@@ -1,0 +1,358 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - link "LB lazybull .pro" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: LB
+        - text: lazybull
+        - generic [ref=e8]: .pro
+      - generic [ref=e9]:
+        - textbox [ref=e10]: NIFTY
+        - button "★" [ref=e11]
+        - button "+" [ref=e12]
+        - generic [ref=e13]: W
+        - button "⌘" [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]: workspace · "godmode"
+        - button "Unnamed ▾" [ref=e17]
+        - button "⟳" [ref=e18]
+        - button "⚙" [ref=e19]
+        - button "⛶" [ref=e20]
+        - button "Trade" [ref=e21]
+        - button "Publish" [ref=e22]
+    - generic [ref=e23]:
+      - button "NI NIFTY" [ref=e25]:
+        - generic [ref=e27]: NI
+        - generic [ref=e28]: NIFTY
+        - img [ref=e29]
+      - button "Compare symbol" [ref=e31]:
+        - img [ref=e32]
+      - generic [ref=e35]:
+        - button "1m" [ref=e36]
+        - button "5m" [ref=e37]
+        - button "15m" [ref=e38]
+        - button "1h" [ref=e39]
+        - button "4h" [ref=e40]
+        - button "D" [ref=e41]
+        - button "W" [ref=e42]
+        - button "M" [ref=e43]
+      - button "Candles" [ref=e45]:
+        - img [ref=e46]
+      - button "Indicators 2" [ref=e51]:
+        - img [ref=e52]
+        - text: Indicators
+        - generic [ref=e54]: "2"
+      - button "Alert" [ref=e56]:
+        - img [ref=e57]
+        - generic [ref=e60]: Alert
+      - button "Replay" [ref=e61]:
+        - img [ref=e62]
+        - generic [ref=e65]: Replay
+      - button "Undo" [ref=e66]:
+        - img [ref=e67]
+        - generic [ref=e70]: Undo
+      - button "Redo" [ref=e71]:
+        - img [ref=e72]
+        - generic [ref=e75]: Redo
+      - generic [ref=e76]:
+        - button "×1" [ref=e78]:
+          - generic [ref=e84]: ×1
+        - button "Full" [ref=e85]:
+          - img [ref=e86]
+          - generic [ref=e88]: Full
+        - button "Snap" [ref=e89]:
+          - img [ref=e90]
+          - generic [ref=e94]: Snap
+        - button "Trade" [ref=e95]:
+          - generic [ref=e96]: Trade
+        - button "Publish" [ref=e97]:
+          - generic [ref=e98]: Publish
+    - generic [ref=e99]:
+      - complementary [ref=e100]:
+        - button "Cursor" [ref=e102]:
+          - img [ref=e103]
+        - button "Trend line" [ref=e107]:
+          - img [ref=e108]
+        - button "Ray" [ref=e113]:
+          - img [ref=e114]
+        - button "Horizontal" [ref=e119]:
+          - img [ref=e120]
+        - button "Parallel channel" [ref=e124]:
+          - img [ref=e125]
+        - button "Fib retracement" [ref=e130]:
+          - img [ref=e131]:
+            - generic [ref=e133]: ".618"
+        - button "Rectangle" [ref=e135]:
+          - img [ref=e136]
+        - button "Brush" [ref=e139]:
+          - img [ref=e140]
+        - button "Text" [ref=e145]:
+          - img [ref=e146]
+        - button "Callout" [ref=e149]:
+          - img [ref=e150]
+        - button "Measure" [ref=e154]:
+          - img [ref=e155]
+        - button "Eraser" [ref=e160]:
+          - img [ref=e161]
+        - button "Color" [ref=e166]
+        - generic [ref=e168]:
+          - generic [ref=e169]: "0"
+          - generic [ref=e170]: drws
+        - button "Clear all" [ref=e171]:
+          - img [ref=e172]
+      - generic [ref=e174]:
+        - generic:
+          - generic [ref=e175]:
+            - generic [ref=e176]: "23997.55"
+            - generic [ref=e177]: SELL
+          - generic [ref=e178]:
+            - generic [ref=e179]: "23997.55"
+            - generic [ref=e180]: BUY
+          - generic [ref=e181]:
+            - text: Vol
+            - generic [ref=e182]: 1.35B
+        - generic:
+          - generic: EMA20
+          - generic: VWAP
+        - generic [ref=e183]:
+          - img [ref=e184]:
+            - generic [ref=e545]: 44,899.75
+            - generic [ref=e546]: 46,788.38
+            - generic [ref=e547]: 48,677.01
+            - generic [ref=e548]: 50,565.64
+            - generic [ref=e549]: 52,454.26
+            - generic [ref=e550]: 54,342.89
+            - generic [ref=e551]: 56,231.52
+            - generic [ref=e552]: Nov 22, 33
+            - generic [ref=e553]: Mar 07, 34
+            - generic [ref=e554]: Jun 20, 34
+            - generic [ref=e555]: Oct 03, 34
+            - generic [ref=e556]: Jan 16, 35
+            - generic [ref=e557]: May 01, 35
+            - generic [ref=e558]: Aug 14, 35
+            - generic [ref=e559]: Nov 27, 35
+            - generic [ref=e562]: 55,443.12
+          - generic:
+            - generic: NIFTY
+            - generic: ·
+            - generic: NSE
+            - generic: ·
+            - generic: W
+            - generic: ·
+            - generic: O
+            - generic: 55,215.72
+            - generic: H
+            - generic: 55,450.02
+            - generic: L
+            - generic: 55,165.98
+            - generic: C
+            - generic: 55,443.12
+            - generic: +227.40 (+0.41%)
+          - generic:
+            - generic: lazybullpro
+        - generic: scroll to zoom · drag with cursor to pan · pick a tool to draw
+        - generic:
+          - generic:
+            - generic: lazybull.pro
+            - generic: booting godmode workspace
+      - complementary [ref=e563]:
+        - generic [ref=e564]:
+          - generic [ref=e565]: Daftar Pantau
+          - generic [ref=e566]:
+            - button "+" [ref=e567]
+            - button "⚙" [ref=e568]
+        - generic [ref=e569]:
+          - generic [ref=e570]: Symbol
+          - generic [ref=e571]: Last
+          - generic [ref=e572]: Chg
+          - generic [ref=e573]: Chg%
+        - generic [ref=e574]:
+          - generic [ref=e575]:
+            - generic [ref=e576]:
+              - img [ref=e577]
+              - text: Indices
+            - button "NI NIFTY 23,997.55 -180.10 -0.74%" [ref=e579]:
+              - generic [ref=e580]:
+                - generic [ref=e582]: NI
+                - generic [ref=e583]: NIFTY
+              - generic [ref=e584]: 23,997.55
+              - generic [ref=e585]: "-180.10"
+              - generic [ref=e586]: "-0.74%"
+            - button "BA BANKNIFTY 54,863.35 -540.25 -0.98%" [ref=e587]:
+              - generic [ref=e588]:
+                - generic [ref=e590]: BA
+                - generic [ref=e591]: BANKNIFTY
+              - generic [ref=e592]: 54,863.35
+              - generic [ref=e593]: "-540.25"
+              - generic [ref=e594]: "-0.98%"
+            - button "SE SENSEX 76,913.50 -582.86 -0.75%" [ref=e595]:
+              - generic [ref=e596]:
+                - generic [ref=e598]: SE
+                - generic [ref=e599]: SENSEX
+              - generic [ref=e600]: 76,913.50
+              - generic [ref=e601]: "-582.86"
+              - generic [ref=e602]: "-0.75%"
+            - button "CN CNXIT 29,353.90 +108.70 +0.37%" [ref=e603]:
+              - generic [ref=e604]:
+                - generic [ref=e606]: CN
+                - generic [ref=e607]: CNXIT
+              - generic [ref=e608]: 29,353.90
+              - generic [ref=e609]: "+108.70"
+              - generic [ref=e610]: +0.37%
+            - button "SP SPX 7,230.12 +21.11 +0.29%" [ref=e611]:
+              - generic [ref=e612]:
+                - generic [ref=e614]: SP
+                - generic [ref=e615]: SPX
+              - generic [ref=e616]: 7,230.12
+              - generic [ref=e617]: "+21.11"
+              - generic [ref=e618]: +0.29%
+          - generic [ref=e619]:
+            - generic [ref=e620]:
+              - img [ref=e621]
+              - text: Stocks
+            - button "RE RELIANCE 1,430.80 +5.40 +0.38%" [ref=e623]:
+              - generic [ref=e624]:
+                - generic [ref=e626]: RE
+                - generic [ref=e627]: RELIANCE
+              - generic [ref=e628]: 1,430.80
+              - generic [ref=e629]: "+5.40"
+              - generic [ref=e630]: +0.38%
+            - button "AX AXISBANK 1,268.30 -28.10 -2.17%" [ref=e631]:
+              - generic [ref=e632]:
+                - generic [ref=e634]: AX
+                - generic [ref=e635]: AXISBANK
+              - generic [ref=e636]: 1,268.30
+              - generic [ref=e637]: "-28.10"
+              - generic [ref=e638]: "-2.17%"
+            - button "HD HDFCBANK 771.70 -7.30 -0.94%" [ref=e639]:
+              - generic [ref=e640]:
+                - generic [ref=e642]: HD
+                - generic [ref=e643]: HDFCBANK
+              - generic [ref=e644]: "771.70"
+              - generic [ref=e645]: "-7.30"
+              - generic [ref=e646]: "-0.94%"
+            - button "IC ICICIBANK 1,263.40 -17.60 -1.37%" [ref=e647]:
+              - generic [ref=e648]:
+                - generic [ref=e650]: IC
+                - generic [ref=e651]: ICICIBANK
+              - generic [ref=e652]: 1,263.40
+              - generic [ref=e653]: "-17.60"
+              - generic [ref=e654]: "-1.37%"
+            - button "BA BAJFINANCE 937.00 +7.00 +0.75%" [ref=e655]:
+              - generic [ref=e656]:
+                - generic [ref=e658]: BA
+                - generic [ref=e659]: BAJFINANCE
+              - generic [ref=e660]: "937.00"
+              - generic [ref=e661]: "+7.00"
+              - generic [ref=e662]: +0.75%
+          - generic [ref=e663]:
+            - generic [ref=e664]:
+              - img [ref=e665]
+              - text: Futures
+            - button "NI NIFTY FUT 24,025.50 -174.00 -0.72%" [ref=e667]:
+              - generic [ref=e668]:
+                - generic [ref=e670]: NI
+                - generic [ref=e671]: NIFTY FUT
+              - generic [ref=e672]: 24,025.50
+              - generic [ref=e673]: "-174.00"
+              - generic [ref=e674]: "-0.72%"
+            - button "GO GOLD FUT 2,712.55 +5.70 +0.21%" [ref=e675]:
+              - generic [ref=e676]:
+                - generic [ref=e678]: GO
+                - generic [ref=e679]: GOLD FUT
+              - generic [ref=e680]: 2,712.55
+              - generic [ref=e681]: "+5.70"
+              - generic [ref=e682]: +0.21%
+            - button "CR CRUDE FUT 71.40 -0.76 -1.06%" [ref=e683]:
+              - generic [ref=e684]:
+                - generic [ref=e686]: CR
+                - generic [ref=e687]: CRUDE FUT
+              - generic [ref=e688]: "71.40"
+              - generic [ref=e689]: "-0.76"
+              - generic [ref=e690]: "-1.06%"
+        - generic [ref=e691]:
+          - generic [ref=e692]:
+            - generic [ref=e693]:
+              - generic [ref=e695]: NI
+              - generic [ref=e696]: NIFTY
+            - generic [ref=e697]:
+              - button "▦" [ref=e698]
+              - button "✎" [ref=e699]
+              - button "⋯" [ref=e700]
+          - generic [ref=e701]: Nifty 50 Index · NSE
+          - generic [ref=e702]:
+            - generic [ref=e703]: 23,997.55
+            - generic [ref=e704]: INR
+          - generic [ref=e705]: −180.10 −0.74%
+          - generic [ref=e706]: Market closed · last update Apr 30, 15:29 GMT+5:30
+          - generic [ref=e708]:
+            - generic [ref=e709]: ⚡
+            - generic [ref=e710]:
+              - generic [ref=e711]: 2 days ago
+              - generic [ref=e712]: AI job shock risks throttling India's consumption
+            - generic [ref=e713]: ›
+        - generic [ref=e714]:
+          - generic [ref=e715]:
+            - generic [ref=e716]: Performance
+            - generic [ref=e717]: vs prev close
+          - generic [ref=e718]:
+            - generic [ref=e719]:
+              - generic [ref=e720]: "-0.85%"
+              - generic [ref=e721]: 1D
+            - generic [ref=e722]:
+              - generic [ref=e723]: +6.42%
+              - generic [ref=e724]: 1M
+            - generic [ref=e725]:
+              - generic [ref=e726]: "-4.95%"
+              - generic [ref=e727]: 3M
+            - generic [ref=e728]:
+              - generic [ref=e729]: "-7.22%"
+              - generic [ref=e730]: 6M
+            - generic [ref=e731]:
+              - generic [ref=e732]: "-8.31%"
+              - generic [ref=e733]: YTD
+            - generic [ref=e734]:
+              - generic [ref=e735]: "-1.42%"
+              - generic [ref=e736]: 1Y
+          - generic [ref=e737]:
+            - generic [ref=e738]: Seasonals
+            - generic [ref=e739]: 5y avg
+    - generic [ref=e753]:
+      - generic [ref=e754]:
+        - button "1D" [ref=e755]
+        - button "5D" [ref=e756]
+        - button "1M" [ref=e757]
+        - button "3M" [ref=e758]
+        - button "6M" [ref=e759]
+        - button "YTD" [ref=e760]
+        - button "1Y" [ref=e761]
+        - button "5Y" [ref=e762]
+        - button "All" [ref=e763]
+        - generic [ref=e764]: log · auto
+      - generic [ref=e765]:
+        - generic [ref=e766]: 0 drawings · 2 indicators
+        - generic [ref=e767]: ·
+        - generic [ref=e768]: 03:27:39 UTC+5:30
+    - complementary:
+      - button "⏱" [ref=e769]:
+        - generic [ref=e770]: ⏱
+      - button "⌘" [ref=e771]:
+        - generic [ref=e772]: ⌘
+      - button "✦" [ref=e773]:
+        - generic [ref=e774]: ✦
+      - button "⚙" [ref=e775]:
+        - generic [ref=e776]: ⚙
+      - button "◎" [ref=e777]:
+        - generic [ref=e778]: ◎
+      - button "⚡" [ref=e779]:
+        - generic [ref=e780]: ⚡
+      - button "≡" [ref=e781]:
+        - generic [ref=e782]: ≡
+      - button "ⓘ" [ref=e783]:
+        - generic [ref=e784]: ⓘ
+      - button "🔔" [ref=e785]:
+        - generic [ref=e786]: 🔔
+      - button "✦" [ref=e787]:
+        - generic [ref=e788]: ✦
+  - button "Open Next.js Dev Tools" [ref=e794] [cursor=pointer]:
+    - img [ref=e795]

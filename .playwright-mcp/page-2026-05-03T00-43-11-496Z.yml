@@ -1,0 +1,422 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]: LIVE
+        - generic [ref=e7]: ·
+        - generic [ref=e8]: NYSE OPEN
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]: AMZN
+          - generic [ref=e12]: "226.45"
+          - generic [ref=e13]: +1.18%
+          - generic [ref=e14]: ·
+        - generic [ref=e15]:
+          - generic [ref=e16]: NVDA
+          - generic [ref=e17]: "138.90"
+          - generic [ref=e18]: +3.07%
+          - generic [ref=e19]: ·
+        - generic [ref=e20]:
+          - generic [ref=e21]: TSLA
+          - generic [ref=e22]: "287.15"
+          - generic [ref=e23]: −1.44%
+          - generic [ref=e24]: ·
+        - generic [ref=e25]:
+          - generic [ref=e26]: AAPL
+          - generic [ref=e27]: "229.83"
+          - generic [ref=e28]: +0.51%
+          - generic [ref=e29]: ·
+        - generic [ref=e30]:
+          - generic [ref=e31]: MSFT
+          - generic [ref=e32]: "428.71"
+          - generic [ref=e33]: +0.92%
+          - generic [ref=e34]: ·
+        - generic [ref=e35]:
+          - generic [ref=e36]: AMD
+          - generic [ref=e37]: "162.04"
+          - generic [ref=e38]: −2.18%
+          - generic [ref=e39]: ·
+        - generic [ref=e40]:
+          - generic [ref=e41]: META
+          - generic [ref=e42]: "603.27"
+          - generic [ref=e43]: +1.74%
+          - generic [ref=e44]: ·
+        - generic [ref=e45]:
+          - generic [ref=e46]: GOOGL
+          - generic [ref=e47]: "189.05"
+          - generic [ref=e48]: +0.34%
+          - generic [ref=e49]: ·
+        - generic [ref=e50]:
+          - generic [ref=e51]: SPY
+          - generic [ref=e52]: "612.40"
+          - generic [ref=e53]: +0.41%
+          - generic [ref=e54]: ·
+        - generic [ref=e55]:
+          - generic [ref=e56]: QQQ
+          - generic [ref=e57]: "540.10"
+          - generic [ref=e58]: +0.62%
+          - generic [ref=e59]: ·
+        - generic [ref=e60]:
+          - generic [ref=e61]: IWM
+          - generic [ref=e62]: "228.07"
+          - generic [ref=e63]: −0.18%
+          - generic [ref=e64]: ·
+        - generic [ref=e65]:
+          - generic [ref=e66]: GLD
+          - generic [ref=e67]: "271.20"
+          - generic [ref=e68]: +0.21%
+          - generic [ref=e69]: ·
+        - generic [ref=e70]:
+          - generic [ref=e71]: VIX
+          - generic [ref=e72]: "14.82"
+          - generic [ref=e73]: −0.94%
+          - generic [ref=e74]: ·
+        - generic [ref=e75]:
+          - generic [ref=e76]: GME
+          - generic [ref=e77]: "31.20"
+          - generic [ref=e78]: +12.4%
+          - generic [ref=e79]: ·
+        - generic [ref=e80]:
+          - generic [ref=e81]: PLTR
+          - generic [ref=e82]: "78.42"
+          - generic [ref=e83]: +2.18%
+          - generic [ref=e84]: ·
+        - generic [ref=e85]:
+          - generic [ref=e86]: COIN
+          - generic [ref=e87]: "287.65"
+          - generic [ref=e88]: −0.62%
+          - generic [ref=e89]: ·
+        - generic [ref=e90]:
+          - generic [ref=e91]: AVGO
+          - generic [ref=e92]: "212.50"
+          - generic [ref=e93]: +1.04%
+          - generic [ref=e94]: ·
+        - generic [ref=e95]:
+          - generic [ref=e96]: NFLX
+          - generic [ref=e97]: "904.18"
+          - generic [ref=e98]: +0.27%
+          - generic [ref=e99]: ·
+        - generic [ref=e100]:
+          - generic [ref=e101]: AMZN
+          - generic [ref=e102]: "226.45"
+          - generic [ref=e103]: +1.18%
+          - generic [ref=e104]: ·
+        - generic [ref=e105]:
+          - generic [ref=e106]: NVDA
+          - generic [ref=e107]: "138.90"
+          - generic [ref=e108]: +3.07%
+          - generic [ref=e109]: ·
+        - generic [ref=e110]:
+          - generic [ref=e111]: TSLA
+          - generic [ref=e112]: "287.15"
+          - generic [ref=e113]: −1.44%
+          - generic [ref=e114]: ·
+        - generic [ref=e115]:
+          - generic [ref=e116]: AAPL
+          - generic [ref=e117]: "229.83"
+          - generic [ref=e118]: +0.51%
+          - generic [ref=e119]: ·
+        - generic [ref=e120]:
+          - generic [ref=e121]: MSFT
+          - generic [ref=e122]: "428.71"
+          - generic [ref=e123]: +0.92%
+          - generic [ref=e124]: ·
+        - generic [ref=e125]:
+          - generic [ref=e126]: AMD
+          - generic [ref=e127]: "162.04"
+          - generic [ref=e128]: −2.18%
+          - generic [ref=e129]: ·
+        - generic [ref=e130]:
+          - generic [ref=e131]: META
+          - generic [ref=e132]: "603.27"
+          - generic [ref=e133]: +1.74%
+          - generic [ref=e134]: ·
+        - generic [ref=e135]:
+          - generic [ref=e136]: GOOGL
+          - generic [ref=e137]: "189.05"
+          - generic [ref=e138]: +0.34%
+          - generic [ref=e139]: ·
+        - generic [ref=e140]:
+          - generic [ref=e141]: SPY
+          - generic [ref=e142]: "612.40"
+          - generic [ref=e143]: +0.41%
+          - generic [ref=e144]: ·
+        - generic [ref=e145]:
+          - generic [ref=e146]: QQQ
+          - generic [ref=e147]: "540.10"
+          - generic [ref=e148]: +0.62%
+          - generic [ref=e149]: ·
+        - generic [ref=e150]:
+          - generic [ref=e151]: IWM
+          - generic [ref=e152]: "228.07"
+          - generic [ref=e153]: −0.18%
+          - generic [ref=e154]: ·
+        - generic [ref=e155]:
+          - generic [ref=e156]: GLD
+          - generic [ref=e157]: "271.20"
+          - generic [ref=e158]: +0.21%
+          - generic [ref=e159]: ·
+        - generic [ref=e160]:
+          - generic [ref=e161]: VIX
+          - generic [ref=e162]: "14.82"
+          - generic [ref=e163]: −0.94%
+          - generic [ref=e164]: ·
+        - generic [ref=e165]:
+          - generic [ref=e166]: GME
+          - generic [ref=e167]: "31.20"
+          - generic [ref=e168]: +12.4%
+          - generic [ref=e169]: ·
+        - generic [ref=e170]:
+          - generic [ref=e171]: PLTR
+          - generic [ref=e172]: "78.42"
+          - generic [ref=e173]: +2.18%
+          - generic [ref=e174]: ·
+        - generic [ref=e175]:
+          - generic [ref=e176]: COIN
+          - generic [ref=e177]: "287.65"
+          - generic [ref=e178]: −0.62%
+          - generic [ref=e179]: ·
+        - generic [ref=e180]:
+          - generic [ref=e181]: AVGO
+          - generic [ref=e182]: "212.50"
+          - generic [ref=e183]: +1.04%
+          - generic [ref=e184]: ·
+        - generic [ref=e185]:
+          - generic [ref=e186]: NFLX
+          - generic [ref=e187]: "904.18"
+          - generic [ref=e188]: +0.27%
+          - generic [ref=e189]: ·
+      - generic [ref=e190]:
+        - generic [ref=e191]: 14:23:08
+        - generic [ref=e192]: UTC
+    - navigation [ref=e193]:
+      - generic [ref=e194]:
+        - link "LB lazybull." [ref=e195] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e198]: LB
+          - generic [ref=e199]: lazybull.
+        - generic [ref=e200]:
+          - link "01 Visual chain" [ref=e201] [cursor=pointer]:
+            - /url: /trade
+            - generic [ref=e202]: "01"
+            - generic [ref=e203]: Visual chain
+          - link "02 Pro charts" [ref=e204] [cursor=pointer]:
+            - /url: /pro
+            - generic [ref=e205]: "02"
+            - generic [ref=e206]: Pro charts
+          - link "03 Teacher" [ref=e207] [cursor=pointer]:
+            - /url: /trade
+            - generic [ref=e208]: "03"
+            - generic [ref=e209]: Teacher
+          - link "04 Learn" [ref=e210] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e211]: "04"
+            - generic [ref=e212]: Learn
+          - link "05 Manifesto" [ref=e213] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e214]: "05"
+            - generic [ref=e215]: Manifesto
+        - generic [ref=e216]:
+          - button "⌘ K Search" [ref=e217]:
+            - generic [ref=e218]: ⌘
+            - text: K
+            - generic [ref=e219]: Search
+          - link "Sign in" [ref=e220] [cursor=pointer]:
+            - /url: "#"
+          - link "Open the chain" [ref=e221] [cursor=pointer]:
+            - /url: /trade
+            - text: Open the chain
+            - img [ref=e223]
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - generic [ref=e228]:
+          - text: ⟢ bet builder · v2
+          - 'link "advanced view: see the chain →" [ref=e229] [cursor=pointer]':
+            - /url: /trade/chain
+        - heading "Stop showing the chain. Show the bet." [level=1] [ref=e230]
+      - generic [ref=e231]:
+        - generic [ref=e232]: underlying
+        - button "AMZN $226.45" [ref=e233]:
+          - text: AMZN
+          - generic [ref=e234]: $226.45
+        - button "NVDA $138.90" [ref=e235]:
+          - text: NVDA
+          - generic [ref=e236]: $138.90
+        - button "TSLA $287.15" [ref=e237]:
+          - text: TSLA
+          - generic [ref=e238]: $287.15
+        - button "AAPL $229.83" [ref=e239]:
+          - text: AAPL
+          - generic [ref=e240]: $229.83
+        - button "SPY $612.40" [ref=e241]:
+          - text: SPY
+          - generic [ref=e242]: $612.40
+        - generic [ref=e243]: live $226.45
+    - generic [ref=e245]:
+      - generic [ref=e246]:
+        - generic [ref=e247]:
+          - generic [ref=e248]: ⟢ Step 01 / Thesis
+          - heading "\"I think AMZN will closes between $215.13 and $240.04 by Jun 07.\"" [level=2] [ref=e249]:
+            - text: "\""
+            - generic [ref=e250]: I think AMZN will closes between $215.13 and $240.04 by Jun 07.
+            - text: "\""
+          - paragraph [ref=e251]: Drag the green band on the chart up or down to change your price zone. Drag the orange line ↔ to change the date. The whole app rebuilds around it.
+        - generic [ref=e252]:
+          - generic [ref=e253]:
+            - img [ref=e254]
+            - generic [ref=e257]:
+              - generic [ref=e258]: 42%
+              - generic [ref=e259]: odds in band · BS
+          - generic [ref=e260]: Black-Scholes risk-neutral odds your stock lands inside the band by expiry.
+      - generic [ref=e263]: loading forecast cone…
+    - generic [ref=e265]:
+      - generic [ref=e266]:
+        - generic [ref=e267]:
+          - generic [ref=e268]: ⟢ Step 02 / Pick your bet
+          - heading "Three ways to bet on it." [level=2] [ref=e269]
+        - button "ask the teacher to explain \"Iron condor 203.5/215 – 240/251.5\"" [ref=e270]: ask the teacher to explain "Iron condor 203.5/215 – 240/251.5"
+      - generic [ref=e272]:
+        - button "Cheap & risky debit unbounded ↑ best case · max profit Risk −$940 Cost $940 Win odds 33% Long 226.5 call Pay a small ticket. Win huge if the stock rips up. Lose it all if it doesn't. place this bet on AMZN →" [ref=e273] [cursor=pointer]:
+          - generic [ref=e274]:
+            - generic [ref=e275]: Cheap & risky
+            - generic [ref=e277]: debit
+          - generic [ref=e278]:
+            - generic [ref=e279]: unbounded ↑
+            - generic [ref=e280]: best case · max profit
+          - img [ref=e281]
+          - generic [ref=e285]:
+            - generic [ref=e286]:
+              - generic [ref=e287]: Risk
+              - generic [ref=e288]: −$940
+            - generic [ref=e289]:
+              - generic [ref=e290]: Cost
+              - generic [ref=e291]: $940
+            - generic [ref=e292]:
+              - generic [ref=e293]: Win odds
+              - generic [ref=e294]: 33%
+          - generic [ref=e295]: Long 226.5 call
+          - paragraph [ref=e296]: Pay a small ticket. Win huge if the stock rips up. Lose it all if it doesn't.
+          - button "place this bet on AMZN →" [ref=e298]:
+            - generic [ref=e299]: place this bet on AMZN
+            - generic [ref=e301]: →
+        - button "Defined-risk income credit +$484 best case · max profit Risk −$666 Cost +$484 Win odds 55% Iron condor 203.5/215 – 240/251.5 You collect premium up front. You win if the stock stays inside the band. Defined max loss either side. place this bet on AMZN →" [ref=e302] [cursor=pointer]:
+          - generic [ref=e303]:
+            - generic [ref=e304]: Defined-risk income
+            - generic [ref=e306]: credit
+          - generic [ref=e307]:
+            - generic [ref=e308]: +$484
+            - generic [ref=e309]: best case · max profit
+          - img [ref=e310]
+          - generic [ref=e314]:
+            - generic [ref=e315]:
+              - generic [ref=e316]: Risk
+              - generic [ref=e317]: −$666
+            - generic [ref=e318]:
+              - generic [ref=e319]: Cost
+              - generic [ref=e320]: +$484
+            - generic [ref=e321]:
+              - generic [ref=e322]: Win odds
+              - generic [ref=e323]: 55%
+          - generic [ref=e324]: Iron condor 203.5/215 – 240/251.5
+          - paragraph [ref=e325]: You collect premium up front. You win if the stock stays inside the band. Defined max loss either side.
+          - button "place this bet on AMZN →" [ref=e327]:
+            - generic [ref=e328]: place this bet on AMZN
+            - generic [ref=e330]: →
+        - button "Aggressive debit +$836 best case · max profit Risk −$514 Cost $514 Win odds 40% Bull call spread 226.5/240 Pay a debit. Capped reward equal to the strike spread. Capped loss equal to the debit. place this bet on AMZN →" [ref=e331] [cursor=pointer]:
+          - generic [ref=e332]:
+            - generic [ref=e333]: Aggressive
+            - generic [ref=e335]: debit
+          - generic [ref=e336]:
+            - generic [ref=e337]: +$836
+            - generic [ref=e338]: best case · max profit
+          - img [ref=e339]
+          - generic [ref=e343]:
+            - generic [ref=e344]:
+              - generic [ref=e345]: Risk
+              - generic [ref=e346]: −$514
+            - generic [ref=e347]:
+              - generic [ref=e348]: Cost
+              - generic [ref=e349]: $514
+            - generic [ref=e350]:
+              - generic [ref=e351]: Win odds
+              - generic [ref=e352]: 40%
+          - generic [ref=e353]: Bull call spread 226.5/240
+          - paragraph [ref=e354]: Pay a debit. Capped reward equal to the strike spread. Capped loss equal to the debit.
+          - button "place this bet on AMZN →" [ref=e356]:
+            - generic [ref=e357]: place this bet on AMZN
+            - generic [ref=e359]: →
+    - generic [ref=e361]:
+      - generic [ref=e362]:
+        - generic [ref=e363]: ⟢ Step 03 / Under the hood
+        - heading "The math, in a language you speak." [level=2] [ref=e364]
+      - generic [ref=e366]:
+        - generic [ref=e367]:
+          - generic [ref=e368]: plain-english greeks · live
+          - list [ref=e370]:
+            - listitem [ref=e371]:
+              - generic [ref=e372]: Δ
+              - generic [ref=e373]:
+                - text: Your bet
+                - generic [ref=e374]: rises $0
+                - text: for every $1 the stock moves up.
+            - listitem [ref=e375]:
+              - generic [ref=e376]: Γ
+              - generic [ref=e377]:
+                - text: That sensitivity itself
+                - generic [ref=e378]: accelerates by $1.03
+                - text: per dollar — biggest near the strike.
+            - listitem [ref=e379]:
+              - generic [ref=e380]: Θ
+              - generic [ref=e381]:
+                - text: "Time is on your side: you earn about"
+                - generic [ref=e382]: $7/day
+                - text: if nothing moves.
+            - listitem [ref=e383]:
+              - generic [ref=e384]: ν
+              - generic [ref=e385]:
+                - text: If implied vol drops −5 points, you earn about
+                - generic [ref=e386]: $81
+                - text: .
+        - generic [ref=e387]:
+          - generic [ref=e388]:
+            - generic [ref=e389]: time machine · what-if simulator
+            - button "↺ reset" [ref=e391]
+          - generic [ref=e392]:
+            - generic [ref=e393]:
+              - generic [ref=e394]: scenario value
+              - generic [ref=e395]: +$0
+            - generic [ref=e396]:
+              - generic [ref=e397]: vs entry
+              - generic [ref=e398]: +$0
+          - generic [ref=e399]:
+            - generic [ref=e400]:
+              - generic [ref=e401]:
+                - generic [ref=e402]: stock price
+                - generic [ref=e403]: $226.45
+              - slider [ref=e404]: "226.515"
+              - generic [ref=e405]:
+                - generic [ref=e406]: $159
+                - generic [ref=e407]: spot $226.45
+                - generic [ref=e408]: $294
+            - generic [ref=e409]:
+              - generic [ref=e410]:
+                - generic [ref=e411]: days from now
+                - generic [ref=e412]: 0d / 35d
+              - slider [ref=e413]: "0"
+              - generic [ref=e414]:
+                - generic [ref=e415]: now
+                - generic [ref=e416]: 35d to expiry
+                - generic [ref=e417]: expiry
+    - generic [ref=e420]:
+      - generic [ref=e421]:
+        - generic [ref=e422]: ⟢ Step 04 / Manage
+        - heading "Where every other app abandons you. We don't." [level=2] [ref=e423]
+      - generic [ref=e424]:
+        - generic [ref=e425]:
+          - generic [ref=e426]: open bets · 0
+          - generic [ref=e427]: live priced from /api/quote
+        - generic [ref=e428]: you haven't placed a bet yet — pick one of the cards above
+    - button "AI teacher" [ref=e430]:
+      - img [ref=e432]
+  - button "Open Next.js Dev Tools" [ref=e449] [cursor=pointer]:
+    - img [ref=e450]

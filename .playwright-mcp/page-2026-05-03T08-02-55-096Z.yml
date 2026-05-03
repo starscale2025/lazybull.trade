@@ -1,0 +1,1321 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]: LIVE
+        - generic [ref=e7]: ·
+        - generic [ref=e8]: NYSE OPEN
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]: AMZN
+          - generic [ref=e12]: "226.45"
+          - generic [ref=e13]: +1.18%
+          - generic [ref=e14]: ·
+        - generic [ref=e15]:
+          - generic [ref=e16]: NVDA
+          - generic [ref=e17]: "138.90"
+          - generic [ref=e18]: +3.07%
+          - generic [ref=e19]: ·
+        - generic [ref=e20]:
+          - generic [ref=e21]: TSLA
+          - generic [ref=e22]: "287.15"
+          - generic [ref=e23]: −1.44%
+          - generic [ref=e24]: ·
+        - generic [ref=e25]:
+          - generic [ref=e26]: AAPL
+          - generic [ref=e27]: "229.83"
+          - generic [ref=e28]: +0.51%
+          - generic [ref=e29]: ·
+        - generic [ref=e30]:
+          - generic [ref=e31]: MSFT
+          - generic [ref=e32]: "428.71"
+          - generic [ref=e33]: +0.92%
+          - generic [ref=e34]: ·
+        - generic [ref=e35]:
+          - generic [ref=e36]: AMD
+          - generic [ref=e37]: "162.04"
+          - generic [ref=e38]: −2.18%
+          - generic [ref=e39]: ·
+        - generic [ref=e40]:
+          - generic [ref=e41]: META
+          - generic [ref=e42]: "603.27"
+          - generic [ref=e43]: +1.74%
+          - generic [ref=e44]: ·
+        - generic [ref=e45]:
+          - generic [ref=e46]: GOOGL
+          - generic [ref=e47]: "189.05"
+          - generic [ref=e48]: +0.34%
+          - generic [ref=e49]: ·
+        - generic [ref=e50]:
+          - generic [ref=e51]: SPY
+          - generic [ref=e52]: "612.40"
+          - generic [ref=e53]: +0.41%
+          - generic [ref=e54]: ·
+        - generic [ref=e55]:
+          - generic [ref=e56]: QQQ
+          - generic [ref=e57]: "540.10"
+          - generic [ref=e58]: +0.62%
+          - generic [ref=e59]: ·
+        - generic [ref=e60]:
+          - generic [ref=e61]: IWM
+          - generic [ref=e62]: "228.07"
+          - generic [ref=e63]: −0.18%
+          - generic [ref=e64]: ·
+        - generic [ref=e65]:
+          - generic [ref=e66]: GLD
+          - generic [ref=e67]: "271.20"
+          - generic [ref=e68]: +0.21%
+          - generic [ref=e69]: ·
+        - generic [ref=e70]:
+          - generic [ref=e71]: VIX
+          - generic [ref=e72]: "14.82"
+          - generic [ref=e73]: −0.94%
+          - generic [ref=e74]: ·
+        - generic [ref=e75]:
+          - generic [ref=e76]: GME
+          - generic [ref=e77]: "31.20"
+          - generic [ref=e78]: +12.4%
+          - generic [ref=e79]: ·
+        - generic [ref=e80]:
+          - generic [ref=e81]: PLTR
+          - generic [ref=e82]: "78.42"
+          - generic [ref=e83]: +2.18%
+          - generic [ref=e84]: ·
+        - generic [ref=e85]:
+          - generic [ref=e86]: COIN
+          - generic [ref=e87]: "287.65"
+          - generic [ref=e88]: −0.62%
+          - generic [ref=e89]: ·
+        - generic [ref=e90]:
+          - generic [ref=e91]: AVGO
+          - generic [ref=e92]: "212.50"
+          - generic [ref=e93]: +1.04%
+          - generic [ref=e94]: ·
+        - generic [ref=e95]:
+          - generic [ref=e96]: NFLX
+          - generic [ref=e97]: "904.18"
+          - generic [ref=e98]: +0.27%
+          - generic [ref=e99]: ·
+        - generic [ref=e100]:
+          - generic [ref=e101]: AMZN
+          - generic [ref=e102]: "226.45"
+          - generic [ref=e103]: +1.18%
+          - generic [ref=e104]: ·
+        - generic [ref=e105]:
+          - generic [ref=e106]: NVDA
+          - generic [ref=e107]: "138.90"
+          - generic [ref=e108]: +3.07%
+          - generic [ref=e109]: ·
+        - generic [ref=e110]:
+          - generic [ref=e111]: TSLA
+          - generic [ref=e112]: "287.15"
+          - generic [ref=e113]: −1.44%
+          - generic [ref=e114]: ·
+        - generic [ref=e115]:
+          - generic [ref=e116]: AAPL
+          - generic [ref=e117]: "229.83"
+          - generic [ref=e118]: +0.51%
+          - generic [ref=e119]: ·
+        - generic [ref=e120]:
+          - generic [ref=e121]: MSFT
+          - generic [ref=e122]: "428.71"
+          - generic [ref=e123]: +0.92%
+          - generic [ref=e124]: ·
+        - generic [ref=e125]:
+          - generic [ref=e126]: AMD
+          - generic [ref=e127]: "162.04"
+          - generic [ref=e128]: −2.18%
+          - generic [ref=e129]: ·
+        - generic [ref=e130]:
+          - generic [ref=e131]: META
+          - generic [ref=e132]: "603.27"
+          - generic [ref=e133]: +1.74%
+          - generic [ref=e134]: ·
+        - generic [ref=e135]:
+          - generic [ref=e136]: GOOGL
+          - generic [ref=e137]: "189.05"
+          - generic [ref=e138]: +0.34%
+          - generic [ref=e139]: ·
+        - generic [ref=e140]:
+          - generic [ref=e141]: SPY
+          - generic [ref=e142]: "612.40"
+          - generic [ref=e143]: +0.41%
+          - generic [ref=e144]: ·
+        - generic [ref=e145]:
+          - generic [ref=e146]: QQQ
+          - generic [ref=e147]: "540.10"
+          - generic [ref=e148]: +0.62%
+          - generic [ref=e149]: ·
+        - generic [ref=e150]:
+          - generic [ref=e151]: IWM
+          - generic [ref=e152]: "228.07"
+          - generic [ref=e153]: −0.18%
+          - generic [ref=e154]: ·
+        - generic [ref=e155]:
+          - generic [ref=e156]: GLD
+          - generic [ref=e157]: "271.20"
+          - generic [ref=e158]: +0.21%
+          - generic [ref=e159]: ·
+        - generic [ref=e160]:
+          - generic [ref=e161]: VIX
+          - generic [ref=e162]: "14.82"
+          - generic [ref=e163]: −0.94%
+          - generic [ref=e164]: ·
+        - generic [ref=e165]:
+          - generic [ref=e166]: GME
+          - generic [ref=e167]: "31.20"
+          - generic [ref=e168]: +12.4%
+          - generic [ref=e169]: ·
+        - generic [ref=e170]:
+          - generic [ref=e171]: PLTR
+          - generic [ref=e172]: "78.42"
+          - generic [ref=e173]: +2.18%
+          - generic [ref=e174]: ·
+        - generic [ref=e175]:
+          - generic [ref=e176]: COIN
+          - generic [ref=e177]: "287.65"
+          - generic [ref=e178]: −0.62%
+          - generic [ref=e179]: ·
+        - generic [ref=e180]:
+          - generic [ref=e181]: AVGO
+          - generic [ref=e182]: "212.50"
+          - generic [ref=e183]: +1.04%
+          - generic [ref=e184]: ·
+        - generic [ref=e185]:
+          - generic [ref=e186]: NFLX
+          - generic [ref=e187]: "904.18"
+          - generic [ref=e188]: +0.27%
+          - generic [ref=e189]: ·
+      - generic [ref=e190]:
+        - generic [ref=e191]: 14:23:08
+        - generic [ref=e192]: UTC
+    - navigation [ref=e193]:
+      - generic [ref=e194]:
+        - link "LB lazybull." [ref=e195] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e198]: LB
+          - generic [ref=e199]: lazybull.
+        - generic [ref=e200]:
+          - link "01 Bet builder" [ref=e201] [cursor=pointer]:
+            - /url: /trade
+            - generic [ref=e202]: "01"
+            - generic [ref=e203]: Bet builder
+          - link "02 Pro charts" [ref=e204] [cursor=pointer]:
+            - /url: /pro
+            - generic [ref=e205]: "02"
+            - generic [ref=e206]: Pro charts
+          - link "03 Quant fund" [ref=e207] [cursor=pointer]:
+            - /url: /quant
+            - generic [ref=e208]: "03"
+            - generic [ref=e209]: Quant fund
+          - link "04 Teacher" [ref=e210] [cursor=pointer]:
+            - /url: /trade
+            - generic [ref=e211]: "04"
+            - generic [ref=e212]: Teacher
+          - link "05 Manifesto" [ref=e213] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e214]: "05"
+            - generic [ref=e215]: Manifesto
+        - generic [ref=e216]:
+          - button "⌘ K Search" [ref=e217]:
+            - generic [ref=e218]: ⌘
+            - text: K
+            - generic [ref=e219]: Search
+          - link "Sign in" [ref=e220] [cursor=pointer]:
+            - /url: "#"
+          - link "Open the chain" [ref=e221] [cursor=pointer]:
+            - /url: /trade
+            - text: Open the chain
+            - img [ref=e223]
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - generic [ref=e228]: distributed hedge fund · v0
+        - generic [ref=e230]: quants 11,842 · bots 27,184
+        - generic [ref=e231]: 60-day live wall · cryptographic broker proof
+      - heading "The PMs are 10,000 strangers on the internet." [level=1] [ref=e232]:
+        - text: The PMs are
+        - text: 10,000 strangers
+        - text: on the internet.
+      - paragraph [ref=e233]: "Free Python studio. Free OHLCV. AI-scaffolded boilerplate. The catch: no backtest beauty contests. Bots only enter the leaderboard after 60 days of live broker-verified trading. The top ones get real platform capital and a paying audience that copies their trades. We're not building software for hedge funds. We're building a hedge fund where a 17-year-old in Mumbai is the PM."
+      - generic [ref=e234]:
+        - link "See the live leaderboard" [ref=e235] [cursor=pointer]:
+          - /url: "#leaderboard"
+          - text: See the live leaderboard
+          - img [ref=e237]
+        - link "Open the studio" [ref=e239] [cursor=pointer]:
+          - /url: "#studio"
+        - link "How allocation works →" [ref=e240] [cursor=pointer]:
+          - /url: "#capital"
+      - generic [ref=e241]:
+        - generic [ref=e242]:
+          - generic [ref=e243]: Capital allocated · live
+          - generic [ref=e244]: $279k
+          - generic [ref=e245]: across top quants
+        - generic [ref=e246]:
+          - generic [ref=e247]: Subscribers paying
+          - generic [ref=e248]: 11,972
+          - generic [ref=e249]: copy-trading rev share
+        - generic [ref=e250]:
+          - generic [ref=e251]: Top-100 avg Sharpe
+          - generic [ref=e252]: "2.18"
+          - generic [ref=e253]: cohort-normalised
+        - generic [ref=e254]:
+          - generic [ref=e255]: Sub revenue · MRR
+          - generic [ref=e256]: $16.9k
+          - generic [ref=e257]: 70 / 30 split
+    - generic [ref=e258]:
+      - generic [ref=e260]:
+        - generic [ref=e261]:
+          - generic [ref=e262]: ⟢ Section 01 / The TikTok of quant
+          - generic [ref=e263]: // leaderboard.live
+        - heading "Ranked, live, cohort by cohort. No backtest fakers." [level=2] [ref=e265]:
+          - text: Ranked, live,
+          - generic [ref=e266]: cohort by cohort. No backtest fakers.
+      - generic [ref=e268]:
+        - generic [ref=e269]:
+          - generic [ref=e270]: cohort
+          - button "All cohorts" [ref=e271]: All cohorts
+          - button "Vol arbitrage" [ref=e273]: Vol arbitrage
+          - button "Mean reversion" [ref=e275]: Mean reversion
+          - button "ML signals" [ref=e277]: ML signals
+          - button "Options flow" [ref=e279]: Options flow
+          - button "Event-driven" [ref=e281]: Event-driven
+          - button "Crypto perps" [ref=e283]: Crypto perps
+        - generic [ref=e285]:
+          - generic [ref=e286]: "#"
+          - generic [ref=e287]: Quant · Bot
+          - generic [ref=e288]: Sharpe
+          - generic [ref=e289]: YTD
+          - generic [ref=e290]: Max DD
+          - generic [ref=e291]: Live
+          - generic [ref=e292]: Allocated
+          - generic [ref=e293]: Followers
+          - generic [ref=e294]: Sub rev /mo
+        - generic [ref=e296] [cursor=pointer]:
+          - generic [ref=e298]: "01"
+          - generic [ref=e299]:
+            - generic [ref=e300]: AM
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - generic [ref=e303]: "@meta_aarav"
+                - generic [ref=e304]: ·
+                - generic [ref=e305]: "17"
+                - generic [ref=e306]: ·
+                - generic [ref=e307]: 🇮🇳 Mumbai · IN
+              - generic [ref=e310]: Vol Crush Hunter v3
+          - generic [ref=e311]: "3.41"
+          - generic [ref=e312]: +127.4%
+          - generic [ref=e313]: "-8.2%"
+          - generic [ref=e314]: 184d
+          - generic [ref=e315]: $52.0k
+          - generic [ref=e316]: 2,341
+          - generic [ref=e317]: $4.3k
+        - generic [ref=e319] [cursor=pointer]:
+          - generic [ref=e321]: "02"
+          - generic [ref=e322]:
+            - generic [ref=e323]: YT
+            - generic [ref=e324]:
+              - generic [ref=e325]:
+                - generic [ref=e326]: "@yukiquant"
+                - generic [ref=e327]: ·
+                - generic [ref=e328]: "24"
+                - generic [ref=e329]: ·
+                - generic [ref=e330]: 🇯🇵 Tokyo · JP
+              - generic [ref=e333]: Earnings Drift v3
+          - generic [ref=e334]: "2.87"
+          - generic [ref=e335]: +89.1%
+          - generic [ref=e336]: "-11.4%"
+          - generic [ref=e337]: 412d
+          - generic [ref=e338]: $38.5k
+          - generic [ref=e339]: 1,892
+          - generic [ref=e340]: $3.1k
+        - generic [ref=e342] [cursor=pointer]:
+          - generic [ref=e344]: "03"
+          - generic [ref=e345]:
+            - generic [ref=e346]: MC
+            - generic [ref=e347]:
+              - generic [ref=e348]:
+                - generic [ref=e349]: "@meichen"
+                - generic [ref=e350]: ·
+                - generic [ref=e351]: "19"
+                - generic [ref=e352]: ·
+                - generic [ref=e353]: 🇸🇬 Singapore · SG
+              - generic [ref=e356]: MRev SP500 baskets
+          - generic [ref=e357]: "2.62"
+          - generic [ref=e358]: +71.4%
+          - generic [ref=e359]: "-6.8%"
+          - generic [ref=e360]: 268d
+          - generic [ref=e361]: $31.2k
+          - generic [ref=e362]: 1,440
+          - generic [ref=e363]: $2.2k
+        - generic [ref=e365] [cursor=pointer]:
+          - generic [ref=e367]: "04"
+          - generic [ref=e368]:
+            - generic [ref=e369]: DM
+            - generic [ref=e370]:
+              - generic [ref=e371]:
+                - generic [ref=e372]: "@dmarin_q"
+                - generic [ref=e373]: ·
+                - generic [ref=e374]: "28"
+                - generic [ref=e375]: ·
+                - generic [ref=e376]: 🇧🇷 São Paulo · BR
+              - generic [ref=e379]: Gamma flip detector
+          - generic [ref=e380]: "2.44"
+          - generic [ref=e381]: +64.8%
+          - generic [ref=e382]: "-9.7%"
+          - generic [ref=e383]: 198d
+          - generic [ref=e384]: $28.4k
+          - generic [ref=e385]: 1,188
+          - generic [ref=e386]: $1.6k
+        - generic [ref=e388] [cursor=pointer]:
+          - generic [ref=e390]: "05"
+          - generic [ref=e391]:
+            - generic [ref=e392]: "NO"
+            - generic [ref=e393]:
+              - generic [ref=e394]:
+                - generic [ref=e395]: "@n_okolie"
+                - generic [ref=e396]: ·
+                - generic [ref=e397]: "22"
+                - generic [ref=e398]: ·
+                - generic [ref=e399]: 🇳🇬 Lagos · NG
+              - generic [ref=e402]: Transformer-news 7B
+          - generic [ref=e403]: "2.31"
+          - generic [ref=e404]: +58.3%
+          - generic [ref=e405]: "-7.4%"
+          - generic [ref=e406]: 156d
+          - generic [ref=e407]: $24.8k
+          - generic [ref=e408]: "974"
+          - generic [ref=e409]: $1.2k
+        - generic [ref=e411] [cursor=pointer]:
+          - generic [ref=e413]: "06"
+          - generic [ref=e414]:
+            - generic [ref=e415]: PC
+            - generic [ref=e416]:
+              - generic [ref=e417]:
+                - generic [ref=e418]: "@p_chandra"
+                - generic [ref=e419]: ·
+                - generic [ref=e420]: "31"
+                - generic [ref=e421]: ·
+                - generic [ref=e422]: 🇮🇳 Bengaluru · IN
+              - generic [ref=e425]: VIX term-structure
+          - generic [ref=e426]: "2.18"
+          - generic [ref=e427]: +51.2%
+          - generic [ref=e428]: "-10.1%"
+          - generic [ref=e429]: 642d
+          - generic [ref=e430]: $22.0k
+          - generic [ref=e431]: "832"
+          - generic [ref=e432]: $980
+        - generic [ref=e434] [cursor=pointer]:
+          - generic [ref=e436]: "07"
+          - generic [ref=e437]:
+            - generic [ref=e438]: RB
+            - generic [ref=e439]:
+              - generic [ref=e440]:
+                - generic [ref=e441]: "@r_ben_amit"
+                - generic [ref=e442]: ·
+                - generic [ref=e443]: "26"
+                - generic [ref=e444]: ·
+                - generic [ref=e445]: 🇮🇱 Tel Aviv · IL
+              - generic [ref=e448]: Perp funding harvester
+          - generic [ref=e449]: "2.05"
+          - generic [ref=e450]: +47.6%
+          - generic [ref=e451]: "-12.8%"
+          - generic [ref=e452]: 304d
+          - generic [ref=e453]: $19.2k
+          - generic [ref=e454]: "712"
+          - generic [ref=e455]: $840
+        - generic [ref=e457] [cursor=pointer]:
+          - generic [ref=e459]: "08"
+          - generic [ref=e460]:
+            - generic [ref=e461]: AR
+            - generic [ref=e462]:
+              - generic [ref=e463]:
+                - generic [ref=e464]: "@anyaR_fx"
+                - generic [ref=e465]: ·
+                - generic [ref=e466]: "29"
+                - generic [ref=e467]: ·
+                - generic [ref=e468]: 🇩🇪 Berlin · DE
+              - generic [ref=e471]: FOMC fade
+          - generic [ref=e472]: "1.94"
+          - generic [ref=e473]: +42.1%
+          - generic [ref=e474]: "-8.5%"
+          - generic [ref=e475]: 388d
+          - generic [ref=e476]: $17.5k
+          - generic [ref=e477]: "668"
+          - generic [ref=e478]: $720
+        - generic [ref=e480] [cursor=pointer]:
+          - generic [ref=e482]: "09"
+          - generic [ref=e483]:
+            - generic [ref=e484]: TP
+            - generic [ref=e485]:
+              - generic [ref=e486]:
+                - generic [ref=e487]: "@t_park"
+                - generic [ref=e488]: ·
+                - generic [ref=e489]: "23"
+                - generic [ref=e490]: ·
+                - generic [ref=e491]: 🇰🇷 Seoul · KR
+              - generic [ref=e494]: GBM ensemble v6
+          - generic [ref=e495]: "1.81"
+          - generic [ref=e496]: +38.4%
+          - generic [ref=e497]: "-7.2%"
+          - generic [ref=e498]: 224d
+          - generic [ref=e499]: $14.8k
+          - generic [ref=e500]: "612"
+          - generic [ref=e501]: $580
+        - generic [ref=e503] [cursor=pointer]:
+          - generic [ref=e505]: "10"
+          - generic [ref=e506]:
+            - generic [ref=e507]: MC
+            - generic [ref=e508]:
+              - generic [ref=e509]:
+                - generic [ref=e510]: "@jcole"
+                - generic [ref=e511]: ·
+                - generic [ref=e512]: "36"
+                - generic [ref=e513]: ·
+                - generic [ref=e514]: 🇺🇸 Austin · US
+              - generic [ref=e517]: Beta-neutral basket
+          - generic [ref=e518]: "1.73"
+          - generic [ref=e519]: +34.8%
+          - generic [ref=e520]: "-5.9%"
+          - generic [ref=e521]: 521d
+          - generic [ref=e522]: $12.4k
+          - generic [ref=e523]: "504"
+          - generic [ref=e524]: $510
+        - generic [ref=e526] [cursor=pointer]:
+          - generic [ref=e528]: "11"
+          - generic [ref=e529]:
+            - generic [ref=e530]: LH
+            - generic [ref=e531]:
+              - generic [ref=e532]:
+                - generic [ref=e533]: "@cairoquant"
+                - generic [ref=e534]: ·
+                - generic [ref=e535]: "20"
+                - generic [ref=e536]: ·
+                - generic [ref=e537]: 🇪🇬 Cairo · EG
+              - generic [ref=e540]: FX news embeddings
+          - generic [ref=e541]: "1.66"
+          - generic [ref=e542]: +31.2%
+          - generic [ref=e543]: "-6.4%"
+          - generic [ref=e544]: 142d
+          - generic [ref=e545]: $10.2k
+          - generic [ref=e546]: "421"
+          - generic [ref=e547]: $420
+        - generic [ref=e549] [cursor=pointer]:
+          - generic [ref=e551]: "12"
+          - generic [ref=e552]:
+            - generic [ref=e553]: RS
+            - generic [ref=e554]:
+              - generic [ref=e555]:
+                - generic [ref=e556]: "@manch_ravi"
+                - generic [ref=e557]: ·
+                - generic [ref=e558]: "18"
+                - generic [ref=e559]: ·
+                - generic [ref=e560]: 🇮🇳 Pune · IN
+              - generic [ref=e563]: 0DTE iron condor
+          - generic [ref=e564]: "1.58"
+          - generic [ref=e565]: +28.4%
+          - generic [ref=e566]: "-9.8%"
+          - generic [ref=e567]: 96d
+          - generic [ref=e568]: $8.4k
+          - generic [ref=e569]: "388"
+          - generic [ref=e570]: $360
+    - generic [ref=e571]:
+      - generic [ref=e573]:
+        - generic [ref=e574]:
+          - generic [ref=e575]: ⟢ Section 02 / The studio
+          - generic [ref=e576]: // studio.py
+        - heading "Describe your edge. We scaffold the rest." [level=2] [ref=e578]:
+          - text: Describe your edge.
+          - generic [ref=e579]: We scaffold the rest.
+      - generic [ref=e581]:
+        - generic [ref=e582]:
+          - generic [ref=e583]:
+            - generic [ref=e588]: studio · vol_spike_tech.py
+            - generic [ref=e590]: ● python 3.12 · jupyter · gpu A10g
+          - generic [ref=e591]:
+            - generic [ref=e592]:
+              - generic [ref=e593]: C
+              - generic [ref=e594]: "# describe your edge in english →"
+            - generic [ref=e595]:
+              - generic [ref=e596]: U
+              - generic [ref=e597]: "\"buy oversold tech on a vol-of-vol spike, hedge with VXX\""
+            - generic [ref=e599]: "03"
+            - generic [ref=e601]:
+              - generic [ref=e602]: "04"
+              - generic [ref=e603]: from lazybull import strategy, data, walk_forward
+            - generic [ref=e605]: "05"
+            - generic [ref=e607]:
+              - generic [ref=e608]: "06"
+              - generic [ref=e609]: "@strategy(name='vol-spike-tech', cohort='vol')"
+            - generic [ref=e610]:
+              - generic [ref=e611]: "07"
+              - generic [ref=e612]: "def signal(b):"
+            - generic [ref=e613]:
+              - generic [ref=e614]: "08"
+              - generic [ref=e615]: rsi = data.rsi(b['close'], 14)
+            - generic [ref=e616]:
+              - generic [ref=e617]: "09"
+              - generic [ref=e618]: vov = data.vix_realised_vol() / data.vix_implied()
+            - generic [ref=e619]:
+              - generic [ref=e620]: "10"
+              - generic [ref=e621]: return (rsi < 28) & (vov > 1.4)
+            - generic [ref=e623]: "11"
+            - generic [ref=e625]:
+              - generic [ref=e626]: "12"
+              - generic [ref=e627]: result = walk_forward(signal, splits=5)
+            - generic [ref=e629]: "13"
+            - generic [ref=e631]:
+              - generic [ref=e632]: O
+              - generic [ref=e633]: → walk-forward sharpe 2.41 · max DD −7.8% · OOS Sharpe 2.18
+            - generic [ref=e634]:
+              - generic [ref=e635]: O
+              - generic [ref=e636]: "→ regime resilience: ✓ 2020 crash · ✓ 2022 rate hikes · ✓ 2024 vol crush"
+            - generic [ref=e637]:
+              - generic [ref=e638]: O
+              - generic [ref=e639]: → ready to paper-deploy. 60-day live wall starts on submit.
+          - generic [ref=e640]:
+            - generic [ref=e641]:
+              - generic [ref=e642]: walk-forward equity curve
+              - generic [ref=e643]: +218% · 3y
+            - img [ref=e644]
+          - generic [ref=e647]:
+            - generic [ref=e648]:
+              - generic [ref=e649]: OOS Sharpe
+              - generic [ref=e650]: "2.18"
+            - generic [ref=e651]:
+              - generic [ref=e652]: Max DD
+              - generic [ref=e653]: −7.8%
+            - generic [ref=e654]:
+              - generic [ref=e655]: Wins regime
+              - generic [ref=e656]: 3 / 3
+        - generic [ref=e657]:
+          - generic [ref=e658]: ai assist · live
+          - generic [ref=e659]:
+            - generic [ref=e660]:
+              - generic [ref=e661]: AI
+              - generic [ref=e662]: "Suggesting: add a position-sizing rule to cap single-name exposure at 8%."
+            - generic [ref=e663]:
+              - generic [ref=e664]:
+                - generic [ref=e665]: ●
+                - text: ✓ walk-forward enforced · no overfit
+              - generic [ref=e666]:
+                - generic [ref=e667]: ●
+                - text: ✓ regime stress test · 3 historical crises
+              - generic [ref=e668]:
+                - generic [ref=e669]: ●
+                - text: ✓ position sizing rules attached
+              - generic [ref=e670]:
+                - generic [ref=e671]: ●
+                - text: ✓ slippage + fees baked in (Alpaca / Zerodha)
+              - generic [ref=e672]:
+                - generic [ref=e673]: ●
+                - text: ✓ paper deploy + 60-day wall before live capital
+            - button "deploy to paper →" [ref=e674]:
+              - generic [ref=e675]: deploy to paper
+              - generic [ref=e677]: →
+            - generic [ref=e678]: free GPU · free OHLCV · charged only for alt-data subscriptions
+    - generic [ref=e679]:
+      - generic [ref=e681]:
+        - generic [ref=e682]:
+          - generic [ref=e683]: ⟢ Section 03 / The data commons
+          - generic [ref=e684]: // data.alt
+        - generic [ref=e685]:
+          - heading "Bloomberg's data, at a price a kid can afford." [level=2] [ref=e686]:
+            - text: Bloomberg's data,
+            - generic [ref=e687]: at a price a kid can afford.
+          - paragraph [ref=e688]: "Bloomberg Terminal: $24K/year. Refinitiv: similar. We negotiate the same alt-data feeds and resell them at a fraction. The unfair advantage retail has never had."
+      - generic [ref=e690]:
+        - generic [ref=e691]:
+          - generic [ref=e692]:
+            - generic [ref=e693]: ✦
+            - generic [ref=e694]: $6/mo
+          - generic [ref=e695]:
+            - generic [ref=e696]: Reddit + X sentiment embeddings
+            - generic [ref=e697]: ML / news
+          - generic [ref=e698]:
+            - generic [ref=e699]: merged into your DataFrame
+            - generic [ref=e700]: add →
+        - generic [ref=e701]:
+          - generic [ref=e702]:
+            - generic [ref=e703]: ⌖
+            - generic [ref=e704]: $14/mo
+          - generic [ref=e705]:
+            - generic [ref=e706]: Options unusual flow
+            - generic [ref=e707]: Options
+          - generic [ref=e708]:
+            - generic [ref=e709]: merged into your DataFrame
+            - generic [ref=e710]: add →
+        - generic [ref=e711]:
+          - generic [ref=e712]:
+            - generic [ref=e713]: ◉
+            - generic [ref=e714]: $12/mo
+          - generic [ref=e715]:
+            - generic [ref=e716]: Dark-pool prints
+            - generic [ref=e717]: Microstructure
+          - generic [ref=e718]:
+            - generic [ref=e719]: merged into your DataFrame
+            - generic [ref=e720]: add →
+        - generic [ref=e721]:
+          - generic [ref=e722]:
+            - generic [ref=e723]: ▲
+            - generic [ref=e724]: $4/mo
+          - generic [ref=e725]:
+            - generic [ref=e726]: Insider transactions
+            - generic [ref=e727]: Event-driven
+          - generic [ref=e728]:
+            - generic [ref=e729]: merged into your DataFrame
+            - generic [ref=e730]: add →
+        - generic [ref=e731]:
+          - generic [ref=e732]:
+            - generic [ref=e733]: ☁
+            - generic [ref=e734]: $3/mo
+          - generic [ref=e735]:
+            - generic [ref=e736]: NOAA weather + AG futures
+            - generic [ref=e737]: Macro / commodities
+          - generic [ref=e738]:
+            - generic [ref=e739]: merged into your DataFrame
+            - generic [ref=e740]: add →
+        - generic [ref=e741]:
+          - generic [ref=e742]:
+            - generic [ref=e743]: 🏛
+            - generic [ref=e744]: $5/mo
+          - generic [ref=e745]:
+            - generic [ref=e746]: Congressional trades + lobbying
+            - generic [ref=e747]: Macro / event
+          - generic [ref=e748]:
+            - generic [ref=e749]: merged into your DataFrame
+            - generic [ref=e750]: add →
+        - generic [ref=e751]:
+          - generic [ref=e752]:
+            - generic [ref=e753]: 🛰
+            - generic [ref=e754]: $18/mo
+          - generic [ref=e755]:
+            - generic [ref=e756]: Low-res satellite (parking, oil)
+            - generic [ref=e757]: Alternative
+          - generic [ref=e758]:
+            - generic [ref=e759]: merged into your DataFrame
+            - generic [ref=e760]: add →
+        - generic [ref=e761]:
+          - generic [ref=e762]:
+            - generic [ref=e763]: ↗
+            - generic [ref=e764]: free
+          - generic [ref=e765]:
+            - generic [ref=e766]: Google Trends + search velocity
+            - generic [ref=e767]: Sentiment
+          - generic [ref=e768]:
+            - generic [ref=e769]: no API key needed
+            - generic [ref=e770]: add →
+        - generic [ref=e771]:
+          - generic [ref=e772]:
+            - generic [ref=e773]: 📰
+            - generic [ref=e774]: $4/mo
+          - generic [ref=e775]:
+            - generic [ref=e776]: News headlines + entity tags
+            - generic [ref=e777]: ML / news
+          - generic [ref=e778]:
+            - generic [ref=e779]: merged into your DataFrame
+            - generic [ref=e780]: add →
+    - generic [ref=e781]:
+      - generic [ref=e783]:
+        - generic [ref=e784]:
+          - generic [ref=e785]: ⟢ Section 04 / The killer
+          - generic [ref=e786]: // allocate.engine
+        - generic [ref=e787]:
+          - heading "The platform is your LP." [level=2] [ref=e788]:
+            - text: The platform
+            - generic [ref=e789]: is your LP.
+          - paragraph [ref=e790]: Top bots each month get real capital from a platform-owned pool. Owner takes 60%. Platform 10%. 30% replenishes the pool. No outside fundraising required.
+      - generic [ref=e793]:
+        - generic [ref=e794]:
+          - generic [ref=e795]: platform capital pool
+          - generic [ref=e796]: $2,000,000
+          - generic [ref=e797]: live · auto-replenishes from monthly performance fees
+          - generic [ref=e798]:
+            - generic [ref=e799]:
+              - generic [ref=e800]:
+                - generic [ref=e801]: Pool size
+                - generic [ref=e802]: $2,000,000
+              - slider [ref=e803]: "2000000"
+            - generic [ref=e804]:
+              - generic [ref=e805]:
+                - generic [ref=e806]: Monthly profit (assumed)
+                - generic [ref=e807]: $120,000
+              - slider [ref=e808]: "120000"
+          - generic [ref=e809]:
+            - generic [ref=e810]:
+              - generic [ref=e811]: Top-N bots receive allocation
+              - generic [ref=e812]: "10"
+            - generic [ref=e813]:
+              - generic [ref=e814]: Owner take of profits
+              - generic [ref=e815]: 60%
+            - generic [ref=e816]:
+              - generic [ref=e817]: Platform take
+              - generic [ref=e818]: 10%
+            - generic [ref=e819]:
+              - generic [ref=e820]: Replenishes pool
+              - generic [ref=e821]: 30%
+        - generic [ref=e822]:
+          - generic [ref=e823]: monthly profit split · live
+          - generic [ref=e824]:
+            - generic: owner · 60%
+            - generic: fee · 10%
+            - generic: pool · 30%
+          - generic [ref=e825]:
+            - generic [ref=e826]:
+              - generic [ref=e827]: To owner
+              - generic [ref=e828]: $72,000
+              - generic [ref=e829]: paid out monthly
+            - generic [ref=e830]:
+              - generic [ref=e831]: Platform fee
+              - generic [ref=e832]: $12,000
+              - generic [ref=e833]: our cut
+            - generic [ref=e834]:
+              - generic [ref=e835]: Pool reinvest
+              - generic [ref=e836]: $36,000
+              - generic [ref=e837]: grows the next allocation
+          - generic [ref=e838]: A 19-year-old quant in Singapore can earn $72,000 this month without raising a single dollar of outside capital. The platform IS their LP.
+          - generic [ref=e839]:
+            - generic [ref=e840]:
+              - generic [ref=e841]: 60-day live wall
+              - generic [ref=e842]: Backtests are not ranked. Only broker-verified live performance enters allocation.
+            - generic [ref=e843]:
+              - generic [ref=e844]: Cohort-relative
+              - generic [ref=e845]: Vol bots compete with vol bots. Different games, different leaderboards.
+            - generic [ref=e846]:
+              - generic [ref=e847]: Multi-regime
+              - generic [ref=e848]: Capital only to bots that survived a vol spike, a vol crush, and a rate-regime shift.
+            - generic [ref=e849]:
+              - generic [ref=e850]: Drawdown leash
+              - generic [ref=e851]: Auto-pause if a bot exceeds its declared max DD. Capital returns to pool.
+    - generic [ref=e852]:
+      - generic [ref=e854]:
+        - generic [ref=e855]:
+          - generic [ref=e856]: ⟢ Section 05 / The retail bridge
+          - generic [ref=e857]: // marketplace
+        - heading "Don't write code? Just copy the verified ones." [level=2] [ref=e859]:
+          - text: Don't write code?
+          - generic [ref=e860]: Just copy the verified ones.
+      - generic [ref=e862]:
+        - generic [ref=e863]:
+          - generic [ref=e864]: copy these · live verified
+          - generic [ref=e865]:
+            - generic [ref=e866] [cursor=pointer]:
+              - generic [ref=e867]:
+                - generic [ref=e868]: "@meta_aarav"
+                - generic [ref=e869]: live · 184d
+              - generic [ref=e870]: Vol Crush Hunter v3
+              - generic [ref=e871]:
+                - generic [ref=e872]:
+                  - generic [ref=e873]: Sharpe
+                  - generic [ref=e874]: "3.41"
+                - generic [ref=e875]:
+                  - generic [ref=e876]: YTD
+                  - generic [ref=e877]: +127%
+                - generic [ref=e878]:
+                  - generic [ref=e879]: Sub
+                  - generic [ref=e880]: $22/mo
+              - button "copy this bot →" [ref=e881]:
+                - generic [ref=e882]: copy this bot
+                - generic [ref=e883]: →
+            - generic [ref=e884] [cursor=pointer]:
+              - generic [ref=e885]:
+                - generic [ref=e886]: "@yukiquant"
+                - generic [ref=e887]: live · 412d
+              - generic [ref=e888]: Earnings Drift v3
+              - generic [ref=e889]:
+                - generic [ref=e890]:
+                  - generic [ref=e891]: Sharpe
+                  - generic [ref=e892]: "2.87"
+                - generic [ref=e893]:
+                  - generic [ref=e894]: YTD
+                  - generic [ref=e895]: +89%
+                - generic [ref=e896]:
+                  - generic [ref=e897]: Sub
+                  - generic [ref=e898]: $20/mo
+              - button "copy this bot →" [ref=e899]:
+                - generic [ref=e900]: copy this bot
+                - generic [ref=e901]: →
+            - generic [ref=e902] [cursor=pointer]:
+              - generic [ref=e903]:
+                - generic [ref=e904]: "@meichen"
+                - generic [ref=e905]: live · 268d
+              - generic [ref=e906]: MRev SP500 baskets
+              - generic [ref=e907]:
+                - generic [ref=e908]:
+                  - generic [ref=e909]: Sharpe
+                  - generic [ref=e910]: "2.62"
+                - generic [ref=e911]:
+                  - generic [ref=e912]: YTD
+                  - generic [ref=e913]: +71%
+                - generic [ref=e914]:
+                  - generic [ref=e915]: Sub
+                  - generic [ref=e916]: $18/mo
+              - button "copy this bot →" [ref=e917]:
+                - generic [ref=e918]: copy this bot
+                - generic [ref=e919]: →
+            - generic [ref=e920] [cursor=pointer]:
+              - generic [ref=e921]:
+                - generic [ref=e922]: "@dmarin_q"
+                - generic [ref=e923]: live · 198d
+              - generic [ref=e924]: Gamma flip detector
+              - generic [ref=e925]:
+                - generic [ref=e926]:
+                  - generic [ref=e927]: Sharpe
+                  - generic [ref=e928]: "2.44"
+                - generic [ref=e929]:
+                  - generic [ref=e930]: YTD
+                  - generic [ref=e931]: +65%
+                - generic [ref=e932]:
+                  - generic [ref=e933]: Sub
+                  - generic [ref=e934]: $17/mo
+              - button "copy this bot →" [ref=e935]:
+                - generic [ref=e936]: copy this bot
+                - generic [ref=e937]: →
+        - generic [ref=e938]:
+          - generic [ref=e939]: copy-trade tiers
+          - list [ref=e940]:
+            - listitem [ref=e941]:
+              - generic [ref=e942]: $5
+              - generic [ref=e943]:
+                - generic [ref=e944]: / month
+                - generic [ref=e945]: Single bot · paper-only mirror
+            - listitem [ref=e946]:
+              - generic [ref=e947]: $15
+              - generic [ref=e948]:
+                - generic [ref=e949]: / month
+                - generic [ref=e950]: Single bot · live copy-trade · 1× sizing
+            - listitem [ref=e951]:
+              - generic [ref=e952]: $30
+              - generic [ref=e953]:
+                - generic [ref=e954]: / month
+                - generic [ref=e955]: Bundle · top 3 in a cohort
+            - listitem [ref=e956]:
+              - generic [ref=e957]: $50
+              - generic [ref=e958]:
+                - generic [ref=e959]: / month
+                - generic [ref=e960]: Pro · meta-bot of top 1,000 weighted by Sharpe
+          - generic [ref=e961]:
+            - generic [ref=e962]: subscription split
+            - generic [ref=e963]:
+              - generic [ref=e964]: bot owner · 70%
+              - generic [ref=e965]: platform · 30%
+            - generic [ref=e966]:
+              - generic [ref=e967]:
+                - generic [ref=e968]: Only verified bots
+                - generic [ref=e969]: 60+ days live · cryptographic broker proof. No 'I'll teach you'.
+              - generic [ref=e970]:
+                - generic [ref=e971]: Forking + revenue share
+                - generic [ref=e972]: Fork @ravi → if you profit, original gets a small attribution cut.
+    - generic [ref=e973]:
+      - generic [ref=e975]:
+        - generic [ref=e976]:
+          - generic [ref=e977]: ⟢ Section 06 / The funnel
+          - generic [ref=e978]: // olympics
+        - generic [ref=e979]:
+          - heading "Quant Olympics. Sponsored by the funds that hire you." [level=2] [ref=e980]:
+            - text: Quant Olympics.
+            - generic [ref=e981]: Sponsored by the funds that hire you.
+          - paragraph [ref=e982]: Citadel, Two Sigma and Jane Street currently spend millions on campus recruiting. Now they sponsor the leaderboard, and the leaderboard becomes their hiring funnel. "Won the 2026 Quant Olympics, now at Citadel" goes viral. More kids sign up. Loop.
+      - generic [ref=e984]:
+        - article [ref=e985]:
+          - generic [ref=e986]:
+            - generic [ref=e987]:
+              - text: sponsored by
+              - generic [ref=e989]: Citadel
+            - generic [ref=e990]: deadline Jul 31
+          - heading "Q2 Earnings Move Predictor" [level=3] [ref=e991]
+          - paragraph [ref=e992]: Best directional + magnitude predictor for SPX-500 Q2 prints. Scored on Brier + ROI.
+          - generic [ref=e994]:
+            - generic [ref=e995]: 62% of window elapsed
+            - generic [ref=e996]: 1,842 entrants
+          - generic [ref=e998]:
+            - generic [ref=e999]:
+              - generic [ref=e1000]: prize pool
+              - generic [ref=e1001]: $25,000
+            - button "enter →" [ref=e1002]
+        - article [ref=e1003]:
+          - generic [ref=e1004]:
+            - generic [ref=e1005]:
+              - text: sponsored by
+              - generic [ref=e1007]: Two Sigma
+            - generic [ref=e1008]: deadline Sep 15
+          - heading "Vol-Regime Sharpe Olympics" [level=3] [ref=e1009]
+          - paragraph [ref=e1010]: Highest Sharpe across one rising-vol and one crushing-vol month. Cherry-picked regimes blocked.
+          - generic [ref=e1012]:
+            - generic [ref=e1013]: 31% of window elapsed
+            - generic [ref=e1014]: 2,104 entrants
+          - generic [ref=e1016]:
+            - generic [ref=e1017]:
+              - generic [ref=e1018]: prize pool
+              - generic [ref=e1019]: $50,000
+            - button "enter →" [ref=e1020]
+        - article [ref=e1021]:
+          - generic [ref=e1022]:
+            - generic [ref=e1023]:
+              - text: sponsored by
+              - generic [ref=e1025]: DE Shaw
+            - generic [ref=e1026]: deadline Aug 14
+          - heading "ESG Signal Hackathon" [level=3] [ref=e1027]
+          - paragraph [ref=e1028]: Ship an ML signal that beats the MSCI ESG Leaders index by ≥150bps after costs over 90d live.
+          - generic [ref=e1030]:
+            - generic [ref=e1031]: 45% of window elapsed
+            - generic [ref=e1032]: 612 entrants
+          - generic [ref=e1034]:
+            - generic [ref=e1035]:
+              - generic [ref=e1036]: prize pool
+              - generic [ref=e1037]: $15,000
+            - button "enter →" [ref=e1038]
+        - article [ref=e1039]:
+          - generic [ref=e1040]:
+            - generic [ref=e1041]:
+              - text: sponsored by
+              - generic [ref=e1043]: Jane Street
+            - generic [ref=e1044]: deadline Jul 18
+          - heading "0DTE Survivability" [level=3] [ref=e1045]
+          - paragraph [ref=e1046]: Highest Sharpe trading SPX 0DTE for 30 consecutive days with max DD ≤ 8%.
+          - generic [ref=e1048]:
+            - generic [ref=e1049]: 83% of window elapsed
+            - generic [ref=e1050]: 988 entrants
+          - generic [ref=e1052]:
+            - generic [ref=e1053]:
+              - generic [ref=e1054]: prize pool
+              - generic [ref=e1055]: $10,000
+            - button "enter →" [ref=e1056]
+    - generic [ref=e1057]:
+      - generic [ref=e1059]:
+        - generic [ref=e1060]:
+          - generic [ref=e1061]: ⟢ Section 07 / The loop
+          - generic [ref=e1062]: // growth
+        - heading "How this grows like Roblox grew." [level=2] [ref=e1064]:
+          - text: How this grows
+          - generic [ref=e1065]: like Roblox grew.
+      - list [ref=e1067]:
+        - listitem [ref=e1068]:
+          - generic [ref=e1070]: "01"
+          - generic [ref=e1071]:
+            - generic [ref=e1072]: Math nerd kid signs up
+            - generic [ref=e1073]: free studio · free OHLCV
+        - listitem [ref=e1074]:
+          - generic [ref=e1076]: "02"
+          - generic [ref=e1077]:
+            - generic [ref=e1078]: Builds a bot in the studio
+            - generic [ref=e1079]: AI scaffolds the boilerplate
+        - listitem [ref=e1080]:
+          - generic [ref=e1082]: "03"
+          - generic [ref=e1083]:
+            - generic [ref=e1084]: Forced through 60d live wall
+            - generic [ref=e1085]: no backtest beauty contests
+        - listitem [ref=e1086]:
+          - generic [ref=e1088]: "04"
+          - generic [ref=e1089]:
+            - generic [ref=e1090]: Hits the leaderboard
+            - generic [ref=e1091]: first followers arrive
+        - listitem [ref=e1092]:
+          - generic [ref=e1094]: "05"
+          - generic [ref=e1095]:
+            - generic [ref=e1096]: Subscription revenue starts
+            - generic [ref=e1097]: $100s → $1,000s / month
+        - listitem [ref=e1098]:
+          - generic [ref=e1100]: "06"
+          - generic [ref=e1101]:
+            - generic [ref=e1102]: Cracks top 100 → capital
+            - generic [ref=e1103]: platform becomes their LP
+        - listitem [ref=e1104]:
+          - generic [ref=e1106]: "07"
+          - generic [ref=e1107]:
+            - generic [ref=e1108]: "\"Bedroom to $50k/mo\" tweet"
+            - generic [ref=e1109]: viral story · waitlist forms
+        - listitem [ref=e1110]:
+          - generic [ref=e1112]: "08"
+          - generic [ref=e1113]:
+            - generic [ref=e1114]: 10,000 more math nerds sign up
+            - generic [ref=e1115]: the loop closes
+    - generic [ref=e1116]:
+      - generic [ref=e1118]:
+        - generic [ref=e1119]:
+          - generic [ref=e1120]: ⟢ Section 08 / Honest brief
+          - generic [ref=e1121]: // risks.md
+        - heading "Six things that could kill us. Read them." [level=2] [ref=e1123]:
+          - text: Six things that
+          - generic [ref=e1124]: could kill us. Read them.
+      - generic [ref=e1126]:
+        - article [ref=e1127]:
+          - generic [ref=e1128]:
+            - generic [ref=e1129]: ⚖
+            - generic [ref=e1130]:
+              - generic [ref=e1131]: risk · 01
+              - generic [ref=e1132]: Regulation is the hardest problem
+          - paragraph [ref=e1133]: Allocating capital to someone else's bot may constitute an unregistered investment company. Copy-trading retail-to-retail edges into investment-advice territory in most jurisdictions.
+          - generic [ref=e1134]: our answerUsers execute on their own brokerage accounts. The capital pool is structured as a regulated fund or prize program per jurisdiction (SEBI / SEC / MiFID II). Securities counsel engaged before any capital flows.
+        - article [ref=e1135]:
+          - generic [ref=e1136]:
+            - generic [ref=e1137]: 📉
+            - generic [ref=e1138]:
+              - generic [ref=e1139]: risk · 02
+              - generic [ref=e1140]: Survivorship bias
+          - paragraph [ref=e1141]: With 10,000 bots running, by pure chance some will look amazing. Your leaderboard fills with lucky bots that revert once you allocate them money.
+          - generic [ref=e1142]: "our answerLong lookback windows (60d live wall + 90d for capital). Cohort-relative ranking. Regime-stress filters: must survive a vol spike, a vol crush, and a rate-regime shift."
+        - article [ref=e1143]:
+          - generic [ref=e1144]:
+            - generic [ref=e1145]: 💸
+            - generic [ref=e1146]:
+              - generic [ref=e1147]: risk · 03
+              - generic [ref=e1148]: Data costs eat you alive
+          - paragraph [ref=e1149]: Real institutional data costs serious money. Bloomberg is $24K/year per seat. Building a Bloomberg-equivalent on day one would burn the company.
+          - generic [ref=e1150]: our answerStart with equities + options chains + a few alt sources we negotiate cheap. Add data as revenue grows. Subsidize a 'good-enough' Bloomberg substitute, not a perfect one.
+        - article [ref=e1151]:
+          - generic [ref=e1152]:
+            - generic [ref=e1153]: 🔌
+            - generic [ref=e1154]:
+              - generic [ref=e1155]: risk · 04
+              - generic [ref=e1156]: Brokerage integration is grunt work
+          - paragraph [ref=e1157]: Each broker has its own API, latency, quirks, fee structure. Death by a thousand cuts.
+          - generic [ref=e1158]: our answerStart with Alpaca (US) and Zerodha (IN). Get them bulletproof. Add Interactive Brokers, Tradier, Binance later. Each broker requires its own ops runbook.
+        - article [ref=e1159]:
+          - generic [ref=e1160]:
+            - generic [ref=e1161]: 🗑
+            - generic [ref=e1162]:
+              - generic [ref=e1163]: risk · 05
+              - generic [ref=e1164]: First 1,000 bots will mostly be garbage
+          - paragraph [ref=e1165]: Most strategies that look great in backtest don't survive contact with live markets. Featuring noise destroys credibility.
+          - generic [ref=e1166]: our answerCurate ruthlessly. Feature only bots that earned their spot through 60-day live verification. Empty leaderboard > fake-impressive leaderboard.
+        - article [ref=e1167]:
+          - generic [ref=e1168]:
+            - generic [ref=e1169]: 🤖
+            - generic [ref=e1170]:
+              - generic [ref=e1171]: risk · 06
+              - generic [ref=e1172]: LLMs hallucinate numbers
+          - paragraph [ref=e1173]: If we let GPT predict probabilities directly, we ship a casino dressed up as quant.
+          - generic [ref=e1174]: our answerLLMs only narrate user theses and translate Greeks to plain English. They never produce probabilities or signals. The math has to come from real models — Black-Scholes, Heston, Monte Carlo, empirical bootstraps.
+    - generic [ref=e1175]:
+      - generic [ref=e1177]:
+        - generic [ref=e1178]:
+          - generic [ref=e1179]: ⟢ Section 09 / Schedule
+          - generic [ref=e1180]: // roadmap.md
+        - heading "Twelve months. No moonshots. Wedges." [level=2] [ref=e1182]:
+          - text: Twelve months.
+          - generic [ref=e1183]: No moonshots. Wedges.
+      - generic [ref=e1185]:
+        - article [ref=e1186]:
+          - generic [ref=e1188]: M01–02
+          - heading "The Studio" [level=3] [ref=e1190]
+          - paragraph [ref=e1191]: Browser notebook + free OHLCV + walk-forward backtests. No leaderboard, no money. Just the best place to write a strategy. Ship to quant Twitter.
+        - article [ref=e1192]:
+          - generic [ref=e1194]: M03–04
+          - heading "Paper deploy + leaderboard" [level=3] [ref=e1196]
+          - paragraph [ref=e1197]: Bots can paper-trade to a real broker API. Cohort-ranked. The 60-day live wall begins.
+        - article [ref=e1198]:
+          - generic [ref=e1200]: M05–06
+          - heading "First Quant Olympics" [level=3] [ref=e1202]
+          - paragraph [ref=e1203]: $5K out-of-pocket prize pool. Make noise. Pull in the first wave of 10K signups.
+        - article [ref=e1204]:
+          - generic [ref=e1206]: M07–09
+          - heading "Live trading via brokerage API" [level=3] [ref=e1208]
+          - paragraph [ref=e1209]: Alpaca + Zerodha + Interactive. Bots crossing the 60-day wall qualify for capital.
+        - article [ref=e1210]:
+          - generic [ref=e1212]: M10–12
+          - heading "First capital allocation pool" [level=3] [ref=e1214]
+          - paragraph [ref=e1215]: $100K platform-funded. Top 10 bots get real money. The first viral 'bedroom to $50K/mo' tweet.
+        - article [ref=e1216]:
+          - generic [ref=e1218]: Year 2
+          - heading "Marketplace + BYO LLM + sponsor tournaments" [level=3] [ref=e1220]
+          - paragraph [ref=e1221]: Copy-trading goes live. LLM-augmented leaderboard. Citadel / Two Sigma sponsor real prize pools.
+    - generic [ref=e1223]:
+      - heading "Bedroom in Mumbai → Two Sigma offer letter." [level=3] [ref=e1224]:
+        - text: Bedroom in Mumbai
+        - text: → Two Sigma offer letter.
+      - paragraph [ref=e1225]: That's the story we're trying to make routine. Open the studio. Build something. We'll do the rest — capital, audience, infrastructure, audit trail. If alpha is more democratically distributed than the industry pretends, we both find out together.
+      - generic [ref=e1226]:
+        - link "Open the studio" [ref=e1227] [cursor=pointer]:
+          - /url: "#studio"
+          - text: Open the studio
+          - img [ref=e1229]
+        - link "See who's already winning" [ref=e1231] [cursor=pointer]:
+          - /url: "#leaderboard"
+        - link "How capital allocation works" [ref=e1232] [cursor=pointer]:
+          - /url: "#capital"
+    - generic [ref=e1233]:
+      - generic [ref=e1235]:
+        - generic [ref=e1236]:
+          - paragraph [ref=e1237]: ⟢ Last call
+          - heading "The chain is open. Drag something." [level=3] [ref=e1238]:
+            - text: The chain is open.
+            - text: Drag something.
+        - generic [ref=e1240]:
+          - generic [ref=e1241]: One email a week · a single new strategy explained
+          - generic [ref=e1242]:
+            - generic [ref=e1243]: $
+            - textbox "learner@inbox.io" [ref=e1244]
+            - button "Subscribe →" [ref=e1245]
+          - paragraph [ref=e1246]: no upsells. one strategy per email. unsubscribe with /quit.
+      - heading [level=2] [ref=e1248]: lazybull.
+      - generic [ref=e1249]:
+        - generic [ref=e1250]:
+          - generic [ref=e1251]: Manifesto
+          - paragraph [ref=e1252]:
+            - text: Options shouldn't be a guessing game.
+            - text: Make them visible. Make them safe.
+          - generic [ref=e1253]:
+            - link "TW" [ref=e1254] [cursor=pointer]:
+              - /url: "#"
+            - link "GH" [ref=e1255] [cursor=pointer]:
+              - /url: "#"
+            - link "DC" [ref=e1256] [cursor=pointer]:
+              - /url: "#"
+            - link "TG" [ref=e1257] [cursor=pointer]:
+              - /url: "#"
+            - link "YT" [ref=e1258] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e1259]:
+          - generic [ref=e1260]: Product
+          - list [ref=e1261]:
+            - listitem [ref=e1262]:
+              - link "› Visual chain" [ref=e1263] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1264]: ›
+                - text: Visual chain
+            - listitem [ref=e1265]:
+              - link "› AI teacher" [ref=e1266] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1267]: ›
+                - text: AI teacher
+            - listitem [ref=e1268]:
+              - link "› Strategy detector" [ref=e1269] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1270]: ›
+                - text: Strategy detector
+            - listitem [ref=e1271]:
+              - link "› Paper trading" [ref=e1272] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1273]: ›
+                - text: Paper trading
+            - listitem [ref=e1274]:
+              - link "› Safety wheels" [ref=e1275] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1276]: ›
+                - text: Safety wheels
+            - listitem [ref=e1277]:
+              - link "› Roadmap" [ref=e1278] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1279]: ›
+                - text: Roadmap
+        - generic [ref=e1280]:
+          - generic [ref=e1281]: Learn
+          - list [ref=e1282]:
+            - listitem [ref=e1283]:
+              - link "› What's an option?" [ref=e1284] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1285]: ›
+                - text: What's an option?
+            - listitem [ref=e1286]:
+              - link "› Greeks 101" [ref=e1287] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1288]: ›
+                - text: Greeks 101
+            - listitem [ref=e1289]:
+              - link "› Spreads 101" [ref=e1290] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1291]: ›
+                - text: Spreads 101
+            - listitem [ref=e1292]:
+              - link "› Iron condors" [ref=e1293] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1294]: ›
+                - text: Iron condors
+            - listitem [ref=e1295]:
+              - link "› Glossary" [ref=e1296] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1297]: ›
+                - text: Glossary
+            - listitem [ref=e1298]:
+              - link "› Worked examples" [ref=e1299] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1300]: ›
+                - text: Worked examples
+        - generic [ref=e1301]:
+          - generic [ref=e1302]: Build
+          - list [ref=e1303]:
+            - listitem [ref=e1304]:
+              - link "› Public API" [ref=e1305] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1306]: ›
+                - text: Public API
+            - listitem [ref=e1307]:
+              - link "› Strategy SDK" [ref=e1308] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1309]: ›
+                - text: Strategy SDK
+            - listitem [ref=e1310]:
+              - link "› Embeddable chain" [ref=e1311] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1312]: ›
+                - text: Embeddable chain
+            - listitem [ref=e1313]:
+              - link "› Webhooks" [ref=e1314] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1315]: ›
+                - text: Webhooks
+            - listitem [ref=e1316]:
+              - link "› Docs" [ref=e1317] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1318]: ›
+                - text: Docs
+            - listitem [ref=e1319]:
+              - link "› Changelog" [ref=e1320] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1321]: ›
+                - text: Changelog
+        - generic [ref=e1322]:
+          - generic [ref=e1323]: About
+          - list [ref=e1324]:
+            - listitem [ref=e1325]:
+              - link "› Manifesto" [ref=e1326] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1327]: ›
+                - text: Manifesto
+            - listitem [ref=e1328]:
+              - link "› Safety" [ref=e1329] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1330]: ›
+                - text: Safety
+            - listitem [ref=e1331]:
+              - link "› Press" [ref=e1332] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1333]: ›
+                - text: Press
+            - listitem [ref=e1334]:
+              - link "› Brand kit" [ref=e1335] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1336]: ›
+                - text: Brand kit
+            - listitem [ref=e1337]:
+              - link "› Contact" [ref=e1338] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1339]: ›
+                - text: Contact
+            - listitem [ref=e1340]:
+              - link "› Status" [ref=e1341] [cursor=pointer]:
+                - /url: "#"
+                - generic [ref=e1342]: ›
+                - text: Status
+      - generic [ref=e1344]:
+        - generic [ref=e1345]:
+          - generic [ref=e1347]: paper-only beta · stable
+          - generic [ref=e1348]: ·
+          - generic [ref=e1349]: build a4f819 · v1.4.0
+          - generic [ref=e1350]: ·
+          - generic [ref=e1351]: region · iad-1
+        - generic [ref=e1352]:
+          - generic [ref=e1353]: © 2026 lazybull labs
+          - generic [ref=e1354]: ·
+          - link "privacy" [ref=e1355] [cursor=pointer]:
+            - /url: "#"
+          - generic [ref=e1356]: ·
+          - link "terms" [ref=e1357] [cursor=pointer]:
+            - /url: "#"
+          - generic [ref=e1358]: ·
+          - link "safety" [ref=e1359] [cursor=pointer]:
+            - /url: "#"
+      - paragraph [ref=e1361]: LAZYBULL is an educational platform for learning about options. We do not accept real funds, are not a registered broker-dealer, and do not provide investment advice. Paper-trading results are simulated using delayed market data and a Black-Scholes pricing model. Real options trading involves substantial risk and is not suitable for every investor.
+  - button "Open Next.js Dev Tools" [ref=e1367] [cursor=pointer]:
+    - img [ref=e1368]

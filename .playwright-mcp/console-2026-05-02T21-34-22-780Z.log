@@ -1,0 +1,90 @@
+[     181ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     199ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    6922ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[    6934ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   18852ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   18852ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   18852ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   18852ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   18852ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   19745ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   19761ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   19912ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   19912ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   19912ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   19912ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   19912ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   22140ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   22159ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   22992ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23005ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23286ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23303ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23456ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23465ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23825ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23838ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   23990ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   24002ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   25506ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   25527ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   26118ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   26118ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   26118ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   26118ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   26118ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   28630ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   28641ms] [LOG] [Fast Refresh] done in 111ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   28752ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   30701ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   31563ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   31564ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   31564ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   31564ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   31564ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   34370ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34411ms] [LOG] [Fast Refresh] done in 142ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   34457ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   37706ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   38558ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   38558ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   38558ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   38558ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   38558ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   39400ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   39400ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   39400ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   39400ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   39400ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   40258ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   40258ms] [WARNING] The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width. @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   44147ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   44147ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   44147ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   44148ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   44148ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   54133ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   54133ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   54133ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   54133ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   54133ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   58613ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   58613ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   58613ms] [ERROR] Error: <circle> attribute r: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   58613ms] [ERROR] Error: <line> attribute y2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   58613ms] [ERROR] Error: <path> attribute d: Expected moveto path command ('M' or 'm'), "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   65891ms] [ERROR] Error: <line> attribute x2: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   86837ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   86843ms] [ERROR] Error: <rect> attribute width: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   86879ms] [LOG] [Fast Refresh] done in 76ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   87545ms] [ERROR] Error: <rect> attribute width: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   91564ms] [ERROR] Error: <rect> attribute width: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[   92075ms] [ERROR] Error: <rect> attribute width: Expected length, "undefined". @ http://localhost:3001/_next/static/chunks/node_modules_motion-dom_dist_es_0n_wqqr._.js:3738
+[  100855ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  100872ms] [LOG] [Fast Refresh] done in 64ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

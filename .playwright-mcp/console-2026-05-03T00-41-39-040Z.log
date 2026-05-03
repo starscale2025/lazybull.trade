@@ -1,0 +1,169 @@
+[     311ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     349ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     440ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/trade" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="trade/page...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function TradePage} serverProvidedParams={{...}}>
+            <TradePage params={Promise} searchParams={Promise}>
+              <main className="flex min-h...">
+                <TickerBar>
+                <Nav>
+                <section>
+                <section>
+                <section className="relative b...">
+                  <div>
+                  <div className="relative m...">
+                    <div>
+                    <StrategyCards strategies={[...]} selectedId="income" onSelect={function onSelect} ...>
+                      <div className="grid grid-...">
+                        <Card s={{id:"cheap", ...}} spot={226.45} symbol="AMZN" selected={false} ...>
+                          <motion.button type="button" onClick={function onSelect} initial={{opacity:0,y:10}} ...>
+>                           <button
+>                             type="button"
+>                             onClick={function onSelect}
+>                             className="group relative flex flex-col gap-4 p-5 text-left transition-colors bg-bg hove..."
+>                             style={{opacity:0,transform:"translateY..."}}
+>                             ref={function useMotionRef.useCallback}
+>                           >
+                              <div>
+                              <div>
+                              <Sparkline>
+                              <div>
+                              <div>
+                              <p>
+                              <div className="mt-auto pt-2">
+>                               <button
+>                                 onClick={function onClick}
+>                                 className="inline-flex w-full items-center justify-between border px-4 py-2.5 font-m..."
+>                                 style={{borderColor:"var(--plasma)",color:"var(--plasma)",background:"transparent"}}
+>                               >
+                        ...
+                    ...
+                ...
+        ...
+      ...
+ @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[     441ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[     519ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <SegmentViewNode type="page" pagePath="trade/page...">
+      <SegmentTrieNode>
+      <ClientPageRoot Component={function TradePage} serverProvidedParams={{...}}>
+        <TradePage params={Promise} searchParams={Promise}>
+          <main className="flex min-h...">
+            <TickerBar>
+            <Nav>
+            <section>
+            <section className="relative b...">
+              <div>
+              <div className="mx-auto ma...">
+                <div className="h-[420px] ...">
+                  <ProbabilityCone bars={[...]} spot={226.45} iv={0.32} daysToExpiry={35} low={215.12749999999997} ...>
+                    <div ref={{current:null}} className="relative h...">
+                      <svg width="100%" height="100%" viewBox="0 0 800 360">
+                        <defs>
+                        <g>
+                        <g>
+                        <g>
+                        <g>
+                        <g>
+                        <path>
+                        <path>
+                        <path>
+                        <line>
+                        <path>
+                        <path>
+                        <line>
+                        <text>
+                        <rect>
+                        <g>
+                        <g>
+                        <g>
+                        <g>
+                        <g>
+                          <line>
+                          <g>
+                            <rect>
+                            <title>
++                             US CPI print
+                              ...
+                        ...
+                        ...
+                      ...
+            ...
+    ...
+
+    at throwOnHydrationMismatch (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at beginWork (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6760:752)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[   17017ms] [ERROR] ./components/wedge/StrategyCards.tsx:126:7
+Expected corresponding JSX closing tag for <motion.div>
+  124 |         </button>
+  125 |       </div>
+> 126 |     </motion.button>
+      |       ^^^^^^^^^^^^^
+  127 |   );
+  128 | }
+  129 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/wedge/StrategyCards.tsx [Client Component Browser]
+    ./app/trade/page.tsx [Client Component Browser]
+    ./app/trade/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/wedge/StrategyCards.tsx [Client Component SSR]
+    ./app/trade/page.tsx [Client Component SSR]
+    ./app/trade/page.tsx [Server Component] @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   17036ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   17132ms] [ERROR] ./components/wedge/StrategyCards.tsx:126:7
+Expected corresponding JSX closing tag for <motion.div>
+  124 |         </button>
+  125 |       </div>
+> 126 |     </motion.button>
+      |       ^^^^^^^^^^^^^
+  127 |   );
+  128 | }
+  129 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/wedge/StrategyCards.tsx [Client Component Browser]
+    ./app/trade/page.tsx [Client Component Browser]
+    ./app/trade/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/wedge/StrategyCards.tsx [Client Component SSR]
+    ./app/trade/page.tsx [Client Component SSR]
+    ./app/trade/page.tsx [Server Component] @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[   17179ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   28640ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   28674ms] [LOG] [Fast Refresh] done in 48ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

@@ -1,0 +1,1451 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e6]: LIVE
+      - generic [ref=e7]: ·
+      - generic [ref=e8]: NYSE OPEN
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: BTC
+        - generic [ref=e12]: 97,482.10
+        - generic [ref=e13]: +2.41%
+        - generic [ref=e14]: ·
+      - generic [ref=e15]:
+        - generic [ref=e16]: ETH
+        - generic [ref=e17]: 3,621.55
+        - generic [ref=e18]: +1.18%
+        - generic [ref=e19]: ·
+      - generic [ref=e20]:
+        - generic [ref=e21]: SOL
+        - generic [ref=e22]: "198.40"
+        - generic [ref=e23]: −0.62%
+        - generic [ref=e24]: ·
+      - generic [ref=e25]:
+        - generic [ref=e26]: NVDA
+        - generic [ref=e27]: "138.90"
+        - generic [ref=e28]: +3.07%
+        - generic [ref=e29]: ·
+      - generic [ref=e30]:
+        - generic [ref=e31]: TSLA
+        - generic [ref=e32]: "287.15"
+        - generic [ref=e33]: −1.44%
+        - generic [ref=e34]: ·
+      - generic [ref=e35]:
+        - generic [ref=e36]: AAPL
+        - generic [ref=e37]: "229.83"
+        - generic [ref=e38]: +0.51%
+        - generic [ref=e39]: ·
+      - generic [ref=e40]:
+        - generic [ref=e41]: MSFT
+        - generic [ref=e42]: "428.71"
+        - generic [ref=e43]: +0.92%
+        - generic [ref=e44]: ·
+      - generic [ref=e45]:
+        - generic [ref=e46]: AMD
+        - generic [ref=e47]: "162.04"
+        - generic [ref=e48]: −2.18%
+        - generic [ref=e49]: ·
+      - generic [ref=e50]:
+        - generic [ref=e51]: META
+        - generic [ref=e52]: "603.27"
+        - generic [ref=e53]: +1.74%
+        - generic [ref=e54]: ·
+      - generic [ref=e55]:
+        - generic [ref=e56]: GOOGL
+        - generic [ref=e57]: "189.05"
+        - generic [ref=e58]: +0.34%
+        - generic [ref=e59]: ·
+      - generic [ref=e60]:
+        - generic [ref=e61]: GME
+        - generic [ref=e62]: "31.20"
+        - generic [ref=e63]: +12.4%
+        - generic [ref=e64]: ·
+      - generic [ref=e65]:
+        - generic [ref=e66]: ARKK
+        - generic [ref=e67]: "60.18"
+        - generic [ref=e68]: −0.83%
+        - generic [ref=e69]: ·
+      - generic [ref=e70]:
+        - generic [ref=e71]: XAU
+        - generic [ref=e72]: 2,712.55
+        - generic [ref=e73]: +0.21%
+        - generic [ref=e74]: ·
+      - generic [ref=e75]:
+        - generic [ref=e76]: WTI
+        - generic [ref=e77]: "71.40"
+        - generic [ref=e78]: −1.06%
+        - generic [ref=e79]: ·
+      - generic [ref=e80]:
+        - generic [ref=e81]: EURUSD
+        - generic [ref=e82]: "1.0421"
+        - generic [ref=e83]: +0.08%
+        - generic [ref=e84]: ·
+      - generic [ref=e85]:
+        - generic [ref=e86]: USDJPY
+        - generic [ref=e87]: "157.83"
+        - generic [ref=e88]: −0.14%
+        - generic [ref=e89]: ·
+      - generic [ref=e90]:
+        - generic [ref=e91]: DOGE
+        - generic [ref=e92]: "0.3812"
+        - generic [ref=e93]: +5.62%
+        - generic [ref=e94]: ·
+      - generic [ref=e95]:
+        - generic [ref=e96]: AVAX
+        - generic [ref=e97]: "41.05"
+        - generic [ref=e98]: −2.91%
+        - generic [ref=e99]: ·
+      - generic [ref=e100]:
+        - generic [ref=e101]: BTC
+        - generic [ref=e102]: 97,482.10
+        - generic [ref=e103]: +2.41%
+        - generic [ref=e104]: ·
+      - generic [ref=e105]:
+        - generic [ref=e106]: ETH
+        - generic [ref=e107]: 3,621.55
+        - generic [ref=e108]: +1.18%
+        - generic [ref=e109]: ·
+      - generic [ref=e110]:
+        - generic [ref=e111]: SOL
+        - generic [ref=e112]: "198.40"
+        - generic [ref=e113]: −0.62%
+        - generic [ref=e114]: ·
+      - generic [ref=e115]:
+        - generic [ref=e116]: NVDA
+        - generic [ref=e117]: "138.90"
+        - generic [ref=e118]: +3.07%
+        - generic [ref=e119]: ·
+      - generic [ref=e120]:
+        - generic [ref=e121]: TSLA
+        - generic [ref=e122]: "287.15"
+        - generic [ref=e123]: −1.44%
+        - generic [ref=e124]: ·
+      - generic [ref=e125]:
+        - generic [ref=e126]: AAPL
+        - generic [ref=e127]: "229.83"
+        - generic [ref=e128]: +0.51%
+        - generic [ref=e129]: ·
+      - generic [ref=e130]:
+        - generic [ref=e131]: MSFT
+        - generic [ref=e132]: "428.71"
+        - generic [ref=e133]: +0.92%
+        - generic [ref=e134]: ·
+      - generic [ref=e135]:
+        - generic [ref=e136]: AMD
+        - generic [ref=e137]: "162.04"
+        - generic [ref=e138]: −2.18%
+        - generic [ref=e139]: ·
+      - generic [ref=e140]:
+        - generic [ref=e141]: META
+        - generic [ref=e142]: "603.27"
+        - generic [ref=e143]: +1.74%
+        - generic [ref=e144]: ·
+      - generic [ref=e145]:
+        - generic [ref=e146]: GOOGL
+        - generic [ref=e147]: "189.05"
+        - generic [ref=e148]: +0.34%
+        - generic [ref=e149]: ·
+      - generic [ref=e150]:
+        - generic [ref=e151]: GME
+        - generic [ref=e152]: "31.20"
+        - generic [ref=e153]: +12.4%
+        - generic [ref=e154]: ·
+      - generic [ref=e155]:
+        - generic [ref=e156]: ARKK
+        - generic [ref=e157]: "60.18"
+        - generic [ref=e158]: −0.83%
+        - generic [ref=e159]: ·
+      - generic [ref=e160]:
+        - generic [ref=e161]: XAU
+        - generic [ref=e162]: 2,712.55
+        - generic [ref=e163]: +0.21%
+        - generic [ref=e164]: ·
+      - generic [ref=e165]:
+        - generic [ref=e166]: WTI
+        - generic [ref=e167]: "71.40"
+        - generic [ref=e168]: −1.06%
+        - generic [ref=e169]: ·
+      - generic [ref=e170]:
+        - generic [ref=e171]: EURUSD
+        - generic [ref=e172]: "1.0421"
+        - generic [ref=e173]: +0.08%
+        - generic [ref=e174]: ·
+      - generic [ref=e175]:
+        - generic [ref=e176]: USDJPY
+        - generic [ref=e177]: "157.83"
+        - generic [ref=e178]: −0.14%
+        - generic [ref=e179]: ·
+      - generic [ref=e180]:
+        - generic [ref=e181]: DOGE
+        - generic [ref=e182]: "0.3812"
+        - generic [ref=e183]: +5.62%
+        - generic [ref=e184]: ·
+      - generic [ref=e185]:
+        - generic [ref=e186]: AVAX
+        - generic [ref=e187]: "41.05"
+        - generic [ref=e188]: −2.91%
+        - generic [ref=e189]: ·
+    - generic [ref=e190]:
+      - generic [ref=e191]: 14:23:08
+      - generic [ref=e192]: UTC
+  - navigation [ref=e193]:
+    - generic [ref=e194]:
+      - link "LB lazybull." [ref=e195] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e198]: LB
+        - generic [ref=e199]: lazybull.
+      - generic [ref=e200]:
+        - link "01 Markets" [ref=e201] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e202]: "01"
+          - generic [ref=e203]: Markets
+        - link "02 Charts" [ref=e204] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e205]: "02"
+          - generic [ref=e206]: Charts
+        - link "03 Strategies" [ref=e207] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e208]: "03"
+          - generic [ref=e209]: Strategies
+        - link "04 Community" [ref=e210] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e211]: "04"
+          - generic [ref=e212]: Community
+        - link "05 Pricing" [ref=e213] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e214]: "05"
+          - generic [ref=e215]: Pricing
+      - generic [ref=e216]:
+        - button "⌘ K Search" [ref=e217]:
+          - generic [ref=e218]: ⌘
+          - text: K
+          - generic [ref=e219]: Search
+        - link "Sign in" [ref=e220] [cursor=pointer]:
+          - /url: "#"
+        - link "Open Terminal" [ref=e221] [cursor=pointer]:
+          - /url: "#"
+          - text: Open Terminal
+          - img [ref=e223]
+  - generic [ref=e225]:
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - generic [ref=e228]: SESSION 04 / Q2-2026
+        - generic [ref=e229]: ·
+        - generic [ref=e230]: 42 EXCHANGES
+        - generic [ref=e231]: ·
+        - generic [ref=e232]: 14M ACTIVE
+      - generic [ref=e233]:
+        - generic [ref=e234]: VOL 2.4T
+        - generic [ref=e235]: ·
+        - generic [ref=e236]: VIX 14.82
+    - generic [ref=e237]:
+      - generic [ref=e238]:
+        - generic [ref=e239]:
+          - generic [ref=e240]: v4.7 // gamma
+          - generic [ref=e242]: SOC2 · ISO 27001
+          - generic [ref=e243]: 0.4ms median fill
+        - heading "Read the tape. Run the market." [level=1] [ref=e244]:
+          - text: Read the tape.
+          - text: Run the
+          - generic [ref=e245]: market.
+        - paragraph [ref=e246]: LAZYBULL is the terminal pros wire into their muscle memory. Order-flow grade charts, cross-venue execution, and a community that calls the move before the candle closes — all built for the screen-staring twelve-monitor crowd.
+        - generic [ref=e247]:
+          - link "Open the terminal" [ref=e248] [cursor=pointer]:
+            - /url: "#"
+            - text: Open the terminal
+            - img [ref=e249]
+          - link "Watch a live trade" [ref=e251] [cursor=pointer]:
+            - /url: "#"
+            - text: Watch a live trade
+          - generic [ref=e253]: Free · No card · 30-day pro
+        - generic [ref=e254]:
+          - generic [ref=e255]:
+            - generic [ref=e256]: Daily volume
+            - generic [ref=e257]: $24.6B
+            - generic [ref=e258]: across 42 venues
+          - generic [ref=e259]:
+            - generic [ref=e260]: Active terminals
+            - generic [ref=e261]: 184,231
+            - generic [ref=e262]: +12k this week
+          - generic [ref=e263]:
+            - generic [ref=e264]: Avg fill latency
+            - generic [ref=e265]: 0.4ms
+            - generic [ref=e266]: p99 1.2ms
+          - generic [ref=e267]:
+            - generic [ref=e268]: Trades / sec
+            - generic [ref=e269]: 12,408
+            - generic [ref=e270]: since open
+      - generic [ref=e271]:
+        - generic [ref=e272]:
+          - generic [ref=e273]:
+            - generic [ref=e278]: terminal · BTC-USD · 1H
+            - generic [ref=e279]: live
+          - generic [ref=e280]:
+            - generic [ref=e281]:
+              - generic [ref=e282]:
+                - generic [ref=e283]: BTC
+                - generic [ref=e284]: USD · COINBASE
+              - generic [ref=e285]: 70,279.79
+            - generic [ref=e286]:
+              - generic [ref=e287]: +9.47%
+              - generic [ref=e288]: +6079.79 1H
+          - img [ref=e290]:
+            - generic [ref=e292]: "71023.55"
+            - generic [ref=e294]: "69145.67"
+            - generic [ref=e296]: "67267.78"
+            - generic [ref=e298]: "65389.89"
+            - generic [ref=e300]: "63512.00"
+            - generic [ref=e449]: "70279.79"
+          - generic [ref=e452]:
+            - generic [ref=e453]:
+              - generic [ref=e454] [cursor=pointer]: 1m
+              - generic [ref=e455] [cursor=pointer]: 5m
+              - generic [ref=e456] [cursor=pointer]: 15m
+              - generic [ref=e457]: 1h
+              - generic [ref=e458] [cursor=pointer]: 4h
+              - generic [ref=e459] [cursor=pointer]: 1d
+              - generic [ref=e460] [cursor=pointer]: 1w
+            - generic [ref=e461]:
+              - generic [ref=e462]: EMA 20
+              - generic [ref=e463]: RSI 58
+              - generic [ref=e464]: BULL ›
+        - generic [ref=e465]:
+          - generic [ref=e466]:
+            - generic [ref=e467]:
+              - generic [ref=e468]: Order book
+              - generic [ref=e469]: depth · 5
+            - generic [ref=e470]:
+              - generic [ref=e471]:
+                - generic [ref=e473]: "64280.10"
+                - generic [ref=e474]: "2.41"
+              - generic [ref=e475]:
+                - generic [ref=e477]: "64274.50"
+                - generic [ref=e478]: "1.18"
+              - generic [ref=e479]:
+                - generic [ref=e481]: "64271.20"
+                - generic [ref=e482]: "0.62"
+              - generic [ref=e483]:
+                - generic [ref=e485]: "64268.90"
+                - generic [ref=e486]: "4.07"
+              - generic [ref=e487]:
+                - generic [ref=e489]: "64263.10"
+                - generic [ref=e490]: "1.44"
+              - generic [ref=e491]:
+                - generic [ref=e493]: "64260.55"
+                - generic [ref=e494]: "3.21"
+          - generic [ref=e495]:
+            - generic [ref=e497]: Signals
+            - generic [ref=e499]:
+              - generic [ref=e500]:
+                - generic [ref=e501]: ▲
+                - generic [ref=e502]: Whale loaded 312 BTC at 64,201
+              - generic [ref=e503]:
+                - generic [ref=e504]: "!"
+                - generic [ref=e505]: CPI print in 02:14:08
+              - generic [ref=e506]:
+                - generic [ref=e507]: ▼
+                - generic [ref=e508]: RSI divergence on 4H · cool down
+              - generic [ref=e509]:
+                - generic [ref=e510]: ~
+                - generic [ref=e511]: Funding flipped positive
+    - generic [ref=e513]:
+      - generic [ref=e514]:
+        - generic [ref=e515]:
+          - generic [ref=e516]: ⌖
+          - generic [ref=e517]: the terminal traders deserve
+        - generic [ref=e518]:
+          - generic [ref=e519]: ⌖
+          - generic [ref=e520]: 0.4ms fills
+        - generic [ref=e521]:
+          - generic [ref=e522]: ⌖
+          - generic [ref=e523]: 42 connected venues
+        - generic [ref=e524]:
+          - generic [ref=e525]: ⌖
+          - generic [ref=e526]: 184k active desks
+        - generic [ref=e527]:
+          - generic [ref=e528]: ⌖
+          - generic [ref=e529]: deep liquidity
+        - generic [ref=e530]:
+          - generic [ref=e531]: ⌖
+          - generic [ref=e532]: real-time order flow
+        - generic [ref=e533]:
+          - generic [ref=e534]: ⌖
+          - generic [ref=e535]: no spreads, no surprises
+        - generic [ref=e536]:
+          - generic [ref=e537]: ⌖
+          - generic [ref=e538]: open the tape
+      - generic [ref=e539]:
+        - generic [ref=e540]:
+          - generic [ref=e541]: ⌖
+          - generic [ref=e542]: the terminal traders deserve
+        - generic [ref=e543]:
+          - generic [ref=e544]: ⌖
+          - generic [ref=e545]: 0.4ms fills
+        - generic [ref=e546]:
+          - generic [ref=e547]: ⌖
+          - generic [ref=e548]: 42 connected venues
+        - generic [ref=e549]:
+          - generic [ref=e550]: ⌖
+          - generic [ref=e551]: 184k active desks
+        - generic [ref=e552]:
+          - generic [ref=e553]: ⌖
+          - generic [ref=e554]: deep liquidity
+        - generic [ref=e555]:
+          - generic [ref=e556]: ⌖
+          - generic [ref=e557]: real-time order flow
+        - generic [ref=e558]:
+          - generic [ref=e559]: ⌖
+          - generic [ref=e560]: no spreads, no surprises
+        - generic [ref=e561]:
+          - generic [ref=e562]: ⌖
+          - generic [ref=e563]: open the tape
+  - generic [ref=e564]:
+    - generic [ref=e566]:
+      - generic [ref=e567]:
+        - generic [ref=e568]: ⟢ Section 02 / Dossier
+        - generic [ref=e569]: // who-it's-for.md
+      - heading "Four kinds of trader. One terminal that gets it." [level=2] [ref=e571]:
+        - text: Four kinds of trader.
+        - generic [ref=e572]: One terminal that gets it.
+    - generic [ref=e574]:
+      - article [ref=e575]:
+        - generic [ref=e580]:
+          - generic [ref=e581]:
+            - generic [ref=e582]: FILE
+            - generic [ref=e583]: 01 / 04
+            - generic [ref=e584]: ·
+            - generic [ref=e585]: SCALPER-01
+          - generic [ref=e586]: ▲
+        - generic [ref=e587]:
+          - heading "The Day Trader" [level=3] [ref=e588]
+          - blockquote [ref=e589]: "\"I close more positions before lunch than most do in a month.\""
+        - paragraph [ref=e590]: Hotkey-grade execution, level 2 depth, and a 1-second tape that doesn't choke when volatility spikes. Built for the people who close 200+ tickets a session.
+        - generic [ref=e591]:
+          - generic [ref=e593]:
+            - generic [ref=e594]:
+              - generic [ref=e595]: 30D PnL
+              - generic [ref=e596]: + live
+            - img [ref=e598]
+          - generic [ref=e601]:
+            - generic [ref=e602]:
+              - generic [ref=e603]: Avg holding
+              - generic [ref=e604]: 4.2m
+            - generic [ref=e605]:
+              - generic [ref=e606]: Hotkeys
+              - generic [ref=e607]: "126"
+            - generic [ref=e608]:
+              - generic [ref=e609]: Slippage
+              - generic [ref=e610]: 0.012%
+        - generic [ref=e611]:
+          - generic [ref=e612]: stack
+          - generic [ref=e613]: Level 2
+          - generic [ref=e614]: DOM Ladder
+          - generic [ref=e615]: TPO Profile
+          - generic [ref=e616]: Hotkeys
+        - link "Open this workspace → SCALPER-01" [ref=e617] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e618]: Open this workspace →
+          - generic [ref=e619]: SCALPER-01
+      - article [ref=e620]:
+        - generic [ref=e625]:
+          - generic [ref=e626]:
+            - generic [ref=e627]: FILE
+            - generic [ref=e628]: 02 / 04
+            - generic [ref=e629]: ·
+            - generic [ref=e630]: POSITION-07
+          - generic [ref=e631]: ✦
+        - generic [ref=e632]:
+          - heading "The Swing Trader" [level=3] [ref=e633]
+          - blockquote [ref=e634]: "\"Patience is a position. The terminal lets me hold it.\""
+        - paragraph [ref=e635]: Multi-timeframe alignment, smart trailing stops, and macro overlays so you can hold for the move that actually matters — not the one that fits on a 1-minute chart.
+        - generic [ref=e636]:
+          - generic [ref=e638]:
+            - generic [ref=e639]:
+              - generic [ref=e640]: 30D PnL
+              - generic [ref=e641]: + live
+            - img [ref=e643]
+          - generic [ref=e646]:
+            - generic [ref=e647]:
+              - generic [ref=e648]: Avg holding
+              - generic [ref=e649]: 11d
+            - generic [ref=e650]:
+              - generic [ref=e651]: Win rate
+              - generic [ref=e652]: 62.4%
+            - generic [ref=e653]:
+              - generic [ref=e654]: Max DD
+              - generic [ref=e655]: −4.1%
+        - generic [ref=e656]:
+          - generic [ref=e657]: stack
+          - generic [ref=e658]: MTF View
+          - generic [ref=e659]: Trail Stops
+          - generic [ref=e660]: Macro Overlay
+          - generic [ref=e661]: Calendar
+        - link "Open this workspace → POSITION-07" [ref=e662] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e663]: Open this workspace →
+          - generic [ref=e664]: POSITION-07
+      - article [ref=e665]:
+        - generic [ref=e670]:
+          - generic [ref=e671]:
+            - generic [ref=e672]: FILE
+            - generic [ref=e673]: 03 / 04
+            - generic [ref=e674]: ·
+            - generic [ref=e675]: QUANT-Σ
+          - generic [ref=e676]: "{ }"
+        - generic [ref=e677]:
+          - heading "The Algo Quant" [level=3] [ref=e678]
+          - blockquote [ref=e679]: "\"Backtest at midnight. Deploy by morning. Sleep through the move.\""
+        - paragraph [ref=e680]: Python and TypeScript SDKs, paper-to-live in one click, walk-forward backtests against 12 years of tick data. Your edge, productionised.
+        - generic [ref=e681]:
+          - generic [ref=e683]:
+            - generic [ref=e684]:
+              - generic [ref=e685]: 30D PnL
+              - generic [ref=e686]: + live
+            - img [ref=e688]
+          - generic [ref=e691]:
+            - generic [ref=e692]:
+              - generic [ref=e693]: Strategies live
+              - generic [ref=e694]: "247"
+            - generic [ref=e695]:
+              - generic [ref=e696]: Tick history
+              - generic [ref=e697]: 12yrs
+            - generic [ref=e698]:
+              - generic [ref=e699]: Sharpe
+              - generic [ref=e700]: "2.81"
+        - generic [ref=e701]:
+          - generic [ref=e702]: stack
+          - generic [ref=e703]: Python SDK
+          - generic [ref=e704]: Backtest
+          - generic [ref=e705]: Paper
+          - generic [ref=e706]: Cron
+        - link "Open this workspace → QUANT-Σ" [ref=e707] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e708]: Open this workspace →
+          - generic [ref=e709]: QUANT-Σ
+      - article [ref=e710]:
+        - generic [ref=e715]:
+          - generic [ref=e716]:
+            - generic [ref=e717]: FILE
+            - generic [ref=e718]: 04 / 04
+            - generic [ref=e719]: ·
+            - generic [ref=e720]: WHALE-Ω
+          - generic [ref=e721]: ◉
+        - generic [ref=e722]:
+          - heading "The Institution" [level=3] [ref=e723]
+          - blockquote [ref=e724]: "\"Move size without moving the market. Or anyone's eyebrows.\""
+        - paragraph [ref=e725]: Cross-venue smart routing, RFQ to 14 dealers, and post-trade TCA reports your compliance team will actually let you publish. Up to $500M tickets.
+        - generic [ref=e726]:
+          - generic [ref=e728]:
+            - generic [ref=e729]:
+              - generic [ref=e730]: 30D PnL
+              - generic [ref=e731]: + live
+            - img [ref=e733]
+          - generic [ref=e736]:
+            - generic [ref=e737]:
+              - generic [ref=e738]: Max ticket
+              - generic [ref=e739]: $500M
+            - generic [ref=e740]:
+              - generic [ref=e741]: RFQ desks
+              - generic [ref=e742]: "14"
+            - generic [ref=e743]:
+              - generic [ref=e744]: Dark pools
+              - generic [ref=e745]: "9"
+        - generic [ref=e746]:
+          - generic [ref=e747]: stack
+          - generic [ref=e748]: SOR
+          - generic [ref=e749]: RFQ
+          - generic [ref=e750]: TCA
+          - generic [ref=e751]: Dark Pool
+        - link "Open this workspace → WHALE-Ω" [ref=e752] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e753]: Open this workspace →
+          - generic [ref=e754]: WHALE-Ω
+  - generic [ref=e755]:
+    - generic [ref=e757]:
+      - generic [ref=e758]:
+        - generic [ref=e759]: ⟢ Section 03 / Live preview
+        - heading "The terminal, streaming in real-time." [level=2] [ref=e760]:
+          - text: The terminal,
+          - text: streaming in real-time.
+      - paragraph [ref=e762]: Every panel below is wired to live market data. Switch assets, scrub the tape, watch the order book breathe. This is the workspace — just smaller.
+    - generic [ref=e763]:
+      - generic [ref=e764]:
+        - generic [ref=e765]:
+          - generic [ref=e766]:
+            - generic [ref=e768]: streaming
+            - generic [ref=e769]: ·
+            - generic [ref=e770]: terminal v4.7.2 · gamma
+            - generic [ref=e771]: ·
+            - generic [ref=e772]: workspace · "swing-desk"
+          - generic [ref=e773]:
+            - generic [ref=e774]: p99 0.8ms
+            - generic [ref=e775]: ·
+            - generic [ref=e776]: 42 venues
+            - generic [ref=e777]: ·
+            - generic [ref=e778]: session 04
+        - generic [ref=e779]:
+          - complementary [ref=e780]:
+            - generic [ref=e781]:
+              - generic [ref=e782]: watchlist
+              - generic [ref=e783]: "06"
+            - generic [ref=e784]:
+              - button "ETH BINANCE 3,621.55 -0.06%" [ref=e785]:
+                - generic [ref=e786]:
+                  - generic [ref=e787]: ETH
+                  - generic [ref=e788]: BINANCE
+                - generic [ref=e789]:
+                  - generic [ref=e790]: 3,621.55
+                  - generic [ref=e791]: "-0.06%"
+              - button "NVDA NASDAQ 138.9 +5.16%" [ref=e792]:
+                - generic [ref=e793]:
+                  - generic [ref=e794]: NVDA
+                  - generic [ref=e795]: NASDAQ
+                - generic [ref=e796]:
+                  - generic [ref=e797]: "138.9"
+                  - generic [ref=e798]: +5.16%
+              - button "SOL COINBASE 198.4 -3.49%" [ref=e799]:
+                - generic [ref=e800]:
+                  - generic [ref=e801]: SOL
+                  - generic [ref=e802]: COINBASE
+                - generic [ref=e803]:
+                  - generic [ref=e804]: "198.4"
+                  - generic [ref=e805]: "-3.49%"
+              - button "TSLA NASDAQ 287.15 -2.14%" [ref=e806]:
+                - generic [ref=e807]:
+                  - generic [ref=e808]: TSLA
+                  - generic [ref=e809]: NASDAQ
+                - generic [ref=e810]:
+                  - generic [ref=e811]: "287.15"
+                  - generic [ref=e812]: "-2.14%"
+              - button "XAUUSD OANDA 2,712.55 +0.44%" [ref=e813]:
+                - generic [ref=e814]:
+                  - generic [ref=e815]: XAUUSD
+                  - generic [ref=e816]: OANDA
+                - generic [ref=e817]:
+                  - generic [ref=e818]: 2,712.55
+                  - generic [ref=e819]: +0.44%
+              - button "EURUSD FX 1.042 -0.46%" [ref=e820]:
+                - generic [ref=e821]:
+                  - generic [ref=e822]: EURUSD
+                  - generic [ref=e823]: FX
+                - generic [ref=e824]:
+                  - generic [ref=e825]: "1.042"
+                  - generic [ref=e826]: "-0.46%"
+          - generic [ref=e827]:
+            - generic [ref=e828]:
+              - generic [ref=e829]:
+                - generic [ref=e830]: Ξ
+                - generic [ref=e831]:
+                  - generic [ref=e832]:
+                    - generic [ref=e833]: ETH/USD
+                    - generic [ref=e834]: ·
+                    - generic [ref=e835]: BINANCE · PERP
+                    - generic [ref=e836]: PERP
+                  - generic [ref=e837]:
+                    - generic [ref=e838]: 4,114.37
+                    - generic [ref=e839]: ▲ 13.61%
+              - generic [ref=e840]:
+                - button "1m" [ref=e841]
+                - button "5m" [ref=e842]
+                - button "15m" [ref=e843]
+                - button "1h" [ref=e844]
+                - button "4h" [ref=e845]
+                - button "D" [ref=e846]
+                - button "W" [ref=e847]
+            - img [ref=e849]:
+              - generic [ref=e851]: "4158.33"
+              - generic [ref=e853]: "4007.58"
+              - generic [ref=e855]: "3856.83"
+              - generic [ref=e857]: "3706.07"
+              - generic [ref=e859]: "3555.32"
+              - generic [ref=e1056]: "4114.37"
+            - generic [ref=e1155]:
+              - generic [ref=e1156]:
+                - generic [ref=e1157]: RSI 14
+                - generic [ref=e1158]: "58.4"
+              - generic [ref=e1159]:
+                - generic [ref=e1160]: MACD
+                - generic [ref=e1161]: "+12.4"
+              - generic [ref=e1162]:
+                - generic [ref=e1163]: ATR 14
+                - generic [ref=e1164]: "82.1"
+              - generic [ref=e1165]:
+                - generic [ref=e1166]: Funding
+                - generic [ref=e1167]: +0.0102%
+          - complementary [ref=e1168]:
+            - generic [ref=e1170]: time & sales
+            - generic [ref=e1172]:
+              - generic [ref=e1173]:
+                - button "Buy" [ref=e1174]
+                - button "Sell" [ref=e1175]
+              - generic [ref=e1176]:
+                - generic [ref=e1177]:
+                  - generic [ref=e1178]: Type
+                  - generic [ref=e1179]: Limit
+                - generic [ref=e1180]:
+                  - generic [ref=e1181]: Price
+                  - generic [ref=e1182]: 3,621.40
+                - generic [ref=e1183]:
+                  - generic [ref=e1184]: Size
+                  - generic [ref=e1185]: 2.50 ETH
+                - button "Place buy ↵" [ref=e1186]
+            - generic [ref=e1187]:
+              - generic [ref=e1188]:
+                - generic [ref=e1189]: time
+                - generic [ref=e1190]: side
+                - generic [ref=e1191]: size
+                - generic [ref=e1192]: price
+                - generic [ref=e1193]: venue
+              - generic [ref=e1194]:
+                - generic [ref=e1195]:
+                  - generic [ref=e1196]: 14:23:08
+                  - generic [ref=e1197]: B
+                  - generic [ref=e1198]: "0.412"
+                  - generic [ref=e1199]: 3,621.55
+                  - generic [ref=e1200]: BNCE
+                - generic [ref=e1201]:
+                  - generic [ref=e1202]: 14:23:07
+                  - generic [ref=e1203]: S
+                  - generic [ref=e1204]: "1.180"
+                  - generic [ref=e1205]: 3,621.40
+                  - generic [ref=e1206]: CBSE
+                - generic [ref=e1207]:
+                  - generic [ref=e1208]: 14:23:06
+                  - generic [ref=e1209]: B
+                  - generic [ref=e1210]: "0.067"
+                  - generic [ref=e1211]: 3,621.55
+                  - generic [ref=e1212]: OKX
+                - generic [ref=e1213]:
+                  - generic [ref=e1214]: 14:23:05
+                  - generic [ref=e1215]: B
+                  - generic [ref=e1216]: "2.940"
+                  - generic [ref=e1217]: 3,621.60
+                  - generic [ref=e1218]: BYBIT
+                - generic [ref=e1219]:
+                  - generic [ref=e1220]: 14:23:04
+                  - generic [ref=e1221]: S
+                  - generic [ref=e1222]: "0.500"
+                  - generic [ref=e1223]: 3,621.45
+                  - generic [ref=e1224]: BNCE
+                - generic [ref=e1225]:
+                  - generic [ref=e1226]: 14:23:03
+                  - generic [ref=e1227]: S
+                  - generic [ref=e1228]: "0.218"
+                  - generic [ref=e1229]: 3,621.50
+                  - generic [ref=e1230]: OKX
+                - generic [ref=e1231]:
+                  - generic [ref=e1232]: 14:23:02
+                  - generic [ref=e1233]: B
+                  - generic [ref=e1234]: "1.620"
+                  - generic [ref=e1235]: 3,621.65
+                  - generic [ref=e1236]: BYBIT
+                - generic [ref=e1237]:
+                  - generic [ref=e1238]: 14:23:01
+                  - generic [ref=e1239]: B
+                  - generic [ref=e1240]: "0.044"
+                  - generic [ref=e1241]: 3,621.55
+                  - generic [ref=e1242]: BNCE
+                - generic [ref=e1243]:
+                  - generic [ref=e1244]: 14:23:00
+                  - generic [ref=e1245]: S
+                  - generic [ref=e1246]: "0.812"
+                  - generic [ref=e1247]: 3,621.30
+                  - generic [ref=e1248]: CBSE
+        - generic [ref=e1249]:
+          - generic [ref=e1250] [cursor=pointer]:
+            - generic [ref=e1251]: MACRO
+            - generic [ref=e1252]:
+              - paragraph [ref=e1253]: Powell signals patience on cuts; vols compress across the curve.
+              - generic [ref=e1254]: 4m ago
+          - generic [ref=e1255] [cursor=pointer]:
+            - generic [ref=e1256]: CRYPTO
+            - generic [ref=e1257]:
+              - paragraph [ref=e1258]: ETH ETF inflows top $312M for the third straight session.
+              - generic [ref=e1259]: 9m ago
+          - generic [ref=e1260] [cursor=pointer]:
+            - generic [ref=e1261]: EQUITY
+            - generic [ref=e1262]:
+              - paragraph [ref=e1263]: Nvidia upgraded to overweight; PT raised to $185.
+              - generic [ref=e1264]: 17m ago
+          - generic [ref=e1265] [cursor=pointer]:
+            - generic [ref=e1266]: ENERGY
+            - generic [ref=e1267]:
+              - paragraph [ref=e1268]: WTI dips on demand revisions out of Asia.
+              - generic [ref=e1269]: 24m ago
+      - generic [ref=e1270]:
+        - article [ref=e1271]:
+          - generic [ref=e1272]:
+            - generic [ref=e1273]:
+              - generic [ref=e1274]: ETH
+              - generic [ref=e1275]: crypto
+            - generic [ref=e1276]: ▲ 4.69%
+          - generic [ref=e1277]: 3,791.44
+          - img [ref=e1279]
+          - generic [ref=e1282]:
+            - generic [ref=e1283]: BINANCE
+            - generic [ref=e1284]: trade →
+        - article [ref=e1285]:
+          - generic [ref=e1286]:
+            - generic [ref=e1287]:
+              - generic [ref=e1288]: NVDA
+              - generic [ref=e1289]: equity
+            - generic [ref=e1290]: ▲ 4.53%
+          - generic [ref=e1291]: "145.19"
+          - img [ref=e1293]
+          - generic [ref=e1296]:
+            - generic [ref=e1297]: NASDAQ
+            - generic [ref=e1298]: trade →
+        - article [ref=e1299]:
+          - generic [ref=e1300]:
+            - generic [ref=e1301]:
+              - generic [ref=e1302]: SOL
+              - generic [ref=e1303]: crypto
+            - generic [ref=e1304]: ▼ 0.46%
+          - generic [ref=e1305]: "197.49"
+          - img [ref=e1307]
+          - generic [ref=e1310]:
+            - generic [ref=e1311]: COINBASE
+            - generic [ref=e1312]: trade →
+        - article [ref=e1313]:
+          - generic [ref=e1314]:
+            - generic [ref=e1315]:
+              - generic [ref=e1316]: TSLA
+              - generic [ref=e1317]: equity
+            - generic [ref=e1318]: ▼ 1.18%
+          - generic [ref=e1319]: "283.76"
+          - img [ref=e1321]
+          - generic [ref=e1324]:
+            - generic [ref=e1325]: NASDAQ
+            - generic [ref=e1326]: trade →
+        - article [ref=e1327]:
+          - generic [ref=e1328]:
+            - generic [ref=e1329]:
+              - generic [ref=e1330]: XAUUSD
+              - generic [ref=e1331]: metal
+            - generic [ref=e1332]: ▲ 0.51%
+          - generic [ref=e1333]: 2,726.27
+          - img [ref=e1335]
+          - generic [ref=e1338]:
+            - generic [ref=e1339]: OANDA
+            - generic [ref=e1340]: trade →
+        - article [ref=e1341]:
+          - generic [ref=e1342]:
+            - generic [ref=e1343]:
+              - generic [ref=e1344]: EURUSD
+              - generic [ref=e1345]: fx
+            - generic [ref=e1346]: ▲ 0.02%
+          - generic [ref=e1347]: "1.0423"
+          - img [ref=e1349]
+          - generic [ref=e1352]:
+            - generic [ref=e1353]: FX
+            - generic [ref=e1354]: trade →
+  - generic [ref=e1355]:
+    - generic [ref=e1356]:
+      - generic [ref=e1357]:
+        - generic [ref=e1358]:
+          - generic [ref=e1359]: ⟢ Section 04 / Desk
+          - generic [ref=e1360]: // receipts.log
+        - heading "184,000 traders. One verified tape." [level=2] [ref=e1362]:
+          - text: 184,000 traders.
+          - generic [ref=e1363]: One verified tape.
+      - generic [ref=e1364]:
+        - generic [ref=e1365]:
+          - generic [ref=e1366]: $2.4T
+          - generic [ref=e1367]: Routed YTD
+        - generic [ref=e1368]:
+          - generic [ref=e1369]: 184k
+          - generic [ref=e1370]: Active traders
+        - generic [ref=e1371]:
+          - generic [ref=e1372]: 98.4%
+          - generic [ref=e1373]: Uptime · 12mo
+        - generic [ref=e1374]:
+          - generic [ref=e1375]: "4.94"
+          - generic [ref=e1376]: Average rating
+    - generic [ref=e1377]:
+      - generic [ref=e1378]:
+        - article [ref=e1379]:
+          - generic [ref=e1380]:
+            - generic [ref=e1381]:
+              - text: Verified desk
+              - generic [ref=e1383]: ·
+              - generic [ref=e1384]: "seat #4719"
+            - generic [ref=e1385]: 01/5
+          - blockquote [ref=e1386]: "\"I've used every terminal on the street. This is the first one that doesn't feel like it was designed in a basement in 1997.\""
+          - generic [ref=e1387]:
+            - generic [ref=e1388]:
+              - generic [ref=e1389]: MC
+              - generic [ref=e1390]:
+                - generic [ref=e1391]: Marcus Cole
+                - generic [ref=e1392]: Prop Desk Lead · Volcanic Capital
+            - generic [ref=e1393]:
+              - generic [ref=e1394]:
+                - generic [ref=e1395]: 30D return
+                - generic [ref=e1396]: +18.4%
+              - img [ref=e1398]
+        - article [ref=e1401]:
+          - generic [ref=e1402]:
+            - generic [ref=e1403]:
+              - text: Verified desk
+              - generic [ref=e1405]: ·
+              - generic [ref=e1406]: "seat #9438"
+            - generic [ref=e1407]: 02/5
+          - blockquote [ref=e1408]: "\"Cancelled my Bloomberg seat after the second week. The order book latency is genuinely better.\""
+          - generic [ref=e1409]:
+            - generic [ref=e1410]:
+              - generic [ref=e1411]: AR
+              - generic [ref=e1412]:
+                - generic [ref=e1413]: Anya Roshanak
+                - generic [ref=e1414]: FX Macro · Independent
+            - generic [ref=e1415]:
+              - generic [ref=e1416]:
+                - generic [ref=e1417]: Sharpe
+                - generic [ref=e1418]: "3.12"
+              - img [ref=e1420]
+        - article [ref=e1423]:
+          - generic [ref=e1424]:
+            - generic [ref=e1425]:
+              - text: Verified desk
+              - generic [ref=e1427]: ·
+              - generic [ref=e1428]: "seat #14157"
+            - generic [ref=e1429]: 03/5
+          - blockquote [ref=e1430]: "\"Backtested 14 strategies on Sunday, deployed 3 by Monday open. Two were already in profit by lunch.\""
+          - generic [ref=e1431]:
+            - generic [ref=e1432]:
+              - generic [ref=e1433]: YT
+              - generic [ref=e1434]:
+                - generic [ref=e1435]: Yuki Tanaka
+                - generic [ref=e1436]: Quant · TopoTrade
+            - generic [ref=e1437]:
+              - generic [ref=e1438]:
+                - generic [ref=e1439]: Live algos
+                - generic [ref=e1440]: "27"
+              - img [ref=e1442]
+        - article [ref=e1445]:
+          - generic [ref=e1446]:
+            - generic [ref=e1447]:
+              - text: Verified desk
+              - generic [ref=e1449]: ·
+              - generic [ref=e1450]: "seat #18876"
+            - generic [ref=e1451]: 04/5
+          - blockquote [ref=e1452]: "\"The community side alone is worth the seat. I've made more money copying calls than off my own setups. Don't tell anyone.\""
+          - generic [ref=e1453]:
+            - generic [ref=e1454]:
+              - generic [ref=e1455]: DM
+              - generic [ref=e1456]:
+                - generic [ref=e1457]: Diego Marín
+                - generic [ref=e1458]: Swing · @ home
+            - generic [ref=e1459]:
+              - generic [ref=e1460]:
+                - generic [ref=e1461]: Win rate
+                - generic [ref=e1462]: 68%
+              - img [ref=e1464]
+        - article [ref=e1467]:
+          - generic [ref=e1468]:
+            - generic [ref=e1469]:
+              - text: Verified desk
+              - generic [ref=e1471]: ·
+              - generic [ref=e1472]: "seat #23595"
+            - generic [ref=e1473]: 05/5
+          - blockquote [ref=e1474]: "\"It's the only tool on my desk where the latency, the chart, and the UX all clear the bar. That's never happened before.\""
+          - generic [ref=e1475]:
+            - generic [ref=e1476]:
+              - generic [ref=e1477]: PC
+              - generic [ref=e1478]:
+                - generic [ref=e1479]: Priya Chandrashekar
+                - generic [ref=e1480]: PM · Northcape Asset
+            - generic [ref=e1481]:
+              - generic [ref=e1482]:
+                - generic [ref=e1483]: AUM
+                - generic [ref=e1484]: $240M
+              - img [ref=e1486]
+      - generic [ref=e1489]:
+        - generic [ref=e1490]:
+          - generic [ref=e1491]: READY · MARKET OPEN · NO QUEUE
+          - generic [ref=e1492]: WAITLIST CLEARED 04/03
+        - generic [ref=e1493]:
+          - generic [ref=e1494]:
+            - heading "Stop watching the market. Trade it." [level=3] [ref=e1495]:
+              - text: Stop watching the market.
+              - text: Trade it.
+            - paragraph [ref=e1496]: 30 days of full Pro. No card, no demo data, no sales call. Just you, the tape, and an order ticket that fires in 0.4ms.
+          - generic [ref=e1497]:
+            - link "Open the terminal" [ref=e1498] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1499]: Open the terminal
+              - img [ref=e1501]
+            - link "Talk to the desk →" [ref=e1503] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1504]: Talk to the desk
+              - generic [ref=e1505]: →
+            - generic [ref=e1506]:
+              - generic [ref=e1507]:
+                - generic [ref=e1508]: 30d Pro
+                - generic [ref=e1509]: free
+              - generic [ref=e1510]:
+                - generic [ref=e1511]: No card
+                - generic [ref=e1512]: required
+              - generic [ref=e1513]:
+                - generic [ref=e1514]: Cancel
+                - generic [ref=e1515]: anytime
+  - generic [ref=e1516]:
+    - generic [ref=e1518]:
+      - generic [ref=e1519]:
+        - generic [ref=e1520]: ⟢ Section 05 / Network
+        - generic [ref=e1521]: // venues.json
+      - heading "Wired into the rooms where the prints happen." [level=2] [ref=e1523]:
+        - text: Wired into the
+        - generic [ref=e1524]: rooms where the prints happen.
+    - generic [ref=e1526]:
+      - generic [ref=e1527]:
+        - generic [ref=e1528]: "42"
+        - generic [ref=e1529]: Connected venues
+      - generic [ref=e1530]:
+        - generic [ref=e1531]: "9"
+        - generic [ref=e1532]: Dark pools
+      - generic [ref=e1533]:
+        - generic [ref=e1534]: "14"
+        - generic [ref=e1535]: Prime brokers
+      - generic [ref=e1536]:
+        - generic [ref=e1537]: 180+
+        - generic [ref=e1538]: Tradable countries
+    - generic [ref=e1540]:
+      - generic [ref=e1541]:
+        - img [ref=e1543]
+        - generic [ref=e1546]:
+          - generic [ref=e1547]: NYSE
+          - generic [ref=e1548]: Exchange
+      - generic [ref=e1549]:
+        - img [ref=e1551]
+        - generic [ref=e1553]:
+          - generic [ref=e1554]: BINANCE
+          - generic [ref=e1555]: Crypto
+      - generic [ref=e1556]:
+        - img [ref=e1558]
+        - generic [ref=e1561]:
+          - generic [ref=e1562]: COINBASE
+          - generic [ref=e1563]: Crypto
+      - generic [ref=e1564]:
+        - img [ref=e1566]
+        - generic [ref=e1568]:
+          - generic [ref=e1569]: NASDAQ
+          - generic [ref=e1570]: Exchange
+      - generic [ref=e1571]:
+        - img [ref=e1573]
+        - generic [ref=e1576]:
+          - generic [ref=e1577]: JANE ST
+          - generic [ref=e1578]: Liquidity
+      - generic [ref=e1579]:
+        - img [ref=e1581]
+        - generic [ref=e1584]:
+          - generic [ref=e1585]: CBOE
+          - generic [ref=e1586]: Derivatives
+      - generic [ref=e1587]:
+        - img [ref=e1589]
+        - generic [ref=e1595]:
+          - generic [ref=e1596]: OKX
+          - generic [ref=e1597]: Crypto
+      - generic [ref=e1598]:
+        - img [ref=e1600]
+        - generic [ref=e1603]:
+          - generic [ref=e1604]: REFINITIV
+          - generic [ref=e1605]: Data
+      - generic [ref=e1606]:
+        - img [ref=e1608]
+        - generic [ref=e1611]:
+          - generic [ref=e1612]: BLOOMBERG
+          - generic [ref=e1613]: Data
+      - generic [ref=e1614]:
+        - img [ref=e1616]
+        - generic [ref=e1619]:
+          - generic [ref=e1620]: CME
+          - generic [ref=e1621]: Futures
+      - generic [ref=e1622]:
+        - img [ref=e1624]
+        - generic [ref=e1626]:
+          - generic [ref=e1627]: POLYGON
+          - generic [ref=e1628]: Data
+      - generic [ref=e1629]:
+        - img [ref=e1631]
+        - generic [ref=e1635]:
+          - generic [ref=e1636]: TRADIER
+          - generic [ref=e1637]: Broker
+      - generic [ref=e1638]:
+        - img [ref=e1640]
+        - generic [ref=e1643]:
+          - generic [ref=e1644]: NYSE
+          - generic [ref=e1645]: Exchange
+      - generic [ref=e1646]:
+        - img [ref=e1648]
+        - generic [ref=e1650]:
+          - generic [ref=e1651]: BINANCE
+          - generic [ref=e1652]: Crypto
+      - generic [ref=e1653]:
+        - img [ref=e1655]
+        - generic [ref=e1658]:
+          - generic [ref=e1659]: COINBASE
+          - generic [ref=e1660]: Crypto
+      - generic [ref=e1661]:
+        - img [ref=e1663]
+        - generic [ref=e1665]:
+          - generic [ref=e1666]: NASDAQ
+          - generic [ref=e1667]: Exchange
+      - generic [ref=e1668]:
+        - img [ref=e1670]
+        - generic [ref=e1673]:
+          - generic [ref=e1674]: JANE ST
+          - generic [ref=e1675]: Liquidity
+      - generic [ref=e1676]:
+        - img [ref=e1678]
+        - generic [ref=e1681]:
+          - generic [ref=e1682]: CBOE
+          - generic [ref=e1683]: Derivatives
+      - generic [ref=e1684]:
+        - img [ref=e1686]
+        - generic [ref=e1692]:
+          - generic [ref=e1693]: OKX
+          - generic [ref=e1694]: Crypto
+      - generic [ref=e1695]:
+        - img [ref=e1697]
+        - generic [ref=e1700]:
+          - generic [ref=e1701]: REFINITIV
+          - generic [ref=e1702]: Data
+      - generic [ref=e1703]:
+        - img [ref=e1705]
+        - generic [ref=e1708]:
+          - generic [ref=e1709]: BLOOMBERG
+          - generic [ref=e1710]: Data
+      - generic [ref=e1711]:
+        - img [ref=e1713]
+        - generic [ref=e1716]:
+          - generic [ref=e1717]: CME
+          - generic [ref=e1718]: Futures
+      - generic [ref=e1719]:
+        - img [ref=e1721]
+        - generic [ref=e1723]:
+          - generic [ref=e1724]: POLYGON
+          - generic [ref=e1725]: Data
+      - generic [ref=e1726]:
+        - img [ref=e1728]
+        - generic [ref=e1732]:
+          - generic [ref=e1733]: TRADIER
+          - generic [ref=e1734]: Broker
+    - generic [ref=e1736]:
+      - generic [ref=e1737]:
+        - img [ref=e1739]
+        - generic [ref=e1743]:
+          - generic [ref=e1744]: TRADIER
+          - generic [ref=e1745]: Broker
+      - generic [ref=e1746]:
+        - img [ref=e1748]
+        - generic [ref=e1750]:
+          - generic [ref=e1751]: POLYGON
+          - generic [ref=e1752]: Data
+      - generic [ref=e1753]:
+        - img [ref=e1755]
+        - generic [ref=e1758]:
+          - generic [ref=e1759]: CME
+          - generic [ref=e1760]: Futures
+      - generic [ref=e1761]:
+        - img [ref=e1763]
+        - generic [ref=e1766]:
+          - generic [ref=e1767]: BLOOMBERG
+          - generic [ref=e1768]: Data
+      - generic [ref=e1769]:
+        - img [ref=e1771]
+        - generic [ref=e1774]:
+          - generic [ref=e1775]: REFINITIV
+          - generic [ref=e1776]: Data
+      - generic [ref=e1777]:
+        - img [ref=e1779]
+        - generic [ref=e1785]:
+          - generic [ref=e1786]: OKX
+          - generic [ref=e1787]: Crypto
+      - generic [ref=e1788]:
+        - img [ref=e1790]
+        - generic [ref=e1793]:
+          - generic [ref=e1794]: CBOE
+          - generic [ref=e1795]: Derivatives
+      - generic [ref=e1796]:
+        - img [ref=e1798]
+        - generic [ref=e1801]:
+          - generic [ref=e1802]: JANE ST
+          - generic [ref=e1803]: Liquidity
+      - generic [ref=e1804]:
+        - img [ref=e1806]
+        - generic [ref=e1808]:
+          - generic [ref=e1809]: NASDAQ
+          - generic [ref=e1810]: Exchange
+      - generic [ref=e1811]:
+        - img [ref=e1813]
+        - generic [ref=e1816]:
+          - generic [ref=e1817]: COINBASE
+          - generic [ref=e1818]: Crypto
+      - generic [ref=e1819]:
+        - img [ref=e1821]
+        - generic [ref=e1823]:
+          - generic [ref=e1824]: BINANCE
+          - generic [ref=e1825]: Crypto
+      - generic [ref=e1826]:
+        - img [ref=e1828]
+        - generic [ref=e1831]:
+          - generic [ref=e1832]: NYSE
+          - generic [ref=e1833]: Exchange
+      - generic [ref=e1834]:
+        - img [ref=e1836]
+        - generic [ref=e1840]:
+          - generic [ref=e1841]: TRADIER
+          - generic [ref=e1842]: Broker
+      - generic [ref=e1843]:
+        - img [ref=e1845]
+        - generic [ref=e1847]:
+          - generic [ref=e1848]: POLYGON
+          - generic [ref=e1849]: Data
+      - generic [ref=e1850]:
+        - img [ref=e1852]
+        - generic [ref=e1855]:
+          - generic [ref=e1856]: CME
+          - generic [ref=e1857]: Futures
+      - generic [ref=e1858]:
+        - img [ref=e1860]
+        - generic [ref=e1863]:
+          - generic [ref=e1864]: BLOOMBERG
+          - generic [ref=e1865]: Data
+      - generic [ref=e1866]:
+        - img [ref=e1868]
+        - generic [ref=e1871]:
+          - generic [ref=e1872]: REFINITIV
+          - generic [ref=e1873]: Data
+      - generic [ref=e1874]:
+        - img [ref=e1876]
+        - generic [ref=e1882]:
+          - generic [ref=e1883]: OKX
+          - generic [ref=e1884]: Crypto
+      - generic [ref=e1885]:
+        - img [ref=e1887]
+        - generic [ref=e1890]:
+          - generic [ref=e1891]: CBOE
+          - generic [ref=e1892]: Derivatives
+      - generic [ref=e1893]:
+        - img [ref=e1895]
+        - generic [ref=e1898]:
+          - generic [ref=e1899]: JANE ST
+          - generic [ref=e1900]: Liquidity
+      - generic [ref=e1901]:
+        - img [ref=e1903]
+        - generic [ref=e1905]:
+          - generic [ref=e1906]: NASDAQ
+          - generic [ref=e1907]: Exchange
+      - generic [ref=e1908]:
+        - img [ref=e1910]
+        - generic [ref=e1913]:
+          - generic [ref=e1914]: COINBASE
+          - generic [ref=e1915]: Crypto
+      - generic [ref=e1916]:
+        - img [ref=e1918]
+        - generic [ref=e1920]:
+          - generic [ref=e1921]: BINANCE
+          - generic [ref=e1922]: Crypto
+      - generic [ref=e1923]:
+        - img [ref=e1925]
+        - generic [ref=e1928]:
+          - generic [ref=e1929]: NYSE
+          - generic [ref=e1930]: Exchange
+    - generic [ref=e1932]:
+      - generic [ref=e1933]:
+        - generic [ref=e1934]: ◼
+        - generic [ref=e1935]:
+          - generic [ref=e1936]: SOC 2 · Type II
+          - generic [ref=e1937]: Audited annually by Coalfire
+      - generic [ref=e1938]:
+        - generic [ref=e1939]: ◆
+        - generic [ref=e1940]:
+          - generic [ref=e1941]: ISO 27001
+          - generic [ref=e1942]: Information security framework
+      - generic [ref=e1943]:
+        - generic [ref=e1944]: ▲
+        - generic [ref=e1945]:
+          - generic [ref=e1946]: FINRA · MiFID II
+          - generic [ref=e1947]: Regulated execution venues
+  - generic [ref=e1948]:
+    - generic [ref=e1950]:
+      - generic [ref=e1951]:
+        - paragraph [ref=e1952]: ⟢ Last call
+        - heading "The market is open. Are you?" [level=3] [ref=e1953]:
+          - text: The market is open.
+          - text: Are you?
+      - generic [ref=e1955]:
+        - generic [ref=e1956]: Daily desk note · 6am ET · before the bell
+        - generic [ref=e1957]:
+          - generic [ref=e1958]: $
+          - textbox "trader@desk.io" [ref=e1959]
+          - button "Subscribe →" [ref=e1960]
+        - paragraph [ref=e1961]: no spam. one email. unsubscribe with /quit.
+    - heading [level=2] [ref=e1963]: lazybull.
+    - generic [ref=e1964]:
+      - generic [ref=e1965]:
+        - generic [ref=e1966]: Manifesto
+        - paragraph [ref=e1967]:
+          - text: We made the terminal we wanted to use.
+          - text: Built by traders. For traders. No suits.
+        - generic [ref=e1968]:
+          - link "TW" [ref=e1969] [cursor=pointer]:
+            - /url: "#"
+          - link "GH" [ref=e1970] [cursor=pointer]:
+            - /url: "#"
+          - link "DC" [ref=e1971] [cursor=pointer]:
+            - /url: "#"
+          - link "TG" [ref=e1972] [cursor=pointer]:
+            - /url: "#"
+          - link "YT" [ref=e1973] [cursor=pointer]:
+            - /url: "#"
+      - generic [ref=e1974]:
+        - generic [ref=e1975]: Terminal
+        - list [ref=e1976]:
+          - listitem [ref=e1977]:
+            - link "› Charts" [ref=e1978] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1979]: ›
+              - text: Charts
+          - listitem [ref=e1980]:
+            - link "› Order tickets" [ref=e1981] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1982]: ›
+              - text: Order tickets
+          - listitem [ref=e1983]:
+            - link "› Workspaces" [ref=e1984] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1985]: ›
+              - text: Workspaces
+          - listitem [ref=e1986]:
+            - link "› Hotkeys" [ref=e1987] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1988]: ›
+              - text: Hotkeys
+          - listitem [ref=e1989]:
+            - link "› DOM ladder" [ref=e1990] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1991]: ›
+              - text: DOM ladder
+          - listitem [ref=e1992]:
+            - link "› Backtest" [ref=e1993] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e1994]: ›
+              - text: Backtest
+      - generic [ref=e1995]:
+        - generic [ref=e1996]: Markets
+        - list [ref=e1997]:
+          - listitem [ref=e1998]:
+            - link "› Equities" [ref=e1999] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2000]: ›
+              - text: Equities
+          - listitem [ref=e2001]:
+            - link "› Crypto" [ref=e2002] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2003]: ›
+              - text: Crypto
+          - listitem [ref=e2004]:
+            - link "› FX" [ref=e2005] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2006]: ›
+              - text: FX
+          - listitem [ref=e2007]:
+            - link "› Futures" [ref=e2008] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2009]: ›
+              - text: Futures
+          - listitem [ref=e2010]:
+            - link "› Options" [ref=e2011] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2012]: ›
+              - text: Options
+          - listitem [ref=e2013]:
+            - link "› Treasuries" [ref=e2014] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2015]: ›
+              - text: Treasuries
+      - generic [ref=e2016]:
+        - generic [ref=e2017]: Build
+        - list [ref=e2018]:
+          - listitem [ref=e2019]:
+            - link "› Python SDK" [ref=e2020] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2021]: ›
+              - text: Python SDK
+          - listitem [ref=e2022]:
+            - link "› TypeScript SDK" [ref=e2023] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2024]: ›
+              - text: TypeScript SDK
+          - listitem [ref=e2025]:
+            - link "› Webhooks" [ref=e2026] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2027]: ›
+              - text: Webhooks
+          - listitem [ref=e2028]:
+            - link "› Strategy lab" [ref=e2029] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2030]: ›
+              - text: Strategy lab
+          - listitem [ref=e2031]:
+            - link "› Public API" [ref=e2032] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2033]: ›
+              - text: Public API
+          - listitem [ref=e2034]:
+            - link "› Docs" [ref=e2035] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2036]: ›
+              - text: Docs
+      - generic [ref=e2037]:
+        - generic [ref=e2038]: Desk
+        - list [ref=e2039]:
+          - listitem [ref=e2040]:
+            - link "› About" [ref=e2041] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2042]: ›
+              - text: About
+          - listitem [ref=e2043]:
+            - link "› Careers" [ref=e2044] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2045]: ›
+              - text: Careers
+          - listitem [ref=e2046]:
+            - link "› Press kit" [ref=e2047] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2048]: ›
+              - text: Press kit
+          - listitem [ref=e2049]:
+            - link "› Brand" [ref=e2050] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2051]: ›
+              - text: Brand
+          - listitem [ref=e2052]:
+            - link "› Legal" [ref=e2053] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2054]: ›
+              - text: Legal
+          - listitem [ref=e2055]:
+            - link "› Status" [ref=e2056] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e2057]: ›
+              - text: Status
+    - generic [ref=e2059]:
+      - generic [ref=e2060]:
+        - generic [ref=e2062]: all systems nominal
+        - generic [ref=e2063]: ·
+        - generic [ref=e2064]: build a4f819 · v4.7.2
+        - generic [ref=e2065]: ·
+        - generic [ref=e2066]: region · iad-1
+      - generic [ref=e2067]:
+        - generic [ref=e2068]: © 2026 lazybull labs
+        - generic [ref=e2069]: ·
+        - link "privacy" [ref=e2070] [cursor=pointer]:
+          - /url: "#"
+        - generic [ref=e2071]: ·
+        - link "terms" [ref=e2072] [cursor=pointer]:
+          - /url: "#"
+        - generic [ref=e2073]: ·
+        - link "disclosures" [ref=e2074] [cursor=pointer]:
+          - /url: "#"
+    - paragraph [ref=e2076]: Trading involves risk. Past performance is not indicative of future results. Lazybull Labs Inc. is a registered broker-dealer (member FINRA / SIPC). Crypto products are offered through Lazybull Digital LLC (FinCEN registered MSB). Charts, prices, and market data shown on this page are illustrative.
