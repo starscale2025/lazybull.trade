@@ -3,10 +3,10 @@ import Link from "next/link";
 export function Nav() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-bg/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-5">
+      <div className="mx-auto flex h-14 max-w-350 items-center justify-between px-5">
         <Link href="/" className="group flex items-center gap-2.5">
           <div className="relative flex size-7 items-center justify-center border border-fg/40 bg-bg">
-            <div className="absolute inset-[3px] bg-bull" />
+            <div className="absolute inset-0.75 bg-bull" />
             <span className="relative font-mono text-[9px] font-bold text-bg">LB</span>
           </div>
           <span className="font-display text-lg font-medium tracking-tightest text-fg">
@@ -21,7 +21,7 @@ export function Nav() {
             { l: "Pro charts", href: "/pro" },
             { l: "Quant", href: "/quant" },
             { l: "Teacher", href: "/trade" },
-            { l: "Manifesto", href: "#" },
+            { l: "About", href: "/about" },
           ].map((item, i) => (
             <Link
               key={item.l}
