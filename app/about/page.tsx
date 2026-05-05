@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 export const metadata = {
   title: "About — lazybull.trade",
   description:
-    "Meet the founders of LazyBull — Joshmann Singh and Shaurya Negi. Two builders obsessed with making options trading radically clear.",
+    "Meet the founders of LazyBull — Shaurya Negi, Joshmann Singh, and Pratham Verma. Three NST students obsessed with making options trading radically clear.",
 };
 
 export default function AboutPage() {
