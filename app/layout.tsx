@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SessionProvider } from "@/components/SessionProvider";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -39,7 +40,9 @@ export default function RootLayout({
       className={`${fraunces.variable} ${jetbrainsMono.variable} ${funnel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-fg selection:bg-bull selection:text-bg">
-        <ThemeProvider>{children}</ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );

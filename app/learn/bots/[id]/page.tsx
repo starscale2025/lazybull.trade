@@ -333,7 +333,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-5">
                 {[
                   { step: "01", title: "BotCell.run()", body: "User clicks Run on this bot in /quant" },
-                  { step: "02", title: "callApi()", body: "POST to localhost:8000" + (bot.endpoint ?? "") },
+                  { step: "02", title: "callApi()", body: "POST to " + (process.env.NEXT_PUBLIC_QUANTAI_URL || "localhost:8000") + (bot.endpoint ?? "") },
                   { step: "03", title: "load_surrogate()", body: bot.module ?? "Python service loads the trained model" },
                   { step: "04", title: "predict()", body: "Forward pass on the inputs you provided" },
                   { step: "05", title: "BotResult", body: "JSON returned, card flips green Source: Python NN" },

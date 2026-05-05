@@ -359,7 +359,7 @@ export default {
 
           <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
             <ArchCard step="01" title="Browser" sub="React workbench" body="You click ▶ Run All in /quant. The bot's run() function builds a request body." />
-            <ArchCard step="02" title="callApi()" sub="POST /api/<endpoint>" body="aiBot() wrapper hits the FastAPI service at localhost:8000 with an 8s timeout." />
+            <ArchCard step="02" title="callApi()" sub="POST /api/<endpoint>" body="aiBot() wrapper hits the FastAPI service (NEXT_PUBLIC_QUANTAI_URL) with an 8s timeout." />
             <ArchCard step="03" title="Python NN" sub="13 trained models" body="serve.py loads the right surrogate, runs predict(), returns JSON. The card flips green." />
           </div>
 

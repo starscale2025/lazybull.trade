@@ -27,7 +27,15 @@ WEIGHTS = ROOT / "weights"
 app = FastAPI(title="LAZYBULL Quant AI", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    # localhost on any port (dev) + lazybull.us and *.lazybull.us (prod) +
+    # vercel preview deploys (*.vercel.app).
+    allow_origin_regex=(
+        r"^https?://("
+        r"localhost|127\.0\.0\.1"
+        r"|(?:[a-z0-9-]+\.)?lazybull\.us"
+        r"|[a-z0-9-]+\.vercel\.app"
+        r")(:\d+)?$"
+    ),
     allow_methods=["*"],
     allow_headers=["*"],
 )

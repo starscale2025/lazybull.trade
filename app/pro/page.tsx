@@ -176,12 +176,36 @@ export default function ProPage() {
   };
 
   // ── workspace save/load (Publish)
-  const saveWorkspace = () => {
+  // When signed in: persists to /api/workspaces (Mongo). When not: falls
+  // back to localStorage so anonymous users still get a saved layout.
+  const saveWorkspace = async () => {
     const ws: Workspace = { symbol, timeframe, drawings, indicators, layout, chart: chartType, color, alerts };
+    // Always cache locally as a fallback.
+    try { localStorage.setItem("lb-pro-workspace", JSON.stringify(ws)); } catch {}
+
+    // Try server-side save (requires auth).
     try {
-      localStorage.setItem("lb-pro-workspace", JSON.stringify(ws));
-      navigator.clipboard.writeText(`${location.origin}/pro?ws=${encodeURIComponent(btoa(JSON.stringify(ws)))}`).catch(() => {});
-      showToast("Workspace saved · share link copied to clipboard", "ok");
+      const r = await fetch("/api/workspaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "pro",
+          name: `${symbol.sym} · ${timeframe}`,
+          state: ws,
+          isPublic: false,
+        }),
+      });
+      if (r.status === 401) {
+        // Not signed in — share-link fallback.
+        navigator.clipboard
+          .writeText(`${location.origin}/pro?ws=${encodeURIComponent(btoa(JSON.stringify(ws)))}`)
+          .catch(() => {});
+        showToast("Saved locally · sign in to sync across devices", "ok");
+        return;
+      }
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || "save failed");
+      showToast(`Saved as "${j.workspace.name}" — synced to your account`, "ok");
     } catch (e) {
       showToast(`Save failed: ${(e as Error).message}`, "warn");
     }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthButtons } from "./AuthButtons";
 
 export function Nav() {
   return (
@@ -40,12 +41,7 @@ export function Nav() {
             <span className="text-fg-faint">⌘</span>K
             <span className="text-fg-faint hidden lg:inline ml-1">Search</span>
           </button>
-          <Link
-            href="#"
-            className="hidden h-9 items-center px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:text-fg sm:inline-flex"
-          >
-            Sign in
-          </Link>
+          <AuthButtons />
           <Link
             href="/trade"
             className="group relative inline-flex h-9 items-center gap-2 bg-bull px-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg"
