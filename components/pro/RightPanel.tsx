@@ -240,7 +240,7 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
         </div>
         {hist.length > 1 && (
           <svg viewBox="0 0 100 30" className="mt-2 h-8 w-full" preserveAspectRatio="none">
-            <path d={sparkPath} fill="none" stroke={(live?.chg ?? 0) >= 0 ? "var(--bull)" : "var(--bear)"} strokeWidth="1.4" />
+            <path d={sparkPath} fill="none" stroke={(live?.chg ?? 0) >= 0 ? "var(--bull)" : "var(--bear)"} strokeWidth="1.4" pathLength={1} className="svg-draw-fast" />
           </svg>
         )}
 

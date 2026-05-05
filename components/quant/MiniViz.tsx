@@ -66,7 +66,7 @@ export function PriceWithOverlay({
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none">
       {/* close line */}
-      <path d={closePath} fill="none" stroke="var(--fg)" strokeOpacity="0.7" strokeWidth="1.2" />
+      <path d={closePath} fill="none" stroke="var(--fg)" strokeOpacity="0.7" strokeWidth="1.2" pathLength={1} className="svg-draw-in" />
       {/* overlays */}
       {overlay.map((o, idx) => (
         <path
@@ -77,6 +77,9 @@ export function PriceWithOverlay({
           strokeWidth="1.2"
           strokeDasharray={o.dashed ? "3 3" : undefined}
           opacity={0.95}
+          pathLength={o.dashed ? undefined : 1}
+          className={o.dashed ? "svg-fade-in" : "svg-draw-in"}
+          style={{ animationDelay: `${0.15 + idx * 0.12}s` }}
         />
       ))}
       {/* signal markers */}
@@ -186,6 +189,9 @@ export function PaneLine({
             stroke={s.color}
             strokeWidth="1.3"
             strokeDasharray={s.dashed ? "3 3" : undefined}
+            pathLength={s.dashed ? undefined : 1}
+            className={s.dashed ? "svg-fade-in" : "svg-draw-in"}
+            style={{ animationDelay: `${idx * 0.12}s` }}
           />
         );
       })}
@@ -222,8 +228,8 @@ export function EquitySpark({
           <stop offset="100%" stopColor={tone} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={`${path} L${width},${height} L0,${height} Z`} fill={`url(#eq-${tone.replace(/[()]/g, "")})`} />
-      <path d={path} fill="none" stroke={tone} strokeWidth="1.4" />
+      <path d={`${path} L${width},${height} L0,${height} Z`} fill={`url(#eq-${tone.replace(/[()]/g, "")})`} className="svg-fade-in" />
+      <path d={path} fill="none" stroke={tone} strokeWidth="1.4" pathLength={1} className="svg-draw-fast" />
     </svg>
   );
 }

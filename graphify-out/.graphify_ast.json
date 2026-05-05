@@ -1,0 +1,4339 @@
+{
+  "nodes": [
+    {
+      "id": "app_learn_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_learn_bots_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_learn_bots_id_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "id_page_generatestaticparams",
+      "label": "generateStaticParams()",
+      "file_type": "code",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "id_page_generatemetadata",
+      "label": "generateMetadata()",
+      "file_type": "code",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "id_page_map",
+      "label": "map()",
+      "file_type": "code",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L340"
+    },
+    {
+      "id": "app_pro_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "pro_page_undo",
+      "label": "undo()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L67"
+    },
+    {
+      "id": "pro_page_redo",
+      "label": "redo()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L73"
+    },
+    {
+      "id": "pro_page_onkey",
+      "label": "onKey()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L82"
+    },
+    {
+      "id": "pro_page_showtoast",
+      "label": "showToast()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L110"
+    },
+    {
+      "id": "pro_page_onpreset",
+      "label": "onPreset()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L173"
+    },
+    {
+      "id": "pro_page_saveworkspace",
+      "label": "saveWorkspace()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L179"
+    },
+    {
+      "id": "pro_page_togglefullscreen",
+      "label": "toggleFullscreen()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L219"
+    },
+    {
+      "id": "pro_page_ontrade",
+      "label": "onTrade()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L237"
+    },
+    {
+      "id": "pro_page_startreplay",
+      "label": "startReplay()",
+      "file_type": "code",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L240"
+    },
+    {
+      "id": "app_trade_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "trade_page_datendaysout",
+      "label": "dateNDaysOut()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L30"
+    },
+    {
+      "id": "trade_page_fmtdate",
+      "label": "fmtDate()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L35"
+    },
+    {
+      "id": "trade_page_fetchall",
+      "label": "fetchAll()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L51"
+    },
+    {
+      "id": "trade_page_rand",
+      "label": "rand()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L95"
+    },
+    {
+      "id": "trade_page_placebet",
+      "label": "placeBet()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L148"
+    },
+    {
+      "id": "trade_page_confirmbet",
+      "label": "confirmBet()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L164"
+    },
+    {
+      "id": "trade_page_narrate",
+      "label": "narrate()",
+      "file_type": "code",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L184"
+    },
+    {
+      "id": "app_trade_chain_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "chain_page_fetchall",
+      "label": "fetchAll()",
+      "file_type": "code",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L34"
+    },
+    {
+      "id": "components_hero_tsx",
+      "label": "Hero.tsx",
+      "file_type": "code",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_hero_fetchrealcandles",
+      "label": "fetchRealCandles()",
+      "file_type": "code",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L5"
+    },
+    {
+      "id": "components_nav_tsx",
+      "label": "Nav.tsx",
+      "file_type": "code",
+      "source_file": "components/Nav.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_tickerbar_tsx",
+      "label": "TickerBar.tsx",
+      "file_type": "code",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_tickerbar_fmtprice",
+      "label": "fmtPrice()",
+      "file_type": "code",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L20"
+    },
+    {
+      "id": "components_tickerbar_fmtpct",
+      "label": "fmtPct()",
+      "file_type": "code",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L26"
+    },
+    {
+      "id": "components_tickerbar_fmtclock",
+      "label": "fmtClock()",
+      "file_type": "code",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L30"
+    },
+    {
+      "id": "components_tickerbar_tickerbar",
+      "label": "TickerBar()",
+      "file_type": "code",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L34"
+    },
+    {
+      "id": "components_candlechart_tsx",
+      "label": "CandleChart.tsx",
+      "file_type": "code",
+      "source_file": "components/CandleChart.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_candlechart_candlechart",
+      "label": "CandleChart()",
+      "file_type": "code",
+      "source_file": "components/CandleChart.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "components_quant_botcell_tsx",
+      "label": "BotCell.tsx",
+      "file_type": "code",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_quant_miniviz_tsx",
+      "label": "MiniViz.tsx",
+      "file_type": "code",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "quant_miniviz_pricewithoverlay",
+      "label": "PriceWithOverlay()",
+      "file_type": "code",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L10"
+    },
+    {
+      "id": "quant_miniviz_yof",
+      "label": "yOf()",
+      "file_type": "code",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L131"
+    },
+    {
+      "id": "quant_miniviz_buildpath",
+      "label": "buildPath()",
+      "file_type": "code",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L135"
+    },
+    {
+      "id": "components_quant_quanthero_tsx",
+      "label": "QuantHero.tsx",
+      "file_type": "code",
+      "source_file": "components/quant/QuantHero.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_quant_botlibrary_tsx",
+      "label": "BotLibrary.tsx",
+      "file_type": "code",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_quant_quantpage_tsx",
+      "label": "QuantPage.tsx",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "quant_quantpage_getdef",
+      "label": "getDef()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L71"
+    },
+    {
+      "id": "quant_quantpage_runone",
+      "label": "runOne()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L75"
+    },
+    {
+      "id": "quant_quantpage_runall",
+      "label": "runAll()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L88"
+    },
+    {
+      "id": "quant_quantpage_addbot",
+      "label": "addBot()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L111"
+    },
+    {
+      "id": "quant_quantpage_removebot",
+      "label": "removeBot()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L127"
+    },
+    {
+      "id": "quant_quantpage_removebotsbydefid",
+      "label": "removeBotsByDefId()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L136"
+    },
+    {
+      "id": "quant_quantpage_updateparams",
+      "label": "updateParams()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L147"
+    },
+    {
+      "id": "quant_quantpage_togglecollapse",
+      "label": "toggleCollapse()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L163"
+    },
+    {
+      "id": "quant_quantpage_movebot",
+      "label": "moveBot()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L167"
+    },
+    {
+      "id": "quant_quantpage_clearall",
+      "label": "clearAll()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L180"
+    },
+    {
+      "id": "quant_quantpage_importbot",
+      "label": "importBot()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L185"
+    },
+    {
+      "id": "quant_quantpage_flashlibrary",
+      "label": "flashLibrary()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L190"
+    },
+    {
+      "id": "quant_quantpage_dismisslearnbanner",
+      "label": "dismissLearnBanner()",
+      "file_type": "code",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L206"
+    },
+    {
+      "id": "components_learn_learnbotdemo_tsx",
+      "label": "LearnBotDemo.tsx",
+      "file_type": "code",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_learn_learnlivedemo_tsx",
+      "label": "LearnLiveDemo.tsx",
+      "file_type": "code",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "learn_learnlivedemo_learnlivedemo",
+      "label": "LearnLiveDemo()",
+      "file_type": "code",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "components_learn_learndatasetplayground_tsx",
+      "label": "LearnDatasetPlayground.tsx",
+      "file_type": "code",
+      "source_file": "components/learn/LearnDatasetPlayground.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "components_learn_learnconsensusplayground_tsx",
+      "label": "LearnConsensusPlayground.tsx",
+      "file_type": "code",
+      "source_file": "components/learn/LearnConsensusPlayground.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "learn_learnconsensusplayground_bot",
+      "label": "bot()",
+      "file_type": "code",
+      "source_file": "components/learn/LearnConsensusPlayground.tsx",
+      "source_location": "L44"
+    },
+    {
+      "id": "learn_learnconsensusplayground_toggle",
+      "label": "toggle()",
+      "file_type": "code",
+      "source_file": "components/learn/LearnConsensusPlayground.tsx",
+      "source_location": "L71"
+    },
+    {
+      "id": "components_learn_learnapistatus_tsx",
+      "label": "LearnApiStatus.tsx",
+      "file_type": "code",
+      "source_file": "components/learn/LearnApiStatus.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "learn_learnapistatus_ping",
+      "label": "ping()",
+      "file_type": "code",
+      "source_file": "components/learn/LearnApiStatus.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "components_pro_topbar_tsx",
+      "label": "TopBar.tsx",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "pro_topbar_symglyph",
+      "label": "SymGlyph()",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L343"
+    },
+    {
+      "id": "pro_topbar_iconbell",
+      "label": "IconBell()",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L353"
+    },
+    {
+      "id": "pro_topbar_iconreplay",
+      "label": "IconReplay()",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L354"
+    },
+    {
+      "id": "pro_topbar_iconundo",
+      "label": "IconUndo()",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L355"
+    },
+    {
+      "id": "pro_topbar_iconredo",
+      "label": "IconRedo()",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L356"
+    },
+    {
+      "id": "pro_topbar_iconfullscreen",
+      "label": "IconFullscreen()",
+      "file_type": "code",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L357"
+    },
+    {
+      "id": "components_pro_chart_tsx",
+      "label": "Chart.tsx",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "pro_chart_setdraft",
+      "label": "setDraft()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L193"
+    },
+    {
+      "id": "pro_chart_onmove",
+      "label": "onMove()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L205"
+    },
+    {
+      "id": "pro_chart_onup",
+      "label": "onUp()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L234"
+    },
+    {
+      "id": "pro_chart_onyaxisdown",
+      "label": "onYAxisDown()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L246"
+    },
+    {
+      "id": "pro_chart_onyaxisdoubleclick",
+      "label": "onYAxisDoubleClick()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L251"
+    },
+    {
+      "id": "pro_chart_onxaxisdown",
+      "label": "onXAxisDown()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L260"
+    },
+    {
+      "id": "pro_chart_onxaxisdoubleclick",
+      "label": "onXAxisDoubleClick()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L265"
+    },
+    {
+      "id": "pro_chart_screenpt",
+      "label": "screenPt()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L277"
+    },
+    {
+      "id": "pro_chart_datapt",
+      "label": "dataPt()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L281"
+    },
+    {
+      "id": "pro_chart_newid",
+      "label": "newId()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L282"
+    },
+    {
+      "id": "pro_chart_onmousemove",
+      "label": "onMouseMove()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L284"
+    },
+    {
+      "id": "pro_chart_onmousedown",
+      "label": "onMouseDown()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L313"
+    },
+    {
+      "id": "pro_chart_onmouseup",
+      "label": "onMouseUp()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L371"
+    },
+    {
+      "id": "pro_chart_onmouseleave",
+      "label": "onMouseLeave()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L386"
+    },
+    {
+      "id": "pro_chart_handlewheel",
+      "label": "handleWheel()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L397"
+    },
+    {
+      "id": "pro_chart_pickdrawing",
+      "label": "pickDrawing()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L425"
+    },
+    {
+      "id": "pro_chart_yline",
+      "label": "yLine()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L943"
+    },
+    {
+      "id": "pro_chart_yof",
+      "label": "yOf()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L970"
+    },
+    {
+      "id": "pro_chart_yofprice",
+      "label": "yOfPrice()",
+      "file_type": "code",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L1122"
+    },
+    {
+      "id": "components_pro_rightpanel_tsx",
+      "label": "RightPanel.tsx",
+      "file_type": "code",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "pro_rightpanel_fetchquotes",
+      "label": "fetchQuotes()",
+      "file_type": "code",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L41"
+    },
+    {
+      "id": "pro_rightpanel_findoldest",
+      "label": "findOldest()",
+      "file_type": "code",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L76"
+    },
+    {
+      "id": "pro_rightpanel_removesym",
+      "label": "removeSym()",
+      "file_type": "code",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L129"
+    },
+    {
+      "id": "pro_rightpanel_addsym",
+      "label": "addSym()",
+      "file_type": "code",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L130"
+    },
+    {
+      "id": "components_pro_bottombar_tsx",
+      "label": "BottomBar.tsx",
+      "file_type": "code",
+      "source_file": "components/pro/BottomBar.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "pro_bottombar_fmtist",
+      "label": "fmtIST()",
+      "file_type": "code",
+      "source_file": "components/pro/BottomBar.tsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "pro_bottombar_bottombar",
+      "label": "BottomBar()",
+      "file_type": "code",
+      "source_file": "components/pro/BottomBar.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "components_wedge_probabilitycone_tsx",
+      "label": "ProbabilityCone.tsx",
+      "file_type": "code",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "wedge_probabilitycone_probabilitycone",
+      "label": "ProbabilityCone()",
+      "file_type": "code",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L24"
+    },
+    {
+      "id": "wedge_probabilitycone_yof",
+      "label": "yOf()",
+      "file_type": "code",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L215"
+    },
+    {
+      "id": "lib_quant_bot_content_ts",
+      "label": "bot-content.ts",
+      "file_type": "code",
+      "source_file": "lib/quant/bot-content.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "lib_quant_bot_source_ts",
+      "label": "bot-source.ts",
+      "file_type": "code",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "quant_bot_source_loadfiles",
+      "label": "loadFiles()",
+      "file_type": "code",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "quant_bot_source_getbotsource",
+      "label": "getBotSource()",
+      "file_type": "code",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "quant_bot_source_slicebyid",
+      "label": "sliceById()",
+      "file_type": "code",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L39"
+    }
+  ],
+  "edges": [
+    {
+      "source": "app_learn_page_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_nav",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "components_nav_nav",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_tickerbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "components_tickerbar_tickerbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_footer",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "components_footer_footer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bots",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "quant_bots_bot_registry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "quant_types_category_meta",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "quant_types_botcategory",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_learn_learnlivedemo",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "learn_learnlivedemo_learnlivedemo",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_learn_learndatasetplayground",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "learn_learndatasetplayground_learndatasetplayground",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_learn_learnconsensusplayground",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_page_tsx",
+      "target": "learn_learnconsensusplayground_learnconsensusplayground",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_nav",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "components_nav_nav",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_tickerbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "components_tickerbar_tickerbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_footer",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "components_footer_footer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bots",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "quant_bots_bot_registry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "quant_types_category_meta",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_page_tsx",
+      "target": "quant_types_botcategory",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "navigation",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_nav",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "components_nav_nav",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_tickerbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "components_tickerbar_tickerbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_footer",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "components_footer_footer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bots",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "quant_bots_bot_registry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "quant_bots_getbot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "quant_types_category_meta",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bot_content",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "quant_bot_content_bot_content",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "quant_bot_content_bot_simple",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bot_source",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "quant_bot_source_getbotsource",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_learn_learnbotdemo",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "learn_learnbotdemo_learnbotdemo",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_learn_learnapistatus",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "learn_learnapistatus_learnapistatus",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "id_page_generatestaticparams",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "id_page_generatemetadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "app_learn_bots_id_page_tsx",
+      "target": "id_page_map",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L340",
+      "weight": 1.0
+    },
+    {
+      "source": "id_page_generatestaticparams",
+      "target": "id_page_map",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/learn/bots/[id]/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_chart",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_chart_chart",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_chart_charthandle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_chart_alert",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_lefttoolbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_lefttoolbar_lefttoolbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_topbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_topbar_topbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_topbar_seed_symbols",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_topbar_symboldef",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_rightpanel",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_rightpanel_rightpanel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_bottombar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_bottombar_bottombar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_replaybar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_replaybar_replaybar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_alertspanel",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_alertspanel_alertspanel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_tradedrawer",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_tradedrawer_tradedrawer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_chartcore",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_chartcore_bar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_chartcore_drawing",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_chartcore_toolkind",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_undo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_redo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_onkey",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_showtoast",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_onpreset",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L173",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_saveworkspace",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L179",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_togglefullscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L219",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_ontrade",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L237",
+      "weight": 1.0
+    },
+    {
+      "source": "app_pro_page_tsx",
+      "target": "pro_page_startreplay",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L240",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page_onkey",
+      "target": "pro_page_undo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page_onkey",
+      "target": "pro_page_redo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L85",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page_saveworkspace",
+      "target": "pro_page_showtoast",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L184",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page_togglefullscreen",
+      "target": "pro_page_showtoast",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L224",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_page_startreplay",
+      "target": "pro_page_showtoast",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/pro/page.tsx",
+      "source_location": "L242",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_nav",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "components_nav_nav",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_tickerbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "components_tickerbar_tickerbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_ai_teacher_avatar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "ai_teacher_avatar_teacheravatar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_probabilitycone",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_probabilitycone_probabilitycone",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_strategycards",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_strategycards_strategycards",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_plaingreeks",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_plaingreeks_plaingreeks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_timemachine",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_timemachine_timemachine",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_eventtimeline",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_eventtimeline_eventtimeline",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_modelspread",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_modelspread_modelspread",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_managepanel",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_managepanel_managepanel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_wedge_positionstory",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_positionstory_storysentence",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "wedge_positionstory_bet",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_models",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "lib_models_generatestrategies",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "lib_models_probbs",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "lib_models_strategy",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_events",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "lib_events_eventsfor",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_datendaysout",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_fmtdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_fetchall",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_rand",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_placebet",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L148",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_confirmbet",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L164",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_page_tsx",
+      "target": "trade_page_narrate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L184",
+      "weight": 1.0
+    },
+    {
+      "source": "trade_page_placebet",
+      "target": "trade_page_fmtdate",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L149",
+      "weight": 1.0
+    },
+    {
+      "source": "trade_page_placebet",
+      "target": "trade_page_datendaysout",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/page.tsx",
+      "source_location": "L149",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_nav",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "components_nav_nav",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_tickerbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "components_tickerbar_tickerbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_options_chain_optionschain",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "options_chain_optionschain_optionschain",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_options_chain_strategycard",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "options_chain_strategycard_strategycard",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_options_chain_positionspanel",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "options_chain_positionspanel_positionspanel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_ai_teacher_avatar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "ai_teacher_avatar_teacheravatar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_safety_riskwizard",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "safety_riskwizard_riskwizard",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_safety_killswitch",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "safety_killswitch_safetysettingsbutton",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_stores",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "lib_stores_useteacher",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_ai_teacher_speechbubble",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "ai_teacher_speechbubble_greektrigger",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_trade_chain_page_tsx",
+      "target": "chain_page_fetchall",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/trade/chain/page.tsx",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_candlechart",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "components_candlechart_candlechart",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "lib_candles_generatecandles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "lib_candles_lastchange",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "lib_candles_candle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_procta",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "components_procta_procta",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_hero_tsx",
+      "target": "components_hero_fetchrealcandles",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Hero.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_nav_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Nav.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "components_tickerbar_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_tickerbar_tsx",
+      "target": "components_tickerbar_fmtprice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "components_tickerbar_tsx",
+      "target": "components_tickerbar_fmtpct",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "components_tickerbar_tsx",
+      "target": "components_tickerbar_fmtclock",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "components_tickerbar_tsx",
+      "target": "components_tickerbar_tickerbar",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/TickerBar.tsx",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "components_candlechart_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CandleChart.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "components_candlechart_tsx",
+      "target": "lib_candles_candle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CandleChart.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "components_candlechart_tsx",
+      "target": "components_candlechart_candlechart",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CandleChart.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_types_activebot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_types_botdef",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_types_botresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_types_paramspec",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_types_tone",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_series",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_series_closes",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "lib_candles_candle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_miniviz",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_miniviz_pricewithoverlay",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_miniviz_paneline",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botcell_tsx",
+      "target": "quant_miniviz_equityspark",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotCell.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_miniviz_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_miniviz_tsx",
+      "target": "quant_miniviz_pricewithoverlay",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_miniviz_tsx",
+      "target": "quant_miniviz_yof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L131",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_miniviz_tsx",
+      "target": "quant_miniviz_buildpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/MiniViz.tsx",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botlibrary_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botlibrary_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botlibrary_tsx",
+      "target": "quant_types_botdef",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botlibrary_tsx",
+      "target": "quant_types_botcategory",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botlibrary_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_botlibrary_tsx",
+      "target": "quant_types_category_meta",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/BotLibrary.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "lib_candles_generatecandles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "lib_candles_candle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bots",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_bots_bot_registry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_bots_getbot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_types_activebot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_types_botdef",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_types_botresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_quanthero",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quanthero_quanthero",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_botlibrary",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_botlibrary_botlibrary",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_workspace",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_workspace_workspace",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_outputpanel",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_outputpanel_outputpanel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_importbotmodal",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_importbotmodal_importbotmodal",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_getdef",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_runone",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_runall",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_addbot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_removebot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L127",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_removebotsbydefid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_updateparams",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_togglecollapse",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L163",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_movebot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L167",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_clearall",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L180",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_importbot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L185",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_flashlibrary",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "components_quant_quantpage_tsx",
+      "target": "quant_quantpage_dismisslearnbanner",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L206",
+      "weight": 1.0
+    },
+    {
+      "source": "quant_quantpage_runone",
+      "target": "quant_quantpage_getdef",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "quant_quantpage_updateparams",
+      "target": "quant_quantpage_getdef",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "quant_quantpage_importbot",
+      "target": "quant_quantpage_addbot",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/quant/QuantPage.tsx",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "lib_candles_generatecandles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "lib_candles_candle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bots",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "quant_bots_getbot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_botcell",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "quant_botcell_botcell",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "quant_types_activebot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnbotdemo_tsx",
+      "target": "quant_types_botresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnBotDemo.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "lib_candles_generatecandles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "lib_candles_candle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_bots",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "quant_bots_getbot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_quant_botcell",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "quant_botcell_botcell",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_quant_types",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "quant_types_activebot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "quant_types_botresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnlivedemo_tsx",
+      "target": "learn_learnlivedemo_learnlivedemo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnLiveDemo.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learndatasetplayground_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnDatasetPlayground.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learndatasetplayground_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_candles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnDatasetPlayground.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learndatasetplayground_tsx",
+      "target": "lib_candles_generatecandles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnDatasetPlayground.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learndatasetplayground_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_candlechart",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnDatasetPlayground.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learndatasetplayground_tsx",
+      "target": "components_candlechart_candlechart",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnDatasetPlayground.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnconsensusplayground_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnConsensusPlayground.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnconsensusplayground_tsx",
+      "target": "learn_learnconsensusplayground_bot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnConsensusPlayground.tsx",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnconsensusplayground_tsx",
+      "target": "learn_learnconsensusplayground_toggle",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnConsensusPlayground.tsx",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnapistatus_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnApiStatus.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_learn_learnapistatus_tsx",
+      "target": "learn_learnapistatus_ping",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/learn/LearnApiStatus.tsx",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "pro_topbar_symglyph",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L343",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "pro_topbar_iconbell",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L353",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "pro_topbar_iconreplay",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L354",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "pro_topbar_iconundo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L355",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "pro_topbar_iconredo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L356",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_topbar_tsx",
+      "target": "pro_topbar_iconfullscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/TopBar.tsx",
+      "source_location": "L357",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_chartcore",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_autoy",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_barofx",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_chartgeom",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_drawing",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_fmt",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_fmttime",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_innerh",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_innerw",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_priceofy",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_toolkind",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_viewport",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_xofbar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_yofprice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_fib_levels",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_fib_colors",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_disttoseg",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chartcore_bar",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_indicators",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_bollinger",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_ema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_ichimoku",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_macd",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_rsi",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_supertrend",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_indicators_vwap",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_setdraft",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L193",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onmove",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L205",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onup",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L234",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onyaxisdown",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L246",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onyaxisdoubleclick",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L251",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onxaxisdown",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L260",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onxaxisdoubleclick",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L265",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_screenpt",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L277",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_datapt",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L281",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_newid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L282",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onmousemove",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L284",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onmousedown",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L313",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onmouseup",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L371",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_onmouseleave",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L386",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_handlewheel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L397",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_pickdrawing",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L425",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_yline",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L943",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_yof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L970",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_chart_tsx",
+      "target": "pro_chart_yofprice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L1122",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousemove",
+      "target": "pro_chart_screenpt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L285",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousemove",
+      "target": "pro_chart_datapt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L303",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousemove",
+      "target": "pro_chart_setdraft",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L304",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousedown",
+      "target": "pro_chart_screenpt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L314",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousedown",
+      "target": "pro_chart_datapt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L315",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousedown",
+      "target": "pro_chart_pickdrawing",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L317",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousedown",
+      "target": "pro_chart_setdraft",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L346",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmousedown",
+      "target": "pro_chart_newid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L346",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmouseup",
+      "target": "pro_chart_setdraft",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L383",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_onmouseleave",
+      "target": "pro_chart_onmouseup",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L388",
+      "weight": 1.0
+    },
+    {
+      "source": "pro_chart_pickdrawing",
+      "target": "pro_chart_yofprice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/Chart.tsx",
+      "source_location": "L430",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_chartcore",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "pro_chartcore_fmt",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_components_pro_topbar",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "pro_topbar_symboldef",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "pro_rightpanel_fetchquotes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "pro_rightpanel_findoldest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "pro_rightpanel_removesym",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L129",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_rightpanel_tsx",
+      "target": "pro_rightpanel_addsym",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/RightPanel.tsx",
+      "source_location": "L130",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_bottombar_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/BottomBar.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_bottombar_tsx",
+      "target": "pro_bottombar_fmtist",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/BottomBar.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "components_pro_bottombar_tsx",
+      "target": "pro_bottombar_bottombar",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/pro/BottomBar.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "components_wedge_probabilitycone_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "components_wedge_probabilitycone_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "components_wedge_probabilitycone_tsx",
+      "target": "users_shaurya555_desktop_lazybull1_lib_events",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_wedge_probabilitycone_tsx",
+      "target": "lib_events_marketevent",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "components_wedge_probabilitycone_tsx",
+      "target": "wedge_probabilitycone_probabilitycone",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "components_wedge_probabilitycone_tsx",
+      "target": "wedge_probabilitycone_yof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L215",
+      "weight": 1.0
+    },
+    {
+      "source": "wedge_probabilitycone_probabilitycone",
+      "target": "wedge_probabilitycone_yof",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/wedge/ProbabilityCone.tsx",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_quant_bot_source_ts",
+      "target": "node_fs",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_quant_bot_source_ts",
+      "target": "node_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_quant_bot_source_ts",
+      "target": "quant_bot_source_loadfiles",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_quant_bot_source_ts",
+      "target": "quant_bot_source_getbotsource",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_quant_bot_source_ts",
+      "target": "quant_bot_source_slicebyid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "quant_bot_source_getbotsource",
+      "target": "quant_bot_source_loadfiles",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "quant_bot_source_getbotsource",
+      "target": "quant_bot_source_slicebyid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/quant/bot-source.ts",
+      "source_location": "L30",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

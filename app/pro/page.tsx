@@ -216,26 +216,40 @@ export default function ProPage() {
 
   // ── fullscreen
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     const el = wrapperRef.current || document.documentElement;
-    if (!document.fullscreenElement) el.requestFullscreen?.();
-    else document.exitFullscreen?.();
+    try {
+      if (!document.fullscreenElement) {
+        if (!el.requestFullscreen) {
+          showToast("Fullscreen not supported in this browser", "warn");
+          return;
+        }
+        await el.requestFullscreen();
+      } else {
+        await document.exitFullscreen?.();
+      }
+    } catch (e) {
+      showToast(`Fullscreen blocked: ${(e as Error).message || "browser refused"}`, "warn");
+    }
   };
 
   // ── trade drawer
   const onTrade = () => setTradeOpen(true);
 
-  // ── compare (add a symbol to watchlist as overlay placeholder)
-  const onCompare = () => {
-    showToast("Tap a symbol in the watchlist to switch the active chart", "ok");
-  };
-
   // ── replay activation
   const startReplay = () => {
-    if (!bars.length) return;
+    if (loading) {
+      showToast("Bars still loading — try again in a sec", "warn");
+      return;
+    }
+    if (!bars.length) {
+      showToast(fetchErr ? `Can't replay — ${fetchErr}` : "No bars yet for this symbol", "warn");
+      return;
+    }
     setReplayActive(true);
     setReplayCursor(Math.max(20, Math.floor(bars.length * 0.6)));
     setReplayPlaying(false);
+    showToast("Replay armed — drag the slider or press play", "ok");
   };
 
   const symbolMetaForChart = useMemo(() => {
@@ -270,7 +284,6 @@ export default function ProPage() {
           <button onClick={() => setAlertsOpen(true)} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">
             ⚡ alerts {alerts.length > 0 && <span className="ml-1 text-cyan">{alerts.length}</span>}
           </button>
-          <button onClick={startReplay} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">⟳ replay</button>
           <button onClick={toggleFullscreen} className="size-7 border border-border bg-bg text-fg-dim hover:text-fg" title="Fullscreen">⛶</button>
           <button onClick={onTrade} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">Trade</button>
           <button onClick={saveWorkspace} className="h-7 bg-bull px-3 font-semibold text-bg hover:bg-bull-dim">Save · Share</button>
@@ -298,7 +311,6 @@ export default function ProPage() {
         onSnapshot={() => chartRef.current?.snapshot()}
         onTrade={onTrade}
         onPublish={saveWorkspace}
-        onCompare={onCompare}
       />
 
       <div className="flex flex-1 overflow-hidden">

@@ -11,8 +11,20 @@
       "input_tokens": 88638,
       "output_tokens": 15642,
       "files": 81
+    },
+    {
+      "date": "2026-05-04T17:21:15.819912+00:00",
+      "input_tokens": 134463,
+      "output_tokens": 33615,
+      "files": 88
+    },
+    {
+      "date": "2026-05-05T08:21:05.319188+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 98
     }
   ],
-  "total_input_tokens": 420152,
-  "total_output_tokens": 74142
+  "total_input_tokens": 554615,
+  "total_output_tokens": 107757
 }

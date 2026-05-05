@@ -99,7 +99,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   }));
 
   // When bars array changes (new symbol/timeframe), refit to last 120
+  // and replay the candle fast-forward entrance.
   const lastBarsRef = useRef(allBars);
+  const [introToken, setIntroToken] = useState(0);
+  const [introPlaying, setIntroPlaying] = useState(true);
   useEffect(() => {
     if (lastBarsRef.current !== allBars) {
       lastBarsRef.current = allBars;
@@ -108,8 +111,60 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       const yr = autoY(allBars, start, span);
       setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
       setYLocked(false);
+      setIntroToken((n) => n + 1);
+      setIntroPlaying(true);
     }
   }, [allBars]);
+
+  // After ~1.4s the per-candle fade-in is finished. Drop the animation
+  // class so subsequent pan/zoom doesn't re-flicker the candles.
+  useEffect(() => {
+    if (!introPlaying) return;
+    const t = setTimeout(() => setIntroPlaying(false), 1400);
+    return () => clearTimeout(t);
+  }, [introToken, introPlaying]);
+
+  // Refit viewport on replay enter/exit so the chart isn't blank.
+  // (Slicing `allBars` for replay leaves the viewport anchored past the
+  // sliced length until we explicitly re-fit.)
+  const wasReplayingRef = useRef(false);
+  useEffect(() => {
+    const isReplaying = replayBar != null;
+    if (isReplaying && !wasReplayingRef.current) {
+      const cutoff = Math.max(2, (replayBar as number) + 1);
+      const sliced = allBars.slice(0, cutoff);
+      const span = Math.min(120, sliced.length || 120);
+      const start = Math.max(0, sliced.length - span);
+      const yr = autoY(sliced, start, span);
+      setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+      setYLocked(false);
+    } else if (!isReplaying && wasReplayingRef.current) {
+      const span = Math.min(120, allBars.length || 120);
+      const start = Math.max(0, allBars.length - span);
+      const yr = autoY(allBars, start, span);
+      setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+      setYLocked(false);
+    }
+    wasReplayingRef.current = isReplaying;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayBar]);
+
+  // Auto-pan during replay: if the cursor moves out of the visible window,
+  // shift the viewport so the latest replay bar stays in view.
+  useEffect(() => {
+    if (replayBar == null) return;
+    setVp((v) => {
+      const rightEdge = v.start + v.span;
+      const padding = Math.max(2, v.span * 0.05);
+      if (replayBar > rightEdge - padding) {
+        return { ...v, start: Math.max(0, replayBar + padding - v.span) };
+      }
+      if (replayBar < v.start) {
+        return { ...v, start: Math.max(0, replayBar - v.span * 0.5) };
+      }
+      return v;
+    });
+  }, [replayBar]);
 
   // Resize observer
   useEffect(() => {
@@ -141,6 +196,82 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     _setDraft(value);
   };
   const panRef = useRef<{ x: number; y: number; vp: Viewport } | null>(null);
+  const yAxisDragRef = useRef<{ y: number; vp: Viewport } | null>(null);
+  const xAxisDragRef = useRef<{ x: number; vp: Viewport } | null>(null);
+
+  // Axis-drag handlers — bound globally so dragging works even when the
+  // pointer leaves the axis region during the drag.
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const yDrag = yAxisDragRef.current;
+      const xDrag = xAxisDragRef.current;
+      if (yDrag) {
+        // Drag DOWN → expand price range (zoom out vertically).
+        // Drag UP   → compress range (zoom in).
+        const dy = e.clientY - yDrag.y;
+        const startVp = yDrag.vp;
+        const range = startVp.yMax - startVp.yMin;
+        const center = (startVp.yMin + startVp.yMax) / 2;
+        const factor = Math.exp(dy * 0.005);
+        const newRange = Math.max(0.01, range * factor);
+        setVp((v) => ({ ...v, yMin: center - newRange / 2, yMax: center + newRange / 2 }));
+        setYLocked(true);
+      }
+      if (xDrag) {
+        // Drag RIGHT → expand bar span (zoom out).
+        // Drag LEFT  → compress span (zoom in).
+        // Anchor the right edge so newer bars stay visible.
+        const dx = e.clientX - xDrag.x;
+        const startVp = xDrag.vp;
+        const factor = Math.exp(-dx * 0.005);
+        const newSpan = Math.max(20, Math.min((allBars.length || 1000), startVp.span * factor));
+        const rightEdge = startVp.start + startVp.span;
+        const newStart = rightEdge - newSpan;
+        setVp((v) => ({ ...v, start: newStart, span: newSpan }));
+        setYLocked(false);
+      }
+    };
+    const onUp = () => {
+      yAxisDragRef.current = null;
+      xAxisDragRef.current = null;
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [allBars.length]);
+
+  const onYAxisDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    yAxisDragRef.current = { y: e.clientY, vp };
+  };
+  const onYAxisDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Reset price range to auto-fit visible bars.
+    setYLocked(false);
+    if (bars.length) {
+      const yr = autoY(bars, vp.start, vp.span);
+      setVp((v) => ({ ...v, yMin: yr.yMin, yMax: yr.yMax }));
+    }
+  };
+  const onXAxisDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    xAxisDragRef.current = { x: e.clientX, vp };
+  };
+  const onXAxisDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Reset span to last 120 bars (the default fit window).
+    if (!allBars.length) return;
+    const span = Math.min(120, allBars.length);
+    const start = Math.max(0, allBars.length - span);
+    const yr = autoY(allBars, start, span);
+    setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+    setYLocked(false);
+  };
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const screenPt = (e: React.MouseEvent | MouseEvent | WheelEvent | React.WheelEvent) => {
@@ -257,17 +388,39 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     onMouseUp();
   };
 
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const factor = Math.exp(e.deltaY * 0.0015);
-    const pivot = barOfX(screenPt(e).x, vp, geom);
-    setVp((v) => {
-      const newSpan = Math.max(20, Math.min(allBars.length || 1000, v.span * factor));
-      const newStart = pivot - ((pivot - v.start) * newSpan) / v.span;
-      return { ...v, start: newStart, span: newSpan };
-    });
-    setYLocked(false);
-  };
+  // Wheel zoom — bound as a native non-passive listener so preventDefault()
+  // actually cancels the browser pinch-zoom (Ctrl+wheel from trackpad).
+  // React's synthetic onWheel is passive, where preventDefault is a silent no-op.
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = wrap.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      // Horizontal scroll → pan; vertical scroll / pinch → zoom around cursor.
+      const isPan = Math.abs(e.deltaX) > Math.abs(e.deltaY) && !e.ctrlKey;
+      setVp((v) => {
+        if (isPan) {
+          const slot = innerW(geom) / v.span;
+          const dBars = e.deltaX / slot;
+          return {
+            ...v,
+            start: Math.max(-50, Math.min(allBars.length - 5, v.start + dBars)),
+          };
+        }
+        const factor = Math.exp(e.deltaY * 0.0015);
+        const pivot = barOfX(mouseX, v, geom);
+        const newSpan = Math.max(20, Math.min(allBars.length || 1000, v.span * factor));
+        const newStart = pivot - ((pivot - v.start) * newSpan) / v.span;
+        return { ...v, start: newStart, span: newSpan };
+      });
+      setYLocked(false);
+    };
+    wrap.addEventListener("wheel", handleWheel, { passive: false });
+    return () => wrap.removeEventListener("wheel", handleWheel);
+  }, [geom, allBars.length]);
 
   const pickDrawing = (px: number, py: number) => {
     for (let k = drawings.length - 1; k >= 0; k--) {
@@ -422,7 +575,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   return (
     <div
       ref={wrapRef}
-      className="relative h-full w-full select-none overflow-hidden bg-bg"
+      className="relative h-full w-full select-none overflow-hidden bg-bg touch-none overscroll-contain"
       style={{ cursor: tool === "cursor" ? "crosshair" : tool === "eraser" ? "not-allowed" : "crosshair" }}
     >
       <svg
@@ -434,7 +587,6 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseLeave}
-        onWheel={onWheel}
         onContextMenu={(e) => e.preventDefault()}
       >
         {/* gridlines */}
@@ -457,8 +609,8 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           <IchimokuOverlay ichi={ind.ichi as { conv: (number | null)[]; base: (number | null)[]; spanA: (number | null)[]; spanB: (number | null)[] }} bars={bars} vp={vp} geom={geom} />
         )}
 
-        {/* candles */}
-        {visibleBars.map((b) => {
+        {/* candles — fade in left-to-right on initial mount + on bar change */}
+        {visibleBars.map((b, idx) => {
           const x = xOfBar(b.i, vp, geom);
           const isUp = b.c >= b.o;
           const c = isUp ? "var(--bull)" : "var(--bear)";
@@ -468,8 +620,13 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           const yL = yOfPrice(b.l, vp, geom);
           const top = Math.min(yO, yC);
           const bh = Math.max(1, Math.abs(yC - yO));
+          const delayMs = introPlaying ? idx * 8 : 0;
           return (
-            <g key={`b-${b.i}`}>
+            <g
+              key={`b-${b.i}-${introToken}`}
+              className={introPlaying ? "chart-candle-in" : undefined}
+              style={introPlaying ? { animationDelay: `${delayMs}ms` } : undefined}
+            >
               <line x1={x} x2={x} y1={yH} y2={yL} stroke={c} strokeWidth={1} />
               <rect x={x - candleW / 2} y={top} width={candleW} height={bh} fill={c} />
             </g>
@@ -490,16 +647,19 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           <SeriesLine values={(ind.st as { trend: (number | null)[] }).trend} bars={bars} vp={vp} geom={geom} color="#ff2e63" dashed />
         )}
 
-        {/* volume */}
+        {/* volume — same fast-forward stagger as the candles above */}
         {showVolume &&
-          visibleBars.map((b) => {
+          visibleBars.map((b, idx) => {
             const x = xOfBar(b.i, vp, geom);
             const isUp = b.c >= b.o;
             const c = isUp ? "var(--bull)" : "var(--bear)";
             const h = (b.v / maxVol) * (volBottom - volTop - 6);
+            const delayMs = introPlaying ? idx * 8 : 0;
             return (
               <rect
-                key={`v-${b.i}`}
+                key={`v-${b.i}-${introToken}`}
+                className={introPlaying ? "chart-candle-in" : undefined}
+                style={introPlaying ? { animationDelay: `${delayMs}ms` } : undefined}
                 x={x - candleW / 2}
                 y={volBottom - h}
                 width={candleW}
@@ -583,6 +743,34 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           return null;
         })}
 
+        {/* Y-axis (price) drag zone — stretched over the right gutter where
+            the price labels live. Drag vertically to scale, double-click to
+            reset to auto-fit. */}
+        <rect
+          x={size.w - geom.padR}
+          y={geom.padT}
+          width={geom.padR}
+          height={size.h - geom.padT - geom.padB}
+          fill="transparent"
+          style={{ cursor: "ns-resize" }}
+          onMouseDown={onYAxisDown}
+          onDoubleClick={onYAxisDoubleClick}
+        />
+
+        {/* X-axis (time) drag zone — stretched along the bottom gutter where
+            the date labels live. Drag horizontally to compress/expand the
+            bar window, double-click to fit last 120 bars. */}
+        <rect
+          x={geom.padL}
+          y={geom.height - PAD.B}
+          width={size.w - geom.padL - geom.padR}
+          height={PAD.B}
+          fill="transparent"
+          style={{ cursor: "ew-resize" }}
+          onMouseDown={onXAxisDown}
+          onDoubleClick={onXAxisDoubleClick}
+        />
+
         {/* crosshair */}
         {crosshair && (
           <g pointerEvents="none">
@@ -665,7 +853,17 @@ function SeriesLine({ values, bars, vp, geom, color, dashed }: { values: (number
     }
     return d;
   }, [values, bars, vp, geom]);
-  return <path d={path} fill="none" stroke={color} strokeWidth={1.4} strokeDasharray={dashed ? "4 4" : undefined} />;
+  return (
+    <path
+      d={path}
+      fill="none"
+      stroke={color}
+      strokeWidth={1.4}
+      strokeDasharray={dashed ? "4 4" : undefined}
+      pathLength={dashed ? undefined : 1}
+      className={dashed ? "svg-fade-in" : "svg-draw-in"}
+    />
+  );
 }
 
 function BBOverlay({ bb, bars, vp, geom }: { bb: { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] }; bars: Bar[]; vp: Viewport; geom: ChartGeom }) {
@@ -698,8 +896,8 @@ function BBOverlay({ bb, bars, vp, geom }: { bb: { mid: (number | null)[]; upper
   return (
     <g>
       <SeriesLine values={bb.mid} bars={bars} vp={vp} geom={geom} color="rgba(245,245,240,0.4)" dashed />
-      <path d={upPath} stroke="rgba(0,255,135,0.5)" strokeWidth={1} fill="none" />
-      <path d={loPath} stroke="rgba(0,255,135,0.5)" strokeWidth={1} fill="none" />
+      <path d={upPath} stroke="rgba(0,255,135,0.5)" strokeWidth={1} fill="none" pathLength={1} className="svg-draw-in" />
+      <path d={loPath} stroke="rgba(0,255,135,0.5)" strokeWidth={1} fill="none" pathLength={1} className="svg-draw-in" />
     </g>
   );
 }
@@ -750,7 +948,7 @@ function RsiPane({ values, bars, vp, top, height, chartW, padL, padR }: { values
       <line x1={padL} x2={chartW - padR} y1={yLine(70)} y2={yLine(70)} stroke="var(--bear)" strokeOpacity="0.4" strokeDasharray="3 3" />
       <line x1={padL} x2={chartW - padR} y1={yLine(50)} y2={yLine(50)} stroke="rgba(245,245,240,0.15)" />
       <line x1={padL} x2={chartW - padR} y1={yLine(30)} y2={yLine(30)} stroke="var(--bull)" strokeOpacity="0.4" strokeDasharray="3 3" />
-      <path d={path} fill="none" stroke="var(--cyan)" strokeWidth={1.4} />
+      <path d={path} fill="none" stroke="var(--cyan)" strokeWidth={1.4} pathLength={1} className="svg-draw-in" />
     </g>
   );
 }
@@ -808,7 +1006,7 @@ function SeriesLineGeneric({ values, top, height, yMax, bars, vp, chartW, padL, 
     }
     return d;
   }, [values, bars, vp, top, height, yMax, chartW, padL, padR]);
-  return <path d={path} fill="none" stroke={color} strokeWidth={1.2} />;
+  return <path d={path} fill="none" stroke={color} strokeWidth={1.2} pathLength={1} className="svg-draw-in" />;
 }
 
 // ── individual drawing shapes ──

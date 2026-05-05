@@ -19,29 +19,39 @@ const SYMBOLS = [
   { sym: "AAPL", name: "Apple", spot: 229.83 },
   { sym: "SPY", name: "S&P 500 ETF", spot: 612.4 },
 ];
+const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
 
 export default function TradePage() {
   const [symIdx, setSymIdx] = useState(0);
-  const [spot, setSpot] = useState(SYMBOLS[0].spot);
+  const [liveSpots, setLiveSpots] = useState<Record<string, number>>({});
+  const sym = SYMBOLS[symIdx];
+  const spot = liveSpots[sym.sym] ?? sym.spot;
   const setBubble = useTeacher((s) => s.setBubble);
 
-  // Random walk so the chain feels alive
+  // Live spot — real Yahoo quotes via /api/quote-batch every 10s.
   useEffect(() => {
-    const id = setInterval(() => {
-      setSpot((s) => {
-        const drift = (Math.random() - 0.5) * 0.6;
-        return Math.max(1, +(s + drift).toFixed(2));
-      });
-    }, 1500);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const fetchAll = async () => {
+      try {
+        const r = await fetch(`/api/quote-batch?symbols=${SYM_LIST}`);
+        const j = await r.json();
+        if (cancelled) return;
+        if (j?.ok && Array.isArray(j.quotes)) {
+          const next: Record<string, number> = {};
+          for (const q of j.quotes) if (q?.last) next[q.sym] = q.last;
+          setLiveSpots(next);
+        }
+      } catch {
+        /* keep prior on transient error */
+      }
+    };
+    fetchAll();
+    const id = setInterval(fetchAll, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
-
-  // When user changes symbol, reset spot
-  useEffect(() => {
-    setSpot(SYMBOLS[symIdx].spot);
-  }, [symIdx]);
-
-  const sym = SYMBOLS[symIdx];
 
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">

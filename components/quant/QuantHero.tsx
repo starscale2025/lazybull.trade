@@ -20,6 +20,7 @@ export function QuantHero({
   activeCount,
   totalBots,
   spot,
+  dataSource,
 }: {
   symbol: string;
   setSymbol: (s: string) => void;
@@ -38,6 +39,7 @@ export function QuantHero({
   activeCount: number;
   totalBots: number;
   spot: number;
+  dataSource: "live" | "synthetic";
 }) {
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
@@ -97,7 +99,24 @@ export function QuantHero({
           <div className="col-span-12 lg:col-span-5">
             <div className="border border-border bg-surface">
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                <span>dataset</span>
+                <span className="flex items-center gap-2">
+                  dataset
+                  <span
+                    className={`inline-flex items-center gap-1 border px-1 py-px text-[9px] ${
+                      dataSource === "live"
+                        ? "border-bull/50 bg-bull/10 text-bull"
+                        : "border-amber/50 bg-amber/10 text-amber"
+                    }`}
+                    title={
+                      dataSource === "live"
+                        ? "real Yahoo Finance OHLCV"
+                        : "synthetic deterministic walk (Yahoo unavailable for this symbol)"
+                    }
+                  >
+                    <span className={`size-1 rounded-full ${dataSource === "live" ? "bg-bull pulse-dot" : "bg-amber"}`} />
+                    {dataSource === "live" ? "LIVE" : "SYNTH"}
+                  </span>
+                </span>
                 <span>spot ${spot.toFixed(2)}</span>
               </div>
               <div className="grid grid-cols-2 gap-px bg-border">

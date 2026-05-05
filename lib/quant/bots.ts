@@ -1,4 +1,5 @@
 import type { BotDef, BotResult, BotContext, Signal } from "./types";
+import { AI_BOTS } from "./ai-bots";
 import {
   closes,
   returns,
@@ -923,6 +924,9 @@ const wheelBot: BotDef = {
 };
 
 export const BOT_REGISTRY: BotDef[] = [
+  // ── AI bots (python ai-quants stack — surfaced first because they're the moat)
+  ...AI_BOTS,
+  // ── Classic technical / statistical / risk / options
   smaCrossover,
   rsiBot,
   macdBot,

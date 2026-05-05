@@ -28,7 +28,7 @@ export type ParamSpec =
       hint?: string;
     };
 
-export type BotCategory = "trend" | "stats" | "risk" | "options" | "custom";
+export type BotCategory = "trend" | "stats" | "risk" | "options" | "ai" | "custom";
 
 export type Signal = {
   i: number;
@@ -84,8 +84,15 @@ export type BotDef = {
   glyph: string;
   tagline: string;
   formula?: string;
+  /** Optional FastAPI endpoint on the python side. Surfaced in the UI. */
+  endpoint?: string;
+  /** Underlying python module (for the "Provenance" line). */
+  module?: string;
   params: ParamSpec[];
-  run: (ctx: BotContext, params: Record<string, number | string | boolean>) => BotResult;
+  run: (
+    ctx: BotContext,
+    params: Record<string, number | string | boolean>,
+  ) => BotResult | Promise<BotResult>;
 };
 
 export type ActiveBot = {
@@ -107,5 +114,6 @@ export const CATEGORY_META: Record<BotCategory, CategoryMeta> = {
   stats: { id: "stats", label: "Statistical", hint: "the math under the move", color: "var(--cyan)" },
   risk: { id: "risk", label: "Risk & Sizing", hint: "how much to bet", color: "var(--amber)" },
   options: { id: "options", label: "Options", hint: "pricing & vol games", color: "var(--plasma)" },
+  ai: { id: "ai", label: "AI Quants", hint: "trained on real markets", color: "var(--bear)" },
   custom: { id: "custom", label: "Your Bots", hint: "imported by you", color: "var(--fg)" },
 };

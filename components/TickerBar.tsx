@@ -1,46 +1,111 @@
-const TICKERS = [
-  { sym: "AMZN", price: "226.45", chg: "+1.18%", up: true },
-  { sym: "NVDA", price: "138.90", chg: "+3.07%", up: true },
-  { sym: "TSLA", price: "287.15", chg: "−1.44%", up: false },
-  { sym: "AAPL", price: "229.83", chg: "+0.51%", up: true },
-  { sym: "MSFT", price: "428.71", chg: "+0.92%", up: true },
-  { sym: "AMD", price: "162.04", chg: "−2.18%", up: false },
-  { sym: "META", price: "603.27", chg: "+1.74%", up: true },
-  { sym: "GOOGL", price: "189.05", chg: "+0.34%", up: true },
-  { sym: "SPY", price: "612.40", chg: "+0.41%", up: true },
-  { sym: "QQQ", price: "540.10", chg: "+0.62%", up: true },
-  { sym: "IWM", price: "228.07", chg: "−0.18%", up: false },
-  { sym: "GLD", price: "271.20", chg: "+0.21%", up: true },
-  { sym: "VIX", price: "14.82", chg: "−0.94%", up: false },
-  { sym: "GME", price: "31.20", chg: "+12.4%", up: true },
-  { sym: "PLTR", price: "78.42", chg: "+2.18%", up: true },
-  { sym: "COIN", price: "287.65", chg: "−0.62%", up: false },
-  { sym: "AVGO", price: "212.50", chg: "+1.04%", up: true },
-  { sym: "NFLX", price: "904.18", chg: "+0.27%", up: true },
+"use client";
+
+import { useEffect, useState } from "react";
+
+const SYMBOLS = [
+  "AMZN", "NVDA", "TSLA", "AAPL", "MSFT", "AMD",
+  "META", "GOOGL", "SPY", "QQQ", "IWM", "GLD",
+  "^VIX", "GME", "PLTR", "COIN", "AVGO", "NFLX",
 ];
 
+const DISPLAY: Record<string, string> = { "^VIX": "VIX" };
+
+type Quote = {
+  sym: string;
+  last: number;
+  chgPct: number;
+  marketState?: string;
+};
+
+function fmtPrice(n: number): string {
+  if (n >= 1000) return n.toFixed(2);
+  if (n >= 100) return n.toFixed(2);
+  if (n >= 10) return n.toFixed(2);
+  return n.toFixed(2);
+}
+function fmtPct(p: number): string {
+  const s = p >= 0 ? "+" : "−";
+  return `${s}${Math.abs(p).toFixed(2)}%`;
+}
+function fmtClock(d: Date): string {
+  return d.toUTCString().split(" ")[4]; // HH:MM:SS
+}
+
 export function TickerBar() {
-  const items = [...TICKERS, ...TICKERS];
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [clock, setClock] = useState<string>("");
+  const [marketState, setMarketState] = useState<string>("");
+
+  // Live quote poll
+  useEffect(() => {
+    let cancelled = false;
+    const fetchAll = async () => {
+      try {
+        const r = await fetch(`/api/quote-batch?symbols=${SYMBOLS.join(",")}`);
+        const j = await r.json();
+        if (cancelled) return;
+        if (j?.ok && Array.isArray(j.quotes)) {
+          setQuotes(j.quotes);
+          const ms = j.quotes.find((q: Quote) => q.sym === "SPY")?.marketState;
+          if (ms) setMarketState(ms);
+        }
+      } catch {
+        /* keep prior quotes on transient error */
+      }
+    };
+    fetchAll();
+    const id = setInterval(fetchAll, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  // Wall clock
+  useEffect(() => {
+    setClock(fmtClock(new Date()));
+    const id = setInterval(() => setClock(fmtClock(new Date())), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const items = quotes.length > 0 ? [...quotes, ...quotes] : [];
+  const stateLabel =
+    marketState === "REGULAR" ? "NYSE OPEN" :
+    marketState === "PRE" ? "PRE-MARKET" :
+    marketState === "POST" ? "POST-MARKET" :
+    marketState === "CLOSED" ? "MARKET CLOSED" :
+    "WAITING…";
+
   return (
     <div className="relative overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider">
       <div className="absolute inset-y-0 left-0 z-10 flex items-center gap-2 bg-bg pl-3 pr-4 border-r border-border">
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
         <span className="text-bull">LIVE</span>
         <span className="text-fg-faint">·</span>
-        <span className="text-fg-dim hidden sm:inline">NYSE OPEN</span>
+        <span className="text-fg-dim hidden sm:inline">{stateLabel}</span>
       </div>
       <div className="flex marquee gap-8 py-2 pl-32">
-        {items.map((t, i) => (
-          <span key={i} className="flex items-center gap-2 whitespace-nowrap shrink-0">
-            <span className="text-fg-dim">{t.sym}</span>
-            <span className="text-fg">{t.price}</span>
-            <span className={t.up ? "text-bull" : "text-bear"}>{t.chg}</span>
-            <span className="text-fg-faint">·</span>
+        {items.length === 0 ? (
+          <span className="flex items-center gap-2 whitespace-nowrap shrink-0 text-fg-faint">
+            fetching live quotes from Yahoo Finance…
           </span>
-        ))}
+        ) : (
+          items.map((t, i) => {
+            const sym = DISPLAY[t.sym] ?? t.sym;
+            const up = t.chgPct >= 0;
+            return (
+              <span key={`${t.sym}-${i}`} className="flex items-center gap-2 whitespace-nowrap shrink-0">
+                <span className="text-fg-dim">{sym}</span>
+                <span className="text-fg">{fmtPrice(t.last)}</span>
+                <span className={up ? "text-bull" : "text-bear"}>{fmtPct(t.chgPct)}</span>
+                <span className="text-fg-faint">·</span>
+              </span>
+            );
+          })
+        )}
       </div>
       <div className="absolute inset-y-0 right-0 z-10 flex items-center gap-2 bg-bg pl-4 pr-3 border-l border-border">
-        <span className="text-fg-dim">14:23:08</span>
+        <span className="text-fg-dim tabular-nums">{clock || "--:--:--"}</span>
         <span className="text-fg-faint">UTC</span>
       </div>
     </div>

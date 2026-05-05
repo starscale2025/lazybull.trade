@@ -1,10 +1,41 @@
 import { CandleChart } from "./CandleChart";
-import { generateCandles, lastChange } from "@/lib/candles";
+import { generateCandles, lastChange, type Candle } from "@/lib/candles";
 import { ProCta } from "./ProCta";
 
-export function Hero() {
-  const candles = generateCandles(72, 11, 226, 0.18, 1.6);
+async function fetchRealCandles(symbol: string, count: number): Promise<{ candles: Candle[]; lastClose: number | null }> {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
+  try {
+    const r = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (lazybullpro/1.0)" },
+      next: { revalidate: 300 },
+    });
+    if (!r.ok) throw new Error(`yahoo ${r.status}`);
+    const j = await r.json();
+    const result = j?.chart?.result?.[0];
+    const q = result?.indicators?.quote?.[0];
+    if (!q) throw new Error("no quote data");
+    const o: (number | null)[] = q.open || [];
+    const h: (number | null)[] = q.high || [];
+    const l: (number | null)[] = q.low || [];
+    const c: (number | null)[] = q.close || [];
+    const out: Candle[] = [];
+    for (let i = 0; i < o.length; i++) {
+      if (o[i] == null || c[i] == null) continue;
+      out.push({ o: o[i] as number, h: (h[i] ?? o[i]) as number, l: (l[i] ?? o[i]) as number, c: c[i] as number });
+    }
+    const tail = out.slice(-count);
+    const lastClose = tail.length ? tail[tail.length - 1].c : null;
+    return { candles: tail, lastClose };
+  } catch {
+    return { candles: [], lastClose: null };
+  }
+}
+
+export async function Hero() {
+  const { candles: realCandles, lastClose } = await fetchRealCandles("AMZN", 72);
+  const candles = realCandles.length >= 30 ? realCandles : generateCandles(72, 11, 226, 0.18, 1.6);
   const change = lastChange(candles);
+  const spotLabel = lastClose ? `$${lastClose.toFixed(2)}` : "live";
 
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
@@ -34,7 +65,10 @@ export function Hero() {
         {/* LEFT — editorial */}
         <div className="col-span-12 lg:col-span-7 flex flex-col gap-10">
           {/* Eyebrow */}
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
+          <div
+            className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider hero-fade-up-soft"
+            style={{ animationDelay: "0.1s" }}
+          >
             <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" /> options · for humans
             </span>
@@ -46,17 +80,34 @@ export function Hero() {
             </span>
           </div>
 
-          {/* Headline — massive editorial */}
+          {/* Headline — massive editorial, animated line-by-line */}
           <h1 className="font-display tracking-tightest text-[clamp(3.4rem,9vw,8.4rem)] leading-[0.86] text-fg">
-            Options
-            <br />
-            you can
-            <br />
-            <span className="italic font-light text-bull phosphor">see</span>
-            <span className="text-bull">.</span>
+            <span className="block hero-headline-line" style={{ animationDelay: "0.3s" }}>
+              Options
+            </span>
+            <span className="block hero-headline-line" style={{ animationDelay: "0.55s" }}>
+              you can
+            </span>
+            <span className="block" style={{ animationDelay: "0.85s" }}>
+              <span
+                className="italic font-light text-bull phosphor hero-glow-in inline-block"
+                style={{ animationDelay: "0.85s" }}
+              >
+                see
+              </span>
+              <span
+                className="text-bull hero-fade-up inline-block"
+                style={{ animationDelay: "1.5s" }}
+              >
+                .
+              </span>
+            </span>
           </h1>
 
-          <p className="max-w-[54ch] text-balance text-base leading-relaxed text-fg-dim md:text-lg">
+          <p
+            className="max-w-[54ch] text-balance text-base leading-relaxed text-fg-dim md:text-lg hero-fade-up"
+            style={{ animationDelay: "1.2s" }}
+          >
             LAZYBULL turns the options chain into a heatmap you{" "}
             <span className="text-fg">drag across</span> to build spreads, condors and straddles.
             An AI teacher hovers over every Greek and explains the trade like you're twelve.
@@ -64,7 +115,10 @@ export function Hero() {
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div
+            className="flex flex-wrap items-center gap-3 hero-fade-up"
+            style={{ animationDelay: "1.5s" }}
+          >
             <a
               href="/trade"
               className="group relative inline-flex items-center gap-3 bg-fg px-5 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull"
@@ -102,7 +156,10 @@ export function Hero() {
         </div>
 
         {/* RIGHT — terminal preview */}
-        <div className="col-span-12 lg:col-span-5 flex flex-col gap-3">
+        <div
+          className="col-span-12 lg:col-span-5 flex flex-col gap-3 hero-card-in"
+          style={{ animationDelay: "0.6s" }}
+        >
           <div className="relative border border-border bg-surface">
             {/* Terminal header */}
             <div className="flex items-center justify-between border-b border-border bg-bg px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
@@ -110,14 +167,14 @@ export function Hero() {
                 <span className="size-2 rounded-full bg-bear" />
                 <span className="size-2 rounded-full bg-amber" />
                 <span className="size-2 rounded-full bg-bull" />
-                <span className="ml-2 text-fg-dim">visual chain · AMZN · 30d</span>
+                <span className="ml-2 text-fg-dim">visual chain · AMZN · {spotLabel}</span>
               </div>
               <span className="text-fg-faint">teacher on</span>
             </div>
 
             {/* Detected strategy block */}
             <div className="flex items-baseline justify-between gap-4 px-4 pt-4">
-              <div>
+              <div className="hero-fade-up-soft" style={{ animationDelay: "1.1s" }}>
                 <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                   <span className="rounded-sm bg-bull/15 px-1 text-bull">DETECTED</span>
                   <span>2 legs · drag built</span>
@@ -129,19 +186,28 @@ export function Hero() {
                   bullish · net debit · defined risk
                 </div>
               </div>
-              <div className="text-right font-mono text-xs text-bull">
+              <div
+                className="text-right font-mono text-xs text-bull hero-fade-up-soft"
+                style={{ animationDelay: "1.4s" }}
+              >
                 <div className="text-lg font-semibold">+$420</div>
                 <div className="text-fg-dim">max profit</div>
               </div>
             </div>
 
             {/* Chart */}
-            <div className="relative h-[260px] px-1">
+            <div
+              className="relative h-[260px] px-1 hero-fade-up-soft"
+              style={{ animationDelay: "1.6s" }}
+            >
               <CandleChart candles={candles} height={260} width={520} glow showVolume={false} />
             </div>
 
             {/* Time row */}
-            <div className="flex items-center justify-between border-t border-border-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div
+              className="flex items-center justify-between border-t border-border-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint hero-fade-up-soft"
+              style={{ animationDelay: "1.9s" }}
+            >
               <div className="flex gap-3">
                 {["7d", "14d", "30d", "45d", "90d"].map((t, i) => (
                   <span key={t} className={i === 2 ? "text-bull" : "hover:text-fg-dim cursor-pointer"}>{t}</span>
@@ -156,7 +222,10 @@ export function Hero() {
 
           {/* Greeks legend + Teacher card */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="border border-border bg-surface p-3">
+            <div
+              className="border border-border bg-surface p-3 hero-fade-up-soft"
+              style={{ animationDelay: "2.1s" }}
+            >
               <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                 <span>greeks</span>
                 <span className="text-fg-faint">hover · learn</span>
@@ -169,8 +238,12 @@ export function Hero() {
                   { g: "ν Vega", v: "0.214", c: "var(--plasma)" },
                   { g: "ρ Rho", v: "+0.041", c: "var(--bear)" },
                   { g: "IV", v: "32.4%", c: "var(--bull)" },
-                ].map((row) => (
-                  <div key={row.g} className="grid grid-cols-2 gap-2">
+                ].map((row, idx) => (
+                  <div
+                    key={row.g}
+                    className="grid grid-cols-2 gap-2 hero-fade-up-soft"
+                    style={{ animationDelay: `${2.4 + idx * 0.08}s` }}
+                  >
                     <span className="text-fg-dim">{row.g}</span>
                     <span className="text-right" style={{ color: row.c }}>{row.v}</span>
                   </div>
@@ -178,7 +251,10 @@ export function Hero() {
               </div>
             </div>
 
-            <div className="relative overflow-hidden border border-bull/30 bg-surface p-3">
+            <div
+              className="relative overflow-hidden border border-bull/30 bg-surface p-3 hero-fade-up-soft"
+              style={{ animationDelay: "2.3s" }}
+            >
               <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                 <span className="text-bull">teacher</span>
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" />

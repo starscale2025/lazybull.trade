@@ -9,12 +9,14 @@ export function BotLibrary({
   customBots,
   activeIds,
   onAdd,
+  onRemove,
   onImport,
 }: {
   bots: BotDef[];
   customBots: BotDef[];
   activeIds: string[];
   onAdd: (def: BotDef) => void;
+  onRemove: (defId: string) => void;
   onImport: () => void;
 }) {
   const [filter, setFilter] = useState<BotCategory | "all">("all");
@@ -36,7 +38,7 @@ export function BotLibrary({
     });
   }, [all, filter, q]);
 
-  const categories: (BotCategory | "all")[] = ["all", "trend", "stats", "risk", "options", "custom"];
+  const categories: (BotCategory | "all")[] = ["all", "ai", "trend", "stats", "risk", "options", "custom"];
 
   return (
     <aside className="flex h-full flex-col border border-border bg-surface">
@@ -92,38 +94,76 @@ export function BotLibrary({
         )}
         {visible.map((b) => {
           const cat = CATEGORY_META[b.category];
+          const isActive = activeIds.includes(b.id);
           return (
-            <button
+            <div
               key={b.id}
-              onClick={() => onAdd(b)}
-              className="group block w-full border-b border-border-soft px-3 py-2.5 text-left transition-colors hover:bg-bg"
+              className={`group relative border-b border-border-soft transition-colors ${
+                isActive ? "bg-bull/[0.06]" : ""
+              }`}
             >
-              <div className="flex items-start gap-3">
-                <span
-                  className="grid size-7 shrink-0 place-items-center border border-border bg-bg font-mono text-[12px]"
-                  style={{ color: cat.color }}
-                >
-                  {b.glyph}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate font-display text-[14px] tracking-tightest text-fg">
-                      {b.name}
-                    </span>
-                    {activeIds.includes(b.id) && (
-                      <span className="size-1.5 rounded-full bg-bull pulse-dot" title="in workspace" />
+              <button
+                onClick={() => (isActive ? onRemove(b.id) : onAdd(b))}
+                title={isActive ? "click to remove from workspace" : "click to add to workspace"}
+                className={`block w-full px-3 py-2.5 pr-9 text-left transition-colors ${
+                  isActive ? "hover:bg-bear/10" : "hover:bg-bg"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className="grid size-7 shrink-0 place-items-center border border-border bg-bg font-mono text-[12px]"
+                    style={{ color: cat.color }}
+                  >
+                    {b.glyph}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-display text-[14px] tracking-tightest text-fg">
+                        {b.name}
+                      </span>
+                      {b.category === "ai" && (
+                        <span className="border border-bear/50 bg-bear/10 px-1 font-mono text-[8px] uppercase tracking-wider text-bear" title={b.endpoint ?? "ai quants"}>
+                          AI
+                        </span>
+                      )}
+                      {isActive && (
+                        <span className="size-1.5 rounded-full bg-bull pulse-dot" title="in workspace" />
+                      )}
+                    </div>
+                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider" style={{ color: cat.color }}>
+                      {cat.label}
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-[11px] text-fg-dim">{b.tagline}</div>
+                  </div>
+                  <span
+                    className={`shrink-0 font-mono text-[10px] uppercase tracking-wider ${
+                      isActive
+                        ? "text-bull group-hover:text-bear"
+                        : "text-fg-faint group-hover:text-bull"
+                    }`}
+                  >
+                    {isActive ? (
+                      <>
+                        <span className="group-hover:hidden">✓ added</span>
+                        <span className="hidden group-hover:inline">− remove</span>
+                      </>
+                    ) : (
+                      "+"
                     )}
-                  </div>
-                  <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider" style={{ color: cat.color }}>
-                    {cat.label}
-                  </div>
-                  <div className="mt-1 line-clamp-2 text-[11px] text-fg-dim">{b.tagline}</div>
+                  </span>
                 </div>
-                <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-fg-faint group-hover:text-bull">
-                  +
-                </span>
-              </div>
-            </button>
+              </button>
+              <a
+                href={`/learn/bots/${b.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Read about ${b.name} — math, code, when it works, when it fails`}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-1.5 right-2 z-10 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-fg-faint hover:border-cyan hover:text-cyan"
+              >
+                ⓘ About
+              </a>
+            </div>
           );
         })}
       </div>

@@ -1,0 +1,142 @@
+{
+  "/Users/shaurya555/Desktop/ai quants/serve.py": {
+    "mtime": 1777840475.6496446,
+    "hash": "e98d6855ca7969552cf37d596f2b8d91"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/leaderboard.py": {
+    "mtime": 1777840186.4409046,
+    "hash": "cff1d0dd8b232655d92aa6b810b3b00c"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/data_gen.py": {
+    "mtime": 1777823914.291761,
+    "hash": "78702e8d347aa99fab7e8abedd703c19"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/__init__.py": {
+    "mtime": 1777823606.5948133,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/features.py": {
+    "mtime": 1777828612.2440248,
+    "hash": "4b19856f194b152bde95bcba7a62b116"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/model.py": {
+    "mtime": 1777824105.6899278,
+    "hash": "95afb2c1e277f64078d6817356cbcfe5"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/honest_eval.py": {
+    "mtime": 1777834631.2457194,
+    "hash": "e86d37a8370faa2df3e4d3067e320336"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/embargo.py": {
+    "mtime": 1777834602.9406848,
+    "hash": "cc95fc8ad5c6cbf1d40959545d65a10c"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/market_data.py": {
+    "mtime": 1777824791.3748362,
+    "hash": "23a2c5af629d06ece03fa1741dfcca66"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/evaluate.py": {
+    "mtime": 1777824324.259058,
+    "hash": "7b552eff3b1d0b14fefd274ac4d43907"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/walk_forward.py": {
+    "mtime": 1777832911.3963149,
+    "hash": "068d0948237fc3089b72b2b20ef16e95"
+  },
+  "/Users/shaurya555/Desktop/ai quants/shared/macro.py": {
+    "mtime": 1777832519.4296112,
+    "hash": "d96aa7d9e37c15eb3af828129096de32"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/heston/train.py": {
+    "mtime": 1777826654.2028975,
+    "hash": "7e2d35234e12bd33780a769e6b4565d7"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/magnitude_macro/walk_forward_eval.py": {
+    "mtime": 1777832994.915332,
+    "hash": "6ab2bb6cf77973c18b3aeeca9bb6188f"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/magnitude_macro/train.py": {
+    "mtime": 1777832556.689903,
+    "hash": "10291960356654ed8581ac7cd9cd20e4"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/best_consensus/build.py": {
+    "mtime": 1777840244.7614393,
+    "hash": "0f62cd4dbd1710073fb5f69e0c94df99"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/best_consensus/__init__.py": {
+    "mtime": 1777840254.597281,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/quantile/train.py": {
+    "mtime": 1777838292.3954432,
+    "hash": "3bf86bc70f5598ce9f46a1f879fede65"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/black_scholes/predict.py": {
+    "mtime": 1777823836.994812,
+    "hash": "061734abe49459bd763250672abf21b5"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/black_scholes/train.py": {
+    "mtime": 1777826194.6752913,
+    "hash": "8c05dfb6dde12bc85cb6437e8d000f61"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/transformer/train.py": {
+    "mtime": 1777838536.9759705,
+    "hash": "fcccf3ec429ac87c1da8962dfa1c3a02"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/triple_barrier/train.py": {
+    "mtime": 1777832173.513462,
+    "hash": "430bf34451646ea00616ed4026c85dd0"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/implied_vol/train.py": {
+    "mtime": 1777826258.6250737,
+    "hash": "e7fbbe99b1d7f7aeb725f39606d92ada"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/cross_sectional/train.py": {
+    "mtime": 1777831732.646547,
+    "hash": "f918d885d13990ccfef583049eb85ccc"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/per_asset/train.py": {
+    "mtime": 1777834075.9892454,
+    "hash": "9c851b449e09962c81213c58432bc04a"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/magnitude/train.py": {
+    "mtime": 1777832013.4970484,
+    "hash": "9df76010862d5371cb057ffd1a49d6b3"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/monte_carlo/train.py": {
+    "mtime": 1777826346.891654,
+    "hash": "4453b7550eee16e43a458c907fbbe34e"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/stacked/train.py": {
+    "mtime": 1777834917.855081,
+    "hash": "8c9d93311c797109e925704a87e0484a"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/direction/experiments.py": {
+    "mtime": 1777830506.1758852,
+    "hash": "5b2966b075a8db8c98a842c36b81a169"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/direction/train.py": {
+    "mtime": 1777829810.6122491,
+    "hash": "db4146945dac90e3240bfeb0b1e9a666"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/sequence/train.py": {
+    "mtime": 1777833351.6421149,
+    "hash": "cf78e3ab474afc945f6154a4d691e263"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/regime/train.py": {
+    "mtime": 1777835568.1208708,
+    "hash": "191cb81361987155d8a2734169ca2bd6"
+  },
+  "/Users/shaurya555/Desktop/ai quants/models/american/train.py": {
+    "mtime": 1777826313.9460986,
+    "hash": "8a930424802c2f79c828613430b4f4c5"
+  },
+  "/Users/shaurya555/Desktop/ai quants/requirements.txt": {
+    "mtime": 1777824416.0569057,
+    "hash": "84e16e2e50ea1aa4e44f23f5f2c17d70"
+  },
+  "/Users/shaurya555/Desktop/ai quants/README.md": {
+    "mtime": 1777840610.1648848,
+    "hash": "8c7471a6e30cf0437f16f91e68738796"
+  }
+}

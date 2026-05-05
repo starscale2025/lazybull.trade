@@ -1,0 +1,1040 @@
+{
+  "communities": {
+    "0": [
+      "abramowitz_stegun_26_2_17",
+      "black_scholes_model",
+      "bots_bollbot",
+      "bots_botregistry",
+      "bots_botsbycategory",
+      "bots_bsbot",
+      "bots_donchianbot",
+      "bots_getbot",
+      "bots_hurstbot",
+      "bots_ivcrushbot",
+      "bots_kalmanbot",
+      "bots_kellybot",
+      "bots_linregbot",
+      "bots_macdbot",
+      "bots_num",
+      "bots_rsibot",
+      "bots_sharpebot",
+      "bots_smacrossover",
+      "bots_varbot",
+      "bots_wheelbot",
+      "bots_zscorebot",
+      "events_eventsfor",
+      "events_hash",
+      "learnpageplan_botsindex",
+      "learnpageplan_perbotroute",
+      "pricing_ncdf",
+      "pricing_ndf",
+      "pricing_priceoption",
+      "quantpage_runone",
+      "runtime_compilecustombot",
+      "runtime_normalise",
+      "series_backtestlongonly",
+      "series_bollinger",
+      "series_closes",
+      "series_donchian",
+      "series_ema",
+      "series_fmtmoney",
+      "series_fmtnum",
+      "series_fmtpct",
+      "series_hurst",
+      "series_kalman",
+      "series_linregchannel",
+      "series_macd",
+      "series_makenorm",
+      "series_makerand",
+      "series_maxdrawdown",
+      "series_returns",
+      "series_rollingstd",
+      "series_rsi",
+      "series_sharpe",
+      "series_sma",
+      "series_sortino",
+      "series_std",
+      "series_zscore",
+      "types_activebot",
+      "types_botcontext",
+      "types_botdef",
+      "types_botresult"
+    ],
+    "1": [
+      "botcell_botcell",
+      "botcell_paramcontrol",
+      "botlibrary_botlibrary",
+      "importbotmodal_field",
+      "importbotmodal_importbotmodal",
+      "learnpageplan_botlibrarytogglefix",
+      "learnpageplan_byob",
+      "learnpageplan_decluttering",
+      "learnpageplan_doc",
+      "learnpageplan_fivefamilies",
+      "learnpageplan_hero",
+      "learnpageplan_learnroute",
+      "learnpageplan_livedemo",
+      "learnpageplan_mdxsplit",
+      "learnpageplan_nowgo",
+      "learnpageplan_presetdeeplinks",
+      "learnpageplan_slidersdemystified",
+      "learnpageplan_softpointer",
+      "learnpageplan_specialty",
+      "learnpageplan_teachermode",
+      "learnpageplan_threepieces",
+      "learnpageplan_whystackbots",
+      "miniviz_equityspark",
+      "miniviz_paneline",
+      "miniviz_pricewithoverlay",
+      "outputpanel_aggregateverdict",
+      "outputpanel_countsides",
+      "outputpanel_outputpanel",
+      "outputpanel_teachernote",
+      "quanthero_quanthero",
+      "quantpage_addbot",
+      "quantpage_buildtape",
+      "quantpage_flashlibrary",
+      "quantpage_importbot",
+      "quantpage_page",
+      "quantpage_quantpage",
+      "quantpage_removebot",
+      "quantpage_removebotsbydefid",
+      "quantpage_runall",
+      "quantpage_spotforsymbol",
+      "quantpage_updateparams",
+      "runtime_samplecustombot",
+      "types_botcategory",
+      "types_categorymeta",
+      "types_pane",
+      "types_paramspec",
+      "types_signal",
+      "types_verdict",
+      "workspace_emptystate",
+      "workspace_workspace"
+    ],
+    "2": [
+      "components_pro_chart_tsx",
+      "components_pro_chartcore_ts",
+      "components_pro_indicators_ts",
+      "pro_chart_datapt",
+      "pro_chart_handlewheel",
+      "pro_chart_newid",
+      "pro_chart_onmousedown",
+      "pro_chart_onmouseleave",
+      "pro_chart_onmousemove",
+      "pro_chart_onmouseup",
+      "pro_chart_onmove",
+      "pro_chart_onup",
+      "pro_chart_onwheel",
+      "pro_chart_onxaxisdoubleclick",
+      "pro_chart_onxaxisdown",
+      "pro_chart_onyaxisdoubleclick",
+      "pro_chart_onyaxisdown",
+      "pro_chart_pickdrawing",
+      "pro_chart_screenpt",
+      "pro_chart_setdraft",
+      "pro_chart_yline",
+      "pro_chart_yof",
+      "pro_chart_yofprice",
+      "pro_chartcore_autoy",
+      "pro_chartcore_barofx",
+      "pro_chartcore_disttoseg",
+      "pro_chartcore_fmttime",
+      "pro_chartcore_genbars",
+      "pro_chartcore_innerh",
+      "pro_chartcore_innerw",
+      "pro_chartcore_mulberry32",
+      "pro_chartcore_priceofy",
+      "pro_chartcore_xofbar",
+      "pro_chartcore_yofprice",
+      "pro_indicators_atr",
+      "pro_indicators_bollinger",
+      "pro_indicators_ema",
+      "pro_indicators_ichimoku",
+      "pro_indicators_macd",
+      "pro_indicators_rsi",
+      "pro_indicators_sma",
+      "pro_indicators_supertrend",
+      "pro_indicators_vwap"
+    ],
+    "3": [
+      "app_api_explain_route_ts",
+      "app_trade_page_tsx",
+      "components_wedge_eventtimeline_tsx",
+      "components_wedge_positionstory_tsx",
+      "components_wedge_probabilitycone_tsx",
+      "components_wedge_strategycards_tsx",
+      "concept_ai_teacher",
+      "concept_random_walk_spot",
+      "explain_route_mockexplanation",
+      "explain_route_openai_call",
+      "explain_route_post",
+      "lib_events_adddays",
+      "lib_events_eventsfor",
+      "lib_events_eventtone",
+      "lib_events_hash",
+      "lib_events_iso",
+      "lib_events_nearestevent",
+      "lib_events_ts",
+      "trade_chain_page_tradepage",
+      "trade_page_confirmbet",
+      "trade_page_datendaysout",
+      "trade_page_fetchall",
+      "trade_page_fmtdate",
+      "trade_page_narrate",
+      "trade_page_placebet",
+      "trade_page_probabilityring",
+      "trade_page_rand",
+      "trade_page_thesisline",
+      "trade_page_tradepage",
+      "wedge_positionstory_positionstoryline",
+      "wedge_positionstory_storysentence",
+      "wedge_probabilitycone_probabilitycone",
+      "wedge_probabilitycone_yof",
+      "wedge_strategycards_xof",
+      "wedge_strategycards_yof"
+    ],
+    "4": [
+      "alertspanel_alertspanel",
+      "chart_alert_type",
+      "chart_bboverlay",
+      "chart_chart",
+      "chart_drawingshape",
+      "chart_ichimokuoverlay",
+      "chart_macdpane",
+      "chart_rsipane",
+      "chart_serieslineline",
+      "chartcore_autoy",
+      "chartcore_bar",
+      "chartcore_barofx",
+      "chartcore_chartgeom",
+      "chartcore_disttoseg",
+      "chartcore_drawing",
+      "chartcore_fmt",
+      "chartcore_fmttime",
+      "chartcore_priceofy",
+      "chartcore_toolkind",
+      "chartcore_viewport",
+      "chartcore_xofbar",
+      "chartcore_yofprice",
+      "indicators_atr",
+      "indicators_bollinger",
+      "indicators_ema",
+      "indicators_ichimoku",
+      "indicators_macd",
+      "indicators_rsi",
+      "indicators_sma",
+      "indicators_supertrend",
+      "indicators_vwap",
+      "lefttoolbar_lefttoolbar",
+      "rightpanel_rightpanel",
+      "topbar_symboldef",
+      "tradedrawer_tradedrawer"
+    ],
+    "5": [
+      "components_quant_botcell_tsx",
+      "components_quant_miniviz_tsx",
+      "lib_quant_bots_ts",
+      "lib_quant_series_ts",
+      "quant_bots_botsbycategory",
+      "quant_bots_num",
+      "quant_miniviz_buildpath",
+      "quant_miniviz_pricewithoverlay",
+      "quant_miniviz_yof",
+      "quant_series_backtestlongonly",
+      "quant_series_bollinger",
+      "quant_series_closes",
+      "quant_series_donchian",
+      "quant_series_ema",
+      "quant_series_fmtmoney",
+      "quant_series_fmtnum",
+      "quant_series_fmtpct",
+      "quant_series_hurst",
+      "quant_series_kalman",
+      "quant_series_linregchannel",
+      "quant_series_logreturns",
+      "quant_series_macd",
+      "quant_series_makenorm",
+      "quant_series_makerand",
+      "quant_series_maxdrawdown",
+      "quant_series_returns",
+      "quant_series_rollingstd",
+      "quant_series_rsi",
+      "quant_series_sharpe",
+      "quant_series_sma",
+      "quant_series_sortino",
+      "quant_series_std",
+      "quant_series_zscore"
+    ],
+    "6": [
+      "ai_teacher_speechbubble_greekchip",
+      "ai_teacher_speechbubble_greektrigger",
+      "app_learn_bots_id_page_tsx",
+      "app_learn_bots_page_tsx",
+      "app_learn_page_tsx",
+      "app_quant_page_tsx",
+      "app_trade_chain_page_tsx",
+      "chain_page_fetchall",
+      "components_ai_teacher_speechbubble_tsx",
+      "components_learn_learnlivedemo_tsx",
+      "components_options_chain_optionschain_tsx",
+      "components_tickerbar_fmtclock",
+      "components_tickerbar_fmtpct",
+      "components_tickerbar_fmtprice",
+      "components_tickerbar_tickerbar",
+      "components_tickerbar_tsx",
+      "id_page_generatemetadata",
+      "id_page_generatestaticparams",
+      "id_page_map",
+      "learn_learnlivedemo_learnlivedemo",
+      "lib_pricing_pricechain",
+      "lib_quant_bot_source_ts",
+      "options_chain_optionschain_formatexpiry",
+      "options_chain_optionschain_ivtoheat",
+      "options_chain_optionschain_ondragenter",
+      "options_chain_optionschain_ondragstart",
+      "options_chain_optionschain_stop",
+      "quant_bot_source_getbotsource",
+      "quant_bot_source_loadfiles",
+      "quant_bot_source_slicebyid",
+      "quant_page_page"
+    ],
+    "7": [
+      "detector_detect",
+      "detector_sortbystrike",
+      "detector_strategykind",
+      "managepanel_component",
+      "managepanel_recommendation",
+      "managepanel_valuelive",
+      "models_strategy_type",
+      "plaingreeks_component",
+      "positionstory_bet_type",
+      "positionstory_line",
+      "positionstory_storysentence",
+      "pricing_chaincell_type",
+      "pricing_leg_type",
+      "pricing_payoff",
+      "pricing_pnlcurve",
+      "pricing_pnlsummary",
+      "pricing_pricechain",
+      "pricing_skewediv",
+      "riskwizard_component",
+      "riskwizard_finish",
+      "riskwizard_naked_call_demo",
+      "stores_position_type",
+      "stores_usepaper",
+      "stores_usesafety",
+      "stores_usestrategy",
+      "strategycards_card",
+      "strategycards_component",
+      "strategycards_sparkline",
+      "timemachine_component",
+      "timemachine_valuestrategy"
+    ],
+    "8": [
+      "components_options_chain_pnldiagram_tsx",
+      "components_options_chain_positionspanel_tsx",
+      "components_options_chain_strategycard_tsx",
+      "components_safety_riskwizard_tsx",
+      "components_wedge_managepanel_tsx",
+      "components_wedge_plaingreeks_tsx",
+      "components_wedge_timemachine_tsx",
+      "lib_detector_detect",
+      "lib_detector_sortbystrike",
+      "lib_detector_ts",
+      "lib_models_midprice",
+      "lib_pricing_hash",
+      "lib_pricing_ncdf",
+      "lib_pricing_ndf",
+      "lib_pricing_payoff",
+      "lib_pricing_pnlcurve",
+      "lib_pricing_pnlsummary",
+      "lib_pricing_priceoption",
+      "lib_pricing_skewediv",
+      "lib_pricing_ts",
+      "options_chain_strategycard_explain",
+      "options_chain_strategycard_fmt",
+      "options_chain_strategycard_placetrade",
+      "safety_riskwizard_finish",
+      "tests_detector_test_mk",
+      "tests_detector_test_ts",
+      "wedge_managepanel_recommendation",
+      "wedge_managepanel_valuelive",
+      "wedge_timemachine_valuestrategy"
+    ],
+    "9": [
+      "aibots_aibot",
+      "aibots_aibots_array",
+      "aibots_americansurrogate",
+      "aibots_apibase",
+      "aibots_bsrequest",
+      "aibots_bssurrogate",
+      "aibots_callapi",
+      "aibots_consensus",
+      "aibots_directionensemble",
+      "aibots_dirrequest",
+      "aibots_hestonsurrogate",
+      "aibots_ivsolver",
+      "aibots_magnitudereg",
+      "aibots_mcsurrogate",
+      "aibots_quantileforecast",
+      "aibots_sequencecnn",
+      "aibots_statusmetric",
+      "aibots_transformerseq",
+      "aibots_triplebarrier",
+      "aibots_withstatus",
+      "fastapi_serve",
+      "learnpageplan_servicestatus",
+      "quantpage_seedactive"
+    ],
+    "10": [
+      "components_quant_importbotmodal_tsx",
+      "components_quant_quantpage_tsx",
+      "lib_quant_runtime_ts",
+      "quant_bots_getbot",
+      "quant_importbotmodal_field",
+      "quant_importbotmodal_importbotmodal",
+      "quant_quantpage_addbot",
+      "quant_quantpage_clearall",
+      "quant_quantpage_dismisslearnbanner",
+      "quant_quantpage_flashlibrary",
+      "quant_quantpage_getdef",
+      "quant_quantpage_importbot",
+      "quant_quantpage_movebot",
+      "quant_quantpage_removebot",
+      "quant_quantpage_removebotsbydefid",
+      "quant_quantpage_runall",
+      "quant_quantpage_runone",
+      "quant_quantpage_togglecollapse",
+      "quant_quantpage_updateparams",
+      "quant_runtime_compilecustombot",
+      "quant_runtime_normalise",
+      "quant_runtime_slug"
+    ],
+    "11": [
+      "about_about",
+      "about_counter",
+      "about_founderphoto",
+      "about_timelineitem",
+      "aboutpage_aboutpage",
+      "candlechart_candlechart",
+      "candlechart_minispark",
+      "concept_paper_only_safety",
+      "concept_visual_options_chain",
+      "detector_test_mk_helper",
+      "detector_test_strategy_detector",
+      "footer_footer",
+      "hero_hero",
+      "nav_nav",
+      "page_home",
+      "partners_logocell",
+      "partners_partners",
+      "procta_previewchart",
+      "procta_procta",
+      "safety_test_safety_kill_switch",
+      "socialproof_socialproof"
+    ],
+    "12": [
+      "components_wedge_modelspread_tsx",
+      "lib_models_biasfromthesis",
+      "lib_models_generatestrategies",
+      "lib_models_histret",
+      "lib_models_ncdf",
+      "lib_models_pnlat",
+      "lib_models_proball",
+      "lib_models_probbs",
+      "lib_models_probempirical",
+      "lib_models_probheston",
+      "lib_models_probmontecarlo",
+      "lib_models_probprofit",
+      "lib_models_probuser",
+      "lib_models_probvolsurface",
+      "lib_models_spreadbetween",
+      "lib_models_summarise",
+      "lib_models_ts"
+    ],
+    "13": [
+      "box_muller_transform",
+      "candles_generatecandles",
+      "candles_mulberry32",
+      "heston_stochastic_vol_model",
+      "models_modelmeta",
+      "models_ncdf",
+      "models_proball",
+      "models_probbs",
+      "models_probempirical",
+      "models_probheston",
+      "models_probmontecarlo",
+      "models_probuser",
+      "models_probvolsurface",
+      "models_spreadbetween",
+      "modelspread_component",
+      "modelspread_default_user_code",
+      "vitest_config"
+    ],
+    "14": [
+      "app_pro_page_tsx",
+      "components_pro_bottombar_tsx",
+      "components_pro_replaybar_tsx",
+      "pro_bottombar_bottombar",
+      "pro_bottombar_fmtist",
+      "pro_page_oncompare",
+      "pro_page_onkey",
+      "pro_page_onpreset",
+      "pro_page_ontrade",
+      "pro_page_redo",
+      "pro_page_saveworkspace",
+      "pro_page_showtoast",
+      "pro_page_startreplay",
+      "pro_page_togglefullscreen",
+      "pro_page_undo",
+      "pro_replaybar_replaybar"
+    ],
+    "15": [
+      "app_page_home",
+      "app_page_tsx",
+      "components_candlechart_candlechart",
+      "components_candlechart_tsx",
+      "components_hero_fetchrealcandles",
+      "components_hero_tsx",
+      "components_learn_learndatasetplayground_tsx",
+      "components_socialproof_socialproof",
+      "components_socialproof_tsx",
+      "components_tradeoverview_tsx",
+      "components_usecases_tsx",
+      "components_usecases_usecases",
+      "lib_candles_generatecandles",
+      "lib_candles_lastchange",
+      "lib_candles_mulberry32",
+      "lib_candles_ts"
+    ],
+    "16": [
+      "avatar_teacheravatar",
+      "concept_drag_select_chain",
+      "concept_iv_heatmap",
+      "greekicons_deltaicon",
+      "greekicons_gammaicon",
+      "greekicons_greekmeta",
+      "greekicons_ivicon",
+      "greekicons_rhoicon",
+      "greekicons_thetaicon",
+      "greekicons_vegaicon",
+      "optionschain_formatexpiry",
+      "optionschain_ivtoheat",
+      "optionschain_optionschain",
+      "speechbubble_greekchip",
+      "speechbubble_greektrigger"
+    ],
+    "17": [
+      "lib_quant_ai_bots_ts",
+      "quant_ai_bots_aibot",
+      "quant_ai_bots_bsrequest",
+      "quant_ai_bots_callapi",
+      "quant_ai_bots_dirrequest",
+      "quant_ai_bots_hashstr",
+      "quant_ai_bots_num",
+      "quant_ai_bots_realisedvol",
+      "quant_ai_bots_seedrand",
+      "quant_ai_bots_statusmetric",
+      "quant_ai_bots_str",
+      "quant_ai_bots_trendstrength",
+      "quant_ai_bots_withstatus"
+    ],
+    "18": [
+      "app_api_quote_batch_route_ts",
+      "app_api_quote_route_ts",
+      "concept_workspace_share_link",
+      "pro_page_panechart",
+      "pro_page_propage",
+      "pro_page_workspace",
+      "quote_batch_route_fetchone",
+      "quote_batch_route_get",
+      "quote_route_get",
+      "quote_route_range_interval",
+      "yahoo_finance_chart_endpoint"
+    ],
+    "19": [
+      "components_pro_alertspanel_tsx",
+      "components_pro_rightpanel_tsx",
+      "components_pro_tradedrawer_tsx",
+      "pro_alertspanel_add",
+      "pro_chartcore_fmt",
+      "pro_rightpanel_addsym",
+      "pro_rightpanel_fetchquotes",
+      "pro_rightpanel_findoldest",
+      "pro_rightpanel_removesym",
+      "pro_tradedrawer_place"
+    ],
+    "20": [
+      "concept_paper_trading_safety",
+      "killswitch_killswitchoverlay",
+      "killswitch_safetysettingsbutton",
+      "killswitch_toggle",
+      "pnldiagram_pnldiagram",
+      "pretrademodal_dangersimulation",
+      "pretrademodal_pretrademodal",
+      "strategycard_explain",
+      "strategycard_placetrade",
+      "strategycard_strategycard"
+    ],
+    "21": [
+      "components_pro_topbar_tsx",
+      "pro_topbar_iconbell",
+      "pro_topbar_iconfullscreen",
+      "pro_topbar_iconredo",
+      "pro_topbar_iconreplay",
+      "pro_topbar_iconundo",
+      "pro_topbar_symglyph"
+    ],
+    "22": [
+      "ai_teacher_greekicons_deltaicon",
+      "ai_teacher_greekicons_gammaicon",
+      "ai_teacher_greekicons_ivicon",
+      "ai_teacher_greekicons_rhoicon",
+      "ai_teacher_greekicons_thetaicon",
+      "ai_teacher_greekicons_vegaicon",
+      "components_ai_teacher_greekicons_tsx"
+    ],
+    "23": [
+      "events_eventtone",
+      "events_marketevent_type",
+      "eventtimeline_component",
+      "eventtimeline_legend",
+      "probabilitycone_component",
+      "probabilitycone_eventcolor"
+    ],
+    "24": [
+      "models_biasfromthesis",
+      "models_generatestrategies",
+      "models_midprice",
+      "models_pnlat",
+      "models_probprofit",
+      "models_summarise"
+    ],
+    "25": [
+      "app_layout_rootlayout",
+      "app_layout_tsx",
+      "components_themeprovider_themeprovider",
+      "components_themeprovider_tsx"
+    ],
+    "26": [
+      "agents_nextjs_agent_rules",
+      "claude_project_instructions",
+      "layout_rootlayout",
+      "themeprovider_themeprovider"
+    ],
+    "27": [
+      "app_api_symbol_search_route_ts",
+      "symbol_search_route_get",
+      "yahoo_finance_search_endpoint"
+    ],
+    "28": [
+      "lib_stores_cellkey",
+      "lib_stores_legid",
+      "lib_stores_ts"
+    ],
+    "29": [
+      "tickerbar_tickerbar",
+      "tradeoverview_tradeoverview",
+      "usecases_usecases"
+    ],
+    "30": [
+      "topbar_indicators_const",
+      "topbar_seedsymbols",
+      "topbar_topbar"
+    ],
+    "31": [
+      "shaurya_about_usage",
+      "shaurya_person",
+      "shaurya_portrait"
+    ],
+    "32": [
+      "joshmann_about_usage",
+      "joshmann_person",
+      "joshmann_portrait"
+    ],
+    "33": [
+      "components_learn_learnconsensusplayground_tsx",
+      "learn_learnconsensusplayground_bot",
+      "learn_learnconsensusplayground_toggle"
+    ],
+    "34": [
+      "components_procta_onkey",
+      "components_procta_tsx"
+    ],
+    "35": [
+      "components_partners_logocell",
+      "components_partners_tsx"
+    ],
+    "36": [
+      "postcss_config",
+      "tailwindcss_postcss_plugin"
+    ],
+    "37": [
+      "chartcore_genbars",
+      "chartcore_mulberry32"
+    ],
+    "38": [
+      "about_page_aboutpage",
+      "app_about_page_tsx"
+    ],
+    "39": [
+      "components_about_counter",
+      "components_about_tsx"
+    ],
+    "40": [
+      "nextconfig_default",
+      "todomd_root"
+    ],
+    "41": [
+      "components_learn_learnapistatus_tsx",
+      "learn_learnapistatus_ping"
+    ],
+    "42": [
+      "postcss_config_mjs"
+    ],
+    "43": [
+      "next_env_d_ts"
+    ],
+    "44": [
+      "vitest_config_ts"
+    ],
+    "45": [
+      "next_config_ts"
+    ],
+    "46": [
+      "components_nav_tsx"
+    ],
+    "47": [
+      "components_footer_tsx"
+    ],
+    "48": [
+      "components_quant_outputpanel_tsx"
+    ],
+    "49": [
+      "components_quant_quanthero_tsx"
+    ],
+    "50": [
+      "components_quant_botlibrary_tsx"
+    ],
+    "51": [
+      "components_quant_workspace_tsx"
+    ],
+    "52": [
+      "components_pro_lefttoolbar_tsx"
+    ],
+    "53": [
+      "components_ai_teacher_avatar_tsx"
+    ],
+    "54": [
+      "components_safety_killswitch_tsx"
+    ],
+    "55": [
+      "components_safety_pretrademodal_tsx"
+    ],
+    "56": [
+      "tests_safety_test_ts"
+    ],
+    "57": [
+      "lib_quant_types_ts"
+    ],
+    "58": [
+      "nextenv_dts"
+    ],
+    "59": [
+      "nextconfig_ts"
+    ],
+    "60": [
+      "bottombar_bottombar"
+    ],
+    "61": [
+      "replaybar_replaybar"
+    ],
+    "62": [
+      "greekicons_greekkey"
+    ],
+    "63": [
+      "positionspanel_positionspanel"
+    ],
+    "64": [
+      "stores_usetheme"
+    ],
+    "65": [
+      "stores_useteacher"
+    ],
+    "66": [
+      "events_nearestevent"
+    ],
+    "67": [
+      "candles_lastchange"
+    ],
+    "68": [
+      "readme_lazybull_overview"
+    ],
+    "69": [
+      "file_svg_icon"
+    ],
+    "70": [
+      "vercel_svg_logo"
+    ],
+    "71": [
+      "next_svg_logo"
+    ],
+    "72": [
+      "globe_svg_icon"
+    ],
+    "73": [
+      "window_svg_icon"
+    ],
+    "74": [
+      "outputpanel_runrow"
+    ],
+    "75": [
+      "runtime_custombotinput"
+    ],
+    "76": [
+      "types_metric"
+    ],
+    "77": [
+      "series_logreturns"
+    ],
+    "78": [
+      "readme_root"
+    ],
+    "79": [
+      "components_learn_learnbotdemo_tsx"
+    ],
+    "80": [
+      "lib_quant_bot_content_ts"
+    ]
+  },
+  "cohesion": {
+    "0": 0.06,
+    "1": 0.05,
+    "2": 0.09,
+    "3": 0.07,
+    "4": 0.07,
+    "5": 0.12,
+    "6": 0.07,
+    "7": 0.07,
+    "8": 0.09,
+    "9": 0.21,
+    "10": 0.11,
+    "11": 0.1,
+    "12": 0.21,
+    "13": 0.14,
+    "14": 0.17,
+    "15": 0.17,
+    "16": 0.15,
+    "17": 0.19,
+    "18": 0.24,
+    "19": 0.2,
+    "20": 0.22,
+    "21": 0.29,
+    "22": 0.29,
+    "23": 0.4,
+    "24": 0.4,
+    "25": 0.5,
+    "26": 0.5,
+    "27": 0.67,
+    "28": 1.0,
+    "29": 0.67,
+    "30": 0.67,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 0.67,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0,
+    "38": 1.0,
+    "39": 1.0,
+    "40": 1.0,
+    "41": 1.0,
+    "42": 1.0,
+    "43": 1.0,
+    "44": 1.0,
+    "45": 1.0,
+    "46": 1.0,
+    "47": 1.0,
+    "48": 1.0,
+    "49": 1.0,
+    "50": 1.0,
+    "51": 1.0,
+    "52": 1.0,
+    "53": 1.0,
+    "54": 1.0,
+    "55": 1.0,
+    "56": 1.0,
+    "57": 1.0,
+    "58": 1.0,
+    "59": 1.0,
+    "60": 1.0,
+    "61": 1.0,
+    "62": 1.0,
+    "63": 1.0,
+    "64": 1.0,
+    "65": 1.0,
+    "66": 1.0,
+    "67": 1.0,
+    "68": 1.0,
+    "69": 1.0,
+    "70": 1.0,
+    "71": 1.0,
+    "72": 1.0,
+    "73": 1.0,
+    "74": 1.0,
+    "75": 1.0,
+    "76": 1.0,
+    "77": 1.0,
+    "78": 1.0,
+    "79": 1.0,
+    "80": 1.0
+  },
+  "gods": [
+    {
+      "id": "chart_chart",
+      "label": "Chart",
+      "degree": 26
+    },
+    {
+      "id": "types_botdef",
+      "label": "BotDef type",
+      "degree": 26
+    },
+    {
+      "id": "quantpage_quantpage",
+      "label": "QuantPage (workbench root)",
+      "degree": 23
+    },
+    {
+      "id": "bots_botregistry",
+      "label": "BOT_REGISTRY array (all bots)",
+      "degree": 21
+    },
+    {
+      "id": "learnpageplan_doc",
+      "label": "Learn page & per-bot pages \u2014 design plan",
+      "degree": 19
+    },
+    {
+      "id": "aibots_aibot",
+      "label": "aiBot() factory",
+      "degree": 13
+    },
+    {
+      "id": "aibots_aibots_array",
+      "label": "AI_BOTS array (12 bots)",
+      "degree": 13
+    },
+    {
+      "id": "fastapi_serve",
+      "label": "FastAPI service (ai quants/serve.py)",
+      "degree": 13
+    },
+    {
+      "id": "pricing_priceoption",
+      "label": "priceOption Black-Scholes",
+      "degree": 12
+    },
+    {
+      "id": "lib_pricing_priceoption",
+      "label": "priceOption()",
+      "degree": 11
+    }
+  ],
+  "surprises": [
+    {
+      "source": "BotDef type",
+      "target": "/learn/bots/[id] per-bot pages",
+      "source_files": [
+        "lib/quant/types.ts",
+        "docs/learn-page-plan.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "QuantPage.removeBotsByDefId",
+      "target": "BotLibrary toggle bug fix",
+      "source_files": [
+        "components/quant/QuantPage.tsx",
+        "docs/learn-page-plan.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "QuantPage.flashLibrary (librarySpotlight flash)",
+      "target": "Soft pointer banner (lb_quant_seen_v1)",
+      "source_files": [
+        "components/quant/QuantPage.tsx",
+        "docs/learn-page-plan.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "RootLayout \u2014 global app shell with fonts",
+      "target": "Next.js Agent Rules (breaking changes notice)",
+      "source_files": [
+        "app/layout.tsx",
+        "AGENTS.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "rationale_for",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories"
+    },
+    {
+      "source": "BotCell (workspace cell)",
+      "target": "Live demo (inline BotCell)",
+      "source_files": [
+        "components/quant/BotCell.tsx",
+        "docs/learn-page-plan.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "conceptually_related_to",
+      "why": "crosses file types (code \u2194 doc); connects across different repos/directories; peripheral node `Live demo (inline BotCell)` unexpectedly reaches hub `BotCell (workspace cell)`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `QuantPage (workbench root)` connect `Community 1` to `Community 0`, `Community 9`, `Community 13`?",
+      "why": "High betweenness centrality (0.206) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Nav (top navigation)` connect `Community 11` to `Community 1`?",
+      "why": "High betweenness centrality (0.191) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 2 inferred relationships involving `BotDef type` (e.g. with `QuantPage.runOne` and `/learn/bots/[id] per-bot pages`) actually correct?",
+      "why": "`BotDef type` has 2 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 3 inferred relationships involving `QuantPage (workbench root)` (e.g. with `QuantHero` and `Workspace`) actually correct?",
+      "why": "`QuantPage (workbench root)` has 3 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `@tailwindcss/postcss`, `Workspace state model (symbol/timeframe/drawings/...)`, `Workspace persistence + base64 share-link mechanism` to the rest of the system?",
+      "why": "123 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.06 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.05 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

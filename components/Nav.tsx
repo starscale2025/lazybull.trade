@@ -17,10 +17,10 @@ export function Nav() {
 
         <div className="hidden items-center gap-1 md:flex">
           {[
+            { l: "Learn", href: "/learn" },
             { l: "Visual chain", href: "/trade" },
             { l: "Pro charts", href: "/pro" },
             { l: "Quant", href: "/quant" },
-            { l: "Teacher", href: "/trade" },
             { l: "About", href: "/about" },
           ].map((item, i) => (
             <Link

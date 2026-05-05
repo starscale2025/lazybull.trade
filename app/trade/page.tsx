@@ -17,6 +17,7 @@ import { storySentence, type Bet } from "@/components/wedge/PositionStory";
 import { generateStrategies, probBS, type Strategy } from "@/lib/models";
 import { eventsFor } from "@/lib/events";
 
+// IV is still synthetic (no free options-IV feed); spot is now live.
 const SYMBOLS = [
   { sym: "AMZN", name: "Amazon", spot: 226.45, iv: 0.32 },
   { sym: "NVDA", name: "Nvidia", spot: 138.9, iv: 0.46 },
@@ -24,6 +25,7 @@ const SYMBOLS = [
   { sym: "AAPL", name: "Apple", spot: 229.83, iv: 0.28 },
   { sym: "SPY", name: "S&P 500", spot: 612.4, iv: 0.16 },
 ];
+const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
 
 function dateNDaysOut(n: number) {
   const d = new Date();
@@ -40,38 +42,73 @@ export default function TradePage() {
   const [symIdx, setSymIdx] = useState(0);
   const sym = SYMBOLS[symIdx];
 
-  // live spot — random walk to keep the UI feeling alive
-  const [spot, setSpot] = useState(sym.spot);
+  // Live spot — polls /api/quote-batch for real Yahoo prices.
+  const [liveSpots, setLiveSpots] = useState<Record<string, number>>({});
+  const spot = liveSpots[sym.sym] ?? sym.spot;
+
   useEffect(() => {
-    setSpot(sym.spot);
-  }, [sym]);
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSpot((s) => +(s + (Math.random() - 0.5) * (s * 0.001)).toFixed(2));
-    }, 2000);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const fetchAll = async () => {
+      try {
+        const r = await fetch(`/api/quote-batch?symbols=${SYM_LIST}`);
+        const j = await r.json();
+        if (cancelled) return;
+        if (j?.ok && Array.isArray(j.quotes)) {
+          const next: Record<string, number> = {};
+          for (const q of j.quotes) if (q?.last) next[q.sym] = q.last;
+          setLiveSpots(next);
+        }
+      } catch {
+        /* keep prior values on transient error */
+      }
+    };
+    fetchAll();
+    const id = setInterval(fetchAll, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
-  // historical bars (deterministic)
-  const histBars = useMemo(() => {
-    const out: { i: number; t: number; c: number }[] = [];
-    let s = sym.spot * 0.92;
-    let seed = sym.sym.charCodeAt(0) * 31 + sym.sym.charCodeAt(1) * 7;
-    const rand = () => {
-      seed = (seed + 0x6d2b79f5) >>> 0;
-      let r = seed;
-      r = Math.imul(r ^ (r >>> 15), r | 1);
-      r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-    };
-    const baseTime = Date.now() - 60 * 86_400_000;
-    for (let i = 0; i < 60; i++) {
-      const drift = 0.001 + Math.sin(i / 14) * 0.004;
-      s = s * (1 + (rand() - 0.5) * 0.018 + drift);
-      out.push({ i, t: baseTime + i * 86_400_000, c: s });
-    }
-    out[out.length - 1].c = sym.spot; // anchor last close to current spot
-    return out;
+  // Historical daily bars from Yahoo (real). Falls back to a deterministic
+  // walk only if the fetch fails.
+  const [histBars, setHistBars] = useState<{ i: number; t: number; c: number }[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/quote?symbol=${sym.sym}&tf=D`);
+        const j = await r.json();
+        if (cancelled) return;
+        if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
+          const last60 = j.bars.slice(-60).map((b: { t: number; c: number }, i: number) => ({ i, t: b.t, c: b.c }));
+          setHistBars(last60);
+          return;
+        }
+      } catch {
+        /* fall through to synthetic fallback */
+      }
+      // Fallback only if Yahoo fails.
+      const out: { i: number; t: number; c: number }[] = [];
+      let s = sym.spot * 0.92;
+      let seed = sym.sym.charCodeAt(0) * 31 + sym.sym.charCodeAt(1) * 7;
+      const rand = () => {
+        seed = (seed + 0x6d2b79f5) >>> 0;
+        let r = seed;
+        r = Math.imul(r ^ (r >>> 15), r | 1);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+      const baseTime = Date.now() - 60 * 86_400_000;
+      for (let i = 0; i < 60; i++) {
+        const drift = 0.001 + Math.sin(i / 14) * 0.004;
+        s = s * (1 + (rand() - 0.5) * 0.018 + drift);
+        out.push({ i, t: baseTime + i * 86_400_000, c: s });
+      }
+      out[out.length - 1].c = sym.spot;
+      setHistBars(out);
+    })();
+    return () => { cancelled = true; };
   }, [sym]);
 
   // thesis

@@ -56,13 +56,12 @@ type Props = {
   onSnapshot: () => void;
   onTrade: () => void;
   onPublish: () => void;
-  onCompare: () => void;
 };
 
 export function TopBar({
   symbol, setSymbol, timeframe, setTimeframe, chart, setChart,
   indicators, toggleIndicator, onReplay, onAlert,
-  layout, setLayout, onUndo, onRedo, onFullscreen, onSnapshot, onTrade, onPublish, onCompare,
+  layout, setLayout, onUndo, onRedo, onFullscreen, onSnapshot, onTrade, onPublish,
 }: Props) {
   const [symOpen, setSymOpen] = useState(false);
   const [indOpen, setIndOpen] = useState(false);
@@ -155,16 +154,6 @@ export function TopBar({
           )}
         </AnimatePresence>
       </div>
-
-      <button
-        title="Compare another symbol on this chart"
-        onClick={onCompare}
-        className="flex size-8 items-center justify-center border border-transparent text-fg-dim hover:border-border hover:text-fg"
-      >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
 
       <Sep />
 

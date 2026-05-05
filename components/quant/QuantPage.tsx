@@ -25,44 +25,78 @@ export function QuantPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [librarySpotlight, setLibrarySpotlight] = useState(false);
   const libraryRef = useRef<HTMLDivElement>(null);
+  const [showLearnBanner, setShowLearnBanner] = useState(false);
 
-  const candles = useMemo<Candle[]>(
+  // Live Yahoo OHLCV for the chosen symbol. Falls back to a deterministic
+  // synthetic walk only if the fetch fails (custom symbol, network down, etc.).
+  const [liveCandles, setLiveCandles] = useState<Candle[] | null>(null);
+  const [dataSource, setDataSource] = useState<"live" | "synthetic">("synthetic");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLiveCandles(null);
+    (async () => {
+      try {
+        const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&tf=D`);
+        const j = await r.json();
+        if (cancelled) return;
+        if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
+          const tail = j.bars.slice(-bars).map((b: { o: number; h: number; l: number; c: number }) => ({
+            o: b.o, h: b.h, l: b.l, c: b.c,
+          }));
+          setLiveCandles(tail);
+          setDataSource("live");
+          return;
+        }
+        setDataSource("synthetic");
+      } catch {
+        if (!cancelled) setDataSource("synthetic");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [symbol, bars]);
+
+  const syntheticCandles = useMemo<Candle[]>(
     () => generateCandles(bars, seed + symbol.charCodeAt(0), spotForSymbol(symbol), drift, vol),
     [bars, seed, symbol, drift, vol]
   );
+  const candles = liveCandles ?? syntheticCandles;
   const lastSpot = candles[candles.length - 1]?.c ?? 100;
 
   // Auto-rerun: when dataset changes, invalidate all results
   useEffect(() => {
     setResults({});
-  }, [bars, seed, symbol, drift, vol]);
+  }, [bars, seed, symbol, drift, vol, liveCandles]);
 
   function getDef(id: string): BotDef | undefined {
     return getBot(id) || customBots.find((b) => b.id === id);
   }
 
-  function runOne(uid: string) {
+  async function runOne(uid: string) {
     const a = active.find((x) => x.uid === uid);
     if (!a) return;
     const def = getDef(a.defId);
     if (!def) return;
-    const out = def.run({ candles, symbol }, a.params);
-    setResults((r) => ({ ...r, [uid]: out }));
+    try {
+      const out = await Promise.resolve(def.run({ candles, symbol }, a.params));
+      setResults((r) => ({ ...r, [uid]: out }));
+    } catch (err) {
+      console.error("bot crashed", a.defId, err);
+    }
   }
 
   function runAll() {
     if (active.length === 0) return;
     const next: ResultsMap = {};
-    // staggered visual: write each result after a tiny tick so the UI animates
     setResults({});
     let i = 0;
-    const tick = () => {
+    const tick = async () => {
       const a = active[i];
       if (!a) return;
       const def = getDef(a.defId);
       if (def) {
         try {
-          next[a.uid] = def.run({ candles, symbol }, a.params);
+          next[a.uid] = await Promise.resolve(def.run({ candles, symbol }, a.params));
           setResults({ ...next });
         } catch (err) {
           console.error("bot crashed", a.defId, err);
@@ -71,7 +105,7 @@ export function QuantPage() {
       i++;
       if (i < active.length) setTimeout(tick, 60);
     };
-    tick();
+    void tick();
   }
 
   function addBot(def: BotDef) {
@@ -80,10 +114,13 @@ export function QuantPage() {
     for (const p of def.params) params[p.key] = p.default;
     const newActive = { uid, defId: def.id, params };
     setActive((a) => [...a, newActive]);
-    // immediate run for delight
-    setTimeout(() => {
-      const out = def.run({ candles, symbol }, params);
-      setResults((r) => ({ ...r, [uid]: out }));
+    setTimeout(async () => {
+      try {
+        const out = await Promise.resolve(def.run({ candles, symbol }, params));
+        setResults((r) => ({ ...r, [uid]: out }));
+      } catch (err) {
+        console.error("bot crashed", def.id, err);
+      }
     }, 50);
   }
 
@@ -96,17 +133,29 @@ export function QuantPage() {
     });
   }
 
+  function removeBotsByDefId(defId: string) {
+    const doomed = active.filter((x) => x.defId === defId).map((x) => x.uid);
+    if (doomed.length === 0) return;
+    setActive((a) => a.filter((x) => x.defId !== defId));
+    setResults((r) => {
+      const next = { ...r };
+      for (const uid of doomed) delete next[uid];
+      return next;
+    });
+  }
+
   function updateParams(uid: string, params: Record<string, number | string | boolean>) {
     setActive((a) => a.map((x) => (x.uid === uid ? { ...x, params } : x)));
-    // Re-run with new params
     const a = active.find((x) => x.uid === uid);
     if (a) {
       const def = getDef(a.defId);
       if (def) {
-        try {
-          const out = def.run({ candles, symbol }, params);
-          setResults((r) => ({ ...r, [uid]: out }));
-        } catch {}
+        void (async () => {
+          try {
+            const out = await Promise.resolve(def.run({ candles, symbol }, params));
+            setResults((r) => ({ ...r, [uid]: out }));
+          } catch {}
+        })();
       }
     }
   }
@@ -144,6 +193,43 @@ export function QuantPage() {
     setTimeout(() => setLibrarySpotlight(false), 1200);
   }
 
+  // ── Learn-page soft pointer (first-time visitor)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const seen = localStorage.getItem("lb_quant_seen_v1");
+      if (!seen) setShowLearnBanner(true);
+    } catch {
+      /* localStorage blocked */
+    }
+  }, []);
+  function dismissLearnBanner() {
+    setShowLearnBanner(false);
+    try { localStorage.setItem("lb_quant_seen_v1", "1"); } catch {}
+  }
+
+  // ── Deep-link: /quant?add=<botId> auto-adds the bot once on mount.
+  const didConsumeAddRef = useRef(false);
+  useEffect(() => {
+    if (didConsumeAddRef.current) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const addId = params.get("add");
+    if (!addId) return;
+    const def = getDef(addId);
+    if (!def) return;
+    didConsumeAddRef.current = true;
+    // Avoid duplicating if already present.
+    if (!active.some((a) => a.defId === addId)) {
+      addBot(def);
+    }
+    // Strip the param from the URL so a refresh doesn't re-add.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("add");
+    window.history.replaceState({}, "", url.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const rows = active.map((a) => ({
     active: a,
     def: getDef(a.defId)!,
@@ -154,6 +240,30 @@ export function QuantPage() {
 
   return (
     <>
+      {showLearnBanner && (
+        <div className="border-b border-bull/30 bg-bull/5 px-5 py-2.5">
+          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
+            <span className="size-1.5 rounded-full bg-bull pulse-dot" />
+            <span className="text-bull">First time here?</span>
+            <span className="text-fg-dim normal-case tracking-normal">
+              Stack bots like Lego blocks. The Learn page walks through it in 3 minutes.
+            </span>
+            <a
+              href="/learn"
+              className="ml-auto inline-flex items-center gap-2 border border-bull bg-bull/10 px-3 py-1 text-bull hover:bg-bull/20"
+            >
+              See how it works →
+            </a>
+            <button
+              onClick={dismissLearnBanner}
+              className="text-fg-faint hover:text-fg"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       <QuantHero
         symbol={symbol}
         setSymbol={setSymbol}
@@ -172,6 +282,7 @@ export function QuantPage() {
         activeCount={active.length}
         totalBots={BOT_REGISTRY.length + customBots.length}
         spot={lastSpot}
+        dataSource={dataSource}
       />
 
       <section className="mx-auto w-full max-w-[1500px] px-5 pt-5">
@@ -182,6 +293,7 @@ export function QuantPage() {
               customBots={customBots}
               activeIds={active.map((a) => a.defId)}
               onAdd={addBot}
+              onRemove={removeBotsByDefId}
               onImport={() => setImportOpen(true)}
             />
           </div>
@@ -238,11 +350,14 @@ function spotForSymbol(s: string) {
 }
 
 function seedActive(): ActiveBot[] {
+  // Seed the workspace with the AI consensus + a couple of classics so the user
+  // sees the AI bots immediately, side-by-side with the math they already know.
+  const consensus = getBot("ai-consensus");
+  const direction = getBot("ai-direction");
   const sma = getBot("sma-cross");
-  const rsi = getBot("rsi-rev");
   const z = getBot("zscore");
   const out: ActiveBot[] = [];
-  for (const def of [sma, rsi, z]) {
+  for (const def of [consensus, direction, sma, z]) {
     if (!def) continue;
     const params: Record<string, number | string | boolean> = {};
     for (const p of def.params) params[p.key] = p.default;

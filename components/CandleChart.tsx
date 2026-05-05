@@ -120,6 +120,7 @@ export function CandleChart({
         d={`${linePath} L${padL + slot * (candles.length - 1) + slot / 2},${padT + innerH} L${padL + slot / 2},${padT + innerH} Z`}
         fill="url(#cc-line)"
         opacity="0.6"
+        className="svg-fade-in"
       />
 
       {/* Close line */}
@@ -130,6 +131,8 @@ export function CandleChart({
         strokeOpacity="0.35"
         strokeWidth="1"
         filter={glow ? "url(#cc-glow)" : undefined}
+        pathLength={1}
+        className="svg-draw-in"
       />
 
       {/* Candles */}
@@ -229,8 +232,8 @@ export function MiniSpark({ candles, color = "var(--bull)", className }: { candl
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={`${path} L${w},${h} L0,${h} Z`} fill="url(#ms-fill)" />
-      <path d={path} fill="none" stroke={color} strokeWidth="1.4" />
+      <path d={`${path} L${w},${h} L0,${h} Z`} fill="url(#ms-fill)" className="svg-fade-in" />
+      <path d={path} fill="none" stroke={color} strokeWidth="1.4" pathLength={1} className="svg-draw-in" />
     </svg>
   );
 }

@@ -73,6 +73,15 @@ export function BotCell({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <a
+            href={`/learn/bots/${def.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`How does ${def.name} work?`}
+            className="grid h-7 w-7 place-items-center border border-border bg-bg font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-cyan hover:text-cyan"
+          >
+            ?
+          </a>
           <button
             onClick={() => setParamsOpen((v) => !v)}
             className="h-7 border border-border bg-bg px-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
@@ -117,6 +126,35 @@ export function BotCell({
             <div className="col-span-full border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[11px] text-fg-dim">
               <span className="text-fg-faint">f(x) = </span>
               {def.formula}
+            </div>
+          )}
+          {(def.endpoint || def.module) && (
+            <div className="col-span-full grid grid-cols-1 gap-2 border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] sm:grid-cols-2">
+              {def.endpoint && (
+                <div className="text-fg-dim">
+                  <span className="text-fg-faint uppercase tracking-wider mr-2">api</span>
+                  <span className="text-cyan">{def.endpoint}</span>
+                </div>
+              )}
+              {def.module && (
+                <div className="text-fg-dim truncate">
+                  <span className="text-fg-faint uppercase tracking-wider mr-2">src</span>
+                  <span className="text-fg">{def.module}</span>
+                </div>
+              )}
+              <div className="col-span-full text-fg-faint text-[9px] flex items-center justify-between gap-3">
+                <span>
+                  outputs are deterministic mocks · swap for `await fetch(API + endpoint)` once the FastAPI service is up
+                </span>
+                <a
+                  href={`/learn/bots/${def.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-cyan hover:underline"
+                >
+                  ↗ How does this work?
+                </a>
+              </div>
             </div>
           )}
         </div>

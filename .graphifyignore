@@ -1,0 +1,4 @@
+ai quants/
+.next/
+.playwright-mcp/
+node_modules/
