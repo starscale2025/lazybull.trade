@@ -310,7 +310,7 @@ html, body {
 .hero-fade-up      { opacity: 0; animation: hero-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .hero-fade-up-soft { opacity: 0; animation: hero-fade-up-soft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .hero-headline-line {
-  display: inline-block;
+  display: block;
   opacity: 0;
   animation: hero-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -344,4 +344,562 @@ html, body {
 }
 @media (prefers-reduced-motion: reduce) {
   .chart-candle-in { animation: none; opacity: 1; }
+}
+
+/* ───── Learn-page ambient motion (chapter dividers, tickers, boot, stats) ─────
+   Pure CSS, all GPU-friendly transforms / opacity / clip-path.
+*/
+
+/* Boot sequence overlay */
+@keyframes boot-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+@keyframes boot-fade-out {
+  0%, 70% { opacity: 1; visibility: visible; }
+  100%    { opacity: 0; visibility: hidden; }
+}
+.boot-fade-out {
+  animation: boot-fade-out 1.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes boot-cursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.boot-cursor { animation: boot-cursor 0.6s steps(1) infinite; }
+
+/* Section watermark — extremely subtle drift on hover-heavy sections */
+@keyframes watermark-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-6px, -4px, 0); }
+}
+.watermark-drift { animation: watermark-drift 24s ease-in-out infinite; }
+
+/* Phosphor pulse — for "live" key terms in body prose */
+@keyframes text-glow-pulse {
+  0%, 100% { text-shadow: 0 0 16px rgba(0, 255, 135, 0.45), 0 0 4px rgba(0, 255, 135, 0.6); }
+  50%      { text-shadow: 0 0 28px rgba(0, 255, 135, 0.7),  0 0 8px rgba(0, 255, 135, 0.8); }
+}
+.text-glow-pulse { animation: text-glow-pulse 4s ease-in-out infinite; }
+
+/* Ambient slow zoom on chart frames */
+@keyframes ambient-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+  50%      { box-shadow: 0 0 60px -20px rgba(0, 255, 135, 0.25); }
+}
+.ambient-glow { animation: ambient-glow 6s ease-in-out infinite; }
+
+/* Scroll-progress shimmer */
+@keyframes progress-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.progress-shimmer {
+  background: linear-gradient(90deg, var(--bull) 0%, rgba(255,255,255,0.7) 50%, var(--bull) 100%);
+  background-size: 200% 100%;
+  animation: progress-shimmer 3s linear infinite;
+}
+
+/* Vertical ticker (data stream rail) */
+@keyframes ticker-vertical {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+.ticker-vertical { animation: ticker-vertical 40s linear infinite; }
+
+/* Headline word-by-word reveal */
+@keyframes word-reveal {
+  from { opacity: 0; transform: translate3d(0, 28px, 0); filter: blur(8px); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0);   filter: blur(0); }
+}
+.word-reveal {
+  display: inline-block;
+  opacity: 0;
+  animation: word-reveal 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Stat-underline reveal */
+@keyframes stat-underline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Section divider — the diamond + tick marks */
+@keyframes divider-grow {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+.divider-grow {
+  transform-origin: center;
+  animation: divider-grow 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes diamond-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.diamond-spin { animation: diamond-spin 18s linear infinite; }
+
+/* Chapter §N cycle in/out */
+@keyframes chapter-rise {
+  from { opacity: 0; transform: translate3d(-12px, 24px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.chapter-rise { animation: chapter-rise 1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* Crosshair sweep (decorative — appears in some section corners) */
+@keyframes crosshair-sweep {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0.4; }
+  50%  { transform: translate(8px, 8px) rotate(180deg); opacity: 0.8; }
+  100% { transform: translate(0, 0) rotate(360deg); opacity: 0.4; }
+}
+.crosshair-sweep { animation: crosshair-sweep 11s ease-in-out infinite; }
+
+/* Pull-quote glow — used on the BIG editorial italic words */
+@keyframes pull-quote-glow {
+  0%, 100% { text-shadow: 0 0 24px rgba(0, 255, 135, 0.55), 0 0 60px rgba(0, 255, 135, 0.25); }
+  50%      { text-shadow: 0 0 38px rgba(0, 255, 135, 0.75), 0 0 90px rgba(0, 255, 135, 0.35); }
+}
+.pull-quote-glow {
+  animation: pull-quote-glow 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-fade-out, .boot-cursor, .watermark-drift, .text-glow-pulse,
+  .ambient-glow, .progress-shimmer, .ticker-vertical, .word-reveal,
+  .divider-grow, .diamond-spin, .chapter-rise, .crosshair-sweep,
+  .pull-quote-glow {
+    animation: none !important;
+  }
+  .word-reveal, .chapter-rise { opacity: 1; transform: none; filter: none; }
+  .divider-grow { transform: scaleX(1); opacity: 1; }
+}
+
+/* ───── Cinematic homepage atmosphere ─────
+   Layered ambient effects that elevate the entire page beyond
+   a typical landing. All GPU-friendly, all reduced-motion-safe.
+*/
+
+/* Cursor-tracking spotlight — placed in body, follows mouse via CSS vars */
+.cursor-spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(
+      600px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(0, 255, 135, 0.08),
+      rgba(0, 255, 135, 0.025) 25%,
+      transparent 55%
+    );
+  transition: opacity 0.4s ease;
+  opacity: 0;
+}
+.cursor-spotlight.is-on { opacity: 1; }
+
+/* Ambient floating orbs — fixed-positioned background blobs that drift */
+.ambient-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 0;
+}
+@keyframes orb-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  25%      { transform: translate3d(60px, -40px, 0) scale(1.08); }
+  50%      { transform: translate3d(-30px, 50px, 0) scale(0.95); }
+  75%      { transform: translate3d(-50px, -20px, 0) scale(1.05); }
+}
+@keyframes orb-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(-80px, 30px, 0) scale(1.12); }
+  66%      { transform: translate3d(40px, -60px, 0) scale(0.9); }
+}
+@keyframes orb-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(70px, 40px, 0) scale(1.1); }
+}
+.orb-drift-1 { animation: orb-drift-1 26s ease-in-out infinite; }
+.orb-drift-2 { animation: orb-drift-2 34s ease-in-out infinite; }
+.orb-drift-3 { animation: orb-drift-3 22s ease-in-out infinite; }
+
+/* Page top scroll-progress rail */
+.scroll-progress-rail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 60;
+  background: transparent;
+  pointer-events: none;
+}
+.scroll-progress-fill {
+  height: 100%;
+  width: var(--p, 0%);
+  background: linear-gradient(90deg, transparent, var(--bull) 25%, var(--cyan) 60%, var(--bull) 100%);
+  background-size: 200% 100%;
+  animation: progress-shimmer 4s linear infinite;
+  transform-origin: left center;
+  box-shadow: 0 0 14px rgba(0, 255, 135, 0.55);
+  transition: width 0.12s ease-out;
+}
+
+/* Scroll reveal — content always renders; transform-only lift on first view.
+   We deliberately do NOT set opacity:0 on the base — past attempts at this
+   left whole sections invisible when an element was scrolled past before
+   the IO observer caught it. The slide is enough. */
+.reveal {
+  transform: translate3d(0, 18px, 0);
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, filter;
+}
+.reveal.is-in {
+  transform: translate3d(0, 0, 0);
+}
+.reveal-fast { transition-duration: 0.6s, 0.5s; }
+.reveal-slow { transition-duration: 1.3s, 1.1s; }
+
+/* Stagger — children slide up with a delay-cascade on parent .is-in */
+.reveal-stagger > * {
+  transform: translate3d(0, 14px, 0);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-stagger.is-in > * { transform: none; }
+.reveal-stagger.is-in > *:nth-child(1) { transition-delay: 0.04s; }
+.reveal-stagger.is-in > *:nth-child(2) { transition-delay: 0.10s; }
+.reveal-stagger.is-in > *:nth-child(3) { transition-delay: 0.16s; }
+.reveal-stagger.is-in > *:nth-child(4) { transition-delay: 0.22s; }
+.reveal-stagger.is-in > *:nth-child(5) { transition-delay: 0.28s; }
+.reveal-stagger.is-in > *:nth-child(n+6) { transition-delay: 0.34s; }
+
+/* Section divider — diamond + ticks animated grow */
+@keyframes divider-tick-grow {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+@keyframes divider-diamond-fade {
+  0%   { opacity: 0; transform: rotate(0deg) scale(0.6); }
+  60%  { opacity: 1; transform: rotate(180deg) scale(1.1); }
+  100% { opacity: 1; transform: rotate(360deg) scale(1); }
+}
+.divider-tick-l {
+  transform-origin: right center;
+  transform: scaleX(0);
+}
+.divider-tick-r {
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+.divider-diamond {
+  opacity: 0;
+}
+.is-in .divider-tick-l {
+  animation: divider-tick-grow 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+.is-in .divider-tick-r {
+  animation: divider-tick-grow 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+.is-in .divider-diamond {
+  animation: divider-diamond-fade 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+}
+
+/* Magnetic CTA — translation handled by JS via CSS vars */
+.magnetic {
+  transform: translate3d(var(--magx, 0px), var(--magy, 0px), 0);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.magnetic-glow::after {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(120px circle at var(--lx, 50%) var(--ly, 50%), rgba(0, 255, 135, 0.35), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(20px);
+}
+.magnetic-glow:hover::after { opacity: 1; }
+
+/* Terminal tilt wrapper — perspective applied, child uses CSS vars */
+.tilt-wrap {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+.tilt {
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate3d(0, 0, 0);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+.tilt-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(450px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 135, 0.18), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  mix-blend-mode: screen;
+  z-index: 5;
+}
+.tilt-wrap:hover .tilt-shine { opacity: 1; }
+
+/* Boot intro overlay */
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: boot-fade-out 2.4s cubic-bezier(0.65, 0, 0.35, 1) 0.9s forwards;
+}
+.boot-scanlines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 135, 0.04) 2px,
+    rgba(0, 255, 135, 0.04) 3px
+  );
+  pointer-events: none;
+}
+.boot-flash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,255,135,0.15) 0%, transparent 60%, rgba(0,255,135,0.08) 100%);
+  animation: boot-flash 0.6s ease-out 0.1s forwards;
+  opacity: 0;
+}
+@keyframes boot-flash {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.boot-line {
+  opacity: 0;
+  animation: boot-line-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes boot-line-in {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.boot-bar {
+  height: 2px;
+  background: var(--bull);
+  width: 0%;
+  animation: boot-progress 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards;
+  box-shadow: 0 0 14px rgba(0, 255, 135, 0.6);
+}
+
+/* Big section "chapter §N" callouts — float in from left */
+@keyframes chapter-flag {
+  0%   { opacity: 0; transform: translate3d(-32px, 0, 0); letter-spacing: 0.4em; }
+  100% { opacity: 1; transform: translate3d(0, 0, 0); letter-spacing: 0.25em; }
+}
+.is-in .chapter-flag { animation: chapter-flag 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.chapter-flag { opacity: 0; }
+
+/* Counter — flicker as it counts (subtle digital readout vibe) */
+@keyframes counter-flick {
+  0%, 95%, 100% { opacity: 1; }
+  97%           { opacity: 0.4; }
+}
+.counter-flick { animation: counter-flick 6s steps(1) infinite; }
+
+/* Continuous gradient sweep over headline italic accents */
+@keyframes headline-sweep {
+  0%   { background-position: -200% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.headline-sweep {
+  background: linear-gradient(
+    100deg,
+    var(--bull) 0%,
+    var(--cyan) 25%,
+    var(--plasma) 50%,
+    var(--cyan) 75%,
+    var(--bull) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: headline-sweep 7s linear infinite;
+}
+
+/* Big arrow / link draw on hover — not used everywhere, but available */
+.draw-arrow {
+  background: linear-gradient(currentColor, currentColor) no-repeat;
+  background-size: 0% 1px;
+  background-position: 0% 100%;
+  transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.draw-arrow:hover { background-size: 100% 1px; }
+
+/* Subtle vignette for dramatic edge falloff (applied to body) */
+.page-vignette::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.45) 100%);
+}
+
+/* CRT flicker on phosphor headline */
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.85; }
+  94% { opacity: 1; }
+  96% { opacity: 0.92; }
+  97% { opacity: 1; }
+}
+.crt-flicker { animation: crt-flicker 8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-spotlight, .ambient-orb, .scroll-progress-fill,
+  .orb-drift-1, .orb-drift-2, .orb-drift-3 {
+    animation: none !important;
+  }
+  .reveal, .reveal-stagger > * {
+    transform: none !important;
+    filter: none !important;
+  }
+  .boot-overlay { display: none; }
+  .headline-sweep { animation: none; }
+  .counter-flick, .crt-flicker { animation: none; }
+}
+
+/* ───── Slim section rule (replaces heavy SectionDivider) ───── */
+.rule-tick-l { transform-origin: right center; transform: scaleX(0); }
+.rule-tick-r { transform-origin: left center;  transform: scaleX(0); }
+.rule-diamond { opacity: 0; transform: rotate(45deg) scale(0.4); }
+
+@keyframes rule-tick-grow { to { transform: scaleX(1); } }
+@keyframes rule-diamond-in {
+  0%   { opacity: 0; transform: rotate(45deg) scale(0.4); }
+  60%  { opacity: 1; transform: rotate(225deg) scale(1.3); }
+  100% { opacity: 1; transform: rotate(405deg) scale(1); }
+}
+.is-in .rule-tick-l { animation: rule-tick-grow 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.is-in .rule-tick-r { animation: rule-tick-grow 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.is-in .rule-diamond { animation: rule-diamond-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards; }
+
+/* ───── Kinetic headline — letters fall in one by one ───── */
+@keyframes kinetic-in {
+  from { opacity: 0; transform: translate3d(0, 0.5em, 0) skewY(6deg); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) skewY(0deg); }
+}
+.kinetic > span {
+  display: inline-block;
+  opacity: 0;
+  animation: kinetic-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ───── Hover lift utility — used on cards for subtle pop ───── */
+.hover-lift {
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 60px -30px rgba(0, 255, 135, 0.35);
+  border-color: rgba(0, 255, 135, 0.35);
+}
+
+/* ───── Cards: scan-line ripple sweeping on hover ───── */
+.scan-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.scan-ripple::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(0,255,135,0.07) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.scan-ripple:hover::before { transform: translateX(110%); }
+
+/* ───── Underline-draw on link hover ───── */
+.link-draw {
+  position: relative;
+}
+.link-draw::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--bull);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-draw:hover::after { transform: scaleX(1); }
+
+/* ───── Floating tilt — gentle Y-bob for accent badges ───── */
+@keyframes float-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+.float-bob { animation: float-bob 4.5s ease-in-out infinite; }
+
+/* ───── Marquee glow trail — for the bottom hero marquee ───── */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+/* ───── Iridescent border sweep on the Hero terminal ───── */
+@keyframes border-sheen {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.border-sheen {
+  position: relative;
+}
+.border-sheen::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(0,255,135,0.5) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: border-sheen 8s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kinetic > span { opacity: 1; transform: none; animation: none; }
+  .float-bob, .border-sheen::before { animation: none; }
 }

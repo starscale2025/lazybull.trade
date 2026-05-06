@@ -1,6 +1,9 @@
 import { CandleChart } from "./CandleChart";
 import { generateCandles, lastChange, type Candle } from "@/lib/candles";
 import { ProCta } from "./ProCta";
+import { TerminalTilt } from "./atmosphere/TerminalTilt";
+import { MagneticCTA } from "./atmosphere/MagneticCTA";
+import { CountUp } from "./atmosphere/CountUp";
 
 async function fetchRealCandles(symbol: string, count: number): Promise<{ candles: Candle[]; lastClose: number | null }> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d`;
@@ -80,24 +83,40 @@ export async function Hero() {
             </span>
           </div>
 
-          {/* Headline — massive editorial, animated line-by-line */}
-          <h1 className="font-display tracking-tightest text-[clamp(3.4rem,9vw,8.4rem)] leading-[0.86] text-fg">
+          {/* Headline — massive editorial, animated line-by-line.
+              Italic glyphs need a touch of left/right padding so the
+              gradient-clipped "see" doesn't get truncated by the section's
+              overflow-hidden. The leading-[0.92] gives the descender of
+              "Options" + "you" room to breathe over the next line. */}
+          <h1
+            className="font-display text-fg"
+            style={{
+              fontSize: "clamp(3rem, 8.5vw, 8rem)",
+              lineHeight: 0.94,
+              letterSpacing: "-0.02em",
+              paddingRight: "0.25em",
+            }}
+          >
             <span className="block hero-headline-line" style={{ animationDelay: "0.3s" }}>
               Options
             </span>
             <span className="block hero-headline-line" style={{ animationDelay: "0.55s" }}>
               you can
             </span>
-            <span className="block" style={{ animationDelay: "0.85s" }}>
+            <span className="block" style={{ animationDelay: "0.85s", paddingLeft: "0.06em" }}>
               <span
-                className="italic font-light text-bull phosphor hero-glow-in inline-block"
-                style={{ animationDelay: "0.85s" }}
+                className="italic font-light hero-glow-in inline-block headline-sweep crt-flicker"
+                style={{
+                  animationDelay: "0.85s",
+                  paddingLeft: "0.06em",
+                  paddingRight: "0.22em",
+                }}
               >
                 see
               </span>
               <span
                 className="text-bull hero-fade-up inline-block"
-                style={{ animationDelay: "1.5s" }}
+                style={{ animationDelay: "1.5s", marginLeft: "-0.1em" }}
               >
                 .
               </span>
@@ -119,15 +138,17 @@ export async function Hero() {
             className="flex flex-wrap items-center gap-3 hero-fade-up"
             style={{ animationDelay: "1.5s" }}
           >
-            <a
-              href="/trade"
-              className="group relative inline-flex items-center gap-3 bg-fg px-5 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull"
-            >
-              Open the visual chain
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.6" />
-              </svg>
-            </a>
+            <MagneticCTA strength={0.3}>
+              <a
+                href="/trade"
+                className="group relative inline-flex items-center gap-3 bg-fg px-5 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull"
+              >
+                Open the visual chain
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.6" />
+                </svg>
+              </a>
+            </MagneticCTA>
             <ProCta />
             <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
               Free · No card · Paper $100k
@@ -135,19 +156,30 @@ export async function Hero() {
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4">
+          <div
+            data-gsap="stagger"
+            data-gsap-duration="1.0"
+            className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4"
+          >
             {[
-              { k: "Strategies detected", v: "14+", sub: "spreads, condors, ratios" },
-              { k: "Greek explainers", v: "6", sub: "delta, gamma, theta, vega…" },
-              { k: "Chain pricing", v: "0.4ms", sub: "full Black-Scholes" },
-              { k: "Paper balance", v: "$100k", sub: "kill switch built-in" },
+              { k: "Strategies detected", to: 14, suffix: "+", decimals: 0, sub: "spreads, condors, ratios" },
+              { k: "Greek explainers", to: 6, suffix: "", decimals: 0, sub: "delta, gamma, theta, vega…" },
+              { k: "Chain pricing", to: 0.4, suffix: "ms", decimals: 1, sub: "full Black-Scholes" },
+              { k: "Paper balance", to: 100, prefix: "$", suffix: "k", decimals: 0, sub: "kill switch built-in" },
             ].map((s) => (
-              <div key={s.k} className="bg-bg p-4">
+              <div key={s.k} className="group relative bg-bg p-4 transition-colors hover:bg-surface">
+                <div className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-fg/60 transition-transform duration-500 group-hover:scale-x-100" />
                 <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                   {s.k}
                 </div>
                 <div className="mt-2 font-display text-3xl tracking-tightest text-fg">
-                  {s.v}
+                  <CountUp
+                    to={s.to}
+                    decimals={s.decimals}
+                    prefix={s.prefix ?? ""}
+                    suffix={s.suffix ?? ""}
+                    duration={1700}
+                  />
                 </div>
                 <div className="mt-1 font-mono text-[10px] text-fg-dim">{s.sub}</div>
               </div>
@@ -160,7 +192,8 @@ export async function Hero() {
           className="col-span-12 lg:col-span-5 flex flex-col gap-3 hero-card-in"
           style={{ animationDelay: "0.6s" }}
         >
-          <div className="relative border border-border bg-surface">
+          <TerminalTilt>
+            <div className="relative border border-border bg-surface">
             {/* Terminal header */}
             <div className="flex items-center justify-between border-b border-border bg-bg px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
               <div className="flex items-center gap-2">
@@ -219,6 +252,7 @@ export async function Hero() {
               </div>
             </div>
           </div>
+          </TerminalTilt>
 
           {/* Greeks legend + Teacher card */}
           <div className="grid grid-cols-2 gap-3">
@@ -277,30 +311,6 @@ export async function Hero() {
         </div>
       </div>
 
-      {/* Bottom marquee */}
-      <div className="relative border-y border-border bg-bg-soft py-3 font-mono text-[11px] uppercase tracking-wider">
-        <div className="flex marquee-slow gap-10 whitespace-nowrap text-fg-faint">
-          {Array.from({ length: 2 }).map((_, k) => (
-            <div key={k} className="flex shrink-0 gap-10">
-              {[
-                "drag · build · trade",
-                "AI teacher built-in",
-                "14+ strategies detected",
-                "iron condors made easy",
-                "training wheels on by default",
-                "kill switch + daily loss limit",
-                "$100k paper account",
-                "no card to start",
-              ].map((t, i) => (
-                <span key={i} className="flex items-center gap-10">
-                  <span className="text-bull">⌖</span>
-                  <span>{t}</span>
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }

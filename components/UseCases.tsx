@@ -79,7 +79,6 @@ const PROFILES = [
 export function UseCases() {
   return (
     <section className="relative border-b border-border bg-bg">
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
 
       {/* Section header */}
       <div className="relative mx-auto max-w-[1400px] px-5 pt-24 pb-12">
@@ -105,7 +104,11 @@ export function UseCases() {
 
       {/* Profile grid */}
       <div className="relative mx-auto max-w-[1400px] px-5 pb-24">
-        <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-2">
+        <div
+          data-gsap="stagger"
+          data-gsap-duration="1.1"
+          className="grid grid-cols-1 gap-px bg-border md:grid-cols-2"
+        >
           {PROFILES.map((p, i) => {
             const candles = generateCandles(40, p.seed, 100, 0.04, 1.6);
             return (

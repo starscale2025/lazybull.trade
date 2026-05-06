@@ -135,7 +135,10 @@ export function CandleChart({
         className="svg-draw-in"
       />
 
-      {/* Candles */}
+      {/* Candles — fast-forward stagger from left to right, ~7ms per bar.
+          Each candle group gets a per-index animation-delay; the CSS
+          `chart-candle-in` keyframe fades opacity 0 → 1 in 220ms. The whole
+          chart "plays" itself in over ~1s. */}
       {candles.map((c, i) => {
         const isBull = c.c >= c.o;
         const color = isBull ? bull : bear;
@@ -147,7 +150,11 @@ export function CandleChart({
         const bodyTop = Math.min(yOpen, yClose);
         const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
         return (
-          <g key={i}>
+          <g
+            key={i}
+            className="chart-candle-in"
+            style={{ animationDelay: `${i * 7}ms` }}
+          >
             <line x1={x} x2={x} y1={yHigh} y2={yLow} stroke={color} strokeWidth={wickW} />
             <rect
               x={x - bodyW / 2}
@@ -161,14 +168,18 @@ export function CandleChart({
         );
       })}
 
-      {/* Last marker */}
+      {/* Last marker — fades in after all candles have appeared. */}
       {(() => {
         const last = candles[candles.length - 1];
         const x = padL + slot * (candles.length - 1) + slot / 2;
         const y = yOf(last.c);
         const color = last.c >= last.o ? bull : bear;
+        const lastMarkerDelay = candles.length * 7 + 200;
         return (
-          <g>
+          <g
+            className="chart-candle-in"
+            style={{ animationDelay: `${lastMarkerDelay}ms`, animationDuration: "0.4s" }}
+          >
             <line x1={padL} x2={width - padR} y1={y} y2={y} stroke={color} strokeOpacity="0.35" strokeDasharray="3 3" />
             <rect x={width - padR - 50} y={y - 8} width="50" height="16" fill={color} />
             <text
@@ -188,7 +199,7 @@ export function CandleChart({
         );
       })()}
 
-      {/* Volume bars */}
+      {/* Volume bars — same per-bar stagger as candles above. */}
       {showVolume &&
         candles.map((c, i) => {
           const isBull = c.c >= c.o;
@@ -206,6 +217,8 @@ export function CandleChart({
               height={h}
               fill={color}
               opacity="0.4"
+              className="chart-candle-in"
+              style={{ animationDelay: `${i * 7}ms` }}
             />
           );
         })}

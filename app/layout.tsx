@@ -3,6 +3,7 @@ import { Fraunces, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google"
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SessionProvider } from "@/components/SessionProvider";
+import { GsapScroller } from "@/components/atmosphere/GsapScroller";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -43,6 +44,7 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </SessionProvider>
+        <GsapScroller />
       </body>
     </html>
   );

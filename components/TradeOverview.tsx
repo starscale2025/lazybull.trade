@@ -81,7 +81,11 @@ export function TradeOverview() {
 
       {/* Steps grid */}
       <div className="relative mx-auto max-w-[1400px] px-5 pb-12">
-        <div className="grid grid-cols-1 gap-px overflow-hidden border border-border bg-border md:grid-cols-2 lg:grid-cols-4">
+        <div
+          data-gsap="stagger-fast"
+          data-gsap-duration="0.9"
+          className="grid grid-cols-1 gap-px overflow-hidden border border-border bg-border md:grid-cols-2 lg:grid-cols-4"
+        >
           {STEPS.map((s, i) => (
             <article
               key={s.n}
@@ -110,7 +114,11 @@ export function TradeOverview() {
 
       {/* Live preview slab */}
       <div className="relative mx-auto max-w-[1400px] px-5 pb-20">
-        <div className="overflow-hidden border border-border bg-bg">
+        <div
+          data-gsap="scale-in"
+          data-gsap-duration="1.2"
+          className="overflow-hidden border border-border bg-bg"
+        >
           {/* Top status bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <div className="flex items-center gap-3">
