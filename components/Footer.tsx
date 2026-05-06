@@ -1,3 +1,5 @@
+import pkg from "../package.json";
+
 const COLS = [
   {
     title: "Product",
@@ -154,7 +156,7 @@ export function Footer() {
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">paper-only beta · stable</span>
             <span className="text-fg-faint">·</span>
-            <span>build a4f819 · v1.4.0</span>
+            <span>v{pkg.version}</span>
             <span className="text-fg-faint hidden md:inline">·</span>
             <span className="hidden md:inline">region · iad-1</span>
           </div>
