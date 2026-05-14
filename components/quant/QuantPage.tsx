@@ -68,6 +68,30 @@ export function QuantPage() {
     setResults({});
   }, [bars, seed, symbol, drift, vol, liveCandles]);
 
+  /**
+   * First-mount auto-run — fires the seeded bots once on initial page
+   * load (after the first set of candles is available) so a fresh visitor
+   * sees the run-stream + decimation animations cascade across the
+   * workspace instead of landing on a row of "press ▶ run" placeholders.
+   *
+   * Guarded by a ref so it only ever runs once per page life. Subsequent
+   * dataset changes (symbol / bars / seed) still wipe results via the
+   * effect above and require an explicit ▶ Run All — that's intentional,
+   * we don't want bots silently rerunning every slider tick.
+   */
+  const didAutoRunRef = useRef(false);
+  useEffect(() => {
+    if (didAutoRunRef.current) return;
+    if (active.length === 0) return;
+    if (candles.length < 20) return; // wait for candles to be ready
+    didAutoRunRef.current = true;
+    // Defer to the next tick so the page paints once before the first
+    // cell starts streaming — gives the hero a beat to settle.
+    const timer = setTimeout(() => runAll(), 350);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candles.length, active.length]);
+
   function getDef(id: string): BotDef | undefined {
     return getBot(id) || customBots.find((b) => b.id === id);
   }
@@ -90,6 +114,11 @@ export function QuantPage() {
     const next: ResultsMap = {};
     setResults({});
     let i = 0;
+    // Stagger ~220ms between bots so the run-stream animations in each
+    // BotCell visibly cascade down the workspace instead of all firing
+    // at once. Each cell's stream runs ~950ms, so adjacent cells overlap
+    // but the start times are clearly distinct.
+    const RUN_STAGGER_MS = 220;
     const tick = async () => {
       const a = active[i];
       if (!a) return;
@@ -103,7 +132,7 @@ export function QuantPage() {
         }
       }
       i++;
-      if (i < active.length) setTimeout(tick, 60);
+      if (i < active.length) setTimeout(tick, RUN_STAGGER_MS);
     };
     void tick();
   }
@@ -302,6 +331,7 @@ export function QuantPage() {
             <Workspace
               rows={rows}
               candles={candles}
+              symbol={symbol}
               beginner={beginner}
               onUpdateParams={updateParams}
               onRemove={removeBot}

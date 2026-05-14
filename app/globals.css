@@ -903,3 +903,63 @@ html, body {
   .kinetic > span { opacity: 1; transform: none; animation: none; }
   .float-bob, .border-sheen::before { animation: none; }
 }
+
+/* ───── Quant workbench: cell stack-in, run-stream, decimation ───── */
+
+/* Cell drop-in: a new BotCell mounts above the previous stack and settles
+   in with a tiny overshoot, so adding bots feels physical rather than
+   list-y. transform-origin: top so it appears to "fall onto" the stack. */
+@keyframes cell-stack-in {
+  0%   { opacity: 0; transform: translate3d(0, -28px, 0) scale(0.985); filter: blur(6px); }
+  55%  { opacity: 1; transform: translate3d(0, 4px, 0) scale(1.004); filter: blur(0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+.cell-stack-in {
+  transform-origin: top center;
+  animation: cell-stack-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Each line of the run-stream prints in with a small leftward slide. The
+   per-line stagger is set inline via animation-delay. */
+@keyframes run-stream-line-in {
+  from { opacity: 0; transform: translate3d(-6px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.run-stream-line {
+  opacity: 0;
+  animation: run-stream-line-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Phosphor rail along the top edge of a running cell — borrows the same
+   shimmer keyframe as the page scroll-progress so the visual language is
+   consistent. */
+.cell-running-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--bull) 50%, transparent);
+  background-size: 200% 100%;
+  animation: progress-shimmer 1.4s linear infinite;
+  box-shadow: 0 0 12px rgba(0, 255, 135, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* When a cell transitions from stream → result, the metrics grid fades
+   up alongside the decimation reveal. Short, GPU-cheap. */
+@keyframes cell-result-in {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.cell-result-in {
+  animation: cell-result-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-stack-in, .run-stream-line, .cell-result-in {
+    animation: none; opacity: 1; transform: none; filter: none;
+  }
+  .cell-running-rail { animation: none; }
+}

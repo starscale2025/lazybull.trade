@@ -2,3 +2,5 @@ ai quants/
 .next/
 .playwright-mcp/
 node_modules/
+build_output.txt
+public/*.pdf

@@ -14,6 +14,7 @@ export type ResolvedRow = {
 export function Workspace({
   rows,
   candles,
+  symbol,
   beginner,
   onUpdateParams,
   onRemove,
@@ -24,6 +25,7 @@ export function Workspace({
 }: {
   rows: ResolvedRow[];
   candles: Candle[];
+  symbol: string;
   beginner: boolean;
   onUpdateParams: (uid: string, params: Record<string, number | string | boolean>) => void;
   onRemove: (uid: string) => void;
@@ -40,6 +42,39 @@ export function Workspace({
     }
     lastCount.current = rows.length;
   }, [rows.length]);
+
+  /**
+   * Stack-in animation gate.
+   *
+   * `seenUidsRef` is initialised on first mount with the uids of any
+   * seeded bots (consensus / direction / sma / zscore from QuantPage).
+   * Those should NOT play the drop-in animation — they're just the
+   * starting state of the workspace.
+   *
+   * Anything that arrives later — a user-added bot, an imported bot,
+   * a deep-link `?add=` — has a uid not in this set and gets the
+   * `cell-stack-in` class so it falls onto the stack with a small
+   * overshoot. After render we record it as seen so a re-render
+   * (param change, reorder, collapse) doesn't replay the animation.
+   */
+  const seenUidsRef = useRef<Set<string> | null>(null);
+  if (seenUidsRef.current === null) {
+    seenUidsRef.current = new Set(rows.map((r) => r.active.uid));
+  }
+  const seen = seenUidsRef.current;
+
+  // Compute "new" uids for THIS render before the effect runs so the
+  // animation class lands on the same render as the cell mounts.
+  const newUids = new Set<string>();
+  for (const r of rows) {
+    if (!seen.has(r.active.uid)) newUids.add(r.active.uid);
+  }
+
+  useEffect(() => {
+    for (const uid of newUids) seen.add(uid);
+    // newUids is a fresh Set every render; safe to depend on rows length.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
 
   return (
     <section className="flex h-full flex-col border border-border bg-bg-soft">
@@ -61,7 +96,10 @@ export function Workspace({
         ) : (
           <div className="space-y-3">
             {rows.map((r, i) => (
-              <div key={r.active.uid} className="group relative">
+              <div
+                key={r.active.uid}
+                className={`group relative ${newUids.has(r.active.uid) ? "cell-stack-in" : ""}`}
+              >
                 {/* reorder rail */}
                 <div className="absolute -left-1 top-2 z-10 hidden flex-col gap-0.5 group-hover:flex">
                   <button
@@ -85,6 +123,7 @@ export function Workspace({
                   def={r.def}
                   result={r.result}
                   candles={candles}
+                  symbol={symbol}
                   beginner={beginner}
                   onUpdateParams={(p) => onUpdateParams(r.active.uid, p)}
                   onRemove={() => onRemove(r.active.uid)}
