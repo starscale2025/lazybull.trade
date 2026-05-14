@@ -125,6 +125,7 @@ export function LearnBotDemo({ botId }: { botId: string }) {
           def={def}
           result={result}
           candles={candles}
+          symbol={symbol}
           beginner={true}
           onUpdateParams={(params) => setActive((a) => (a ? { ...a, params } : a))}
           onRemove={() => {}}

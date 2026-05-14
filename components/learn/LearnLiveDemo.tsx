@@ -99,6 +99,7 @@ export function LearnLiveDemo() {
         def={def}
         result={result}
         candles={candles}
+        symbol={SYMBOL}
         beginner={true}
         onUpdateParams={(params) => setActive((a) => ({ ...a, params }))}
         onRemove={() => {}}
