@@ -1,0 +1,10 @@
+[mcp_servers.playwright]
+args = ["@executeautomation/playwright-mcp-server"]
+command = "npx"
+
+[mcp_servers.taskmaster-ai]
+args = [
+    "-y",
+    "task-master-ai",
+]
+command = "npx"
