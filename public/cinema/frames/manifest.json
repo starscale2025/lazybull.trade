@@ -1,14 +1,14 @@
 {
   "desktop": {
     "dir": "/cinema/frames/desktop",
-    "width": 1600,
-    "height": 1000,
-    "frameCount": 160
+    "width": 1440,
+    "height": 900,
+    "frameCount": 96
   },
   "mobile": {
     "dir": "/cinema/frames/mobile",
-    "width": 800,
-    "height": 1200,
-    "frameCount": 160
+    "width": 720,
+    "height": 1080,
+    "frameCount": 96
   }
 }

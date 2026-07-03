@@ -15,11 +15,11 @@ const RAW = path.join(ROOT, "raw");
 const OUT = path.resolve(ROOT, "..", "..", "public", "cinema", "frames");
 const SCENE = pathToFileURL(path.join(ROOT, "scene.html")).href;
 const SITE = process.env.SITE ?? "http://localhost:3000";
-const FRAME_COUNT = 160;
+const FRAME_COUNT = 96; // fewer frames = faster decode + far less bitmap memory
 const POSTER_INDEX = Math.round(FRAME_COUNT * 0.66); // bull moment, 1-based below
 const SETS = [
-  { name: "desktop", width: 1600, height: 1000 },
-  { name: "mobile", width: 800, height: 1200 },
+  { name: "desktop", width: 1440, height: 900 },
+  { name: "mobile", width: 720, height: 1080 },
 ];
 // Each becomes a DISTINCT panel screen in the assembly/dive acts.
 const PAGES = [
@@ -145,10 +145,12 @@ function writePosterAndManifest() {
     path.join(RAW, "desktop", `frame_${pad(POSTER_INDEX)}.png`),
     "-o", path.join(OUT, "poster.webp"),
   ]);
-  const manifest = {
-    desktop: { dir: "/cinema/frames/desktop", width: 1600, height: 1000, frameCount: FRAME_COUNT },
-    mobile: { dir: "/cinema/frames/mobile", width: 800, height: 1200, frameCount: FRAME_COUNT },
-  };
+  const manifest = Object.fromEntries(
+    SETS.map((set) => [
+      set.name,
+      { dir: `/cinema/frames/${set.name}`, width: set.width, height: set.height, frameCount: FRAME_COUNT },
+    ])
+  );
   fs.writeFileSync(path.join(OUT, "manifest.json"), JSON.stringify(manifest, null, 2));
 }
 

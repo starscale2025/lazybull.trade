@@ -18,7 +18,7 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const SCROLL_LENGTH_VH = 500;
+const SCROLL_LENGTH_VH = 360; // shorter pin = snappier, less "sticky" scroll
 const EAGER_FRAMES = 24;
 const CHUNK = 24;
 
@@ -97,7 +97,9 @@ export function ScrollCinema() {
     };
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Cap DPR at 1.25: the scrub redraws the whole canvas every tick, so a 2x
+      // canvas is 2.5x the pixels to blit — the main source of scroll jank.
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       canvas.width = Math.round(canvas.clientWidth * dpr);
       canvas.height = Math.round(canvas.clientHeight * dpr);
       lastDrawn = -1;
@@ -195,10 +197,13 @@ export function ScrollCinema() {
     <section
       ref={sectionRef}
       data-cinema
-      className="relative z-20 bg-bg"
+      className="pointer-events-none relative z-20"
       style={{ height: `${SCROLL_LENGTH_VH}vh`, marginBottom: "-100vh" }}
     >
-      <div ref={stickyRef} className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden">
+      {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
+          the section — otherwise the section's opaque bg stays over the real Hero
+          in the -100vh overlap and the handoff reveals black instead of the page. */}
+      <div ref={stickyRef} className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg">
         <canvas ref={canvasRef} className="h-full w-full" />
         {COPY_BEATS.map((b, i) => (
           <div
