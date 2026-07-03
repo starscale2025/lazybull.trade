@@ -21,10 +21,16 @@ const SETS = [
   { name: "desktop", width: 1600, height: 1000 },
   { name: "mobile", width: 800, height: 1200 },
 ];
+// Each becomes a DISTINCT panel screen in the assembly/dive acts.
 const PAGES = [
   ["home", "/"],
   ["learn", "/learn"],
   ["trade", "/trade"],
+  ["quant", "/quant"],
+  ["pro", "/pro"],
+  ["chain", "/trade/chain"],
+  ["bots", "/learn/bots"],
+  ["about", "/about"],
 ];
 
 const pad = (n) => String(n).padStart(4, "0");

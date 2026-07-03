@@ -27,6 +27,15 @@
     background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.8) 100%);
     pointer-events: none;
   }
+  /* ambient green glow so the opening frames are never dead black */
+  #glow {
+    position: absolute; left: 50%; top: 50%; width: 120vw; height: 120vh;
+    transform: translate(-50%, -50%);
+    background:
+      radial-gradient(38% 42% at 42% 44%, rgba(0,255,135,0.16), transparent 70%),
+      radial-gradient(34% 40% at 62% 58%, rgba(0,229,255,0.08), transparent 70%);
+    pointer-events: none;
+  }
   /* Act 0: stroke-drawn MacBook outline */
   #outline { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
   #outline path {
@@ -82,6 +91,7 @@
 </head>
 <body>
 <div id="stage">
+  <div id="glow"></div>
   <div id="grid"></div>
   <div id="mac">
     <div id="screen"><div id="screen-inner"></div></div>
@@ -106,7 +116,7 @@ const PHASES = {
   assembly: [0.12, 0.32],
   dive:     [0.32, 0.58],
   bull:     [0.58, 0.80],
-  reveal:   [0.80, 1.00],  // frames show the homepage under the runtime flash/handoff overlays
+  reveal:   [0.80, 1.00],  // frames hold clean black; component fades canvas out to the real homepage
 };
 
 // ---- tiny deterministic helpers ------------------------------------------
@@ -124,17 +134,18 @@ function mulberry32(seed) {
   };
 }
 
-// ---- panel crop table (shot key, bg offset %, dive direction) -------------
+// ---- panels: each is a DISTINCT full app screen (not a crop of one page) --
+// shot = a route screenshot key; dive = fly-off direction during the dive.
 const PANEL_DEFS = [
-  { shot: "home",  bx: 0,   by: 0,   dive: [-1.0, -0.4] },
-  { shot: "home",  bx: 50,  by: 10,  dive: [ 1.0, -0.3] },
-  { shot: "home",  bx: 100, by: 30,  dive: [-0.7,  0.8] },
-  { shot: "learn", bx: 0,   by: 20,  dive: [ 0.8,  0.7] },
-  { shot: "learn", bx: 60,  by: 45,  dive: [-1.2,  0.1] },
-  { shot: "learn", bx: 20,  by: 80,  dive: [ 1.2,  0.2] },
-  { shot: "trade", bx: 0,   by: 0,   dive: [-0.4, -1.0] },
-  { shot: "trade", bx: 80,  by: 40,  dive: [ 0.4,  1.1] },
-  { shot: "trade", bx: 40,  by: 100, dive: [ 0.2, -1.2] },
+  { shot: "home",  dive: [-1.0, -0.4] },
+  { shot: "trade", dive: [ 1.0, -0.3] },
+  { shot: "learn", dive: [-0.7,  0.8] },
+  { shot: "quant", dive: [ 0.8,  0.7] },
+  { shot: "pro",   dive: [-1.2,  0.1] },
+  { shot: "chain", dive: [ 1.2,  0.2] },
+  { shot: "bots",  dive: [-0.4, -1.0] },
+  { shot: "about", dive: [ 0.4,  1.1] },
+  { shot: "home",  dive: [ 0.2, -1.2] },
 ];
 // assembly start poses: fanned around the viewport edges (deterministic)
 const START_POSES = [
@@ -157,7 +168,7 @@ function bullOutline() {
 }
 
 // ---- scene state -----------------------------------------------------------
-let CFG = null;        // { shots: {home,learn,trade}, bullFrames: string[] | null }
+let CFG = null;        // { shots: {home,learn,trade,quant,pro,chain,bots,about}, bullFrames: string[] | null }
 let PARTICLES = [];    // { sx, sy, tx, ty, tint, size, glow }
 let BULL_IMGS = [];    // preloaded Image objects for real bull frames
 
@@ -176,8 +187,8 @@ window.initScene = async function initScene(cfg) {
       el.className = "panel " + cls;
       el.dataset.i = String(i);
       el.style.backgroundImage = `url(${CFG.shots[def.shot]})`;
-      el.style.backgroundSize = "300%";
-      el.style.backgroundPosition = `${def.bx}% ${def.by}%`;
+      el.style.backgroundSize = "cover";
+      el.style.backgroundPosition = "top center";
       parent.appendChild(el);
     }
   });
@@ -217,9 +228,8 @@ window.initScene = async function initScene(cfg) {
   const bullCanvas = document.getElementById("bull");
   bullCanvas.width = W; bullCanvas.height = H;
 
-  // Preload images (shots + homepage + real bull frames if present).
-  const urls = [CFG.shots.home, CFG.shots.learn, CFG.shots.trade];
-  document.getElementById("homepage").src = CFG.shots.home;
+  // Preload images (all route shots + real bull frames if present).
+  const urls = Object.values(CFG.shots);
   if (CFG.bullFrames && CFG.bullFrames.length) {
     BULL_IMGS = CFG.bullFrames.map((u) => { const im = new Image(); im.src = u; return im; });
     urls.push(...CFG.bullFrames);
@@ -248,16 +258,19 @@ window.renderAt = function renderAt(t) {
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
   const $ = (id) => document.getElementById(id);
-  const [outline, wordmark, mac, base, screen, fly, bullC, bullR, home, grid] =
-    ["outline", "wordmark", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid"].map($);
+  const [outline, wordmark, mac, base, screen, fly, bullC, bullR, home, grid, glow] =
+    ["outline", "wordmark", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid", "glow"].map($);
 
   // ---- Act: boot — stroke-draw the MacBook outline, wordmark fade ---------
   const pBoot = seg(t, ...PHASES.boot);
-  const bootDraw = easeOut(seg(pBoot, 0, 0.8));
+  // start ~20% drawn so the very first frame is never dead-black, finish early.
+  const bootDraw = easeOut(seg(pBoot, -0.15, 0.6));
   strokes().forEach(({ p, len }) => { p.style.strokeDashoffset = String(len * (1 - bootDraw)); });
   const outlineFade = 1 - seg(t, PHASES.assembly[0], PHASES.assembly[0] + 0.06);
-  outline.style.opacity = String((pBoot > 0 ? 1 : 0) * outlineFade);
-  wordmark.style.opacity = String(seg(pBoot, 0.25, 0.7) * outlineFade);
+  outline.style.opacity = String(outlineFade);
+  wordmark.style.opacity = String((0.18 + 0.82 * seg(pBoot, 0.1, 0.55)) * outlineFade);
+  // ambient glow: present through boot + assembly, gone by the dive.
+  glow.style.opacity = String(0.9 * (1 - seg(t, PHASES.assembly[0], PHASES.dive[0])));
 
   // ---- Act: assembly — real mac appears, panels fall into the screen ------
   const pAsm = seg(t, ...PHASES.assembly);
@@ -305,7 +318,10 @@ window.renderAt = function renderAt(t) {
   // ---- Act: bull — particle silhouette converges (or real Veo frames) -----
   const pBull = seg(t, ...PHASES.bull);
   const hasReal = BULL_IMGS.length > 0;
-  const bullOn = t >= PHASES.bull[0] - 0.02 && t < PHASES.reveal[0] + 0.06;
+  // dissolve the particle bull back into darkness before the handoff so the
+  // reveal act is clean black (the real homepage fades up under it at runtime).
+  const dissolve = 1 - seg(t, 0.76, 0.90);
+  const bullOn = t >= PHASES.bull[0] - 0.02 && t < 0.93;
   const ctx = bullC.getContext("2d");
   ctx.clearRect(0, 0, W, H);
   if (bullOn && (!hasReal || pBull < 0.2)) {
@@ -316,7 +332,7 @@ window.renderAt = function renderAt(t) {
       const x = lerp(pt.sx, pt.tx, conv);
       const y = lerp(pt.sy, pt.ty, conv);
       const green = pt.tint < 0.6;
-      ctx.globalAlpha = alive * (0.35 + 0.65 * conv) * brightness;
+      ctx.globalAlpha = alive * (0.35 + 0.65 * conv) * brightness * dissolve;
       ctx.shadowBlur = pt.glow ? 10 : 0;
       ctx.shadowColor = "#00ff87";
       ctx.fillStyle = green ? "#00ff87" : "#f5f5f0";
@@ -325,7 +341,7 @@ window.renderAt = function renderAt(t) {
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     // grounding glow under the head
     const g = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, W * 0.3);
-    g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * alive * brightness})`);
+    g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * alive * brightness * dissolve})`);
     g.addColorStop(1, "rgba(0,255,135,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
@@ -338,12 +354,11 @@ window.renderAt = function renderAt(t) {
     bullR.style.opacity = "0";
   }
 
-  // ---- Act: reveal — the homepage shot fades in under the runtime flash ---
-  const pRev = seg(t, ...PHASES.reveal);
-  home.style.opacity = String(seg(pRev, 0, 0.4));
-  home.style.transform =
-    `translate(-50%, -50%) scale(${lerp(1.06, 1.0, easeOut(pRev))})`;
-  home.style.filter = `brightness(${lerp(0.85, 0.95, pRev)})`;
+  // ---- Act: reveal — hold clean black. The component fades the whole canvas
+  // out across this act (canvasOpacity), so the REAL, crisp homepage shows
+  // through underneath. No baked homepage screenshot — that read as a zoomed,
+  // mismatched duplicate fighting the live page.
+  home.style.opacity = "0";
   return true;
 };
 </script>
