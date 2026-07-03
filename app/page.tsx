@@ -7,6 +7,7 @@ import { TradeOverview } from "@/components/TradeOverview";
 import { SocialProof } from "@/components/SocialProof";
 import { Partners } from "@/components/Partners";
 import { Footer } from "@/components/Footer";
+import { ScrollCinema } from "@/components/scrollstory/ScrollCinema";
 import { IntroSequence } from "@/components/atmosphere/IntroSequence";
 import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
@@ -26,6 +27,8 @@ export default function Home() {
       <div className="relative z-10 flex flex-col">
         <TickerBar />
         <Nav />
+
+        <ScrollCinema />
 
         <Hero />
 
