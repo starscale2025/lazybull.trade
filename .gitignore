@@ -44,3 +44,8 @@ next-env.d.ts
 *.pkl
 *.pt
 ai quants/weights/
+
+# scroll-cinema pipeline intermediates (generated frames in public/ ARE committed)
+scripts/cinema/shots/
+scripts/cinema/raw/
+scripts/cinema/bull.mp4
