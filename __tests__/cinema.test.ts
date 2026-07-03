@@ -90,11 +90,11 @@ describe("flashOpacity", () => {
 });
 
 describe("canvasOpacity", () => {
-  it("holds 1, then fades to 0 under the flash before the flash clears", () => {
+  it("holds 1 almost to the end, then a short crossfade to 0", () => {
     expect(canvasOpacity(0)).toBe(1);
-    expect(canvasOpacity(0.85)).toBe(1);
-    expect(canvasOpacity(0.88)).toBeCloseTo(0.5, 5); // mid of [0.85, 0.91]
-    expect(canvasOpacity(0.91)).toBe(0);
+    expect(canvasOpacity(0.9)).toBe(1);
+    expect(canvasOpacity(0.98)).toBe(1);
+    expect(canvasOpacity(0.99)).toBeCloseTo(0.5, 5); // mid of [0.98, 1.0]
     expect(canvasOpacity(1)).toBe(0);
   });
 });

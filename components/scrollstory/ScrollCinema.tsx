@@ -85,7 +85,8 @@ export function ScrollCinema() {
 
     const applyOverlays = () => {
       if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
-      if (flashRef.current) flashRef.current.style.opacity = String(flashOpacity(progress));
+      // faint bloom only — the baked Matrix rain is the real green transition
+      if (flashRef.current) flashRef.current.style.opacity = String(flashOpacity(progress) * 0.18);
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
@@ -171,7 +172,7 @@ export function ScrollCinema() {
   if (mode === "static") {
     // Reduced motion or frames unavailable: calm static hero, copy laid out plainly.
     return (
-      <section className="relative overflow-hidden border-b border-border bg-bg">
+      <section data-cinema-static className="relative overflow-hidden border-b border-border bg-bg">
         <img
           src="/cinema/frames/poster.webp"
           alt=""

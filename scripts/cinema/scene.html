@@ -84,8 +84,9 @@
     height: 92%; opacity: 0;
   }
   #homepage {
-    position: absolute; left: 50%; top: 50%;
-    min-width: 100%; min-height: 100%; opacity: 0;
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover; object-position: top center;
+    opacity: 0;
   }
 </style>
 </head>
@@ -98,14 +99,13 @@
     <div id="base"></div>
   </div>
   <div id="panels"></div>
+  <img id="homepage" alt="">
   <canvas id="bull"></canvas>
   <img id="bullreal" alt="">
-  <img id="homepage" alt="">
   <svg id="outline" width="880" height="620" viewBox="0 0 880 620">
     <path id="outline-screen" d="M 60 20 H 820 Q 838 20 838 38 V 500 H 42 V 38 Q 42 20 60 20 Z"/>
     <path id="outline-base" d="M 10 530 H 870 Q 870 560 830 560 H 50 Q 10 560 10 530 Z"/>
   </svg>
-  <div id="wordmark">lazybull<span class="dot">.</span>trade</div>
   <div id="vignette"></div>
 </div>
 
@@ -167,10 +167,16 @@ function bullOutline() {
   return right.concat(left); // closed-ish loop, top-center → right → bottom → left → top
 }
 
+// ---- matrix rain charset (katakana + latin + symbols) ---------------------
+const MATRIX_CHARS =
+  "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｸ0123456789$+=<>*ﾘﾁﾄﾉﾌｦ".split("");
+
 // ---- scene state -----------------------------------------------------------
-let CFG = null;        // { shots: {home,learn,trade,quant,pro,chain,bots,about}, bullFrames: string[] | null }
+let CFG = null;        // { shots: {home,learn,trade,...,hero}, bullFrames: string[] | null }
 let PARTICLES = [];    // { sx, sy, tx, ty, tint, size, glow }
 let BULL_IMGS = [];    // preloaded Image objects for real bull frames
+let MATRIX = [];       // { x, phase, speed, len, lead } per rain column
+let MATRIX_CELL = 16;  // rain cell size in px
 
 window.initScene = async function initScene(cfg) {
   CFG = cfg;
@@ -228,6 +234,25 @@ window.initScene = async function initScene(cfg) {
   const bullCanvas = document.getElementById("bull");
   bullCanvas.width = W; bullCanvas.height = H;
 
+  // Seed Matrix rain columns (deterministic).
+  MATRIX_CELL = Math.max(13, Math.round(W / 96));
+  const cols = Math.floor(W / MATRIX_CELL);
+  const rnd2 = mulberry32(90210);
+  MATRIX = [];
+  for (let c = 0; c < cols; c++) {
+    MATRIX.push({
+      x: c * MATRIX_CELL + MATRIX_CELL * 0.1,
+      phase: rnd2(),
+      speed: 0.55 + rnd2() * 1.1,
+      len: 9 + Math.floor(rnd2() * 18),
+      lead: Math.floor(rnd2() * 9973),
+    });
+  }
+
+  // The reveal layer is a screenshot of the real homepage hero (cinema hidden),
+  // so the frames resolve into a page that matches the live <Hero> at handoff.
+  document.getElementById("homepage").src = CFG.shots.hero || CFG.shots.home;
+
   // Preload images (all route shots + real bull frames if present).
   const urls = Object.values(CFG.shots);
   if (CFG.bullFrames && CFG.bullFrames.length) {
@@ -258,17 +283,17 @@ window.renderAt = function renderAt(t) {
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
   const $ = (id) => document.getElementById(id);
-  const [outline, wordmark, mac, base, screen, fly, bullC, bullR, home, grid, glow] =
-    ["outline", "wordmark", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid", "glow"].map($);
+  const [outline, mac, base, screen, fly, bullC, bullR, home, grid, glow] =
+    ["outline", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid", "glow"].map($);
 
-  // ---- Act: boot — stroke-draw the MacBook outline, wordmark fade ---------
+  // ---- Act: boot — stroke-draw the MacBook outline (the DOM copy overlay
+  // supplies the wordmark, so there is no baked text competing with it) -----
   const pBoot = seg(t, ...PHASES.boot);
   // start ~20% drawn so the very first frame is never dead-black, finish early.
   const bootDraw = easeOut(seg(pBoot, -0.15, 0.6));
   strokes().forEach(({ p, len }) => { p.style.strokeDashoffset = String(len * (1 - bootDraw)); });
   const outlineFade = 1 - seg(t, PHASES.assembly[0], PHASES.assembly[0] + 0.06);
   outline.style.opacity = String(outlineFade);
-  wordmark.style.opacity = String((0.18 + 0.82 * seg(pBoot, 0.1, 0.55)) * outlineFade);
   // ambient glow: present through boot + assembly, gone by the dive.
   glow.style.opacity = String(0.9 * (1 - seg(t, PHASES.assembly[0], PHASES.dive[0])));
 
@@ -318,11 +343,10 @@ window.renderAt = function renderAt(t) {
   // ---- Act: bull — particle silhouette converges (or real Veo frames) -----
   const pBull = seg(t, ...PHASES.bull);
   const hasReal = BULL_IMGS.length > 0;
-  // keep the bull bright until the green flash washes over it (~0.84), then let
-  // it dissolve under the flash. The canvas fades out under that same flash at
-  // runtime, so the bull hands straight off to the real homepage — no black gap.
-  const dissolve = 1 - seg(t, 0.84, 0.905);
-  const bullOn = t >= PHASES.bull[0] - 0.02 && t < 0.93;
+  // the bull holds bright, then dissolves into the Matrix rain as it builds
+  // (0.74-0.84) — the particles "become" the falling code.
+  const dissolve = 1 - seg(t, 0.74, 0.84);
+  const bullOn = t >= PHASES.bull[0] - 0.02 && t < 0.86;
   const ctx = bullC.getContext("2d");
   ctx.clearRect(0, 0, W, H);
   if (bullOn && (!hasReal || pBull < 0.2)) {
@@ -355,11 +379,42 @@ window.renderAt = function renderAt(t) {
     bullR.style.opacity = "0";
   }
 
-  // ---- Act: reveal — hold clean black. The component fades the whole canvas
-  // out across this act (canvasOpacity), so the REAL, crisp homepage shows
-  // through underneath. No baked homepage screenshot — that read as a zoomed,
-  // mismatched duplicate fighting the live page.
-  home.style.opacity = "0";
+  // ---- Matrix rain — the bull dissolves into cascading green code, which
+  // then thins to resolve into the homepage. Drawn on the (transparent) bull
+  // canvas, so the homepage layer behind shows through the gaps.
+  const rainAmt = seg(t, 0.72, 0.84) * (1 - seg(t, 0.92, 1.0));
+  if (rainAmt > 0.002) {
+    const cell = MATRIX_CELL;
+    const rows = Math.ceil(H / cell) + 2;
+    ctx.font = `${Math.round(cell * 0.92)}px ui-monospace, SFMono-Regular, monospace`;
+    ctx.textBaseline = "top";
+    const fall = t - 0.72;
+    for (const col of MATRIX) {
+      const period = rows + col.len;
+      const head = ((col.phase * period) + fall * col.speed * rows * 4.5) % period;
+      for (let k = 0; k < col.len; k++) {
+        const row = Math.floor((((head - k) % period) + period) % period);
+        const y = row * cell;
+        if (y > H) continue;
+        const ch = MATRIX_CHARS[(col.lead + row * 3 + Math.floor(fall * 26)) % MATRIX_CHARS.length];
+        if (k === 0) {
+          ctx.fillStyle = `rgba(214,255,232,${rainAmt})`;
+          ctx.shadowBlur = 8; ctx.shadowColor = "#00ff87";
+        } else {
+          ctx.fillStyle = `rgba(0,255,135,${rainAmt * (1 - k / col.len) * 0.82})`;
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillText(ch, col.x, y);
+      }
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // ---- reveal — the real-homepage screenshot resolves in behind the thinning
+  // rain, so the last frames already show the homepage. The component holds the
+  // canvas opaque until the pin releases onto the live <Hero> at the same spot,
+  // so there is no black gap and no zoom.
+  home.style.opacity = String(seg(t, 0.86, 0.985));
   return true;
 };
 </script>

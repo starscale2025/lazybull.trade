@@ -69,12 +69,13 @@ export function flashOpacity(progress: number): number {
   return p < mid ? (p - from) / (mid - from) : (to - p) / (to - mid);
 }
 
-// The canvas fades out UNDER the green flash (which peaks ~0.86 and clears at
-// 0.92) so the bull hands straight off to the real homepage with no black gap.
-// Deliberately inside the flash act, not ACTS.handoff.
-const HANDOFF_FADE = { from: 0.85, to: 0.91 };
+// The canvas holds opaque almost to the very end: the final frames already
+// show the homepage (resolved from the Matrix rain), so the gap above the
+// rising real <Hero> stays hidden until the pin releases with the Hero at
+// top:0. Only a 2% crossfade at the very end blends baked -> live.
+const HANDOFF_FADE = { from: 0.98, to: 1.0 };
 
-/** Whole-cinema opacity: 1, then fades to 0 under the flash so the real homepage shows through. */
+/** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end. */
 export function canvasOpacity(progress: number): number {
   const { from, to } = HANDOFF_FADE;
   const p = clamp01(progress);

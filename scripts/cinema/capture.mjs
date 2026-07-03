@@ -49,9 +49,29 @@ async function captureShots(browser) {
     process.stdout.write(`shot ${name} ${SITE}${route} … `);
     await page.goto(SITE + route, { waitUntil: "load", timeout: 60000 });
     await page.waitForTimeout(2500); // let charts/fonts settle
+    // strip the Next.js dev error overlay (pre-existing next-auth error w/o a DB)
+    await page.evaluate(() => document.querySelectorAll("nextjs-portal").forEach((e) => e.remove()));
     await page.screenshot({ path: file });
     console.log("ok");
   }
+  // Hero shot: reuse the reduced-motion context (a full-motion load of "/" hits a
+  // client error boundary here without a DB). Reduced-motion renders the cinema as
+  // a static fallback <section data-cinema-static>; remove it and scroll its next
+  // sibling — the real <Hero> — to the viewport top, matching the live handoff.
+  process.stdout.write("shot hero … ");
+  await page.goto(SITE + "/", { waitUntil: "load", timeout: 60000 });
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => {
+    document.querySelectorAll("nextjs-portal").forEach((e) => e.remove()); // dev overlay
+    const cinema =
+      document.querySelector("[data-cinema-static]") || document.querySelector("[data-cinema]");
+    const hero = cinema?.nextElementSibling;
+    cinema?.remove();
+    if (hero) window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
+  });
+  await page.evaluate(() => document.querySelectorAll("nextjs-portal").forEach((e) => e.remove()));
+  await page.screenshot({ path: path.join(SHOTS, "hero.png") });
+  console.log("ok");
   await ctx.close();
 }
 
@@ -84,7 +104,10 @@ async function renderSet(browser, set, bullFrames) {
   const page = await ctx.newPage();
   await page.goto(SCENE);
   const shots = Object.fromEntries(
-    PAGES.map(([name]) => [name, pathToFileURL(path.join(SHOTS, `${name}.png`)).href])
+    [...PAGES.map(([name]) => name), "hero"].map((name) => [
+      name,
+      pathToFileURL(path.join(SHOTS, `${name}.png`)).href,
+    ])
   );
   await page.evaluate((cfg) => window.initScene(cfg), { shots, bullFrames });
   for (let i = 0; i < FRAME_COUNT; i++) {
