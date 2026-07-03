@@ -1,0 +1,351 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: #050505; --fg: #f5f5f0; --fg-dim: #8a8a82;
+    --bull: #00ff87; --border: #1f1f1f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; transition: none !important; animation: none !important; }
+  html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
+  #stage {
+    position: relative; width: 100vw; height: 100vh; overflow: hidden;
+    background: var(--bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  /* faint background grid, parallaxes during the dive */
+  #grid {
+    position: absolute; inset: -60%;
+    background-image:
+      linear-gradient(rgba(245,245,240,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,245,240,0.045) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+  #vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+  }
+  /* Act 0: stroke-drawn MacBook outline */
+  #outline { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  #outline path {
+    fill: none; stroke: var(--bull); stroke-width: 2;
+    filter: drop-shadow(0 0 12px rgba(0,255,135,0.55));
+  }
+  #wordmark {
+    position: absolute; left: 50%; top: 68%; transform: translate(-50%, -50%);
+    color: var(--fg); font-size: 30px; letter-spacing: -0.04em; font-weight: 700;
+  }
+  #wordmark .dot { color: var(--bull); }
+  /* Acts 1-2: the CSS MacBook */
+  #mac { position: absolute; left: 50%; top: 50%; width: 840px; height: 560px;
+         transform: translate(-50%, -50%); }
+  #screen {
+    position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 780px; height: 490px; border-radius: 18px;
+    background: #0a0a0a; border: 2px solid #2a2a2a;
+    box-shadow: 0 0 0 8px #111, 0 30px 80px rgba(0,0,0,0.8);
+    overflow: hidden;
+  }
+  #screen-inner { position: absolute; inset: 14px; background: var(--bg); overflow: hidden; }
+  #base {
+    position: absolute; left: 50%; top: 498px; transform: translateX(-50%);
+    width: 840px; height: 26px; border-radius: 4px 4px 14px 14px;
+    background: linear-gradient(#2c2c2c, #151515);
+  }
+  #base::after {
+    content: ""; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 130px; height: 9px; border-radius: 0 0 10px 10px; background: #0c0c0c;
+  }
+  .panel {
+    position: absolute; border: 1px solid var(--border); border-radius: 8px;
+    background-color: #0a0a0a; background-repeat: no-repeat;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,255,135,0.06);
+    overflow: hidden; will-change: transform, opacity;
+  }
+  .panel::after {  /* subtle top chrome bar so crops read as "panels" */
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+    background: linear-gradient(90deg, var(--bull), transparent 60%); opacity: 0.7;
+  }
+  #panels { position: absolute; inset: 0; }  /* dive-phase flying layer */
+  #bull { position: absolute; inset: 0; }
+  #bullreal {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    height: 92%; opacity: 0;
+  }
+  #homepage {
+    position: absolute; left: 50%; top: 50%;
+    min-width: 100%; min-height: 100%; opacity: 0;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="mac">
+    <div id="screen"><div id="screen-inner"></div></div>
+    <div id="base"></div>
+  </div>
+  <div id="panels"></div>
+  <canvas id="bull"></canvas>
+  <img id="bullreal" alt="">
+  <img id="homepage" alt="">
+  <svg id="outline" width="880" height="620" viewBox="0 0 880 620">
+    <path id="outline-screen" d="M 60 20 H 820 Q 838 20 838 38 V 500 H 42 V 38 Q 42 20 60 20 Z"/>
+    <path id="outline-base" d="M 10 530 H 870 Q 870 560 830 560 H 50 Q 10 560 10 530 Z"/>
+  </svg>
+  <div id="wordmark">lazybull<span class="dot">.</span>trade</div>
+  <div id="vignette"></div>
+</div>
+
+<script>
+// ---- timeline (MUST match ACTS in lib/cinema.ts) -------------------------
+const PHASES = {
+  boot:     [0.00, 0.12],
+  assembly: [0.12, 0.32],
+  dive:     [0.32, 0.58],
+  bull:     [0.58, 0.80],
+  reveal:   [0.80, 1.00],  // frames show the homepage under the runtime flash/handoff overlays
+};
+
+// ---- tiny deterministic helpers ------------------------------------------
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let z = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    z = (z + Math.imul(z ^ (z >>> 7), 61 | z)) ^ z;
+    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ---- panel crop table (shot key, bg offset %, dive direction) -------------
+const PANEL_DEFS = [
+  { shot: "home",  bx: 0,   by: 0,   dive: [-1.0, -0.4] },
+  { shot: "home",  bx: 50,  by: 10,  dive: [ 1.0, -0.3] },
+  { shot: "home",  bx: 100, by: 30,  dive: [-0.7,  0.8] },
+  { shot: "learn", bx: 0,   by: 20,  dive: [ 0.8,  0.7] },
+  { shot: "learn", bx: 60,  by: 45,  dive: [-1.2,  0.1] },
+  { shot: "learn", bx: 20,  by: 80,  dive: [ 1.2,  0.2] },
+  { shot: "trade", bx: 0,   by: 0,   dive: [-0.4, -1.0] },
+  { shot: "trade", bx: 80,  by: 40,  dive: [ 0.4,  1.1] },
+  { shot: "trade", bx: 40,  by: 100, dive: [ 0.2, -1.2] },
+];
+// assembly start poses: fanned around the viewport edges (deterministic)
+const START_POSES = [
+  { x: -0.55, y: -0.35, r: -24 }, { x: 0.0,  y: -0.62, r: 10 }, { x: 0.55, y: -0.38, r: 22 },
+  { x: -0.68, y:  0.05, r: -14 }, { x: 0.7,  y:  0.02, r: 16 }, { x: -0.5, y:  0.42, r: -20 },
+  { x:  0.0,  y:  0.6,  r:  8 },  { x: 0.52, y:  0.44, r: 18 }, { x: -0.2, y: -0.55, r: -6 },
+];
+
+// ---- bull-head silhouette (normalized, x in [-1,1], y in [0,1]) -----------
+const BULL_HALF = [
+  [0.05, 0.30], [0.14, 0.24], [0.24, 0.20], [0.42, 0.12], [0.62, 0.04],  // poll → horn sweeps up & out to a point
+  [0.44, 0.21], [0.31, 0.27],                                            // horn underside back to the skull
+  [0.32, 0.36], [0.36, 0.46],                                            // brow → cheek (widest part of face)
+  [0.30, 0.58], [0.23, 0.71], [0.17, 0.81], [0.10, 0.90], [0.03, 0.95],  // jaw → muzzle → chin → bottom center
+];
+function bullOutline() {
+  const right = BULL_HALF;
+  const left = [...BULL_HALF].reverse().map(([x, y]) => [-x, y]);
+  return right.concat(left); // closed-ish loop, top-center → right → bottom → left → top
+}
+
+// ---- scene state -----------------------------------------------------------
+let CFG = null;        // { shots: {home,learn,trade}, bullFrames: string[] | null }
+let PARTICLES = [];    // { sx, sy, tx, ty, tint, size, glow }
+let BULL_IMGS = [];    // preloaded Image objects for real bull frames
+
+window.initScene = async function initScene(cfg) {
+  CFG = cfg;
+  const stage = document.getElementById("stage");
+  const W = stage.clientWidth, H = stage.clientHeight;
+
+  // Build the 9 panels twice: once inside the screen grid, once in the fly layer.
+  const inner = document.getElementById("screen-inner");
+  const fly = document.getElementById("panels");
+  inner.innerHTML = ""; fly.innerHTML = "";
+  PANEL_DEFS.forEach((def, i) => {
+    for (const [parent, cls] of [[inner, "grid"], [fly, "fly"]]) {
+      const el = document.createElement("div");
+      el.className = "panel " + cls;
+      el.dataset.i = String(i);
+      el.style.backgroundImage = `url(${CFG.shots[def.shot]})`;
+      el.style.backgroundSize = "300%";
+      el.style.backgroundPosition = `${def.bx}% ${def.by}%`;
+      parent.appendChild(el);
+    }
+  });
+  // grid slots: 3x3 inside screen-inner (752x462 area)
+  document.querySelectorAll("#screen-inner .panel").forEach((el, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    el.style.width = "236px"; el.style.height = "142px";
+    el.style.left = `${8 + col * 246}px`;
+    el.style.top = `${8 + row * 152}px`;
+  });
+  // fly copies: sized relative to viewport, centered; renderAt moves them
+  document.querySelectorAll("#panels .panel").forEach((el) => {
+    el.style.width = `${Math.round(W * 0.28)}px`;
+    el.style.height = `${Math.round(W * 0.17)}px`;
+    el.style.left = "50%"; el.style.top = "50%";
+  });
+
+  // Seed bull particles.
+  const rnd = mulberry32(1337);
+  const outline = bullOutline();
+  const cx = W / 2, cy = H * 0.5, scale = Math.min(W, H) * 0.36;
+  const N = 1200;
+  PARTICLES = [];
+  for (let i = 0; i < N; i++) {
+    const u = i / N;
+    const fi = u * (outline.length - 1);
+    const k = Math.floor(fi), fr = fi - k;
+    const a = outline[k], b = outline[Math.min(k + 1, outline.length - 1)];
+    const jx = (rnd() - 0.5) * 0.05, jy = (rnd() - 0.5) * 0.05;
+    PARTICLES.push({
+      sx: rnd() * W, sy: rnd() * H,
+      tx: cx + (lerp(a[0], b[0], fr) + jx) * scale,
+      ty: cy + (lerp(a[1], b[1], fr) + jy - 0.5) * scale * 1.15,
+      tint: rnd(), size: rnd() < 0.25 ? 3 : 2, glow: i % 4 === 0,
+    });
+  }
+  const bullCanvas = document.getElementById("bull");
+  bullCanvas.width = W; bullCanvas.height = H;
+
+  // Preload images (shots + homepage + real bull frames if present).
+  const urls = [CFG.shots.home, CFG.shots.learn, CFG.shots.trade];
+  document.getElementById("homepage").src = CFG.shots.home;
+  if (CFG.bullFrames && CFG.bullFrames.length) {
+    BULL_IMGS = CFG.bullFrames.map((u) => { const im = new Image(); im.src = u; return im; });
+    urls.push(...CFG.bullFrames);
+  }
+  await Promise.all(
+    urls.map((u) => new Promise((res) => { const im = new Image(); im.onload = res; im.onerror = res; im.src = u; }))
+  );
+  document.fonts && (await document.fonts.ready);
+  return true;
+};
+
+// SVG stroke lengths, measured once lazily.
+let STROKES = null;
+function strokes() {
+  if (!STROKES) {
+    STROKES = ["outline-screen", "outline-base"].map((id) => {
+      const p = document.getElementById(id);
+      return { p, len: p.getTotalLength() };
+    });
+    STROKES.forEach(({ p, len }) => { p.style.strokeDasharray = String(len); });
+  }
+  return STROKES;
+}
+
+window.renderAt = function renderAt(t) {
+  const stage = document.getElementById("stage");
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const $ = (id) => document.getElementById(id);
+  const [outline, wordmark, mac, base, screen, fly, bullC, bullR, home, grid] =
+    ["outline", "wordmark", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid"].map($);
+
+  // ---- Act: boot — stroke-draw the MacBook outline, wordmark fade ---------
+  const pBoot = seg(t, ...PHASES.boot);
+  const bootDraw = easeOut(seg(pBoot, 0, 0.8));
+  strokes().forEach(({ p, len }) => { p.style.strokeDashoffset = String(len * (1 - bootDraw)); });
+  const outlineFade = 1 - seg(t, PHASES.assembly[0], PHASES.assembly[0] + 0.06);
+  outline.style.opacity = String((pBoot > 0 ? 1 : 0) * outlineFade);
+  wordmark.style.opacity = String(seg(pBoot, 0.25, 0.7) * outlineFade);
+
+  // ---- Act: assembly — real mac appears, panels fall into the screen ------
+  const pAsm = seg(t, ...PHASES.assembly);
+  const pDive = seg(t, ...PHASES.dive);
+  // camera push during first dive half: mac scales up and swallows the view
+  const push = easeIO(seg(pDive, 0, 0.4));
+  const macScale = lerp(1, 8, push);
+  const macVisible = t >= PHASES.assembly[0] && push < 1;
+  mac.style.display = macVisible ? "block" : "none";
+  mac.style.opacity = String(seg(pAsm, 0, 0.15));
+  mac.style.transform =
+    `translate(-50%, -50%) scale(${macScale}) translateY(${lerp(0, -20, push)}px)`;
+  base.style.opacity = String(1 - seg(push, 0.5, 0.9));
+  screen.style.boxShadow = push > 0.5 ? "none" : "";
+  document.querySelectorAll("#screen-inner .panel").forEach((el) => {
+    const i = Number(el.dataset.i);
+    const sp = START_POSES[i];
+    const local = easeIO(seg(pAsm, 0.05 + i * 0.055, 0.55 + i * 0.045));
+    const x = lerp(sp.x * 1400, 0, local);
+    const y = lerp(sp.y * 1000, 0, local);
+    const r = lerp(sp.r, 0, local);
+    el.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg)`;
+    el.style.opacity = String(Math.min(1, local * 2.5));
+  });
+
+  // ---- Act: dive (second half) — panels fly past the camera ---------------
+  const flyOn = pDive > 0.4 && t < PHASES.bull[0] + 0.04;
+  fly.style.display = flyOn ? "block" : "none";
+  if (flyOn) {
+    document.querySelectorAll("#panels .panel").forEach((el) => {
+      const i = Number(el.dataset.i);
+      const d = PANEL_DEFS[i].dive;
+      const f = easeIO(seg(pDive, 0.4 + i * 0.02, 0.95 + i * 0.004));
+      const s = lerp(0.55, 5.2, f);
+      const x = d[0] * f * W * 1.15;
+      const y = d[1] * f * H * 1.15;
+      el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${s})`;
+      el.style.opacity = String((1 - seg(f, 0.72, 1)) * seg(pDive, 0.38, 0.46));
+    });
+  }
+  grid.style.transform =
+    `translate(${lerp(0, -140, pDive)}px, ${lerp(0, -90, pDive)}px) scale(${lerp(1, 1.6, pDive)})`;
+  grid.style.opacity = String(0.9 - 0.55 * seg(t, ...PHASES.bull));
+
+  // ---- Act: bull — particle silhouette converges (or real Veo frames) -----
+  const pBull = seg(t, ...PHASES.bull);
+  const hasReal = BULL_IMGS.length > 0;
+  const bullOn = t >= PHASES.bull[0] - 0.02 && t < PHASES.reveal[0] + 0.06;
+  const ctx = bullC.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+  if (bullOn && (!hasReal || pBull < 0.2)) {
+    const conv = easeOut(seg(pBull, 0, 0.45));
+    const alive = hasReal ? 1 - seg(pBull, 0.05, 0.2) : 1;
+    const brightness = 0.55 + 0.45 * seg(pBull, 0.5, 0.9);
+    for (const pt of PARTICLES) {
+      const x = lerp(pt.sx, pt.tx, conv);
+      const y = lerp(pt.sy, pt.ty, conv);
+      const green = pt.tint < 0.6;
+      ctx.globalAlpha = alive * (0.35 + 0.65 * conv) * brightness;
+      ctx.shadowBlur = pt.glow ? 10 : 0;
+      ctx.shadowColor = "#00ff87";
+      ctx.fillStyle = green ? "#00ff87" : "#f5f5f0";
+      ctx.fillRect(x, y, pt.size, pt.size);
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    // grounding glow under the head
+    const g = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, W * 0.3);
+    g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * alive * brightness})`);
+    g.addColorStop(1, "rgba(0,255,135,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (hasReal) {
+    const idx = Math.min(BULL_IMGS.length - 1, Math.floor(pBull * BULL_IMGS.length));
+    bullR.src = BULL_IMGS[Math.max(0, idx)].src;
+    bullR.style.opacity = String(seg(pBull, 0.05, 0.2) * (1 - seg(t, PHASES.reveal[0], PHASES.reveal[0] + 0.08)));
+  } else {
+    bullR.style.opacity = "0";
+  }
+
+  // ---- Act: reveal — the homepage shot fades in under the runtime flash ---
+  const pRev = seg(t, ...PHASES.reveal);
+  home.style.opacity = String(seg(pRev, 0, 0.4));
+  home.style.transform =
+    `translate(-50%, -50%) scale(${lerp(1.06, 1.0, easeOut(pRev))})`;
+  home.style.filter = `brightness(${lerp(0.85, 0.95, pRev)})`;
+  return true;
+};
+</script>
+</body>
+</html>
