@@ -69,9 +69,14 @@ export function flashOpacity(progress: number): number {
   return p < mid ? (p - from) / (mid - from) : (to - p) / (to - mid);
 }
 
-/** Whole-cinema opacity: 1 until the handoff act, then fades to 0. */
+// The canvas fades out UNDER the green flash (which peaks ~0.86 and clears at
+// 0.92) so the bull hands straight off to the real homepage with no black gap.
+// Deliberately inside the flash act, not ACTS.handoff.
+const HANDOFF_FADE = { from: 0.85, to: 0.91 };
+
+/** Whole-cinema opacity: 1, then fades to 0 under the flash so the real homepage shows through. */
 export function canvasOpacity(progress: number): number {
-  const { from, to } = ACTS.handoff;
+  const { from, to } = HANDOFF_FADE;
   const p = clamp01(progress);
   if (p <= from) return 1;
   if (p >= to) return 0;

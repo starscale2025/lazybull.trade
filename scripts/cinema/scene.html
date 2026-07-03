@@ -318,9 +318,10 @@ window.renderAt = function renderAt(t) {
   // ---- Act: bull — particle silhouette converges (or real Veo frames) -----
   const pBull = seg(t, ...PHASES.bull);
   const hasReal = BULL_IMGS.length > 0;
-  // dissolve the particle bull back into darkness before the handoff so the
-  // reveal act is clean black (the real homepage fades up under it at runtime).
-  const dissolve = 1 - seg(t, 0.76, 0.90);
+  // keep the bull bright until the green flash washes over it (~0.84), then let
+  // it dissolve under the flash. The canvas fades out under that same flash at
+  // runtime, so the bull hands straight off to the real homepage — no black gap.
+  const dissolve = 1 - seg(t, 0.84, 0.905);
   const bullOn = t >= PHASES.bull[0] - 0.02 && t < 0.93;
   const ctx = bullC.getContext("2d");
   ctx.clearRect(0, 0, W, H);
