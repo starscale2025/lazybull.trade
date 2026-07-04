@@ -18,7 +18,7 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const SCROLL_LENGTH_VH = 360; // shorter pin = snappier, less "sticky" scroll
+const SCROLL_LENGTH_VH = 600; // longer pin = the animation unfolds more slowly
 const EAGER_FRAMES = 24;
 const CHUNK = 24;
 
@@ -57,7 +57,9 @@ export function ScrollCinema() {
     let st: ScrollTrigger | null = null;
     let set: FrameSet | null = null;
     const frames: (Frame | null)[] = [];
-    let progress = 0;
+    let progress = 0;        // smoothed value that actually drives the draw
+    let targetProgress = 0;  // raw scroll position from ScrollTrigger
+    let raf = 0;             // smoothing loop handle
     let lastDrawn = -1;
 
     const draw = () => {
@@ -147,14 +149,30 @@ export function ScrollCinema() {
           }
         }
       })();
+      // Smooth scrub: ease the rendered progress toward the scroll position each
+      // frame instead of snapping, so wheel/trackpad steps glide instead of jerk.
+      const SMOOTH = 0.09; // lower = smoother/glidier, higher = snappier
+      const loop = () => {
+        const diff = targetProgress - progress;
+        if (Math.abs(diff) < 0.0002) {
+          progress = targetProgress;
+          draw();
+          applyOverlays();
+          raf = 0;
+          return;
+        }
+        progress += diff * SMOOTH;
+        draw();
+        applyOverlays();
+        raf = requestAnimationFrame(loop);
+      };
       st = ScrollTrigger.create({
         trigger: section,
         start: "top top",
         end: "bottom bottom",
         onUpdate: (self) => {
-          progress = self.progress;
-          draw();
-          applyOverlays();
+          targetProgress = self.progress;
+          if (!raf) raf = requestAnimationFrame(loop);
         },
       });
       applyOverlays();
@@ -163,6 +181,7 @@ export function ScrollCinema() {
     window.addEventListener("resize", resize);
     return () => {
       disposed = true;
+      if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       st?.kill();
       for (const f of frames) {
