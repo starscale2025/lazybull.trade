@@ -39,6 +39,9 @@ export type CopyBeat = {
   to: number;
   heading: string;
   sub?: string;
+  /** "top" lifts the beat into the upper third so it clears the feature-act
+   *  charts; default (undefined) centers it over the laptop/bull visuals. */
+  pos?: "top";
 };
 
 // DOM overlays synced to scroll progress (crisp text, not baked into the scene).
@@ -46,11 +49,11 @@ export const COPY_BEATS: CopyBeat[] = [
   { id: "boot", from: 0.01, to: 0.06, heading: "lazybull.trade", sub: "options — without the fog" },
   { id: "assembly", from: 0.085, to: 0.145, heading: "One terminal. Every tool.", sub: "27 bots · 13 models · 8 live demos" },
   { id: "dive", from: 0.165, to: 0.235, heading: "0.4ms pricing engine", sub: "$100K paper — $0 real dollars at risk, ever" },
-  { id: "regime", from: 0.255, to: 0.315, heading: "It reads the regime first.", sub: "Hurst says trend, reversion or noise — before a single trade." },
-  { id: "candle-foresight", from: 0.385, to: 0.435, heading: "It saw the crash coming.", sub: "Direction Ensemble · P(down) 71% · ULTRA conviction" },
-  { id: "candle-vindication", from: 0.485, to: 0.545, heading: "Flagged DOWN — 12 bars early.", sub: "Reality fell into the cone it drew." },
-  { id: "safety", from: 0.575, to: 0.64, heading: "Your worst case is a number you chose.", sub: "Defined-risk · daily kill switch · paper-only, always." },
-  { id: "consensus", from: 0.665, to: 0.72, heading: "12 bots. One verdict.", sub: "ULTRA when they agree — historically 65–77% right." },
+  { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "It reads the regime first.", sub: "Hurst says trend, reversion or noise — before a single trade." },
+  { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "It saw the crash coming.", sub: "AI Direction Ensemble · ULTRA conviction" },
+  { id: "candle-vindication", from: 0.485, to: 0.545, pos: "top", heading: "Flagged DOWN — 12 bars early.", sub: "Reality fell into the cone it drew." },
+  { id: "safety", from: 0.575, to: 0.64, pos: "top", heading: "Your worst case is a number you chose.", sub: "Defined-risk · daily kill switch · paper-only, always." },
+  { id: "consensus", from: 0.665, to: 0.72, pos: "top", heading: "12 bots. One verdict.", sub: "ULTRA when they agree — historically 65–77% right." },
   { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Only then trade it." },
   { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
 ];

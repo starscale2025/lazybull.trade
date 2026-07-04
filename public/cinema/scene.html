@@ -202,7 +202,8 @@ let PAYOFF = null;     // { pts:[{x,y}], zeroY, lossY, beX, maxLossX }
 let RING = null;       // { cx, cy, r, nodes:[{a,x,y,col,up,k}] }
 
 function computeChart(W, H) {
-  CHART = { x: W * 0.13, y: H * 0.24, w: W * 0.74, h: H * 0.44 };
+  // lower-center so the feature-act copy (top third) never overlaps the chart
+  CHART = { x: W * 0.11, y: H * 0.34, w: W * 0.78, h: H * 0.46 };
 }
 
 // Two reference paths the regime act blends between: a mean-reverting "choppy"
@@ -284,7 +285,7 @@ function buildPayoff() {
 }
 
 function buildRing(W, H) {
-  const cx = W / 2, cy = H * 0.47, r = Math.min(W, H) * 0.26;
+  const cx = W / 2, cy = H * 0.56, r = Math.min(W, H) * 0.25;
   const nodes = BOTS.map((b, i) => {
     const a = -Math.PI / 2 + (i / BOTS.length) * TAU;
     return { a, x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, col: FAM_COLOR[b.fam], up: b.up, k: b.k };

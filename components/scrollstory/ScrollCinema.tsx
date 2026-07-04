@@ -100,7 +100,9 @@ export function ScrollCinema() {
         if (!el) return;
         const o = beatOpacity(progress, beat);
         el.style.opacity = String(o);
-        el.style.transform = `translate(-50%, calc(-50% + ${((1 - o) * 14).toFixed(2)}px))`;
+        // "top" beats anchor at their top edge (upper third); others center.
+        const baseY = beat.pos === "top" ? "0px" : "-50%";
+        el.style.transform = `translate(-50%, calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px))`;
       });
     };
 
@@ -225,8 +227,8 @@ export function ScrollCinema() {
           <div
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
-            className="absolute left-1/2 top-1/2 w-[min(90vw,760px)] -translate-x-1/2 -translate-y-1/2 text-center"
-            style={{ opacity: 0 }}
+            className="absolute left-1/2 w-[min(90vw,760px)] -translate-x-1/2 text-center"
+            style={{ top: b.pos === "top" ? "14%" : "50%", opacity: 0 }}
           >
             <div className="font-display text-4xl tracking-tightest text-fg md:text-6xl">{b.heading}</div>
             {b.sub && <div className="mt-3 font-mono text-sm text-fg-dim md:text-base">{b.sub}</div>}
