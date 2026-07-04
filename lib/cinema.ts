@@ -97,7 +97,10 @@ export function flashOpacity(progress: number): number {
 // the homepage (resolved from the Matrix rain), so the gap above the rising real
 // <Hero> stays hidden until the pin releases with the Hero at top:0. Only a 2%
 // crossfade at the very end blends the scene's homepage → the live page.
-const HANDOFF_FADE = { from: 0.98, to: 1.0 };
+// Fade only in the last sliver: the real Get Started rises into place via the
+// -100vh overlap and is only aligned with the baked reveal at progress 1. A
+// wider window crossfades while it's still offset → a visible double image.
+const HANDOFF_FADE = { from: 0.998, to: 1.0 };
 
 /** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end. */
 export function canvasOpacity(progress: number): number {

@@ -101,6 +101,9 @@ export function ScrollCinema() {
       requestAnimationFrame(() => {
         keepHeroInPlace();
         rootStyle.overflowAnchor = prevAnchor;
+        // Removing 1400vh invalidates every other ScrollTrigger's start/end
+        // (e.g. the footer's data-gsap reveals) — recompute so they still fire.
+        ScrollTrigger.refresh();
       });
     };
     collapseRef.current = collapse; // let the Skip button trigger the same collapse

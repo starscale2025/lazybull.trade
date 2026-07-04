@@ -81,8 +81,8 @@ describe("canvasOpacity", () => {
   it("holds 1 almost to the end, then a short crossfade to 0", () => {
     expect(canvasOpacity(0)).toBe(1);
     expect(canvasOpacity(0.9)).toBe(1);
-    expect(canvasOpacity(0.98)).toBe(1);
-    expect(canvasOpacity(0.99)).toBeCloseTo(0.5, 5);
+    expect(canvasOpacity(0.998)).toBe(1);
+    expect(canvasOpacity(0.999)).toBeCloseTo(0.5, 5);
     expect(canvasOpacity(1)).toBe(0);
   });
 });
