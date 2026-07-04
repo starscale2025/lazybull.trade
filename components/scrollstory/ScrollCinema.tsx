@@ -29,7 +29,19 @@ export function ScrollCinema() {
   const stickyRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
+  const skipRef = useRef<HTMLButtonElement>(null);
+  const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Skip the intro: land at the end (Get Started at top via the -100vh overlap),
+  // then run the same play-once collapse so it can't be scrolled back into. No
+  // one is trapped in the long scroll.
+  const handleSkip = () => {
+    const s = sectionRef.current;
+    if (!s) return;
+    window.scrollTo(0, s.offsetTop + s.offsetHeight - window.innerHeight + 4);
+    collapseRef.current?.();
+  };
   // "cinema" until proven otherwise; flips to static for reduced-motion or load failure
   const [mode, setMode] = useState<"cinema" | "static">("cinema");
 
@@ -90,11 +102,17 @@ export function ScrollCinema() {
         rootStyle.overflowAnchor = prevAnchor;
       });
     };
+    collapseRef.current = collapse; // let the Skip button trigger the same collapse
 
     const applyOverlays = () => {
       if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
       // faint bloom only — the scene's Matrix rain is the real green transition
       if (flashRef.current) flashRef.current.style.opacity = String(flashOpacity(progress) * 0.18);
+      if (skipRef.current) {
+        const o = progress < 0.85 ? 1 : Math.max(0, 1 - (progress - 0.85) / 0.08);
+        skipRef.current.style.opacity = String(o);
+        skipRef.current.style.pointerEvents = o > 0.1 ? "auto" : "none";
+      }
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
@@ -235,6 +253,14 @@ export function ScrollCinema() {
           </div>
         ))}
         <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
+        <button
+          ref={skipRef}
+          type="button"
+          onClick={handleSkip}
+          className="pointer-events-auto absolute bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
+        >
+          Skip intro ↓
+        </button>
         <noscript>
           <img src="/cinema/shots/hero.webp" alt="LazyBull — options, without the fog" className="absolute inset-0 h-full w-full object-cover" />
         </noscript>
