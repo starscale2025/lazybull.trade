@@ -1,20 +1,18 @@
 import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
-import { Hero } from "@/components/Hero";
-import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
-import { UseCases } from "@/components/UseCases";
-import { TradeOverview } from "@/components/TradeOverview";
-import { SocialProof } from "@/components/SocialProof";
-import { Partners } from "@/components/Partners";
+import { GetStarted } from "@/components/GetStarted";
+import { CinemaGate } from "@/components/scrollstory/CinemaGate";
 import { Footer } from "@/components/Footer";
-import { ScrollCinema } from "@/components/scrollstory/ScrollCinema";
-import { IntroSequence } from "@/components/atmosphere/IntroSequence";
-import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
+import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
+import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ScrollReveal } from "@/components/atmosphere/ScrollReveal";
-import { SectionDivider } from "@/components/atmosphere/SectionDivider";
 
+// The homepage is now the scroll-cinema: it tells the whole product story as one
+// animated sequence, then hands off to a single Get Started. Signed-in visitors
+// skip the intro (see CinemaGate). The marketing sections it replaced live on in
+// git history if we ever want them back.
 export default function Home() {
   return (
     <main className="relative flex min-h-screen flex-col bg-bg text-fg">
@@ -22,35 +20,14 @@ export default function Home() {
       <AmbientOrbs />
       <CursorSpotlight />
       <ScrollProgress />
-      <IntroSequence />
 
       <div className="relative z-10 flex flex-col">
         <TickerBar />
         <Nav />
 
-        <ScrollCinema />
+        <CinemaGate />
 
-        <Hero />
-
-        <SectionDivider flag="§ 02 — who" meta="04 profiles" />
-        <ScrollReveal as="section">
-          <UseCases />
-        </ScrollReveal>
-
-        <SectionDivider flag="§ 03 — how" meta="04 drags" />
-        <ScrollReveal as="section">
-          <TradeOverview />
-        </ScrollReveal>
-
-        <SectionDivider flag="§ 04 — receipts" meta="learners.log" />
-        <ScrollReveal as="section">
-          <SocialProof />
-        </ScrollReveal>
-
-        <SectionDivider flag="§ 05 — stack" meta="partners.json" />
-        <ScrollReveal as="section">
-          <Partners />
-        </ScrollReveal>
+        <GetStarted />
 
         <ScrollReveal as="div" speed="slow">
           <Footer />
