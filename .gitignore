@@ -45,7 +45,7 @@ next-env.d.ts
 *.pt
 ai quants/weights/
 
-# scroll-cinema pipeline intermediates (generated frames in public/ ARE committed)
+# scroll-cinema intermediates (the served shots in public/cinema/shots ARE committed)
 scripts/cinema/shots/
 scripts/cinema/raw/
 scripts/cinema/bull.mp4

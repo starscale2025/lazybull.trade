@@ -3,41 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-  COPY_BEATS,
-  beatOpacity,
-  canvasOpacity,
-  flashOpacity,
-  frameUrl,
-  manifestSchema,
-  progressToFrame,
-  type FrameSet,
-} from "@/lib/cinema";
+import { COPY_BEATS, beatOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
 const SCROLL_LENGTH_VH = 600; // longer pin = the animation unfolds more slowly
-const EAGER_FRAMES = 24;
-const CHUNK = 24;
 
-type Frame = ImageBitmap | HTMLImageElement;
+// Distinct app-screen shots the scene composites (panels + the reveal hero).
+const SHOT_NAMES = ["home", "learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
+const SHOTS = Object.fromEntries(SHOT_NAMES.map((n) => [n, `/cinema/shots/${n}.webp`]));
 
-function blobToImage(blob: Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
-    img.src = url;
-  });
-}
+type SceneWindow = Window & {
+  initScene?: (cfg: { shots: Record<string, string>; bullFrames: string[] | null }) => Promise<unknown>;
+  renderAt?: (t: number) => void;
+};
 
 export function ScrollCinema() {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
   // "cinema" until proven otherwise; flips to static for reduced-motion or load failure
@@ -49,45 +35,23 @@ export function ScrollCinema() {
       return;
     }
     const section = sectionRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!section || !canvas || !ctx) return;
+    const iframe = frameRef.current;
+    if (!section || !iframe) return;
 
     let disposed = false;
+    let started = false;
+    let ready = false;
     let st: ScrollTrigger | null = null;
-    let set: FrameSet | null = null;
-    const frames: (Frame | null)[] = [];
-    let progress = 0;        // smoothed value that actually drives the draw
-    let targetProgress = 0;  // raw scroll position from ScrollTrigger
-    let raf = 0;             // smoothing loop handle
-    let lastDrawn = -1;
+    let raf = 0;
+    let progress = 0; // smoothed value that drives the scene
+    let targetProgress = 0; // raw scroll position
+    let resizeTimer = 0;
 
-    const draw = () => {
-      if (!set) return;
-      const target = progressToFrame(progress, set.frameCount);
-      // nearest loaded frame at/below target, else nearest above — never blank
-      let idx = target;
-      while (idx >= 0 && !frames[idx]) idx--;
-      if (idx < 0) {
-        idx = target;
-        while (idx < set.frameCount && !frames[idx]) idx++;
-        if (idx >= set.frameCount) return;
-      }
-      if (idx === lastDrawn) return;
-      lastDrawn = idx;
-      const img = frames[idx] as Frame;
-      const cw = canvas.width;
-      const ch = canvas.height;
-      const scale = Math.max(cw / set.width, ch / set.height);
-      const dw = set.width * scale;
-      const dh = set.height * scale;
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-    };
+    const win = () => iframe.contentWindow as SceneWindow | null;
 
     const applyOverlays = () => {
       if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
-      // faint bloom only — the baked Matrix rain is the real green transition
+      // faint bloom only — the scene's Matrix rain is the real green transition
       if (flashRef.current) flashRef.current.style.opacity = String(flashOpacity(progress) * 0.18);
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
@@ -98,74 +62,44 @@ export function ScrollCinema() {
       });
     };
 
-    const resize = () => {
-      // Cap DPR at 1.25: the scrub redraws the whole canvas every tick, so a 2x
-      // canvas is 2.5x the pixels to blit — the main source of scroll jank.
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-      canvas.width = Math.round(canvas.clientWidth * dpr);
-      canvas.height = Math.round(canvas.clientHeight * dpr);
-      lastDrawn = -1;
-      draw();
+    const renderScene = () => {
+      if (ready) win()?.renderAt?.(progress);
     };
 
-    const loadFrame = async (s: FrameSet, i: number) => {
-      try {
-        const res = await fetch(frameUrl(s.dir, i));
-        if (!res.ok) throw new Error(String(res.status));
-        const blob = await res.blob();
-        frames[i] =
-          typeof createImageBitmap === "function"
-            ? await createImageBitmap(blob)
-            : await blobToImage(blob);
-      } catch {
-        frames[i] = null;
+    // Smooth scrub: ease progress toward the scroll position each frame. Because
+    // the scene renders LIVE (a pure function of t), every in-between value draws
+    // a real frame — so it's fluid at 60fps at any scroll speed, not stepped.
+    const SMOOTH = 0.12; // lower = glidier, higher = tighter to the scroll
+    const loop = () => {
+      const diff = targetProgress - progress;
+      if (Math.abs(diff) < 0.0002) {
+        progress = targetProgress;
+        renderScene();
+        applyOverlays();
+        raf = 0;
+        return;
       }
+      progress += diff * SMOOTH;
+      renderScene();
+      applyOverlays();
+      raf = requestAnimationFrame(loop);
     };
 
-    (async () => {
+    const start = async () => {
+      if (started || disposed) return;
+      const w = win();
+      if (!w?.initScene) return; // scene not loaded yet; onload will call again
+      started = true;
       try {
-        const res = await fetch("/cinema/frames/manifest.json");
-        if (!res.ok) throw new Error(String(res.status));
-        const manifest = manifestSchema.parse(await res.json());
-        set = window.innerWidth <= 768 ? manifest.mobile : manifest.desktop;
+        await w.initScene({ shots: SHOTS, bullFrames: null });
       } catch {
         if (!disposed) setMode("static");
         return;
       }
-      frames.length = set.frameCount;
-      resize();
-      const eager = Math.min(EAGER_FRAMES, set.frameCount);
-      await Promise.all(Array.from({ length: eager }, (_, i) => loadFrame(set!, i)));
       if (disposed) return;
-      draw();
-      // Background-load the rest in chunks; redraw in case the user scrubbed ahead.
-      void (async () => {
-        for (let start = eager; start < set!.frameCount && !disposed; start += CHUNK) {
-          const n = Math.min(CHUNK, set!.frameCount - start);
-          await Promise.all(Array.from({ length: n }, (_, j) => loadFrame(set!, start + j)));
-          if (!disposed) {
-            lastDrawn = -1;
-            draw();
-          }
-        }
-      })();
-      // Smooth scrub: ease the rendered progress toward the scroll position each
-      // frame instead of snapping, so wheel/trackpad steps glide instead of jerk.
-      const SMOOTH = 0.09; // lower = smoother/glidier, higher = snappier
-      const loop = () => {
-        const diff = targetProgress - progress;
-        if (Math.abs(diff) < 0.0002) {
-          progress = targetProgress;
-          draw();
-          applyOverlays();
-          raf = 0;
-          return;
-        }
-        progress += diff * SMOOTH;
-        draw();
-        applyOverlays();
-        raf = requestAnimationFrame(loop);
-      };
+      ready = true;
+      renderScene();
+      applyOverlays();
       st = ScrollTrigger.create({
         trigger: section,
         start: "top top",
@@ -175,29 +109,39 @@ export function ScrollCinema() {
           if (!raf) raf = requestAnimationFrame(loop);
         },
       });
-      applyOverlays();
-    })();
+    };
 
-    window.addEventListener("resize", resize);
+    // The scene seeds particles/rain for a specific size; re-init on resize.
+    const onResize = () => {
+      if (!ready) return;
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        win()?.initScene?.({ shots: SHOTS, bullFrames: null }).then(renderScene);
+      }, 160);
+    };
+
+    iframe.addEventListener("load", start);
+    start(); // in case the iframe is already loaded
+    window.addEventListener("resize", onResize);
+
     return () => {
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
+      window.clearTimeout(resizeTimer);
+      iframe.removeEventListener("load", start);
+      window.removeEventListener("resize", onResize);
       st?.kill();
-      for (const f of frames) {
-        if (f && "close" in f) f.close();
-      }
     };
   }, []);
 
   if (mode === "static") {
-    // Reduced motion or frames unavailable: calm static hero, copy laid out plainly.
+    // Reduced motion or scene unavailable: calm static hero, copy laid out plainly.
     return (
       <section data-cinema-static className="relative overflow-hidden border-b border-border bg-bg">
         <img
-          src="/cinema/frames/poster.webp"
+          src="/cinema/shots/hero.webp"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-30"
+          className="absolute inset-0 h-full w-full object-cover opacity-20"
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
         <div className="relative mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center gap-10 px-6 py-24 text-center">
@@ -223,7 +167,15 @@ export function ScrollCinema() {
           the section — otherwise the section's opaque bg stays over the real Hero
           in the -100vh overlap and the handoff reveals black instead of the page. */}
       <div ref={stickyRef} className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg">
-        <canvas ref={canvasRef} className="h-full w-full" />
+        <iframe
+          ref={frameRef}
+          src="/cinema/scene.html"
+          title=""
+          aria-hidden
+          tabIndex={-1}
+          scrolling="no"
+          className="pointer-events-none h-full w-full border-0"
+        />
         {COPY_BEATS.map((b, i) => (
           <div
             key={b.id}
@@ -237,7 +189,7 @@ export function ScrollCinema() {
         ))}
         <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
         <noscript>
-          <img src="/cinema/frames/poster.webp" alt="LazyBull — options, without the fog" className="absolute inset-0 h-full w-full object-cover" />
+          <img src="/cinema/shots/hero.webp" alt="LazyBull — options, without the fog" className="absolute inset-0 h-full w-full object-cover" />
         </noscript>
       </div>
     </section>
