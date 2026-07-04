@@ -188,7 +188,9 @@ export function ScrollCinema() {
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
         <div className="relative mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center gap-10 px-6 py-24 text-center">
-          {COPY_BEATS.map((b) => (
+          {/* Curated subset — the motion-only bookends (boot/welcome) and the second
+              candle beat would make a static vertical list too long. */}
+          {COPY_BEATS.filter((b) => !["boot", "welcome", "candle-vindication"].includes(b.id)).map((b) => (
             <div key={b.id}>
               <div className="font-display text-3xl tracking-tightest text-fg md:text-4xl">{b.heading}</div>
               {b.sub && <div className="mt-2 font-mono text-sm text-fg-dim">{b.sub}</div>}

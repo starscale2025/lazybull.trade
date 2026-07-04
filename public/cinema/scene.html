@@ -182,13 +182,14 @@ const MATRIX_CHARS =
   "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｸ0123456789$+=<>*ﾘﾁﾄﾉﾌｦ".split("");
 
 // 12 bots for the consensus ring — real families/verdicts from the app.
+// 10 agree (up>0.6), 2 dissent — a realistic ULTRA majority, not unanimity.
 const BOTS = [
   { k: "SMA", fam: "trend", up: 0.86 }, { k: "MACD", fam: "trend", up: 0.80 },
-  { k: "RSI", fam: "trend", up: 0.72 }, { k: "BOLL", fam: "trend", up: 0.78 },
+  { k: "RSI", fam: "trend", up: 0.43 }, { k: "BOLL", fam: "trend", up: 0.78 },
   { k: "DON", fam: "trend", up: 0.83 }, { k: "Z", fam: "stats", up: 0.64 },
   { k: "KAL", fam: "stats", up: 0.70 }, { k: "LR", fam: "stats", up: 0.67 },
   { k: "DIR", fam: "ai", up: 0.88 }, { k: "MAG", fam: "ai", up: 0.74 },
-  { k: "CNN", fam: "ai", up: 0.69 }, { k: "TXR", fam: "ai", up: 0.82 },
+  { k: "CNN", fam: "ai", up: 0.41 }, { k: "TXR", fam: "ai", up: 0.82 },
 ];
 const FAM_COLOR = { trend: GREEN, stats: CYAN, ai: RED };
 
@@ -224,7 +225,7 @@ function buildRegime() {
 // forecast line + cone that bends DOWN before the crash and that the crash
 // then falls into. All pixel geometry mapped to the shared CHART rect.
 function buildCandles() {
-  const ch = CHART, N = 90, DIVERGE = 52, CRASH = 62, END_CRASH = 80, dt = 1 / 52;
+  const ch = CHART, N = 90, DIVERGE = 52, CRASH = 64, END_CRASH = 82, dt = 1 / 52; // AI diverges 12 bars before the crash
   const rnd = mulberry32(7);
   let price = 100;
   const raw = [];
@@ -299,6 +300,10 @@ window.initScene = async function initScene(cfg) {
   }
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
+  // Bail on an unlaid-out / collapsed 0-size stage: keep any prior geometry and
+  // let the next resize re-init at a real size (avoids NaN chart mapping).
+  if (W < 2 || H < 2) return true;
+  STROKES = null; // re-measure the boot outline lengths on every (re)init
 
   // Panels ×2 (grid inside the mac + fly layer).
   const inner = document.getElementById("screen-inner");
@@ -502,6 +507,12 @@ function drawCandle(ctx, p, env, W, H) {
     const pulse = 3 + 2 * (0.5 + 0.5 * Math.sin(seg(p, 0.28, 0.62) * TAU * 2));
     ctx.globalAlpha = predA; ctx.fillStyle = AMBER; ctx.beginPath();
     ctx.arc(dv.x, dv.y, pulse, 0, TAU); ctx.fill();
+    // anchor the probability figure to the forecast so the copy's "71%" is on-chart
+    ctx.globalAlpha = predA; ctx.fillStyle = AMBER;
+    ctx.font = `600 ${Math.round(H * 0.019)}px ui-monospace, monospace`;
+    ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("P(down) 71%", dv.x + 13, dv.y - 9);
+    ctx.textBaseline = "top";
   }
 
   // candles
@@ -713,12 +724,15 @@ window.renderAt = function renderAt(t) {
   const ctx = bullC.getContext("2d");
   ctx.clearRect(0, 0, W, H);
 
-  // crossfade envelopes overlap at boundaries → no black flash between acts
-  const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety), eCon = actEnv(t, P.consensus);
-  if (eReg > 0.001) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
-  if (eCan > 0.001) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
-  if (eSaf > 0.001) drawSafety(ctx, seg(t, ...P.safety), eSaf, W, H);
-  if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
+  // crossfade envelopes overlap at boundaries → no black flash between acts.
+  // Gated on CHART so a 0-size init (geometry not built yet) can't NaN/crash.
+  if (CHART) {
+    const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety), eCon = actEnv(t, P.consensus);
+    if (eReg > 0.001) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
+    if (eCan > 0.001) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
+    if (eSaf > 0.001) drawSafety(ctx, seg(t, ...P.safety), eSaf, W, H);
+    if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
+  }
 
   // ---- bull ---------------------------------------------------------------
   const pBull = seg(t, ...P.bull);
