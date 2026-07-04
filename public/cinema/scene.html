@@ -432,12 +432,22 @@ function drawRegime(ctx, r, env, W, H) {
   for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yOf(ys[i]));
   ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.shadowBlur = 10; ctx.shadowColor = col; ctx.stroke();
   ctx.shadowBlur = 0;
-  // regime meter (bottom): a needle riding 0..1 at H
-  const my = ch.y + ch.h + Math.min(48, H * 0.06), mx0 = ch.x + ch.w * 0.28, mw = ch.w * 0.44;
-  ctx.strokeStyle = "rgba(245,245,240,0.25)"; ctx.lineWidth = 1;
+  // regime meter (bottom): a needle riding 0..1 at H, with the detected regime
+  // name and what the platform would run for it (real Hurst → bot mapping).
+  const my = ch.y + ch.h + Math.min(44, H * 0.055), mx0 = ch.x + ch.w * 0.30, mw = ch.w * 0.40;
+  ctx.strokeStyle = "rgba(245,245,240,0.22)"; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(mx0, my); ctx.lineTo(mx0 + mw, my); ctx.stroke();
   const nx = mx0 + mw * seg(H_ex, 0.34, 0.68);
-  ctx.fillStyle = col; ctx.fillRect(nx - 1.5, my - 8, 3, 16);
+  ctx.fillStyle = col; ctx.fillRect(nx - 1.5, my - 7, 3, 14);
+  const name = H_ex > 0.56 ? "TRENDING" : H_ex < 0.44 ? "MEAN-REVERTING" : "RANDOM WALK";
+  const rec = H_ex > 0.56 ? "run trend bots · SMA · MACD · Donchian"
+    : H_ex < 0.44 ? "run reversion · Z-Score · Kalman" : "no edge — stand aside";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillStyle = col; ctx.font = `700 ${Math.round(H * 0.024)}px ui-monospace, monospace`;
+  ctx.fillText(`H ${H_ex.toFixed(2)}  ·  ${name}`, W / 2, my + 14);
+  ctx.fillStyle = GRAY; ctx.font = `${Math.round(H * 0.016)}px ui-monospace, monospace`;
+  ctx.fillText(rec, W / 2, my + 14 + H * 0.032);
+  ctx.textAlign = "left";
   ctx.restore();
 }
 
