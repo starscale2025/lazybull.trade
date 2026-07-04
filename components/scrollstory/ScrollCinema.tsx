@@ -38,6 +38,10 @@ export function ScrollCinema() {
     const iframe = frameRef.current;
     if (!section || !iframe) return;
 
+    // Start every load at the top so the intro plays from the beginning (and a
+    // reload while past the cinema doesn't restore into a collapsed layout).
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
     let disposed = false;
     let started = false;
     let ready = false;
@@ -46,8 +50,42 @@ export function ScrollCinema() {
     let progress = 0; // smoothed value that drives the scene
     let targetProgress = 0; // raw scroll position
     let resizeTimer = 0;
+    let collapsed = false;
 
     const win = () => iframe.contentWindow as SceneWindow | null;
+
+    // Play-once: after the user scrolls all the way through onto the homepage,
+    // remove the cinema from the layout (compensating scroll so nothing jumps)
+    // so it can't be scrolled back into. The intro plays a single time.
+    const collapse = () => {
+      if (collapsed || disposed) return;
+      collapsed = true;
+      progress = 1;
+      renderScene();
+      applyOverlays();
+      st?.kill();
+      if (raf) cancelAnimationFrame(raf);
+      // Anchor on the Hero: note where it sits now, remove the cinema, then
+      // shift scroll by exactly how far the Hero moved so nothing visibly jumps.
+      // Disable native scroll-anchoring so only our shift moves the scroll, and
+      // re-assert on the next frame in case anything clobbered it mid-update.
+      const hero = section.nextElementSibling as HTMLElement | null;
+      const rootStyle = document.documentElement.style;
+      const prevAnchor = rootStyle.overflowAnchor;
+      rootStyle.overflowAnchor = "none";
+      const before = hero ? hero.getBoundingClientRect().top : 0;
+      section.style.display = "none";
+      const keepHeroInPlace = () => {
+        if (!hero) return;
+        const delta = hero.getBoundingClientRect().top - before;
+        if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+      };
+      keepHeroInPlace();
+      requestAnimationFrame(() => {
+        keepHeroInPlace();
+        rootStyle.overflowAnchor = prevAnchor;
+      });
+    };
 
     const applyOverlays = () => {
       if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
@@ -108,12 +146,13 @@ export function ScrollCinema() {
           targetProgress = self.progress;
           if (!raf) raf = requestAnimationFrame(loop);
         },
+        onLeave: () => collapse(), // scrolled past the end onto the homepage → lock it out
       });
     };
 
     // The scene seeds particles/rain for a specific size; re-init on resize.
     const onResize = () => {
-      if (!ready) return;
+      if (!ready || collapsed) return;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
         win()?.initScene?.({ shots: SHOTS, bullFrames: null }).then(renderScene);
