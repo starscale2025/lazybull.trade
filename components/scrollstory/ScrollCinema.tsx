@@ -9,7 +9,7 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const SCROLL_LENGTH_VH = 1000; // long pin: room for the expanded feature acts to read
+const SCROLL_LENGTH_VH = 1400; // long pin: room for the expanded feature acts to read slowly
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 const SHOT_NAMES = ["home", "learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
