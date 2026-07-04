@@ -17,8 +17,8 @@ export type Act =
 // Contiguous, covers [0,1]. The candle act (climb → crash → AI prediction) is
 // the long signature beat. `matrix` folds the old flash+handoff+reveal.
 export const ACTS: Record<Act, { from: number; to: number }> = {
-  boot: { from: 0.0, to: 0.07 },
-  assembly: { from: 0.07, to: 0.15 },
+  boot: { from: 0.0, to: 0.05 },
+  assembly: { from: 0.05, to: 0.15 },
   dive: { from: 0.15, to: 0.24 },
   regime: { from: 0.24, to: 0.32 },
   candle: { from: 0.32, to: 0.56 },
@@ -46,8 +46,8 @@ export type CopyBeat = {
 
 // DOM overlays synced to scroll progress (crisp text, not baked into the scene).
 export const COPY_BEATS: CopyBeat[] = [
-  { id: "boot", from: 0.01, to: 0.06, heading: "lazybull.trade", sub: "options — without the fog" },
-  { id: "assembly", from: 0.085, to: 0.145, heading: "One terminal. Every tool.", sub: "27 bots · 13 models · 8 live demos" },
+  { id: "boot", from: 0.006, to: 0.045, heading: "lazybull.trade", sub: "options — without the fog" },
+  { id: "assembly", from: 0.075, to: 0.145, heading: "One terminal. Every tool.", sub: "27 bots · 13 models · 8 live demos" },
   { id: "dive", from: 0.165, to: 0.235, heading: "0.4ms pricing engine", sub: "$100K paper — $0 real dollars at risk, ever" },
   { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "It reads the regime first.", sub: "Hurst says trend, reversion or noise — before a single trade." },
   { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "It saw the crash coming.", sub: "AI Direction Ensemble · ULTRA conviction" },
