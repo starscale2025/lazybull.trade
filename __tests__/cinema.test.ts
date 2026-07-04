@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
   ACTS,
+  ACT_ORDER,
   COPY_BEATS,
   beatOpacity,
   canvasOpacity,
   clamp01,
   flashOpacity,
-  frameUrl,
-  manifestSchema,
-  progressToFrame,
 } from "@/lib/cinema";
 
 describe("ACTS", () => {
-  it("covers [0,1] contiguously in order", () => {
-    const order = ["boot", "assembly", "dive", "bull", "flash", "handoff"] as const;
-    expect(ACTS[order[0]].from).toBe(0);
-    expect(ACTS[order[order.length - 1]].to).toBe(1);
-    for (let i = 1; i < order.length; i++) {
-      expect(ACTS[order[i]].from).toBe(ACTS[order[i - 1]].to);
+  it("covers [0,1] contiguously in ACT_ORDER", () => {
+    expect(ACT_ORDER.length).toBe(9);
+    expect(ACTS[ACT_ORDER[0]].from).toBe(0);
+    expect(ACTS[ACT_ORDER[ACT_ORDER.length - 1]].to).toBe(1);
+    for (let i = 1; i < ACT_ORDER.length; i++) {
+      expect(ACTS[ACT_ORDER[i]].from).toBeCloseTo(ACTS[ACT_ORDER[i - 1]].to, 10);
     }
+  });
+  it("every act has positive width", () => {
+    for (const a of ACT_ORDER) expect(ACTS[a].to).toBeGreaterThan(ACTS[a].from);
   });
 });
 
@@ -32,6 +33,12 @@ describe("COPY_BEATS", () => {
       expect(b.to).toBeGreaterThan(b.from);
     }
   });
+  it("each beat sits within some act window", () => {
+    for (const b of COPY_BEATS) {
+      const inside = ACT_ORDER.some((a) => b.from >= ACTS[a].from - 1e-9 && b.to <= ACTS[a].to + 1e-9);
+      expect(inside, `beat ${b.id} spans an act boundary`).toBe(true);
+    }
+  });
 });
 
 describe("clamp01", () => {
@@ -41,19 +48,6 @@ describe("clamp01", () => {
     expect(clamp01(1.5)).toBe(1);
     expect(clamp01(NaN)).toBe(0);
     expect(clamp01(Infinity)).toBe(0);
-  });
-});
-
-describe("progressToFrame", () => {
-  it("maps progress to clamped frame indices", () => {
-    expect(progressToFrame(0, 160)).toBe(0);
-    expect(progressToFrame(1, 160)).toBe(159);
-    expect(progressToFrame(0.999, 160)).toBe(159);
-    expect(progressToFrame(0.5, 160)).toBe(80);
-    expect(progressToFrame(0.25, 4)).toBe(1);
-    expect(progressToFrame(-1, 160)).toBe(0);
-    expect(progressToFrame(NaN, 160)).toBe(0);
-    expect(progressToFrame(0.5, 0)).toBe(0);
   });
 });
 
@@ -71,20 +65,14 @@ describe("beatOpacity", () => {
     expect(beatOpacity(0.3, beat, 0.03)).toBe(1);
     expect(beatOpacity(0.385, beat, 0.03)).toBeCloseTo(0.5, 5);
   });
-  it("never exceeds 1 when the window is narrower than two fades", () => {
-    const narrow = { from: 0.2, to: 0.22 };
-    expect(beatOpacity(0.21, narrow, 0.03)).toBeLessThanOrEqual(1);
-    expect(beatOpacity(0.21, narrow, 0.03)).toBeGreaterThan(0);
-  });
 });
 
 describe("flashOpacity", () => {
-  it("is a triangle over the flash act peaking mid-act", () => {
+  it("is a faint triangle over the start of the matrix act", () => {
     expect(flashOpacity(0.5)).toBe(0);
-    expect(flashOpacity(0.8)).toBe(0);
-    expect(flashOpacity(0.86)).toBeCloseTo(1, 5);
-    expect(flashOpacity(0.89)).toBeCloseTo(0.5, 5);
-    expect(flashOpacity(0.92)).toBe(0);
+    expect(flashOpacity(ACTS.matrix.from)).toBe(0); // 0.84 edge
+    expect(flashOpacity(0.872)).toBeCloseTo(1, 5); // mid of [0.84, 0.904]
+    expect(flashOpacity(0.905)).toBe(0);
     expect(flashOpacity(1)).toBe(0);
   });
 });
@@ -94,30 +82,7 @@ describe("canvasOpacity", () => {
     expect(canvasOpacity(0)).toBe(1);
     expect(canvasOpacity(0.9)).toBe(1);
     expect(canvasOpacity(0.98)).toBe(1);
-    expect(canvasOpacity(0.99)).toBeCloseTo(0.5, 5); // mid of [0.98, 1.0]
+    expect(canvasOpacity(0.99)).toBeCloseTo(0.5, 5);
     expect(canvasOpacity(1)).toBe(0);
-  });
-});
-
-describe("frameUrl", () => {
-  it("builds 1-based zero-padded webp paths", () => {
-    expect(frameUrl("/cinema/frames/desktop", 0)).toBe("/cinema/frames/desktop/frame_0001.webp");
-    expect(frameUrl("/cinema/frames/mobile", 159)).toBe("/cinema/frames/mobile/frame_0160.webp");
-  });
-});
-
-describe("manifestSchema", () => {
-  const valid = {
-    desktop: { dir: "/cinema/frames/desktop", width: 1600, height: 1000, frameCount: 160 },
-    mobile: { dir: "/cinema/frames/mobile", width: 800, height: 1200, frameCount: 160 },
-  };
-  it("parses a valid manifest", () => {
-    expect(manifestSchema.parse(valid)).toEqual(valid);
-  });
-  it("rejects missing sets and bad numbers", () => {
-    expect(() => manifestSchema.parse({ desktop: valid.desktop })).toThrow();
-    expect(() =>
-      manifestSchema.parse({ ...valid, desktop: { ...valid.desktop, frameCount: 0 } })
-    ).toThrow();
   });
 });

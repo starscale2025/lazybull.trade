@@ -5,7 +5,7 @@
 <style>
   :root {
     --bg: #050505; --fg: #f5f5f0; --fg-dim: #8a8a82;
-    --bull: #00ff87; --border: #1f1f1f;
+    --bull: #00ff87; --bear: #ff5c5c; --cyan: #00e5ff; --amber: #ffb020; --border: #1f1f1f;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; transition: none !important; animation: none !important; }
   html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
@@ -14,7 +14,6 @@
     background: var(--bg);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
-  /* faint background grid, parallaxes during the dive */
   #grid {
     position: absolute; inset: -60%;
     background-image:
@@ -27,7 +26,6 @@
     background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.8) 100%);
     pointer-events: none;
   }
-  /* ambient green glow so the opening frames are never dead black */
   #glow {
     position: absolute; left: 50%; top: 50%; width: 120vw; height: 120vh;
     transform: translate(-50%, -50%);
@@ -36,18 +34,11 @@
       radial-gradient(34% 40% at 62% 58%, rgba(0,229,255,0.08), transparent 70%);
     pointer-events: none;
   }
-  /* Act 0: stroke-drawn MacBook outline */
   #outline { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
   #outline path {
     fill: none; stroke: var(--bull); stroke-width: 2;
     filter: drop-shadow(0 0 12px rgba(0,255,135,0.55));
   }
-  #wordmark {
-    position: absolute; left: 50%; top: 68%; transform: translate(-50%, -50%);
-    color: var(--fg); font-size: 30px; letter-spacing: -0.04em; font-weight: 700;
-  }
-  #wordmark .dot { color: var(--bull); }
-  /* Acts 1-2: the CSS MacBook */
   #mac { position: absolute; left: 50%; top: 50%; width: 840px; height: 560px;
          transform: translate(-50%, -50%); }
   #screen {
@@ -73,11 +64,11 @@
     box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,255,135,0.06);
     overflow: hidden; will-change: transform, opacity;
   }
-  .panel::after {  /* subtle top chrome bar so crops read as "panels" */
+  .panel::after {
     content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
     background: linear-gradient(90deg, var(--bull), transparent 60%); opacity: 0.7;
   }
-  #panels { position: absolute; inset: 0; }  /* dive-phase flying layer */
+  #panels { position: absolute; inset: 0; }
   #bull { position: absolute; inset: 0; }
   #bullreal {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -110,13 +101,12 @@
 </div>
 
 <script>
-// ---- timeline (MUST match ACTS in lib/cinema.ts) -------------------------
-const PHASES = {
-  boot:     [0.00, 0.12],
-  assembly: [0.12, 0.32],
-  dive:     [0.32, 0.58],
-  bull:     [0.58, 0.80],
-  reveal:   [0.80, 1.00],  // frames hold clean black; component fades canvas out to the real homepage
+// ---- timeline: PHASES are RECEIVED from initScene (single source of truth =
+// ACTS in lib/cinema.ts). Fallback default kept in sync for standalone opens. --
+let PHASES = {
+  boot: [0.00, 0.07], assembly: [0.07, 0.15], dive: [0.15, 0.24], regime: [0.24, 0.32],
+  candle: [0.32, 0.56], safety: [0.56, 0.65], consensus: [0.65, 0.73], bull: [0.73, 0.84],
+  matrix: [0.84, 1.00],
 };
 
 // ---- tiny deterministic helpers ------------------------------------------
@@ -125,6 +115,12 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
 const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+// Crossfade envelope for a feature act: ramps in just before the act and out
+// just after, overlapping the neighbours at the boundary so there is no black
+// flash between acts (at a shared boundary both sit at ~0.5 → a clean dissolve).
+const actEnv = (t, ph, fin = 0.02, fout = 0.024) =>
+  seg(t, ph[0] - fin, ph[0] + fin) * (1 - seg(t, ph[1] - fout, ph[1] + fout));
+const TAU = Math.PI * 2;
 function mulberry32(seed) {
   return function () {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -133,57 +129,178 @@ function mulberry32(seed) {
     return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
   };
 }
+function normal(rnd) { // Box-Muller
+  let u = 0, v = 0;
+  while (u === 0) u = rnd();
+  while (v === 0) v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v);
+}
+// lerp between two #rrggbb hex colors
+function mixHex(a, b, t) {
+  const pa = [parseInt(a.slice(1, 3), 16), parseInt(a.slice(3, 5), 16), parseInt(a.slice(5, 7), 16)];
+  const pb = [parseInt(b.slice(1, 3), 16), parseInt(b.slice(3, 5), 16), parseInt(b.slice(5, 7), 16)];
+  const c = pa.map((x, i) => Math.round(lerp(x, pb[i], clamp(t, 0, 1))));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+const GREEN = "#00ff87", RED = "#ff5c5c", CYAN = "#00e5ff", AMBER = "#ffb020", INK = "#f5f5f0", GRAY = "#8a8a82";
+// alpha wrapper that accepts either #rrggbb or rgb(...) so fills never break
+function withAlpha(c, a) {
+  if (c[0] === "#") {
+    const r = parseInt(c.slice(1, 3), 16), g = parseInt(c.slice(3, 5), 16), b = parseInt(c.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  return c.replace("rgb(", "rgba(").replace(")", `,${a})`);
+}
 
-// ---- panels: each is a DISTINCT full app screen (not a crop of one page) --
-// shot = a route screenshot key; dive = fly-off direction during the dive.
+// ---- panels (each a distinct app screen) ---------------------------------
 const PANEL_DEFS = [
-  { shot: "home",  dive: [-1.0, -0.4] },
-  { shot: "trade", dive: [ 1.0, -0.3] },
-  { shot: "learn", dive: [-0.7,  0.8] },
-  { shot: "quant", dive: [ 0.8,  0.7] },
-  { shot: "pro",   dive: [-1.2,  0.1] },
-  { shot: "chain", dive: [ 1.2,  0.2] },
-  { shot: "bots",  dive: [-0.4, -1.0] },
-  { shot: "about", dive: [ 0.4,  1.1] },
+  { shot: "home",  dive: [-1.0, -0.4] }, { shot: "trade", dive: [ 1.0, -0.3] },
+  { shot: "learn", dive: [-0.7,  0.8] }, { shot: "quant", dive: [ 0.8,  0.7] },
+  { shot: "pro",   dive: [-1.2,  0.1] }, { shot: "chain", dive: [ 1.2,  0.2] },
+  { shot: "bots",  dive: [-0.4, -1.0] }, { shot: "about", dive: [ 0.4,  1.1] },
   { shot: "home",  dive: [ 0.2, -1.2] },
 ];
-// assembly start poses: fanned around the viewport edges (deterministic)
 const START_POSES = [
   { x: -0.55, y: -0.35, r: -24 }, { x: 0.0,  y: -0.62, r: 10 }, { x: 0.55, y: -0.38, r: 22 },
   { x: -0.68, y:  0.05, r: -14 }, { x: 0.7,  y:  0.02, r: 16 }, { x: -0.5, y:  0.42, r: -20 },
   { x:  0.0,  y:  0.6,  r:  8 },  { x: 0.52, y:  0.44, r: 18 }, { x: -0.2, y: -0.55, r: -6 },
 ];
 
-// ---- bull-head silhouette (normalized, x in [-1,1], y in [0,1]) -----------
+// ---- bull-head silhouette -------------------------------------------------
 const BULL_HALF = [
-  [0.05, 0.30], [0.14, 0.24], [0.24, 0.20], [0.42, 0.12], [0.62, 0.04],  // poll → horn sweeps up & out to a point
-  [0.44, 0.21], [0.31, 0.27],                                            // horn underside back to the skull
-  [0.32, 0.36], [0.36, 0.46],                                            // brow → cheek (widest part of face)
-  [0.30, 0.58], [0.23, 0.71], [0.17, 0.81], [0.10, 0.90], [0.03, 0.95],  // jaw → muzzle → chin → bottom center
+  [0.05, 0.30], [0.14, 0.24], [0.24, 0.20], [0.42, 0.12], [0.62, 0.04],
+  [0.44, 0.21], [0.31, 0.27], [0.32, 0.36], [0.36, 0.46],
+  [0.30, 0.58], [0.23, 0.71], [0.17, 0.81], [0.10, 0.90], [0.03, 0.95],
 ];
 function bullOutline() {
   const right = BULL_HALF;
   const left = [...BULL_HALF].reverse().map(([x, y]) => [-x, y]);
-  return right.concat(left); // closed-ish loop, top-center → right → bottom → left → top
+  return right.concat(left);
 }
 
-// ---- matrix rain charset (katakana + latin + symbols) ---------------------
 const MATRIX_CHARS =
   "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｸ0123456789$+=<>*ﾘﾁﾄﾉﾌｦ".split("");
 
+// 12 bots for the consensus ring — real families/verdicts from the app.
+const BOTS = [
+  { k: "SMA", fam: "trend", up: 0.86 }, { k: "MACD", fam: "trend", up: 0.80 },
+  { k: "RSI", fam: "trend", up: 0.72 }, { k: "BOLL", fam: "trend", up: 0.78 },
+  { k: "DON", fam: "trend", up: 0.83 }, { k: "Z", fam: "stats", up: 0.64 },
+  { k: "KAL", fam: "stats", up: 0.70 }, { k: "LR", fam: "stats", up: 0.67 },
+  { k: "DIR", fam: "ai", up: 0.88 }, { k: "MAG", fam: "ai", up: 0.74 },
+  { k: "CNN", fam: "ai", up: 0.69 }, { k: "TXR", fam: "ai", up: 0.82 },
+];
+const FAM_COLOR = { trend: GREEN, stats: CYAN, ai: RED };
+
 // ---- scene state -----------------------------------------------------------
-let CFG = null;        // { shots: {home,learn,trade,...,hero}, bullFrames: string[] | null }
-let PARTICLES = [];    // { sx, sy, tx, ty, tint, size, glow }
-let BULL_IMGS = [];    // preloaded Image objects for real bull frames
-let MATRIX = [];       // { x, phase, speed, len, lead } per rain column
-let MATRIX_CELL = 16;  // rain cell size in px
+let CFG = null, PARTICLES = [], BULL_IMGS = [], MATRIX = [], MATRIX_CELL = 16;
+let CHART = null;      // shared chart rect { x, y, w, h }
+let REGIME = null;     // { incr: number[] }
+let CANDLES = null;    // { bars:[{x,oy,cy,hy,ly,bw,up,crash}], ai:[{x,y}], cone:[{x,uy,ly}], diverge, spot:[] }
+let PAYOFF = null;     // { pts:[{x,y}], zeroY, lossY, beX, maxLossX }
+let RING = null;       // { cx, cy, r, nodes:[{a,x,y,col,up,k}] }
+
+function computeChart(W, H) {
+  CHART = { x: W * 0.13, y: H * 0.24, w: W * 0.74, h: H * 0.44 };
+}
+
+// Two reference paths the regime act blends between: a mean-reverting "choppy"
+// walk (low Hurst) and a smooth "trend" (high Hurst). Blending makes the three
+// regimes read distinctly as the Hurst dial rises.
+function buildRegime() {
+  const rnd = mulberry32(4242), n = 140;
+  const choppy = [], trend = [];
+  let cv = 0, tv = 0;
+  for (let i = 0; i < n; i++) {
+    cv = cv * 0.55 + (rnd() - 0.5) * 2.4; // OU-ish: pulled back to 0 → oscillates
+    choppy.push(cv);
+    tv += 0.5 + (rnd() - 0.5) * 0.55;      // persistent climb with light noise
+    trend.push(tv);
+  }
+  REGIME = { choppy, trend, n };
+}
+
+// Deterministic GBM candle series: climb → crash → stabilize, plus an AI
+// forecast line + cone that bends DOWN before the crash and that the crash
+// then falls into. All pixel geometry mapped to the shared CHART rect.
+function buildCandles() {
+  const ch = CHART, N = 90, DIVERGE = 52, CRASH = 62, END_CRASH = 80, dt = 1 / 52;
+  const rnd = mulberry32(7);
+  let price = 100;
+  const raw = [];
+  for (let i = 0; i < N; i++) {
+    let mu, sig;
+    if (i < CRASH) { mu = 1.05; sig = 0.85; }          // euphoric climb
+    else if (i < END_CRASH) { mu = -3.6; sig = 2.1; }  // the crash
+    else { mu = 0.15; sig = 0.7; }                      // stabilize tail
+    const o = price;
+    price = price * Math.exp((mu - 0.5 * sig * sig) * dt + sig * Math.sqrt(dt) * normal(rnd));
+    const c = price;
+    const hi = Math.max(o, c), lo = Math.min(o, c);
+    const wick = (0.25 + rnd() * 0.6) * Math.abs(c - o) + o * 0.0015;
+    raw.push({ o, c, h: hi + wick, l: lo - wick, up: c >= o, crash: i >= CRASH && i < END_CRASH });
+  }
+  // AI forecast: tracks close through DIVERGE, then bends down toward the crash low.
+  let crashLow = Infinity;
+  for (let i = CRASH; i < N; i++) crashLow = Math.min(crashLow, raw[i].l);
+  const ai = [];
+  const slope = (raw[DIVERGE].c - crashLow) / (END_CRASH - 2 - DIVERGE);
+  for (let i = 0; i < N; i++) {
+    if (i <= DIVERGE) ai.push(raw[i].c);
+    else ai.push(Math.max(crashLow, raw[DIVERGE].c - (i - DIVERGE) * slope));
+  }
+  // price range for pixel mapping (pad a little)
+  let pmin = Infinity, pmax = -Infinity;
+  for (const b of raw) { pmin = Math.min(pmin, b.l); pmax = Math.max(pmax, b.h); }
+  const pad = (pmax - pmin) * 0.08; pmin -= pad; pmax += pad;
+  const yOf = (p) => ch.y + ch.h * (1 - (p - pmin) / (pmax - pmin));
+  const xOf = (i) => ch.x + (i + 0.5) * (ch.w / N);
+  const bw = Math.max(2, (ch.w / N) * 0.6);
+  const bars = raw.map((b, i) => ({
+    x: xOf(i), oy: yOf(b.o), cy: yOf(b.c), hy: yOf(b.h), ly: yOf(b.l), bw, up: b.up, crash: b.crash,
+  }));
+  const aiPx = ai.map((v, i) => ({ x: xOf(i), y: yOf(v) }));
+  // widening cone around the AI line, from DIVERGE onward
+  const cone = [];
+  for (let i = DIVERGE; i < N; i++) {
+    const w = (i - DIVERGE) * (pmax - pmin) * 0.010 + (pmax - pmin) * 0.008;
+    cone.push({ x: xOf(i), uy: yOf(ai[i] + w), ly: yOf(ai[i] - w) });
+  }
+  CANDLES = { bars, ai: aiPx, cone, diverge: DIVERGE, crash: CRASH, endCrash: END_CRASH, N, spot: raw.map((b) => b.c) };
+}
+
+// Bull Call Spread payoff: flat max-loss floor → ramp → flat max-profit ceiling.
+function buildPayoff() {
+  const ch = CHART;
+  const maxLoss = -80, maxProfit = 420, k1 = 0.30, k2 = 0.62; // ramp between 30%-62% of width
+  const yOf = (v) => ch.y + ch.h * (1 - (v - maxLoss) / (maxProfit - maxLoss));
+  const xOf = (u) => ch.x + u * ch.w;
+  const pts = [
+    { u: 0, v: maxLoss }, { u: k1, v: maxLoss }, { u: k2, v: maxProfit }, { u: 1, v: maxProfit },
+  ].map((p) => ({ x: xOf(p.u), y: yOf(p.v) }));
+  const beU = k1 + (k2 - k1) * (0 - maxLoss) / (maxProfit - maxLoss); // where payoff crosses 0
+  PAYOFF = { pts, zeroY: yOf(0), lossY: yOf(maxLoss), profY: yOf(maxProfit), beX: xOf(beU), floorX0: xOf(0), floorX1: xOf(k1), maxLoss, maxProfit };
+}
+
+function buildRing(W, H) {
+  const cx = W / 2, cy = H * 0.47, r = Math.min(W, H) * 0.26;
+  const nodes = BOTS.map((b, i) => {
+    const a = -Math.PI / 2 + (i / BOTS.length) * TAU;
+    return { a, x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, col: FAM_COLOR[b.fam], up: b.up, k: b.k };
+  });
+  RING = { cx, cy, r, nodes };
+}
 
 window.initScene = async function initScene(cfg) {
   CFG = cfg;
+  if (cfg.phases) {
+    PHASES = {};
+    for (const k in cfg.phases) PHASES[k] = [cfg.phases[k].from, cfg.phases[k].to];
+  }
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
 
-  // Build the 9 panels twice: once inside the screen grid, once in the fly layer.
+  // Panels ×2 (grid inside the mac + fly layer).
   const inner = document.getElementById("screen-inner");
   const fly = document.getElementById("panels");
   inner.innerHTML = ""; fly.innerHTML = "";
@@ -198,30 +315,24 @@ window.initScene = async function initScene(cfg) {
       parent.appendChild(el);
     }
   });
-  // grid slots: 3x3 inside screen-inner (752x462 area)
   document.querySelectorAll("#screen-inner .panel").forEach((el, i) => {
     const col = i % 3, row = Math.floor(i / 3);
     el.style.width = "236px"; el.style.height = "142px";
-    el.style.left = `${8 + col * 246}px`;
-    el.style.top = `${8 + row * 152}px`;
+    el.style.left = `${8 + col * 246}px`; el.style.top = `${8 + row * 152}px`;
   });
-  // fly copies: sized relative to viewport, centered; renderAt moves them
   document.querySelectorAll("#panels .panel").forEach((el) => {
     el.style.width = `${Math.round(W * 0.28)}px`;
     el.style.height = `${Math.round(W * 0.17)}px`;
     el.style.left = "50%"; el.style.top = "50%";
   });
 
-  // Seed bull particles.
+  // Bull particles.
   const rnd = mulberry32(1337);
   const outline = bullOutline();
   const cx = W / 2, cy = H * 0.5, scale = Math.min(W, H) * 0.36;
-  const N = 1200;
   PARTICLES = [];
-  for (let i = 0; i < N; i++) {
-    const u = i / N;
-    const fi = u * (outline.length - 1);
-    const k = Math.floor(fi), fr = fi - k;
+  for (let i = 0; i < 1200; i++) {
+    const u = i / 1200, fi = u * (outline.length - 1), k = Math.floor(fi), fr = fi - k;
     const a = outline[k], b = outline[Math.min(k + 1, outline.length - 1)];
     const jx = (rnd() - 0.5) * 0.05, jy = (rnd() - 0.5) * 0.05;
     PARTICLES.push({
@@ -234,39 +345,39 @@ window.initScene = async function initScene(cfg) {
   const bullCanvas = document.getElementById("bull");
   bullCanvas.width = W; bullCanvas.height = H;
 
-  // Seed Matrix rain columns (deterministic).
+  // Matrix rain columns.
   MATRIX_CELL = Math.max(13, Math.round(W / 96));
   const cols = Math.floor(W / MATRIX_CELL);
   const rnd2 = mulberry32(90210);
   MATRIX = [];
   for (let c = 0; c < cols; c++) {
     MATRIX.push({
-      x: c * MATRIX_CELL + MATRIX_CELL * 0.1,
-      phase: rnd2(),
-      speed: 0.55 + rnd2() * 1.1,
-      len: 9 + Math.floor(rnd2() * 18),
-      lead: Math.floor(rnd2() * 9973),
+      x: c * MATRIX_CELL + MATRIX_CELL * 0.1, phase: rnd2(),
+      speed: 0.55 + rnd2() * 1.1, len: 9 + Math.floor(rnd2() * 18), lead: Math.floor(rnd2() * 9973),
     });
   }
 
-  // The reveal layer is a screenshot of the real homepage hero (cinema hidden),
-  // so the frames resolve into a page that matches the live <Hero> at handoff.
+  // Precompute feature-act geometry (size dependent → recomputed on resize).
+  computeChart(W, H);
+  buildRegime();
+  buildCandles();
+  buildPayoff();
+  buildRing(W, H);
+
   document.getElementById("homepage").src = CFG.shots.hero || CFG.shots.home;
 
-  // Preload images (all route shots + real bull frames if present).
   const urls = Object.values(CFG.shots);
   if (CFG.bullFrames && CFG.bullFrames.length) {
     BULL_IMGS = CFG.bullFrames.map((u) => { const im = new Image(); im.src = u; return im; });
     urls.push(...CFG.bullFrames);
   }
-  await Promise.all(
-    urls.map((u) => new Promise((res) => { const im = new Image(); im.onload = res; im.onerror = res; im.src = u; }))
-  );
+  await Promise.all(urls.map((u) => new Promise((res) => {
+    const im = new Image(); im.onload = res; im.onerror = res; im.src = u;
+  })));
   document.fonts && (await document.fonts.ready);
   return true;
 };
 
-// SVG stroke lengths, measured once lazily.
 let STROKES = null;
 function strokes() {
   if (!STROKES) {
@@ -279,116 +390,370 @@ function strokes() {
   return STROKES;
 }
 
+// ================= ACT RENDERERS (canvas) =================================
+
+// Act: regime — a price path morphs trend↔reversion↔noise and recolors.
+function drawRegime(ctx, r, env, W, H) {
+  const ch = CHART, alpha = env;
+  if (alpha <= 0.001) return;
+  const H_ex = lerp(0.36, 0.66, easeIO(r)); // Hurst rises: reversion → noise → trend
+  const blend = easeIO(r);
+  const n = REGIME.n;
+  // blend the choppy and trend reference paths
+  const ys = []; let vmin = 1e9, vmax = -1e9;
+  for (let i = 0; i < n; i++) {
+    const v = lerp(REGIME.choppy[i], REGIME.trend[i], blend);
+    ys.push(v); if (v < vmin) vmin = v; if (v > vmax) vmax = v;
+  }
+  const span = Math.max(1e-6, vmax - vmin);
+  const xOf = (i) => ch.x + (i / (n - 1)) * ch.w;
+  const yOf = (val) => ch.y + ch.h * (1 - (val - vmin) / span);
+  // color by regime: cyan (revert) → gray (random) → green (trend)
+  const col = H_ex < 0.47 ? mixHex(GRAY, CYAN, seg(0.47 - H_ex, 0, 0.11))
+    : H_ex > 0.53 ? mixHex(GRAY, GREEN, seg(H_ex - 0.53, 0, 0.13))
+    : GRAY;
+  ctx.save(); ctx.globalAlpha = alpha;
+  // fill under curve
+  const grad = ctx.createLinearGradient(0, ch.y, 0, ch.y + ch.h);
+  grad.addColorStop(0, withAlpha(col, 0.16));
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.beginPath(); ctx.moveTo(xOf(0), yOf(ys[0]));
+  for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yOf(ys[i]));
+  ctx.lineTo(xOf(n - 1), ch.y + ch.h); ctx.lineTo(xOf(0), ch.y + ch.h); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  // stroke
+  ctx.beginPath(); ctx.moveTo(xOf(0), yOf(ys[0]));
+  for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yOf(ys[i]));
+  ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.shadowBlur = 10; ctx.shadowColor = col; ctx.stroke();
+  ctx.shadowBlur = 0;
+  // regime meter (bottom): a needle riding 0..1 at H
+  const my = ch.y + ch.h + Math.min(48, H * 0.06), mx0 = ch.x + ch.w * 0.28, mw = ch.w * 0.44;
+  ctx.strokeStyle = "rgba(245,245,240,0.25)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(mx0, my); ctx.lineTo(mx0 + mw, my); ctx.stroke();
+  const nx = mx0 + mw * seg(H_ex, 0.34, 0.68);
+  ctx.fillStyle = col; ctx.fillRect(nx - 1.5, my - 8, 3, 16);
+  ctx.restore();
+}
+
+function drawCandleBody(ctx, c, alpha, grow, hot) {
+  const col = c.up ? GREEN : RED;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = col; ctx.fillStyle = col;
+  ctx.lineWidth = Math.max(1, c.bw * 0.16);
+  if (hot) { ctx.shadowBlur = 10; ctx.shadowColor = col; }
+  ctx.beginPath(); ctx.moveTo(c.x, c.hy); ctx.lineTo(c.x, c.ly); ctx.stroke();
+  const top = Math.min(c.oy, c.cy), full = Math.max(2, Math.abs(c.cy - c.oy));
+  const h = full * grow, mid = (c.oy + c.cy) / 2;
+  ctx.fillRect(c.x - c.bw / 2, mid - h / 2, c.bw, h);
+  ctx.shadowBlur = 0;
+}
+
+// Act: candle — the signature. Climb → AI predicts down → crash into the cone.
+function drawCandle(ctx, p, env, W, H) {
+  const ch = CHART, C = CANDLES;
+  const chartAlpha = env;
+  if (chartAlpha <= 0.001) return;
+  // gentle pull-back "zoom out"
+  const zoom = lerp(1.14, 1.0, easeOut(seg(p, 0, 0.20)));
+  ctx.save();
+  const cxp = ch.x + ch.w * 0.5, cyp = ch.y + ch.h * 0.5;
+  ctx.translate(cxp, cyp); ctx.scale(zoom, zoom); ctx.translate(-cxp, -cyp);
+  ctx.globalAlpha = chartAlpha;
+
+  // faint chart gridlines + baseline
+  ctx.strokeStyle = "rgba(245,245,240,0.06)"; ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const gy = ch.y + (g / 4) * ch.h;
+    ctx.beginPath(); ctx.moveTo(ch.x, gy); ctx.lineTo(ch.x + ch.w, gy); ctx.stroke();
+  }
+
+  // how many candles are revealed (climb then crash). Climb starts immediately
+  // so the act never opens on a blank chart.
+  const climbN = Math.round(easeOut(seg(p, 0.03, 0.40)) * C.crash);
+  const crashN = Math.round(easeOut(seg(p, 0.46, 0.72)) * (C.N - C.crash));
+  const revealed = p < 0.46 ? climbN : C.crash + crashN;
+
+  // prediction cone + AI line appear DURING the climb (foresight before fear),
+  // fully drawn and held through p≈0.40-0.46 before the crash starts.
+  const predA = seg(p, 0.24, 0.40) * (1 - seg(p, 0.88, 0.97)) * chartAlpha;
+  const predReveal = easeOut(seg(p, 0.24, 0.60)); // how far the forecast has drawn
+  if (predA > 0.002) {
+    const cone = C.cone, cn = Math.max(2, Math.round(cone.length * predReveal));
+    // cone fill
+    ctx.globalAlpha = predA * 0.5;
+    ctx.beginPath(); ctx.moveTo(cone[0].x, cone[0].uy);
+    for (let i = 1; i < cn; i++) ctx.lineTo(cone[i].x, cone[i].uy);
+    for (let i = cn - 1; i >= 0; i--) ctx.lineTo(cone[i].x, cone[i].ly);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(0,229,255,0.10)"; ctx.fill();
+    // dashed AI forecast line (cyan → amber toward the crash)
+    ctx.globalAlpha = predA;
+    ctx.setLineDash([6, 5]); ctx.lineWidth = 2;
+    const dEnd = Math.min(C.N - 1, C.diverge + Math.round((C.N - 1 - C.diverge) * predReveal));
+    ctx.beginPath();
+    for (let i = C.diverge; i <= dEnd; i++) {
+      const q = (i - C.diverge) / Math.max(1, C.N - 1 - C.diverge);
+      if (i === C.diverge) ctx.moveTo(C.ai[i].x, C.ai[i].y); else ctx.lineTo(C.ai[i].x, C.ai[i].y);
+    }
+    ctx.strokeStyle = mixHex(CYAN, AMBER, predReveal); ctx.shadowBlur = 8; ctx.shadowColor = CYAN;
+    ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
+    // pulsing marker at the divergence point
+    const dv = C.ai[C.diverge];
+    const pulse = 3 + 2 * (0.5 + 0.5 * Math.sin(seg(p, 0.28, 0.62) * TAU * 2));
+    ctx.globalAlpha = predA; ctx.fillStyle = AMBER; ctx.beginPath();
+    ctx.arc(dv.x, dv.y, pulse, 0, TAU); ctx.fill();
+  }
+
+  // candles
+  for (let i = 0; i < revealed; i++) {
+    const c = C.bars[i];
+    // each candle pops in over its own little sub-window near the reveal edge
+    const grow = i < revealed - 1 ? 1 : easeOut(clamp((p < 0.46 ? seg(p, 0.03, 0.40) * C.crash : C.crash + seg(p, 0.46, 0.72) * (C.N - C.crash)) - i, 0, 1));
+    const hot = i >= revealed - 2; // leading edge glows
+    drawCandleBody(ctx, c, chartAlpha, grow, hot);
+  }
+
+  // crash screen-shake (deterministic, decays) — applied as a subtle offset
+  // handled by re-drawing? keep cheap: a red vignette pulse during the crash.
+  const crashHeat = seg(p, 0.48, 0.56) * (1 - seg(p, 0.74, 0.86));
+  if (crashHeat > 0.01) {
+    const g = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.2, W / 2, H * 0.5, W * 0.62);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(255,60,60,${0.16 * crashHeat})`);
+    ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+
+  // vindication: draw a check where the crash meets the AI line
+  const vind = seg(p, 0.70, 0.88) * chartAlpha;
+  if (vind > 0.02) {
+    const meet = C.ai[Math.min(C.N - 1, C.endCrash - 2)];
+    ctx.globalAlpha = vind; ctx.strokeStyle = GREEN; ctx.lineWidth = 3;
+    ctx.shadowBlur = 10; ctx.shadowColor = GREEN;
+    ctx.beginPath();
+    ctx.arc(meet.x, meet.y, 16, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(meet.x - 7, meet.y); ctx.lineTo(meet.x - 1, meet.y + 6); ctx.lineTo(meet.x + 8, meet.y - 7); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// Act: safety — the capped payoff diagram (defined risk + kill switch).
+function drawSafety(ctx, q, env, W, H) {
+  const ch = CHART, P = PAYOFF, alpha = env;
+  if (alpha <= 0.001) return;
+  const draw = easeOut(seg(q, 0.0, 0.45)); // payoff strokes left→right
+  ctx.save(); ctx.globalAlpha = alpha;
+  // zero line
+  ctx.strokeStyle = "rgba(245,245,240,0.14)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ch.x, P.zeroY); ctx.lineTo(ch.x + ch.w, P.zeroY); ctx.stroke();
+  // reveal x
+  const revealX = ch.x + ch.w * draw;
+  // build clipped polyline path
+  const pts = P.pts;
+  function pathTo(xLimit) {
+    ctx.beginPath();
+    let started = false, prev = null;
+    for (const pt of pts) {
+      if (!started) { ctx.moveTo(pt.x, pt.y); started = true; prev = pt; continue; }
+      if (pt.x <= xLimit) { ctx.lineTo(pt.x, pt.y); prev = pt; }
+      else {
+        const tt = (xLimit - prev.x) / (pt.x - prev.x);
+        if (tt > 0) ctx.lineTo(xLimit, lerp(prev.y, pt.y, clamp(tt, 0, 1)));
+        break;
+      }
+    }
+  }
+  // fills: below-zero red, above-zero green (clipped to reveal)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(ch.x, ch.y, ch.w * draw, ch.h); ctx.clip();
+  // green fill above zero
+  ctx.beginPath(); ctx.moveTo(pts[0].x, P.zeroY);
+  for (const pt of pts) ctx.lineTo(pt.x, pt.y);
+  ctx.lineTo(pts[pts.length - 1].x, P.zeroY); ctx.closePath();
+  ctx.fillStyle = "rgba(0,255,135,0.10)"; ctx.fill();
+  ctx.restore();
+  // the payoff line
+  pathTo(revealX);
+  ctx.strokeStyle = GREEN; ctx.lineWidth = 2.6; ctx.shadowBlur = 10; ctx.shadowColor = GREEN; ctx.stroke();
+  ctx.shadowBlur = 0;
+  // max-loss guard line
+  const guard = seg(q, 0.32, 0.6) * alpha;
+  if (guard > 0.02) {
+    ctx.globalAlpha = guard; ctx.strokeStyle = RED; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(ch.x, P.lossY); ctx.lineTo(ch.x + ch.w, P.lossY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = RED; ctx.font = `600 ${Math.round(H * 0.02)}px ui-monospace, monospace`;
+    ctx.textBaseline = "bottom"; ctx.fillText("−$80  max loss", ch.x + 6, P.lossY - 6);
+  }
+  // breakeven vertical
+  const be = seg(q, 0.4, 0.66) * alpha;
+  if (be > 0.02) {
+    ctx.globalAlpha = be; ctx.strokeStyle = CYAN; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(P.beX, ch.y); ctx.lineTo(P.beX, ch.y + ch.h); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // kill-switch armed glow + badge
+  const kill = seg(q, 0.55, 0.85) * alpha;
+  if (kill > 0.02) {
+    const g = ctx.createRadialGradient(W / 2, P.lossY, 10, W / 2, P.lossY, W * 0.34);
+    g.addColorStop(0, `rgba(0,255,135,${0.14 * kill})`); g.addColorStop(1, "rgba(0,255,135,0)");
+    ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = kill; ctx.fillStyle = GREEN;
+    const bx = ch.x + ch.w - 172, by = ch.y + 8;
+    ctx.beginPath(); ctx.arc(bx + 8, by + 9, 4, 0, TAU); ctx.fill();
+    ctx.font = `600 ${Math.round(H * 0.019)}px ui-monospace, monospace`; ctx.textBaseline = "top";
+    ctx.fillStyle = "rgba(0,255,135,0.9)"; ctx.fillText("KILL SWITCH ARMED", bx + 20, by + 1);
+  }
+  ctx.restore();
+}
+
+// Act: consensus — 12 bots vote on a ring; a tally arc climbs to a tier.
+function drawConsensus(ctx, v, env, W, H) {
+  const R = RING, alpha = env;
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  // agreement grows: how many bots have "cast" and how strongly they agree BUY
+  let agree = 0;
+  R.nodes.forEach((nd, i) => {
+    const cast = easeOut(seg(v, 0.08 + i * 0.03, 0.5 + i * 0.02));
+    const strength = (nd.up - 0.5) * 2; // ~0.28..0.76 conviction
+    const len = R.r * lerp(0.12, 0.99, cast) * (0.55 + strength * 0.45);
+    // spoke
+    ctx.strokeStyle = nd.col; ctx.globalAlpha = alpha * (0.35 + 0.5 * cast);
+    ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(R.cx, R.cy);
+    ctx.lineTo(R.cx + Math.cos(nd.a) * len, R.cy + Math.sin(nd.a) * len);
+    ctx.stroke();
+    // node
+    const lit = cast > 0.5 && nd.up > 0.6;
+    ctx.globalAlpha = alpha * (0.4 + 0.6 * cast);
+    ctx.fillStyle = nd.col; ctx.shadowBlur = lit ? 10 : 0; ctx.shadowColor = nd.col;
+    ctx.beginPath(); ctx.arc(nd.x, nd.y, lit ? 6 : 4, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+    if (nd.up > 0.6 && cast > 0.7) agree += 1;
+    // label
+    ctx.globalAlpha = alpha * cast * 0.8; ctx.fillStyle = GRAY;
+    ctx.font = `${Math.round(H * 0.014)}px ui-monospace, monospace`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(nd.k, R.cx + Math.cos(nd.a) * (R.r + 18), R.cy + Math.sin(nd.a) * (R.r + 18));
+  });
+  ctx.textAlign = "left";
+  // central tally arc
+  const pct = (agree / R.nodes.length);
+  const arcT = easeOut(seg(v, 0.2, 0.85)) * pct;
+  ctx.globalAlpha = alpha; ctx.lineWidth = 6; ctx.strokeStyle = "rgba(245,245,240,0.10)";
+  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, 0, TAU); ctx.stroke();
+  ctx.strokeStyle = GREEN; ctx.shadowBlur = 12; ctx.shadowColor = GREEN;
+  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, -Math.PI / 2, -Math.PI / 2 + TAU * arcT); ctx.stroke();
+  ctx.shadowBlur = 0;
+  // tier text
+  const shown = Math.round(arcT * R.nodes.length);
+  const tierPct = shown / R.nodes.length;
+  const tier = tierPct >= 0.83 ? "ULTRA" : tierPct >= 0.7 ? "HIGH" : tierPct >= 0.55 ? "MEDIUM" : "SPLIT";
+  ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = `700 ${Math.round(H * 0.05)}px ui-monospace, monospace`;
+  ctx.fillText(`${shown}/${R.nodes.length}`, R.cx, R.cy - H * 0.008);
+  ctx.font = `600 ${Math.round(H * 0.02)}px ui-monospace, monospace`;
+  ctx.fillStyle = tier === "ULTRA" ? GREEN : GRAY;
+  ctx.fillText(tier, R.cx, R.cy + H * 0.03);
+  ctx.textAlign = "left";
+  ctx.restore();
+}
+
+// ================= MAIN =====================================================
 window.renderAt = function renderAt(t) {
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
   const $ = (id) => document.getElementById(id);
   const [outline, mac, base, screen, fly, bullC, bullR, home, grid, glow] =
     ["outline", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid", "glow"].map($);
+  const P = PHASES;
 
-  // ---- Act: boot — stroke-draw the MacBook outline (the DOM copy overlay
-  // supplies the wordmark, so there is no baked text competing with it) -----
-  const pBoot = seg(t, ...PHASES.boot);
-  // start ~20% drawn so the very first frame is never dead-black, finish early.
+  // ---- boot ---------------------------------------------------------------
+  const pBoot = seg(t, ...P.boot);
   const bootDraw = easeOut(seg(pBoot, -0.15, 0.6));
   strokes().forEach(({ p, len }) => { p.style.strokeDashoffset = String(len * (1 - bootDraw)); });
-  const outlineFade = 1 - seg(t, PHASES.assembly[0], PHASES.assembly[0] + 0.06);
+  const outlineFade = 1 - seg(t, P.assembly[0], P.assembly[0] + (P.assembly[1] - P.assembly[0]) * 0.4);
   outline.style.opacity = String(outlineFade);
-  // ambient glow: present through boot + assembly, gone by the dive.
-  glow.style.opacity = String(0.9 * (1 - seg(t, PHASES.assembly[0], PHASES.dive[0])));
+  glow.style.opacity = String(0.9 * (1 - seg(t, P.assembly[0], P.dive[1])));
 
-  // ---- Act: assembly — real mac appears, panels fall into the screen ------
-  const pAsm = seg(t, ...PHASES.assembly);
-  const pDive = seg(t, ...PHASES.dive);
-  // camera push during first dive half: mac scales up and swallows the view
-  const push = easeIO(seg(pDive, 0, 0.4));
+  // ---- assembly + dive (mac + panels) ------------------------------------
+  const pAsm = seg(t, ...P.assembly);
+  const pDive = seg(t, ...P.dive);
+  const push = easeIO(seg(pDive, 0, 0.5));
   const macScale = lerp(1, 8, push);
-  const macVisible = t >= PHASES.assembly[0] && push < 1;
+  const macVisible = t >= P.assembly[0] && push < 1;
   mac.style.display = macVisible ? "block" : "none";
   mac.style.opacity = String(seg(pAsm, 0, 0.15));
-  mac.style.transform =
-    `translate(-50%, -50%) scale(${macScale}) translateY(${lerp(0, -20, push)}px)`;
+  mac.style.transform = `translate(-50%, -50%) scale(${macScale}) translateY(${lerp(0, -20, push)}px)`;
   base.style.opacity = String(1 - seg(push, 0.5, 0.9));
   screen.style.boxShadow = push > 0.5 ? "none" : "";
-  document.querySelectorAll("#screen-inner .panel").forEach((el) => {
-    const i = Number(el.dataset.i);
-    const sp = START_POSES[i];
-    const local = easeIO(seg(pAsm, 0.05 + i * 0.055, 0.55 + i * 0.045));
-    const x = lerp(sp.x * 1400, 0, local);
-    const y = lerp(sp.y * 1000, 0, local);
-    const r = lerp(sp.r, 0, local);
-    el.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg)`;
-    el.style.opacity = String(Math.min(1, local * 2.5));
-  });
-
-  // ---- Act: dive (second half) — panels fly past the camera ---------------
-  const flyOn = pDive > 0.4 && t < PHASES.bull[0] + 0.04;
+  if (macVisible) {
+    document.querySelectorAll("#screen-inner .panel").forEach((el) => {
+      const i = Number(el.dataset.i), sp = START_POSES[i];
+      const local = easeIO(seg(pAsm, 0.05 + i * 0.055, 0.55 + i * 0.045));
+      el.style.transform = `translate(${lerp(sp.x * 1400, 0, local)}px, ${lerp(sp.y * 1000, 0, local)}px) rotate(${lerp(sp.r, 0, local)}deg)`;
+      el.style.opacity = String(Math.min(1, local * 2.5));
+    });
+  }
+  const flyOn = pDive > 0.45 && t < P.regime[0] + 0.02;
   fly.style.display = flyOn ? "block" : "none";
   if (flyOn) {
     document.querySelectorAll("#panels .panel").forEach((el) => {
-      const i = Number(el.dataset.i);
-      const d = PANEL_DEFS[i].dive;
-      const f = easeIO(seg(pDive, 0.4 + i * 0.02, 0.95 + i * 0.004));
+      const i = Number(el.dataset.i), d = PANEL_DEFS[i].dive;
+      const f = easeIO(seg(pDive, 0.45 + i * 0.02, 0.98 + i * 0.002));
       const s = lerp(0.55, 5.2, f);
-      const x = d[0] * f * W * 1.15;
-      const y = d[1] * f * H * 1.15;
-      el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${s})`;
-      el.style.opacity = String((1 - seg(f, 0.72, 1)) * seg(pDive, 0.38, 0.46));
+      el.style.transform = `translate(-50%, -50%) translate(${d[0] * f * W * 1.15}px, ${d[1] * f * H * 1.15}px) scale(${s})`;
+      el.style.opacity = String((1 - seg(f, 0.72, 1)) * seg(pDive, 0.42, 0.5));
     });
   }
-  grid.style.transform =
-    `translate(${lerp(0, -140, pDive)}px, ${lerp(0, -90, pDive)}px) scale(${lerp(1, 1.6, pDive)})`;
-  grid.style.opacity = String(0.9 - 0.55 * seg(t, ...PHASES.bull));
+  // grid: parallax through the dive, hold faint through the feature acts, gone by the bull
+  grid.style.transform = `translate(${lerp(0, -140, pDive)}px, ${lerp(0, -90, pDive)}px) scale(${lerp(1, 1.6, pDive)})`;
+  grid.style.opacity = String(lerp(0.9, 0.18, seg(t, P.dive[0], P.dive[1])) * (1 - seg(t, P.bull[0], P.bull[0] + (P.bull[1] - P.bull[0]) * 0.6)));
 
-  // ---- Act: bull — particle silhouette converges (or real Veo frames) -----
-  const pBull = seg(t, ...PHASES.bull);
-  const hasReal = BULL_IMGS.length > 0;
-  // the bull holds bright, then dissolves into the Matrix rain as it builds
-  // (0.74-0.84) — the particles "become" the falling code.
-  const dissolve = 1 - seg(t, 0.74, 0.84);
-  const bullOn = t >= PHASES.bull[0] - 0.02 && t < 0.86;
+  // ---- canvas: exactly one heavy act draws per frame ---------------------
   const ctx = bullC.getContext("2d");
   ctx.clearRect(0, 0, W, H);
+
+  // crossfade envelopes overlap at boundaries → no black flash between acts
+  const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety), eCon = actEnv(t, P.consensus);
+  if (eReg > 0.001) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
+  if (eCan > 0.001) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
+  if (eSaf > 0.001) drawSafety(ctx, seg(t, ...P.safety), eSaf, W, H);
+  if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
+
+  // ---- bull ---------------------------------------------------------------
+  const pBull = seg(t, ...P.bull);
+  const hasReal = BULL_IMGS.length > 0;
+  const dissolveStart = lerp(P.bull[0], P.bull[1], 0.6), dissolveEnd = lerp(P.matrix[0], P.matrix[1], 0.25);
+  const dissolve = 1 - seg(t, dissolveStart, dissolveEnd);
+  const bullOn = t >= P.bull[0] - 0.01 && t < dissolveEnd + 0.02;
   if (bullOn && (!hasReal || pBull < 0.2)) {
-    const conv = easeOut(seg(pBull, 0, 0.45));
+    const conv = easeOut(seg(pBull, 0, 0.5));
     const alive = hasReal ? 1 - seg(pBull, 0.05, 0.2) : 1;
-    const brightness = 0.55 + 0.45 * seg(pBull, 0.5, 0.9);
+    const brightness = 0.55 + 0.45 * seg(pBull, 0.5, 0.95);
     for (const pt of PARTICLES) {
-      const x = lerp(pt.sx, pt.tx, conv);
-      const y = lerp(pt.sy, pt.ty, conv);
-      const green = pt.tint < 0.6;
+      const x = lerp(pt.sx, pt.tx, conv), y = lerp(pt.sy, pt.ty, conv);
       ctx.globalAlpha = alive * (0.35 + 0.65 * conv) * brightness * dissolve;
-      ctx.shadowBlur = pt.glow ? 10 : 0;
-      ctx.shadowColor = "#00ff87";
-      ctx.fillStyle = green ? "#00ff87" : "#f5f5f0";
+      ctx.shadowBlur = pt.glow ? 10 : 0; ctx.shadowColor = GREEN;
+      ctx.fillStyle = pt.tint < 0.6 ? GREEN : INK;
       ctx.fillRect(x, y, pt.size, pt.size);
     }
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-    // grounding glow under the head
     const g = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, W * 0.3);
     g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * alive * brightness * dissolve})`);
     g.addColorStop(1, "rgba(0,255,135,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
-  if (hasReal) {
-    const idx = Math.min(BULL_IMGS.length - 1, Math.floor(pBull * BULL_IMGS.length));
-    bullR.src = BULL_IMGS[Math.max(0, idx)].src;
-    bullR.style.opacity = String(seg(pBull, 0.05, 0.2) * (1 - seg(t, PHASES.reveal[0], PHASES.reveal[0] + 0.08)));
-  } else {
-    bullR.style.opacity = "0";
-  }
+  bullR.style.opacity = "0";
 
-  // ---- Matrix rain — the bull dissolves into cascading green code, which
-  // then thins to resolve into the homepage. Drawn on the (transparent) bull
-  // canvas, so the homepage layer behind shows through the gaps.
-  const rainAmt = seg(t, 0.72, 0.84) * (1 - seg(t, 0.92, 1.0));
+  // ---- matrix rain + homepage resolve ------------------------------------
+  const rainStart = dissolveStart, rainPeakEnd = dissolveEnd;
+  const rainThin = lerp(P.matrix[0], P.matrix[1], 0.5);
+  const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, 1.0));
   if (rainAmt > 0.002) {
-    const cell = MATRIX_CELL;
-    const rows = Math.ceil(H / cell) + 2;
+    const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
     ctx.font = `${Math.round(cell * 0.92)}px ui-monospace, SFMono-Regular, monospace`;
     ctx.textBaseline = "top";
-    const fall = t - 0.72;
+    const fall = t - P.bull[0];
     for (const col of MATRIX) {
       const period = rows + col.len;
       const head = ((col.phase * period) + fall * col.speed * rows * 4.5) % period;
@@ -396,25 +761,16 @@ window.renderAt = function renderAt(t) {
         const row = Math.floor((((head - k) % period) + period) % period);
         const y = row * cell;
         if (y > H) continue;
-        const ch = MATRIX_CHARS[(col.lead + row * 3 + Math.floor(fall * 26)) % MATRIX_CHARS.length];
-        if (k === 0) {
-          ctx.fillStyle = `rgba(214,255,232,${rainAmt})`;
-          ctx.shadowBlur = 8; ctx.shadowColor = "#00ff87";
-        } else {
-          ctx.fillStyle = `rgba(0,255,135,${rainAmt * (1 - k / col.len) * 0.82})`;
-          ctx.shadowBlur = 0;
-        }
-        ctx.fillText(ch, col.x, y);
+        const chc = MATRIX_CHARS[(col.lead + row * 3 + Math.floor(fall * 26)) % MATRIX_CHARS.length];
+        if (k === 0) { ctx.fillStyle = `rgba(214,255,232,${rainAmt})`; ctx.shadowBlur = 8; ctx.shadowColor = GREEN; }
+        else { ctx.fillStyle = `rgba(0,255,135,${rainAmt * (1 - k / col.len) * 0.82})`; ctx.shadowBlur = 0; }
+        ctx.fillText(chc, col.x, y);
       }
     }
     ctx.shadowBlur = 0;
   }
-
-  // ---- reveal — the real-homepage screenshot resolves in behind the thinning
-  // rain, so the last frames already show the homepage. The component holds the
-  // canvas opaque until the pin releases onto the live <Hero> at the same spot,
-  // so there is no black gap and no zoom.
-  home.style.opacity = String(seg(t, 0.86, 0.985));
+  const homeStart = lerp(P.matrix[0], P.matrix[1], 0.15), homeEnd = lerp(P.matrix[0], P.matrix[1], 0.9);
+  home.style.opacity = String(seg(t, homeStart, homeEnd));
   return true;
 };
 </script>

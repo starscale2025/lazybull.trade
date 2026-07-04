@@ -3,20 +3,24 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { COPY_BEATS, beatOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, COPY_BEATS, beatOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const SCROLL_LENGTH_VH = 600; // longer pin = the animation unfolds more slowly
+const SCROLL_LENGTH_VH = 1000; // long pin: room for the expanded feature acts to read
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 const SHOT_NAMES = ["home", "learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
 const SHOTS = Object.fromEntries(SHOT_NAMES.map((n) => [n, `/cinema/shots/${n}.webp`]));
 
 type SceneWindow = Window & {
-  initScene?: (cfg: { shots: Record<string, string>; bullFrames: string[] | null }) => Promise<unknown>;
+  initScene?: (cfg: {
+    shots: Record<string, string>;
+    phases: Record<string, { from: number; to: number }>;
+    bullFrames: string[] | null;
+  }) => Promise<unknown>;
   renderAt?: (t: number) => void;
 };
 
@@ -129,7 +133,7 @@ export function ScrollCinema() {
       if (!w?.initScene) return; // scene not loaded yet; onload will call again
       started = true;
       try {
-        await w.initScene({ shots: SHOTS, bullFrames: null });
+        await w.initScene({ shots: SHOTS, phases: ACTS, bullFrames: null });
       } catch {
         if (!disposed) setMode("static");
         return;
@@ -155,7 +159,7 @@ export function ScrollCinema() {
       if (!ready || collapsed) return;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
-        win()?.initScene?.({ shots: SHOTS, bullFrames: null }).then(renderScene);
+        win()?.initScene?.({ shots: SHOTS, phases: ACTS, bullFrames: null }).then(renderScene);
       }, 160);
     };
 
