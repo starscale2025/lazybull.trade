@@ -16,9 +16,10 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const RAW = path.join(ROOT, "shots"); // raw PNG screenshots (gitignored)
 const OUT = path.resolve(ROOT, "..", "..", "public", "cinema", "shots"); // served webp
 const SITE = process.env.SITE ?? "http://localhost:3000";
-// Each becomes a DISTINCT panel screen in the assembly/dive acts.
+// Each becomes a DISTINCT panel screen in the assembly/dive acts. ("/" is the
+// cinema itself now, so it isn't a panel — the reveal-target "hero" shot below
+// captures the real Get Started landing separately.)
 const PAGES = [
-  ["home", "/"],
   ["learn", "/learn"],
   ["trade", "/trade"],
   ["quant", "/quant"],

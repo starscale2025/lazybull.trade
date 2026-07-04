@@ -12,7 +12,8 @@ if (typeof window !== "undefined") {
 const SCROLL_LENGTH_VH = 1400; // long pin: room for the expanded feature acts to read slowly
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
-const SHOT_NAMES = ["home", "learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
+// "/" is now the cinema itself, so no "home" shot — panels use real product routes.
+const SHOT_NAMES = ["learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
 const SHOTS = Object.fromEntries(SHOT_NAMES.map((n) => [n, `/cinema/shots/${n}.webp`]));
 
 type SceneWindow = Window & {
