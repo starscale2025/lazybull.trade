@@ -681,7 +681,7 @@ function drawConsensus(ctx, v, env, W, H) {
 }
 
 // ================= MAIN =====================================================
-window.renderAt = function renderAt(t) {
+window.renderAt = function renderAt(t, hideBull, hideCandle) {
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
   const $ = (id) => document.getElementById(id);
@@ -703,7 +703,7 @@ window.renderAt = function renderAt(t) {
   const pAsm = seg(t, ...P.assembly);
   const pDive = seg(t, ...P.dive);
   const push = easeIO(seg(pDive, 0, 0.5));
-  const macScale = lerp(1, 8, push);
+  const macScale = lerp(1, 4.5, push); // gentler dive so the panel screenshots stay sharp
   const macVisible = t >= P.assembly[0] && push < 1;
   mac.style.display = macVisible ? "block" : "none";
   mac.style.opacity = String(seg(pAsm, 0, 0.15));
@@ -724,7 +724,7 @@ window.renderAt = function renderAt(t) {
     document.querySelectorAll("#panels .panel").forEach((el) => {
       const i = Number(el.dataset.i), d = PANEL_DEFS[i].dive;
       const f = easeIO(seg(pDive, 0.45 + i * 0.02, 0.98 + i * 0.002));
-      const s = lerp(0.55, 5.2, f);
+      const s = lerp(0.55, 3.5, f);
       el.style.transform = `translate(-50%, -50%) translate(${d[0] * f * W * 1.15}px, ${d[1] * f * H * 1.15}px) scale(${s})`;
       el.style.opacity = String((1 - seg(f, 0.72, 1)) * seg(pDive, 0.42, 0.5));
     });
@@ -742,45 +742,47 @@ window.renderAt = function renderAt(t) {
   if (CHART) {
     const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety), eCon = actEnv(t, P.consensus);
     if (eReg > 0.001) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
-    if (eCan > 0.001) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
+    // 3D candle canyon (R3F) owns this beat when live → skip the 2D chart.
+    if (eCan > 0.001 && !hideCandle) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
     if (eSaf > 0.001) drawSafety(ctx, seg(t, ...P.safety), eSaf, W, H);
     if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
   }
 
-  // ---- bull ---------------------------------------------------------------
-  const pBull = seg(t, ...P.bull);
-  const hasReal = BULL_IMGS.length > 0;
-  const dissolveStart = lerp(P.bull[0], P.bull[1], 0.6), dissolveEnd = lerp(P.matrix[0], P.matrix[1], 0.25);
-  const dissolve = 1 - seg(t, dissolveStart, dissolveEnd);
-  const bullOn = t >= P.bull[0] - 0.01 && t < dissolveEnd + 0.02;
-  if (bullOn && (!hasReal || pBull < 0.2)) {
-    const conv = easeOut(seg(pBull, 0, 0.5));
-    const alive = hasReal ? 1 - seg(pBull, 0.05, 0.2) : 1;
-    const brightness = 0.55 + 0.45 * seg(pBull, 0.5, 0.95);
+  // ---- bull (particle logo) ----------------------------------------------
+  // The real-3D bull (R3F, parent doc) owns ~0.71–0.80. Once it clears, the
+  // classic particle-bull LOGO plays IN FULL: particles assemble (converge) →
+  // hold → scatter into the Matrix rain. Absolute "logo phase" timings (not
+  // derived from the bull act) so the 3D bull and the particle logo never overlap.
+  const LOGO0 = 0.8, CONV_END = 0.855, DIS0 = 0.87, DIS1 = 0.925;
+  const dissolve = 1 - seg(t, DIS0, DIS1);
+  const bullOn = t >= LOGO0 - 0.01 && t < DIS1 + 0.02;
+  // `hideBull` (per frame) keeps the particle logo hidden while the 3D bull is up.
+  if (bullOn && !hideBull) {
+    const conv = easeOut(seg(t, LOGO0, CONV_END));
+    const brightness = 0.5 + 0.5 * seg(t, LOGO0, CONV_END);
     for (const pt of PARTICLES) {
       const x = lerp(pt.sx, pt.tx, conv), y = lerp(pt.sy, pt.ty, conv);
-      ctx.globalAlpha = alive * (0.35 + 0.65 * conv) * brightness * dissolve;
+      ctx.globalAlpha = (0.35 + 0.65 * conv) * brightness * dissolve;
       ctx.shadowBlur = pt.glow ? 10 : 0; ctx.shadowColor = GREEN;
       ctx.fillStyle = pt.tint < 0.6 ? GREEN : INK;
       ctx.fillRect(x, y, pt.size, pt.size);
     }
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     const g = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, W * 0.3);
-    g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * alive * brightness * dissolve})`);
+    g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * brightness * dissolve})`);
     g.addColorStop(1, "rgba(0,255,135,0)");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   bullR.style.opacity = "0";
 
   // ---- matrix rain + homepage resolve ------------------------------------
-  const rainStart = dissolveStart, rainPeakEnd = dissolveEnd;
-  const rainThin = lerp(P.matrix[0], P.matrix[1], 0.5);
+  const rainStart = 0.9, rainPeakEnd = 0.95, rainThin = 0.96;
   const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, 1.0));
   if (rainAmt > 0.002) {
     const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
     ctx.font = `${Math.round(cell * 0.92)}px ui-monospace, SFMono-Regular, monospace`;
     ctx.textBaseline = "top";
-    const fall = t - P.bull[0];
+    const fall = t - LOGO0;
     for (const col of MATRIX) {
       const period = rows + col.len;
       const head = ((col.phase * period) + fall * col.speed * rows * 4.5) % period;
@@ -796,7 +798,7 @@ window.renderAt = function renderAt(t) {
     }
     ctx.shadowBlur = 0;
   }
-  const homeStart = lerp(P.matrix[0], P.matrix[1], 0.15), homeEnd = lerp(P.matrix[0], P.matrix[1], 0.9);
+  const homeStart = 0.91, homeEnd = 0.99;
   home.style.opacity = String(seg(t, homeStart, homeEnd));
   return true;
 };

@@ -53,10 +53,10 @@ const smaCrossover: BotDef = {
       const fp = f[i - 1], fc = f[i], sp = s[i - 1], sc = s[i];
       if (fp == null || fc == null || sp == null || sc == null) continue;
       if (fp <= sp && fc > sc) {
-        signals.push({ i, kind: "buy", price: px[i], label: "golden cross" });
+        signals.push({ i, kind: "long", price: px[i], label: "crossover up" });
         sigArr[i] = 1;
       } else if (fp >= sp && fc < sc) {
-        signals.push({ i, kind: "sell", price: px[i], label: "death cross" });
+        signals.push({ i, kind: "short", price: px[i], label: "crossover down" });
         sigArr[i] = -1;
       }
     }
@@ -77,7 +77,7 @@ const smaCrossover: BotDef = {
         { values: f, color: "var(--bull)", label: `SMA${fast}` },
         { values: s, color: "var(--cyan)", label: `SMA${slow}` },
       ],
-      summary: `${signals.length} crosses · ${bt.trades} trades · ${(bt.winRate * 100).toFixed(0)}% win rate · backtest return ${fmtPct(eqRet)}.`,
+      summary: `${signals.length} crosses · ${bt.trades} trades · ${(bt.winRate * 100).toFixed(0)}% win rate · backtest return ${fmtPct(eqRet)}. Hypothetical — past performance is not indicative of future results.`,
       beginner:
         "Two moving averages chase each other. When the faster one cuts up through the slow one, money flows in. When it falls below, it cuts losses. Old, simple, surprisingly hard to beat.",
       verdict: {
@@ -117,10 +117,10 @@ const rsiBot: BotDef = {
       const a = r[i - 1], b = r[i];
       if (a == null || b == null) continue;
       if (a < lo && b >= lo) {
-        signals.push({ i, kind: "buy", price: px[i], label: "exit oversold" });
+        signals.push({ i, kind: "long", price: px[i], label: "exit oversold" });
         sigArr[i] = 1;
       } else if (a > hi && b <= hi) {
-        signals.push({ i, kind: "sell", price: px[i], label: "exit overbought" });
+        signals.push({ i, kind: "short", price: px[i], label: "exit overbought" });
         sigArr[i] = -1;
       }
     }
@@ -188,10 +188,10 @@ const macdBot: BotDef = {
       const a = m.histogram[i - 1], b = m.histogram[i];
       if (a == null || b == null) continue;
       if (a <= 0 && b > 0) {
-        signals.push({ i, kind: "buy", price: px[i], label: "hist > 0" });
+        signals.push({ i, kind: "long", price: px[i], label: "hist > 0" });
         sigArr[i] = 1;
       } else if (a >= 0 && b < 0) {
-        signals.push({ i, kind: "sell", price: px[i], label: "hist < 0" });
+        signals.push({ i, kind: "short", price: px[i], label: "hist < 0" });
         sigArr[i] = -1;
       }
     }
@@ -215,7 +215,7 @@ const macdBot: BotDef = {
         refLines: [{ value: 0, color: "var(--fg-faint)" }],
         height: 90,
       },
-      summary: `MACD histogram ${lastH.toFixed(3)}. ${signals.length} crosses, ${bt.trades} trades, win ${(bt.winRate * 100).toFixed(0)}%.`,
+      summary: `MACD histogram ${lastH.toFixed(3)}. ${signals.length} crosses, ${bt.trades} trades, win ${(bt.winRate * 100).toFixed(0)}%. Hypothetical — past performance is not indicative of future results.`,
       beginner:
         "MACD looks at the difference between two trend-followers. When that difference flips from negative to positive, momentum just woke up. When it flips negative, it's running out of steam.",
       verdict: {
@@ -251,10 +251,10 @@ const donchianBot: BotDef = {
       const l = ch.lower[i - 1];
       if (u == null || l == null) continue;
       if (px[i] > u) {
-        signals.push({ i, kind: "buy", price: px[i], label: `${period}d high` });
+        signals.push({ i, kind: "long", price: px[i], label: `${period}d high` });
         sigArr[i] = 1;
       } else if (px[i] < l) {
-        signals.push({ i, kind: "sell", price: px[i], label: `${period}d low` });
+        signals.push({ i, kind: "short", price: px[i], label: `${period}d low` });
         sigArr[i] = -1;
       }
     }
@@ -318,10 +318,10 @@ const bollBot: BotDef = {
       const u = b.upper[i], l = b.lower[i];
       if (u == null || l == null || upPrev == null || loPrev == null) continue;
       if (px[i - 1] < loPrev && px[i] >= l) {
-        signals.push({ i, kind: "buy", price: px[i], label: "lower band reclaim" });
+        signals.push({ i, kind: "long", price: px[i], label: "lower band reclaim" });
         sigArr[i] = 1;
       } else if (px[i - 1] > upPrev && px[i] <= u) {
-        signals.push({ i, kind: "sell", price: px[i], label: "upper band reject" });
+        signals.push({ i, kind: "short", price: px[i], label: "upper band reject" });
         sigArr[i] = -1;
       }
     }
@@ -380,10 +380,10 @@ const zscoreBot: BotDef = {
       const a = z[i - 1], b = z[i];
       if (a == null || b == null) continue;
       if (a < -th && b >= -th) {
-        signals.push({ i, kind: "buy", price: px[i], label: "reverting up" });
+        signals.push({ i, kind: "long", price: px[i], label: "reverting up" });
         sigArr[i] = 1;
       } else if (a > th && b <= th) {
-        signals.push({ i, kind: "sell", price: px[i], label: "reverting down" });
+        signals.push({ i, kind: "short", price: px[i], label: "reverting down" });
         sigArr[i] = -1;
       }
     }
@@ -493,10 +493,10 @@ const kalmanBot: BotDef = {
       const d = (px[i] - f) / f;
       const dp = (px[i - 1] - fp) / fp;
       if (dp < -0.02 && d >= -0.02) {
-        signals.push({ i, kind: "buy", price: px[i], label: "back to fair" });
+        signals.push({ i, kind: "long", price: px[i], label: "back to fair" });
         sigArr[i] = 1;
       } else if (dp > 0.02 && d <= 0.02) {
-        signals.push({ i, kind: "sell", price: px[i], label: "back to fair" });
+        signals.push({ i, kind: "short", price: px[i], label: "back to fair" });
         sigArr[i] = -1;
       }
     }
@@ -551,10 +551,10 @@ const linregBot: BotDef = {
       const u = r.upper[i], l = r.lower[i];
       if (u == null || l == null) continue;
       if (px[i - 1] < (r.lower[i - 1] ?? -Infinity) && px[i] >= l) {
-        signals.push({ i, kind: "buy", price: px[i] });
+        signals.push({ i, kind: "long", price: px[i] });
         sigArr[i] = 1;
       } else if (px[i - 1] > (r.upper[i - 1] ?? Infinity) && px[i] <= u) {
-        signals.push({ i, kind: "sell", price: px[i] });
+        signals.push({ i, kind: "short", price: px[i] });
         sigArr[i] = -1;
       }
     }
@@ -722,7 +722,7 @@ const sharpeBot: BotDef = {
         { key: "ret", label: `${px.length}d return`, value: fmtPct(totalRet), tone: totalRet > 0 ? "bull" : "bear" },
         { key: "dd", label: "Max DD", value: fmtPct(dd), tone: dd < -0.2 ? "bear" : dd < -0.1 ? "warn" : "neutral" },
       ],
-      summary: `Sharpe ${sh.toFixed(2)} · Sortino ${so.toFixed(2)} · Max DD ${(dd * 100).toFixed(1)}% over ${px.length} bars.`,
+      summary: `Sharpe ${sh.toFixed(2)} · Sortino ${so.toFixed(2)} · Max DD ${(dd * 100).toFixed(1)}% over ${px.length} bars. Hypothetical — past performance is not indicative of future results.`,
       beginner:
         "Sharpe is return divided by how bumpy the ride was. >1 is good. >2 is rare. >3 is suspicious. Sortino is the same idea but only counts the bumps that hurt (downside).",
       verdict: {
@@ -910,7 +910,7 @@ const wheelBot: BotDef = {
         { key: "ret", label: `${cycles}c return`, value: fmtPct(ret), tone: ret > 0 ? "bull" : "bear" },
         { key: "annual", label: "Annualised", value: fmtPct(annual), tone: annual > 0 ? "bull" : "bear" },
       ],
-      summary: `${cycles} cycles · puts @ $${putStrike.toFixed(2)} / calls @ $${callStrike.toFixed(2)} · ${fmtPct(ret)} (${fmtPct(annual)} annualised).`,
+      summary: `${cycles} cycles · puts @ $${putStrike.toFixed(2)} / calls @ $${callStrike.toFixed(2)} · ${fmtPct(ret)} (${fmtPct(annual)} annualised). Hypothetical — past performance is not indicative of future results.`,
       beginner:
         "The Wheel is the patient income trade. You sell puts on a stock you wouldn't mind owning. If you get assigned, you flip and sell calls against the shares. Premium income drips in either way.",
       verdict: {

@@ -33,7 +33,7 @@ async function captureShots(browser) {
   fs.mkdirSync(RAW, { recursive: true });
   const ctx = await browser.newContext({
     viewport: { width: 1600, height: 1000 },
-    deviceScaleFactor: 2,
+    deviceScaleFactor: 3, // 4800×3000 so the dive can magnify the panels and stay sharp
     reducedMotion: "reduce", // freeze the site's ambient animation for clean shots
     colorScheme: "dark",
   });
@@ -71,7 +71,7 @@ function encodeToPublic() {
   const files = fs.readdirSync(RAW).filter((f) => f.endsWith(".png"));
   for (const f of files) {
     execFileSync("cwebp", [
-      "-quiet", "-q", "82",
+      "-quiet", "-q", "88",
       path.join(RAW, f),
       "-o", path.join(OUT, f.replace(/\.png$/, ".webp")),
     ]);

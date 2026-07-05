@@ -105,9 +105,9 @@ export function OutputPanel({
             <div className="space-y-1 font-mono text-[10px] tabular-nums">
               {recent.map((s, i) => (
                 <div key={i} className="grid grid-cols-[24px_50px_1fr_auto] items-center gap-2 border-l-2 border-border-soft pl-2"
-                  style={{ borderLeftColor: s.sig.kind === "buy" ? "var(--bull)" : s.sig.kind === "sell" ? "var(--bear)" : "var(--amber)" }}>
+                  style={{ borderLeftColor: s.sig.kind === "long" ? "var(--bull)" : s.sig.kind === "short" ? "var(--bear)" : "var(--amber)" }}>
                   <span className="text-fg-faint">t{s.sig.i}</span>
-                  <span className={s.sig.kind === "buy" ? "text-bull" : s.sig.kind === "sell" ? "text-bear" : "text-amber"}>
+                  <span className={s.sig.kind === "long" ? "text-bull" : s.sig.kind === "short" ? "text-bear" : "text-amber"}>
                     {s.sig.kind.toUpperCase()}
                   </span>
                   <span className="truncate text-fg-dim">{s.bot}</span>

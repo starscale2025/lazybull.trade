@@ -123,13 +123,13 @@ export function LearnBacktestBuilder() {
     const sharpe = sd > 0 ? (mean / sd) * Math.sqrt(252) : 0;
     let peak = -Infinity, dd = 0;
     for (const v of eq) { peak = Math.max(peak, v); dd = Math.min(dd, (v - peak) / peak); }
-    const trades = visibleSignals.filter((s) => s.kind === "buy" || s.kind === "sell").length;
-    // crude win-rate: pair consecutive buy/sell, sign of price diff.
+    const trades = visibleSignals.filter((s) => s.kind === "long" || s.kind === "short").length;
+    // crude win-rate: pair consecutive long/short, sign of price diff.
     let wins = 0, total = 0;
     let lastBuy: number | null = null;
     for (const s of visibleSignals) {
-      if (s.kind === "buy") lastBuy = candles[s.i].c;
-      else if (s.kind === "sell" && lastBuy != null) {
+      if (s.kind === "long") lastBuy = candles[s.i].c;
+      else if (s.kind === "short" && lastBuy != null) {
         total++;
         if (candles[s.i].c > lastBuy) wins++;
         lastBuy = null;
@@ -309,7 +309,7 @@ function BacktestChart({
       {signals.map((s, k) => {
         const x = xOf(s.i);
         const y = yOfPrice(prices[s.i] ?? fullPrices[s.i]);
-        const c = s.kind === "buy" ? "var(--bull)" : s.kind === "sell" ? "var(--bear)" : "var(--amber)";
+        const c = s.kind === "long" ? "var(--bull)" : s.kind === "short" ? "var(--bear)" : "var(--amber)";
         return (
           <g key={k}>
             <line x1={x} x2={x} y1={padT} y2={H - padB} stroke={c} strokeOpacity="0.15" />

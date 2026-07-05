@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   ACTS,
   ACT_ORDER,
+  BULL3D,
+  CANDLE3D,
   COPY_BEATS,
   beatOpacity,
+  bull3dOpacity,
+  candle3dOpacity,
   canvasOpacity,
   clamp01,
   flashOpacity,
@@ -84,5 +88,54 @@ describe("canvasOpacity", () => {
     expect(canvasOpacity(0.998)).toBe(1);
     expect(canvasOpacity(0.999)).toBeCloseTo(0.5, 5);
     expect(canvasOpacity(1)).toBe(0);
+  });
+});
+
+describe("bull3dOpacity", () => {
+  it("is 0 outside the bull window", () => {
+    expect(bull3dOpacity(0)).toBe(0);
+    expect(bull3dOpacity(BULL3D.in0)).toBe(0);
+    expect(bull3dOpacity(BULL3D.out1)).toBe(0);
+    expect(bull3dOpacity(1)).toBe(0);
+  });
+  it("fades in, holds opaque, then dissolves out", () => {
+    expect(bull3dOpacity((BULL3D.in0 + BULL3D.in1) / 2)).toBeCloseTo(0.5, 5);
+    expect(bull3dOpacity(BULL3D.in1)).toBe(1);
+    expect(bull3dOpacity((BULL3D.in1 + BULL3D.out0) / 2)).toBe(1);
+    expect(bull3dOpacity(BULL3D.out0)).toBe(1);
+    expect(bull3dOpacity((BULL3D.out0 + BULL3D.out1) / 2)).toBeCloseTo(0.5, 5);
+  });
+  it("hands off cleanly: monotonic window, gone before the homepage resolve", () => {
+    // The 2D Matrix rain starts mid-bull-act (~0.796), so the 3D fade-out overlaps
+    // it. The bull must be fully gone before the homepage resolves (~0.86) so the
+    // cinema's tail is purely 2D.
+    expect(BULL3D.in0).toBeGreaterThanOrEqual(ACTS.consensus.from);
+    expect(BULL3D.in0).toBeLessThan(BULL3D.in1);
+    expect(BULL3D.in1).toBeLessThanOrEqual(BULL3D.out0);
+    expect(BULL3D.out0).toBeLessThan(BULL3D.out1);
+    expect(BULL3D.out1).toBeLessThanOrEqual(0.86);
+  });
+});
+
+describe("candle3dOpacity", () => {
+  it("is 0 outside the candle window", () => {
+    expect(candle3dOpacity(0.3)).toBe(0);
+    expect(candle3dOpacity(CANDLE3D.in0)).toBe(0);
+    expect(candle3dOpacity(CANDLE3D.out1)).toBe(0);
+    expect(candle3dOpacity(0.6)).toBe(0);
+  });
+  it("fades in, holds opaque through the foresight beats, dissolves out", () => {
+    expect(candle3dOpacity((CANDLE3D.in0 + CANDLE3D.in1) / 2)).toBeCloseTo(0.5, 5);
+    expect(candle3dOpacity(CANDLE3D.in1)).toBe(1);
+    expect(candle3dOpacity(0.44)).toBe(1); // foresight beat
+    expect(candle3dOpacity(0.52)).toBe(1); // vindication beat
+    expect(candle3dOpacity((CANDLE3D.out0 + CANDLE3D.out1) / 2)).toBeCloseTo(0.5, 5);
+  });
+  it("stays inside the candle act", () => {
+    expect(CANDLE3D.in0).toBeGreaterThanOrEqual(ACTS.candle.from - 1e-9);
+    expect(CANDLE3D.out1).toBeLessThanOrEqual(ACTS.candle.to + 1e-9);
+    expect(CANDLE3D.in0).toBeLessThan(CANDLE3D.in1);
+    expect(CANDLE3D.in1).toBeLessThanOrEqual(CANDLE3D.out0);
+    expect(CANDLE3D.out0).toBeLessThan(CANDLE3D.out1);
   });
 });

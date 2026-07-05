@@ -110,3 +110,29 @@ export function canvasOpacity(progress: number): number {
   if (p >= to) return 0;
   return 1 - (p - from) / (to - from);
 }
+
+// Real-3D (R3F) layers crossfade OVER the 2D scene across their act, holding
+// opaque in the middle and dissolving at the edges. While a layer is live the
+// matching 2D draw is suppressed (no double image). A 4-point fade: 0 → 1 (in0..in1)
+// → 1 → 0 (out0..out1).
+export type Fade4 = { in0: number; in1: number; out0: number; out1: number };
+
+function windowOpacity(progress: number, w: Fade4): number {
+  const p = clamp01(progress);
+  if (p <= w.in0 || p >= w.out1) return 0;
+  if (p < w.in1) return (p - w.in0) / (w.in1 - w.in0);
+  if (p <= w.out0) return 1;
+  return 1 - (p - w.out0) / (w.out1 - w.out0);
+}
+
+// The candle act (climb → crash → AI foresight) as a 3D candlestick canyon.
+export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.535, out1: 0.56 };
+// The bull crescendo: fades in over the consensus tail, holds, then fully clears
+// by ~0.80 so the classic particle-bull LOGO can play in full after it (assemble →
+// scatter → Matrix). `out0` is also where the 2D logo un-hides (scene LOGO0=0.775).
+export const BULL3D: Fade4 = { in0: 0.71, in1: 0.735, out0: 0.78, out1: 0.8 };
+
+/** Opacity for the 3D candle-canyon DOM layer. */
+export const candle3dOpacity = (progress: number) => windowOpacity(progress, CANDLE3D);
+/** Opacity for the 3D bull DOM layer. */
+export const bull3dOpacity = (progress: number) => windowOpacity(progress, BULL3D);

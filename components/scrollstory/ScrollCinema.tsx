@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, COPY_BEATS, beatOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, BULL3D, CANDLE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { cinemaClock } from "@/lib/cinema-clock";
+
+// Lazy so three.js only loads for users who actually get the cinema (not the
+// reduced-motion static fallback, and not until after first paint).
+const Bull3D = lazy(() => import("./Bull3D"));
+const CandleField3D = lazy(() => import("./CandleField3D"));
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -22,7 +28,9 @@ type SceneWindow = Window & {
     phases: Record<string, { from: number; to: number }>;
     bullFrames: string[] | null;
   }) => Promise<unknown>;
-  renderAt?: (t: number) => void;
+  // `hideBull` / `hideCandle` (per frame) drop the matching 2D draw once that 3D
+  // layer is live.
+  renderAt?: (t: number, hideBull?: boolean, hideCandle?: boolean) => void;
 };
 
 export function ScrollCinema() {
@@ -33,6 +41,24 @@ export function ScrollCinema() {
   const skipRef = useRef<HTMLButtonElement>(null);
   const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const bull3dWrapRef = useRef<HTMLDivElement>(null);
+  const bull3dActiveRef = useRef(false);
+  const bull3dReadyRef = useRef(false);
+  const [bull3dActive, setBull3dActive] = useState(false);
+  const candle3dWrapRef = useRef<HTMLDivElement>(null);
+  const candle3dActiveRef = useRef(false);
+  const candle3dReadyRef = useRef(false);
+  const [candle3dActive, setCandle3dActive] = useState(false);
+
+  // Each 3D layer's WebGL context going live tells the 2D scene to drop its
+  // matching draw (via the per-frame hide flags). Stays false if WebGL fails →
+  // the 2D bull / candle chart remain as fallbacks.
+  const handleBullReady = () => {
+    bull3dReadyRef.current = true;
+  };
+  const handleCandleReady = () => {
+    candle3dReadyRef.current = true;
+  };
 
   // Skip the intro: land at the end (Get Started at top via the -100vh overlap),
   // then run the same play-once collapse so it can't be scrolled back into. No
@@ -117,6 +143,27 @@ export function ScrollCinema() {
         skipRef.current.style.opacity = String(o);
         skipRef.current.style.pointerEvents = o > 0.1 ? "auto" : "none";
       }
+      // 3D layers: crossfade each layer's DOM opacity over the 2D scene, and turn
+      // its WebGL frameloop on only near its window (a rare toggle, not per frame).
+      const driveLayer = (
+        wrap: React.RefObject<HTMLDivElement | null>,
+        opacity: number,
+        win: typeof BULL3D,
+        activeRef: React.RefObject<boolean>,
+        setActive: (v: boolean) => void
+      ) => {
+        if (wrap.current) {
+          wrap.current.style.opacity = String(opacity);
+          wrap.current.style.visibility = opacity > 0.001 ? "visible" : "hidden";
+        }
+        const near = progress > win.in0 - 0.04 && progress < win.out1 + 0.04;
+        if (near !== activeRef.current) {
+          activeRef.current = near;
+          setActive(near);
+        }
+      };
+      driveLayer(bull3dWrapRef, bull3dOpacity(progress), BULL3D, bull3dActiveRef, setBull3dActive);
+      driveLayer(candle3dWrapRef, candle3dOpacity(progress), CANDLE3D, candle3dActiveRef, setCandle3dActive);
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
@@ -129,7 +176,12 @@ export function ScrollCinema() {
     };
 
     const renderScene = () => {
-      if (ready) win()?.renderAt?.(progress);
+      cinemaClock.progress = progress; // shared clock the 3D layers read
+      // Keep the 2D particle logo hidden until the 3D bull has FULLY faded out
+      // (>= out1). Then the classic logo plays in full — assemble → scatter →
+      // Matrix — with no overlap between the two differently-posed bulls.
+      const hideBull = bull3dReadyRef.current && progress < BULL3D.out1;
+      if (ready) win()?.renderAt?.(progress, hideBull, candle3dReadyRef.current);
     };
 
     // Smooth scrub: ease progress toward the scroll position each frame. Because
@@ -245,14 +297,34 @@ export function ScrollCinema() {
           scrolling="no"
           className="pointer-events-none h-full w-full border-0"
         />
+        {/* Real-3D layers, each crossfaded over the 2D scene across its act. They
+            sit above the iframe, below the copy text; only one is visible at a time. */}
+        <div
+          ref={candle3dWrapRef}
+          className="pointer-events-none absolute inset-0"
+          style={{ opacity: 0, visibility: "hidden" }}
+        >
+          <Suspense fallback={null}>
+            <CandleField3D active={candle3dActive} onReady={handleCandleReady} />
+          </Suspense>
+        </div>
+        <div
+          ref={bull3dWrapRef}
+          className="pointer-events-none absolute inset-0"
+          style={{ opacity: 0, visibility: "hidden" }}
+        >
+          <Suspense fallback={null}>
+            <Bull3D active={bull3dActive} onReady={handleBullReady} />
+          </Suspense>
+        </div>
         {COPY_BEATS.map((b, i) => (
           <div
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
-            className="absolute left-1/2 w-[min(90vw,760px)] -translate-x-1/2 text-center"
-            style={{ top: b.pos === "top" ? "14%" : "50%", opacity: 0 }}
+            className="absolute left-1/2 -translate-x-1/2 text-center"
+            style={{ top: b.pos === "top" ? "14%" : "50%", opacity: 0, width: "min(92vw, 680px)" }}
           >
-            <div className="font-display text-4xl tracking-tightest text-fg md:text-6xl">{b.heading}</div>
+            <div className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl">{b.heading}</div>
             {b.sub && <div className="mt-3 font-mono text-sm text-fg-dim md:text-base">{b.sub}</div>}
           </div>
         ))}

@@ -16,7 +16,7 @@ export function PriceWithOverlay({
 }: {
   closes: number[];
   overlay?: SeriesV[];
-  signals?: { i: number; kind: "buy" | "sell" | "warn" }[];
+  signals?: { i: number; kind: "long" | "short" | "warn" }[];
   height?: number;
   width?: number;
 }) {
@@ -87,7 +87,7 @@ export function PriceWithOverlay({
         const x = padL + s.i * stepX;
         const c = closes[s.i] ?? closes[closes.length - 1];
         const y = yOf(c);
-        const color = s.kind === "buy" ? "var(--bull)" : s.kind === "sell" ? "var(--bear)" : "var(--amber)";
+        const color = s.kind === "long" ? "var(--bull)" : s.kind === "short" ? "var(--bear)" : "var(--amber)";
         return (
           <g key={i}>
             <line x1={x} x2={x} y1={padT} y2={padT + innerH} stroke={color} strokeOpacity="0.18" />

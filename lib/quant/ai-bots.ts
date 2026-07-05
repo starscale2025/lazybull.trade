@@ -191,7 +191,7 @@ const bsSurrogate: BotDef = aiBot<BSReq, BSRes>(
           "We trained a tiny neural network to mimic the Black-Scholes formula. It's just as accurate but stays fast even when you batch 10,000 options at once.",
         verdict: {
           side: "hold",
-          text: `Surrogate price $${data.price.toFixed(2)}. Compare against the live chain — anything more than 0.5% off is mispriced.`,
+          text: `Surrogate price $${data.price.toFixed(2)}. For study, a gap beyond ~0.5% from the textbook Black-Scholes value just shows where the model diverges from theory — not a trade.`,
           confidence: 1,
         },
       };

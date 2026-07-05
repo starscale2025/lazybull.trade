@@ -32,7 +32,8 @@ export type BotCategory = "trend" | "stats" | "risk" | "options" | "ai" | "custo
 
 export type Signal = {
   i: number;
-  kind: "buy" | "sell" | "warn";
+  // impersonal, hypothetical model events for education — not buy/sell calls
+  kind: "long" | "short" | "warn";
   price?: number;
   label?: string;
 };
