@@ -49,3 +49,6 @@ ai quants/weights/
 scripts/cinema/shots/
 scripts/cinema/raw/
 scripts/cinema/bull.mp4
+
+# local tooling
+.claude/
