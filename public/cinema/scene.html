@@ -690,11 +690,10 @@ window.renderAt = function renderAt(t, hideBull, hideCandle) {
   const P = PHASES;
 
   // ---- boot ---------------------------------------------------------------
-  const pBoot = seg(t, ...P.boot);
-  // draw continuously across the WHOLE boot act (no static hold at the end that
-  // reads as a laggy dead-scroll before the assembly kicks in)
-  const bootDraw = easeOut(seg(pBoot, -0.08, 0.95));
-  strokes().forEach(({ p, len }) => { p.style.strokeDashoffset = String(len * (1 - bootDraw)); });
+  // A complete, glowing laptop outline is a far stronger opening frame than a
+  // half-drawn sliver (the old draw-on left just two line segments at rest). It
+  // holds fully-drawn, then dissolves into the assembling panels below.
+  strokes().forEach(({ p }) => { p.style.strokeDashoffset = "0"; });
   const outlineFade = 1 - seg(t, P.assembly[0], P.assembly[0] + (P.assembly[1] - P.assembly[0]) * 0.4);
   outline.style.opacity = String(outlineFade);
   glow.style.opacity = String(0.9 * (1 - seg(t, P.assembly[0], P.dive[1])));

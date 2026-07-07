@@ -50,6 +50,13 @@ export function ScrollCinema() {
   const candle3dReadyRef = useRef(false);
   const [candle3dActive, setCandle3dActive] = useState(false);
 
+  // Preloader: scroll is locked and a loading screen shows until the scene, its
+  // panel screenshots, three.js and the bull model are all loaded — then the
+  // scroll animation is enabled. No more scrolling into half-loaded frames.
+  const [loading, setLoading] = useState(true);
+  const [loadPct, setLoadPct] = useState(8);
+  const [reveal, setReveal] = useState(false);
+
   // Each 3D layer's WebGL context going live tells the 2D scene to drop its
   // matching draw (via the per-frame hide flags). Stays false if WebGL fails →
   // the 2D bull / candle chart remain as fallbacks.
@@ -85,8 +92,14 @@ export function ScrollCinema() {
     // reload while past the cinema doesn't restore into a collapsed layout).
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
+    // Lock scroll while the cinema preloads so the scroll animation only begins
+    // once everything is ready (restored on reveal / on cleanup).
+    const rootStyle = document.documentElement.style;
+    const prevOverflow = rootStyle.overflow;
+    rootStyle.overflow = "hidden";
+    window.scrollTo(0, 0);
+
     let disposed = false;
-    let started = false;
     let ready = false;
     let st: ScrollTrigger | null = null;
     let raf = 0;
@@ -94,6 +107,8 @@ export function ScrollCinema() {
     let targetProgress = 0; // raw scroll position
     let resizeTimer = 0;
     let collapsed = false;
+    let creep = 0; // interval that eases the loading bar up during preload
+    let onSceneLoad: (() => void) | null = null;
 
     const win = () => iframe.contentWindow as SceneWindow | null;
 
@@ -203,21 +218,7 @@ export function ScrollCinema() {
       raf = requestAnimationFrame(loop);
     };
 
-    const start = async () => {
-      if (started || disposed) return;
-      const w = win();
-      if (!w?.initScene) return; // scene not loaded yet; onload will call again
-      started = true;
-      try {
-        await w.initScene({ shots: SHOTS, phases: ACTS, bullFrames: null });
-      } catch {
-        if (!disposed) setMode("static");
-        return;
-      }
-      if (disposed) return;
-      ready = true;
-      renderScene();
-      applyOverlays();
+    const createScrollTrigger = () => {
       st = ScrollTrigger.create({
         trigger: section,
         start: "top top",
@@ -230,6 +231,61 @@ export function ScrollCinema() {
       });
     };
 
+    // ---- preload: scene + panel shots, then three.js + the bull model ----
+    const shotsLoaded = new Promise<void>((resolve, reject) => {
+      let done = false;
+      const run = async () => {
+        if (done || disposed) return;
+        const w = win();
+        if (!w?.initScene) return; // iframe not ready yet; the load listener retries
+        done = true;
+        try {
+          await w.initScene({ shots: SHOTS, phases: ACTS, bullFrames: null });
+          ready = true;
+          renderScene();
+          applyOverlays();
+          resolve();
+        } catch {
+          reject(new Error("scene"));
+        }
+      };
+      onSceneLoad = run;
+      iframe.addEventListener("load", run);
+      run(); // in case the iframe is already loaded
+    });
+    // three.js chunks + the bull GLB (non-fatal — the 2D fallbacks cover failures).
+    const extras = Promise.allSettled([
+      import("./Bull3D"),
+      import("./CandleField3D"),
+      fetch("/models/bull.glb").then((r) => r.arrayBuffer()),
+    ]);
+    const minTime = new Promise((r) => window.setTimeout(r, 650)); // don't flash the loader
+
+    creep = window.setInterval(() => setLoadPct((p) => (p < 90 ? p + 2 : p)), 120);
+
+    let settled = false;
+    const reveal = () => {
+      if (settled || disposed) return;
+      settled = true;
+      window.clearInterval(creep);
+      setLoadPct(100);
+      window.setTimeout(() => {
+        if (disposed) return;
+        rootStyle.overflow = prevOverflow; // unlock scroll
+        createScrollTrigger(); // enable the scroll animation
+        setReveal(true); // fade the loading screen out
+        window.setTimeout(() => { if (!disposed) setLoading(false); }, 550);
+      }, 420);
+    };
+    Promise.all([shotsLoaded, extras, minTime]).then(reveal).catch(() => {
+      if (settled || disposed) return;
+      settled = true;
+      window.clearInterval(creep);
+      rootStyle.overflow = prevOverflow;
+      setMode("static");
+    });
+    window.setTimeout(reveal, 15000); // safety: never trap the user behind a hung asset
+
     // The scene seeds particles/rain for a specific size; re-init on resize.
     const onResize = () => {
       if (!ready || collapsed) return;
@@ -238,16 +294,15 @@ export function ScrollCinema() {
         win()?.initScene?.({ shots: SHOTS, phases: ACTS, bullFrames: null }).then(renderScene);
       }, 160);
     };
-
-    iframe.addEventListener("load", start);
-    start(); // in case the iframe is already loaded
     window.addEventListener("resize", onResize);
 
     return () => {
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
-      iframe.removeEventListener("load", start);
+      window.clearInterval(creep);
+      rootStyle.overflow = prevOverflow; // never leave scroll locked
+      if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
       window.removeEventListener("resize", onResize);
       st?.kill();
     };
@@ -278,12 +333,46 @@ export function ScrollCinema() {
   }
 
   return (
-    <section
-      ref={sectionRef}
-      data-cinema
-      className="pointer-events-none relative z-20"
-      style={{ height: `${SCROLL_LENGTH_VH}vh`, marginBottom: "-100vh" }}
-    >
+    <>
+      {loading && (
+        <div
+          aria-hidden
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-7 bg-bg transition-opacity duration-500 ease-out"
+          style={{ opacity: reveal ? 0 : 1, pointerEvents: reveal ? "none" : "auto" }}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.14]" />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "radial-gradient(ellipse at center, rgba(0,255,135,0.06), transparent 62%)" }}
+          />
+          <div className="relative flex items-center gap-2.5">
+            <span className="flex size-8 items-center justify-center bg-bull font-mono text-[13px] font-bold tracking-tight text-bg">
+              LB
+            </span>
+            <span className="font-display text-3xl tracking-tight text-fg">
+              lazybull<span className="text-bull">.</span>
+            </span>
+          </div>
+          <div className="relative h-px w-[260px] overflow-hidden bg-border">
+            <div
+              className="h-full bg-bull transition-[width] duration-300 ease-out"
+              style={{ width: `${loadPct}%`, boxShadow: "0 0 12px rgba(0,255,135,0.7)" }}
+            />
+          </div>
+          <div className="relative flex w-[260px] items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+            <span className="flex items-center gap-1.5">
+              <span className="size-1 rounded-full bg-bull pulse-dot" /> Initializing terminal
+            </span>
+            <span className="tabular-nums text-bull/90">{Math.round(loadPct)}%</span>
+          </div>
+        </div>
+      )}
+      <section
+        ref={sectionRef}
+        data-cinema
+        className="pointer-events-none relative z-20"
+        style={{ height: `${SCROLL_LENGTH_VH}vh`, marginBottom: "-100vh" }}
+      >
       {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
           the section — otherwise the section's opaque bg stays over the real Hero
           in the -100vh overlap and the handoff reveals black instead of the page. */}
@@ -341,6 +430,7 @@ export function ScrollCinema() {
           <img src="/cinema/shots/hero.webp" alt="LazyBull — options, without the fog" className="absolute inset-0 h-full w-full object-cover" />
         </noscript>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
