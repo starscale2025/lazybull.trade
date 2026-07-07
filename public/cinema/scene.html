@@ -196,6 +196,7 @@ const FAM_COLOR = { trend: GREEN, stats: CYAN, ai: RED };
 // ---- scene state -----------------------------------------------------------
 let CFG = null, PARTICLES = [], BULL_IMGS = [], MATRIX = [], MATRIX_CELL = 16;
 let NOW = 0; // ambient time (seconds) set by renderAt — drives always-on motion
+let DRAW_T0 = null; // when the loader revealed → the laptop draw-on starts
 let CHART = null;      // shared chart rect { x, y, w, h }
 let REGIME = null;     // { incr: number[] }
 let CANDLES = null;    // { bars:[{x,oy,cy,hy,ly,bw,up,crash}], ai:[{x,y}], cone:[{x,uy,ly}], diverge, spot:[] }
@@ -701,10 +702,13 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy) {
   const P = PHASES;
 
   // ---- boot ---------------------------------------------------------------
-  // A complete, glowing laptop outline is a far stronger opening frame than a
-  // half-drawn sliver (the old draw-on left just two line segments at rest). It
-  // holds fully-drawn, then dissolves into the assembling panels below.
-  strokes().forEach(({ p }) => { p.style.strokeDashoffset = "0"; });
+  // The laptop sketches ITSELF in — time-based, once, starting the moment the
+  // loader reveals. The draw-on animation plays for everyone, but the resting
+  // frame always ends complete (never a half-drawn sliver held hostage by the
+  // scroll position, which was the old bug).
+  if (DRAW_T0 === null && NOW > 0) DRAW_T0 = NOW;
+  const bootDraw = DRAW_T0 === null ? 0 : easeOut(clamp((NOW - DRAW_T0) / 1.5, 0, 1));
+  strokes().forEach(({ p, len }) => { p.style.strokeDashoffset = String(len * (1 - bootDraw)); });
   const outlineFade = 1 - seg(t, P.assembly[0], P.assembly[0] + (P.assembly[1] - P.assembly[0]) * 0.4);
   outline.style.opacity = String(outlineFade);
   // ambient breathing on the boot glow so the opening frame feels alive at rest

@@ -9,7 +9,7 @@
 
 import { Suspense, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, ContactShadows, MeshReflectorMaterial } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -242,7 +242,7 @@ function Aura() {
     }
     pts.geometry.attributes.position.needsUpdate = true;
     (pts.material as THREE.PointsMaterial).opacity =
-      0.5 + 0.16 * Math.sin(t * 0.8) + 0.3 * burst;
+      0.4 + 0.12 * Math.sin(t * 0.8) + 0.3 * burst;
   });
   return (
     <points ref={ref} frustumCulled={false}>
@@ -260,51 +260,6 @@ function Aura() {
         blending={THREE.AdditiveBlending}
       />
     </points>
-  );
-}
-
-// Low ground mist: soft additive billboards drifting through the bull's legs.
-function Mist() {
-  const tex = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = c.height = 128;
-    const g = c.getContext("2d")!;
-    const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62);
-    grad.addColorStop(0, "rgba(140,255,200,0.55)");
-    grad.addColorStop(1, "rgba(140,255,200,0)");
-    g.fillStyle = grad;
-    g.fillRect(0, 0, 128, 128);
-    return new THREE.CanvasTexture(c);
-  }, []);
-  const refs = useRef<(THREE.Sprite | null)[]>([]);
-  const PUFFS = [
-    { x: -1.4, y: 0.32, s: 4.6, sp: 0.16, ph: 0 },
-    { x: 1.2, y: 0.24, s: 3.8, sp: 0.11, ph: 2.4 },
-    { x: 0, y: 0.4, s: 5.4, sp: 0.08, ph: 4.2 },
-  ];
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    PUFFS.forEach((p, i) => {
-      const s = refs.current[i];
-      if (!s) return;
-      s.position.set(p.x + Math.sin(t * p.sp + p.ph) * 1.3, p.y, 0.6);
-      (s.material as THREE.SpriteMaterial).opacity = 0.04 + 0.022 * Math.sin(t * 0.5 + p.ph);
-    });
-  });
-  return (
-    <group>
-      {PUFFS.map((p, i) => (
-        <sprite
-          key={i}
-          ref={(el) => {
-            refs.current[i] = el;
-          }}
-          scale={[p.s, p.s * 0.42, 1]}
-        >
-          <spriteMaterial map={tex} transparent opacity={0.06} depthWrite={false} blending={THREE.AdditiveBlending} />
-        </sprite>
-      ))}
-    </group>
   );
 }
 
@@ -391,35 +346,8 @@ export default function Bull3D({
       </Suspense>
       <BullInteraction />
       <Aura />
-      <Mist />
-
-      {/* black-glass floor: the rimmed silhouette reflects beneath the bull */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]}>
-        <planeGeometry args={[36, 36]} />
-        <MeshReflectorMaterial
-          blur={[380, 120]}
-          resolution={1024}
-          mixBlur={0.9}
-          mixStrength={1.8}
-          roughness={0.8}
-          depthScale={1.0}
-          minDepthThreshold={0.35}
-          maxDepthThreshold={1.2}
-          color="#060807"
-          metalness={0.5}
-          mirror={0.62}
-        />
-      </mesh>
-      {/* Soft green contact shadow keeps the sculpture seated on the glass */}
-      <ContactShadows
-        position={[0, 0.008, 0]}
-        opacity={0.42}
-        scale={14}
-        blur={2.8}
-        far={4}
-        resolution={512}
-        color="#00160c"
-      />
+      {/* no floor plane: the bull stands in pure black void — every floor
+          treatment (mist, shadows, mirror) read as a green wash on real GPUs */}
 
       <Rig />
 

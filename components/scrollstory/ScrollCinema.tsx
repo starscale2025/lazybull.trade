@@ -59,7 +59,6 @@ export function ScrollCinema() {
   const [candle3dActive, setCandle3dActive] = useState(false);
 
   const tooltipRef = useRef<HTMLDivElement>(null); // live price tag on candle hover
-  const cursorRef = useRef<HTMLDivElement>(null); // lagging cursor ring
 
   // Preloader: scroll is locked and a loading screen shows until the scene, its
   // panel screenshots, three.js and the bull model are all loaded — then the
@@ -120,11 +119,8 @@ export function ScrollCinema() {
     let collapsed = false;
     let creep = 0; // interval that eases the loading bar up during preload
     let onSceneLoad: (() => void) | null = null;
-    let ringX = window.innerWidth / 2; // lagging cursor-ring position
-    let ringY = window.innerHeight / 2;
     let pxS = 0; // damped pointer for layered parallax
     let pyS = 0;
-    let isDown = false;
 
     // Normalized pointer (-1..1) shared with the 3D layers via the clock.
     const onPointer = (e: PointerEvent) => {
@@ -135,19 +131,14 @@ export function ScrollCinema() {
     // real UI interactions (skip button, nav).
     const onDown = (e: PointerEvent) => {
       if ((e.target as HTMLElement | null)?.closest?.("button, a, input, [role=button]")) return;
-      isDown = true;
       cinemaClock.click = {
         x: (e.clientX / window.innerWidth) * 2 - 1,
         y: (e.clientY / window.innerHeight) * 2 - 1,
         t: performance.now(),
       };
     };
-    const onUp = () => {
-      isDown = false;
-    };
     window.addEventListener("pointermove", onPointer, { passive: true });
     window.addEventListener("pointerdown", onDown, { passive: true });
-    window.addEventListener("pointerup", onUp, { passive: true });
 
     const win = () => iframe.contentWindow as SceneWindow | null;
 
@@ -281,15 +272,6 @@ export function ScrollCinema() {
           el.style.opacity = "0";
         }
       }
-      if (cursorRef.current) {
-        const cx = (cinemaClock.px * 0.5 + 0.5) * window.innerWidth;
-        const cy = (cinemaClock.py * 0.5 + 0.5) * window.innerHeight;
-        ringX += (cx - ringX) * 0.18;
-        ringY += (cy - ringY) * 0.18;
-        const s = isDown ? 0.72 : hov ? 1.7 : 1;
-        cursorRef.current.style.transform = `translate(${(ringX - 14).toFixed(1)}px, ${(ringY - 14).toFixed(1)}px) scale(${s})`;
-        cursorRef.current.style.borderColor = hov ? "rgba(0,255,135,0.9)" : "rgba(0,255,135,0.45)";
-      }
       raf = requestAnimationFrame(tick);
     };
 
@@ -381,7 +363,6 @@ export function ScrollCinema() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointerup", onUp);
       st?.kill();
     };
   }, []);
@@ -536,12 +517,6 @@ export function ScrollCinema() {
           <span className="text-fg" />
           <span />
         </div>
-        {/* lagging cursor ring — tightens on press, blooms over targets */}
-        <div
-          ref={cursorRef}
-          className="pointer-events-none absolute left-0 top-0 z-30 size-7 rounded-full border transition-[border-color] duration-200"
-          style={{ borderColor: "rgba(0,255,135,0.45)", willChange: "transform" }}
-        />
         <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
         <button
           ref={skipRef}
