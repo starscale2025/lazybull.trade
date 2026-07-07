@@ -154,15 +154,23 @@ function Bull() {
     const bt = clamp((p - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0), 0, 1);
     // Emergence: rise + settle over the first third, then a slow turntable.
     const rise = smooth(0, 0.34, bt);
+    // Charge finale: lean back + head down (windup), then LUNGE at the camera.
+    const windup = smooth(0.66, 0.8, bt);
+    const charge = smooth(0.8, 0.97, bt);
     pxs.current += (cinemaClock.px - pxs.current) * 0.045;
     const snort = Math.exp(-(performance.now() - SNORT.t) / 480); // click → snort
     g.position.y = (1 - rise) * -1.1 + Math.sin(time * 1.05) * 0.02 * rise; // breathing
+    // assigned (not +=) so scrubbing backwards reverses cleanly — pure f(bt)
+    g.position.z = -windup * 0.5 + charge * charge * 4.2; // recoil, then accelerate
+    g.position.x = charge * 0.5;
     g.scale.setScalar(
-      (0.92 + 0.08 * rise) * (1 + Math.sin(time * 0.9) * 0.005 + 0.05 * snort)
+      (0.92 + 0.08 * rise) * (1 + Math.sin(time * 0.9) * 0.005 + 0.05 * snort) +
+        charge * 0.15 // looms as it closes the distance
     );
     // slow turntable + the head tracks the cursor hard — it WATCHES you
-    g.rotation.y = -0.62 + bt * 0.7 + pxs.current * 0.42;
-    g.rotation.x = -0.09 * snort; // the head tosses up on the snort
+    g.rotation.y = -0.62 + bt * 0.7 + pxs.current * 0.42 + charge * 0.55; // squares up to the viewer
+    // snort toss + windup head-dip + mid-lunge head toss, all additive
+    g.rotation.x = -0.09 * snort + 0.1 * windup - 0.22 * charge;
     // eye-line light: ignites when your cursor comes near its face (or it snorts)
     const hl = headLight.current;
     if (hl) {
@@ -217,11 +225,22 @@ function Aura() {
     const arr = pts.geometry.attributes.position.array as Float32Array;
     // snort → the aura blasts outward and races; cursor → motes shy away
     const burst = Math.exp(-(performance.now() - SNORT.t) / 520);
+    // charge finale → the aura streams off the bull as it runs (pure f(bt))
+    const abt = clamp(
+      (cinemaClock.progress - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0),
+      0,
+      1
+    );
+    const chargeBurst = smooth(0.8, 0.97, abt);
     const cw = CURSORB.ok ? CURSORB.world : null;
     for (let i = 0; i < COUNT; i++) {
-      const a = a0[i] + t * sp[i] * (0.55 + burst * 1.6);
+      const a = a0[i] + t * sp[i] * (0.55 + burst * 1.6 + chargeBurst * 2.0);
       const h = (h0[i] + t * sp[i] * 0.5) % 3.0;
-      const r = r0[i] * (1 - h * 0.11) * (1 + burst * 0.55 * (1 - h / 3));
+      const r =
+        r0[i] *
+        (1 - h * 0.11) *
+        (1 + burst * 0.55 * (1 - h / 3)) *
+        (1 + chargeBurst * 0.9);
       let x = Math.cos(a) * r;
       let y = h * 0.92 + 0.12;
       const z = Math.sin(a) * r * 0.62; // squashed to hug the body
@@ -242,7 +261,7 @@ function Aura() {
     }
     pts.geometry.attributes.position.needsUpdate = true;
     (pts.material as THREE.PointsMaterial).opacity =
-      0.4 + 0.12 * Math.sin(t * 0.8) + 0.3 * burst;
+      0.4 + 0.12 * Math.sin(t * 0.8) + 0.3 * burst + chargeBurst * 0.35;
   });
   return (
     <points ref={ref} frustumCulled={false}>
@@ -260,6 +279,44 @@ function Aura() {
         blending={THREE.AdditiveBlending}
       />
     </points>
+  );
+}
+
+// White-green impact flash: a huge additive sprite glued 2 units in front of the
+// camera. As the DOM wrapper crossfades out at the end of the act it whites the
+// frame, so the particle-logo act appears out of the burst. Pure f(bt).
+function ImpactFlash() {
+  const ref = useRef<THREE.Sprite>(null);
+  const fwd = useMemo(() => new THREE.Vector3(), []);
+  useFrame((state) => {
+    const s = ref.current;
+    if (!s) return;
+    const bt = clamp(
+      (cinemaClock.progress - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0),
+      0,
+      1
+    );
+    const flash = smooth(0.9, 1.0, bt) * 0.9;
+    (s.material as THREE.SpriteMaterial).opacity = flash;
+    s.visible = flash > 0.001; // skip the draw call outside the burst
+    // re-glue every frame: camera position + 2 along the view direction, so the
+    // quad survives the Rig's orbit/shake and always covers the viewport
+    state.camera.getWorldDirection(fwd);
+    s.position.copy(state.camera.position).addScaledVector(fwd, 2);
+  });
+  return (
+    <sprite ref={ref} scale={[40, 40, 1]} frustumCulled={false} renderOrder={999}>
+      <spriteMaterial
+        map={dotTexture()}
+        color="#ccffe2"
+        transparent
+        opacity={0}
+        depthWrite={false}
+        depthTest={false}
+        toneMapped={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </sprite>
   );
 }
 
@@ -282,8 +339,10 @@ function Rig() {
       0,
       1
     );
-    // Gentle dolly-in through the beat + a slow handheld sway.
-    const z = 5.3 - 0.7 * smooth(0, 1, bt);
+    const charge = smooth(0.8, 0.97, bt);
+    // Gentle dolly-in through the beat + a slow handheld sway; the camera backs
+    // off slightly during the charge — then the bull overtakes it anyway.
+    const z = 5.3 - 0.7 * smooth(0, 1, bt) + charge * 0.6;
     tmpL.current.set(0, 1.15 - pys.current * 0.1, 0);
     tmpP.current.set(
       2.5 + Math.sin(time * 0.31) * 0.07,
@@ -299,10 +358,14 @@ function Rig() {
     pos.current.lerp(tmpP.current, 0.08);
     look.current.lerp(tmpL.current, 0.08);
     state.camera.position.copy(pos.current);
+    // impact shake, applied after the smoothed pos so it never feeds back into
+    // the lerp state — sin-based = deterministic + fully reversible
+    state.camera.position.x += Math.sin(time * 47.0) * 0.1 * charge;
+    state.camera.position.y += Math.cos(time * 39.0) * 0.08 * charge;
     state.camera.lookAt(look.current);
-    // scroll velocity → FOV kick
+    // scroll velocity → FOV kick; the charge punches the FOV wide open
     const cam = state.camera as THREE.PerspectiveCamera;
-    const targetFov = 34 + cinemaClock.vel * 7;
+    const targetFov = 34 + cinemaClock.vel * 7 + charge * 24;
     if (Math.abs(cam.fov - targetFov) > 0.01) {
       cam.fov += (targetFov - cam.fov) * 0.1;
       cam.updateProjectionMatrix();
@@ -350,6 +413,7 @@ export default function Bull3D({
           treatment (mist, shadows, mirror) read as a green wash on real GPUs */}
 
       <Rig />
+      <ImpactFlash />
 
       <EffectComposer multisampling={0}>
         <Bloom

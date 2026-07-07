@@ -125,6 +125,8 @@ function windowOpacity(progress: number, w: Fade4): number {
   return 1 - (p - w.out0) / (w.out1 - w.out0);
 }
 
+// The dive act as a REAL 3D tunnel flythrough — a corridor of app screens.
+export const DIVE3D: Fade4 = { in0: 0.148, in1: 0.165, out0: 0.222, out1: 0.242 };
 // The candle act (climb → crash → AI foresight) as a 3D candlestick canyon.
 export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.535, out1: 0.56 };
 // The bull crescendo: fades in over the consensus tail, holds, then fully clears
@@ -132,6 +134,8 @@ export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.535, out1: 0.56 
 // scatter → Matrix). `out0` is also where the 2D logo un-hides (scene LOGO0=0.775).
 export const BULL3D: Fade4 = { in0: 0.71, in1: 0.735, out0: 0.78, out1: 0.8 };
 
+/** Opacity for the 3D dive-tunnel DOM layer. */
+export const dive3dOpacity = (progress: number) => windowOpacity(progress, DIVE3D);
 /** Opacity for the 3D candle-canyon DOM layer. */
 export const candle3dOpacity = (progress: number) => windowOpacity(progress, CANDLE3D);
 /** Opacity for the 3D bull DOM layer. */

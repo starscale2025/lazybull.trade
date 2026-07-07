@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
 
 // Lazy so three.js only loads for users who actually get the cinema (not the
 // reduced-motion static fallback, and not until after first paint).
 const Bull3D = lazy(() => import("./Bull3D"));
 const CandleField3D = lazy(() => import("./CandleField3D"));
+const Tunnel3D = lazy(() => import("./Tunnel3D"));
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -28,16 +29,17 @@ type SceneWindow = Window & {
     phases: Record<string, { from: number; to: number }>;
     bullFrames: string[] | null;
   }) => Promise<unknown>;
-  // `hideBull` / `hideCandle` (per frame) drop the matching 2D draw once that 3D
-  // layer is live. `now` (seconds) drives ambient, always-on motion; `cx`/`cy`
-  // (-1..1) drive the cursor spotlight.
+  // `hideBull` / `hideCandle` / `hideDive` (per frame) drop the matching 2D draw
+  // once that 3D layer is live. `now` (seconds) drives ambient, always-on motion;
+  // `cx`/`cy` (-1..1) drive the cursor spotlight.
   renderAt?: (
     t: number,
     hideBull?: boolean,
     hideCandle?: boolean,
     now?: number,
     cx?: number,
-    cy?: number
+    cy?: number,
+    hideDive?: boolean
   ) => void;
 };
 
@@ -57,6 +59,10 @@ export function ScrollCinema() {
   const candle3dActiveRef = useRef(false);
   const candle3dReadyRef = useRef(false);
   const [candle3dActive, setCandle3dActive] = useState(false);
+  const dive3dWrapRef = useRef<HTMLDivElement>(null);
+  const dive3dActiveRef = useRef(false);
+  const dive3dReadyRef = useRef(false);
+  const [dive3dActive, setDive3dActive] = useState(false);
 
   const tooltipRef = useRef<HTMLDivElement>(null); // live price tag on candle hover
 
@@ -75,6 +81,9 @@ export function ScrollCinema() {
   };
   const handleCandleReady = () => {
     candle3dReadyRef.current = true;
+  };
+  const handleDiveReady = () => {
+    dive3dReadyRef.current = true;
   };
 
   // Skip the intro: land at the end (Get Started at top via the -100vh overlap),
@@ -179,7 +188,7 @@ export function ScrollCinema() {
     };
     collapseRef.current = collapse; // let the Skip button trigger the same collapse
 
-    const applyOverlays = () => {
+    const applyOverlays = (now = 0) => {
       if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
       // faint bloom only — the scene's Matrix rain is the real green transition
       if (flashRef.current) flashRef.current.style.opacity = String(flashOpacity(progress) * 0.18);
@@ -209,6 +218,7 @@ export function ScrollCinema() {
       };
       driveLayer(bull3dWrapRef, bull3dOpacity(progress), BULL3D, bull3dActiveRef, setBull3dActive);
       driveLayer(candle3dWrapRef, candle3dOpacity(progress), CANDLE3D, candle3dActiveRef, setCandle3dActive);
+      driveLayer(dive3dWrapRef, dive3dOpacity(progress), DIVE3D, dive3dActiveRef, setDive3dActive);
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
@@ -222,11 +232,16 @@ export function ScrollCinema() {
         el.style.transform = `translate(calc(-50% + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
       });
       // Layered cursor parallax: the whole composited scene drifts gently against
-      // the pointer (scaled up a hair so edges never peek in).
-      const t3 = `translate3d(${(pxS * -7).toFixed(2)}px, ${(pyS * -5).toFixed(2)}px, 0) scale(1.015)`;
+      // the pointer (scaled up a hair so edges never peek in). During the matrix
+      // burst the whole frame GLITCH-SHAKES (deterministic sin jitter × flash).
+      const fl = flashOpacity(progress);
+      const jx = Math.sin(now * 67) * 5 * fl;
+      const jy = Math.cos(now * 53) * 4 * fl;
+      const t3 = `translate3d(${(pxS * -7 + jx).toFixed(2)}px, ${(pyS * -5 + jy).toFixed(2)}px, 0) scale(1.015)`;
       if (frameRef.current) frameRef.current.style.transform = t3;
       if (candle3dWrapRef.current) candle3dWrapRef.current.style.transform = t3;
       if (bull3dWrapRef.current) bull3dWrapRef.current.style.transform = t3;
+      if (dive3dWrapRef.current) dive3dWrapRef.current.style.transform = t3;
     };
 
     const renderScene = (now = 0) => {
@@ -236,7 +251,15 @@ export function ScrollCinema() {
       // Matrix — with no overlap between the two differently-posed bulls.
       const hideBull = bull3dReadyRef.current && progress < BULL3D.out1;
       if (ready)
-        win()?.renderAt?.(progress, hideBull, candle3dReadyRef.current, now, pxS, pyS);
+        win()?.renderAt?.(
+          progress,
+          hideBull,
+          candle3dReadyRef.current,
+          now,
+          pxS,
+          pyS,
+          dive3dReadyRef.current
+        );
     };
 
     // Persistent render loop: smooth-scrubs progress toward the scroll position
@@ -253,7 +276,7 @@ export function ScrollCinema() {
       // damped scroll velocity → the 3D cameras kick their FOV when you scroll hard
       cinemaClock.vel += (Math.min(1, Math.abs(diff) * 14) - cinemaClock.vel) * 0.08;
       renderScene(now);
-      applyOverlays();
+      applyOverlays(now);
       // interaction chrome: candle tooltip + the lagging cursor ring
       const hov = cinemaClock.hover;
       if (tooltipRef.current) {
@@ -314,6 +337,7 @@ export function ScrollCinema() {
     const extras = Promise.allSettled([
       import("./Bull3D"),
       import("./CandleField3D"),
+      import("./Tunnel3D"),
       fetch("/models/bull.glb").then((r) => r.arrayBuffer()),
     ]);
     const minTime = new Promise((r) => window.setTimeout(r, 650)); // don't flash the loader
@@ -468,6 +492,15 @@ export function ScrollCinema() {
         />
         {/* Real-3D layers, each crossfaded over the 2D scene across its act. They
             sit above the iframe, below the copy text; only one is visible at a time. */}
+        <div
+          ref={dive3dWrapRef}
+          className="pointer-events-none absolute inset-0"
+          style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
+        >
+          <Suspense fallback={null}>
+            <Tunnel3D active={dive3dActive} onReady={handleDiveReady} />
+          </Suspense>
+        </div>
         <div
           ref={candle3dWrapRef}
           className="pointer-events-none absolute inset-0"

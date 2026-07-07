@@ -4,12 +4,14 @@ import {
   ACT_ORDER,
   BULL3D,
   CANDLE3D,
+  DIVE3D,
   COPY_BEATS,
   beatOpacity,
   bull3dOpacity,
   candle3dOpacity,
   canvasOpacity,
   clamp01,
+  dive3dOpacity,
   flashOpacity,
 } from "@/lib/cinema";
 
@@ -114,6 +116,24 @@ describe("bull3dOpacity", () => {
     expect(BULL3D.in1).toBeLessThanOrEqual(BULL3D.out0);
     expect(BULL3D.out0).toBeLessThan(BULL3D.out1);
     expect(BULL3D.out1).toBeLessThanOrEqual(0.86);
+  });
+});
+
+describe("dive3dOpacity", () => {
+  it("is 0 outside the tunnel window and 1 through its hold", () => {
+    expect(dive3dOpacity(0.1)).toBe(0);
+    expect(dive3dOpacity(DIVE3D.in0)).toBe(0);
+    expect(dive3dOpacity((DIVE3D.in0 + DIVE3D.in1) / 2)).toBeCloseTo(0.5, 5);
+    expect(dive3dOpacity(0.19)).toBe(1); // mid-tunnel
+    expect(dive3dOpacity(DIVE3D.out1)).toBe(0);
+    expect(dive3dOpacity(0.3)).toBe(0);
+  });
+  it("spans the dive act and clears before the regime chart needs the frame", () => {
+    expect(DIVE3D.in0).toBeGreaterThanOrEqual(ACTS.dive.from - 0.01);
+    expect(DIVE3D.out1).toBeLessThanOrEqual(ACTS.regime.from + 0.01);
+    expect(DIVE3D.in0).toBeLessThan(DIVE3D.in1);
+    expect(DIVE3D.in1).toBeLessThanOrEqual(DIVE3D.out0);
+    expect(DIVE3D.out0).toBeLessThan(DIVE3D.out1);
   });
 });
 

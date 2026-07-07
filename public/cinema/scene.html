@@ -692,7 +692,7 @@ function drawConsensus(ctx, v, env, W, H) {
 }
 
 // ================= MAIN =====================================================
-window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy) {
+window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDive) {
   NOW = now || 0; // ambient wall-clock (seconds) — keeps the scene alive at rest
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
@@ -733,7 +733,9 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy) {
       el.style.opacity = String(Math.min(1, local * 2.5));
     });
   }
-  const flyOn = pDive > 0.45 && t < P.regime[0] + 0.02;
+  // The real-3D tunnel (R3F, parent doc) owns the dive when live → skip the 2D
+  // panel flythrough (the laptop zoom stays as the entry the tunnel fades over).
+  const flyOn = pDive > 0.45 && t < P.regime[0] + 0.02 && !hideDive;
   fly.style.display = flyOn ? "block" : "none";
   if (flyOn) {
     document.querySelectorAll("#panels .panel").forEach((el) => {

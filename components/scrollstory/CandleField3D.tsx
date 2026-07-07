@@ -257,6 +257,90 @@ function Candles() {
   );
 }
 
+// Every red crash candle detonates on print: 9 emissive shards blast down-and-
+// outward from its base, tumbling under gravity, then vanish once the candle
+// settles (the finished chart stays clean). Pure function of rf — scrubbing
+// backwards un-explodes them. One instancedMesh for the whole crash (~144).
+const SHARDS_PER = 9;
+function CrashShards() {
+  const crash = useMemo(
+    () =>
+      CANDLES.map((c, i) => ({ c, i })).filter(
+        ({ c, i }) => !c.up && i >= DIVERGE && i < CRASH_END
+      ),
+    []
+  );
+  const geo = useMemo(() => new THREE.BoxGeometry(0.16, 0.16, 0.16), []);
+  const mat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#2e0a15",
+        emissive: new THREE.Color("#ff2e63"),
+        emissiveIntensity: 1.6,
+        roughness: 0.4,
+      }),
+    []
+  );
+  // deterministic per-shard trajectory: mostly downward + outward debris
+  const params = useMemo(
+    () =>
+      crash.flatMap(({ i }) =>
+        Array.from({ length: SHARDS_PER }, (_, s) => {
+          const rnd = mulberry32(i * 31 + s);
+          return {
+            vx: (rnd() - 0.5) * 1.6, // [-0.8, 0.8]
+            vy: -0.6 - rnd() * 1.6, // [-2.2, -0.6]
+            vz: (rnd() - 0.5) * 1.0, // [-0.5, 0.5]
+            spin: rnd() * Math.PI * 2,
+            jit: 0.6 + rnd() * 0.8, // size jitter 0.6..1.4
+          };
+        })
+      ),
+    [crash]
+  );
+  const inst = useRef<THREE.InstancedMesh>(null);
+  const obj = useMemo(() => new THREE.Object3D(), []); // scratch for matrices
+  useFrame(() => {
+    const m = inst.current;
+    if (!m) return;
+    const rf = revealF(cinemaClock.progress);
+    for (let k = 0; k < crash.length; k++) {
+      const { c, i } = crash[k];
+      const g = clamp(rf - i, 0, 1);
+      const live = g > 0.05 && g < 1; // hidden before impact + once settled
+      for (let sh = 0; sh < SHARDS_PER; sh++) {
+        const id = k * SHARDS_PER + sh;
+        const p = params[id];
+        if (live) {
+          const s = 1 - (1 - g) * (1 - g); // easeOut → burst fast, drift out
+          obj.position.set(
+            i * SP + p.vx * s * 2.8,
+            c.cy - c.h / 2 + p.vy * s * 2.8 - s * s * 1.8, // extra gravity pull
+            p.vz * s * 2.8
+          );
+          // geometry is already 0.16 per side → scale carries jitter + shrink
+          obj.scale.setScalar(p.jit * (1 - s * 0.7));
+          obj.rotation.set(p.spin + s * 6, p.spin * 1.7 + s * 6, 0);
+        } else {
+          obj.position.set(i * SP, c.cy, 0);
+          obj.scale.setScalar(0);
+          obj.rotation.set(0, 0, 0);
+        }
+        obj.updateMatrix();
+        m.setMatrixAt(id, obj.matrix);
+      }
+    }
+    m.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <instancedMesh
+      ref={inst}
+      args={[geo, mat, crash.length * SHARDS_PER]}
+      frustumCulled={false}
+    />
+  );
+}
+
 // The live print-head: a hot orb riding the newest candle, a point light that
 // flashes the neighbourhood on every print, and a pulse ring expanding around it.
 function PrintHead() {
@@ -271,15 +355,21 @@ function PrintHead() {
     const x = clamp(rf, 0, N - 1) * SP;
     const y = lerp(CANDLES[idx].cy, CANDLES[Math.min(idx + 1, N - 1)].cy, frac);
     const flash = (1 - frac) * (1 - frac); // spikes as each candle lands
+    // the head bleeds red while printing crash candles — .set() per frame is cheap
+    const crash = !CANDLES[idx].up && idx >= DIVERGE;
     if (orb.current) {
       orb.current.visible = on;
       orb.current.position.set(x, y, 0);
       orb.current.scale.setScalar(0.09 + 0.15 * flash);
+      (orb.current.material as THREE.MeshBasicMaterial).color.set(
+        crash ? "#ffd7e2" : "#c8ffe4"
+      );
     }
     if (light.current) {
       light.current.visible = on;
       light.current.position.set(x, y + 0.5, 1.4);
-      light.current.intensity = 3 + 30 * flash;
+      light.current.intensity = (3 + 30 * flash) * (crash ? 1.6 : 1);
+      light.current.color.set(crash ? "#ff2e63" : "#00ff87");
     }
     if (ring.current) {
       ring.current.visible = on;
@@ -561,6 +651,16 @@ function Rig() {
     pxs.current += (cinemaClock.px - pxs.current) * 0.05;
     pys.current += (cinemaClock.py - pys.current) * 0.05;
     const build = buildAt(cinemaClock.progress);
+    // crash candles hit like impacts: spike as each red bar lands, decay as it
+    // settles — pure function of rf so scrubbing back un-shakes cleanly
+    const rf = revealF(cinemaClock.progress);
+    const rIdx = Math.floor(rf);
+    const rFrac = rf - rIdx;
+    let impact = 0;
+    const rc = CANDLES[rIdx];
+    if (rc && !rc.up && rIdx >= DIVERGE) {
+      impact = (1 - rFrac) * (1 - rFrac) * Math.min(1, rc.h / 1.6);
+    }
     // The camera path is a SMOOTH function of scroll only — never the discrete
     // candle index or their noisy per-candle heights — so it glides along the
     // chart instead of snapping to each newly-printed candle.
@@ -588,11 +688,14 @@ function Rig() {
     // inertia: the camera trails its target — motion has mass
     pos.current.lerp(tmpP.current, 0.09);
     look.current.lerp(tmpL.current, 0.09);
+    // deterministic sin shake (no Math.random — must reverse under scrub)
+    pos.current.x += Math.sin(time * 53) * 0.16 * impact;
+    pos.current.y += Math.cos(time * 44) * 0.13 * impact;
     state.camera.position.copy(pos.current);
     state.camera.lookAt(look.current);
-    // scroll hard → the world stretches (FOV kick)
+    // scroll hard → the world stretches (FOV kick); crash impacts punch in too
     const cam = state.camera as THREE.PerspectiveCamera;
-    const targetFov = 42 + cinemaClock.vel * 9;
+    const targetFov = 42 + cinemaClock.vel * 9 + impact * 3;
     if (Math.abs(cam.fov - targetFov) > 0.01) {
       cam.fov += (targetFov - cam.fov) * 0.1;
       cam.updateProjectionMatrix();
@@ -626,6 +729,7 @@ export default function CandleField3D({
 
       <Interaction />
       <Candles />
+      <CrashShards />
       <PrintHead />
       <ClickFX />
       <AIForecast />
