@@ -1,15 +1,16 @@
 "use client";
 
 // Targeted real-3D "hero moment": the bull act (progress ~0.71–0.85) rendered as
-// a dark sculpture under green/cyan rim light + bloom, replacing the 2D particle
-// bull. Reads the shared cinemaClock in useFrame (one-clock rule) — no per-frame
-// React state. The whole layer's DOM opacity is crossfaded by ScrollCinema via
-// bull3dOpacity(), so it dissolves into the 2D Matrix rain underneath.
+// a dark sculpture under green/cyan rim light + bloom — standing on black glass,
+// wrapped in an orbiting energy aura and ground mist, breathing, its head turning
+// toward the cursor. Reads the shared cinemaClock in useFrame (one-clock rule) —
+// no per-frame React state. The whole layer's DOM opacity is crossfaded by
+// ScrollCinema via bull3dOpacity(), so it dissolves into the 2D logo underneath.
 
 import { Suspense, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, ContactShadows } from "@react-three/drei";
-import { EffectComposer, Bloom, SMAA } from "@react-three/postprocessing";
+import { useGLTF, ContactShadows, MeshReflectorMaterial } from "@react-three/drei";
+import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { cinemaClock } from "@/lib/cinema-clock";
@@ -25,14 +26,25 @@ const smooth = (a: number, b: number, x: number) => {
   const t = clamp((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
+function mulberry32(seed: number) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 function Bull() {
   const { scene } = useGLTF(MODEL);
   const group = useRef<THREE.Group>(null);
+  const pxs = useRef(0);
 
-  // Skeleton-safe clone (the GLB is rigged; plain clone breaks the skinned bind),
-  // fit into a ~2.6-unit height standing on y=0 and centered on x/z, and override
-  // every material with one dark sculptural surface (the GLB ships no textures).
+  // Skeleton-safe clone (plain clone breaks skinned binds), fit into a ~2.6-unit
+  // height standing on y=0 and centered on x/z, and override every material with
+  // one dark sculptural surface (the GLB ships no textures).
   const fitted = useMemo(() => {
     const root = skeletonClone(scene);
     // Bounds from geometry (Box3.setFromObject is unreliable on skinned meshes).
@@ -78,17 +90,20 @@ function Bull() {
     return root;
   }, [scene]);
 
-  useFrame(() => {
+  useFrame((state) => {
     const g = group.current;
     if (!g) return;
+    const time = state.clock.elapsedTime;
     const p = cinemaClock.progress;
     // Local time across the whole bull layer window.
     const bt = clamp((p - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0), 0, 1);
     // Emergence: rise + settle over the first third, then a slow turntable.
     const rise = smooth(0, 0.34, bt);
-    g.position.y = (1 - rise) * -1.1;
-    g.scale.setScalar(0.92 + 0.08 * rise);
-    g.rotation.y = -0.62 + bt * 0.7; // slow, presenting a 3/4 profile
+    pxs.current += (cinemaClock.px - pxs.current) * 0.045;
+    g.position.y = (1 - rise) * -1.1 + Math.sin(time * 1.05) * 0.02 * rise; // breathing
+    g.scale.setScalar((0.92 + 0.08 * rise) * (1 + Math.sin(time * 0.9) * 0.005));
+    // slow turntable + the head drifts toward the cursor — it watches you
+    g.rotation.y = -0.62 + bt * 0.7 + pxs.current * 0.24;
   });
 
   return (
@@ -98,17 +113,134 @@ function Bull() {
   );
 }
 
-function Rig() {
+// Orbiting energy aura: green motes rising in a cylinder around the bull —
+// the same particle language as the logo it dissolves into.
+function Aura() {
+  const ref = useRef<THREE.Points>(null);
+  const COUNT = 850;
+  const { positions, a0, r0, h0, sp } = useMemo(() => {
+    const rnd = mulberry32(41);
+    const positions = new Float32Array(COUNT * 3);
+    const a0 = new Float32Array(COUNT);
+    const r0 = new Float32Array(COUNT);
+    const h0 = new Float32Array(COUNT);
+    const sp = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      a0[i] = rnd() * Math.PI * 2;
+      r0[i] = 1.15 + rnd() * 1.5;
+      h0[i] = rnd() * 3.0;
+      sp[i] = 0.25 + rnd() * 0.5;
+    }
+    return { positions, a0, r0, h0, sp };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useFrame((state) => {
+    const pts = ref.current;
+    if (!pts) return;
+    const t = state.clock.elapsedTime;
+    const arr = pts.geometry.attributes.position.array as Float32Array;
+    for (let i = 0; i < COUNT; i++) {
+      const a = a0[i] + t * sp[i] * 0.55;
+      const h = (h0[i] + t * sp[i] * 0.5) % 3.0;
+      const r = r0[i] * (1 - h * 0.11);
+      arr[i * 3] = Math.cos(a) * r;
+      arr[i * 3 + 1] = h * 0.92 + 0.12;
+      arr[i * 3 + 2] = Math.sin(a) * r * 0.62; // squashed to hug the body
+    }
+    pts.geometry.attributes.position.needsUpdate = true;
+    (pts.material as THREE.PointsMaterial).opacity = 0.5 + 0.16 * Math.sin(t * 0.8);
+  });
+  return (
+    <points ref={ref} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        color="#38ffa1"
+        size={0.028}
+        sizeAttenuation
+        transparent
+        opacity={0.55}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+}
+
+// Low ground mist: soft additive billboards drifting through the bull's legs.
+function Mist() {
+  const tex = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 128;
+    const g = c.getContext("2d")!;
+    const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62);
+    grad.addColorStop(0, "rgba(140,255,200,0.55)");
+    grad.addColorStop(1, "rgba(140,255,200,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }, []);
+  const refs = useRef<(THREE.Sprite | null)[]>([]);
+  const PUFFS = [
+    { x: -1.4, y: 0.32, s: 4.6, sp: 0.16, ph: 0 },
+    { x: 1.2, y: 0.24, s: 3.8, sp: 0.11, ph: 2.4 },
+    { x: 0, y: 0.4, s: 5.4, sp: 0.08, ph: 4.2 },
+  ];
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    PUFFS.forEach((p, i) => {
+      const s = refs.current[i];
+      if (!s) return;
+      s.position.set(p.x + Math.sin(t * p.sp + p.ph) * 1.3, p.y, 0.6);
+      (s.material as THREE.SpriteMaterial).opacity = 0.04 + 0.022 * Math.sin(t * 0.5 + p.ph);
+    });
+  });
+  return (
+    <group>
+      {PUFFS.map((p, i) => (
+        <sprite
+          key={i}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          scale={[p.s, p.s * 0.42, 1]}
+        >
+          <spriteMaterial map={tex} transparent opacity={0.06} depthWrite={false} blending={THREE.AdditiveBlending} />
+        </sprite>
+      ))}
+    </group>
+  );
+}
+
+function Rig() {
+  const pos = useRef(new THREE.Vector3(2.5, 1.55, 5.3));
+  const look = useRef(new THREE.Vector3(0, 1.15, 0));
+  const tmpP = useRef(new THREE.Vector3());
+  const tmpL = useRef(new THREE.Vector3());
+  const pxs = useRef(0);
+  const pys = useRef(0);
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    pxs.current += (cinemaClock.px - pxs.current) * 0.05;
+    pys.current += (cinemaClock.py - pys.current) * 0.05;
     const bt = clamp(
       (cinemaClock.progress - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0),
       0,
       1
     );
-    // Gentle dolly-in through the beat.
+    // Gentle dolly-in through the beat + cursor parallax + a slow handheld sway.
     const z = 5.3 - 0.7 * smooth(0, 1, bt);
-    state.camera.position.set(2.5, 1.55, z);
-    state.camera.lookAt(0, 1.15, 0);
+    tmpP.current.set(
+      2.5 + pxs.current * 0.75 + Math.sin(time * 0.31) * 0.07,
+      1.55 - pys.current * 0.4 + Math.sin(time * 0.43) * 0.05,
+      z
+    );
+    tmpL.current.set(pxs.current * 0.2, 1.15 - pys.current * 0.15, 0);
+    pos.current.lerp(tmpP.current, 0.08);
+    look.current.lerp(tmpL.current, 0.08);
+    state.camera.position.copy(pos.current);
+    state.camera.lookAt(look.current);
   });
   return null;
 }
@@ -146,13 +278,32 @@ export default function Bull3D({
       <Suspense fallback={null}>
         <Bull />
       </Suspense>
+      <Aura />
+      <Mist />
 
-      {/* Soft green contact shadow to ground the sculpture */}
+      {/* black-glass floor: the rimmed silhouette reflects beneath the bull */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]}>
+        <planeGeometry args={[36, 36]} />
+        <MeshReflectorMaterial
+          blur={[380, 120]}
+          resolution={1024}
+          mixBlur={0.9}
+          mixStrength={1.8}
+          roughness={0.8}
+          depthScale={1.0}
+          minDepthThreshold={0.35}
+          maxDepthThreshold={1.2}
+          color="#060807"
+          metalness={0.5}
+          mirror={0.62}
+        />
+      </mesh>
+      {/* Soft green contact shadow keeps the sculpture seated on the glass */}
       <ContactShadows
-        position={[0, 0.001, 0]}
-        opacity={0.55}
-        scale={9}
-        blur={2.6}
+        position={[0, 0.008, 0]}
+        opacity={0.42}
+        scale={14}
+        blur={2.8}
         far={4}
         resolution={512}
         color="#00160c"
@@ -165,8 +316,9 @@ export default function Bull3D({
           mipmapBlur
           luminanceThreshold={0.55}
           luminanceSmoothing={0.25}
-          intensity={0.85}
+          intensity={0.9}
         />
+        <ChromaticAberration offset={[0.0005, 0.0009]} />
         <SMAA />
       </EffectComposer>
     </Canvas>

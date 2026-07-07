@@ -195,6 +195,7 @@ const FAM_COLOR = { trend: GREEN, stats: CYAN, ai: RED };
 
 // ---- scene state -----------------------------------------------------------
 let CFG = null, PARTICLES = [], BULL_IMGS = [], MATRIX = [], MATRIX_CELL = 16;
+let NOW = 0; // ambient time (seconds) set by renderAt — drives always-on motion
 let CHART = null;      // shared chart rect { x, y, w, h }
 let REGIME = null;     // { incr: number[] }
 let CANDLES = null;    // { bars:[{x,oy,cy,hy,ly,bw,up,crash}], ai:[{x,y}], cone:[{x,uy,ly}], diverge, spot:[] }
@@ -602,8 +603,9 @@ function drawSafety(ctx, q, env, W, H) {
   const guard = seg(q, 0.32, 0.6) * alpha;
   if (guard > 0.02) {
     ctx.globalAlpha = guard; ctx.strokeStyle = RED; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
+    ctx.lineDashOffset = -((NOW * 22) % 12); // marching ants — the guard is live
     ctx.beginPath(); ctx.moveTo(ch.x, P.lossY); ctx.lineTo(ch.x + ch.w, P.lossY); ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.setLineDash([]); ctx.lineDashOffset = 0;
     ctx.fillStyle = RED; ctx.font = `600 ${Math.round(H * 0.02)}px ui-monospace, monospace`;
     ctx.textBaseline = "bottom"; ctx.fillText("−$80  max loss", ch.x + 6, P.lossY - 6);
   }
@@ -611,7 +613,9 @@ function drawSafety(ctx, q, env, W, H) {
   const be = seg(q, 0.4, 0.66) * alpha;
   if (be > 0.02) {
     ctx.globalAlpha = be; ctx.strokeStyle = CYAN; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.4;
+    ctx.lineDashOffset = -((NOW * 16) % 9);
     ctx.beginPath(); ctx.moveTo(P.beX, ch.y); ctx.lineTo(P.beX, ch.y + ch.h); ctx.stroke(); ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
   }
   // kill-switch armed glow + badge
   const kill = seg(q, 0.55, 0.85) * alpha;
@@ -648,8 +652,8 @@ function drawConsensus(ctx, v, env, W, H) {
     // node
     const lit = cast > 0.5 && nd.up > 0.6;
     ctx.globalAlpha = alpha * (0.4 + 0.6 * cast);
-    ctx.fillStyle = nd.col; ctx.shadowBlur = lit ? 10 : 0; ctx.shadowColor = nd.col;
-    ctx.beginPath(); ctx.arc(nd.x, nd.y, lit ? 6 : 4, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = nd.col; ctx.shadowBlur = lit ? 10 + 5 * Math.sin(NOW * 2.4 + i * 1.7) : 0; ctx.shadowColor = nd.col;
+    ctx.beginPath(); ctx.arc(nd.x, nd.y, lit ? 6 + 0.8 * Math.sin(NOW * 2.4 + i * 1.7) : 4, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
     if (nd.up > 0.6 && cast > 0.7) agree += 1;
     // label
     ctx.globalAlpha = alpha * cast * 0.8; ctx.fillStyle = GRAY;
@@ -666,6 +670,12 @@ function drawConsensus(ctx, v, env, W, H) {
   ctx.strokeStyle = GREEN; ctx.shadowBlur = 12; ctx.shadowColor = GREEN;
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, -Math.PI / 2, -Math.PI / 2 + TAU * arcT); ctx.stroke();
   ctx.shadowBlur = 0;
+  // radar sweep: a soft arc orbiting the ring — the ensemble is always scanning
+  const sweep = (NOW * 0.9) % TAU;
+  ctx.globalAlpha = alpha * 0.45; ctx.lineWidth = 2.2; ctx.strokeStyle = "rgba(0,255,135,0.55)";
+  ctx.shadowBlur = 8; ctx.shadowColor = GREEN;
+  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42 + 8, sweep, sweep + 0.65); ctx.stroke();
+  ctx.shadowBlur = 0; ctx.globalAlpha = alpha;
   // tier text
   const shown = Math.round(arcT * R.nodes.length);
   const tierPct = shown / R.nodes.length;
@@ -681,7 +691,8 @@ function drawConsensus(ctx, v, env, W, H) {
 }
 
 // ================= MAIN =====================================================
-window.renderAt = function renderAt(t, hideBull, hideCandle) {
+window.renderAt = function renderAt(t, hideBull, hideCandle, now) {
+  NOW = now || 0; // ambient wall-clock (seconds) — keeps the scene alive at rest
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
   const $ = (id) => document.getElementById(id);
@@ -696,7 +707,8 @@ window.renderAt = function renderAt(t, hideBull, hideCandle) {
   strokes().forEach(({ p }) => { p.style.strokeDashoffset = "0"; });
   const outlineFade = 1 - seg(t, P.assembly[0], P.assembly[0] + (P.assembly[1] - P.assembly[0]) * 0.4);
   outline.style.opacity = String(outlineFade);
-  glow.style.opacity = String(0.9 * (1 - seg(t, P.assembly[0], P.dive[1])));
+  // ambient breathing on the boot glow so the opening frame feels alive at rest
+  glow.style.opacity = String(0.9 * (1 - seg(t, P.assembly[0], P.dive[1])) * (0.82 + 0.18 * Math.sin(NOW * 1.4)));
 
   // ---- assembly + dive (mac + panels) ------------------------------------
   const pAsm = seg(t, ...P.assembly);
@@ -781,7 +793,7 @@ window.renderAt = function renderAt(t, hideBull, hideCandle) {
     const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
     ctx.font = `${Math.round(cell * 0.92)}px ui-monospace, SFMono-Regular, monospace`;
     ctx.textBaseline = "top";
-    const fall = t - LOGO0;
+    const fall = (t - LOGO0) + NOW * 0.1; // rain keeps falling even at rest
     for (const col of MATRIX) {
       const period = rows + col.len;
       const head = ((col.phase * period) + fall * col.speed * rows * 4.5) % period;

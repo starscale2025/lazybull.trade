@@ -29,8 +29,8 @@ type SceneWindow = Window & {
     bullFrames: string[] | null;
   }) => Promise<unknown>;
   // `hideBull` / `hideCandle` (per frame) drop the matching 2D draw once that 3D
-  // layer is live.
-  renderAt?: (t: number, hideBull?: boolean, hideCandle?: boolean) => void;
+  // layer is live. `now` (seconds) drives ambient, always-on motion.
+  renderAt?: (t: number, hideBull?: boolean, hideCandle?: boolean, now?: number) => void;
 };
 
 export function ScrollCinema() {
@@ -109,6 +109,15 @@ export function ScrollCinema() {
     let collapsed = false;
     let creep = 0; // interval that eases the loading bar up during preload
     let onSceneLoad: (() => void) | null = null;
+    let pxS = 0; // damped pointer for layered parallax
+    let pyS = 0;
+
+    // Normalized pointer (-1..1) shared with the 3D layers via the clock.
+    const onPointer = (e: PointerEvent) => {
+      cinemaClock.px = (e.clientX / window.innerWidth) * 2 - 1;
+      cinemaClock.py = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener("pointermove", onPointer, { passive: true });
 
     const win = () => iframe.contentWindow as SceneWindow | null;
 
@@ -184,38 +193,44 @@ export function ScrollCinema() {
         if (!el) return;
         const o = beatOpacity(progress, beat);
         el.style.opacity = String(o);
-        // "top" beats anchor at their top edge (upper third); others center.
+        // per-character stagger plays while the beat is on-window
+        el.classList.toggle("beat-in", o > 0.1);
+        // "top" beats anchor at their top edge (upper third); others center. The
+        // type layer parallaxes harder than the scene → real depth.
         const baseY = beat.pos === "top" ? "0px" : "-50%";
-        el.style.transform = `translate(-50%, calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px))`;
+        el.style.transform = `translate(calc(-50% + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
       });
+      // Layered cursor parallax: the whole composited scene drifts gently against
+      // the pointer (scaled up a hair so edges never peek in).
+      const t3 = `translate3d(${(pxS * -7).toFixed(2)}px, ${(pyS * -5).toFixed(2)}px, 0) scale(1.015)`;
+      if (frameRef.current) frameRef.current.style.transform = t3;
+      if (candle3dWrapRef.current) candle3dWrapRef.current.style.transform = t3;
+      if (bull3dWrapRef.current) bull3dWrapRef.current.style.transform = t3;
     };
 
-    const renderScene = () => {
+    const renderScene = (now = 0) => {
       cinemaClock.progress = progress; // shared clock the 3D layers read
       // Keep the 2D particle logo hidden until the 3D bull has FULLY faded out
       // (>= out1). Then the classic logo plays in full — assemble → scatter →
       // Matrix — with no overlap between the two differently-posed bulls.
       const hideBull = bull3dReadyRef.current && progress < BULL3D.out1;
-      if (ready) win()?.renderAt?.(progress, hideBull, candle3dReadyRef.current);
+      if (ready) win()?.renderAt?.(progress, hideBull, candle3dReadyRef.current, now);
     };
 
-    // Smooth scrub: ease progress toward the scroll position each frame. Because
-    // the scene renders LIVE (a pure function of t), every in-between value draws
-    // a real frame — so it's fluid at 60fps at any scroll speed, not stepped.
+    // Persistent render loop: smooth-scrubs progress toward the scroll position
+    // AND keeps ambient time flowing, so the scene breathes even at rest (drifting
+    // rain, marching dashes, pointer parallax) instead of freezing between scrolls.
     const SMOOTH = 0.12; // lower = glidier, higher = tighter to the scroll
-    const loop = () => {
+    const tick = (ts: number) => {
+      if (disposed || collapsed) return;
+      const now = ts / 1000;
       const diff = targetProgress - progress;
-      if (Math.abs(diff) < 0.0002) {
-        progress = targetProgress;
-        renderScene();
-        applyOverlays();
-        raf = 0;
-        return;
-      }
-      progress += diff * SMOOTH;
-      renderScene();
+      progress = Math.abs(diff) < 0.0002 ? targetProgress : progress + diff * SMOOTH;
+      pxS += (cinemaClock.px - pxS) * 0.055;
+      pyS += (cinemaClock.py - pyS) * 0.055;
+      renderScene(now);
       applyOverlays();
-      raf = requestAnimationFrame(loop);
+      raf = requestAnimationFrame(tick);
     };
 
     const createScrollTrigger = () => {
@@ -225,10 +240,10 @@ export function ScrollCinema() {
         end: "bottom bottom",
         onUpdate: (self) => {
           targetProgress = self.progress;
-          if (!raf) raf = requestAnimationFrame(loop);
         },
         onLeave: () => collapse(), // scrolled past the end onto the homepage → lock it out
       });
+      raf = requestAnimationFrame(tick); // the always-on loop starts with the scroll
     };
 
     // ---- preload: scene + panel shots, then three.js + the bull model ----
@@ -291,7 +306,7 @@ export function ScrollCinema() {
       if (!ready || collapsed) return;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
-        win()?.initScene?.({ shots: SHOTS, phases: ACTS, bullFrames: null }).then(renderScene);
+        win()?.initScene?.({ shots: SHOTS, phases: ACTS, bullFrames: null }).then(() => renderScene());
       }, 160);
     };
     window.addEventListener("resize", onResize);
@@ -304,9 +319,31 @@ export function ScrollCinema() {
       rootStyle.overflow = prevOverflow; // never leave scroll locked
       if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("pointermove", onPointer);
       st?.kill();
     };
   }, []);
+
+  // Headings render as per-word/per-char spans so each character can blur-rise
+  // in with a stagger when its beat opens (scrub-safe: the container opacity is
+  // still driven numerically every frame).
+  const renderChars = (text: string) => {
+    let k = 0;
+    const words = text.split(" ");
+    return words.map((w, wi) => (
+      <span key={wi} className="beat-word">
+        {Array.from(w).map((c) => {
+          const i = k++;
+          return (
+            <span key={i} className="beat-char" style={{ "--i": i } as React.CSSProperties}>
+              {c}
+            </span>
+          );
+        })}
+        {wi < words.length - 1 ? " " : ""}
+      </span>
+    ));
+  };
 
   if (mode === "static") {
     // Reduced motion or scene unavailable: calm static hero, copy laid out plainly.
@@ -391,7 +428,7 @@ export function ScrollCinema() {
         <div
           ref={candle3dWrapRef}
           className="pointer-events-none absolute inset-0"
-          style={{ opacity: 0, visibility: "hidden" }}
+          style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
         >
           <Suspense fallback={null}>
             <CandleField3D active={candle3dActive} onReady={handleCandleReady} />
@@ -400,12 +437,18 @@ export function ScrollCinema() {
         <div
           ref={bull3dWrapRef}
           className="pointer-events-none absolute inset-0"
-          style={{ opacity: 0, visibility: "hidden" }}
+          style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
         >
           <Suspense fallback={null}>
             <Bull3D active={bull3dActive} onReady={handleBullReady} />
           </Suspense>
         </div>
+        {/* film grain layer: scanlines + vignette unify the 2D and 3D acts */}
+        <div className="pointer-events-none absolute inset-0 scanlines opacity-[0.13]" />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.62) 100%)" }}
+        />
         {COPY_BEATS.map((b, i) => (
           <div
             key={b.id}
@@ -413,8 +456,13 @@ export function ScrollCinema() {
             className="absolute left-1/2 -translate-x-1/2 text-center"
             style={{ top: b.pos === "top" ? "14%" : "50%", opacity: 0, width: "min(92vw, 680px)" }}
           >
-            <div className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl">{b.heading}</div>
-            {b.sub && <div className="mt-3 font-mono text-sm text-fg-dim md:text-base">{b.sub}</div>}
+            <div
+              className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl"
+              style={{ textShadow: "0 0 36px rgba(0,255,135,0.16), 0 2px 22px rgba(0,0,0,0.85)" }}
+            >
+              {renderChars(b.heading)}
+            </div>
+            {b.sub && <div className="beat-sub mt-3 font-mono text-sm text-fg-dim md:text-base">{b.sub}</div>}
           </div>
         ))}
         <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
@@ -429,6 +477,23 @@ export function ScrollCinema() {
         <noscript>
           <img src="/cinema/shots/hero.webp" alt="LazyBull — options, without the fog" className="absolute inset-0 h-full w-full object-cover" />
         </noscript>
+        <style>{`
+          .beat-word { display: inline-block; white-space: nowrap; }
+          .beat-char {
+            display: inline-block; opacity: 0;
+            transform: translateY(0.55em) rotate(1.5deg); filter: blur(9px);
+            transition: opacity .5s cubic-bezier(.22,.68,.26,1), transform .55s cubic-bezier(.22,.68,.26,1), filter .5s ease;
+          }
+          .beat-in .beat-char {
+            opacity: 1; transform: none; filter: blur(0);
+            transition-delay: calc(var(--i) * 24ms);
+          }
+          .beat-sub { opacity: 0; transform: translateY(10px); transition: opacity .6s ease, transform .6s ease; }
+          .beat-in .beat-sub { opacity: 1; transform: none; transition-delay: 420ms; }
+          @media (prefers-reduced-motion: reduce) {
+            .beat-char, .beat-sub { transition: none; opacity: 1; transform: none; filter: none; }
+          }
+        `}</style>
       </div>
       </section>
     </>

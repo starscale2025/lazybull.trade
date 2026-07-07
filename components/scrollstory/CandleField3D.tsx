@@ -3,13 +3,15 @@
 // Targeted real-3D "hero moment": the signature candle act (progress ~0.32–0.56)
 // as a canyon of 3D candlesticks the camera flies along — green candles climbing
 // into a peak, then red candles collapsing into a crash, with a translucent AI
-// probability cone that bracketed the drop. Reads the shared cinemaClock in
-// useFrame (one-clock rule). Crossfaded over the 2D scene by ScrollCinema.
+// probability cone that bracketed the drop. Candles print in live with a glowing
+// print-head, reflected in a black-glass floor, with drifting dust and a weighted,
+// cursor-reactive camera. Reads the shared cinemaClock in useFrame (one-clock
+// rule). Crossfaded over the 2D scene by ScrollCinema.
 
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { EffectComposer, Bloom, SMAA } from "@react-three/postprocessing";
-import { Grid, Line } from "@react-three/drei";
+import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
+import { Grid, Line, MeshReflectorMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { CANDLE3D } from "@/lib/cinema";
@@ -98,7 +100,8 @@ function Candles() {
     []
   );
   const refs = useRef<(THREE.Group | null)[]>([]);
-  useFrame(() => {
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
     const rf = revealF(cinemaClock.progress);
     for (let i = 0; i < N; i++) {
       const g = refs.current[i];
@@ -108,6 +111,9 @@ function Candles() {
       const e = 1 - (1 - grow) * (1 - grow); // easeOut → candle snaps in, then settles
       g.scale.set(1, e, 1);
     }
+    // the whole ridge breathes faintly — alive even between scrolls
+    green.emissiveIntensity = 0.9 + 0.1 * Math.sin(time * 1.15);
+    red.emissiveIntensity = 1.2 + 0.14 * Math.sin(time * 1.5 + 2);
   });
   return (
     <group>
@@ -130,6 +136,119 @@ function Candles() {
         );
       })}
     </group>
+  );
+}
+
+// The live print-head: a hot orb riding the newest candle, a point light that
+// flashes the neighbourhood on every print, and a shockwave ring expanding
+// across the glass floor beneath it — the "market ticking in" made physical.
+function PrintHead() {
+  const orb = useRef<THREE.Mesh>(null);
+  const light = useRef<THREE.PointLight>(null);
+  const ring = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const rf = revealF(cinemaClock.progress);
+    const on = rf > 0.05 && rf < N - 0.02;
+    const idx = clamp(Math.floor(rf), 0, N - 1);
+    const frac = clamp(rf - idx, 0, 1);
+    const x = clamp(rf, 0, N - 1) * SP;
+    const y = lerp(CANDLES[idx].cy, CANDLES[Math.min(idx + 1, N - 1)].cy, frac);
+    const flash = (1 - frac) * (1 - frac); // spikes as each candle lands
+    if (orb.current) {
+      orb.current.visible = on;
+      orb.current.position.set(x, y, 0);
+      orb.current.scale.setScalar(0.09 + 0.15 * flash);
+    }
+    if (light.current) {
+      light.current.visible = on;
+      light.current.position.set(x, y + 0.5, 1.4);
+      light.current.intensity = 3 + 30 * flash;
+    }
+    if (ring.current) {
+      ring.current.visible = on;
+      // pulse AT the printing candle (XY plane faces the camera), not on the floor
+      ring.current.position.set(x, y, 0.62);
+      const s = 0.3 + frac * 1.7;
+      ring.current.scale.set(s, s, s);
+      (ring.current.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - frac);
+    }
+  });
+  return (
+    <group>
+      <mesh ref={orb} visible={false}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshBasicMaterial color="#c8ffe4" toneMapped={false} />
+      </mesh>
+      <pointLight ref={light} visible={false} color="#00ff87" distance={8} decay={2} />
+      <mesh ref={ring} visible={false}>
+        <ringGeometry args={[0.9, 1, 48]} />
+        <meshBasicMaterial
+          color="#00ff87"
+          transparent
+          opacity={0}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// Drifting particulate — three counter-drifting clouds (near green, far cyan)
+// fill the air so no frame is ever empty.
+function Dust({
+  seed,
+  count,
+  area,
+  center,
+  color,
+  size,
+  speed,
+}: {
+  seed: number;
+  count: number;
+  area: [number, number, number];
+  center: [number, number, number];
+  color: string;
+  size: number;
+  speed: number;
+}) {
+  const ref = useRef<THREE.Points>(null);
+  const positions = useMemo(() => {
+    const rnd = mulberry32(seed);
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = center[0] + (rnd() - 0.5) * area[0];
+      arr[i * 3 + 1] = center[1] + (rnd() - 0.5) * area[1];
+      arr[i * 3 + 2] = center[2] + (rnd() - 0.5) * area[2];
+    }
+    return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const g = ref.current;
+    if (!g) return;
+    g.position.x = Math.sin(t * speed) * 1.4;
+    g.position.y = Math.sin(t * speed * 0.63 + seed) * 0.5;
+    (g.material as THREE.PointsMaterial).opacity = 0.2 + 0.12 * Math.sin(t * 0.8 + seed);
+  });
+  return (
+    <points ref={ref} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        color={color}
+        size={size}
+        sizeAttenuation
+        transparent
+        opacity={0.28}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
   );
 }
 
@@ -208,7 +327,17 @@ function AIForecast() {
 }
 
 function Rig() {
+  const pos = useRef(new THREE.Vector3(-7, 7, 11));
+  const look = useRef(new THREE.Vector3(0, 3, 0));
+  const tmpP = useRef(new THREE.Vector3());
+  const tmpL = useRef(new THREE.Vector3());
+  const pxs = useRef(0);
+  const pys = useRef(0);
   useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    // damped pointer → parallax with weight
+    pxs.current += (cinemaClock.px - pxs.current) * 0.05;
+    pys.current += (cinemaClock.py - pys.current) * 0.05;
     const build = buildAt(cinemaClock.progress);
     // The camera path is a SMOOTH function of scroll only — never the discrete
     // candle index or their noisy per-candle heights — so it glides along the
@@ -222,16 +351,21 @@ function Rig() {
         : lerp(PEAK_Y, 1.4, smooth(pk, 0.8, build));
     // Track the printing edge, then PULL BACK at the end to reveal the whole crash.
     const pull = smooth(0.78, 1.0, build);
-    state.camera.position.set(
-      lerp(edgeX - 7, SPAN * 0.5, pull),
-      lerp(trendY + 4.5, PEAK_Y * 0.5 + 9, pull),
-      lerp(11, 16.5, pull)
+    tmpP.current.set(
+      lerp(edgeX - 7, SPAN * 0.5, pull) + pxs.current * 1.1 + Math.sin(time * 0.33) * 0.18,
+      lerp(trendY + 4.5, PEAK_Y * 0.5 + 9, pull) - pys.current * 0.65 + Math.sin(time * 0.47) * 0.14,
+      lerp(11, 16.5, pull) + Math.cos(time * 0.29) * 0.16
     );
-    state.camera.lookAt(
-      lerp(edgeX - 1.5, SPAN * 0.72, pull),
-      lerp(trendY, 3, pull),
+    tmpL.current.set(
+      lerp(edgeX - 1.5, SPAN * 0.72, pull) + pxs.current * 0.5,
+      lerp(trendY, 3, pull) - pys.current * 0.3,
       0
     );
+    // inertia: the camera trails its target — motion has mass
+    pos.current.lerp(tmpP.current, 0.09);
+    look.current.lerp(tmpL.current, 0.09);
+    state.camera.position.copy(pos.current);
+    state.camera.lookAt(look.current);
   });
   return null;
 }
@@ -260,9 +394,30 @@ export default function CandleField3D({
       <directionalLight position={[6, 14, 8]} intensity={0.7} color="#bfe9ff" />
 
       <Candles />
+      <PrintHead />
       <AIForecast />
+      <Dust seed={11} count={420} area={[70, 16, 26]} center={[SPAN / 2, 7, 2]} color="#57ffb0" size={0.055} speed={0.11} />
+      <Dust seed={23} count={320} area={[80, 20, 34]} center={[SPAN / 2, 9, -6]} color="#28d7ff" size={0.045} speed={0.07} />
+      <Dust seed={37} count={260} area={[60, 10, 18]} center={[SPAN / 2, 2.5, 5]} color="#9dffcf" size={0.04} speed={0.16} />
 
-      {/* Grid floor for depth, fading into the fog */}
+      {/* black-glass floor: the glowing ridge reflects in it (the “wet look”) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SPAN / 2, -0.54, 0]}>
+        <planeGeometry args={[SPAN * 3, 90]} />
+        <MeshReflectorMaterial
+          blur={[320, 90]}
+          resolution={1024}
+          mixBlur={0.85}
+          mixStrength={2.6}
+          roughness={0.72}
+          depthScale={1.1}
+          minDepthThreshold={0.4}
+          maxDepthThreshold={1.3}
+          color="#050806"
+          metalness={0.55}
+          mirror={0.72}
+        />
+      </mesh>
+      {/* faint grid floats on the glass */}
       <Grid
         position={[SPAN / 2, -0.5, 0]}
         args={[SPAN * 2.5, 60]}
@@ -280,7 +435,8 @@ export default function CandleField3D({
       <Rig />
 
       <EffectComposer multisampling={0}>
-        <Bloom mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.9} />
+        <Bloom mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
+        <ChromaticAberration offset={[0.0005, 0.0009]} />
         <SMAA />
       </EffectComposer>
     </Canvas>
