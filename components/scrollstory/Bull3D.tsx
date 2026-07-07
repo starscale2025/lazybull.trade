@@ -37,6 +37,58 @@ function mulberry32(seed: number) {
   };
 }
 
+// Soft round sprite for particles (raw gl_Points render as squares up close).
+const dotTexture = (() => {
+  let t: THREE.CanvasTexture | null = null;
+  return () => {
+    if (t) return t;
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const g = c.getContext("2d")!;
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 30);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.4, "rgba(255,255,255,0.7)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    t = new THREE.CanvasTexture(c);
+    return t;
+  };
+})();
+
+// --- scene-local interaction state -------------------------------------------
+const CURSORB = { world: new THREE.Vector3(), ok: false };
+const SNORT = { t: -1e9 }; // last time the bull was clicked (performance.now())
+
+// Raycasts the pointer onto the scene plane (aura force-field) and consumes
+// clicks: clicking on/near the bull makes it SNORT.
+function BullInteraction() {
+  const ray = useMemo(() => new THREE.Raycaster(), []);
+  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), []);
+  const ndc = useMemo(() => new THREE.Vector2(), []);
+  const hit = useMemo(() => new THREE.Vector3(), []);
+  const lastClick = useRef(0);
+  useFrame((state) => {
+    ndc.set(cinemaClock.px, -cinemaClock.py);
+    ray.setFromCamera(ndc, state.camera);
+    CURSORB.ok = ray.ray.intersectPlane(plane, CURSORB.world) !== null;
+    const clk = cinemaClock.click;
+    if (clk && clk.t !== lastClick.current) {
+      lastClick.current = clk.t;
+      const p = cinemaClock.progress;
+      const bt = (p - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0);
+      if (bt > 0.02 && bt < 0.98) {
+        ndc.set(clk.x, -clk.y);
+        ray.setFromCamera(ndc, state.camera);
+        if (ray.ray.intersectPlane(plane, hit) && Math.abs(hit.x) < 2.2 && hit.y > -0.2 && hit.y < 2.8) {
+          SNORT.t = clk.t; // clicked the bull → snort
+        }
+      }
+    }
+  });
+  return null;
+}
+
 function Bull() {
   const { scene } = useGLTF(MODEL);
   const group = useRef<THREE.Group>(null);
@@ -90,6 +142,9 @@ function Bull() {
     return root;
   }, [scene]);
 
+  const headLight = useRef<THREE.PointLight>(null);
+  const headWorld = useMemo(() => new THREE.Vector3(), []);
+
   useFrame((state) => {
     const g = group.current;
     if (!g) return;
@@ -100,15 +155,36 @@ function Bull() {
     // Emergence: rise + settle over the first third, then a slow turntable.
     const rise = smooth(0, 0.34, bt);
     pxs.current += (cinemaClock.px - pxs.current) * 0.045;
+    const snort = Math.exp(-(performance.now() - SNORT.t) / 480); // click → snort
     g.position.y = (1 - rise) * -1.1 + Math.sin(time * 1.05) * 0.02 * rise; // breathing
-    g.scale.setScalar((0.92 + 0.08 * rise) * (1 + Math.sin(time * 0.9) * 0.005));
-    // slow turntable + the head drifts toward the cursor — it watches you
-    g.rotation.y = -0.62 + bt * 0.7 + pxs.current * 0.24;
+    g.scale.setScalar(
+      (0.92 + 0.08 * rise) * (1 + Math.sin(time * 0.9) * 0.005 + 0.05 * snort)
+    );
+    // slow turntable + the head tracks the cursor hard — it WATCHES you
+    g.rotation.y = -0.62 + bt * 0.7 + pxs.current * 0.42;
+    g.rotation.x = -0.09 * snort; // the head tosses up on the snort
+    // eye-line light: ignites when your cursor comes near its face (or it snorts)
+    const hl = headLight.current;
+    if (hl) {
+      hl.getWorldPosition(headWorld).project(state.camera);
+      const d = Math.hypot(headWorld.x - cinemaClock.px, headWorld.y - -cinemaClock.py);
+      const prox = clamp(1 - d / 0.55, 0, 1);
+      hl.intensity = 0.4 + prox * 5 + snort * 10;
+    }
   });
 
   return (
     <group ref={group}>
       <primitive object={fitted} />
+      {/* rides the head as the bull turns */}
+      <pointLight
+        ref={headLight}
+        position={[-1.02, 1.78, 0.5]}
+        color="#7dffc9"
+        distance={2.6}
+        decay={2}
+        intensity={0.4}
+      />
     </group>
   );
 }
@@ -139,16 +215,34 @@ function Aura() {
     if (!pts) return;
     const t = state.clock.elapsedTime;
     const arr = pts.geometry.attributes.position.array as Float32Array;
+    // snort → the aura blasts outward and races; cursor → motes shy away
+    const burst = Math.exp(-(performance.now() - SNORT.t) / 520);
+    const cw = CURSORB.ok ? CURSORB.world : null;
     for (let i = 0; i < COUNT; i++) {
-      const a = a0[i] + t * sp[i] * 0.55;
+      const a = a0[i] + t * sp[i] * (0.55 + burst * 1.6);
       const h = (h0[i] + t * sp[i] * 0.5) % 3.0;
-      const r = r0[i] * (1 - h * 0.11);
-      arr[i * 3] = Math.cos(a) * r;
-      arr[i * 3 + 1] = h * 0.92 + 0.12;
-      arr[i * 3 + 2] = Math.sin(a) * r * 0.62; // squashed to hug the body
+      const r = r0[i] * (1 - h * 0.11) * (1 + burst * 0.55 * (1 - h / 3));
+      let x = Math.cos(a) * r;
+      let y = h * 0.92 + 0.12;
+      const z = Math.sin(a) * r * 0.62; // squashed to hug the body
+      if (cw) {
+        const rx = x - cw.x;
+        const ry = y - cw.y;
+        const r2 = rx * rx + ry * ry;
+        if (r2 < 1.9 && r2 > 0.0001) {
+          const d = Math.sqrt(r2);
+          const push = (1 - d / 1.38) * 0.5;
+          x += (rx / d) * push;
+          y += (ry / d) * push;
+        }
+      }
+      arr[i * 3] = x;
+      arr[i * 3 + 1] = y;
+      arr[i * 3 + 2] = z;
     }
     pts.geometry.attributes.position.needsUpdate = true;
-    (pts.material as THREE.PointsMaterial).opacity = 0.5 + 0.16 * Math.sin(t * 0.8);
+    (pts.material as THREE.PointsMaterial).opacity =
+      0.5 + 0.16 * Math.sin(t * 0.8) + 0.3 * burst;
   });
   return (
     <points ref={ref} frustumCulled={false}>
@@ -159,6 +253,7 @@ function Aura() {
         color="#38ffa1"
         size={0.028}
         sizeAttenuation
+        map={dotTexture()}
         transparent
         opacity={0.55}
         depthWrite={false}
@@ -218,6 +313,9 @@ function Rig() {
   const look = useRef(new THREE.Vector3(0, 1.15, 0));
   const tmpP = useRef(new THREE.Vector3());
   const tmpL = useRef(new THREE.Vector3());
+  const offset = useRef(new THREE.Vector3());
+  const euler = useRef(new THREE.Euler());
+  const quat = useRef(new THREE.Quaternion());
   const pxs = useRef(0);
   const pys = useRef(0);
   useFrame((state) => {
@@ -229,18 +327,31 @@ function Rig() {
       0,
       1
     );
-    // Gentle dolly-in through the beat + cursor parallax + a slow handheld sway.
+    // Gentle dolly-in through the beat + a slow handheld sway.
     const z = 5.3 - 0.7 * smooth(0, 1, bt);
+    tmpL.current.set(0, 1.15 - pys.current * 0.1, 0);
     tmpP.current.set(
-      2.5 + pxs.current * 0.75 + Math.sin(time * 0.31) * 0.07,
-      1.55 - pys.current * 0.4 + Math.sin(time * 0.43) * 0.05,
+      2.5 + Math.sin(time * 0.31) * 0.07,
+      1.55 + Math.sin(time * 0.43) * 0.05,
       z
     );
-    tmpL.current.set(pxs.current * 0.2, 1.15 - pys.current * 0.15, 0);
+    // true orbit: your pointer walks the camera AROUND the bull (±14° / ±7°)
+    offset.current.copy(tmpP.current).sub(tmpL.current);
+    euler.current.set(-pys.current * 0.12, -pxs.current * 0.25, 0, "YXZ");
+    quat.current.setFromEuler(euler.current);
+    offset.current.applyQuaternion(quat.current);
+    tmpP.current.copy(tmpL.current).add(offset.current);
     pos.current.lerp(tmpP.current, 0.08);
     look.current.lerp(tmpL.current, 0.08);
     state.camera.position.copy(pos.current);
     state.camera.lookAt(look.current);
+    // scroll velocity → FOV kick
+    const cam = state.camera as THREE.PerspectiveCamera;
+    const targetFov = 34 + cinemaClock.vel * 7;
+    if (Math.abs(cam.fov - targetFov) > 0.01) {
+      cam.fov += (targetFov - cam.fov) * 0.1;
+      cam.updateProjectionMatrix();
+    }
   });
   return null;
 }
@@ -278,6 +389,7 @@ export default function Bull3D({
       <Suspense fallback={null}>
         <Bull />
       </Suspense>
+      <BullInteraction />
       <Aura />
       <Mist />
 

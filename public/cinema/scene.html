@@ -691,7 +691,7 @@ function drawConsensus(ctx, v, env, W, H) {
 }
 
 // ================= MAIN =====================================================
-window.renderAt = function renderAt(t, hideBull, hideCandle, now) {
+window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy) {
   NOW = now || 0; // ambient wall-clock (seconds) — keeps the scene alive at rest
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
@@ -811,6 +811,19 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now) {
   }
   const homeStart = 0.91, homeEnd = 0.99;
   home.style.opacity = String(seg(t, homeStart, homeEnd));
+
+  // ---- cursor spotlight: the pointer carries a soft torch through the 2D acts
+  if (cx !== undefined && cy !== undefined) {
+    const gx = (cx * 0.5 + 0.5) * W, gy = (cy * 0.5 + 0.5) * H;
+    const fadeOut = 1 - seg(t, homeStart, homeEnd); // clear of the homepage reveal
+    const rad = Math.min(W, H) * 0.34;
+    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, rad);
+    g.addColorStop(0, `rgba(0,255,135,${0.075 * fadeOut})`);
+    g.addColorStop(0.5, `rgba(0,255,135,${0.028 * fadeOut})`);
+    g.addColorStop(1, "rgba(0,255,135,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
   return true;
 };
 </script>
