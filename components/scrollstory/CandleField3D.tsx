@@ -198,9 +198,13 @@ function Candles() {
       if (!g) continue;
       const grow = clamp(rf - i, 0, 1); // 0 until the print reaches this candle
       g.visible = grow > 0.001;
-      const e = 1 - (1 - grow) * (1 - grow); // easeOut → candle snaps in, then settles
+      // easeOutBack → candle pops past 100% (~1.1 near grow 0.7) then settles to 1
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      const b = grow - 1;
+      const e = 1 + c3 * b * b * b + c1 * b * b; // 0 at grow=0, 1 at grow=1
       const f = i === FLARE.idx ? FLARE.amt : 0;
-      g.scale.set(1 + 0.14 * f, e * (1 + 0.05 * f), 1 + 0.14 * f);
+      g.scale.set(1 + 0.14 * f, Math.max(0.0001, e) * (1 + 0.05 * f), 1 + 0.14 * f);
     }
     // the whole ridge breathes faintly — alive even between scrolls
     green.emissiveIntensity = 0.9 + 0.1 * Math.sin(time * 1.15);
@@ -254,6 +258,36 @@ function Candles() {
       </group>
       <pointLight ref={flareLight} visible={false} distance={6} decay={2} />
     </group>
+  );
+}
+
+// The 2D chart-line made physical: a glowing baseline that races ahead with the
+// print head — candles read as extruding UP from it. Fades once the chart lands.
+function Baseline() {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const m = ref.current;
+    if (!m) return;
+    const rf = revealF(cinemaClock.progress);
+    const w = clamp(rf, 0, N) * SP + 1; // reach follows the print head
+    m.visible = w > 1.01;
+    m.scale.x = w;
+    m.position.x = w / 2 - 0.5;
+    (m.material as THREE.MeshBasicMaterial).opacity =
+      0.5 * (1 - smooth(0.86, 0.98, buildAt(cinemaClock.progress))); // gone once printed
+  });
+  return (
+    <mesh ref={ref} visible={false} position={[0, -0.45, 0]}>
+      <boxGeometry args={[1, 0.04, 0.04]} />
+      <meshBasicMaterial
+        color="#00ff87"
+        toneMapped={false}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
 }
 
@@ -540,7 +574,8 @@ function Dust({
       arr[ix + 2] = base[ix + 2];
     }
     g.geometry.attributes.position.needsUpdate = true;
-    (g.material as THREE.PointsMaterial).opacity = 0.22 + 0.12 * Math.sin(t * 0.8 + seed);
+    // dimmer than the candles on purpose — atmosphere, not hero
+    (g.material as THREE.PointsMaterial).opacity = 0.15 + 0.09 * Math.sin(t * 0.8 + seed);
   });
   return (
     <points ref={ref} frustumCulled={false}>
@@ -729,6 +764,7 @@ export default function CandleField3D({
 
       <Interaction />
       <Candles />
+      <Baseline />
       <CrashShards />
       <PrintHead />
       <ClickFX />
@@ -761,10 +797,10 @@ export default function CandleField3D({
         args={[SPAN * 2.5, 60]}
         cellSize={1.05}
         cellThickness={0.6}
-        cellColor="#0c3524"
+        cellColor="#092619"
         sectionSize={SP * 6}
         sectionThickness={1}
-        sectionColor="#0e5c3a"
+        sectionColor="#0a4029"
         fadeDistance={70}
         fadeStrength={2}
         infiniteGrid

@@ -22,6 +22,7 @@ const MODEL = "/models/bull.glb";
 useGLTF.preload(MODEL);
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (a: number, b: number, x: number) => {
   const t = clamp((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
@@ -87,6 +88,98 @@ function BullInteraction() {
     }
   });
   return null;
+}
+
+// Particle assembly: ~1400 motes scattered on a shell converge onto the bull's
+// surface as it rises — the swarm BECOMES the bull, then dies as it lands.
+// Rendered inside the same <group> as the model so it inherits every transform
+// (rise, charge, snort scale). Pure f(bt) per particle → scrub-reversible.
+function AssemblyParticles({ fitted }: { fitted: THREE.Object3D }) {
+  const ref = useRef<THREE.Points>(null);
+  const { positions, targets, scatters, stagger, count } = useMemo(() => {
+    // holder object: TS flow-narrowing can't see assignments inside traverse()
+    const found: { m: THREE.Mesh | null } = { m: null };
+    fitted.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!found.m && m.isMesh && m.geometry) found.m = m;
+    });
+    const mesh = found.m;
+    // include the fit scale/offset applied after the memo's first update pass
+    fitted.updateWorldMatrix(true, true);
+    const pos = mesh
+      ? (mesh.geometry.attributes.position as THREE.BufferAttribute)
+      : null;
+    const total = pos ? pos.count : 0;
+    const stride = Math.max(1, Math.floor(total / 1400));
+    const count = pos ? Math.min(1400, Math.floor(total / stride)) : 0;
+    const targets = new Float32Array(count * 3);
+    const scatters = new Float32Array(count * 3);
+    const stagger = new Float32Array(count);
+    const rnd = mulberry32(7);
+    const v = new THREE.Vector3();
+    for (let i = 0; i < count; i++) {
+      v.fromBufferAttribute(pos!, i * stride);
+      // fitted has no parent at memo time → "world" here IS the group's local space
+      mesh!.localToWorld(v);
+      targets[i * 3] = v.x + (rnd() * 2 - 1) * 0.01;
+      targets[i * 3 + 1] = v.y + (rnd() * 2 - 1) * 0.01;
+      targets[i * 3 + 2] = v.z + (rnd() * 2 - 1) * 0.01;
+      // scatter start: random point on a shell r 3.2..5 around the bull's chest
+      const u = rnd() * 2 - 1;
+      const th = rnd() * Math.PI * 2;
+      const rr = 3.2 + rnd() * 1.8;
+      const sxy = Math.sqrt(1 - u * u);
+      scatters[i * 3] = Math.cos(th) * sxy * rr;
+      scatters[i * 3 + 1] = 1.3 + u * rr;
+      scatters[i * 3 + 2] = Math.sin(th) * sxy * rr;
+      stagger[i] = rnd();
+    }
+    const positions = new Float32Array(scatters); // start fully scattered
+    return { positions, targets, scatters, stagger, count };
+  }, [fitted]);
+  useFrame(() => {
+    const pts = ref.current;
+    if (!pts || count === 0) return;
+    // same local time + rise curve as Bull's useFrame so the swarm lands exactly
+    // when the model finishes rising
+    const bt = clamp(
+      (cinemaClock.progress - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0),
+      0,
+      1
+    );
+    const rise = smooth(0, 0.34, bt);
+    const fade = 1 - smooth(0.3, 0.42, bt); // bull absorbs the swarm as it settles
+    (pts.material as THREE.PointsMaterial).opacity = fade;
+    pts.visible = fade >= 0.01; // skip draw for the rest of the act
+    if (!pts.visible) return;
+    const arr = pts.geometry.attributes.position.array as Float32Array;
+    for (let i = 0; i < count; i++) {
+      const conv = clamp(rise * 1.45 - stagger[i] * 0.45, 0, 1); // staggered arrival
+      const k = 1 - (1 - conv) ** 3; // easeOut cubic → decelerating landing
+      arr[i * 3] = lerp(scatters[i * 3], targets[i * 3], k);
+      arr[i * 3 + 1] = lerp(scatters[i * 3 + 1], targets[i * 3 + 1], k);
+      arr[i * 3 + 2] = lerp(scatters[i * 3 + 2], targets[i * 3 + 2], k);
+    }
+    pts.geometry.attributes.position.needsUpdate = true;
+  });
+  if (count === 0) return null;
+  return (
+    <points ref={ref} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        color="#7dffc9"
+        size={0.035}
+        sizeAttenuation
+        map={dotTexture()}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
 }
 
 function Bull() {
@@ -184,6 +277,8 @@ function Bull() {
   return (
     <group ref={group}>
       <primitive object={fitted} />
+      {/* the swarm that converges into the bull during the rise */}
+      <AssemblyParticles fitted={fitted} />
       {/* rides the head as the bull turns */}
       <pointLight
         ref={headLight}
@@ -260,8 +355,9 @@ function Aura() {
       arr[i * 3 + 2] = z;
     }
     pts.geometry.attributes.position.needsUpdate = true;
+    // base dimmed 0.4→0.32 so the assembly swarm owns the emergence beat
     (pts.material as THREE.PointsMaterial).opacity =
-      0.4 + 0.12 * Math.sin(t * 0.8) + 0.3 * burst + chargeBurst * 0.35;
+      0.32 + 0.12 * Math.sin(t * 0.8) + 0.3 * burst + chargeBurst * 0.35;
   });
   return (
     <points ref={ref} frustumCulled={false}>

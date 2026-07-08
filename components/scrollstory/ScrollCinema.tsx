@@ -566,14 +566,18 @@ export function ScrollCinema() {
           .beat-word { display: inline-block; white-space: nowrap; }
           .beat-char {
             display: inline-block; opacity: 0;
-            transform: translateY(0.55em) rotate(1.5deg); filter: blur(9px);
-            transition: opacity .5s cubic-bezier(.22,.68,.26,1), transform .55s cubic-bezier(.22,.68,.26,1), filter .5s ease;
+            transform: translateY(0.55em) rotate(1.5deg); filter: blur(4px);
+            transition: opacity .45s cubic-bezier(.22,.68,.26,1), transform .6s cubic-bezier(.3,1.42,.42,1), filter .4s ease;
           }
           .beat-in .beat-char {
             opacity: 1; transform: none; filter: blur(0);
             transition-delay: calc(var(--i) * 24ms);
           }
-          .beat-sub { opacity: 0; transform: translateY(10px); transition: opacity .6s ease, transform .6s ease; }
+          .beat-sub {
+            opacity: 0; transform: translateY(10px);
+            color: rgba(245,245,240,0.82); letter-spacing: 0.05em;
+            transition: opacity .6s ease, transform .6s cubic-bezier(.3,1.3,.45,1);
+          }
           .beat-in .beat-sub { opacity: 1; transform: none; transition-delay: 420ms; }
           @media (prefers-reduced-motion: reduce) {
             .beat-char, .beat-sub { transition: none; opacity: 1; transform: none; filter: none; }

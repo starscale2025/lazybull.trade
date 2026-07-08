@@ -600,6 +600,30 @@ function drawSafety(ctx, q, env, W, H) {
   pathTo(revealX);
   ctx.strokeStyle = GREEN; ctx.lineWidth = 2.6; ctx.shadowBlur = 10; ctx.shadowColor = GREEN; ctx.stroke();
   ctx.shadowBlur = 0;
+  // laser tip riding the reveal front — the payoff is being cut, not faded in
+  if (draw > 0.05 && draw < 0.99) {
+    const yAt = (x) => { // same interpolation pathTo uses
+      if (x <= pts[0].x) return pts[0].y;
+      for (let i = 1; i < pts.length; i++) {
+        if (x <= pts[i].x) {
+          const tt = (x - pts[i - 1].x) / Math.max(1e-6, pts[i].x - pts[i - 1].x);
+          return lerp(pts[i - 1].y, pts[i].y, tt);
+        }
+      }
+      return pts[pts.length - 1].y;
+    };
+    ctx.fillStyle = "rgba(220,255,238,0.95)";
+    ctx.shadowBlur = 14; ctx.shadowColor = GREEN;
+    ctx.beginPath(); ctx.arc(revealX, yAt(revealX), 3.5, 0, TAU); ctx.fill();
+    ctx.shadowBlur = 0;
+    for (const [dx, ta] of [[-8, 0.5], [-18, 0.3], [-30, 0.15]]) {
+      const tx = revealX + dx;
+      if (tx < pts[0].x) continue;
+      ctx.globalAlpha = alpha * ta;
+      ctx.beginPath(); ctx.arc(tx, yAt(tx), 2.2, 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = alpha;
+  }
   // max-loss guard line
   const guard = seg(q, 0.32, 0.6) * alpha;
   if (guard > 0.02) {
@@ -609,6 +633,17 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.setLineDash([]); ctx.lineDashOffset = 0;
     ctx.fillStyle = RED; ctx.font = `600 ${Math.round(H * 0.02)}px ui-monospace, monospace`;
     ctx.textBaseline = "bottom"; ctx.fillText("−$80  max loss", ch.x + 6, P.lossY - 6);
+  }
+  // red leak: risk dripping out below the floor — the guard is what holds it
+  if (guard > 0.05) {
+    ctx.fillStyle = RED;
+    for (let i = 0; i < 10; i++) {
+      const px_ = ch.x + ((i * 0.104 + 0.03) % 1) * ch.w;
+      const f = ((NOW * 0.25 + i * 0.13) % 1);
+      ctx.globalAlpha = guard * (1 - f) * 0.5;
+      ctx.beginPath(); ctx.arc(px_, P.lossY + f * 28, 1.6, 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = alpha;
   }
   // breakeven vertical
   const be = seg(q, 0.4, 0.66) * alpha;
@@ -655,6 +690,17 @@ function drawConsensus(ctx, v, env, W, H) {
     ctx.globalAlpha = alpha * (0.4 + 0.6 * cast);
     ctx.fillStyle = nd.col; ctx.shadowBlur = lit ? 10 + 5 * Math.sin(NOW * 2.4 + i * 1.7) : 0; ctx.shadowColor = nd.col;
     ctx.beginPath(); ctx.arc(nd.x, nd.y, lit ? 6 + 0.8 * Math.sin(NOW * 2.4 + i * 1.7) : 4, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+    // energy pulses: committed bots feed the verdict — 2 sparks per spoke, inward
+    if (cast > 0.55) {
+      for (let k = 0; k < 2; k++) {
+        const f = ((NOW * 0.55 + i * 0.171 + k * 0.5) % 1);
+        ctx.globalAlpha = alpha * (1 - f) * 0.9 * cast;
+        ctx.fillStyle = nd.col; ctx.shadowBlur = 8; ctx.shadowColor = nd.col;
+        ctx.beginPath();
+        ctx.arc(lerp(nd.x, R.cx, f), lerp(nd.y, R.cy, f), 2.5, 0, TAU); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
     if (nd.up > 0.6 && cast > 0.7) agree += 1;
     // label
     ctx.globalAlpha = alpha * cast * 0.8; ctx.fillStyle = GRAY;
@@ -666,7 +712,14 @@ function drawConsensus(ctx, v, env, W, H) {
   // central tally arc
   const pct = (agree / R.nodes.length);
   const arcT = easeOut(seg(v, 0.2, 0.85)) * pct;
-  ctx.globalAlpha = alpha; ctx.lineWidth = 6; ctx.strokeStyle = "rgba(245,245,240,0.10)";
+  // center charge glow: the verdict accumulating energy behind the tally
+  const chgA = Math.max(0, 0.05 + 0.10 * arcT + 0.05 * Math.sin(NOW * 3));
+  const cg = ctx.createRadialGradient(R.cx, R.cy, 0, R.cx, R.cy, R.r * 0.40);
+  cg.addColorStop(0, `rgba(0,255,135,${chgA})`);
+  cg.addColorStop(1, "rgba(0,255,135,0)");
+  ctx.globalAlpha = alpha; ctx.fillStyle = cg;
+  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.40, 0, TAU); ctx.fill();
+  ctx.lineWidth = 6; ctx.strokeStyle = "rgba(245,245,240,0.10)";
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, 0, TAU); ctx.stroke();
   ctx.strokeStyle = GREEN; ctx.shadowBlur = 12; ctx.shadowColor = GREEN;
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, -Math.PI / 2, -Math.PI / 2 + TAU * arcT); ctx.stroke();
@@ -688,6 +741,18 @@ function drawConsensus(ctx, v, env, W, H) {
   ctx.fillStyle = tier === "ULTRA" ? GREEN : GRAY;
   ctx.fillText(tier, R.cx, R.cy + H * 0.03);
   ctx.textAlign = "left";
+  // verdict flash: the lock-in moment — pure f(v) so it scrubs both ways
+  const fl = seg(v, 0.86, 0.93) * (1 - seg(v, 0.93, 1.0));
+  if (fl > 0.01) {
+    ctx.globalAlpha = alpha * fl * 0.9;
+    ctx.strokeStyle = GREEN; ctx.lineWidth = 3; ctx.shadowBlur = 16; ctx.shadowColor = GREEN;
+    ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * (0.42 + fl * 0.5), 0, TAU); ctx.stroke();
+    ctx.shadowBlur = 0;
+    const fg = ctx.createRadialGradient(R.cx, R.cy, 0, R.cx, R.cy, Math.max(W, H) * 0.55);
+    fg.addColorStop(0, `rgba(0,255,135,${0.10 * fl})`);
+    fg.addColorStop(1, "rgba(0,255,135,0)");
+    ctx.globalAlpha = alpha; ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
+  }
   ctx.restore();
 }
 
@@ -748,11 +813,39 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   }
   // grid: parallax through the dive, hold faint through the feature acts, gone by the bull
   grid.style.transform = `translate(${lerp(0, -140, pDive)}px, ${lerp(0, -90, pDive)}px) scale(${lerp(1, 1.6, pDive)})`;
-  grid.style.opacity = String(lerp(0.9, 0.18, seg(t, P.dive[0], P.dive[1])) * (1 - seg(t, P.bull[0], P.bull[0] + (P.bull[1] - P.bull[0]) * 0.6)));
+  // ×0.7: background dimmed so the hero layers (charts, ring, bull) pop
+  grid.style.opacity = String(lerp(0.9, 0.18, seg(t, P.dive[0], P.dive[1])) * (1 - seg(t, P.bull[0], P.bull[0] + (P.bull[1] - P.bull[0]) * 0.6)) * 0.7);
 
   // ---- canvas: exactly one heavy act draws per frame ---------------------
   const ctx = bullC.getContext("2d");
   ctx.clearRect(0, 0, W, H);
+
+  // boot flourish: after the outline finishes, a glass sweep crosses the
+  // laptop then a power-on pulse blooms — time-based, plays once per reveal.
+  if (DRAW_T0 !== null && t < P.assembly[0] + 0.02) {
+    const sw = clamp((NOW - DRAW_T0 - 1.55) / 0.9, 0, 1);
+    if (sw > 0 && sw < 1) {
+      const bandW = W * 0.18;
+      const bx = lerp(-0.2 * W, 1.2 * W, easeIO(sw));
+      ctx.save();
+      ctx.translate(bx, H / 2); ctx.rotate(-18 * Math.PI / 180);
+      const bg = ctx.createLinearGradient(-bandW / 2, 0, bandW / 2, 0);
+      bg.addColorStop(0, "rgba(200,255,225,0)");
+      bg.addColorStop(0.5, "rgba(200,255,225,0.10)");
+      bg.addColorStop(1, "rgba(200,255,225,0)");
+      ctx.fillStyle = bg;
+      ctx.fillRect(-bandW / 2, -H, bandW, H * 2);
+      ctx.restore();
+    }
+    const po = clamp((NOW - DRAW_T0 - 2.5) / 0.5, 0, 1);
+    const poA = 0.16 * Math.sin(po * Math.PI); // spike then settle
+    if (poA > 0.002) {
+      const pg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * 0.45);
+      pg.addColorStop(0, `rgba(0,255,135,${poA})`);
+      pg.addColorStop(1, "rgba(0,255,135,0)");
+      ctx.fillStyle = pg; ctx.fillRect(0, 0, W, H);
+    }
+  }
 
   // crossfade envelopes overlap at boundaries → no black flash between acts.
   // Gated on CHART so a 0-size init (geometry not built yet) can't NaN/crash.
@@ -824,8 +917,8 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     const fadeOut = 1 - seg(t, homeStart, homeEnd); // clear of the homepage reveal
     const rad = Math.min(W, H) * 0.34;
     const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, rad);
-    g.addColorStop(0, `rgba(0,255,135,${0.075 * fadeOut})`);
-    g.addColorStop(0.5, `rgba(0,255,135,${0.028 * fadeOut})`);
+    g.addColorStop(0, `rgba(0,255,135,${0.05 * fadeOut})`);
+    g.addColorStop(0.5, `rgba(0,255,135,${0.02 * fadeOut})`);
     g.addColorStop(1, "rgba(0,255,135,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
