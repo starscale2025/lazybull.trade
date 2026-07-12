@@ -17,6 +17,7 @@ import { TimeMachine } from "@/components/wedge/TimeMachine";
 import { EventTimeline } from "@/components/wedge/EventTimeline";
 import { ModelSpread } from "@/components/wedge/ModelSpread";
 import { ManagePanel } from "@/components/wedge/ManagePanel";
+import { BetSlip, BetBar } from "@/components/wedge/BetSlip";
 import { storySentence, type Bet } from "@/components/wedge/PositionStory";
 import { generateStrategies, probBS, type Strategy } from "@/lib/models";
 import { eventsFor } from "@/lib/events";
@@ -39,6 +40,23 @@ function dateNDaysOut(n: number) {
 function fmtDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
 }
+
+// The four stations of the workbench — drives the scrollspy step navigator.
+const STEPS = [
+  { id: "thesis", label: "Thesis" },
+  { id: "pick", label: "Pick a bet" },
+  { id: "detail", label: "Under the hood" },
+  { id: "manage", label: "Manage" },
+] as const;
+
+// Step 03's four analytics panels, one at a time (progressive disclosure).
+const TABS = [
+  { id: "greeks", label: "Greeks, plain" },
+  { id: "whatif", label: "What-if machine" },
+  { id: "events", label: "Event horizon" },
+  { id: "models", label: "Model spread" },
+] as const;
+type TabId = (typeof TABS)[number]["id"];
 
 export default function TradePage() {
   const [mounted, setMounted] = useState(false);
@@ -182,6 +200,28 @@ export default function TradePage() {
   })();
   const thesisSentence = `I think ${sym.sym} will ${direction} $${low.toFixed(2)} and $${high.toFixed(2)} by ${fmtDate(dateNDaysOut(days))}.`;
 
+  // workbench chrome: scrollspy step navigator + step-03 tabs
+  const [activeStep, setActiveStep] = useState<string>("thesis");
+  const [tab, setTab] = useState<TabId>("greeks");
+  const jumpTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActiveStep(e.target.id);
+      },
+      { rootMargin: "-35% 0px -55% 0px" }
+    );
+    STEPS.forEach((s) => {
+      const el = document.getElementById(s.id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+  }, []);
+
+  const expiryStr = fmtDate(dateNDaysOut(days));
+
   // narrate via /api/explain (LLM only narrates, never predicts probabilities)
   const [narration, setNarration] = useState<string | null>(null);
   const [narrating, setNarrating] = useState(false);
@@ -212,7 +252,7 @@ export default function TradePage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-bg text-fg">
+    <main className="flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
       {/* the homepage's atmosphere language, carried through */}
       <AmbientOrbs />
       <CursorSpotlight />
@@ -268,194 +308,243 @@ export default function TradePage() {
         </div>
       </section>
 
-      {/* Step 1 — Thesis */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-4 -top-16 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-          data-gsap="parallax"
-          data-gsap-amount="70"
-        >
-          01
-        </div>
-        <div className="relative mx-auto grid max-w-[1400px] grid-cols-12 gap-x-5 gap-y-6 px-5 py-8">
-          <div className="col-span-12 lg:col-span-7">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 01 / Thesis</div>
-            <h2
-              className="mt-2 font-display text-[clamp(2rem,4.5vw,3.8rem)] tracking-tightest leading-[1]"
-              data-gsap="blur-in"
-              data-gsap-delay="0.08"
-              style={{ textShadow: "0 0 40px rgba(0,255,135,0.1)" }}
-            >
-              <span className="text-fg-dim italic">"</span>
-              <ThesisLine sentence={thesisSentence} />
-              <span className="text-fg-dim italic">"</span>
-            </h2>
-            <p className="mt-3 max-w-[60ch] text-sm text-fg-dim" data-gsap="fade-up-soft" data-gsap-delay="0.18">
-              Drag the green band on the chart up or down to change your price zone.
-              Drag the orange line ↔ to change the date. The whole app rebuilds around it.
-            </p>
-          </div>
-          <div className="col-span-12 lg:col-span-5 flex flex-col items-end justify-end gap-3" data-gsap="scale-in" data-gsap-delay="0.2">
-            <ProbabilityRing prob={probInBand} />
-            <div className="font-mono text-[11px] uppercase tracking-wider text-fg-faint text-right max-w-[26ch]">
-              Black-Scholes risk-neutral odds your stock lands inside the band by expiry.
+      {/* Workbench: the four steps in a main column + an always-visible bet slip.
+          Decision lives next to data — no more scrolling away from the action. */}
+      <div className="relative mx-auto grid w-full max-w-[1500px] grid-cols-12 gap-x-6 px-5">
+        {/* ---- main column ---- */}
+        <div className="col-span-12 lg:col-span-8 xl:col-span-9">
+          {/* step navigator — scrollspy keeps “where am I?” answered */}
+          <nav className="sticky top-0 z-30 -mx-5 border-b border-border bg-bg/85 px-5 py-2 backdrop-blur-md">
+            <div className="flex items-center gap-1 overflow-x-auto">
+              {STEPS.map((s, i) => (
+                <button
+                  key={s.id}
+                  onClick={() => jumpTo(s.id)}
+                  className={`shrink-0 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors ${
+                    activeStep === s.id
+                      ? "border-bull/60 bg-bull/10 text-bull"
+                      : "border-transparent text-fg-faint hover:text-fg"
+                  }`}
+                >
+                  <span className={activeStep === s.id ? "text-bull" : "text-fg-faint"}>0{i + 1}</span>
+                  <span className="ml-1.5">{s.label}</span>
+                </button>
+              ))}
             </div>
-          </div>
-        </div>
+          </nav>
 
-        <div className="relative mx-auto max-w-[1400px] px-5 pb-8" data-gsap="scale-in" data-gsap-delay="0.1">
-          <div className="h-[420px] border border-border bg-bg transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)]">
-            {mounted ? (
-              <ProbabilityCone
-                bars={histBars}
-                spot={spot}
-                iv={sym.iv}
-                daysToExpiry={days}
-                low={low}
-                high={high}
-                onChangeLow={setLow}
-                onChangeHigh={setHigh}
-                onChangeDays={setDays}
-                events={events}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Step 2 — Strategy cards */}
-      <section className="relative overflow-hidden border-b border-border bg-bg-soft">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-6 -bottom-20 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-          data-gsap="parallax"
-          data-gsap-amount="70"
-        >
-          02
-        </div>
-        <div className="relative mx-auto max-w-[1400px] px-5 py-10">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 02 / Pick your bet</div>
+          {/* Step 1 — Thesis */}
+          <section id="thesis" className="relative scroll-mt-16 overflow-hidden border-b border-border">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-4 -top-12 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+              data-gsap="parallax"
+              data-gsap-amount="60"
+            >
+              01
+            </div>
+            <div className="relative py-8">
+              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 01 / Thesis</div>
               <h2
-                className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]"
+                className="mt-2 font-display text-[clamp(1.7rem,3.2vw,2.9rem)] tracking-tightest leading-[1.05]"
+                data-gsap="blur-in"
+                data-gsap-delay="0.08"
+                style={{ textShadow: "0 0 40px rgba(0,255,135,0.1)" }}
+              >
+                <span className="text-fg-dim italic">"</span>
+                <ThesisLine sentence={thesisSentence} />
+                <span className="text-fg-dim italic">"</span>
+              </h2>
+              <p className="mt-3 max-w-[60ch] text-sm text-fg-dim" data-gsap="fade-up-soft" data-gsap-delay="0.16">
+                Drag the <span className="text-bull">green band</span> to set your price zone, the{" "}
+                <span className="text-amber">orange line ↔</span> to set the date. The slip on the right rebuilds live.
+              </p>
+
+              <div className="relative mt-5" data-gsap="scale-in" data-gsap-delay="0.1">
+                <div className="h-[420px] border border-border bg-bg transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)]">
+                  {mounted ? (
+                    <ProbabilityCone
+                      bars={histBars}
+                      spot={spot}
+                      iv={sym.iv}
+                      daysToExpiry={days}
+                      low={low}
+                      high={high}
+                      onChangeLow={setLow}
+                      onChangeHigh={setHigh}
+                      onChangeDays={setDays}
+                      events={events}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Step 2 — Strategy cards */}
+          <section id="pick" className="relative scroll-mt-16 overflow-hidden border-b border-border">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-6 -bottom-16 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+              data-gsap="parallax"
+              data-gsap-amount="60"
+            >
+              02
+            </div>
+            <div className="relative py-8">
+              <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 02 / Pick your bet</div>
+                  <h2
+                    className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1.05]"
+                    data-gsap="blur-in"
+                    data-gsap-delay="0.08"
+                  >
+                    Three ways to <span className="italic font-light text-bull">bet on it.</span>
+                  </h2>
+                </div>
+                <MagneticCTA>
+                  <button
+                    onClick={() => selected && narrate(selected)}
+                    className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull/20"
+                  >
+                    <span className="size-1.5 rounded-full bg-bull pulse-dot" />
+                    explain {selected ? `"${selected.kind}"` : "this"}
+                  </button>
+                </MagneticCTA>
+              </div>
+
+              <StrategyCards
+                strategies={strategies}
+                selectedId={selectedId}
+                onSelect={(s) => setSelectedId(s.id)}
+                onPlace={(s) => { setSelectedId(s.id); placeBet(s); }}
+                spot={spot}
+                symbol={sym.sym}
+              />
+
+              {/* AI narration appears under cards */}
+              <AnimatePresence>
+                {(narrating || narration) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-px border border-bull/40 bg-bull/5 p-5"
+                  >
+                    <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-bull">teacher · plain English</div>
+                    {narrating && <div className="text-fg-faint font-mono text-[11px]">teacher is thinking…</div>}
+                    {!narrating && narration && (
+                      <p className="text-[14px] leading-relaxed text-fg whitespace-pre-line">{narration}</p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </section>
+
+          {/* Step 3 — Under the hood (tabbed: one panel at a time) */}
+          <section id="detail" className="relative scroll-mt-16 overflow-hidden border-b border-border">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-8 top-2 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+              data-gsap="parallax"
+              data-gsap-amount="60"
+            >
+              03
+            </div>
+            <div className="relative py-8">
+              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 03 / Under the hood</div>
+              <h2
+                className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1.05]"
                 data-gsap="blur-in"
                 data-gsap-delay="0.08"
               >
-                Three ways to <span className="italic font-light text-bull">bet on it.</span>
+                The math, in a <span className="italic font-light text-bull">language you speak.</span>
               </h2>
+
+              <div className="mt-5 flex flex-wrap items-center gap-1" data-gsap="fade-up-soft">
+                {TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors ${
+                      tab === t.id
+                        ? "border-bull/60 bg-bull/10 text-bull"
+                        : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4" data-gsap="fade-up-soft" data-gsap-delay="0.08">
+                {tab === "greeks" && <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
+                {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
+                {tab === "events" && mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
+                {tab === "models" && mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
+              </div>
             </div>
-            <MagneticCTA>
-              <button
-                onClick={() => selected && narrate(selected)}
-                className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull/20"
-              >
-                <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-                ask the teacher to explain {selected ? `"${selected.kind}"` : "this"}
-              </button>
-            </MagneticCTA>
-          </div>
+          </section>
 
-          <StrategyCards
-            strategies={strategies}
-            selectedId={selectedId}
-            onSelect={(s) => setSelectedId(s.id)}
-            onPlace={(s) => { setSelectedId(s.id); placeBet(s); }}
-            spot={spot}
-            symbol={sym.sym}
-          />
-
-          {/* AI narration appears under cards */}
-          <AnimatePresence>
-            {(narrating || narration) && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mt-px border border-bull/40 bg-bull/5 p-5"
-              >
-                <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-bull">teacher · plain English</div>
-                {narrating && <div className="text-fg-faint font-mono text-[11px]">teacher is thinking…</div>}
-                {!narrating && narration && (
-                  <p className="text-[14px] leading-relaxed text-fg whitespace-pre-line">{narration}</p>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </section>
-
-      {/* Step 3 — Under the hood */}
-      <section className="relative overflow-hidden border-b border-border bg-bg">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-8 top-4 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-          data-gsap="parallax"
-          data-gsap-amount="70"
-        >
-          03
-        </div>
-        <div className="relative mx-auto max-w-[1400px] px-5 py-10">
-          <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 03 / Under the hood</div>
-            <h2
-              className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]"
-              data-gsap="blur-in"
-              data-gsap-delay="0.08"
+          {/* Step 4 — Manage */}
+          <section id="manage" className="relative scroll-mt-16 overflow-hidden">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-8 -top-10 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+              data-gsap="parallax"
+              data-gsap-amount="60"
             >
-              The math, in a <span className="italic font-light text-bull">language you speak.</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-12 gap-5">
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-5" data-gsap="slide-right">
-              <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />
-              <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />
+              04
             </div>
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-5" data-gsap="slide-left">
-              {mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
-              {mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
+            <div className="relative py-8">
+              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 04 / Manage</div>
+              <h2
+                className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1.05]"
+                data-gsap="blur-in"
+                data-gsap-delay="0.08"
+              >
+                Where every other app abandons you. <span className="italic font-light text-bull">We don't.</span>
+              </h2>
+              <div className="mt-5">
+                <ManagePanel
+                  bets={bets}
+                  liveSpot={spot}
+                  iv={sym.iv}
+                  onClose={(id, pnl) =>
+                    setBets((cur) => cur.map((b) => (b.id === id ? { ...b, status: "closed", closedPnl: pnl } : b)))
+                  }
+                  onRoll={() => alert("Roll preview — extending to next monthly expiry. Coming soon as a real flow.")}
+                />
+              </div>
             </div>
-          </div>
+          </section>
         </div>
-      </section>
 
-      {/* Step 4 — Manage */}
-      <section className="relative overflow-hidden border-b border-border bg-bg-soft">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-8 -top-14 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-          data-gsap="parallax"
-          data-gsap-amount="70"
-        >
-          04
-        </div>
-        <div className="relative mx-auto max-w-[1400px] px-5 py-10">
-          <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 04 / Manage</div>
-            <h2
-              className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]"
-              data-gsap="blur-in"
-              data-gsap-delay="0.08"
-            >
-              Where every other app abandons you. <span className="italic font-light text-bull">We don't.</span>
-            </h2>
+        {/* ---- sticky bet slip rail (desktop) ---- */}
+        <aside className="hidden lg:col-span-4 lg:block xl:col-span-3">
+          <div className="sticky top-14 py-8">
+            <BetSlip
+              sym={sym.sym}
+              spot={spot}
+              low={low}
+              high={high}
+              expiry={expiryStr}
+              prob={probInBand}
+              selected={selected}
+              openCount={bets.filter((b) => b.status === "open").length}
+              onPlace={() => selected && placeBet(selected)}
+              onJump={jumpTo}
+            />
           </div>
-          <ManagePanel
-            bets={bets}
-            liveSpot={spot}
-            iv={sym.iv}
-            onClose={(id, pnl) =>
-              setBets((cur) => cur.map((b) => (b.id === id ? { ...b, status: "closed", closedPnl: pnl } : b)))
-            }
-            onRoll={() => alert("Roll preview — extending to next monthly expiry. Coming soon as a real flow.")}
-          />
-        </div>
-      </section>
+        </aside>
+      </div>
+
+      {/* mobile: essentials + PLACE pinned to the bottom */}
+      <BetBar prob={probInBand} selected={selected} onPlace={() => selected && placeBet(selected)} />
 
       {/* Confirm modal */}
       <AnimatePresence>
@@ -536,36 +625,3 @@ function ThesisLine({ sentence }: { sentence: string }) {
   );
 }
 
-function ProbabilityRing({ prob }: { prob: number }) {
-  const r = 40;
-  const c = 2 * Math.PI * r;
-  const filled = c * prob;
-  const tone = prob > 0.6 ? "var(--bull)" : prob > 0.35 ? "var(--cyan)" : "var(--bear)";
-  return (
-    <div className="flex items-center gap-3 border border-border bg-surface px-4 py-3">
-      <svg width="84" height="84" viewBox="0 0 84 84">
-        <circle cx="42" cy="42" r={r} stroke="var(--border)" strokeWidth="6" fill="none" />
-        <motion.circle
-          cx="42"
-          cy="42"
-          r={r}
-          stroke={tone}
-          strokeWidth="6"
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          initial={false}
-          animate={{ strokeDashoffset: c - filled }}
-          transition={{ type: "spring", stiffness: 120, damping: 18 }}
-          transform="rotate(-90 42 42)"
-        />
-      </svg>
-      <div>
-        <div className="font-display text-3xl tracking-tightest tabular-nums" style={{ color: tone }}>
-          {(prob * 100).toFixed(0)}%
-        </div>
-        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">odds in band · BS</div>
-      </div>
-    </div>
-  );
-}
