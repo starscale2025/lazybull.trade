@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
 import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
+import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
+import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
+import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
+import { MagneticCTA } from "@/components/atmosphere/MagneticCTA";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
 import { StrategyCards } from "@/components/wedge/StrategyCards";
 import { PlainGreeks } from "@/components/wedge/PlainGreeks";
@@ -209,26 +213,42 @@ export default function TradePage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">
+      {/* the homepage's atmosphere language, carried through */}
+      <AmbientOrbs />
+      <CursorSpotlight />
+      <ScrollProgress />
+      <div className="pointer-events-none fixed inset-0 z-40 scanlines opacity-[0.09]" aria-hidden />
+      <div
+        className="pointer-events-none fixed inset-0 z-40"
+        aria-hidden
+        style={{ background: "radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,0.45) 100%)" }}
+      />
       <TickerBar />
       <Nav />
 
       {/* Header */}
-      <section className="relative border-b border-border bg-bg">
+      <section className="relative overflow-hidden border-b border-border bg-bg">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
+        <div className="pointer-events-none absolute -left-24 -top-32 h-[380px] w-[380px] rounded-full bg-bull/10 blur-[130px] drift" />
         <div className="relative mx-auto flex max-w-[1400px] flex-wrap items-end justify-between gap-4 px-5 py-6">
           <div>
-            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">
               ⟢ bet builder · v2
               <Link href="/trade/chain" className="text-bull hover:underline">advanced view: see the chain →</Link>
             </div>
-            <h1 className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1]">
+            <h1
+              className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1]"
+              data-gsap="blur-in"
+              data-gsap-delay="0.08"
+              style={{ textShadow: "0 0 32px rgba(0,255,135,0.12)" }}
+            >
               Stop showing the chain.
               <span className="italic font-light text-bull"> Show the bet.</span>
             </h1>
           </div>
 
           {/* symbol switcher */}
-          <div className="flex items-center gap-1 overflow-x-auto font-mono text-[11px] uppercase tracking-wider">
+          <div className="flex items-center gap-1 overflow-x-auto font-mono text-[11px] uppercase tracking-wider" data-gsap="fade-up" data-gsap-delay="0.16">
             <span className="shrink-0 text-fg-faint mr-2">underlying</span>
             {SYMBOLS.map((s, i) => (
               <button
@@ -249,21 +269,34 @@ export default function TradePage() {
       </section>
 
       {/* Step 1 — Thesis */}
-      <section className="relative border-b border-border">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-12 gap-x-5 gap-y-6 px-5 py-8">
+      <section className="relative overflow-hidden border-b border-border">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-4 -top-16 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+          data-gsap="parallax"
+          data-gsap-amount="70"
+        >
+          01
+        </div>
+        <div className="relative mx-auto grid max-w-[1400px] grid-cols-12 gap-x-5 gap-y-6 px-5 py-8">
           <div className="col-span-12 lg:col-span-7">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">⟢ Step 01 / Thesis</div>
-            <h2 className="mt-2 font-display text-[clamp(2rem,4.5vw,3.8rem)] tracking-tightest leading-[1]">
+            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 01 / Thesis</div>
+            <h2
+              className="mt-2 font-display text-[clamp(2rem,4.5vw,3.8rem)] tracking-tightest leading-[1]"
+              data-gsap="blur-in"
+              data-gsap-delay="0.08"
+              style={{ textShadow: "0 0 40px rgba(0,255,135,0.1)" }}
+            >
               <span className="text-fg-dim italic">"</span>
               <ThesisLine sentence={thesisSentence} />
               <span className="text-fg-dim italic">"</span>
             </h2>
-            <p className="mt-3 max-w-[60ch] text-sm text-fg-dim">
+            <p className="mt-3 max-w-[60ch] text-sm text-fg-dim" data-gsap="fade-up-soft" data-gsap-delay="0.18">
               Drag the green band on the chart up or down to change your price zone.
               Drag the orange line ↔ to change the date. The whole app rebuilds around it.
             </p>
           </div>
-          <div className="col-span-12 lg:col-span-5 flex flex-col items-end justify-end gap-3">
+          <div className="col-span-12 lg:col-span-5 flex flex-col items-end justify-end gap-3" data-gsap="scale-in" data-gsap-delay="0.2">
             <ProbabilityRing prob={probInBand} />
             <div className="font-mono text-[11px] uppercase tracking-wider text-fg-faint text-right max-w-[26ch]">
               Black-Scholes risk-neutral odds your stock lands inside the band by expiry.
@@ -271,8 +304,8 @@ export default function TradePage() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-[1400px] px-5 pb-8">
-          <div className="h-[420px] border border-border bg-bg">
+        <div className="relative mx-auto max-w-[1400px] px-5 pb-8" data-gsap="scale-in" data-gsap-delay="0.1">
+          <div className="h-[420px] border border-border bg-bg transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)]">
             {mounted ? (
               <ProbabilityCone
                 bars={histBars}
@@ -294,23 +327,37 @@ export default function TradePage() {
       </section>
 
       {/* Step 2 — Strategy cards */}
-      <section className="relative border-b border-border bg-bg-soft">
+      <section className="relative overflow-hidden border-b border-border bg-bg-soft">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-6 -bottom-20 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+          data-gsap="parallax"
+          data-gsap-amount="70"
+        >
+          02
+        </div>
         <div className="relative mx-auto max-w-[1400px] px-5 py-10">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">⟢ Step 02 / Pick your bet</div>
-              <h2 className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]">
-                Three ways to bet on it.
+              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 02 / Pick your bet</div>
+              <h2
+                className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]"
+                data-gsap="blur-in"
+                data-gsap-delay="0.08"
+              >
+                Three ways to <span className="italic font-light text-bull">bet on it.</span>
               </h2>
             </div>
-            <button
-              onClick={() => selected && narrate(selected)}
-              className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull/20"
-            >
-              <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-              ask the teacher to explain {selected ? `"${selected.kind}"` : "this"}
-            </button>
+            <MagneticCTA>
+              <button
+                onClick={() => selected && narrate(selected)}
+                className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull/20"
+              >
+                <span className="size-1.5 rounded-full bg-bull pulse-dot" />
+                ask the teacher to explain {selected ? `"${selected.kind}"` : "this"}
+              </button>
+            </MagneticCTA>
           </div>
 
           <StrategyCards
@@ -343,21 +390,33 @@ export default function TradePage() {
       </section>
 
       {/* Step 3 — Under the hood */}
-      <section className="relative border-b border-border bg-bg">
-        <div className="mx-auto max-w-[1400px] px-5 py-10">
+      <section className="relative overflow-hidden border-b border-border bg-bg">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-8 top-4 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+          data-gsap="parallax"
+          data-gsap-amount="70"
+        >
+          03
+        </div>
+        <div className="relative mx-auto max-w-[1400px] px-5 py-10">
           <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">⟢ Step 03 / Under the hood</div>
-            <h2 className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]">
-              The math, in a language you speak.
+            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 03 / Under the hood</div>
+            <h2
+              className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]"
+              data-gsap="blur-in"
+              data-gsap-delay="0.08"
+            >
+              The math, in a <span className="italic font-light text-bull">language you speak.</span>
             </h2>
           </div>
 
           <div className="grid grid-cols-12 gap-5">
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-5">
+            <div className="col-span-12 lg:col-span-6 flex flex-col gap-5" data-gsap="slide-right">
               <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />
               <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />
             </div>
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-5">
+            <div className="col-span-12 lg:col-span-6 flex flex-col gap-5" data-gsap="slide-left">
               {mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
               {mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
             </div>
@@ -366,12 +425,24 @@ export default function TradePage() {
       </section>
 
       {/* Step 4 — Manage */}
-      <section className="relative border-b border-border bg-bg-soft">
-        <div className="mx-auto max-w-[1400px] px-5 py-10">
+      <section className="relative overflow-hidden border-b border-border bg-bg-soft">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-8 -top-14 select-none font-display text-[15rem] leading-none tracking-tightest text-fg opacity-[0.03]"
+          data-gsap="parallax"
+          data-gsap-amount="70"
+        >
+          04
+        </div>
+        <div className="relative mx-auto max-w-[1400px] px-5 py-10">
           <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">⟢ Step 04 / Manage</div>
-            <h2 className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]">
-              Where every other app abandons you. We don't.
+            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 04 / Manage</div>
+            <h2
+              className="mt-2 font-display text-[clamp(1.8rem,3.6vw,3rem)] tracking-tightest leading-[1.05]"
+              data-gsap="blur-in"
+              data-gsap-delay="0.08"
+            >
+              Where every other app abandons you. <span className="italic font-light text-bull">We don't.</span>
             </h2>
           </div>
           <ManagePanel
