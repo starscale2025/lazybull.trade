@@ -68,6 +68,7 @@ Breakevens: ${body.breakevens.map((b) => `$${b.toFixed(2)}`).join(", ") || "n/a"
 
     const r = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
+      signal: AbortSignal.timeout(20000), // a hung LLM call must never wedge the server
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4o-mini",

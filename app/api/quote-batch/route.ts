@@ -12,6 +12,7 @@ async function fetchOne(symbol: string) {
   try {
     const r = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (lazybullpro/1.0)" },
+      signal: AbortSignal.timeout(6000), // a blackholed upstream must never wedge the server
       next: { revalidate: 30 },
     });
     if (!r.ok) return null;
