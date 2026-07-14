@@ -47,13 +47,23 @@ export function QuantHero({
       <div className="pointer-events-none absolute -left-32 top-10 h-[320px] w-[320px] rounded-full bg-cyan/10 blur-[120px] drift" />
       <div className="pointer-events-none absolute right-0 top-20 h-[280px] w-[280px] rounded-full bg-plasma/10 blur-[120px] drift" style={{ animationDelay: "-5s" }} />
       <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
-      {/* The engine room: a brass difference-engine being read by a laser —
-          the whole page's thesis (old math, new light) as one object. */}
-      <img
-        src="/media/quant/machine-hero@1600.webp"
-        srcSet="/media/quant/machine-hero@800.webp 800w, /media/quant/machine-hero@1600.webp 1600w"
-        sizes="100vw"
-        alt=""
+      {/* The engine room: a brass difference-engine RUNNING — gears turn, the
+          laser sweeps. muted is (re)set via ref (React omits the attribute in
+          SSR markup, so autoplay would be vetoed pre-hydration). */}
+      <video
+        ref={(el) => {
+          if (!el) return;
+          el.muted = true;
+          if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            el.play().catch(() => {});
+          }
+        }}
+        src="/media/loops/machine-loop.webm"
+        poster="/media/quant/machine-hero@1600.webp"
+        autoPlay
+        muted
+        loop
+        playsInline
         aria-hidden
         className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[30%_65%] opacity-[0.3]"
         style={{ maskImage: "radial-gradient(95% 130% at 30% 70%, black 28%, transparent 74%)" }}

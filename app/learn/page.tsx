@@ -24,7 +24,7 @@ import { AnimatedDivider } from "@/components/learn/ambient/AnimatedDivider";
 import { BigStat } from "@/components/learn/ambient/BigStat";
 import { LiveBadge } from "@/components/learn/ambient/LiveBadge";
 import { DataStreamRail } from "@/components/learn/ambient/DataStreamRail";
-import { ParticleCurtain } from "@/components/atmosphere/ParticleCurtain";
+import { ScrollScrub, ScrubBeat } from "@/components/atmosphere/ScrollScrub";
 
 export const metadata = {
   title: "Learn · Lazybull",
@@ -233,36 +233,44 @@ export default function LearnPage() {
         <TickerStrip items={TICKER_JARGON_D} />
       </section>
 
-      {/* §00.5 — the prism interstitial: a physical object refracting the
-          market into readable light (Higgsfield still, full-bleed masked band) */}
-      <section className="relative overflow-hidden border-b border-border bg-bg">
-        <img
-          src="/media/learn/prism-hero@1600.webp"
-          srcSet="/media/learn/prism-hero@800.webp 800w, /media/learn/prism-hero@1600.webp 1600w"
-          sizes="100vw"
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.6]"
-          style={{ maskImage: "radial-gradient(130% 130% at 50% 42%, black 34%, transparent 76%)" }}
-        />
-        <div className="relative z-10 mx-auto max-w-[1200px] px-5 py-24 text-center md:py-32">
-          <div className="mb-5 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">
-            ⟢ §00.5 · THE CURRICULUM, REFRACTED
+      {/* §00.5 — the prism set piece: a PINNED scroll-scrubbed film. Scroll
+          drives the frame (reel language) while the copy beats swap. */}
+      <ScrollScrub
+        base="/media/scrub/prism"
+        frameCount={64}
+        poster="/media/learn/prism-hero@1600.webp"
+        posterAlt="Glass prism refracting light into a candlestick chart"
+        height="300vh"
+        className="border-b border-border bg-bg"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.66)_100%)]" />
+        <ScrubBeat from={0.02} to={0.42}>
+          <div className="px-5 text-center">
+            <div className="mb-5 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+              ⟢ §00.5 · THE CURRICULUM, REFRACTED
+            </div>
+            <h2 className="font-display uppercase leading-[0.92] tracking-tightest text-fg text-[clamp(3rem,8.5vw,8.5rem)] [text-shadow:0_2px_40px_rgba(0,0,0,0.9)]">
+              Taught by light
+            </h2>
           </div>
-          <h2
-            className="font-display uppercase leading-[0.92] tracking-tightest text-fg text-[clamp(3rem,8.5vw,8.5rem)] [text-shadow:0_2px_40px_rgba(0,0,0,0.85)]"
-            data-gsap="blur-in"
-          >
-            Taught by light
-          </h2>
-          <p className="mx-auto mt-6 max-w-[520px] font-mono text-[13px] leading-relaxed text-fg-dim" data-gsap="fade-up">
-            One hard idea in, a spectrum you can read out. Every chapter splits
-            the jargon into signals — regime, direction, odds — before you risk
-            a single paper dollar.
-          </p>
+        </ScrubBeat>
+        <ScrubBeat from={0.48} to={0.98}>
+          <div className="px-5 text-center">
+            <h2 className="font-display leading-[0.95] tracking-tightest text-fg text-[clamp(2.2rem,6vw,5.5rem)] [text-shadow:0_2px_40px_rgba(0,0,0,0.9)]">
+              One hard idea in.
+              <br />
+              <span className="italic font-light text-bull">A spectrum you can read.</span>
+            </h2>
+            <p className="mx-auto mt-6 max-w-[520px] font-mono text-[13px] leading-relaxed text-fg-dim [text-shadow:0_1px_16px_rgba(0,0,0,0.9)]">
+              Every chapter splits the jargon into signals — regime, direction,
+              odds — before you risk a single paper dollar.
+            </p>
+          </div>
+        </ScrubBeat>
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+          scroll to refract
         </div>
-        <ParticleCurtain className="relative z-10 mx-auto -mt-8 max-w-[900px]" height={200} seed={7} />
-      </section>
+      </ScrollScrub>
 
       <AnimatedDivider num="00→01" label="ENTER THE WORKBENCH" />
 

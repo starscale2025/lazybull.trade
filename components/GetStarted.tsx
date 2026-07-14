@@ -154,12 +154,22 @@ export function GetStarted() {
 
         {/* the AI that watches — macro eye with live HUD tracking boxes */}
         <div className="relative mt-12 w-full max-w-3xl overflow-hidden border border-border">
-          <img
-            src="/media/eye/eye-hero@1600.webp"
-            srcSet="/media/eye/eye-hero@800.webp 800w, /media/eye/eye-hero@1600.webp 1600w"
-            sizes="(max-width: 768px) 100vw, 768px"
-            alt="Macro eye with a candlestick chart reflected in the pupil — the AI watches every tick"
-            loading="lazy"
+          {/* a LIVE eye: blinks, pupil breathes, the chart in it flickers */}
+          <video
+            ref={(el) => {
+              if (!el) return;
+              el.muted = true;
+              if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                el.play().catch(() => {});
+              }
+            }}
+            src="/media/loops/eye-loop.webm"
+            poster="/media/eye/eye-hero@1600.webp"
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-label="Macro eye with a candlestick chart reflected in the pupil — the AI watches every tick"
             className="h-auto w-full opacity-90"
           />
           {[
