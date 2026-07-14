@@ -152,41 +152,70 @@ export function GetStarted() {
           ))}
         </div>
 
-        {/* the AI that watches — macro eye with live HUD tracking boxes */}
-        <div className="relative mt-12 w-full max-w-3xl overflow-hidden border border-border">
-          {/* a LIVE eye: blinks, pupil breathes, the chart in it flickers */}
-          <video
-            ref={(el) => {
-              if (!el) return;
-              el.muted = true;
-              if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-                el.play().catch(() => {});
-              }
-            }}
-            src="/media/loops/eye-loop.webm"
-            poster="/media/eye/eye-hero@1600.webp"
-            autoPlay
-            muted
-            loop
-            playsInline
-            aria-label="Macro eye with a candlestick chart reflected in the pupil — the AI watches every tick"
-            className="h-auto w-full opacity-90"
-          />
-          {[
-            { l: "26%", t: "46%", w: 90, label: "P(down) 71%" },
-            { l: "58%", t: "22%", w: 74, label: "IV 0.41" },
-            { l: "70%", t: "58%", w: 84, label: "Δ −0.32" },
-          ].map((b) => (
+        {/* the AI that watches — FULL-BLEED live eye, type set ON the footage,
+            edges melted into the void (no box, no border: this is a scene,
+            not an embed) */}
+        <div className="relative left-1/2 mt-16 w-screen -translate-x-1/2">
+          <div className="relative h-[78vh] min-h-[420px] w-full overflow-hidden">
+            <video
+              ref={(el) => {
+                if (!el) return;
+                el.muted = true;
+                if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                  el.play().catch(() => {});
+                }
+              }}
+              src="/media/loops/eye-loop.webm"
+              poster="/media/eye/eye-hero@1600.webp"
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-label="Macro eye with a candlestick chart reflected in the pupil — the AI watches every tick"
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 14%, black 84%, transparent 100%)",
+              }}
+            />
+            {/* vignette keeps the frame edges in the void */}
             <div
-              key={b.label}
-              className="pointer-events-none absolute border border-bull/70 bg-bg/60 px-1.5 py-1 text-left font-mono text-[9px] uppercase tracking-wider text-bull backdrop-blur-[1px]"
-              style={{ left: b.l, top: b.t, width: b.w, animation: "gs-hud 3.2s ease-in-out infinite" }}
+              className="pointer-events-none absolute inset-0"
+              style={{ background: "radial-gradient(ellipse at 50% 46%, transparent 30%, rgba(0,0,0,0.78) 92%)" }}
+            />
+            {/* pupil target brackets + tracking HUD */}
+            <div
+              className="pointer-events-none absolute left-1/2 top-[46%] size-[26vmin] -translate-x-1/2 -translate-y-1/2"
+              aria-hidden
             >
-              {b.label}
+              {["left-0 top-0 border-l border-t", "right-0 top-0 border-r border-t", "left-0 bottom-0 border-l border-b", "right-0 bottom-0 border-r border-b"].map((pos) => (
+                <span key={pos} className={`absolute size-4 border-bull/80 ${pos}`} />
+              ))}
+              <span className="absolute left-1/2 top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bull pulse-dot" />
             </div>
-          ))}
-          <div className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-dim">
-            27 bots watching, so you don&apos;t have to
+            {[
+              { l: "18%", t: "30%", label: "P(down) 71%", d: "0s" },
+              { l: "66%", t: "22%", label: "IV 0.41", d: "-1.1s" },
+              { l: "70%", t: "66%", label: "Δ −0.32", d: "-2.2s" },
+            ].map((b) => (
+              <div
+                key={b.label}
+                className="pointer-events-none absolute border border-bull/70 bg-bg/70 px-2.5 py-1.5 text-left font-mono text-[11px] uppercase tracking-wider text-bull backdrop-blur-sm md:text-xs"
+                style={{ left: b.l, top: b.t, animation: "gs-hud 3.2s ease-in-out infinite", animationDelay: b.d }}
+              >
+                {b.label}
+              </div>
+            ))}
+            {/* the line, set like a title card — not a caption */}
+            <div className="absolute inset-x-0 bottom-[8%] px-6 text-center">
+              <div className="font-display text-fg text-[clamp(1.8rem,4.5vw,3.6rem)] leading-tight [text-shadow:0_2px_30px_rgba(0,0,0,0.95)]">
+                27 bots watching,{" "}
+                <span className="italic font-light text-bull">so you don&apos;t have to.</span>
+              </div>
+              <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
+                every tick · every greek · every regime
+              </div>
+            </div>
           </div>
         </div>
       </div>
