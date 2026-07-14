@@ -1,12 +1,18 @@
 # 3D model credits
 
-## bull.glb
+## bull-obsidian.glb
 
-- **Title:** Bull
-- **Author:** Poly by Google
-- **Source:** https://poly.pizza/m/fWsIqDIIJ5S
-- **License:** [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) — attribution required.
+- **Title:** Obsidian Bull
+- **Source:** Generated with Higgsfield (image_to_3d) from our own obsidian-bull
+  still (`/media/bull/bull-hero`). Owned output — no attribution requirements.
+- **Processing:** Draco mesh compression + WebP textures at 1024px via
+  gltf-transform (13.2 MB → 400 KB). Decoder served from `/public/draco/`.
 
-Used in the homepage scroll-cinema (the bull act). CC BY requires a visible credit
-wherever the work is distributed — a user-facing credit line (About/colophon) still
-needs to be placed, or swap for a CC0 asset if zero-attribution is preferred.
+Used in the homepage scroll-cinema (the bull act).
+
+## bull.glb (retired)
+
+- **Title:** Bull — Poly by Google — https://poly.pizza/m/fWsIqDIIJ5S
+- **License:** [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- No longer referenced by any page; kept only for history. If ever re-used, a
+  visible user-facing credit line is required.

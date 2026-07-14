@@ -16,10 +16,11 @@ import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.j
 import { cinemaClock } from "@/lib/cinema-clock";
 import { BULL3D } from "@/lib/cinema";
 
-// Model: "Bull" by Poly by Google — CC BY 3.0 (via poly.pizza/m/fWsIqDIIJ5S).
-// Attribution required; see public/models/CREDITS.md.
-const MODEL = "/models/bull.glb";
-useGLTF.preload(MODEL);
+// Model: generated with Higgsfield (image_to_3d from our own obsidian-bull
+// still) — owned output, no attribution requirements. Draco-compressed
+// (13MB → 400KB); decoder served from /draco/. See public/models/CREDITS.md.
+const MODEL = "/models/bull-obsidian.glb";
+useGLTF.preload(MODEL, "/draco/");
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -183,13 +184,14 @@ function AssemblyParticles({ fitted }: { fitted: THREE.Object3D }) {
 }
 
 function Bull() {
-  const { scene } = useGLTF(MODEL);
+  const { scene } = useGLTF(MODEL, "/draco/");
   const group = useRef<THREE.Group>(null);
   const pxs = useRef(0);
 
   // Skeleton-safe clone (plain clone breaks skinned binds), fit into a ~2.6-unit
-  // height standing on y=0 and centered on x/z, and override every material with
-  // one dark sculptural surface (the GLB ships no textures).
+  // height standing on y=0 and centered on x/z. The obsidian GLB carries its own
+  // PBR textures — keep them and layer the fresnel rim on top; only untextured
+  // meshes fall back to the flat sculptural material.
   const fitted = useMemo(() => {
     const root = skeletonClone(scene);
     // Bounds from geometry (Box3.setFromObject is unreliable on skinned meshes).
@@ -208,7 +210,9 @@ function Bull() {
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
-    const s = 2.6 / size.y;
+    // 2.3 (was 2.6 for the plinthless CC model): the obsidian statue carries its
+    // own plinth in the bbox, so fit a hair smaller to keep full-silhouette headroom.
+    const s = 2.3 / size.y;
     root.scale.multiplyScalar(s);
     root.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     const mat = new THREE.MeshStandardMaterial({
@@ -230,7 +234,18 @@ function Bull() {
     mat.customProgramCacheKey = () => "bull-fresnel";
     root.traverse((o) => {
       const m = o as THREE.Mesh;
-      if (m.isMesh) m.material = mat;
+      if (!m.isMesh) return;
+      const src = m.material as THREE.MeshStandardMaterial;
+      if (src?.isMeshStandardMaterial && src.map) {
+        const base = src.clone(); // don't mutate the useGLTF cache
+        base.roughness = Math.min(base.roughness, 0.55);
+        base.onBeforeCompile = mat.onBeforeCompile;
+        base.customProgramCacheKey = () => "bull-fresnel";
+        base.needsUpdate = true;
+        m.material = base;
+      } else {
+        m.material = mat;
+      }
     });
     return root;
   }, [scene]);
