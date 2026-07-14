@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
+import { HungCard } from "./atmosphere/HungCard";
 
 // The single landing the cinema hands off to (and the page's real, crawlable
 // content). Live/glowing, but with continuous — not entrance — effects so the
@@ -39,6 +40,25 @@ export function GetStarted() {
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden border-t border-border bg-bg px-6 text-center"
     >
       {/* --- animated background --- */}
+      {/* living smoke: a real fluid, not CSS — sits under everything else.
+          muted is (re)set via ref: React omits the muted ATTRIBUTE in SSR
+          markup, so the browser would otherwise veto autoplay pre-hydration. */}
+      <video
+        ref={(el) => {
+          if (!el) return;
+          el.muted = true;
+          if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            el.play().catch(() => {});
+          }
+        }}
+        src="/media/loops/smoke-loop.webm"
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] w-full object-cover opacity-25 motion-reduce:hidden"
+      />
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
       <div className="pointer-events-none absolute -left-32 top-1/4 h-[520px] w-[520px] rounded-full bg-bull/12 blur-[150px] drift" />
       <div
@@ -121,13 +141,44 @@ export function GetStarted() {
           </Link>
         </div>
 
-        <ul className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-[11px] uppercase tracking-wider text-fg-faint">
-          {FEATURES.map((f) => (
-            <li key={f} className="flex items-center gap-2">
-              <span className="size-1 rounded-full bg-bull/70 pulse-dot" /> {f}
-            </li>
+        {/* feature chips hung on wires — damped pendulums, hover gives a push */}
+        <div className="mt-2 flex flex-wrap items-start justify-center gap-6">
+          {FEATURES.map((f, i) => (
+            <HungCard key={f} wire={34 + (i % 3) * 14} phase={i * 1.7}>
+              <span className="flex items-center gap-2 rounded-full border border-border bg-surface/80 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur-sm">
+                <span className="size-1 rounded-full bg-bull/70 pulse-dot" /> {f}
+              </span>
+            </HungCard>
           ))}
-        </ul>
+        </div>
+
+        {/* the AI that watches — macro eye with live HUD tracking boxes */}
+        <div className="relative mt-12 w-full max-w-3xl overflow-hidden border border-border">
+          <img
+            src="/media/eye/eye-hero@1600.webp"
+            srcSet="/media/eye/eye-hero@800.webp 800w, /media/eye/eye-hero@1600.webp 1600w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            alt="Macro eye with a candlestick chart reflected in the pupil — the AI watches every tick"
+            loading="lazy"
+            className="h-auto w-full opacity-90"
+          />
+          {[
+            { l: "26%", t: "46%", w: 90, label: "P(down) 71%" },
+            { l: "58%", t: "22%", w: 74, label: "IV 0.41" },
+            { l: "70%", t: "58%", w: 84, label: "Δ −0.32" },
+          ].map((b) => (
+            <div
+              key={b.label}
+              className="pointer-events-none absolute border border-bull/70 bg-bg/60 px-1.5 py-1 text-left font-mono text-[9px] uppercase tracking-wider text-bull backdrop-blur-[1px]"
+              style={{ left: b.l, top: b.t, width: b.w, animation: "gs-hud 3.2s ease-in-out infinite" }}
+            >
+              {b.label}
+            </div>
+          ))}
+          <div className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-dim">
+            27 bots watching, so you don&apos;t have to
+          </div>
+        </div>
       </div>
 
       <style>{`
@@ -139,9 +190,11 @@ export function GetStarted() {
         .gs-cta { animation: gs-cta-glow 2.6s ease-in-out infinite; }
         .gs-cta::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 36%, rgba(255,255,255,0.6) 50%, transparent 64%); background-size: 250% 100%; animation: gs-cta-shine 3.6s ease-in-out infinite; }
         @keyframes gs-cta-shine { 0% { background-position: 180% 0; } 55%,100% { background-position: -130% 0; } }
+        @keyframes gs-hud { 0%,100% { opacity: 0.55; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
         @media (prefers-reduced-motion: reduce) {
           .gs-ember, .gs-candle, .gs-cta, .gs-cta::after { animation: none; }
           .gs-ember { opacity: 0; }
+          [style*="gs-hud"] { animation: none !important; }
         }
       `}</style>
     </section>
