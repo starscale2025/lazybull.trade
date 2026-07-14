@@ -14,5 +14,5 @@ Used in the homepage scroll-cinema (the bull act).
 
 - **Title:** Bull — Poly by Google — https://poly.pizza/m/fWsIqDIIJ5S
 - **License:** [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
-- No longer referenced by any page; kept only for history. If ever re-used, a
+- Removed from the repo (unused since the obsidian swap). If ever re-used, a
   visible user-facing credit line is required.
