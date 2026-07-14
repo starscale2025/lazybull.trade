@@ -22,9 +22,12 @@ type Props = {
   frontFrom: number;
   kicker?: string;
   className?: string;
+  /** "screen" makes black pixels transparent — a free cutout for luminous
+   *  objects shot on black (glass, glow, neon). Default expects real alpha. */
+  blend?: "normal" | "screen";
 };
 
-export function MaterialHero({ cutout, cutoutAlt, lines, frontFrom, kicker, className = "" }: Props) {
+export function MaterialHero({ cutout, cutoutAlt, lines, frontFrom, kicker, className = "", blend = "normal" }: Props) {
   const { behind, front } = splitLayers(lines, frontFrom);
   const Line = ({ text }: { text: string }) => (
     <div className="font-display uppercase leading-[0.92] tracking-tightest text-fg text-[clamp(3rem,9vw,9rem)]">
@@ -45,9 +48,11 @@ export function MaterialHero({ cutout, cutoutAlt, lines, frontFrom, kicker, clas
             <Line key={t} text={t} />
           ))}
         </div>
-        {/* the object */}
+        {/* the object. In screen mode the blend lives on the WRAPPER — the
+            parallax transform makes this div a stacking context, and a blend on
+            the img inside it would be isolated there and render opaque. */}
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-[min(58vw,540px)] -translate-x-1/2 -translate-y-1/2"
+          className={`pointer-events-none absolute left-1/2 top-1/2 z-10 w-[min(58vw,540px)] -translate-x-1/2 -translate-y-1/2 ${blend === "screen" ? "mix-blend-screen" : ""}`}
           data-gsap="parallax"
           data-gsap-amount="110"
         >
@@ -57,7 +62,7 @@ export function MaterialHero({ cutout, cutoutAlt, lines, frontFrom, kicker, clas
             width={1600}
             height={2000}
             priority
-            className="h-auto w-full drop-shadow-[0_40px_80px_rgba(0,0,0,0.75)]"
+            className={`h-auto w-full ${blend === "screen" ? "" : "drop-shadow-[0_40px_80px_rgba(0,0,0,0.75)]"}`}
           />
         </div>
         {/* front layer */}

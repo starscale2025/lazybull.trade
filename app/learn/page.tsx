@@ -24,6 +24,7 @@ import { AnimatedDivider } from "@/components/learn/ambient/AnimatedDivider";
 import { BigStat } from "@/components/learn/ambient/BigStat";
 import { LiveBadge } from "@/components/learn/ambient/LiveBadge";
 import { DataStreamRail } from "@/components/learn/ambient/DataStreamRail";
+import { ParticleCurtain } from "@/components/atmosphere/ParticleCurtain";
 
 export const metadata = {
   title: "Learn · Lazybull",
@@ -230,6 +231,37 @@ export default function LearnPage() {
 
         {/* Bottom marquee — set the tone immediately */}
         <TickerStrip items={TICKER_JARGON_D} />
+      </section>
+
+      {/* §00.5 — the prism interstitial: a physical object refracting the
+          market into readable light (Higgsfield still, full-bleed masked band) */}
+      <section className="relative overflow-hidden border-b border-border bg-bg">
+        <img
+          src="/media/learn/prism-hero@1600.webp"
+          srcSet="/media/learn/prism-hero@800.webp 800w, /media/learn/prism-hero@1600.webp 1600w"
+          sizes="100vw"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.6]"
+          style={{ maskImage: "radial-gradient(130% 130% at 50% 42%, black 34%, transparent 76%)" }}
+        />
+        <div className="relative z-10 mx-auto max-w-[1200px] px-5 py-24 text-center md:py-32">
+          <div className="mb-5 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">
+            ⟢ §00.5 · THE CURRICULUM, REFRACTED
+          </div>
+          <h2
+            className="font-display uppercase leading-[0.92] tracking-tightest text-fg text-[clamp(3rem,8.5vw,8.5rem)] [text-shadow:0_2px_40px_rgba(0,0,0,0.85)]"
+            data-gsap="blur-in"
+          >
+            Taught by light
+          </h2>
+          <p className="mx-auto mt-6 max-w-[520px] font-mono text-[13px] leading-relaxed text-fg-dim" data-gsap="fade-up">
+            One hard idea in, a spectrum you can read out. Every chapter splits
+            the jargon into signals — regime, direction, odds — before you risk
+            a single paper dollar.
+          </p>
+        </div>
+        <ParticleCurtain className="relative z-10 mx-auto -mt-8 max-w-[900px]" height={200} seed={7} />
       </section>
 
       <AnimatedDivider num="00→01" label="ENTER THE WORKBENCH" />
