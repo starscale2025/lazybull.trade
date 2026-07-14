@@ -268,6 +268,16 @@ export default function TradePage() {
 
       {/* Header */}
       <section className="relative overflow-hidden border-b border-border bg-bg">
+        {/* prop scene: the bet as a physical object (Higgsfield) */}
+        <img
+          src="/media/trade/chip-hero@1600.webp"
+          srcSet="/media/trade/chip-hero@800.webp 800w, /media/trade/chip-hero@1600.webp 1600w"
+          sizes="100vw"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-[0.32]"
+          style={{ maskImage: "linear-gradient(to left, black 30%, transparent 78%)" }}
+        />
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
         <div className="pointer-events-none absolute -left-24 -top-32 h-[380px] w-[380px] rounded-full bg-bull/10 blur-[130px] drift" />
         <div className="relative mx-auto flex max-w-[1400px] flex-wrap items-end justify-between gap-4 px-5 py-6">
