@@ -280,6 +280,39 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
       ),
     []
   );
+  // dimmed twins of the inner cores — a reflection of a lit heart, not a lamp
+  const coreGreen = useMemo(
+    () =>
+      reflectionFade(
+        new THREE.MeshStandardMaterial({
+          color: "#000000",
+          emissive: new THREE.Color("#7dffc9"),
+          emissiveIntensity: 0.55,
+          roughness: 0.5,
+          metalness: 0,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+        })
+      ),
+    []
+  );
+  const coreRed = useMemo(
+    () =>
+      reflectionFade(
+        new THREE.MeshStandardMaterial({
+          color: "#000000",
+          emissive: new THREE.Color("#ff5c86"),
+          emissiveIntensity: 0.65,
+          roughness: 0.5,
+          metalness: 0,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+        })
+      ),
+    []
+  );
   const refs = useRef<(THREE.Group | null)[]>([]);
   useFrame(() => {
     const rf = revealF(cinemaClock.progress);
@@ -315,6 +348,7 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
             scale={[1, -0.0001, 1]}
           >
             <mesh geometry={body} material={m} scale={[0.72, c.h, 0.72]} />
+            <mesh geometry={box} material={c.up ? coreGreen : coreRed} scale={[0.36, c.h * 0.66, 0.36]} />
             <mesh geometry={box} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
           </group>
         );
@@ -328,14 +362,15 @@ function Candles() {
   const body = useCrystalGeometry(box);
   const hitMat = useMemo(() => new THREE.MeshBasicMaterial({ visible: false }), []);
   // Bodies are TRANSLUCENT GLASS (the reference: a green glass block with a
-  // glowing deep-green core). Transmission refracts whatever sits behind the
-  // body (neighbour candles, dust, the floor), the emerald attenuation tints
-  // the volume, and a low emissive keeps the core glowing — against this black
-  // void pure transmission alone would sample mostly-empty space and read as
-  // smoke, so the core glow is what sells the glass. Clearcoat is the wet outer
-  // polish; flatShading keeps the cut-crystal facets frosted. Thickness is the
-  // constant 0.72 x/z footprint (rays cross bodies sideways; only candle HEIGHT
-  // varies, so two shared materials still shade all 48 correctly).
+  // luminous heart). Transmission refracts whatever sits behind AND INSIDE the
+  // body — the opaque inner CORE mesh below renders into the transmission
+  // buffer, so the glass shell samples it blurred by its roughness: a bright
+  // center softened by a frosted shell, with the emerald attenuation tinting
+  // the volume between. The shell keeps only a FAINT emissive of its own (edge
+  // life); the core carries the glow. Clearcoat is the wet outer polish;
+  // flatShading keeps the cut-crystal facets frosted. Thickness is the constant
+  // 0.72 x/z footprint (rays cross bodies sideways; only candle HEIGHT varies,
+  // so two shared materials still shade all 48 correctly).
   const green = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
@@ -350,7 +385,7 @@ function Candles() {
         clearcoat: 0.7,
         clearcoatRoughness: 0.22,
         emissive: new THREE.Color("#00ff87"),
-        emissiveIntensity: 0.42,
+        emissiveIntensity: 0.22,
         flatShading: true,
       }),
     []
@@ -369,8 +404,35 @@ function Candles() {
         clearcoat: 0.7,
         clearcoatRoughness: 0.22,
         emissive: new THREE.Color("#ff2e63"),
-        emissiveIntensity: 0.55,
+        emissiveIntensity: 0.3,
         flatShading: true,
+      }),
+    []
+  );
+  // The luminous HEART inside each glass body: a shared unit box scaled to
+  // ~50% of the footprint / ~66% of the height per candle. It draws opaque, so
+  // the transmission pass picks it up and the glass shell shows it frosted —
+  // bright center, deep attenuation color between core and shell. Hotter than
+  // the shell, cooler than the wick, so bloom keeps its hierarchy.
+  const coreGreen = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#000000",
+        emissive: new THREE.Color("#7dffc9"),
+        emissiveIntensity: 1.25,
+        roughness: 0.5,
+        metalness: 0,
+      }),
+    []
+  );
+  const coreRed = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#000000",
+        emissive: new THREE.Color("#ff5c86"),
+        emissiveIntensity: 1.5,
+        roughness: 0.5,
+        metalness: 0,
       }),
     []
   );
@@ -416,10 +478,13 @@ function Candles() {
       const f = i === FLARE.idx ? FLARE.amt : 0;
       g.scale.set(1 + 0.14 * f, Math.max(0.0001, e) * (1 + 0.05 * f), 1 + 0.14 * f);
     }
-    // the whole ridge breathes faintly — alive even between scrolls. Wicks
-    // carry the bloom; the glass cores pulse gently underneath them.
-    green.emissiveIntensity = 0.42 + 0.08 * Math.sin(time * 1.15);
-    red.emissiveIntensity = 0.55 + 0.1 * Math.sin(time * 1.5 + 2);
+    // the whole ridge breathes faintly — alive even between scrolls. One pulse,
+    // three layers: hot wicks feed bloom, the inner cores throb beneath them,
+    // and the glass shells barely flicker at their edges.
+    green.emissiveIntensity = 0.22 + 0.05 * Math.sin(time * 1.15);
+    red.emissiveIntensity = 0.3 + 0.06 * Math.sin(time * 1.5 + 2);
+    coreGreen.emissiveIntensity = 1.25 + 0.18 * Math.sin(time * 1.15);
+    coreRed.emissiveIntensity = 1.5 + 0.2 * Math.sin(time * 1.5 + 2);
     wickGreen.emissiveIntensity = 1.7 + 0.25 * Math.sin(time * 1.15);
     wickRed.emissiveIntensity = 2.1 + 0.3 * Math.sin(time * 1.5 + 2);
     // hovered candle gets a hot local light (its flare)
@@ -437,8 +502,9 @@ function Candles() {
       {CANDLES.map((c, i) => {
         const bm = c.up ? green : red;
         const wm = c.up ? wickGreen : wickRed;
-        // Body + wick are both centered on the close level, so scaling the parent
-        // group's Y grows the whole candle in place.
+        const cm = c.up ? coreGreen : coreRed;
+        // Body, core and wick are all centered on the close level, so scaling
+        // the parent group's Y grows the whole candle (heart included) in place.
         return (
           <group
             key={i}
@@ -449,6 +515,7 @@ function Candles() {
             scale={[1, 0, 1]}
           >
             <mesh geometry={body} material={bm} scale={[0.72, c.h, 0.72]} />
+            <mesh geometry={box} material={cm} scale={[0.36, c.h * 0.66, 0.36]} />
             <mesh geometry={box} material={wm} scale={[0.11, c.wh - c.wl, 0.11]} />
           </group>
         );
