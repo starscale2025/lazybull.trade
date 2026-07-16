@@ -12,6 +12,10 @@ type Props = {
   onPlace: (s: Strategy) => void;
   spot: number;
   symbol: string;
+  /** 1 = stacked (right-rail panel), 3 = the classic three-across row (default). */
+  columns?: 1 | 3;
+  /** Dense app-shell mode: three slim selectable rows instead of full cards. */
+  compact?: boolean;
 };
 
 const TONE: Record<Strategy["id"], { label: string; color: string; pillBg: string }> = {
@@ -20,9 +24,48 @@ const TONE: Record<Strategy["id"], { label: string; color: string; pillBg: strin
   aggressive: { label: "Aggressive", color: "var(--bear)", pillBg: "rgba(255,46,99,0.12)" },
 };
 
-export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot, symbol }: Props) {
+/** Shared tone map so the strategy panel (page shell) can color its detail block consistently. */
+export const STRATEGY_TONE = TONE;
+
+export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot, symbol, columns = 3, compact = false }: Props) {
+  if (compact) {
+    return (
+      <div className="flex flex-col divide-y divide-border-soft">
+        {strategies.map((s) => {
+          const tone = TONE[s.id];
+          const selected = selectedId === s.id;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => onSelect(s)}
+              className={`relative flex items-center gap-2 px-3 py-2 text-left font-mono transition-colors ${
+                selected ? "bg-surface" : "bg-bg hover:bg-surface"
+              }`}
+            >
+              {selected && (
+                <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5" style={{ background: tone.color }} aria-hidden />
+              )}
+              <span
+                className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 text-[9px] uppercase tracking-wider"
+                style={{ color: tone.color, background: tone.pillBg }}
+              >
+                <span className="size-1 rounded-full" style={{ background: tone.color }} />
+                {tone.label}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-[11px] text-fg">{s.kind}</span>
+              <span className="shrink-0 text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+                {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
+              </span>
+              <span className="w-9 shrink-0 text-right text-[11px] tabular-nums text-bull">{(s.prob * 100).toFixed(0)}%</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
   return (
-    <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-3">
+    <div className={`grid grid-cols-1 gap-px bg-border ${columns === 3 ? "md:grid-cols-3" : ""}`}>
       {strategies.map((s, i) => (
         <Card
           key={s.id}
@@ -47,6 +90,24 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
   }, [s.legs, s.id, spot]);
   const fmt = (n: number) =>
     Number.isFinite(n) ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}` : (n > 0 ? "unbounded ↑" : "unbounded ↓");
+
+  // factual chips, all derived from the strategy itself (never invented)
+  const definedRisk = Number.isFinite(s.maxLoss);
+  const chips: string[] = [s.cost > 0 ? "debit" : "credit", s.bias, ...(definedRisk ? ["defined risk"] : [])];
+  // R:R only when both sides are finite and the loss side is non-zero
+  const rr =
+    Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0
+      ? s.maxProfit / Math.abs(s.maxLoss)
+      : null;
+  const rail: { k: string; v: string; c?: string }[] = [
+    { k: "max profit", v: fmt(s.maxProfit) },
+    { k: "max loss", v: fmt(s.maxLoss) },
+    ...(s.breakevens.length
+      ? [{ k: "breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / ") }]
+      : []),
+    { k: "pop", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull" },
+    ...(rr != null ? [{ k: "r:r", v: rr.toFixed(2) }] : []),
+  ];
 
   return (
     <motion.div
@@ -73,38 +134,41 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
           <span className="size-1.5 rounded-full" style={{ background: tone.color }} />
           {tone.label}
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.id === "income" ? "credit" : "debit"}</span>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+          {s.cost > 0 ? "you pay" : "you collect"} ${Math.abs(s.cost).toFixed(0)}
+        </span>
       </div>
 
-      {/* headline numbers */}
+      {/* strategy title + fact chips */}
       <div>
-        <div className="font-display text-4xl tracking-tightest leading-none" style={{ color: tone.color }}>
-          {fmt(s.maxProfit)}
-        </div>
-        <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
-          best case · max profit
+        <div className="font-display text-2xl uppercase tracking-tightest leading-[1.05] text-fg">{s.kind}</div>
+        <div className="mt-2 flex flex-wrap items-center gap-1">
+          {chips.map((c, i) => (
+            <span
+              key={c}
+              className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+                i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
+              }`}
+            >
+              {c}
+            </span>
+          ))}
         </div>
       </div>
 
       {/* mini P&L sparkline */}
       <Sparkline curve={curve} spot={spot} color={tone.color} />
 
-      {/* secondary stats */}
-      <div className="grid grid-cols-3 gap-px bg-border-soft">
-        {[
-          { k: "Risk", v: fmt(s.maxLoss), c: "text-bear" },
-          { k: "Cost", v: `${s.cost >= 0 ? "" : "+"}$${Math.abs(s.cost).toFixed(0)}`, c: s.cost >= 0 ? "text-fg-dim" : "text-bull" },
-          { k: "Win odds", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-fg" },
-        ].map((it) => (
-          <div key={it.k} className="bg-bg p-2">
-            <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{it.k}</div>
-            <div className={`mt-0.5 font-mono text-sm tabular-nums ${it.c}`}>{it.v}</div>
+      {/* stat rail */}
+      <div className="h-px bg-border-soft" />
+      <div className="flex flex-col gap-1.5">
+        {rail.map((it) => (
+          <div key={it.k} className="flex items-baseline justify-between gap-3">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{it.k}</span>
+            <span className={`text-right font-mono text-sm tabular-nums ${it.c ?? "text-fg"}`}>{it.v}</span>
           </div>
         ))}
       </div>
-
-      {/* leg recipe */}
-      <div className="font-mono text-[11px] text-fg-dim">{s.kind}</div>
 
       {/* blurb */}
       <p className="text-sm leading-relaxed text-fg">{s.blurb}</p>
@@ -128,7 +192,16 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
   );
 }
 
-function Sparkline({ curve, spot, color }: { curve: { s: number; pnl: number }[]; spot: number; color: string }) {
+/** Payoff sparkline for the selected strategy — reused by the app-shell strategy panel. */
+export function PnlSparkline({ s, spot, className = "h-20 w-full" }: { s: Strategy; spot: number; className?: string }) {
+  const curve = useMemo(() => {
+    const legs: Leg[] = s.legs.map((l, i) => ({ id: `${s.id}-${i}`, ...l }));
+    return pnlCurve(legs, spot, 0.35, 81);
+  }, [s.legs, s.id, spot]);
+  return <Sparkline curve={curve} spot={spot} color={TONE[s.id].color} className={className} />;
+}
+
+function Sparkline({ curve, spot, color, className = "h-20 w-full" }: { curve: { s: number; pnl: number }[]; spot: number; color: string; className?: string }) {
   if (!curve.length) return null;
   const w = 280, h = 84;
   const xs = curve.map((p) => p.s);
@@ -143,7 +216,7 @@ function Sparkline({ curve, spot, color }: { curve: { s: number; pnl: number }[]
   const filledTop = curve.map((p) => `L${xOf(p.s).toFixed(1)},${yOf(Math.max(0, p.pnl)).toFixed(1)}`).join(" ");
   const filledBot = curve.map((p) => `L${xOf(p.s).toFixed(1)},${yOf(Math.min(0, p.pnl)).toFixed(1)}`).join(" ");
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-20 w-full">
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={className}>
       <defs>
         <linearGradient id={`g-${color.replace(/[^a-z0-9]/gi, "")}`} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.4" />

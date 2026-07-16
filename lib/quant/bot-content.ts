@@ -605,7 +605,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Hurst is one number that tells you what kind of market you're in. >0.5 = the trend keeps going (use trend bots). <0.5 = price keeps snapping back (use reversion bots). =0.5 = random, no edge. Computed via R/S analysis over a rolling window. The single most useful regime classifier we have.",
     shines: [
       "Bot selection. Don't run an SMA Crossover when Hurst is 0.4 — you'll get killed. Run a Z-Score bot instead.",
-      "Sizing. When Hurst > 0.6, trend bots earn their keep — size up. When 0.45-0.55, scale down.",
+      "Position-sizing context. Historically, when Hurst > 0.6 the series trended and trend-following signals performed better; between 0.45-0.55 it behaved more randomly and those signals degraded.",
       "Asset comparison. Lay Hurst against multiple symbols and rank by trendiness.",
     ],
     fails: [

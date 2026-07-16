@@ -1,0 +1,1 @@
+{"nodes": [{"id": "gsapscroller_gsapscroller", "label": "GsapScroller \u2014 global GSAP/ScrollTrigger driver wiring declarative data-gsap attributes site-wide", "file_type": "code", "source_file": "components/atmosphere/GsapScroller.tsx", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

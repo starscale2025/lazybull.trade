@@ -1,0 +1,1 @@
+{"nodes": [{"id": "introsequence_introsequence", "label": "IntroSequence \u2014 one-shot boot-screen overlay gated by sessionStorage", "file_type": "code", "source_file": "components/atmosphere/IntroSequence.tsx", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

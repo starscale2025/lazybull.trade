@@ -157,6 +157,9 @@ export function GetStarted() {
             not an embed) */}
         <div className="relative left-1/2 mt-16 w-screen -translate-x-1/2">
           <div className="relative h-[78vh] min-h-[420px] w-full overflow-hidden">
+            {/* the matrix eye: an eye built from phosphor code on a CRT —
+                monochrome emerald so it belongs to the terminal world. muted
+                re-set via ref (React omits the attribute in SSR markup). */}
             <video
               ref={(el) => {
                 if (!el) return;
@@ -165,24 +168,31 @@ export function GetStarted() {
                   el.play().catch(() => {});
                 }
               }}
-              src="/media/loops/eye-loop.webm"
-              poster="/media/eye/eye-hero@1600.webp"
+              src="/media/loops/matrix-eye.webm"
+              poster="/media/eye/matrix-eye@1600.webp"
               autoPlay
               muted
               loop
               playsInline
-              aria-label="Macro eye with a candlestick chart reflected in the pupil — the AI watches every tick"
+              aria-label="An eye drawn in green terminal code, a candlestick chart ticking in its pupil — the AI watches every tick"
               className="absolute inset-0 h-full w-full object-cover"
               style={{
+                // fade the FOOTAGE itself to transparent on every edge — the section's
+                // grid + glow continue through, so there is no rectangle to see.
+                // (never paint black over the page: opaque overlays create the very
+                // border they're meant to hide)
+                // stops chosen so alpha reaches 0 BEFORE every band edge (top edge sits
+                // at 66% of ry, sides at 68% of rx — zero by 63% guarantees no paint
+                // touches the boundary)
                 maskImage:
-                  "linear-gradient(to bottom, transparent 0%, black 14%, black 84%, transparent 100%)",
+                  "radial-gradient(ellipse 74% 70% at 50% 46%, black 32%, rgba(0,0,0,0.8) 46%, transparent 63%)",
+                WebkitMaskImage:
+                  "radial-gradient(ellipse 74% 70% at 50% 46%, black 32%, rgba(0,0,0,0.8) 46%, transparent 63%)",
               }}
             />
-            {/* vignette keeps the frame edges in the void */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{ background: "radial-gradient(ellipse at 50% 46%, transparent 30%, rgba(0,0,0,0.78) 92%)" }}
-            />
+            {/* no overlay: any full-band shade paints a visible onset line at the
+                band boundary. The video's own alpha mask does all the melting;
+                the title card carries its own text-shadow. */}
             {/* pupil target brackets + tracking HUD */}
             <div
               className="pointer-events-none absolute left-1/2 top-[46%] size-[26vmin] -translate-x-1/2 -translate-y-1/2"
@@ -193,10 +203,51 @@ export function GetStarted() {
               ))}
               <span className="absolute left-1/2 top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bull pulse-dot" />
             </div>
+            {/* P(down) card — sparkline + confidence, top-left (ref 06) */}
+            <div
+              className="pointer-events-none absolute left-[6%] top-[14%] border border-bull/60 bg-bg/70 px-3 py-2 text-left backdrop-blur-sm"
+              style={{ animation: "gs-hud 3.2s ease-in-out infinite" }}
+              aria-hidden
+            >
+              <svg viewBox="0 0 120 22" className="h-5 w-28 text-bull" fill="none" aria-hidden>
+                <polyline
+                  points="0,15 9,12 18,16 27,10 36,13 45,7 54,11 63,6 72,10 81,5 90,9 99,4 108,8 120,3"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                />
+              </svg>
+              <div className="mt-1.5 font-mono text-[13px] uppercase tracking-wider text-bull md:text-sm">
+                P(down) <span className="font-bold">71%</span>
+              </div>
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-fg-dim">confidence</span>
+                <span className="flex gap-px" aria-hidden>
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <span key={i} className={`h-1.5 w-1 ${i < 7 ? "bg-bull" : "bg-fg-faint/40"}`} />
+                  ))}
+                </span>
+              </div>
+            </div>
+            {/* left index column (ref 06) */}
+            <div className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left font-mono text-[11px] tracking-wider md:block" aria-hidden>
+              {[
+                { s: "SPX", v: "5,278.06", c: "+0.48%", up: true },
+                { s: "QQQ", v: "452.19", c: "+0.71%", up: true },
+                { s: "ESM4", v: "5,279.25", c: "+0.50%", up: true },
+                { s: "NQM4", v: "18,352.75", c: "+0.68%", up: true },
+                { s: "VIX", v: "12.94", c: "−1.22%", up: false },
+              ].map((r) => (
+                <div key={r.s} className="border-b border-bull/20 pb-1.5 text-bull/90">
+                  <div>
+                    {r.s} <span className="text-fg-dim">{r.v}</span>
+                  </div>
+                  <div className={r.up ? "text-bull" : "text-bear"}>{r.c}</div>
+                </div>
+              ))}
+            </div>
             {[
-              { l: "18%", t: "30%", label: "P(down) 71%", d: "0s" },
-              { l: "66%", t: "22%", label: "IV 0.41", d: "-1.1s" },
-              { l: "70%", t: "66%", label: "Δ −0.32", d: "-2.2s" },
+              { l: "78%", t: "20%", label: "IV 0.41", d: "-1.1s" },
+              { l: "76%", t: "62%", label: "Δ −0.32", d: "-2.2s" },
             ].map((b) => (
               <div
                 key={b.label}
@@ -208,9 +259,9 @@ export function GetStarted() {
             ))}
             {/* the line, set like a title card — not a caption */}
             <div className="absolute inset-x-0 bottom-[8%] px-6 text-center">
-              <div className="font-display text-fg text-[clamp(1.8rem,4.5vw,3.6rem)] leading-tight [text-shadow:0_2px_30px_rgba(0,0,0,0.95)]">
-                27 bots watching,{" "}
-                <span className="italic font-light text-bull">so you don&apos;t have to.</span>
+              <div className="font-display text-bull text-[clamp(1.8rem,4.5vw,3.6rem)] leading-tight [text-shadow:0_2px_30px_rgba(0,0,0,0.95)]">
+                27 bots watching,
+                <br className="hidden sm:block" /> so you don&apos;t have to.
               </div>
               <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
                 every tick · every greek · every regime

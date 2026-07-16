@@ -17,13 +17,14 @@ type GreekKey = "delta" | "gamma" | "theta" | "vega" | "rho";
 
 const GREEK_DEFS: Record<
   GreekKey,
-  { label: string; symbol: string; color: string; oneLiner: string; tldr: string }
+  { label: string; symbol: string; color: string; oneLiner: string; statLine: string; tldr: string }
 > = {
   delta: {
     label: "Delta",
     symbol: "Δ",
     color: "var(--bull)",
     oneLiner: "How much the option price moves when the stock moves $1.",
+    statLine: "How much the option price changes for a $1 move in the underlying.",
     tldr: "Delta tells you how 'stock-like' your option is. ATM call ≈ 0.5 delta — it moves about 50¢ for every $1 in the stock. Deep ITM ≈ 1. Far OTM ≈ 0.",
   },
   gamma: {
@@ -31,6 +32,7 @@ const GREEK_DEFS: Record<
     symbol: "Γ",
     color: "var(--cyan)",
     oneLiner: "How fast Delta changes as the stock moves.",
+    statLine: "How much Delta changes for a $1 move in the underlying.",
     tldr: "Gamma is highest right at the money. That's why ATM options 'come alive' near expiry — small spot moves swing delta dramatically.",
   },
   theta: {
@@ -38,6 +40,7 @@ const GREEK_DEFS: Record<
     symbol: "Θ",
     color: "var(--amber)",
     oneLiner: "How much value the option loses each day, all else equal.",
+    statLine: "How much time decay reduces the option price each day.",
     tldr: "The 'rent' you pay for owning an option. Always negative for long options, gets brutal in the last week before expiry.",
   },
   vega: {
@@ -45,6 +48,7 @@ const GREEK_DEFS: Record<
     symbol: "ν",
     color: "var(--plasma)",
     oneLiner: "How much the option price moves per 1% change in IV.",
+    statLine: "How much the option price changes for a 1% move in implied volatility.",
     tldr: "Buy options when IV is low, sell when high. Vega is highest for long-dated ATM options — they're vol bets.",
   },
   rho: {
@@ -52,6 +56,7 @@ const GREEK_DEFS: Record<
     symbol: "ρ",
     color: "var(--bear)",
     oneLiner: "How much the option price moves per 1% change in interest rates.",
+    statLine: "How much the option price changes for a 1% move in interest rates.",
     tldr: "Mostly ignored on monthly options because rates barely move week-to-week. Matters for LEAPs and high-rate environments.",
   },
 };
@@ -146,24 +151,49 @@ export function LearnGreekSurface() {
         </div>
       </div>
 
-      {/* Current strike's exact values */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-6">
-        <ValueTile label="Price" value={`$${current.price.toFixed(2)}`} tone="var(--fg)" />
-        <ValueTile label="Δ Delta" value={current.delta.toFixed(3)} tone={GREEK_DEFS.delta.color} />
-        <ValueTile label="Γ Gamma" value={current.gamma.toFixed(4)} tone={GREEK_DEFS.gamma.color} />
-        <ValueTile label="Θ Theta /day" value={current.theta.toFixed(3)} tone={GREEK_DEFS.theta.color} />
-        <ValueTile label="ν Vega /1%" value={current.vega.toFixed(3)} tone={GREEK_DEFS.vega.color} />
-        <ValueTile label="ρ Rho /1%" value={current.rho.toFixed(3)} tone={GREEK_DEFS.rho.color} />
+      {/* Current strike's exact values — five Greek stat cards */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        {(Object.keys(GREEK_DEFS) as GreekKey[]).map((g) => (
+          <GreekStatCard
+            key={g}
+            label={GREEK_DEFS[g].label}
+            value={current[g].toFixed(g === "gamma" ? 4 : 3)}
+            statLine={GREEK_DEFS[g].statLine}
+            series={surface.map((s) => s[g])}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function ValueTile({ label, value, tone }: { label: string; value: string; tone: string }) {
+function GreekStatCard({
+  label, value, statLine, series,
+}: {
+  label: string; value: string; statLine: string; series: number[];
+}) {
+  // Downsample the live curve across strikes into a small sparkline.
+  const step = Math.max(1, Math.floor(series.length / 15));
+  const pts = series.filter((_, i) => i % step === 0);
+  const min = Math.min(...pts);
+  const max = Math.max(...pts);
+  const range = max - min || 1;
+  const points = pts
+    .map((v, i) => `${((i / (pts.length - 1)) * 90).toFixed(1)},${(2 + (1 - (v - min) / range) * 16).toFixed(1)}`)
+    .join(" ");
+
   return (
-    <div className="bg-bg p-3">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{label}</div>
-      <div className="mt-1 font-mono text-[14px] tabular-nums" style={{ color: tone }}>{value}</div>
+    <div className="border border-border bg-surface p-4">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">{label}</div>
+      <div className="mt-2 flex items-end justify-between gap-2">
+        <div className="font-display text-2xl tracking-tightest tabular-nums text-fg lg:text-3xl">{value}</div>
+        <svg viewBox="0 0 90 20" className="mb-1 h-4 w-[72px] shrink-0 text-bull" fill="none" aria-hidden>
+          <polyline points={points} stroke="currentColor" strokeWidth="1.2" />
+        </svg>
+      </div>
+      <div className="mt-3 border-t border-border-soft pt-2 text-[11px] leading-relaxed text-fg-dim">
+        {statLine}
+      </div>
     </div>
   );
 }

@@ -166,13 +166,16 @@ export function LearnConsensusPlayground() {
             </div>
             <p className="text-[13px] leading-relaxed text-fg-dim">
               {tally.tier === "ULTRA" &&
-                <>Real edge. Historically, when ≥85% of independent models agree, accuracy lands in the 65–77% band. Size up.</>}
+                <>Strong historical agreement. When ≥85% of independent models agreed in backtests, next-bar direction matched about 63–66% of the time — the top of the observed range.</>}
               {tally.tier === "HIGH" &&
-                <>Tradeable signal. 70–85% agreement → ~60–66% historical accuracy. Half-Kelly is sensible.</>}
+                <>Moderate agreement. 70–85% agreement corresponded to roughly 60–63% historical accuracy.</>}
               {tally.tier === "MEDIUM" &&
-                <>Lean, not conviction. 55–70% agreement → ~55–60% accuracy. Small size, define your stop in advance.</>}
+                <>A lean, not a conviction. 55–70% agreement corresponded to roughly 55–60% historical accuracy.</>}
               {tally.tier === "SPLIT" &&
-                <>Models disagree. The market is genuinely confused — that's the most valuable signal of all. Sit it out.</>}
+                <>Models disagree. Historically the next move was close to a coin flip — the clearest sign the market itself was uncertain.</>}
+            </p>
+            <p className="mt-2 text-[11px] italic leading-relaxed text-fg-faint">
+              Hypothetical, backtested figures shown for education only — not advice or a recommendation to trade.
             </p>
           </div>
         </div>

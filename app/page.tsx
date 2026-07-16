@@ -27,6 +27,11 @@ export default function Home() {
 
         <CinemaGate />
 
+        {/* NOTE: keep GetStarted immediately after the cinema — its opening block
+            ("Options you can see." + Get started) is pixel-matched to the cinema's
+            final overlay, which is what makes the collapse hand-off invisible.
+            Never insert a section between them. The crystal-bull showcase renders
+            INSIDE GetStarted, above the eye band. */}
         <GetStarted />
 
         <ScrollReveal as="div" speed="slow">

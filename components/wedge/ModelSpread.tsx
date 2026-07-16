@@ -39,8 +39,8 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
   })();
 
   return (
-    <div className="border border-border bg-bg">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-soft px-5 py-3">
+    <div className="bg-bg">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-3 py-2">
         <div className="flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">Model spread</span>
           <span className="border border-border bg-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg">consensus {(consensus * 100).toFixed(0)}%</span>
@@ -60,7 +60,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
         </button>
       </div>
 
-      <div className="space-y-1 p-5">
+      <div className="space-y-1 p-3">
         {order.map((k, i) => {
           const meta = MODEL_META[k];
           const v = probs[k];
@@ -112,7 +112,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-t border-border-soft"
           >
-            <div className="p-5">
+            <div className="p-3">
               <div className="mb-2 flex items-center justify-between">
                 <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                   Your model · runs in a sandboxed Function constructor

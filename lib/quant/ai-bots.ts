@@ -613,7 +613,7 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
         ],
         summary: `Real ensemble of ${data.ensemble_size} GBMs on ${data.ticker} says ${label} (P=${(pUp * 100).toFixed(1)}%) for ${data.horizon_days}d — ${band} conviction. Embargoed CV accuracy ~${(expAcc * 100).toFixed(0)}%.`,
         beginner:
-          "Boosted-tree models each vote on whether the stock will be up or down 20 days from now. When they agree (low σ), trust the call more.",
+          "Boosted-tree models each vote on whether the stock will be up or down 20 days from now. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
         verdict: {
           side: pUp > 0.6 ? "buy" : pUp < 0.4 ? "sell" : "hold",
           text: `${(pUp * 100).toFixed(0)}% chance ${data.prediction}. ${band} conviction — historical accuracy ~${(expAcc * 100).toFixed(0)}%.`,
@@ -651,7 +651,7 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
           { key: "rv", label: "Realised vol", value: `${(rv * 100).toFixed(0)}%`, tone: "neutral" },
         ],
         summary: `Ensemble of ${probs.length} GBMs says ${label.toUpperCase()} (P=${(pUp * 100).toFixed(1)}%) for ${horizon}d — ${band} conviction.`,
-        beginner: "Boosted-tree models each vote on direction. When they agree (low σ), trust the call more.",
+        beginner: "Boosted-tree models each vote on direction. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
         verdict: {
           side: pUp > 0.6 ? "buy" : pUp < 0.4 ? "sell" : "hold",
           text: `${(pUp * 100).toFixed(0)}% chance ${label}. ${band} conviction.`,
@@ -1100,7 +1100,7 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
         summary:
           `Models voting UP: ${upVotes}/6 — ${tier.toUpperCase()} consensus. ` +
           models.map((m) => `${m.name} ${(m.p * 100).toFixed(0)}%${m.vote === 1 ? "↑" : "↓"}`).join(" · "),
-        beginner: "Six models vote on direction. 5–6 agreeing = high quality. Split = sit out.",
+        beginner: "Six models vote on direction. Historically, 5–6 agreeing was the highest-quality tier; a split vote carried no edge.",
         verdict: {
           side: dir === "up" ? "buy" : dir === "down" ? "sell" : "hold",
           text: dir === "split"

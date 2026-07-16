@@ -17,11 +17,13 @@ export type Cone = {
   onChangeHigh: (v: number) => void;
   onChangeDays?: (v: number) => void;
   events?: MarketEvent[];
+  /** When provided, labels the draggable band "N% PROBABILITY RANGE" (ref terminal look). */
+  bandProb?: number;
 };
 
 const PAD = { L: 14, R: 78, T: 18, B: 36 };
 
-export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onChangeLow, onChangeHigh, onChangeDays, events = [] }: Cone) {
+export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onChangeLow, onChangeHigh, onChangeDays, events = [], bandProb }: Cone) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 360 });
   const dragRef = useRef<{ which: "low" | "high" | "both" | null; startY: number; startLow: number; startHigh: number; startTimeX?: number; startDays?: number } | null>(null);
@@ -253,6 +255,30 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
             {low.toFixed(2)}
           </text>
         </g>
+
+        {/* Band label + handle squares — "N% PROBABILITY RANGE" (ref terminal look) */}
+        {bandProb != null && (() => {
+          const xs = xOf(histN - 1);
+          const bandTop = Math.min(yLow, yHigh);
+          const labelY = Math.max(PAD.T + 10, bandTop - 8);
+          return (
+            <g pointerEvents="none">
+              <text
+                x={(xs + xExpiry) / 2}
+                y={labelY}
+                textAnchor="middle"
+                fontFamily="var(--font-jetbrains)"
+                fontSize="9"
+                letterSpacing="1.5"
+                fill="var(--bull)"
+              >
+                {Math.round(bandProb * 100)}% PROBABILITY RANGE
+              </text>
+              <rect x={xs + (xExpiry - xs) * 0.3 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--bull)" strokeWidth="1.2" />
+              <rect x={xs + (xExpiry - xs) * 0.7 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--bull)" strokeWidth="1.2" />
+            </g>
+          );
+        })()}
 
         {/* Expiry handle (drag along x) */}
         <g onMouseDown={(e) => startDrag("expiry", e)} style={{ cursor: "ew-resize" }}>

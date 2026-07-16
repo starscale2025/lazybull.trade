@@ -1,614 +1,810 @@
 {
-  "/Users/shaurya555/Desktop/lazybull1/postcss.config.mjs": {
-    "mtime": 1777755338.972134,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/postcss.config.mjs": {
+    "mtime": 1782661722.9829037,
     "hash": "239f3ebf717465dc636818a1a619398d"
   },
-  "/Users/shaurya555/Desktop/lazybull1/next-auth.d.ts": {
-    "mtime": 1777973838.509354,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/next-auth.d.ts": {
+    "mtime": 1782661722.9824238,
     "hash": "62aa7e7367d27e598c2d87086e486efd"
   },
-  "/Users/shaurya555/Desktop/lazybull1/next-env.d.ts": {
-    "mtime": 1778189033.4772792,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/next-env.d.ts": {
+    "mtime": 1783114042.6255565,
     "hash": "d0f8375ae1199dc7acd3977fc33b78b8"
   },
-  "/Users/shaurya555/Desktop/lazybull1/vitest.config.ts": {
-    "mtime": 1777757528.2414858,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/vitest.config.ts": {
+    "mtime": 1782661722.984761,
     "hash": "0d11b102fe9143c67bd38afd8a2bcaed"
   },
-  "/Users/shaurya555/Desktop/lazybull1/next.config.ts": {
-    "mtime": 1777888236.9885125,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/next.config.ts": {
+    "mtime": 1782661722.9824917,
     "hash": "daad32b4de0b92afe04301ebf0a6cc76"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/layout.tsx": {
-    "mtime": 1778033512.2298746,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/layout.tsx": {
+    "mtime": 1782661722.947248,
     "hash": "521c68044b2a8e24e1bcd7364bac4683"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/page.tsx": {
-    "mtime": 1778008412.4131522,
-    "hash": "4b08af06bd7b3c02dc7eee9336235804"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/page.tsx": {
+    "mtime": 1784081623.9041786,
+    "hash": "585feed274f433d96602f6f028bff183"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/quant/page.tsx": {
-    "mtime": 1777811717.7203991,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/quant/page.tsx": {
+    "mtime": 1782661722.9481063,
     "hash": "a5fb17d7e72332a4a49e7be6b213063c"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/learn/page.tsx": {
-    "mtime": 1778003966.4627652,
-    "hash": "050348c01535e806c4c9640f8e436088"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/learn/page.tsx": {
+    "mtime": 1784068810.8786986,
+    "hash": "3aff539c7e395b683ae4a3b287ca4c15"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/learn/bots/page.tsx": {
-    "mtime": 1777969723.7635322,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/learn/bots/page.tsx": {
+    "mtime": 1782661722.9475994,
     "hash": "98447388133369345ee1ea09d1ba5a26"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/learn/bots/[id]/page.tsx": {
-    "mtime": 1777974424.4281964,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/learn/bots/[id]/page.tsx": {
+    "mtime": 1782661722.9474788,
     "hash": "f63b2adceb4a15b3cbf4c5ae50fe87ba"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/pro/page.tsx": {
-    "mtime": 1777973992.432621,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/pro/page.tsx": {
+    "mtime": 1782661722.9479377,
     "hash": "f40ae35524cfa12a1fd3ac0ff3edcd98"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/auth/signin/page.tsx": {
-    "mtime": 1777973924.7981923,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/auth/signin/page.tsx": {
+    "mtime": 1782661722.9469523,
     "hash": "c369c3a5433fc9d6376f7a8752d13500"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/trade/page.tsx": {
-    "mtime": 1777969723.766666,
-    "hash": "407f145dc8600d950f19e364db844700"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/trade/page.tsx": {
+    "mtime": 1784051912.1774907,
+    "hash": "638dc1a3c0c07f41acf078e33e6570d6"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/trade/chain/page.tsx": {
-    "mtime": 1777969723.7657743,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/trade/chain/page.tsx": {
+    "mtime": 1782661722.9482858,
     "hash": "9749f672b19c4b9463ae858565bff28d"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/admin/layout.tsx": {
-    "mtime": 1778188377.096283,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/admin/layout.tsx": {
+    "mtime": 1782661722.9452462,
     "hash": "011909f51d3cb8a55800b5304f8a1c19"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/admin/page.tsx": {
-    "mtime": 1778189434.436977,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/admin/page.tsx": {
+    "mtime": 1782661722.9453995,
     "hash": "2b8defa108acd72a758bbc39d5df6e9a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/about/page.tsx": {
-    "mtime": 1777969719.959068,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/about/page.tsx": {
+    "mtime": 1782661722.9451349,
     "hash": "0eca3cc0bffffb308ea7996598a24288"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/explain/route.ts": {
-    "mtime": 1777757106.600501,
-    "hash": "3d6e9697cc63e3cd9598dfd06a97bc85"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/explain/route.ts": {
+    "mtime": 1783878401.1844027,
+    "hash": "808c4a19e6f7cd4d4ce37c888f5286c3"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/symbol-search/route.ts": {
-    "mtime": 1777760238.8060164,
-    "hash": "5547ccf38d180dd8ebebf1078865886d"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/symbol-search/route.ts": {
+    "mtime": 1783878369.9584177,
+    "hash": "c369c42388b2ade0194f36d161f406f8"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/auth/[...nextauth]/route.ts": {
-    "mtime": 1777973827.230176,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/auth/[...nextauth]/route.ts": {
+    "mtime": 1782661722.9456158,
     "hash": "0688e3b88b71f6362d6b8485e75d2bb9"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/quote/route.ts": {
-    "mtime": 1777760227.9507687,
-    "hash": "920dbf90a65ac48dbbdebfc69393447d"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/quote/route.ts": {
+    "mtime": 1783878369.9525902,
+    "hash": "7b70569326a78e3cb890945e4b5ba4ce"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/health/route.ts": {
-    "mtime": 1777973412.9702268,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/health/route.ts": {
+    "mtime": 1782661722.9458497,
     "hash": "cb3512170f183e3ff2be37f842a9ee77"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/workspaces/route.ts": {
-    "mtime": 1777973955.2296603,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/workspaces/route.ts": {
+    "mtime": 1782661722.9467745,
     "hash": "382fc2980af3a3791c129a99c3b4c5dd"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/workspaces/[id]/route.ts": {
-    "mtime": 1777973965.0342915,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/workspaces/[id]/route.ts": {
+    "mtime": 1782661722.9466956,
     "hash": "61904497f129f7f565e3faedc0d4b799"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/watchlists/route.ts": {
-    "mtime": 1777973977.6131604,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/watchlists/route.ts": {
+    "mtime": 1782661722.946312,
     "hash": "9639e38bf7e9ee91ae5e4298f282155a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/app/api/quote-batch/route.ts": {
-    "mtime": 1777760905.6134102,
-    "hash": "3f4e6982ef2e7defb094f944747dd6ab"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/app/api/quote-batch/route.ts": {
+    "mtime": 1783878369.9557464,
+    "hash": "739a3292387b8c6769545f4dab00b492"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/UseCases.tsx": {
-    "mtime": 1778033554.095038,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/UseCases.tsx": {
+    "mtime": 1782661722.949877,
     "hash": "515080bee9bf827f11e9b2457e8f0066"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/Hero.tsx": {
-    "mtime": 1778033549.1662533,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/Hero.tsx": {
+    "mtime": 1782661722.9490464,
     "hash": "a8c384202ec05f1c5cbf6285fafb1602"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/Nav.tsx": {
-    "mtime": 1777973899.5115805,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/Nav.tsx": {
+    "mtime": 1782661722.9491227,
     "hash": "5b665c2a44c6c65fead640bc30c2b42e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/SocialProof.tsx": {
-    "mtime": 1778033594.9015338,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/SocialProof.tsx": {
+    "mtime": 1782661722.9495215,
     "hash": "e138008401ccf99694bc46dabc5de97e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/TradeOverview.tsx": {
-    "mtime": 1778033571.0906699,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/TradeOverview.tsx": {
+    "mtime": 1782661722.9497294,
     "hash": "aff6a5d957a5bcbd1d1ca7f7fcc46780"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/TickerBar.tsx": {
-    "mtime": 1777969723.7692063,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/TickerBar.tsx": {
+    "mtime": 1782661722.9496448,
     "hash": "1d4d1f3116cc192c98fb97ceeb10c01e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/ProCta.tsx": {
-    "mtime": 1777759643.7797666,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/ProCta.tsx": {
+    "mtime": 1782661722.9493637,
     "hash": "436993c433665e9bb983f8f6b7b6dc9b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/Partners.tsx": {
-    "mtime": 1778033613.0491138,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/Partners.tsx": {
+    "mtime": 1782661722.9492106,
     "hash": "998c0efea274a8f243cc666b9614981a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/SessionProvider.tsx": {
-    "mtime": 1777973852.4283803,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/SessionProvider.tsx": {
+    "mtime": 1782661722.9494233,
     "hash": "c4668c671279e72532101c967ffe89f0"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/Footer.tsx": {
-    "mtime": 1778038997.1154268,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/Footer.tsx": {
+    "mtime": 1782661722.9488883,
     "hash": "5716c5b6ef67d44a65a77d9e5dd5072f"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/ThemeProvider.tsx": {
-    "mtime": 1777757383.367851,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/GetStarted.tsx": {
+    "mtime": 1784069776.2623897,
+    "hash": "166543851bf18511a525026e3c80ff76"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/ThemeProvider.tsx": {
+    "mtime": 1782661722.9495828,
     "hash": "833f192e235b389e8b7d1ce150fb2c4e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/AuthButtons.tsx": {
-    "mtime": 1777973887.89191,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/AuthButtons.tsx": {
+    "mtime": 1782661722.9487145,
     "hash": "e01f83f3a13471249b575274a9bb3aa1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/CandleChart.tsx": {
-    "mtime": 1778004810.246186,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/CandleChart.tsx": {
+    "mtime": 1782661722.948801,
     "hash": "61271bf82285052421f323196a6c5ba6"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/About.tsx": {
-    "mtime": 1777969719.9640937,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/About.tsx": {
+    "mtime": 1782661722.9486217,
     "hash": "3283d5651b3b96a1c9d8c1daef37d752"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/OutputPanel.tsx": {
-    "mtime": 1777811545.943367,
-    "hash": "1f86dded5dc4ef468684b4e5cfa9ae82"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/OutputPanel.tsx": {
+    "mtime": 1783320657.889532,
+    "hash": "40a3420bb7ccbd5263e5aa4331a34046"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/DecimatedNumber.tsx": {
-    "mtime": 1778188896.3891468,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/DecimatedNumber.tsx": {
+    "mtime": 1782661722.9549062,
     "hash": "3371eefda099d696fd1839cd1bf79fb6"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/BotCell.tsx": {
-    "mtime": 1778189059.6581218,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/BotCell.tsx": {
+    "mtime": 1782661722.9547677,
     "hash": "0abffc599d97114f0839c24e6446fe75"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/MiniViz.tsx": {
-    "mtime": 1777969723.7771857,
-    "hash": "11768cd5245cfb7f05fc007922508fee"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/MiniViz.tsx": {
+    "mtime": 1783320657.8885703,
+    "hash": "1bc9da30a53cb3672851e76c71a7f285"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/QuantHero.tsx": {
-    "mtime": 1777969723.7775624,
-    "hash": "039cde2ecf8a5aec4bef87fe8a8dfc7d"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/QuantHero.tsx": {
+    "mtime": 1784068838.8661575,
+    "hash": "b4a3dfed491ed617dab8785cbb3979eb"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/BotLibrary.tsx": {
-    "mtime": 1777969723.7763038,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/BotLibrary.tsx": {
+    "mtime": 1782661722.9548414,
     "hash": "90f5ed6d25a24d4a013f628bfee478df"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/RunStream.tsx": {
-    "mtime": 1778188919.0728374,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/RunStream.tsx": {
+    "mtime": 1782661722.9557552,
     "hash": "11087c6ce354a0594c513ee05e57349b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/ImportBotModal.tsx": {
-    "mtime": 1777811578.1622968,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/ImportBotModal.tsx": {
+    "mtime": 1782661722.9549818,
     "hash": "cd113d42032c38984ff7a7308d95c0bb"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/Workspace.tsx": {
-    "mtime": 1778189104.25686,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/Workspace.tsx": {
+    "mtime": 1782661722.9558263,
     "hash": "52be95ba84136965e21670b7c8176693"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/quant/QuantPage.tsx": {
-    "mtime": 1778190127.3106923,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/quant/QuantPage.tsx": {
+    "mtime": 1782661722.9556844,
     "hash": "d67817ce839c2c9d61a56c0d7d5653d1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnProbabilityComparison.tsx": {
-    "mtime": 1777998424.6780543,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnProbabilityComparison.tsx": {
+    "mtime": 1782661722.9525208,
     "hash": "d8e9edbddf16106c7370aae39a922dc1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnRegimeVisualizer.tsx": {
-    "mtime": 1777998201.7204115,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnRegimeVisualizer.tsx": {
+    "mtime": 1782661722.9526103,
     "hash": "7f7d210943c38cf907a4378a3ca12460"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnBotDemo.tsx": {
-    "mtime": 1777969723.770744,
-    "hash": "4c92f3f6276d82cac6ad5f13ea7f2c87"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnBotDemo.tsx": {
+    "mtime": 1782661722.9519327,
+    "hash": "497c8f88eb6516739da1a75d3cd07a3a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnLiveDemo.tsx": {
-    "mtime": 1777969723.7724962,
-    "hash": "18e5d11a97572a588dc9dded6c12d935"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnLiveDemo.tsx": {
+    "mtime": 1782661722.9523606,
+    "hash": "88df26e6ce5404debf4d9f143eec6038"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnDatasetPlayground.tsx": {
-    "mtime": 1777969723.7718892,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnDatasetPlayground.tsx": {
+    "mtime": 1782661722.9521527,
     "hash": "0420c36e170dc6e85e5ceacd60f0ee6d"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnBacktestBuilder.tsx": {
-    "mtime": 1777998323.3292558,
-    "hash": "edccfc7990e3d66098d77b69857a61ba"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnBacktestBuilder.tsx": {
+    "mtime": 1783320657.8880942,
+    "hash": "f48c44505e0cc4f6ce6681258ed274c1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnConsensusPlayground.tsx": {
-    "mtime": 1777969723.771141,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnConsensusPlayground.tsx": {
+    "mtime": 1782661722.9520752,
     "hash": "5f3187a28caf8c60c2c837adf8fefeeb"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnVolSmile.tsx": {
-    "mtime": 1777998372.1551883,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnVolSmile.tsx": {
+    "mtime": 1782661722.952748,
     "hash": "23acec9840364913e7427f56893e9a31"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnGreekSurface.tsx": {
-    "mtime": 1777998251.1575446,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnGreekSurface.tsx": {
+    "mtime": 1782661722.952295,
     "hash": "e1c97c154efb2e42f06727d0e26aec0c"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/LearnApiStatus.tsx": {
-    "mtime": 1777969723.770084,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/LearnApiStatus.tsx": {
+    "mtime": 1782661722.9517028,
     "hash": "c79d7460fbfc180bc7542ac0df264b84"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/ScrollProgressBar.tsx": {
-    "mtime": 1778003588.0175698,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/ScrollProgressBar.tsx": {
+    "mtime": 1782661722.953145,
     "hash": "c859fca18d498fb1e1570895c0c02b39"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/BootSequence.tsx": {
-    "mtime": 1778003575.8005593,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/BootSequence.tsx": {
+    "mtime": 1782661722.9529643,
     "hash": "a1877d7a1ea91f4f6816708eb30074db"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/LiveBadge.tsx": {
-    "mtime": 1778003667.7738998,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/LiveBadge.tsx": {
+    "mtime": 1782661722.9530914,
     "hash": "19eadde849c67d8e46412fc685fc5a80"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/AnimatedDivider.tsx": {
-    "mtime": 1778003640.7786062,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/AnimatedDivider.tsx": {
+    "mtime": 1782661722.9528446,
     "hash": "682524870576a2cc99d5fe4b01170725"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/BigStat.tsx": {
-    "mtime": 1778003657.1173644,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/BigStat.tsx": {
+    "mtime": 1782661722.9529033,
     "hash": "a1bd83a03f4c439bb9d3d702e006c003"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/SectionIndex.tsx": {
-    "mtime": 1778003607.7532098,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/SectionIndex.tsx": {
+    "mtime": 1782661722.9532027,
     "hash": "960aee8c50d6ca611723278f50e1fbb4"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/DataStreamRail.tsx": {
-    "mtime": 1778003686.4804487,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/DataStreamRail.tsx": {
+    "mtime": 1782661722.9530303,
     "hash": "29d4ca3d34241c59563290bcf69ef855"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/learn/ambient/TickerStrip.tsx": {
-    "mtime": 1778003623.5387585,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/learn/ambient/TickerStrip.tsx": {
+    "mtime": 1782661722.9532561,
     "hash": "3d7133ed5d339ee7ea584cf8a3684dc3"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/TopBar.tsx": {
-    "mtime": 1777969723.7753987,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/scrollstory/Bull3D.tsx": {
+    "mtime": 1784052981.860451,
+    "hash": "9af36ca17b76c16e7e3f4af56fb87b09"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/scrollstory/Tunnel3D.tsx": {
+    "mtime": 1783468156.63305,
+    "hash": "4988ae35154d22819d401b764911c06d"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/scrollstory/ScrollCinema.tsx": {
+    "mtime": 1783468153.1663897,
+    "hash": "c7e66f6aa570f8e8f5384aef4174841e"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/scrollstory/CinemaGate.tsx": {
+    "mtime": 1783320657.8233497,
+    "hash": "69afebfe9b05bbf39594e2594d164bcf"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/scrollstory/CandleField3D.tsx": {
+    "mtime": 1783468134.1827054,
+    "hash": "40e97e2e2f01647fbd853cd72539a373"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/TopBar.tsx": {
+    "mtime": 1782661722.954454,
     "hash": "c8d6042004d03ddb839612bb7eed75d1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/Chart.tsx": {
-    "mtime": 1777969723.773786,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/Chart.tsx": {
+    "mtime": 1782661722.9541206,
     "hash": "3b68a4a15538dabd1f732599754fc979"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/LeftToolbar.tsx": {
-    "mtime": 1777759420.5454183,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/LeftToolbar.tsx": {
+    "mtime": 1782661722.9541965,
     "hash": "b38d95df184ec20137a9c1ed8d4bbe73"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/chartCore.ts": {
-    "mtime": 1777759273.5689623,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/chartCore.ts": {
+    "mtime": 1782661722.9546027,
     "hash": "0228ca866979025f61539e892a9c1fbd"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/RightPanel.tsx": {
-    "mtime": 1777969723.7745104,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/RightPanel.tsx": {
+    "mtime": 1782661722.9543822,
     "hash": "15c621099239c2bf71f177d05f75047f"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/BottomBar.tsx": {
-    "mtime": 1777969723.7732434,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/BottomBar.tsx": {
+    "mtime": 1782661722.9540231,
     "hash": "c1e87e1f76ad7d5327b9d4edba0d1cdf"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/indicators.ts": {
-    "mtime": 1777760279.4977252,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/indicators.ts": {
+    "mtime": 1782661722.954669,
     "hash": "6594660eade50c43a390aabf96b61abc"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/ReplayBar.tsx": {
-    "mtime": 1777760630.0581653,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/ReplayBar.tsx": {
+    "mtime": 1782661722.9542518,
     "hash": "4b0d9be1d662f1730a3c3f205547ebe1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/AlertsPanel.tsx": {
-    "mtime": 1777760653.4510536,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/AlertsPanel.tsx": {
+    "mtime": 1782661722.953962,
     "hash": "d2f30b9d76e801701177da8dc6d9803e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/pro/TradeDrawer.tsx": {
-    "mtime": 1777760681.3501234,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/pro/TradeDrawer.tsx": {
+    "mtime": 1782661722.9545326,
     "hash": "d4532a92d8503cab4b0a6799a4e1f483"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/ai-teacher/SpeechBubble.tsx": {
-    "mtime": 1777757084.4162447,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/ai-teacher/SpeechBubble.tsx": {
+    "mtime": 1782661722.9509294,
     "hash": "07163260b144bd316de85760582c3a75"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/ai-teacher/GreekIcons.tsx": {
-    "mtime": 1777757749.545426,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/ai-teacher/GreekIcons.tsx": {
+    "mtime": 1782661722.9508727,
     "hash": "aac0c1160d4bc9b13214ce6d1b30f142"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/ai-teacher/Avatar.tsx": {
-    "mtime": 1777757763.530011,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/ai-teacher/Avatar.tsx": {
+    "mtime": 1782661722.9508033,
     "hash": "621f9990eaf5ec32be44baaebbbee1f9"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/options-chain/OptionsChain.tsx": {
-    "mtime": 1777757655.7135804,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/options-chain/OptionsChain.tsx": {
+    "mtime": 1782661722.953436,
     "hash": "99920a40e2a78d1c1aee938b871e2f7e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/options-chain/PositionsPanel.tsx": {
-    "mtime": 1777757376.4860926,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/options-chain/PositionsPanel.tsx": {
+    "mtime": 1782661722.9537106,
     "hash": "a00fbe037e289db996b9e0cfe914fa27"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/options-chain/StrategyCard.tsx": {
-    "mtime": 1777757238.3490827,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/options-chain/StrategyCard.tsx": {
+    "mtime": 1782661722.953847,
     "hash": "39fbfdbb9b6344c2ee724c2edfa172e9"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/options-chain/PnLDiagram.tsx": {
-    "mtime": 1777757589.5707788,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/options-chain/PnLDiagram.tsx": {
+    "mtime": 1782661722.9535053,
     "hash": "89b13e263f4bd7becb776a54317aeca9"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/SignupTimeline.tsx": {
-    "mtime": 1778188512.5343473,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/SignupTimeline.tsx": {
+    "mtime": 1782661722.9505062,
     "hash": "095faea95aa1f61b8c117f37acde1efe"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/UserGeoMap.tsx": {
-    "mtime": 1778188483.5710237,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/UserGeoMap.tsx": {
+    "mtime": 1782661722.950706,
     "hash": "ab0c1fd1822f5f793ac758c27ec33d0c"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/SymbolHeatmap.tsx": {
-    "mtime": 1778188452.016324,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/SymbolHeatmap.tsx": {
+    "mtime": 1782661722.9505775,
     "hash": "e7559f4840444d47fefe1158fd17bfae"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/CommandPalette.tsx": {
-    "mtime": 1778188558.168721,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/CommandPalette.tsx": {
+    "mtime": 1782661722.9500935,
     "hash": "2453a67193719fd580c8b753e0c86022"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/ErrorTopList.tsx": {
-    "mtime": 1778188502.9093919,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/ErrorTopList.tsx": {
+    "mtime": 1782661722.9501538,
     "hash": "7ac7d6c055ba6cef54a71cb914e0c261"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/KillSwitchPanel.tsx": {
-    "mtime": 1778188536.0129862,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/KillSwitchPanel.tsx": {
+    "mtime": 1782661722.9502122,
     "hash": "790a06505e29277e40a986a417c99703"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/BotRunDistribution.tsx": {
-    "mtime": 1778188465.438814,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/BotRunDistribution.tsx": {
+    "mtime": 1782661722.9499712,
     "hash": "380749fcd85850ce8dc98818ba8ca8bd"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/KpiStrip.tsx": {
-    "mtime": 1778188404.9430945,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/KpiStrip.tsx": {
+    "mtime": 1782661722.9502716,
     "hash": "1502fd34dc5a9c31ea8b994443b6d689"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/CockpitTopBar.tsx": {
-    "mtime": 1778188389.9095304,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/CockpitTopBar.tsx": {
+    "mtime": 1782661722.950027,
     "hash": "f60e702efb8da5be35583e7c7e341af1"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/RecentTrades.tsx": {
-    "mtime": 1778188494.8247693,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/RecentTrades.tsx": {
+    "mtime": 1782661722.9504466,
     "hash": "e812930369d3675eb6a795066845f4e8"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/SystemHealthChart.tsx": {
-    "mtime": 1778188421.5618732,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/SystemHealthChart.tsx": {
+    "mtime": 1782661722.950649,
     "hash": "e40377d96d261d63bc24be71f36e2153"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/ProFunnel.tsx": {
-    "mtime": 1778188519.611898,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/ProFunnel.tsx": {
+    "mtime": 1782661722.950394,
     "hash": "b33202e3664215c29bd95196614b09ae"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/admin/LiveEventStream.tsx": {
-    "mtime": 1778188441.589958,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/admin/LiveEventStream.tsx": {
+    "mtime": 1782661722.950341,
     "hash": "928f45b56756ddfe14317ec92cdb17fa"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/safety/RiskWizard.tsx": {
-    "mtime": 1777757280.4894516,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/safety/RiskWizard.tsx": {
+    "mtime": 1782661722.9560602,
     "hash": "49495abaffabb513584f3341999dd61f"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/safety/KillSwitch.tsx": {
-    "mtime": 1777757345.1454966,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/safety/KillSwitch.tsx": {
+    "mtime": 1782661722.955926,
     "hash": "62a32541ac15426bd60117add43795cc"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/safety/PreTradeModal.tsx": {
-    "mtime": 1777757309.6546738,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/safety/PreTradeModal.tsx": {
+    "mtime": 1782661722.9559932,
     "hash": "1d8a32d7d54d56e0c2d58ac3072df470"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/AmbientOrbs.tsx": {
-    "mtime": 1778008417.973561,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/AmbientOrbs.tsx": {
+    "mtime": 1782661722.951018,
     "hash": "89e2679df59eded0dbe1b11463c5e109"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/ScrollProgress.tsx": {
-    "mtime": 1778003791.875299,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/ScrollProgress.tsx": {
+    "mtime": 1782661722.9514043,
     "hash": "3544a837440613b16c9255321cfa3450"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/IntroSequence.tsx": {
-    "mtime": 1778008380.989041,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/IntroSequence.tsx": {
+    "mtime": 1782661722.9512746,
     "hash": "0ce92c333d475e9937c84d12b99fb64a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/MagneticCTA.tsx": {
-    "mtime": 1778003819.472831,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/MagneticCTA.tsx": {
+    "mtime": 1782661722.9513407,
     "hash": "f70f4988c9c28140627aa1347f75a238"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/SectionDivider.tsx": {
-    "mtime": 1778008392.7243733,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/SectionDivider.tsx": {
+    "mtime": 1782661722.9515324,
     "hash": "3c95b795f4a6ad12415e01f912bcecad"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/ScrollReveal.tsx": {
-    "mtime": 1778008908.9010978,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/ScrollScrub.tsx": {
+    "mtime": 1784072182.4611864,
+    "hash": "4cf4ab21e1d61676a087861470c67497"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/ScrollReveal.tsx": {
+    "mtime": 1782661722.9514709,
     "hash": "6d4bb5726ef8f9e7c8ee058a45e6a8e7"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/CursorSpotlight.tsx": {
-    "mtime": 1778008385.7631307,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/HungCard.tsx": {
+    "mtime": 1784051678.6777205,
+    "hash": "e59e1e4859bdcbd7bc20dffacbe963fd"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/CursorSpotlight.tsx": {
+    "mtime": 1782661722.9511337,
     "hash": "64dd68e090d26af6ae2a57eea7e3c2c2"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/TerminalTilt.tsx": {
-    "mtime": 1778003827.8248744,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/TerminalTilt.tsx": {
+    "mtime": 1782661722.9515965,
     "hash": "6c62c0cbb021a761e235fd9461ec1ac6"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/GsapScroller.tsx": {
-    "mtime": 1778033924.7677455,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/GsapScroller.tsx": {
+    "mtime": 1782661722.95121,
     "hash": "52c22a16dfcbf8604b97abfee255ccd3"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/atmosphere/CountUp.tsx": {
-    "mtime": 1778007197.129113,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/CountUp.tsx": {
+    "mtime": 1782661722.9510782,
     "hash": "87abfc50898cc9f645a7a7f892d56c9b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/PositionStory.tsx": {
-    "mtime": 1777768670.8613408,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/MaterialHero.tsx": {
+    "mtime": 1784065970.238738,
+    "hash": "a0c48f0e100e5b6b50d4afed0f92b22b"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/atmosphere/ParticleCurtain.tsx": {
+    "mtime": 1784051629.2875547,
+    "hash": "5c5adcef43789ca8d5e10b228e0c9e8f"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/PositionStory.tsx": {
+    "mtime": 1782661722.9564905,
     "hash": "0cb263c1660e72465d2fb7d02d7f4fe7"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/ManagePanel.tsx": {
-    "mtime": 1777768703.2602143,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/ManagePanel.tsx": {
+    "mtime": 1782661722.956231,
     "hash": "43f6f8d1fca82b9e71fb0ff616c1daee"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/ProbabilityCone.tsx": {
-    "mtime": 1777969723.778828,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/ProbabilityCone.tsx": {
+    "mtime": 1782661722.9567676,
     "hash": "b6eddb922b484fc7f8896187fb95a04b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/PlainGreeks.tsx": {
-    "mtime": 1777768568.7552748,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/PlainGreeks.tsx": {
+    "mtime": 1782661722.9564269,
     "hash": "4c2279d89a0b586761e2a75af66817d2"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/StrategyCards.tsx": {
-    "mtime": 1777768927.630601,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/BetSlip.tsx": {
+    "mtime": 1783877249.3985698,
+    "hash": "3989e2eecb1a4fb2b51eb2da4f580b3e"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/StrategyCards.tsx": {
+    "mtime": 1782661722.9568436,
     "hash": "9fb2be3b1f458c738aa634e2c45a9f5d"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/TimeMachine.tsx": {
-    "mtime": 1777768591.2538543,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/TimeMachine.tsx": {
+    "mtime": 1782661722.9569154,
     "hash": "685736cc31ca7750c2f8064e694d3db8"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/ModelSpread.tsx": {
-    "mtime": 1777768656.3031003,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/ModelSpread.tsx": {
+    "mtime": 1782661722.9563022,
     "hash": "513155908ef6917f8609c36a66bf8c2e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/components/wedge/EventTimeline.tsx": {
-    "mtime": 1777768623.7578783,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/components/wedge/EventTimeline.tsx": {
+    "mtime": 1782661722.9561596,
     "hash": "0c85610e07e474896bcaa30baeecaf9b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/__tests__/detector.test.ts": {
-    "mtime": 1777757508.7292738,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/draco/draco_decoder.js": {
+    "mtime": 1784052182.2369585,
+    "hash": "5fcad04db3893d9fbb79418b1f8e44a1"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/draco/draco_wasm_wrapper.js": {
+    "mtime": 1784052182.2378955,
+    "hash": "7a48a3fdc5785631621f4b20cd0937dc"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/__tests__/cinema.test.ts": {
+    "mtime": 1783449178.4551551,
+    "hash": "e880cd2ef31829a79570cc1e437ca1ea"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/__tests__/detector.test.ts": {
+    "mtime": 1782661722.93007,
     "hash": "2ab0f492d9284f1483e94ee762eda2a0"
   },
-  "/Users/shaurya555/Desktop/lazybull1/__tests__/safety.test.ts": {
-    "mtime": 1777757522.126547,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/__tests__/particle-curtain.test.ts": {
+    "mtime": 1784051590.2063422,
+    "hash": "fb3b8eeb630170cd2a7f248da3682f90"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/__tests__/safety.test.ts": {
+    "mtime": 1782661722.9301257,
     "hash": "146ca961b0c570acd0f633d8b3cea19e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/scripts/init-mongo.ts": {
-    "mtime": 1777973444.5712707,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/__tests__/material-hero.test.ts": {
+    "mtime": 1784051411.3205724,
+    "hash": "9f33654c6cf4bff7cfc1c1d51fadb856"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/init-mongo.ts": {
+    "mtime": 1782661722.9846303,
     "hash": "613d5c777c513792edacbeba6d0ba242"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/admin-data.ts": {
-    "mtime": 1778188635.6686046,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/capture.mjs": {
+    "mtime": 1783320657.919002,
+    "hash": "1b6f5d7d9148736960ed615e44c46ee7"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-bull.mjs": {
+    "mtime": 1784065753.9663825,
+    "hash": "2d88ae85f6baa2866c2ef8a9e8db5158"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/sweep.mjs": {
+    "mtime": 1784066756.9054623,
+    "hash": "bcee3e7b23dc7f8fcb06f1c3c20fbb9b"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/debug-seek.mjs": {
+    "mtime": 1784065607.5579457,
+    "hash": "8f5d978da8d46f70e77fd700d6d18d39"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-videos.mjs": {
+    "mtime": 1784068885.00012,
+    "hash": "60b765083628affdae6140f698b38573"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-getstarted.mjs": {
+    "mtime": 1784066522.9963887,
+    "hash": "06c4ca9aed141a46cf86ceaa100dbe16"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/sweep-home.mjs": {
+    "mtime": 1784067144.3906116,
+    "hash": "c1549143d52a175df2a377db1492c1de"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/debug-learn.mjs": {
+    "mtime": 1784065892.9488144,
+    "hash": "6c5492f55e14647111fa22706502cd54"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/debug-clock.mjs": {
+    "mtime": 1784052767.6475658,
+    "hash": "b2e6e18ef70bf10cd3813d269ff73cc5"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-pages.mjs": {
+    "mtime": 1784065829.5653448,
+    "hash": "61ac9817fc9dc75926512ff658148234"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-eye.mjs": {
+    "mtime": 1784069826.122068,
+    "hash": "31b589fe62d5a77772dc032dc8277a91"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-quant.mjs": {
+    "mtime": 1784066223.4318838,
+    "hash": "e8cfc8bdcce7d24cd35c80bba34340b4"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/raw/verify-smoke.mjs": {
+    "mtime": 1784066579.2045603,
+    "hash": "1ba8d24f268f7253be525e00938cb2a7"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/media/finish.mjs": {
+    "mtime": 1784051027.2374766,
+    "hash": "ff0c6963c553b70471137dd2f98dd2e5"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/media/scrub-frames.mjs": {
+    "mtime": 1784068667.3597255,
+    "hash": "629867c89ba4258aa675761131b8c2a7"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/admin-data.ts": {
+    "mtime": 1782661722.980458,
     "hash": "17f2de03ddb1d33cacd0103f3aabcc1d"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/pricing.ts": {
-    "mtime": 1777756924.3937669,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/cinema-clock.ts": {
+    "mtime": 1783441235.7293017,
+    "hash": "e68f8004be1395976f8c9a0b4292d86b"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/pricing.ts": {
+    "mtime": 1782661722.9814076,
     "hash": "15e8e0f058f87b10b21910c66aeb9cfe"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/admin.ts": {
-    "mtime": 1778188294.252847,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/admin.ts": {
+    "mtime": 1782661722.9805274,
     "hash": "1f331450a528eb2487d1b9d1a2ab8314"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/stores.ts": {
-    "mtime": 1777756993.3245506,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/cinema.ts": {
+    "mtime": 1783448787.465181,
+    "hash": "3dffd1eab51bfd89bd5ab591d7ef3ff7"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/stores.ts": {
+    "mtime": 1782661722.9823577,
     "hash": "51ca9da03081c4457f80ce172d041e6a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/events.ts": {
-    "mtime": 1777768442.682441,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/events.ts": {
+    "mtime": 1782661722.9809241,
     "hash": "8f3a1daa989bbbaba6255cf0dfe56e87"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/mongo.ts": {
-    "mtime": 1778041851.4820004,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/mongo.ts": {
+    "mtime": 1782661722.9813128,
     "hash": "75085ab7564c5cc2acb7a8bd90a1f568"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/models.ts": {
-    "mtime": 1777768416.676873,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/models.ts": {
+    "mtime": 1782661722.9810095,
     "hash": "4ada59487426777aa51faeb15d4c2546"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/auth.ts": {
-    "mtime": 1777973815.2557786,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/auth.ts": {
+    "mtime": 1782661722.9805963,
     "hash": "846e90e9175bb5a44ae35ab5eb62d03c"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/candles.ts": {
-    "mtime": 1777755445.9385054,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/candles.ts": {
+    "mtime": 1782661722.980667,
     "hash": "e5acd1191a0120e3bee455af6807c44e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/detector.ts": {
-    "mtime": 1777757561.8983788,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/detector.ts": {
+    "mtime": 1782661722.9808567,
     "hash": "036dc42e3dbc0853e7994b5e0a819601"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/bot-content.ts": {
-    "mtime": 1777969723.8198206,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/bot-content.ts": {
+    "mtime": 1782661722.9817379,
     "hash": "228886081ecc19ab9672f21058d08cf2"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/ai-bots.ts": {
-    "mtime": 1777969723.818152,
-    "hash": "6789d1980691332177e1dd0ccfd4db8e"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/ai-bots.ts": {
+    "mtime": 1783320657.8964067,
+    "hash": "6a6d1719fc7020f33ef3a4c0e03e2105"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/runtime.ts": {
-    "mtime": 1777811400.2880332,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/runtime.ts": {
+    "mtime": 1782661722.982034,
     "hash": "5c5d309e06dbe1d86bce51c539fae265"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/types.ts": {
-    "mtime": 1777969723.8224552,
-    "hash": "3503f66d9e14764f994425fe4ca0837d"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/types.ts": {
+    "mtime": 1783320657.8979127,
+    "hash": "e45b76dae9f9703354d45617ca49493a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/series.ts": {
-    "mtime": 1777811160.7150562,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/series.ts": {
+    "mtime": 1782661722.9821916,
     "hash": "1749dcd1a9a9caa9e10db9c8b581b93f"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/bot-source.ts": {
-    "mtime": 1777969723.8203008,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/bot-source.ts": {
+    "mtime": 1782661722.98182,
     "hash": "9e8f3aa9e679d112a07ab6abc19965ef"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/quant/bots.ts": {
-    "mtime": 1777969723.8213742,
-    "hash": "46db125d235ca16b01bd58a035571201"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/quant/bots.ts": {
+    "mtime": 1783320657.8969512,
+    "hash": "31d84612ee307b5c2c36d5a91870cf1a"
   },
-  "/Users/shaurya555/Desktop/lazybull1/lib/db/workspaces.ts": {
-    "mtime": 1777973945.973932,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/lib/db/workspaces.ts": {
+    "mtime": 1782661722.9807756,
     "hash": "a0373ecc1ec07ae0fb5eb1b530d38670"
   },
-  "/Users/shaurya555/Desktop/lazybull1/TODO.md": {
-    "mtime": 1777888236.986664,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/TODO.md": {
+    "mtime": 1782661722.9299726,
     "hash": "1340808ea4d9600e12f13e7f2a7a82e9"
   },
-  "/Users/shaurya555/Desktop/lazybull1/README.md": {
-    "mtime": 1777888236.9862604,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/README.md": {
+    "mtime": 1782661722.9299014,
     "hash": "a077bbadb8ad2305bdae1fb3a30dd291"
   },
-  "/Users/shaurya555/Desktop/lazybull1/AGENTS.md": {
-    "mtime": 1777755350.0151956,
-    "hash": "9e09241799026ac05be315a2f0b50055"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/STRATEGY.md": {
+    "mtime": 1783320657.886854,
+    "hash": "6b7214d1db7cb98ca9b5c47cbc53a88b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/CLAUDE.md": {
-    "mtime": 1777755350.0152771,
-    "hash": "5c27369b226fcf2be8a6cfe52224e767"
-  },
-  "/Users/shaurya555/Desktop/lazybull1/docs/learn-page-plan.md": {
-    "mtime": 1777969723.779351,
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/learn-page-plan.md": {
+    "mtime": 1782661722.957102,
     "hash": "1260726c8c582a84f61b67199712b52e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/file.svg": {
-    "mtime": 1777755338.97234,
-    "hash": "d09f95206c3fa0bb9bd9fefabfd0ea71"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/superpowers/plans/2026-07-14-cinematic-materials-makeover.md": {
+    "mtime": 1784050289.4781113,
+    "hash": "c3092d5a99dc88bd349d36a0b7959451"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/vercel.svg": {
-    "mtime": 1777755338.972308,
-    "hash": "c0af2f507b369b085b35ef4bbe3bcf1e"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/superpowers/plans/2026-07-03-scroll-cinema-homepage.md": {
+    "mtime": 1783320657.0028868,
+    "hash": "32787d37b7bcc5314cf5016162a78d84"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/next.svg": {
-    "mtime": 1777755338.9721355,
-    "hash": "8e061864f388b47f33a1c3780831193e"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/superpowers/specs/2026-07-03-scroll-cinema-homepage-design.md": {
+    "mtime": 1783320656.9959924,
+    "hash": "0c14905f6bac1fac5bba1e6065c42824"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/globe.svg": {
-    "mtime": 1777755338.9721928,
-    "hash": "2aaafa6a49b6563925fe440891e32717"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/02-north-star.md": {
+    "mtime": 1783320657.8918967,
+    "hash": "916c34075699c1166bc58debad690fdd"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/window.svg": {
-    "mtime": 1777755338.9723067,
-    "hash": "a2760511c65806022ad20adf74370ff3"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/09-compliance-risk.md": {
+    "mtime": 1783320657.894312,
+    "hash": "fc88e47fa18dc0e9ad5eb069cbd6224b"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/shaurya.jpg": {
-    "mtime": 1777888236.9900205,
-    "hash": "e53ea8afe8f69fb88b19b844dd17ee0c"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/07-growth-playbook.md": {
+    "mtime": 1783320657.893538,
+    "hash": "557dc16dcf8f69c838a52c82138e914e"
   },
-  "/Users/shaurya555/Desktop/lazybull1/public/joshmann.jpg": {
-    "mtime": 1777888236.9895773,
-    "hash": "e840ea931bf381e4e583943bb1feaec1"
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/10-capital-strategy.md": {
+    "mtime": 1783320657.894496,
+    "hash": "064edfb9a1a73ec2756bb2b511c912fa"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/00-ranking.md": {
+    "mtime": 1783320657.8914952,
+    "hash": "de1fe0f9218534fd2f2ec56e1c870e25"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/11-gaps-to-revenue.md": {
+    "mtime": 1783320657.8947089,
+    "hash": "22d47bf5a80dfb43f96933c8ad70c8a2"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/04-90-day-plan.md": {
+    "mtime": 1783320657.8923795,
+    "hash": "0f7cf560899bab2da0a6a35ab01ff6b3"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/03-pricing-and-packaging.md": {
+    "mtime": 1783320657.892178,
+    "hash": "1f0503c6ff4a3358751fa778e1997225"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/05-millions-model.md": {
+    "mtime": 1783320657.892553,
+    "hash": "2fb2e177cf6a9ad35acf7cfb870d215f"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/01-research-brief.md": {
+    "mtime": 1783320657.8917265,
+    "hash": "ff50adf7e6cc0e8ac385dc024487d94f"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/12-critic-redteam.md": {
+    "mtime": 1783320657.8949351,
+    "hash": "3152706b431e0c34c667f3d01bc9728e"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/06-ai-roadmap.md": {
+    "mtime": 1783320657.8930745,
+    "hash": "9c2dbd80f41c07bb9505165f5d815595"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/docs/strategy/08-brand-positioning.md": {
+    "mtime": 1783320657.8936963,
+    "hash": "2832fcc4d166a7b3971cec188b65ec0d"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/cinema/scene.html": {
+    "mtime": 1783468249.0029266,
+    "hash": "b8f8dd8873539f16fd2fcca9d599da79"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/models/CREDITS.md": {
+    "mtime": 1784066756.853978,
+    "hash": "12d696fbcef4fc8faf453ea3caaa1a57"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/media/README.md": {
+    "mtime": 1784051008.3602035,
+    "hash": "ea9d5a581e5b888fd71918e57c2134ec"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/scripts/cinema/README.md": {
+    "mtime": 1783320657.7444603,
+    "hash": "57ccdf74e98d6f98c9581b5017a1417f"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/cinema/shots/hero.webp": {
+    "mtime": 1784069915.6508853,
+    "hash": "69f19ae61d1a9c4f68c2d3627a4cf74e"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/cinema/shots/learn.webp": {
+    "mtime": 1784069916.3640418,
+    "hash": "b71eef9728e8d5d8250d81eb406ddf93"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/cinema/shots/trade.webp": {
+    "mtime": 1784069917.782059,
+    "hash": "1c9e863555712cc403378ea50331728f"
+  },
+  "/Users/shaurya555/Desktop/lazybulllllll/laztbull/public/cinema/shots/quant.webp": {
+    "mtime": 1784069917.2998636,
+    "hash": "039e8ae7a0a05260100dbff8305ca969"
   }
 }

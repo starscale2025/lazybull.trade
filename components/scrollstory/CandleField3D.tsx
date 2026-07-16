@@ -8,7 +8,7 @@
 // through cinemaClock (one-clock rule). Crossfaded over the 2D scene by
 // ScrollCinema.
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
 import { Grid, Line, MeshReflectorMaterial } from "@react-three/drei";
@@ -163,17 +163,138 @@ function Interaction() {
   return null;
 }
 
+// Candle bodies: a Higgsfield-generated cut-emerald crystal (normalized to the
+// unit cube so it's a drop-in for the old unit box — per-candle scaling still
+// shapes it). Non-indexed + recomputed normals = crisp gem facets. Falls back
+// to the plain box until the GLB arrives (candles grow on scroll anyway).
+function useCrystalGeometry(fallback: THREE.BufferGeometry) {
+  const [geo, setGeo] = useState<THREE.BufferGeometry | null>(null);
+  useEffect(() => {
+    let disposed = false;
+    let loaded: THREE.BufferGeometry | null = null;
+    import("three/examples/jsm/loaders/GLTFLoader.js").then(({ GLTFLoader }) => {
+      if (disposed) return;
+      new GLTFLoader().load(
+        "/models/candle-crystal.glb",
+        (gltf) => {
+          if (disposed) return;
+          let src: THREE.BufferGeometry | null = null;
+          gltf.scene.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!src && m.isMesh && m.geometry) src = m.geometry;
+          });
+          if (!src) return;
+          const g = (src as THREE.BufferGeometry).toNonIndexed();
+          g.computeVertexNormals(); // per-face normals → hard facets
+          g.computeBoundingBox();
+          const bb = g.boundingBox!;
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          bb.getSize(size);
+          bb.getCenter(center);
+          g.translate(-center.x, -center.y, -center.z);
+          g.scale(1 / Math.max(size.x, 1e-6), 1 / Math.max(size.y, 1e-6), 1 / Math.max(size.z, 1e-6));
+          loaded = g;
+          setGeo(g);
+        },
+        undefined,
+        () => {} // load failure → keep the box
+      );
+    });
+    return () => {
+      disposed = true;
+      loaded?.dispose();
+    };
+  }, []);
+  return geo ?? fallback;
+}
+
+// The floor's "total reflection", done the honest-cheat way: mirrored clones of
+// every candle below the glass plane, dimmed and fading with depth. Reads as a
+// perfect mirror regardless of fog/bloom thresholds, costs two draw groups.
+const FLOOR_Y = -0.54;
+function MirrorCandles({ body }: { body: THREE.BufferGeometry }) {
+  const green = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#031a10",
+        emissive: new THREE.Color("#00ff87"),
+        emissiveIntensity: 0.34,
+        roughness: 0.35,
+        metalness: 0.1,
+        flatShading: true,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+      }),
+    []
+  );
+  const red = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#1d0710",
+        emissive: new THREE.Color("#ff2e63"),
+        emissiveIntensity: 0.45,
+        roughness: 0.35,
+        metalness: 0.1,
+        flatShading: true,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+      }),
+    []
+  );
+  const refs = useRef<(THREE.Group | null)[]>([]);
+  useFrame(() => {
+    const rf = revealF(cinemaClock.progress);
+    for (let i = 0; i < N; i++) {
+      const g = refs.current[i];
+      if (!g) continue;
+      const grow = clamp(rf - i, 0, 1);
+      g.visible = grow > 0.001;
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      const b = grow - 1;
+      const e = 1 + c3 * b * b * b + c1 * b * b;
+      g.scale.set(1, -Math.max(0.0001, e), 1); // negative y = the mirror flip
+    }
+  });
+  return (
+    <group>
+      {CANDLES.map((c, i) => {
+        const m = c.up ? green : red;
+        return (
+          <group
+            key={i}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            // mirror across the glass plane: y' = 2*FLOOR_Y - y, flipped
+            position={[c.x, 2 * FLOOR_Y - c.cy, 0]}
+            scale={[1, -0.0001, 1]}
+          >
+            <mesh geometry={body} material={m} scale={[0.72, c.h, 0.72]} />
+            <mesh geometry={body} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
 function Candles() {
   const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const body = useCrystalGeometry(box);
   const hitMat = useMemo(() => new THREE.MeshBasicMaterial({ visible: false }), []);
   const green = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: "#052a1b",
         emissive: new THREE.Color("#00ff87"),
-        emissiveIntensity: 0.9,
-        roughness: 0.3,
-        metalness: 0.1,
+        emissiveIntensity: 0.72,
+        roughness: 0.22,
+        metalness: 0.15,
+        flatShading: true,
       }),
     []
   );
@@ -182,9 +303,10 @@ function Candles() {
       new THREE.MeshStandardMaterial({
         color: "#2e0a15",
         emissive: new THREE.Color("#ff2e63"),
-        emissiveIntensity: 1.2,
-        roughness: 0.3,
-        metalness: 0.1,
+        emissiveIntensity: 0.95,
+        roughness: 0.22,
+        metalness: 0.15,
+        flatShading: true,
       }),
     []
   );
@@ -234,11 +356,12 @@ function Candles() {
             position={[c.x, c.cy, 0]}
             scale={[1, 0, 1]}
           >
-            <mesh geometry={box} material={m} scale={[0.72, c.h, 0.72]} />
+            <mesh geometry={body} material={m} scale={[0.72, c.h, 0.72]} />
             <mesh geometry={box} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
           </group>
         );
       })}
+      <MirrorCandles body={body} />
       {/* forgiving invisible hitboxes for hover (material invisible, ray-visible) */}
       <group
         ref={(el) => {
@@ -777,18 +900,19 @@ export default function CandleField3D({
       {/* black-glass floor: the glowing ridge reflects in it (the “wet look”) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SPAN / 2, -0.54, 0]}>
         <planeGeometry args={[SPAN * 3, 90]} />
+        {/* obsidian mirror: the candles double themselves in the floor */}
         <MeshReflectorMaterial
-          blur={[320, 90]}
+          blur={[0, 0]}
           resolution={1024}
-          mixBlur={0.85}
-          mixStrength={2.6}
-          roughness={0.72}
-          depthScale={1.1}
-          minDepthThreshold={0.4}
-          maxDepthThreshold={1.3}
-          color="#050806"
-          metalness={0.55}
-          mirror={0.72}
+          mixBlur={0}
+          mixStrength={7}
+          roughness={0.02}
+          depthScale={0}
+          color="#040604"
+          metalness={0.7}
+          mirror={1}
+          transparent
+          opacity={0.5}
         />
       </mesh>
       {/* faint grid floats on the glass */}
@@ -796,11 +920,11 @@ export default function CandleField3D({
         position={[SPAN / 2, -0.5, 0]}
         args={[SPAN * 2.5, 60]}
         cellSize={1.05}
-        cellThickness={0.6}
-        cellColor="#092619"
+        cellThickness={0.35}
+        cellColor="#06180f"
         sectionSize={SP * 6}
-        sectionThickness={1}
-        sectionColor="#0a4029"
+        sectionThickness={0.6}
+        sectionColor="#07301e"
         fadeDistance={70}
         fadeStrength={2}
         infiniteGrid

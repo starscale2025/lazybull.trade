@@ -43,8 +43,8 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
   const open = bets.filter((b) => b.status === "open");
 
   return (
-    <div className="border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+    <div className="bg-bg">
+      <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
         <span>open bets · {open.length}</span>
         <span className="text-fg-faint">live priced from /api/quote</span>
       </div>
@@ -55,7 +55,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="px-5 py-10 text-center font-mono text-[11px] text-fg-faint"
+            className="px-3 py-6 text-center font-mono text-[11px] text-fg-faint"
           >
             you haven't placed a bet yet — pick one of the cards above
           </motion.div>
@@ -71,18 +71,18 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ delay: 0.04 * i }}
-              className="border-b border-border-soft p-5"
+              className="border-b border-border-soft p-3"
             >
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-display text-2xl tracking-tightest">{b.strategy.kind}</div>
+                  <div className="font-display text-xl tracking-tightest">{b.strategy.kind}</div>
                   <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     {b.symbol} · expiry {b.expiry} · {daysLeft}d left
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">live P&L</div>
-                  <div className={`font-display text-3xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
+                  <div className={`font-display text-2xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
                     {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
                   </div>
                 </div>

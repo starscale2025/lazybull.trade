@@ -16,10 +16,12 @@ import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.j
 import { cinemaClock } from "@/lib/cinema-clock";
 import { BULL3D } from "@/lib/cinema";
 
-// Model: generated with Higgsfield (image_to_3d from our own obsidian-bull
-// still) — owned output, no attribution requirements. Draco-compressed
-// (13MB → 400KB); decoder served from /draco/. See public/models/CREDITS.md.
-const MODEL = "/models/bull-obsidian.glb";
+// Model: Higgsfield/Meshy image_to_3d from our own faceted-obsidian bull concept
+// still — owned output, no attribution. Deliberately low-poly (~8k tri, untextured)
+// so flatShading reads as sharp crystal facets; the in-code obsidian material +
+// green fresnel seams own the whole look. Previous smooth statue kept at
+// /models/bull-obsidian.glb as a fallback.
+const MODEL = "/models/bull-crystal.glb";
 useGLTF.preload(MODEL, "/draco/");
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
@@ -216,9 +218,11 @@ function Bull() {
     root.scale.multiplyScalar(s);
     root.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     const mat = new THREE.MeshStandardMaterial({
-      color: "#0a0d0b",
-      roughness: 0.4,
-      metalness: 0.45,
+      color: "#070b0e",
+      roughness: 0.2,
+      metalness: 0.4,
+      flatShading: true, // faceted obsidian-crystal read — sharp low-poly facets catch the rim light
+      side: THREE.DoubleSide, // Meshy meshes can ship reversed winding — render both sides so nothing culls
     });
     // Fresnel edge-glow: a continuous green→cyan rim on the silhouette (independent
     // of light angle) so the sculpture always reads against the black + feeds bloom.
@@ -228,7 +232,7 @@ function Bull() {
         `#include <emissivemap_fragment>
          float _fres = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 4.5);
          vec3 _rim = mix(vec3(0.0, 1.0, 0.529), vec3(0.0, 0.898, 1.0), clamp(normal.x * 0.5 + 0.5, 0.0, 1.0));
-         totalEmissiveRadiance += _rim * _fres * 0.7;`
+         totalEmissiveRadiance += _rim * _fres * 1.05;`
       );
     };
     mat.customProgramCacheKey = () => "bull-fresnel";
@@ -238,7 +242,9 @@ function Bull() {
       const src = m.material as THREE.MeshStandardMaterial;
       if (src?.isMeshStandardMaterial && src.map) {
         const base = src.clone(); // don't mutate the useGLTF cache
-        base.roughness = Math.min(base.roughness, 0.55);
+        base.roughness = Math.min(base.roughness, 0.24);
+        base.metalness = Math.max(base.metalness ?? 0.3, 0.38);
+        base.flatShading = true; // faceted crystal read on the textured obsidian meshes too
         base.onBeforeCompile = mat.onBeforeCompile;
         base.customProgramCacheKey = () => "bull-fresnel";
         base.needsUpdate = true;

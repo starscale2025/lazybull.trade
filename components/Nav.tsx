@@ -22,6 +22,8 @@ export function Nav() {
             { l: "Visual chain", href: "/trade" },
             { l: "Pro charts", href: "/pro" },
             { l: "Quant", href: "/quant" },
+            { l: "Greeks", href: "/greeks" },
+            { l: "Pricing", href: "/pricing" },
             { l: "About", href: "/about" },
           ].map((item, i) => (
             <Link

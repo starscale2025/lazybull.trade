@@ -552,6 +552,12 @@ export default function LearnPage() {
         <TerminalFrame label="TERMINAL §06" hint="DRAG STRIKE · HOVER GREEK">
           <LearnGreekSurface />
         </TerminalFrame>
+
+        <div className="mt-3 flex justify-end">
+          <Link href="/greeks" className="font-mono text-[11px] uppercase tracking-[0.2em] text-bull transition-colors hover:text-bull-dim">
+            open the full surface lab →
+          </Link>
+        </div>
       </Chapter>
 
       <AnimatedDivider num="06→07" label="THE SMILE" />
@@ -935,7 +941,7 @@ export default {
             <BigStat value={0.1} label="bs surrogate err %" tone="amber" decimals={1} size="sm" />
           </div>
           <div className="bg-bg p-5">
-            <BigStat value={77} label="ultra-tier accuracy %" tone="plasma" size="sm" />
+            <BigStat value={5} label="option-pricing surrogates" tone="plasma" size="sm" />
           </div>
         </div>
 

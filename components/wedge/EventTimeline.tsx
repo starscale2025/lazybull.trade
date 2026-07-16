@@ -14,7 +14,7 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
   });
 
   return (
-    <div className="border border-border bg-bg p-5">
+    <div className="bg-bg p-3">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           <span className="size-1.5 rounded-full bg-amber" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
@@ -9,15 +9,15 @@ import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
 import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
-import { MagneticCTA } from "@/components/atmosphere/MagneticCTA";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
-import { StrategyCards } from "@/components/wedge/StrategyCards";
+import { StrategyCards, PnlSparkline, STRATEGY_TONE } from "@/components/wedge/StrategyCards";
 import { PlainGreeks } from "@/components/wedge/PlainGreeks";
 import { TimeMachine } from "@/components/wedge/TimeMachine";
 import { EventTimeline } from "@/components/wedge/EventTimeline";
 import { ModelSpread } from "@/components/wedge/ModelSpread";
 import { ManagePanel } from "@/components/wedge/ManagePanel";
-import { BetSlip, BetBar } from "@/components/wedge/BetSlip";
+import { ChainTable } from "@/components/wedge/ChainTable";
+import { BetBar } from "@/components/wedge/BetSlip";
 import { storySentence, type Bet } from "@/components/wedge/PositionStory";
 import { generateStrategies, probBS, type Strategy } from "@/lib/models";
 import { eventsFor } from "@/lib/events";
@@ -32,6 +32,8 @@ const SYMBOLS = [
 ];
 const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
 
+type LiveQuote = { last: number; chg: number; chgPct: number; name?: string; exch?: string };
+
 function dateNDaysOut(n: number) {
   const d = new Date();
   d.setDate(d.getDate() + n);
@@ -41,20 +43,12 @@ function fmtDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
 }
 
-// The four stations of the workbench — drives the scrollspy step navigator.
-const STEPS = [
-  { id: "thesis", label: "Thesis" },
-  { id: "pick", label: "Pick a bet" },
-  { id: "detail", label: "Under the hood" },
-  { id: "manage", label: "Manage" },
-] as const;
-
-// Step 03's four analytics panels, one at a time (progressive disclosure).
+// The "under the hood" analytics panels, one at a time (progressive disclosure).
 const TABS = [
-  { id: "greeks", label: "Greeks, plain" },
   { id: "whatif", label: "What-if machine" },
   { id: "events", label: "Event horizon" },
   { id: "models", label: "Model spread" },
+  { id: "manage", label: "Positions" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -64,9 +58,10 @@ export default function TradePage() {
   const [symIdx, setSymIdx] = useState(0);
   const sym = SYMBOLS[symIdx];
 
-  // Live spot — polls /api/quote-batch for real Yahoo prices.
-  const [liveSpots, setLiveSpots] = useState<Record<string, number>>({});
-  const spot = liveSpots[sym.sym] ?? sym.spot;
+  // Live quotes — polls /api/quote-batch for real Yahoo prices (+ change/exchange).
+  const [liveQuotes, setLiveQuotes] = useState<Record<string, LiveQuote>>({});
+  const quote = liveQuotes[sym.sym];
+  const spot = quote?.last ?? sym.spot;
 
   useEffect(() => {
     let cancelled = false;
@@ -76,9 +71,11 @@ export default function TradePage() {
         const j = await r.json();
         if (cancelled) return;
         if (j?.ok && Array.isArray(j.quotes)) {
-          const next: Record<string, number> = {};
-          for (const q of j.quotes) if (q?.last) next[q.sym] = q.last;
-          setLiveSpots(next);
+          const next: Record<string, LiveQuote> = {};
+          for (const q of j.quotes)
+            if (q?.last)
+              next[q.sym] = { last: q.last, chg: q.chg ?? 0, chgPct: q.chgPct ?? 0, name: q.name, exch: q.exch };
+          setLiveQuotes(next);
         }
       } catch {
         /* keep prior values on transient error */
@@ -133,6 +130,33 @@ export default function TradePage() {
     return () => { cancelled = true; };
   }, [sym]);
 
+  // Change readout: real quote change when available, else derived from the
+  // last two historical closes.
+  const prevClose = histBars.length > 1 ? histBars[histBars.length - 2].c : spot;
+  const chg = quote?.chg ?? spot - prevClose;
+  const chgPct = quote?.chgPct ?? (prevClose ? ((spot - prevClose) / prevClose) * 100 : 0);
+
+  // Header stat cluster — IV rank/percentile are derived from the synthetic
+  // base IV (no real IV-history feed), so the whole cluster carries an
+  // "illustrative" tag, same convention as the Source: Mock chips.
+  const symSeed = sym.sym.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const ivRank = Math.round(Math.min(98, Math.max(2, ((sym.iv - 0.12) / (0.55 - 0.12)) * 100)));
+  const ivPctile = Math.round(Math.min(98, Math.max(2, ivRank + ((symSeed % 13) - 6))));
+
+  // Next earnings from the same deterministic event calendar the timeline uses.
+  const nextEarnings = useMemo(() => {
+    const start = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 120);
+    return eventsFor(sym.sym, start, end).find((e) => e.kind === "earnings") ?? null;
+  }, [sym]);
+  const earnDays = nextEarnings
+    ? Math.max(0, Math.ceil((new Date(nextEarnings.date).getTime() - Date.now()) / 86_400_000))
+    : null;
+  const earnLabel = nextEarnings
+    ? new Date(nextEarnings.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()
+    : "—";
+
   // thesis
   const [low, setLow] = useState(sym.spot * 0.95);
   const [high, setHigh] = useState(sym.spot * 1.06);
@@ -144,7 +168,16 @@ export default function TradePage() {
     setDays(35);
   }, [sym]);
 
+  const resetView = () => {
+    setLow(spot * 0.95);
+    setHigh(spot * 1.06);
+    setDays(35);
+  };
+
   const probInBand = probBS({ spot, low, high, daysToExpiry: days, iv: sym.iv });
+
+  // chain depth (strikes each side of ATM) — drives the chain table
+  const [chainDepth, setChainDepth] = useState(5);
 
   // strategies
   const strategies = useMemo(
@@ -166,6 +199,7 @@ export default function TradePage() {
   const [bets, setBets] = useState<Bet[]>([]);
   const [confirm, setConfirm] = useState<Bet | null>(null);
   const [recentlyPlaced, setRecentlyPlaced] = useState<Bet | null>(null);
+  const openCount = bets.filter((b) => b.status === "open").length;
 
   const placeBet = (s: Strategy) => {
     const expiry = fmtDate(dateNDaysOut(days));
@@ -200,34 +234,23 @@ export default function TradePage() {
   })();
   const thesisSentence = `I think ${sym.sym} will ${direction} $${low.toFixed(2)} and $${high.toFixed(2)} by ${fmtDate(dateNDaysOut(days))}.`;
 
-  // workbench chrome: scrollspy step navigator + step-03 tabs
-  const [activeStep, setActiveStep] = useState<string>("thesis");
-  const [tab, setTab] = useState<TabId>("greeks");
-  const jumpTo = (id: string) =>
+  // under-the-hood tabs + anchor jumps (BetSlip uses these)
+  const [tab, setTab] = useState<TabId>("whatif");
+  const jumpTo = (id: string) => {
+    if (id === "manage") setTab("manage");
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) setActiveStep(e.target.id);
-      },
-      { rootMargin: "-35% 0px -55% 0px" }
-    );
-    STEPS.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) io.observe(el);
-    });
-    return () => io.disconnect();
-  }, []);
+  };
 
   const expiryStr = fmtDate(dateNDaysOut(days));
 
-  // narrate via /api/explain (LLM only narrates, never predicts probabilities)
-  const [narration, setNarration] = useState<string | null>(null);
+  // narrate via /api/explain (LLM only narrates, never predicts probabilities).
+  // The endpoint takes a fixed position payload — questions from the teacher
+  // input re-run the same explanation flow for the current position.
   const [narrating, setNarrating] = useState(false);
-  const narrate = async (s: Strategy) => {
+  const [thread, setThread] = useState<{ role: "user" | "teacher"; text: string }[]>([]);
+  const narrate = async (s: Strategy, question?: string) => {
+    if (question) setThread((cur) => [...cur, { role: "user", text: question }]);
     setNarrating(true);
-    setNarration(null);
     try {
       const r = await fetch("/api/explain", {
         method: "POST",
@@ -245,7 +268,7 @@ export default function TradePage() {
         }),
       });
       const j = await r.json();
-      setNarration(j.text || null);
+      if (j.text) setThread((cur) => [...cur, { role: "teacher", text: j.text }]);
     } finally {
       setNarrating(false);
     }
@@ -266,260 +289,262 @@ export default function TradePage() {
       <TickerBar />
       <Nav />
 
-      {/* Header */}
-      <section className="relative overflow-hidden border-b border-border bg-bg">
-        {/* prop scene: the bet as a physical object (Higgsfield) */}
+      {/* ── App shell: on lg+ everything below the nav fits one screen and panels
+             scroll internally. 91px = measured TickerBar (33.5px) + Nav (57px). */}
+      <div className="flex flex-col lg:h-[calc(100vh-91px)] lg:overflow-hidden">
+      {/* ── Header row: symbol · price · change | IV cluster · earnings · paper badge */}
+      <section className="relative overflow-hidden border-b border-border bg-bg lg:shrink-0">
         <img
           src="/media/trade/chip-hero@1600.webp"
           srcSet="/media/trade/chip-hero@800.webp 800w, /media/trade/chip-hero@1600.webp 1600w"
           sizes="100vw"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-[0.32]"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-[0.18]"
           style={{ maskImage: "linear-gradient(to left, black 30%, transparent 78%)" }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
-        <div className="pointer-events-none absolute -left-24 -top-32 h-[380px] w-[380px] rounded-full bg-bull/10 blur-[130px] drift" />
-        <div className="relative mx-auto flex max-w-[1400px] flex-wrap items-end justify-between gap-4 px-5 py-6">
-          <div>
-            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">
+        <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
+        <div className="relative mx-auto w-full max-w-[1600px] px-5 py-4 lg:py-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-2">
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">
               ⟢ bet builder · v2
               <Link href="/trade/chain" className="text-bull hover:underline">advanced view: see the chain →</Link>
             </div>
-            <h1
-              className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1]"
-              data-gsap="blur-in"
-              data-gsap-delay="0.08"
-              style={{ textShadow: "0 0 32px rgba(0,255,135,0.12)" }}
-            >
-              Stop showing the chain.
-              <span className="italic font-light text-bull"> Show the bet.</span>
-            </h1>
+            <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-bull">
+              <span className="size-1.5 rounded-full bg-bull pulse-dot" />
+              paper only · $100k practice account
+            </span>
           </div>
 
-          {/* symbol switcher */}
-          <div className="flex items-center gap-1 overflow-x-auto font-mono text-[11px] uppercase tracking-wider" data-gsap="fade-up" data-gsap-delay="0.16">
-            <span className="shrink-0 text-fg-faint mr-2">underlying</span>
-            {SYMBOLS.map((s, i) => (
-              <button
-                key={s.sym}
-                onClick={() => setSymIdx(i)}
-                className={`shrink-0 border px-3 py-1 transition-colors ${
-                  i === symIdx ? "border-bull bg-bull/10 text-bull" : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
-                }`}
-              >
-                {s.sym} <span className="ml-1 text-fg-faint tabular-nums">${s.spot.toFixed(2)}</span>
-              </button>
-            ))}
-            <span className="ml-3 flex shrink-0 items-center gap-2 text-fg-dim">
-              <span className="size-1.5 rounded-full bg-bull pulse-dot" /> live ${spot.toFixed(2)}
-            </span>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:mt-1.5 lg:items-center">
+            {/* symbol block — one dense baseline row on lg */}
+            <div className="lg:flex lg:flex-wrap lg:items-baseline lg:gap-x-4" data-gsap="fade-up">
+              <div className="flex flex-wrap items-baseline gap-3">
+                <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]" style={{ textShadow: "0 0 32px rgba(0,255,135,0.12)" }}>
+                  {sym.sym}
+                </h1>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-fg-dim">{quote?.name ?? sym.name}</span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-3 font-mono tabular-nums lg:mt-0">
+                <span className="text-2xl text-fg lg:text-xl">${spot.toFixed(2)}</span>
+                <span className={`text-sm ${chg >= 0 ? "text-bull" : "text-bear"}`}>
+                  {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
+                </span>
+              </div>
+              <div className="mt-1 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint lg:mt-0">
+                <span className={`size-1.5 rounded-full ${quote ? "bg-bull pulse-dot" : "bg-amber"}`} />
+                {quote ? `live price · ${quote.exch ?? "us market"}` : "seed price · connecting"}
+              </div>
+            </div>
+
+            {/* IV / earnings cluster — synthetic, tagged illustrative */}
+            <div className="flex flex-col items-start gap-2 sm:items-end lg:flex-row lg:items-center lg:gap-3" data-gsap="fade-up" data-gsap-delay="0.08">
+              <div className="flex divide-x divide-border font-mono">
+                {[
+                  { k: "iv rank", v: String(ivRank) },
+                  { k: "iv percentile", v: `${ivPctile}%` },
+                  { k: "iv", v: `${(sym.iv * 100).toFixed(1)}%` },
+                ].map((s) => (
+                  <div key={s.k} className="px-4 text-right first:pl-0">
+                    <div className="text-[9px] uppercase tracking-wider text-fg-faint">{s.k}</div>
+                    <div className="mt-1 text-lg tabular-nums text-fg lg:mt-0.5 lg:text-base">{s.v}</div>
+                  </div>
+                ))}
+                <div className="px-4 pr-0 text-right">
+                  <div className="text-[9px] uppercase tracking-wider text-fg-faint">earnings</div>
+                  <div className="mt-1 flex items-baseline justify-end gap-1.5 lg:mt-0.5">
+                    <span className="text-lg tabular-nums text-fg lg:text-base">{earnLabel}</span>
+                    {earnDays != null && (
+                      <span className="border border-bull/40 bg-bull/10 px-1 py-px text-[9px] uppercase tracking-wider text-bull">
+                        {earnDays}d
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-amber">
+                <span className="size-1 rounded-full bg-amber" />
+                illustrative · synthetic iv
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Workbench: the four steps in a main column + an always-visible bet slip.
-          Decision lives next to data — no more scrolling away from the action. */}
-      <div className="relative mx-auto grid w-full max-w-[1500px] grid-cols-12 gap-x-6 px-5">
-        {/* ---- main column ---- */}
-        <div className="col-span-12 lg:col-span-8 xl:col-span-9">
-          {/* step navigator — scrollspy keeps “where am I?” answered */}
-          <nav className="sticky top-0 z-30 -mx-5 border-b border-border bg-bg/85 px-5 py-2 backdrop-blur-md">
-            <div className="flex items-center gap-1 overflow-x-auto">
-              {STEPS.map((s, i) => (
+      {/* ── Terminal grid: chart + chain (≈60%) | strategy · greeks · teacher (≈40%) */}
+      <div className="relative mx-auto grid w-full max-w-[1600px] grid-cols-1 items-start gap-4 px-5 py-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch lg:gap-3 lg:overflow-hidden lg:py-3">
+        {/* ---- left column: toolbar → cone chart → chain (internal scroll) ---- */}
+        <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-hidden">
+          {/* toolbar strip — live controls only */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-border bg-surface px-3 py-2 font-mono text-[10px] uppercase tracking-wider lg:shrink-0 lg:flex-nowrap lg:gap-x-3 lg:overflow-x-auto">
+            <span className="text-fg-faint">underlying</span>
+            <div className="flex items-center gap-1">
+              {SYMBOLS.map((s, i) => (
                 <button
-                  key={s.id}
-                  onClick={() => jumpTo(s.id)}
-                  className={`shrink-0 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors ${
-                    activeStep === s.id
-                      ? "border-bull/60 bg-bull/10 text-bull"
-                      : "border-transparent text-fg-faint hover:text-fg"
+                  key={s.sym}
+                  onClick={() => setSymIdx(i)}
+                  className={`border px-2 py-0.5 transition-colors ${
+                    i === symIdx ? "border-bull/60 bg-bull/10 text-bull" : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
                   }`}
                 >
-                  <span className={activeStep === s.id ? "text-bull" : "text-fg-faint"}>0{i + 1}</span>
-                  <span className="ml-1.5">{s.label}</span>
+                  {s.sym}
                 </button>
               ))}
             </div>
-          </nav>
-
-          {/* Step 1 — Thesis */}
-          <section id="thesis" className="relative scroll-mt-16 overflow-hidden border-b border-border">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-4 -top-12 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-              data-gsap="parallax"
-              data-gsap-amount="60"
-            >
-              01
-            </div>
-            <div className="relative py-8">
-              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 01 / Thesis</div>
-              <h2
-                className="mt-2 font-display text-[clamp(1.7rem,3.2vw,2.9rem)] tracking-tightest leading-[1.05]"
-                data-gsap="blur-in"
-                data-gsap-delay="0.08"
-                style={{ textShadow: "0 0 40px rgba(0,255,135,0.1)" }}
+            <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
+            <label className="flex items-center gap-2 text-fg-faint">
+              strikes
+              <select
+                value={chainDepth}
+                onChange={(e) => setChainDepth(Number(e.target.value))}
+                className="border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] uppercase text-fg-dim outline-none focus:border-bull/50"
               >
-                <span className="text-fg-dim italic">"</span>
-                <ThesisLine sentence={thesisSentence} />
-                <span className="text-fg-dim italic">"</span>
-              </h2>
-              <p className="mt-3 max-w-[60ch] text-sm text-fg-dim" data-gsap="fade-up-soft" data-gsap-delay="0.16">
-                Drag the <span className="text-bull">green band</span> to set your price zone, the{" "}
-                <span className="text-amber">orange line ↔</span> to set the date. The slip on the right rebuilds live.
-              </p>
-
-              <div className="relative mt-5" data-gsap="scale-in" data-gsap-delay="0.1">
-                <div className="h-[420px] border border-border bg-bg transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)]">
-                  {mounted ? (
-                    <ProbabilityCone
-                      bars={histBars}
-                      spot={spot}
-                      iv={sym.iv}
-                      daysToExpiry={days}
-                      low={low}
-                      high={high}
-                      onChangeLow={setLow}
-                      onChangeHigh={setHigh}
-                      onChangeDays={setDays}
-                      events={events}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Step 2 — Strategy cards */}
-          <section id="pick" className="relative scroll-mt-16 overflow-hidden border-b border-border">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -left-6 -bottom-16 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-              data-gsap="parallax"
-              data-gsap-amount="60"
-            >
-              02
-            </div>
-            <div className="relative py-8">
-              <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 02 / Pick your bet</div>
-                  <h2
-                    className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1.05]"
-                    data-gsap="blur-in"
-                    data-gsap-delay="0.08"
-                  >
-                    Three ways to <span className="italic font-light text-bull">bet on it.</span>
-                  </h2>
-                </div>
-                <MagneticCTA>
-                  <button
-                    onClick={() => selected && narrate(selected)}
-                    className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull/20"
-                  >
-                    <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-                    explain {selected ? `"${selected.kind}"` : "this"}
-                  </button>
-                </MagneticCTA>
-              </div>
-
-              <StrategyCards
-                strategies={strategies}
-                selectedId={selectedId}
-                onSelect={(s) => setSelectedId(s.id)}
-                onPlace={(s) => { setSelectedId(s.id); placeBet(s); }}
-                spot={spot}
-                symbol={sym.sym}
+                <option value={4}>±4</option>
+                <option value={5}>±5</option>
+                <option value={8}>±8</option>
+              </select>
+            </label>
+            <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
+            {/* days-from-now slider — drives the same `days` state as the cone drag + chain stepper */}
+            <label className="flex shrink-0 items-center gap-2 text-fg-faint">
+              days from now
+              <input
+                type="range"
+                min={1}
+                max={365}
+                step={1}
+                value={days}
+                onChange={(e) => setDays(Number(e.target.value))}
+                className="h-1 w-24 accent-bull xl:w-32"
+                aria-label="days from now"
               />
-
-              {/* AI narration appears under cards */}
-              <AnimatePresence>
-                {(narrating || narration) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="mt-px border border-bull/40 bg-bull/5 p-5"
-                  >
-                    <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-bull">teacher · plain English</div>
-                    {narrating && <div className="text-fg-faint font-mono text-[11px]">teacher is thinking…</div>}
-                    {!narrating && narration && (
-                      <p className="text-[14px] leading-relaxed text-fg whitespace-pre-line">{narration}</p>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </section>
-
-          {/* Step 3 — Under the hood (tabbed: one panel at a time) */}
-          <section id="detail" className="relative scroll-mt-16 overflow-hidden border-b border-border">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-8 top-2 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-              data-gsap="parallax"
-              data-gsap-amount="60"
+              <span className="text-amber tabular-nums">
+                {days}d<span className="lg:hidden"> · {expiryStr}</span>
+              </span>
+            </label>
+            <button
+              onClick={resetView}
+              className="ml-auto shrink-0 border border-border px-2 py-0.5 text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
             >
-              03
+              reset view ⟲
+            </button>
+          </div>
+
+          {/* chart + draggable probability cone — ≈55% of the column on lg */}
+          <section id="thesis" className="scroll-mt-16 border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bull">⟢ forecast cone · {sym.sym}</span>
+              <span className="hidden max-w-[62%] truncate font-mono text-[10px] text-fg-dim md:block">
+                <ThesisLine sentence={thesisSentence} />
+              </span>
             </div>
-            <div className="relative py-8">
-              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 03 / Under the hood</div>
-              <h2
-                className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1.05]"
-                data-gsap="blur-in"
-                data-gsap-delay="0.08"
-              >
-                The math, in a <span className="italic font-light text-bull">language you speak.</span>
-              </h2>
-
-              <div className="mt-5 flex flex-wrap items-center gap-1" data-gsap="fade-up-soft">
-                {TABS.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    className={`border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] transition-colors ${
-                      tab === t.id
-                        ? "border-bull/60 bg-bull/10 text-bull"
-                        : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-4" data-gsap="fade-up-soft" data-gsap-delay="0.08">
-                {tab === "greeks" && <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
-                {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
-                {tab === "events" && mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
-                {tab === "models" && mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
+            <div className="relative h-[420px] bg-bg lg:h-auto lg:min-h-0 lg:flex-1">
+              {mounted ? (
+                <ProbabilityCone
+                  bars={histBars}
+                  spot={spot}
+                  iv={sym.iv}
+                  daysToExpiry={days}
+                  low={low}
+                  high={high}
+                  onChangeLow={setLow}
+                  onChangeHigh={setHigh}
+                  onChangeDays={setDays}
+                  events={events}
+                  bandProb={probInBand}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
+              )}
+              {/* in-band probability ring — same number the strategy panel prices from */}
+              <div className="pointer-events-none absolute left-4 top-4 z-10 hidden sm:block">
+                <InBandRing prob={probInBand} />
               </div>
             </div>
           </section>
 
-          {/* Step 4 — Manage */}
-          <section id="manage" className="relative scroll-mt-16 overflow-hidden">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -left-8 -top-10 select-none font-display text-[10rem] leading-none tracking-tightest text-fg opacity-[0.03]"
-              data-gsap="parallax"
-              data-gsap-amount="60"
-            >
-              04
-            </div>
-            <div className="relative py-8">
-              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">⟢ Step 04 / Manage</div>
-              <h2
-                className="mt-2 font-display text-[clamp(1.6rem,3vw,2.6rem)] tracking-tightest leading-[1.05]"
-                data-gsap="blur-in"
-                data-gsap-delay="0.08"
+          {/* options chain — fills the rest of the column; rows scroll internally,
+              footer stays pinned at the bottom of the column */}
+          <ChainTable
+            symbol={sym.sym}
+            spot={spot}
+            iv={sym.iv}
+            days={days}
+            perSide={chainDepth}
+            onStepDays={(d) => setDays(Math.max(1, Math.min(365, days + d)))}
+          />
+        </div>
+
+        {/* ---- right rail: strategy · greeks · teacher · analytics — its own scroll ---- */}
+        <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-y-auto">
+          {/* strategy panel — picker + legs + payoff/stat rail + place CTA, all inside */}
+          <section id="pick" className="scroll-mt-16 border border-border bg-surface lg:shrink-0">
+            <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">strategy · pick one of three</span>
+              <Link
+                href="/trade/chain"
+                className="border border-border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
               >
-                Where every other app abandons you. <span className="italic font-light text-bull">We don't.</span>
-              </h2>
-              <div className="mt-5">
+                edit legs ✎
+              </Link>
+            </div>
+            <StrategyCards
+              strategies={strategies}
+              selectedId={selectedId}
+              onSelect={(s) => setSelectedId(s.id)}
+              onPlace={(s) => { setSelectedId(s.id); placeBet(s); }}
+              spot={spot}
+              symbol={sym.sym}
+              columns={1}
+              compact
+            />
+            {selected && <LegsList s={selected} />}
+            {selected && (
+              <StrategyDetail
+                s={selected}
+                symbol={sym.sym}
+                spot={spot}
+                prob={probInBand}
+                onPlace={() => placeBet(selected)}
+              />
+            )}
+          </section>
+
+          {/* plain-english greeks */}
+          <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} onDetails={() => { window.location.href = "/greeks"; }} />
+
+          {/* AI teacher */}
+          <TeacherPanel
+            selected={selected}
+            narrating={narrating}
+            thread={thread}
+            onExplain={() => selected && narrate(selected)}
+            onAsk={(q) => selected && narrate(selected, q)}
+          />
+
+          {/* under the hood — one analytics panel at a time, compact rail edition */}
+          <section id="detail" className="scroll-mt-16 border border-border bg-surface lg:shrink-0">
+            <div className="flex items-center gap-1 overflow-x-auto border-b border-border bg-bg-soft px-2 py-1.5">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`shrink-0 border px-2 py-1 font-mono text-[9px] uppercase tracking-[0.15em] transition-colors ${
+                    tab === t.id
+                      ? "border-bull/60 bg-bull/10 text-bull"
+                      : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
+                  }`}
+                >
+                  {t.label}
+                  {t.id === "manage" ? ` (${openCount})` : ""}
+                </button>
+              ))}
+            </div>
+            <div id="manage" className="scroll-mt-16">
+              {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
+              {tab === "events" && mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
+              {tab === "models" && mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
+              {tab === "manage" && (
                 <ManagePanel
                   bets={bets}
                   liveSpot={spot}
@@ -529,29 +554,12 @@ export default function TradePage() {
                   }
                   onRoll={() => alert("Roll preview — extending to next monthly expiry. Coming soon as a real flow.")}
                 />
-              </div>
+              )}
             </div>
           </section>
         </div>
-
-        {/* ---- sticky bet slip rail (desktop) ---- */}
-        <aside className="hidden lg:col-span-4 lg:block xl:col-span-3">
-          <div className="sticky top-14 py-8">
-            <BetSlip
-              sym={sym.sym}
-              spot={spot}
-              low={low}
-              high={high}
-              expiry={expiryStr}
-              prob={probInBand}
-              selected={selected}
-              openCount={bets.filter((b) => b.status === "open").length}
-              onPlace={() => selected && placeBet(selected)}
-              onJump={jumpTo}
-            />
-          </div>
-        </aside>
       </div>
+      </div>{/* /app shell */}
 
       {/* mobile: essentials + PLACE pinned to the bottom */}
       <BetBar prob={probInBand} selected={selected} onPlace={() => selected && placeBet(selected)} />
@@ -611,7 +619,7 @@ export default function TradePage() {
             exit={{ opacity: 0, y: 16 }}
             className="fixed bottom-5 left-1/2 z-[110] -translate-x-1/2 border border-bull/60 bg-bull/10 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl"
           >
-            ✓ bet placed · scroll down to manage
+            ✓ bet placed · see the positions tab
           </motion.div>
         )}
       </AnimatePresence>
@@ -635,3 +643,277 @@ function ThesisLine({ sentence }: { sentence: string }) {
   );
 }
 
+/** Ring gauge overlaid on the chart — "N% IN BAND · PROBABILITY @ EXPIRATION". */
+function InBandRing({ prob }: { prob: number }) {
+  const r = 44;
+  const c = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(1, prob));
+  const tone = prob > 0.6 ? "var(--bull)" : prob > 0.35 ? "var(--cyan)" : "var(--bear)";
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <div className="relative">
+        <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden>
+          <circle cx="52" cy="52" r={r} stroke="var(--border)" strokeWidth="6" fill="rgba(5,5,5,0.55)" />
+          <circle
+            cx="52"
+            cy="52"
+            r={r}
+            stroke={tone}
+            strokeWidth="6"
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={c}
+            strokeDashoffset={c - c * p}
+            transform="rotate(-90 52 52)"
+            style={{
+              filter: "drop-shadow(0 0 6px rgba(0,255,135,0.45))",
+              transition: "stroke-dashoffset 0.5s cubic-bezier(.22,.68,.26,1), stroke 0.3s",
+            }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-display text-2xl leading-none tracking-tightest tabular-nums" style={{ color: tone }}>
+            {Math.round(prob * 100)}%
+          </span>
+          <span className="mt-1 font-mono text-[8px] uppercase tracking-[0.25em] text-fg-dim">in band</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+        <span className="size-2 shrink-0 border border-bull/60 bg-bull/20" aria-hidden />
+        <span className="leading-tight">probability<br />@ expiration</span>
+      </div>
+    </div>
+  );
+}
+
+/** The selected strategy's legs, broker-ticket style: Buy/Sell qty strike type · mid. */
+function LegsList({ s }: { s: Strategy }) {
+  return (
+    <div className="border-t border-border">
+      <div className="flex items-center justify-between bg-bg-soft px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint">
+        <span>legs · selected</span>
+        <span>mid px</span>
+      </div>
+      <ul className="divide-y divide-border-soft">
+        {s.legs.map((l, i) => (
+          <li key={i} className="flex items-center justify-between px-3 py-2 font-mono text-[12px] tabular-nums">
+            <span className={l.side === "long" ? "text-bull" : "text-bear"}>
+              {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
+            </span>
+            <span className={l.side === "long" ? "text-fg" : "text-bear"}>
+              {l.side === "long" ? "" : "−"}{l.premium.toFixed(2)}
+            </span>
+          </li>
+        ))}
+        <li className="flex items-center justify-between bg-bg px-3 py-2 font-mono text-[12px] tabular-nums">
+          <span className="text-fg">{s.cost > 0 ? "Net Debit" : "Net Credit"}</span>
+          <span className="text-bull">{Math.abs(s.cost / 100).toFixed(2)}</span>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+/** Selected-strategy detail, ref-style: fact chips, payoff diagram beside a
+ *  snug label/value stat rail, and the place-bet CTA — all inside the panel. */
+function StrategyDetail({
+  s,
+  symbol,
+  spot,
+  prob,
+  onPlace,
+}: {
+  s: Strategy;
+  symbol: string;
+  spot: number;
+  prob: number;
+  onPlace: () => void;
+}) {
+  const tone = STRATEGY_TONE[s.id];
+  const fmt = (n: number) =>
+    Number.isFinite(n) ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}` : n > 0 ? "uncapped" : "unbounded";
+  const definedRisk = Number.isFinite(s.maxLoss);
+  const chips: string[] = [s.cost > 0 ? "debit" : "credit", s.bias, ...(definedRisk ? ["defined risk"] : [])];
+  const rr =
+    Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0 ? s.maxProfit / Math.abs(s.maxLoss) : null;
+  const rail: { k: string; v: string; c: string }[] = [
+    { k: "max profit", v: fmt(s.maxProfit), c: "text-bull" },
+    { k: "max loss", v: fmt(s.maxLoss), c: "text-bear" },
+    ...(s.breakevens.length
+      ? [{ k: "breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / "), c: "text-fg" }]
+      : []),
+    { k: "pop", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull" },
+    ...(rr != null ? [{ k: "r:r", v: rr.toFixed(2), c: "text-fg" }] : []),
+  ];
+
+  return (
+    <div className="border-t border-border p-3">
+      {/* fact chips — derived from the strategy, never invented */}
+      <div className="flex flex-wrap items-center gap-1">
+        {chips.map((c, i) => (
+          <span
+            key={c}
+            className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+              i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
+            }`}
+          >
+            {c}
+          </span>
+        ))}
+        <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+          {s.cost > 0 ? "you pay" : "you collect"} ${Math.abs(s.cost).toFixed(0)}
+        </span>
+      </div>
+
+      {/* payoff diagram | snug stat rail */}
+      <div className="mt-3 flex items-stretch gap-4">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <PnlSparkline s={s} spot={spot} className="w-full min-h-16 flex-1" />
+          <div className="mt-1 text-center font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+            p/l @ expiration
+          </div>
+        </div>
+        <div className="grid w-[200px] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
+          {rail.map((it) => (
+            <div key={it.k} className="contents">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{it.k}</span>
+              <span className={`text-right font-mono text-[12px] tabular-nums ${it.c}`}>{it.v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* place CTA — bordered, inside the panel, tone-coloured like the cards */}
+      <button
+        type="button"
+        onClick={onPlace}
+        className="mt-3 flex w-full items-center justify-between border px-3 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider transition-opacity hover:opacity-85"
+        style={{ borderColor: tone.color, color: tone.color, background: tone.pillBg }}
+      >
+        <span className="inline-flex items-center gap-2">
+          <span className="size-1.5 rounded-full pulse-dot" style={{ background: tone.color }} />
+          place this bet on {symbol}
+        </span>
+        <span>→</span>
+      </button>
+      <div className="mt-1.5 text-right font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+        {Math.round(prob * 100)}% in band · black-scholes · paper only
+      </div>
+    </div>
+  );
+}
+
+/** AI teacher panel: explanation thread + "ask anything" input. Answers come
+ *  from the same /api/explain flow the explain button uses — it describes the
+ *  position the user built; it never gives advice. */
+function TeacherPanel({
+  selected,
+  narrating,
+  thread,
+  onExplain,
+  onAsk,
+}: {
+  selected: Strategy | null;
+  narrating: boolean;
+  thread: { role: "user" | "teacher"; text: string }[];
+  onExplain: () => void;
+  onAsk: (q: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "nearest" });
+  }, [thread.length, narrating]);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = q.trim();
+    if (!text || !selected || narrating) return;
+    setQ("");
+    onAsk(text);
+  };
+
+  return (
+    <section className="flex flex-col border border-border bg-surface lg:shrink-0">
+      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
+        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">
+          ai teacher
+          <span className="border border-bull/40 bg-bull/10 px-1 py-px font-mono text-[8px] uppercase tracking-[0.2em] text-bull">beta</span>
+        </span>
+        <button
+          type="button"
+          onClick={onExplain}
+          disabled={!selected || narrating}
+          className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          explain this position
+        </button>
+      </div>
+
+      <div className="flex max-h-[300px] min-h-[160px] flex-col gap-3 overflow-y-auto p-3 lg:max-h-[240px] lg:min-h-[120px]">
+        {thread.length === 0 && !narrating && (
+          <TeacherBubble
+            role="teacher"
+            text={
+              selected
+                ? `This panel describes the ${selected.kind} you built — max profit, max loss, breakevens, and what can go wrong. Press "explain this position", or type a question below.`
+                : "Pick a strategy on the left to get a plain-English read of the position."
+            }
+          />
+        )}
+        {thread.map((m, i) => (
+          <TeacherBubble key={i} role={m.role} text={m.text} />
+        ))}
+        {narrating && <TeacherBubble role="teacher" text="teacher is thinking…" thinking />}
+        <div ref={endRef} />
+      </div>
+
+      <form onSubmit={submit} className="flex items-center gap-2 border-t border-border bg-bg-soft p-2">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Ask anything about this trade..."
+          disabled={!selected}
+          className="min-w-0 flex-1 border border-border bg-bg px-3 py-2 font-mono text-[12px] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-bull/50 disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={!selected || narrating || !q.trim()}
+          aria-label="ask the teacher"
+          className="flex size-9 shrink-0 items-center justify-center bg-bull text-bg transition-colors hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 12h14M13 5l7 7-7 7" />
+          </svg>
+        </button>
+      </form>
+      <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+        describes the position you built · education, not advice
+      </div>
+    </section>
+  );
+}
+
+function TeacherBubble({ role, text, thinking }: { role: "user" | "teacher"; text: string; thinking?: boolean }) {
+  if (role === "user") {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[85%] border border-border bg-bg-soft px-3 py-2 text-[12px] leading-relaxed text-fg">{text}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-end gap-2">
+      <span className="flex size-8 shrink-0 select-none items-center justify-center border border-bull/40 bg-bg font-mono text-[12px] text-bull" aria-hidden>
+        :]
+      </span>
+      <div
+        className={`relative max-w-[85%] whitespace-pre-line border border-bull/40 bg-surface px-3 py-2 leading-relaxed ${
+          thinking ? "font-mono text-[11px] text-fg-faint" : "text-[12px] text-fg"
+        }`}
+      >
+        {text}
+      </div>
+    </div>
+  );
+}

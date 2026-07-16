@@ -338,7 +338,7 @@ export function ScrollCinema() {
       import("./Bull3D"),
       import("./CandleField3D"),
       import("./Tunnel3D"),
-      fetch("/models/bull.glb").then((r) => r.arrayBuffer()),
+      fetch("/models/bull-crystal.glb").then((r) => r.arrayBuffer()),
     ]);
     const minTime = new Promise((r) => window.setTimeout(r, 650)); // don't flash the loader
 

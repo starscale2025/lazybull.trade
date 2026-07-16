@@ -197,13 +197,68 @@ function AggregateVerdict({
       ? "text-amber"
       : "text-fg-dim";
 
+  const total = counts.buy + counts.sell + counts.hold + counts.warn;
+  const agreeing = side === "buy" ? counts.buy : side === "sell" ? counts.sell : side === "warn" ? counts.warn : counts.hold;
+  const arcColor =
+    side === "buy" ? "var(--bull)" : side === "sell" ? "var(--bear)" : side === "warn" ? "var(--amber)" : "var(--fg-dim)";
+  const mood =
+    side === "buy" ? "bullish" : side === "sell" ? "bearish" : side === "warn" ? "caution" : "mixed";
+
   return (
     <div className={`border ${bg} p-3`}>
       <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-        <span>aggregate</span>
+        <span>consensus meter</span>
         <span>spot ${spot.toFixed(2)}</span>
       </div>
-      <div className={`mt-1 font-display text-3xl tracking-tightest ${text}`}>{side.toUpperCase()}</div>
+
+      {/* segmented agreement arc — one segment per completed bot, lit = the
+          dominant side's votes (design ref: docs/design-refs/03-quant-workbench.png) */}
+      {total > 0 && (
+        <div className="relative mx-auto mt-2 w-full max-w-[220px]">
+          <svg viewBox="0 0 200 112" className="w-full">
+            {Array.from({ length: total }, (_, i) => {
+              const gapDeg = total > 1 ? 5 : 0;
+              const segDeg = (180 - gapDeg * (total - 1)) / total;
+              const a0 = 180 - i * (segDeg + gapDeg);
+              const a1 = a0 - segDeg;
+              const r = 86;
+              const rad = (d: number) => (d * Math.PI) / 180;
+              const x0 = 100 + r * Math.cos(rad(a0));
+              const y0 = 104 - r * Math.sin(rad(a0));
+              const x1 = 100 + r * Math.cos(rad(a1));
+              const y1 = 104 - r * Math.sin(rad(a1));
+              const lit = i < agreeing;
+              return (
+                <path
+                  key={i}
+                  d={`M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`}
+                  fill="none"
+                  stroke={lit ? arcColor : "var(--border)"}
+                  strokeWidth="10"
+                  strokeLinecap="butt"
+                  style={lit ? { filter: `drop-shadow(0 0 6px ${arcColor})` } : undefined}
+                />
+              );
+            })}
+          </svg>
+          <div className="absolute inset-x-0 bottom-0 text-center">
+            <div className="font-display text-2xl tracking-tightest text-fg">
+              {agreeing} <span className="text-fg-faint">of</span> {total}
+            </div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">
+              models agree
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-2 flex items-center justify-center gap-2">
+        <span className={`border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${text} ${side === "buy" ? "border-bull/40" : side === "sell" ? "border-bear/40" : side === "warn" ? "border-amber/40" : "border-border"}`}>
+          {mood}
+        </span>
+        <span className={`font-display text-xl tracking-tightest ${text}`}>{side.toUpperCase()}</span>
+      </div>
+
       <div className="mt-2 grid grid-cols-4 gap-px overflow-hidden border border-border bg-border">
         {[
           { l: "buy", v: counts.buy, c: "text-bull" },
@@ -248,10 +303,10 @@ function teacherNote(side: Verdict["side"], counts: ReturnType<typeof countSides
     return "Add a bot or two from the library, then press RUN ALL. The agreement between bots is more interesting than any single one.";
   }
   if (side === "buy" && counts.buy >= 2) {
-    return `${counts.buy} bots agree on long. When independent methods land on the same answer, you have a real signal — not just a coincidence. Risk-size accordingly.`;
+    return `${counts.buy} bots agree on long. When independent methods land on the same answer, that agreement is historically more informative than any single model — though it is still model output, not advice.`;
   }
   if (side === "sell" && counts.sell >= 2) {
-    return `${counts.sell} bots want to sell. Multiple methods pointing the same way is your best evidence. If you don't want to short, at least don't be long here.`;
+    return `${counts.sell} bots lean bearish. Multiple methods pointing the same way was historically the strongest evidence this workbench produces — worth understanding why before dismissing it.`;
   }
   if (counts.buy > 0 && counts.sell > 0) {
     return `Bots disagree (${counts.buy} buy / ${counts.sell} sell). That usually means trend & reversion bots are fighting — the market is in transition. Wait for confirmation.`;

@@ -64,8 +64,13 @@
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
-* {
-  border-color: var(--border);
+/* default border color lives in @layer base so Tailwind border-color utilities
+   (border-bull, border-bear/40, …) can override it — unlayered, this rule beat
+   every utility and rendered all accent borders gray */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 html, body {

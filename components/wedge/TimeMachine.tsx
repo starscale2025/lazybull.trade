@@ -29,14 +29,14 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
   if (!s) {
     return (
-      <div className="border border-border bg-bg p-4 font-mono text-[11px] text-fg-faint">
+      <div className="bg-bg p-3 font-mono text-[11px] text-fg-faint">
         Pick a strategy to time-machine its P&L.
       </div>
     );
   }
 
   return (
-    <div className="border border-border bg-bg p-5">
+    <div className="bg-bg p-3">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           <span className="size-1.5 rounded-full bg-cyan" />
@@ -53,7 +53,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
       <div className="mb-4 flex items-baseline justify-between">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">scenario value</div>
-          <div className={`font-display text-4xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
+          <div className={`font-display text-3xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
             {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
           </div>
         </div>
