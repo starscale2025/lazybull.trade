@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
-import { Grid, Line, MeshReflectorMaterial } from "@react-three/drei";
+import { Grid, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { CANDLE3D } from "@/lib/cinema";
@@ -209,39 +209,75 @@ function useCrystalGeometry(fallback: THREE.BufferGeometry) {
   return geo ?? fallback;
 }
 
-// The floor's "total reflection", done the honest-cheat way: mirrored clones of
-// every candle below the glass plane, dimmed and fading with depth. Reads as a
-// perfect mirror regardless of fog/bloom thresholds, costs two draw groups.
+// The candles' reflections, done the honest-cheat way: mirrored clones hanging
+// from each candle's OWN base (wick low). A plane-mirrored image can't carry
+// this act — the chart climbs ~12 units above the static floor while the camera
+// tracks the trend at ~20° pitch, so anything mirrored across FLOOR_Y projects
+// below the frustum (NDC y < -1) from build ~0.05 to ~0.65: no reflection until
+// the end pull-back. Anchoring per-candle keeps the reflection glued to its
+// candle — visible from the FIRST printed candle — and the vertical alpha fade
+// below makes it die with depth like polished obsidian instead of reading as an
+// upside-down twin. Pure function of rf → scrub-reversible.
 const FLOOR_Y = -0.54;
-function MirrorCandles({ body }: { body: THREE.BufferGeometry }) {
+
+// Reflection fade: full strength at the contact end, gently dimming toward the
+// deep end — NEVER to zero, so body + wick outlines stay crisp and readable the
+// whole way down (true-mirror read, not a smudge). Unit-box / normalized-crystal
+// local y spans ±0.5, and after the mirror flip (scale.y<0) local +y points
+// world-DOWN, so depth = position.y + 0.5. Constant uniforms, no per-frame
+// state. If a future three renames a chunk the replace no-ops and clones just
+// render unfaded — graceful.
+function reflectionFade(mat: THREE.MeshStandardMaterial) {
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying float vRefDepth;")
+      .replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\nvRefDepth = clamp(position.y + 0.5, 0.0, 1.0);"
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying float vRefDepth;")
+      .replace(
+        "#include <dithering_fragment>",
+        "#include <dithering_fragment>\ngl_FragColor.a *= 1.0 - 0.6 * vRefDepth;"
+      );
+  };
+  return mat;
+}
+
+function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.BufferGeometry }) {
   const green = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({
-        color: "#031a10",
-        emissive: new THREE.Color("#00ff87"),
-        emissiveIntensity: 0.34,
-        roughness: 0.35,
-        metalness: 0.1,
-        flatShading: true,
-        transparent: true,
-        opacity: 0.42,
-        depthWrite: false,
-      }),
+      reflectionFade(
+        new THREE.MeshStandardMaterial({
+          color: "#031a10",
+          emissive: new THREE.Color("#00ff87"),
+          emissiveIntensity: 0.4,
+          roughness: 0.35,
+          metalness: 0.1,
+          flatShading: true,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+        })
+      ),
     []
   );
   const red = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({
-        color: "#1d0710",
-        emissive: new THREE.Color("#ff2e63"),
-        emissiveIntensity: 0.45,
-        roughness: 0.35,
-        metalness: 0.1,
-        flatShading: true,
-        transparent: true,
-        opacity: 0.42,
-        depthWrite: false,
-      }),
+      reflectionFade(
+        new THREE.MeshStandardMaterial({
+          color: "#1d0710",
+          emissive: new THREE.Color("#ff2e63"),
+          emissiveIntensity: 0.52,
+          roughness: 0.35,
+          metalness: 0.1,
+          flatShading: true,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+        })
+      ),
     []
   );
   const refs = useRef<(THREE.Group | null)[]>([]);
@@ -256,7 +292,12 @@ function MirrorCandles({ body }: { body: THREE.BufferGeometry }) {
       const c3 = c1 + 1;
       const b = grow - 1;
       const e = 1 + c3 * b * b * b + c1 * b * b;
-      g.scale.set(1, -Math.max(0.0001, e), 1); // negative y = the mirror flip
+      const ey = Math.max(0.0001, e);
+      // slide the anchor with the pop so the clone's wick tip stays glued to the
+      // real wick tip while both grow (at e=1 this equals the true mirror pose:
+      // y' = 2*wl - cy, since cy - (wh - wl) = 2*wl - cy)
+      g.position.y = CANDLES[i].cy - ey * (CANDLES[i].wh - CANDLES[i].wl);
+      g.scale.set(1, -ey, 1); // negative y = the mirror flip
     }
   });
   return (
@@ -269,12 +310,12 @@ function MirrorCandles({ body }: { body: THREE.BufferGeometry }) {
             ref={(el) => {
               refs.current[i] = el;
             }}
-            // mirror across the glass plane: y' = 2*FLOOR_Y - y, flipped
-            position={[c.x, 2 * FLOOR_Y - c.cy, 0]}
+            // mirror across the candle's own base (wl): y' = cy - (wh - wl), flipped
+            position={[c.x, c.cy - (c.wh - c.wl), 0]}
             scale={[1, -0.0001, 1]}
           >
             <mesh geometry={body} material={m} scale={[0.72, c.h, 0.72]} />
-            <mesh geometry={body} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
+            <mesh geometry={box} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
           </group>
         );
       })}
@@ -286,27 +327,74 @@ function Candles() {
   const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
   const body = useCrystalGeometry(box);
   const hitMat = useMemo(() => new THREE.MeshBasicMaterial({ visible: false }), []);
+  // Bodies are TRANSLUCENT GLASS (the reference: a green glass block with a
+  // glowing deep-green core). Transmission refracts whatever sits behind the
+  // body (neighbour candles, dust, the floor), the emerald attenuation tints
+  // the volume, and a low emissive keeps the core glowing — against this black
+  // void pure transmission alone would sample mostly-empty space and read as
+  // smoke, so the core glow is what sells the glass. Clearcoat is the wet outer
+  // polish; flatShading keeps the cut-crystal facets frosted. Thickness is the
+  // constant 0.72 x/z footprint (rays cross bodies sideways; only candle HEIGHT
+  // varies, so two shared materials still shade all 48 correctly).
   const green = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({
-        color: "#052a1b",
+      new THREE.MeshPhysicalMaterial({
+        color: "#9fffd4",
+        transmission: 0.92,
+        thickness: 0.72,
+        ior: 1.5,
+        roughness: 0.16,
+        metalness: 0,
+        attenuationColor: new THREE.Color("#00ff87"),
+        attenuationDistance: 1.1,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.22,
         emissive: new THREE.Color("#00ff87"),
-        emissiveIntensity: 0.72,
-        roughness: 0.22,
-        metalness: 0.15,
+        emissiveIntensity: 0.42,
         flatShading: true,
       }),
     []
   );
   const red = useMemo(
     () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#ffc0cf",
+        transmission: 0.92,
+        thickness: 0.72,
+        ior: 1.5,
+        roughness: 0.16,
+        metalness: 0,
+        attenuationColor: new THREE.Color("#ff2e63"),
+        attenuationDistance: 1.0,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.22,
+        emissive: new THREE.Color("#ff2e63"),
+        emissiveIntensity: 0.55,
+        flatShading: true,
+      }),
+    []
+  );
+  // Wicks stay opaque and HOT — they are what bloom reads, now that the bodies
+  // glow softly from within instead of carrying the whole emissive load.
+  const wickGreen = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#052a1b",
+        emissive: new THREE.Color("#00ff87"),
+        emissiveIntensity: 1.7,
+        roughness: 0.4,
+        metalness: 0,
+      }),
+    []
+  );
+  const wickRed = useMemo(
+    () =>
       new THREE.MeshStandardMaterial({
         color: "#2e0a15",
         emissive: new THREE.Color("#ff2e63"),
-        emissiveIntensity: 0.95,
-        roughness: 0.22,
-        metalness: 0.15,
-        flatShading: true,
+        emissiveIntensity: 2.1,
+        roughness: 0.4,
+        metalness: 0,
       }),
     []
   );
@@ -328,9 +416,12 @@ function Candles() {
       const f = i === FLARE.idx ? FLARE.amt : 0;
       g.scale.set(1 + 0.14 * f, Math.max(0.0001, e) * (1 + 0.05 * f), 1 + 0.14 * f);
     }
-    // the whole ridge breathes faintly — alive even between scrolls
-    green.emissiveIntensity = 0.9 + 0.1 * Math.sin(time * 1.15);
-    red.emissiveIntensity = 1.2 + 0.14 * Math.sin(time * 1.5 + 2);
+    // the whole ridge breathes faintly — alive even between scrolls. Wicks
+    // carry the bloom; the glass cores pulse gently underneath them.
+    green.emissiveIntensity = 0.42 + 0.08 * Math.sin(time * 1.15);
+    red.emissiveIntensity = 0.55 + 0.1 * Math.sin(time * 1.5 + 2);
+    wickGreen.emissiveIntensity = 1.7 + 0.25 * Math.sin(time * 1.15);
+    wickRed.emissiveIntensity = 2.1 + 0.3 * Math.sin(time * 1.5 + 2);
     // hovered candle gets a hot local light (its flare)
     const fl = flareLight.current;
     if (fl) {
@@ -344,7 +435,8 @@ function Candles() {
   return (
     <group>
       {CANDLES.map((c, i) => {
-        const m = c.up ? green : red;
+        const bm = c.up ? green : red;
+        const wm = c.up ? wickGreen : wickRed;
         // Body + wick are both centered on the close level, so scaling the parent
         // group's Y grows the whole candle in place.
         return (
@@ -356,12 +448,12 @@ function Candles() {
             position={[c.x, c.cy, 0]}
             scale={[1, 0, 1]}
           >
-            <mesh geometry={body} material={m} scale={[0.72, c.h, 0.72]} />
-            <mesh geometry={box} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
+            <mesh geometry={body} material={bm} scale={[0.72, c.h, 0.72]} />
+            <mesh geometry={box} material={wm} scale={[0.11, c.wh - c.wl, 0.11]} />
           </group>
         );
       })}
-      <MirrorCandles body={body} />
+      <MirrorCandles body={body} box={box} />
       {/* forgiving invisible hitboxes for hover (material invisible, ray-visible) */}
       <group
         ref={(el) => {
@@ -897,22 +989,26 @@ export default function CandleField3D({
       <Dust seed={23} count={320} area={[80, 20, 16]} center={[SPAN / 2, 9, -4]} color="#28d7ff" size={0.045} speed={0.07} react={0.5} />
       <Dust seed={37} count={260} area={[60, 10, 10]} center={[SPAN / 2, 2.5, 1]} color="#9dffcf" size={0.04} speed={0.16} react={1.3} />
 
-      {/* black-glass floor: the glowing ridge reflects in it (the “wet look”) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SPAN / 2, -0.54, 0]}>
+      {/* Polished black-glass floor — deliberately NOT a render-to-texture
+          reflector. With this rig (~20° pitch, the chart towering ~12 units
+          above FLOOR_Y) a true plane-mirrored image projects below the frustum
+          for nearly the whole act, so a MeshReflectorMaterial shows nothing
+          until the end pull-back (and its extra 1024² scene pass would double
+          again through the glass bodies' transmission pass). The crisp
+          candle+wick reflection is carried by MirrorCandles instead; this plane
+          is the glass those reflections appear to live in — near-black, tight
+          clearcoat highlights under the print-head/flare lights (the wet
+          sheen), slightly translucent so it dies softly into the fog. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SPAN / 2, FLOOR_Y, 0]}>
         <planeGeometry args={[SPAN * 3, 90]} />
-        {/* obsidian mirror: the candles double themselves in the floor */}
-        <MeshReflectorMaterial
-          blur={[0, 0]}
-          resolution={1024}
-          mixBlur={0}
-          mixStrength={7}
-          roughness={0.02}
-          depthScale={0}
-          color="#040604"
-          metalness={0.7}
-          mirror={1}
+        <meshPhysicalMaterial
+          color="#030605"
+          roughness={0.08}
+          metalness={0.5}
+          clearcoat={1}
+          clearcoatRoughness={0.15}
           transparent
-          opacity={0.5}
+          opacity={0.62}
         />
       </mesh>
       {/* faint grid floats on the glass */}
