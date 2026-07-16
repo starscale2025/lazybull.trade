@@ -14,7 +14,7 @@ import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/p
 import { Grid, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { cinemaClock } from "@/lib/cinema-clock";
-import { CANDLE3D } from "@/lib/cinema";
+import { CANDLE3D, CANDLE_BUILD_END, candleLabT } from "@/lib/cinema";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -70,10 +70,20 @@ const CANDLES: Candle[] = (() => {
 const PEAK_Y = CANDLES[DIVERGE].cy;
 
 // How far the chart has "printed" — candles form left→right as you scroll, like
-// a live market ticking in. Completes a touch before the layer fades out.
+// a live market ticking in. The chart timeline deliberately completes at
+// CANDLE_BUILD_END (before the window's out0): the act's tail belongs to the
+// LAB FINALE (see IceCandle), which runs on candleLabT over CANDLE_LAB.
 const buildAt = (progress: number) =>
-  clamp((progress - CANDLE3D.in0) / (CANDLE3D.out0 - CANDLE3D.in0), 0, 1);
+  clamp((progress - CANDLE3D.in0) / (CANDLE_BUILD_END - CANDLE3D.in0), 0, 1);
 const revealF = (progress: number) => clamp(buildAt(progress) / 0.9, 0, 1) * N;
+
+// The candle the AI "takes into the lab" for the finale: the last bull candle
+// of the floor chop — right where the pulled-back camera rests, cleanly
+// detachable once the chart has landed.
+const LAB_I = (() => {
+  for (let i = N - 1; i >= 0; i--) if (CANDLES[i].up) return i;
+  return N - 1;
+})();
 
 // Soft round sprite for particles (raw gl_Points render as squares up close).
 const dotTexture = (() => {
@@ -316,21 +326,25 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
   const refs = useRef<(THREE.Group | null)[]>([]);
   useFrame(() => {
     const rf = revealF(cinemaClock.progress);
+    // the lab candle's reflection dies with its liftoff — a candle in the air
+    // has no contact point on the glass
+    const lift = 1 - smooth(0.02, 0.22, candleLabT(cinemaClock.progress));
     for (let i = 0; i < N; i++) {
       const g = refs.current[i];
       if (!g) continue;
       const grow = clamp(rf - i, 0, 1);
-      g.visible = grow > 0.001;
+      const lk = i === LAB_I ? lift : 1;
+      g.visible = grow > 0.001 && lk > 0.001;
       const c1 = 1.70158;
       const c3 = c1 + 1;
       const b = grow - 1;
       const e = 1 + c3 * b * b * b + c1 * b * b;
-      const ey = Math.max(0.0001, e);
+      const ey = Math.max(0.0001, e * lk);
       // slide the anchor with the pop so the clone's wick tip stays glued to the
       // real wick tip while both grow (at e=1 this equals the true mirror pose:
       // y' = 2*wl - cy, since cy - (wh - wl) = 2*wl - cy)
       g.position.y = CANDLES[i].cy - ey * (CANDLES[i].wh - CANDLES[i].wl);
-      g.scale.set(1, -ey, 1); // negative y = the mirror flip
+      g.scale.set(lk, -ey, lk); // negative y = the mirror flip
     }
   });
   return (
@@ -353,6 +367,132 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
           </group>
         );
       })}
+    </group>
+  );
+}
+
+// THE LAB BEAT (candleLabT: progress 0.50→0.55): the AI takes ONE candle into
+// the lab. The LAB_I bull candle lifts out of the field SPINNING, freezes from
+// market-green to ICE (frosty white-cyan glass, pale-blue attenuation, bright
+// cool core), drifts to the RIGHT side of the screen and STRETCHES vertically —
+// body and wick pulled up+down as if under analysis — while the quant-bot
+// panel (DOM overlay in ScrollCinema, same clock) computes on the left. The
+// landing spot is CAMERA-RELATIVE (a fixed NDC point unprojected each frame),
+// so it sits at ~72% viewport x at any aspect ratio and keeps breathing with
+// the pointer-orbit. Every pose is a pure function of candleLabT — scrubbing
+// back re-freezes it into its slot (Candles/MirrorCandles reverse the liftoff).
+const LAB_POSE = {
+  green: {
+    color: new THREE.Color("#9fffd4"),
+    attenuation: new THREE.Color("#00ff87"),
+    emissive: new THREE.Color("#00ff87"),
+    core: new THREE.Color("#7dffc9"),
+    wick: new THREE.Color("#00ff87"),
+  },
+  ice: {
+    color: new THREE.Color("#f2fbff"),
+    attenuation: new THREE.Color("#bfe8ff"),
+    emissive: new THREE.Color("#9fdcff"),
+    core: new THREE.Color("#e4f6ff"),
+    wick: new THREE.Color("#cfeeff"),
+  },
+};
+
+function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.BufferGeometry }) {
+  const group = useRef<THREE.Group>(null);
+  const bodyRef = useRef<THREE.Mesh>(null);
+  const coreRef = useRef<THREE.Mesh>(null);
+  const wickRef = useRef<THREE.Mesh>(null);
+  const light = useRef<THREE.PointLight>(null);
+  // dedicated materials (one candle) — per-frame lerp green→ice is f(lt) only
+  const glass = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#9fffd4",
+        transmission: 0.92,
+        thickness: 0.72,
+        ior: 1.5,
+        roughness: 0.16,
+        metalness: 0,
+        attenuationColor: new THREE.Color("#00ff87"),
+        attenuationDistance: 1.1,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.22,
+        emissive: new THREE.Color("#00ff87"),
+        emissiveIntensity: 0.22,
+        flatShading: true,
+      }),
+    []
+  );
+  const core = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#000000",
+        emissive: new THREE.Color("#7dffc9"),
+        emissiveIntensity: 1.25,
+        roughness: 0.5,
+        metalness: 0,
+      }),
+    []
+  );
+  const wick = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#052a1b",
+        emissive: new THREE.Color("#00ff87"),
+        emissiveIntensity: 1.7,
+        roughness: 0.4,
+        metalness: 0,
+      }),
+    []
+  );
+  const dir = useMemo(() => new THREE.Vector3(), []);
+  const target = useMemo(() => new THREE.Vector3(), []);
+  useFrame((state) => {
+    const g = group.current;
+    if (!g) return;
+    const lt = candleLabT(cinemaClock.progress);
+    g.visible = lt > 0.001;
+    if (!g.visible) return;
+    const c = CANDLES[LAB_I];
+    // landing spot: NDC (0.44, 0.06) ≈ 72% viewport x, a hair above center,
+    // 11 units out along that ray — recomputed each frame so it tracks the rig
+    dir.set(0.44, 0.06, 0.5).unproject(state.camera).sub(state.camera.position).normalize();
+    target.copy(state.camera.position).addScaledVector(dir, 11);
+    const move = smooth(0.06, 0.62, lt); // liftoff → drift right
+    const arc = Math.sin(move * Math.PI) * 1.4; // rises on the way, settles at the bench
+    g.position.set(
+      lerp(c.x, target.x, move),
+      lerp(c.cy, target.y, move) + arc,
+      lerp(0, target.z, move)
+    );
+    g.rotation.y = lt * Math.PI * 3.5; // spins out of the field, lands face-on
+    g.scale.setScalar(1 + 2.3 * smooth(0.1, 0.7, lt)); // floor candle → hero scale
+    // the ANALYSIS stretch: body + wick elongate up/down while the footprint slims
+    const s = smooth(0.45, 0.96, lt);
+    const slim = 1 - 0.22 * s;
+    bodyRef.current?.scale.set(0.72 * slim, c.h * (1 + 1.6 * s), 0.72 * slim);
+    coreRef.current?.scale.set(0.36 * slim, c.h * 0.66 * (1 + 1.9 * s), 0.36 * slim);
+    wickRef.current?.scale.set(0.11 * slim, (c.wh - c.wl) * (1 + 2.3 * s), 0.11 * slim);
+    // green → ICE as it leaves the field
+    const k = smooth(0.12, 0.5, lt);
+    glass.color.lerpColors(LAB_POSE.green.color, LAB_POSE.ice.color, k);
+    glass.attenuationColor.lerpColors(LAB_POSE.green.attenuation, LAB_POSE.ice.attenuation, k);
+    glass.emissive.lerpColors(LAB_POSE.green.emissive, LAB_POSE.ice.emissive, k);
+    glass.attenuationDistance = lerp(1.1, 1.7, k);
+    glass.emissiveIntensity = lerp(0.22, 0.32, k);
+    core.emissive.lerpColors(LAB_POSE.green.core, LAB_POSE.ice.core, k);
+    core.emissiveIntensity = lerp(1.25, 1.85, k) + 0.12 * Math.sin(state.clock.elapsedTime * 2.2);
+    wick.emissive.lerpColors(LAB_POSE.green.wick, LAB_POSE.ice.wick, k);
+    wick.emissiveIntensity = lerp(1.7, 2.3, k);
+    if (light.current) light.current.intensity = 15 * k; // cool spill on the glass
+  });
+  return (
+    <group ref={group} visible={false}>
+      <mesh ref={bodyRef} geometry={body} material={glass} />
+      <mesh ref={coreRef} geometry={box} material={core} />
+      <mesh ref={wickRef} geometry={box} material={wick} />
+      <pointLight ref={light} color="#bfe8ff" distance={9} decay={2} intensity={0} position={[0.6, 0.4, 1.4]} />
     </group>
   );
 }
@@ -465,6 +605,9 @@ function Candles() {
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     const rf = revealF(cinemaClock.progress);
+    // lab liftoff: the chosen candle shrinks out of its field slot while the
+    // IceCandle (spawned on the same spot) takes over — reversible hand-off
+    const lift = 1 - smooth(0.02, 0.22, candleLabT(cinemaClock.progress));
     for (let i = 0; i < N; i++) {
       const g = refs.current[i];
       if (!g) continue;
@@ -476,7 +619,12 @@ function Candles() {
       const b = grow - 1;
       const e = 1 + c3 * b * b * b + c1 * b * b; // 0 at grow=0, 1 at grow=1
       const f = i === FLARE.idx ? FLARE.amt : 0;
-      g.scale.set(1 + 0.14 * f, Math.max(0.0001, e) * (1 + 0.05 * f), 1 + 0.14 * f);
+      const lk = i === LAB_I ? lift : 1;
+      g.scale.set(
+        (1 + 0.14 * f) * lk,
+        Math.max(0.0001, e * (1 + 0.05 * f) * lk),
+        (1 + 0.14 * f) * lk
+      );
     }
     // the whole ridge breathes faintly — alive even between scrolls. One pulse,
     // three layers: hot wicks feed bloom, the inner cores throb beneath them,
@@ -521,6 +669,7 @@ function Candles() {
         );
       })}
       <MirrorCandles body={body} box={box} />
+      <IceCandle body={body} box={box} />
       {/* forgiving invisible hitboxes for hover (material invisible, ray-visible) */}
       <group
         ref={(el) => {
@@ -919,8 +1068,11 @@ function AIForecast() {
   const lineRef = useRef<any>(null); // drei <Line> → Line2 (has .material.opacity)
   useFrame(() => {
     // The forecast draws in as price diverges from the AI's call (the crash) —
-    // the prediction appears just before reality falls into it.
-    const reveal = smooth(0.5, 0.82, buildAt(cinemaClock.progress));
+    // the prediction appears just before reality falls into it. It bows out as
+    // the lab beat begins (it sits exactly where the ice candle flies to).
+    const reveal =
+      smooth(0.5, 0.82, buildAt(cinemaClock.progress)) *
+      (1 - smooth(0, 0.3, candleLabT(cinemaClock.progress)));
     const cm = coneRef.current?.material as THREE.MeshBasicMaterial | undefined;
     if (cm) cm.opacity = 0.19 * reveal;
     if (lineRef.current?.material) lineRef.current.material.opacity = 0.92 * reveal;

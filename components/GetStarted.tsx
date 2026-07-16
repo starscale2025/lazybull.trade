@@ -7,6 +7,32 @@ import { HungCard } from "./atmosphere/HungCard";
 // The single landing the cinema hands off to (and the page's real, crawlable
 // content). Live/glowing, but with continuous — not entrance — effects so the
 // baked reveal frame matches and the handoff stays seamless.
+
+// Below-the-fold loops load LAZILY: preload none/metadata keeps their megabytes
+// out of the initial page load, and playback (which triggers the real fetch)
+// only starts as the video nears the viewport. muted is (re)set via ref because
+// React omits the muted ATTRIBUTE in SSR markup, so the browser would otherwise
+// veto autoplay pre-hydration.
+const lazyLoop = (el: HTMLVideoElement | null) => {
+  if (!el) return;
+  el.muted = true;
+  if (el.dataset.lazyloop) return; // ref callbacks re-run; wire once
+  el.dataset.lazyloop = "1";
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          el.play().catch(() => {});
+        }
+        io.disconnect();
+      }
+    },
+    { rootMargin: "600px 0px" } // start fetching a beat before it scrolls in
+  );
+  io.observe(el);
+};
+
 const FEATURES = [
   "Visual options chain",
   "27 quant bots · 13 models",
@@ -41,18 +67,12 @@ export function GetStarted() {
     >
       {/* --- animated background --- */}
       {/* living smoke: a real fluid, not CSS — sits under everything else.
-          muted is (re)set via ref: React omits the muted ATTRIBUTE in SSR
-          markup, so the browser would otherwise veto autoplay pre-hydration. */}
+          No poster, so preload=metadata keeps a first frame ready; playback
+          (and the real fetch) starts as the section nears the viewport. */}
       <video
-        ref={(el) => {
-          if (!el) return;
-          el.muted = true;
-          if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            el.play().catch(() => {});
-          }
-        }}
+        ref={lazyLoop}
         src="/media/loops/smoke-loop.webm"
-        autoPlay
+        preload="metadata"
         muted
         loop
         playsInline
@@ -158,19 +178,14 @@ export function GetStarted() {
         <div className="relative left-1/2 mt-16 w-screen -translate-x-1/2">
           <div className="relative h-[78vh] min-h-[420px] w-full overflow-hidden">
             {/* the matrix eye: an eye built from phosphor code on a CRT —
-                monochrome emerald so it belongs to the terminal world. muted
-                re-set via ref (React omits the attribute in SSR markup). */}
+                monochrome emerald so it belongs to the terminal world. The
+                poster covers until the loop lazily fetches near the viewport
+                (preload=none: ~1MB stays out of the initial load). */}
             <video
-              ref={(el) => {
-                if (!el) return;
-                el.muted = true;
-                if (el.paused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-                  el.play().catch(() => {});
-                }
-              }}
+              ref={lazyLoop}
               src="/media/loops/matrix-eye.webm"
               poster="/media/eye/matrix-eye@1600.webp"
-              autoPlay
+              preload="none"
               muted
               loop
               playsInline

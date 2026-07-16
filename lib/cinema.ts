@@ -51,7 +51,9 @@ export const COPY_BEATS: CopyBeat[] = [
   { id: "dive", from: 0.165, to: 0.235, heading: "0.4ms pricing engine", sub: "$100K paper — $0 real dollars at risk, ever" },
   { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "It reads the regime first.", sub: "Hurst says trend, reversion or noise — before a single trade." },
   { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "It saw the crash coming.", sub: "AI Direction Ensemble · ULTRA conviction" },
-  { id: "candle-vindication", from: 0.485, to: 0.545, pos: "top", heading: "Flagged DOWN — 12 bars early.", sub: "Reality fell into the cone it drew." },
+  // sits over the crash landing + pull-back, which end at CANDLE_BUILD_END —
+  // it must be gone before the lab beat (CANDLE_LAB) takes the stage.
+  { id: "candle-vindication", from: 0.455, to: 0.5, pos: "top", heading: "Flagged DOWN — 12 bars early.", sub: "Reality fell into the cone it drew." },
   { id: "safety", from: 0.575, to: 0.64, pos: "top", heading: "Your worst case is a number you chose.", sub: "Defined-risk · daily kill switch · paper-only, always." },
   { id: "consensus", from: 0.665, to: 0.72, pos: "top", heading: "12 bots. One verdict.", sub: "ULTRA when they agree — historically 65–77% right." },
   { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Only then trade it." },
@@ -127,8 +129,23 @@ function windowOpacity(progress: number, w: Fade4): number {
 
 // The dive act as a REAL 3D tunnel flythrough — a corridor of app screens.
 export const DIVE3D: Fade4 = { in0: 0.148, in1: 0.165, out0: 0.222, out1: 0.242 };
-// The candle act (climb → crash → AI foresight) as a 3D candlestick canyon.
-export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.535, out1: 0.56 };
+// The candle act (climb → crash → AI foresight → the lab finale) as a 3D
+// candlestick canyon. The fade-out tail reaches 0.013 into the 2D safety act —
+// a sliver, and safely clear of the "safety" copy beat at 0.575.
+export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.55, out1: 0.573 };
+
+// THE LAB FINALE inside the candle act: the chart timeline (print → crash →
+// pull-back) intentionally completes at CANDLE_BUILD_END, freeing the window's
+// tail for "the AI takes one candle into the lab" — a single candle lifts out
+// of the field spinning, freezes to ice and stretches under analysis while the
+// quant-bot panel (DOM overlay in ScrollCinema) computes on the left. Both
+// layers read candleLabT so the 3D pose and the panel's math stay locked to
+// the same clock. Pure f(progress) — scrub-reversible by construction.
+export const CANDLE_BUILD_END = 0.5;
+export const CANDLE_LAB = { from: 0.5, to: 0.55 };
+/** 0→1 through the lab beat (liftoff → ice → stretch → verdict). */
+export const candleLabT = (progress: number) =>
+  clamp01((clamp01(progress) - CANDLE_LAB.from) / (CANDLE_LAB.to - CANDLE_LAB.from));
 // The bull crescendo: fades in over the consensus tail, holds, then fully clears
 // by ~0.80 so the classic particle-bull LOGO can play in full after it (assemble →
 // scatter → Matrix). `out0` is also where the 2D logo un-hides (scene LOGO0=0.775).

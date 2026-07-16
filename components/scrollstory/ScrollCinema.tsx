@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
 
 // Lazy so three.js only loads for users who actually get the cinema (not the
@@ -65,6 +65,11 @@ export function ScrollCinema() {
   const [dive3dActive, setDive3dActive] = useState(false);
 
   const tooltipRef = useRef<HTMLDivElement>(null); // live price tag on candle hover
+  // quant-lab panel (the candle act's finale): the terminal that "computes"
+  // while the ice candle stretches — lines + live value spans driven per frame
+  const labRef = useRef<HTMLDivElement>(null);
+  const labLineRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const labValRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   // Preloader: scroll is locked and a loading screen shows until the scene, its
   // panel screenshots, three.js and the bull model are all loaded — then the
@@ -72,6 +77,10 @@ export function ScrollCinema() {
   const [loading, setLoading] = useState(true);
   const [loadPct, setLoadPct] = useState(8);
   const [reveal, setReveal] = useState(false);
+  // gate held >10s → show "still loading" + a skip-to-static choice (we never
+  // auto-reveal a half-loaded scene; the user decides)
+  const [slowLoad, setSlowLoad] = useState(false);
+  const bailToStaticRef = useRef<(() => void) | null>(null);
 
   // Each 3D layer's WebGL context going live tells the 2D scene to drop its
   // matching draw (via the per-frame hide flags). Stays false if WebGL fails →
@@ -231,6 +240,49 @@ export function ScrollCinema() {
         const baseY = beat.pos === "top" ? "0px" : "-50%";
         el.style.transform = `translate(calc(-50% + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
       });
+      // Quant-lab panel — the candle finale's left-hand brain. Lines highlight
+      // one-by-one and the live values (μ, σ, agree, K) interpolate on the SAME
+      // clock (candleLabT) that spins + stretches the ice candle, so the math
+      // visibly computes in sync. In with the liftoff, out with the candle
+      // layer's own fade. Pure f(progress) like everything else here.
+      if (labRef.current) {
+        const lt = candleLabT(progress);
+        const o =
+          lt <= 0
+            ? 0
+            : Math.min(
+                1,
+                lt / 0.1,
+                Math.max(0, (CANDLE3D.out1 - progress) / (CANDLE3D.out1 - CANDLE3D.out0))
+              );
+        const el = labRef.current;
+        el.style.opacity = String(o);
+        el.style.visibility = o > 0.001 ? "visible" : "hidden";
+        if (o > 0.001) {
+          const hi = Math.floor(lt * 11.5); // sequential highlight index
+          labLineRefs.current.forEach((ln, i) => {
+            if (!ln) return;
+            if (i === 9) {
+              // the verdict stays dark until the scan lands, then flares
+              const on = lt > 0.86;
+              ln.style.opacity = on ? "1" : "0.15";
+              ln.style.textShadow = on ? "0 0 18px rgba(0,255,135,0.45)" : "none";
+            } else {
+              ln.style.opacity = i < hi ? "0.85" : i === hi ? "1" : "0.3";
+              ln.style.textShadow = i === hi ? "0 0 14px rgba(125,255,201,0.35)" : "none";
+            }
+          });
+          const ve = Math.min(1, lt / 0.86); // values settle as the verdict lights
+          const mu = (0.12 + 0.72 * ve).toFixed(2);
+          const sg = (1.24 + 0.68 * ve).toFixed(2);
+          const ag = String(1 + Math.round(4 * ve));
+          const K = String(240 + 2 * Math.round(9 * ve));
+          const vals = [mu, sg, ag, K, K, ag];
+          labValRefs.current.forEach((sp, i) => {
+            if (sp) sp.textContent = vals[i];
+          });
+        }
+      }
       // Layered cursor parallax: the whole composited scene drifts gently against
       // the pointer (scaled up a hair so edges never peek in). During the matrix
       // burst the whole frame GLITCH-SHAKES (deterministic sin jitter × flash).
@@ -333,22 +385,49 @@ export function ScrollCinema() {
       iframe.addEventListener("load", run);
       run(); // in case the iframe is already loaded
     });
-    // three.js chunks + the bull GLB (non-fatal — the 2D fallbacks cover failures).
+    // three.js chunks + BOTH GLBs — all inside the reveal gate. Revealing early
+    // (the old 15s auto-bailout) handed slow machines a half-loaded act, so the
+    // loader now holds until everything the cinema plays is actually here.
+    // Failures stay non-fatal (allSettled): a dead chunk/GLB reveals with its
+    // 2D fallback — slow is not broken, and broken still degrades gracefully.
+    const GATE_STEPS = 6; // scene+shots · 3 chunks · 2 GLBs → the REAL progress bar
+    let gateDone = 0;
+    const step = <T,>(p: Promise<T>): Promise<T> => {
+      const bump = () => {
+        if (disposed) return;
+        gateDone++;
+        setLoadPct((prev) => Math.max(prev, Math.round((gateDone / GATE_STEPS) * 96)));
+      };
+      p.then(bump, bump);
+      return p;
+    };
     const extras = Promise.allSettled([
-      import("./Bull3D"),
-      import("./CandleField3D"),
-      import("./Tunnel3D"),
-      fetch("/models/bull-crystal.glb").then((r) => r.arrayBuffer()),
+      step(import("./Bull3D")),
+      step(import("./CandleField3D")),
+      step(import("./Tunnel3D")),
+      step(fetch("/models/bull-crystal.glb").then((r) => r.arrayBuffer())),
+      step(fetch("/models/candle-crystal.glb").then((r) => r.arrayBuffer())),
     ]);
     const minTime = new Promise((r) => window.setTimeout(r, 650)); // don't flash the loader
 
-    creep = window.setInterval(() => setLoadPct((p) => (p < 90 ? p + 2 : p)), 120);
+    // the bar is anchored to REAL gate steps; the creep only eases it toward
+    // the next milestone so a long download still visibly breathes
+    creep = window.setInterval(
+      () => setLoadPct((p) => Math.min(p + 1, Math.round((gateDone / GATE_STEPS) * 96) + 8, 96)),
+      150
+    );
 
     let settled = false;
+    // after 10s of honest waiting, offer a way out — never auto-reveal
+    const slowTimer = window.setTimeout(() => {
+      if (!settled && !disposed) setSlowLoad(true);
+    }, 10000);
     const reveal = () => {
       if (settled || disposed) return;
       settled = true;
       window.clearInterval(creep);
+      window.clearTimeout(slowTimer);
+      setSlowLoad(false);
       setLoadPct(100);
       window.setTimeout(() => {
         if (disposed) return;
@@ -358,14 +437,24 @@ export function ScrollCinema() {
         window.setTimeout(() => { if (!disposed) setLoading(false); }, 550);
       }, 420);
     };
-    Promise.all([shotsLoaded, extras, minTime]).then(reveal).catch(() => {
+    // the loader's skip: the user bails to the static homepage — the same
+    // landing as a genuine scene failure, but chosen, never automatic
+    bailToStaticRef.current = () => {
       if (settled || disposed) return;
       settled = true;
       window.clearInterval(creep);
+      window.clearTimeout(slowTimer);
+      rootStyle.overflow = prevOverflow;
+      setMode("static");
+    };
+    Promise.all([step(shotsLoaded), extras, minTime]).then(reveal).catch(() => {
+      if (settled || disposed) return;
+      settled = true;
+      window.clearInterval(creep);
+      window.clearTimeout(slowTimer);
       rootStyle.overflow = prevOverflow;
       setMode("static");
     });
-    window.setTimeout(reveal, 15000); // safety: never trap the user behind a hung asset
 
     // The scene seeds particles/rain for a specific size; re-init on resize.
     const onResize = () => {
@@ -381,6 +470,7 @@ export function ScrollCinema() {
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
+      window.clearTimeout(slowTimer);
       window.clearInterval(creep);
       rootStyle.overflow = prevOverflow; // never leave scroll locked
       if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
@@ -469,6 +559,23 @@ export function ScrollCinema() {
             </span>
             <span className="tabular-nums text-bull/90">{Math.round(loadPct)}%</span>
           </div>
+          {/* >10s in the gate: name the wait and offer the static page instead —
+              a choice, never an automatic half-loaded reveal */}
+          <div
+            className="relative flex flex-col items-center gap-3 transition-opacity duration-500"
+            style={{ opacity: slowLoad ? 1 : 0, pointerEvents: slowLoad ? "auto" : "none" }}
+          >
+            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+              still loading the heavy bits…
+            </div>
+            <button
+              type="button"
+              onClick={() => bailToStaticRef.current?.()}
+              className="border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg"
+            >
+              Skip intro →
+            </button>
+          </div>
         </div>
       )}
       <section
@@ -541,6 +648,64 @@ export function ScrollCinema() {
             {b.sub && <div className="beat-sub mt-3 font-mono text-sm text-fg-dim md:text-base">{b.sub}</div>}
           </div>
         ))}
+        {/* QUANT-LAB PANEL — the candle act's finale (candleLabT 0→1): the AI
+            "takes one candle into the lab". Terminal lines light up with scroll
+            while the ice candle spins/stretches on the right; all values are
+            driven imperatively in applyOverlays on the same clock. */}
+        <div
+          ref={labRef}
+          data-lab-panel
+          className="absolute z-20 border border-border bg-black/85 font-mono backdrop-blur-sm"
+          style={{
+            left: "5vw",
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: "min(40vw, 440px)",
+            opacity: 0,
+            visibility: "hidden",
+            boxShadow: "0 0 70px rgba(0,0,0,0.65), 0 0 28px rgba(191,232,255,0.07)",
+          }}
+        >
+          <div className="flex items-center justify-between border-b border-border px-3.5 py-2 text-[10px] uppercase tracking-wider text-fg-dim">
+            <span>quant-bot · candidate scan</span>
+            <span style={{ color: "#bfe8ff" }}>ice-lab</span>
+          </div>
+          <div className="px-3.5 py-3 text-[12px] leading-[1.8] text-fg">
+            <div ref={(el) => { labLineRefs.current[0] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --scan NVDA --paper
+            </div>
+            <div ref={(el) => { labLineRefs.current[1] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              <span className="text-bull">regime</span> = hurst(64) <span className="text-fg-dim">→</span> <span style={{ color: "#28d7ff" }}>0.63</span> TREND
+            </div>
+            <div ref={(el) => { labLineRefs.current[2] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              μ̂ drift = ewma(24h) <span className="text-fg-dim">→</span> +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span>%/d
+            </div>
+            <div ref={(el) => { labLineRefs.current[3] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              σ̂ vol = garch(1,1) <span className="text-fg-dim">→</span> <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span>%
+            </div>
+            <div ref={(el) => { labLineRefs.current[4] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              <span className="text-bull">ensemble</span> = vote(6 models) <span className="text-fg-dim">→</span> agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#28d7ff" }}>1</span>/6
+            </div>
+            <div ref={(el) => { labLineRefs.current[5] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              regime.ok <span className="text-fg-dim">&&</span> conviction ≥ <span className="text-bull">ULTRA</span> <span className="text-fg-dim">→</span> true
+            </div>
+            <div ref={(el) => { labLineRefs.current[6] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              <span className="text-bull">size</span> = kelly_cap(0.25) <span className="text-fg-dim">→</span> <span style={{ color: "#28d7ff" }}>2.1%</span> NAV
+            </div>
+            <div ref={(el) => { labLineRefs.current[7] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              <span className="text-bull">strikes</span> = scan(240…262, Δ2) <span className="text-fg-dim">→</span> K=<span ref={(el) => { labValRefs.current[3] = el; }} style={{ color: "#28d7ff" }}>240</span>
+            </div>
+            <div ref={(el) => { labLineRefs.current[8] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+              EV(K·call, 21d) = +0.31σ <span className="text-fg-dim">·</span> θ-decay ok
+            </div>
+            <div ref={(el) => { labLineRefs.current[9] = el; }} className="whitespace-nowrap pt-1" style={{ opacity: 0.15 }}>
+              <span className="text-fg-dim">→</span> candidate: <span className="text-bull">CALL <span ref={(el) => { labValRefs.current[4] = el; }}>258</span></span> · agree <span ref={(el) => { labValRefs.current[5] = el; }}>5</span>/6
+            </div>
+          </div>
+          <div className="border-t border-border px-3.5 py-1.5 text-[9px] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
+            simulated · educational — not advice
+          </div>
+        </div>
         {/* live price tag — follows the hovered 3D candle */}
         <div
           ref={tooltipRef}
