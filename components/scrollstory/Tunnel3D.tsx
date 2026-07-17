@@ -396,7 +396,10 @@ export default function Tunnel3D({
 
       <EffectComposer multisampling={0}>
         <Bloom mipmapBlur luminanceThreshold={0.4} luminanceSmoothing={0.3} intensity={1.0} />
-        <ChromaticAberration offset={[0.0006, 0.001]} />
+        {/* subtle only — a stronger offset split the additive dust motes into
+            red/blue fringes that read as purple specks over the bloom-blown
+            green core. Kept low so big shapes still get a hint of lens fringe. */}
+        <ChromaticAberration offset={[0.0002, 0.00028]} />
         <SMAA />
       </EffectComposer>
     </Canvas>
