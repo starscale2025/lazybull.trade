@@ -363,18 +363,27 @@ export function ScrollCinema() {
     // Persistent render loop: smooth-scrubs progress toward the scroll position
     // AND keeps ambient time flowing, so the scene breathes even at rest (drifting
     // rain, marching dashes, pointer parallax) instead of freezing between scrolls.
-    // lower = glidier, higher = tighter to the scroll. Low-end devices get a
-    // much glidier scrub: each frame advances less, so dropped frames read as
-    // ease rather than judder (the scene can't skip ahead between paints).
+    // Frame-rate-INDEPENDENT scrub smoothing. The old code advanced progress by a
+    // fixed per-frame fraction, so a low-end device painting at 30fps advanced half
+    // as fast and the scene visibly trailed the scroll — the "lag". Here progress
+    // eases toward the scroll on a time-constant: dt normalises it so the felt
+    // scrub speed is identical at 24fps or 120fps (no unbounded trailing on slow
+    // GPUs). Rates are lowered so it's glidier/slower overall, and low-end gets
+    // extra glide so any dropped frames read as ease, not judder. dt is clamped so
+    // a long stall (tab blur, GC pause) resumes gently instead of lurching ahead.
     const LOW_END =
       (navigator.hardwareConcurrency || 8) <= 4 ||
       ((navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
-    const SMOOTH = LOW_END ? 0.055 : 0.1;
+    const EASE_RATE = LOW_END ? 3.0 : 5.0; // lower = slower/glidier (≈0.05 / 0.08 per 60fps frame)
+    let lastNow = -1;
     const tick = (ts: number) => {
       if (disposed || collapsed) return;
       const now = ts / 1000;
+      const dt = lastNow < 0 ? 1 / 60 : Math.min(0.05, now - lastNow);
+      lastNow = now;
       const diff = targetProgress - progress;
-      progress = Math.abs(diff) < 0.0002 ? targetProgress : progress + diff * SMOOTH;
+      const k = 1 - Math.exp(-EASE_RATE * dt);
+      progress = Math.abs(diff) < 0.0002 ? targetProgress : progress + diff * k;
       pxS += (cinemaClock.px - pxS) * 0.055;
       pyS += (cinemaClock.py - pyS) * 0.055;
       // damped scroll velocity → the 3D cameras kick their FOV when you scroll hard
