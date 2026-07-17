@@ -3,8 +3,15 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
+
+// smoothstep — the phase ramps for the quant-lab type-on/colour narration, kept
+// identical in shape to the 3D IceCandle's so the panel and candle read as one clock.
+const ss = (a: number, b: number, x: number) => {
+  const t = clamp01((x - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
 
 // Lazy so three.js only loads for users who actually get the cinema (not the
 // reduced-motion static fallback, and not until after first paint).
@@ -16,7 +23,10 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const SCROLL_LENGTH_VH = 1400; // long pin: room for the expanded feature acts to read slowly
+const SCROLL_LENGTH_VH = 1500; // long pin: room for the expanded feature acts to read slowly
+// (1400 → 1500 when the ICE-LAB tail was widened — offsets the mild progress-
+// compression on safety/consensus so their felt pace barely changes, and gives
+// the lab's colour story its ~1.8× breathing room.)
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 // "/" is now the cinema itself, so no "home" shot — panels use real product routes.
@@ -70,6 +80,10 @@ export function ScrollCinema() {
   const labRef = useRef<HTMLDivElement>(null);
   const labLineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const labValRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const labPhaseRef = useRef<HTMLSpanElement>(null); // header tag: scan → candidate → stress → staged
+  // per-line char lengths, measured once — the type-on reveals `budget` chars
+  // cumulatively across lines (monospace → 1ch/char), so it's pure f(labT).
+  const labLenRef = useRef<number[] | null>(null);
 
   // Preloader: scroll is locked and a loading screen shows until the scene, its
   // panel screenshots, three.js and the bull model are all loaded — then the
@@ -259,28 +273,60 @@ export function ScrollCinema() {
         el.style.opacity = String(o);
         el.style.visibility = o > 0.001 ? "visible" : "hidden";
         if (o > 0.001) {
-          const hi = Math.floor(lt * 11.5); // sequential highlight index
+          // phase ramps — SAME shape as the 3D IceCandle, so the panel narrates
+          // exactly what the candle is doing: ice-scan → green candidate → red
+          // stress → settle. Pure f(lt); scrubbing back un-types + un-colours.
+          const B = ss(0.44, 0.62, lt); // candidate (green) emerges
+          const C = ss(0.66, 0.84, lt); // downside stress (red)
+          const RS = ss(0.88, 0.985, lt); // settle / verdict
+          // TYPE-ON: reveal `budget` pixels cumulatively across the lines. Widths
+          // are the lines' intrinsic scrollWidth (glyph-accurate even for →/≥/μ/σ,
+          // which the mono stack renders wider than 1ch — a ch reveal clipped them).
+          // Measured once (scrollWidth is the full content width even while the line
+          // is clipped to width:0). Pure f(lt) so scrub reverses cleanly.
+          if (!labLenRef.current || labLenRef.current[0] === 0) {
+            labLenRef.current = labLineRefs.current.map((ln) => (ln ? ln.scrollWidth + 2 : 0));
+          }
+          const lens = labLenRef.current;
+          const total = lens.reduce((a, b) => a + b, 0) || 1;
+          let budget = clamp01((lt - 0.02) / 0.9) * total; // 0→fully typed by lt≈0.92
           labLineRefs.current.forEach((ln, i) => {
             if (!ln) return;
-            if (i === 9) {
-              // the verdict stays dark until the scan lands, then flares
-              const on = lt > 0.86;
-              ln.style.opacity = on ? "1" : "0.15";
-              ln.style.textShadow = on ? "0 0 18px rgba(0,255,135,0.45)" : "none";
-            } else {
-              ln.style.opacity = i < hi ? "0.85" : i === hi ? "1" : "0.3";
-              ln.style.textShadow = i === hi ? "0 0 14px rgba(125,255,201,0.35)" : "none";
-            }
+            const len = lens[i] || 0;
+            const typed = Math.max(0, Math.min(len, budget));
+            budget -= len;
+            ln.style.width = typed.toFixed(1) + "px";
+            const started = typed > 0.5;
+            const done = typed >= len - 0.5;
+            ln.style.opacity = started ? "1" : "0";
+            ln.classList.toggle("lab-caret", started && !done); // blink only at the frontier
+            // phase accents narrate the colour story on the key lines:
+            let glow = 0.28; // base cyan-ish scan glow once a line is in
+            let rgb = "125,255,201";
+            if (i === 7) { rgb = "0,255,135"; glow = 0.2 + 0.6 * B; }          // candidate → green in phase B
+            else if (i === 8 || i === 9) { rgb = "255,46,99"; glow = 0.15 + 0.6 * C; } // stress → red in phase C
+            else if (i === 10) { rgb = "0,255,135"; glow = 0.2 + 0.7 * Math.max(RS, lt > 0.9 ? 1 : 0); } // verdict → green at settle
+            ln.style.textShadow = started ? `0 0 ${(8 + 14 * glow).toFixed(0)}px rgba(${rgb},${glow.toFixed(2)})` : "none";
           });
-          const ve = Math.min(1, lt / 0.86); // values settle as the verdict lights
+          // live values interpolate on the SAME clock; all fixed-width so the ch
+          // reveal stays exact. agree climbs to 6/6 for the settled verdict.
+          const ve = clamp01(lt / 0.85);
           const mu = (0.12 + 0.72 * ve).toFixed(2);
           const sg = (1.24 + 0.68 * ve).toFixed(2);
           const ag = String(1 + Math.round(4 * ve));
           const K = String(240 + 2 * Math.round(9 * ve));
-          const vals = [mu, sg, ag, K, K, ag];
+          const ag6 = String(1 + Math.round(5 * ve));
+          const vals = [mu, sg, ag, K, ag6];
           labValRefs.current.forEach((sp, i) => {
             if (sp) sp.textContent = vals[i];
           });
+          // header tag + its colour follow the phase the candle is in
+          if (labPhaseRef.current) {
+            const ph =
+              lt >= 0.86 ? ["staged", "#00ff87"] : C > 0.5 ? ["stress", "#ff2e63"] : B > 0.5 ? ["candidate", "#00ff87"] : ["scan", "#bfe8ff"];
+            labPhaseRef.current.textContent = ph[0];
+            labPhaseRef.current.style.color = ph[1];
+          }
         }
       }
       // Layered cursor parallax: the whole composited scene drifts gently against
@@ -676,39 +722,46 @@ export function ScrollCinema() {
           }}
         >
           <div className="flex items-center justify-between border-b border-border px-3.5 py-2 text-[10px] uppercase tracking-wider text-fg-dim">
-            <span>quant-bot · candidate scan</span>
-            <span style={{ color: "#bfe8ff" }}>ice-lab</span>
+            <span>quant-bot · candidate lab</span>
+            <span ref={labPhaseRef} style={{ color: "#bfe8ff" }}>scan</span>
           </div>
+          {/* Lines TYPE ON with scroll (width in ch, driven in applyOverlays) and
+              light through the colour story: cyan scan → green candidate (B) →
+              red downside stress (C) → green verdict. Content is descriptive /
+              paper-only — never an imperative. */}
           <div className="px-3.5 py-3 text-[11px] leading-[1.7] text-fg md:text-[12px] md:leading-[1.8]">
-            <div ref={(el) => { labLineRefs.current[0] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+            <div ref={(el) => { labLineRefs.current[0] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --scan NVDA --paper
             </div>
-            <div ref={(el) => { labLineRefs.current[1] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+            <div ref={(el) => { labLineRefs.current[1] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-bull">regime</span> = hurst(64) <span className="text-fg-dim">→</span> <span style={{ color: "#28d7ff" }}>0.63</span> TREND
             </div>
-            <div ref={(el) => { labLineRefs.current[2] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
-              μ̂ drift = ewma(24h) <span className="text-fg-dim">→</span> +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span>%/d
+            <div ref={(el) => { labLineRefs.current[2] = el; }} className="lab-line" style={{ opacity: 0 }}>
+              μ drift = ewma(24h) <span className="text-fg-dim">→</span> +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span>%/d
             </div>
-            <div ref={(el) => { labLineRefs.current[3] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
-              σ̂ vol = garch(1,1) <span className="text-fg-dim">→</span> <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span>%
+            <div ref={(el) => { labLineRefs.current[3] = el; }} className="lab-line" style={{ opacity: 0 }}>
+              σ vol = garch(1,1) <span className="text-fg-dim">→</span> <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span>%
             </div>
-            <div ref={(el) => { labLineRefs.current[4] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+            <div ref={(el) => { labLineRefs.current[4] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-bull">ensemble</span> = vote(6 models) <span className="text-fg-dim">→</span> agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#28d7ff" }}>1</span>/6
             </div>
-            <div ref={(el) => { labLineRefs.current[5] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+            <div ref={(el) => { labLineRefs.current[5] = el; }} className="lab-line" style={{ opacity: 0 }}>
               regime.ok <span className="text-fg-dim">&&</span> conviction ≥ <span className="text-bull">ULTRA</span> <span className="text-fg-dim">→</span> true
             </div>
-            <div ref={(el) => { labLineRefs.current[6] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
+            <div ref={(el) => { labLineRefs.current[6] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-bull">size</span> = kelly_cap(0.25) <span className="text-fg-dim">→</span> <span style={{ color: "#28d7ff" }}>2.1%</span> NAV
             </div>
-            <div ref={(el) => { labLineRefs.current[7] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
-              <span className="text-bull">strikes</span> = scan(240…262, Δ2) <span className="text-fg-dim">→</span> K=<span ref={(el) => { labValRefs.current[3] = el; }} style={{ color: "#28d7ff" }}>240</span>
+            <div ref={(el) => { labLineRefs.current[7] = el; }} className="lab-line" style={{ opacity: 0 }}>
+              <span className="text-fg-dim">→</span> candidate = <span className="text-bull">CALL <span ref={(el) => { labValRefs.current[3] = el; }}>240</span></span> · agree <span ref={(el) => { labValRefs.current[4] = el; }}>1</span>/6
             </div>
-            <div ref={(el) => { labLineRefs.current[8] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
-              EV(K·call, 21d) = +0.31σ <span className="text-fg-dim">·</span> θ-decay ok
+            <div ref={(el) => { labLineRefs.current[8] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
+              <span style={{ color: "#ff6b8a" }}>stress</span>(-2σ shock) <span className="text-fg-dim">→</span> max loss capped
             </div>
-            <div ref={(el) => { labLineRefs.current[9] = el; }} className="whitespace-nowrap pt-1" style={{ opacity: 0.15 }}>
-              <span className="text-fg-dim">→</span> candidate: <span className="text-bull">CALL <span ref={(el) => { labValRefs.current[4] = el; }}>258</span></span> · agree <span ref={(el) => { labValRefs.current[5] = el; }}>5</span>/6
+            <div ref={(el) => { labLineRefs.current[9] = el; }} className="lab-line" style={{ opacity: 0 }}>
+              VaR(95%) = -1.0R <span className="text-fg-dim">·</span> daily kill-switch armed
+            </div>
+            <div ref={(el) => { labLineRefs.current[10] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
+              <span className="text-fg-dim">→</span> historical agreement <span className="text-bull">6/6 models</span> · paper pick staged
             </div>
           </div>
           <div className="border-t border-border px-3.5 py-1.5 text-[9px] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
@@ -753,8 +806,16 @@ export function ScrollCinema() {
             transition: opacity .6s ease, transform .6s cubic-bezier(.3,1.3,.45,1);
           }
           .beat-in .beat-sub { opacity: 1; transform: none; transition-delay: 420ms; }
+          /* QUANT-LAB type-on: each line clips to a ch-width set every frame from
+             labT (monospace → 1ch/char), so the reveal is pure f(progress) and
+             scrubs backwards. Only the frontier line carries the blinking caret
+             (a right border) — the one time-based touch, purely cosmetic. */
+          .lab-line { display: block; white-space: nowrap; overflow: hidden; width: 0; }
+          .lab-caret { box-shadow: inset -2px 0 0 0 rgba(191,232,255,0.85); animation: lab-blink 1.05s steps(1, end) infinite; }
+          @keyframes lab-blink { 50% { box-shadow: inset -2px 0 0 0 transparent; } }
           @media (prefers-reduced-motion: reduce) {
             .beat-char, .beat-sub { transition: none; opacity: 1; transform: none; filter: none; }
+            .lab-caret { animation: none; }
           }
         `}</style>
       </div>

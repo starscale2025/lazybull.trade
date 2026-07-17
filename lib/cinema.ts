@@ -21,9 +21,15 @@ export const ACTS: Record<Act, { from: number; to: number }> = {
   assembly: { from: 0.05, to: 0.15 },
   dive: { from: 0.15, to: 0.24 },
   regime: { from: 0.24, to: 0.32 },
-  candle: { from: 0.32, to: 0.56 },
-  safety: { from: 0.56, to: 0.65 },
-  consensus: { from: 0.65, to: 0.73 },
+  // candle's tail was widened (0.56 → 0.59) to give the ICE-LAB finale ~1.8×
+  // longer felt duration (see CANDLE_LAB). safety + consensus are shifted LATER
+  // to absorb it while bull/matrix (and the fragile end handoff near 1.0) stay
+  // EXACTLY fixed; the mild progress-compression on safety/consensus is offset
+  // by the longer scroll section (SCROLL_LENGTH_VH), so their felt pace barely
+  // changes. Contiguous, still covers [0,1].
+  candle: { from: 0.32, to: 0.59 },
+  safety: { from: 0.59, to: 0.665 },
+  consensus: { from: 0.665, to: 0.73 },
   bull: { from: 0.73, to: 0.84 },
   matrix: { from: 0.84, to: 1.0 },
 };
@@ -54,8 +60,11 @@ export const COPY_BEATS: CopyBeat[] = [
   // sits over the crash landing + pull-back, which end at CANDLE_BUILD_END —
   // it must be gone before the lab beat (CANDLE_LAB) takes the stage.
   { id: "candle-vindication", from: 0.455, to: 0.5, pos: "top", heading: "Flagged DOWN — 12 bars early.", sub: "Reality fell into the cone it drew." },
-  { id: "safety", from: 0.575, to: 0.64, pos: "top", heading: "Your worst case is a number you chose.", sub: "Defined-risk · daily kill switch · paper-only, always." },
-  { id: "consensus", from: 0.665, to: 0.72, pos: "top", heading: "12 bots. One verdict.", sub: "ULTRA when they agree — historically 65–77% right." },
+  // safety/consensus shifted later with their acts (the lab tail widened). safety
+  // opens after the ice-candle layer's fade tail (CANDLE3D.out1 = 0.605) so the
+  // quant-lab panel is gone before this copy takes the stage.
+  { id: "safety", from: 0.61, to: 0.66, pos: "top", heading: "Your worst case is a number you chose.", sub: "Defined-risk · daily kill switch · paper-only, always." },
+  { id: "consensus", from: 0.675, to: 0.725, pos: "top", heading: "12 bots. One verdict.", sub: "ULTRA when they agree — historically 65–77% right." },
   { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Only then trade it." },
   { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
 ];
@@ -130,20 +139,25 @@ function windowOpacity(progress: number, w: Fade4): number {
 // The dive act as a REAL 3D tunnel flythrough — a corridor of app screens.
 export const DIVE3D: Fade4 = { in0: 0.148, in1: 0.165, out0: 0.222, out1: 0.242 };
 // The candle act (climb → crash → AI foresight → the lab finale) as a 3D
-// candlestick canyon. The fade-out tail reaches 0.013 into the 2D safety act —
-// a sliver, and safely clear of the "safety" copy beat at 0.575.
-export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.55, out1: 0.573 };
+// candlestick canyon. out0/out1 hold the layer opaque through the whole widened
+// ICE-LAB window (ends at CANDLE_LAB.to = 0.585) then fade over a sliver into the
+// 2D safety act — clear of the "safety" copy beat, which now opens at 0.61.
+export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.585, out1: 0.605 };
 
 // THE LAB FINALE inside the candle act: the chart timeline (print → crash →
 // pull-back) intentionally completes at CANDLE_BUILD_END, freeing the window's
 // tail for "the AI takes one candle into the lab" — a single candle lifts out
-// of the field spinning, freezes to ice and stretches under analysis while the
-// quant-bot panel (DOM overlay in ScrollCinema) computes on the left. Both
-// layers read candleLabT so the 3D pose and the panel's math stay locked to
-// the same clock. Pure f(progress) — scrub-reversible by construction.
+// of the field spinning and runs a three-phase colour analysis: freezes to ICE
+// (scan), warms to GREEN (bullish candidate), then to RED (downside stress-test)
+// before settling green (confirmed paper candidate), stretching under analysis
+// while the quant-bot panel (DOM overlay in ScrollCinema) types line-by-line on
+// the left. Both layers read candleLabT so the 3D colour/pose and the panel's
+// type-on + math stay locked to the same clock. The window was widened 0.05 →
+// 0.085 (≈1.8× felt with the longer scroll section) for the colour story to
+// breathe. Pure f(progress) — scrub-reversible by construction.
 export const CANDLE_BUILD_END = 0.5;
-export const CANDLE_LAB = { from: 0.5, to: 0.55 };
-/** 0→1 through the lab beat (liftoff → ice → stretch → verdict). */
+export const CANDLE_LAB = { from: 0.5, to: 0.585 };
+/** 0→1 through the lab beat (liftoff → ice → green → red → settle → verdict). */
 export const candleLabT = (progress: number) =>
   clamp01((clamp01(progress) - CANDLE_LAB.from) / (CANDLE_LAB.to - CANDLE_LAB.from));
 // The bull crescendo: fades in over the consensus tail, holds, then fully clears

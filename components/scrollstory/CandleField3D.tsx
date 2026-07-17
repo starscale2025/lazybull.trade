@@ -381,6 +381,10 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
 // so it sits at ~72% viewport x at any aspect ratio and keeps breathing with
 // the pointer-orbit. Every pose is a pure function of candleLabT — scrubbing
 // back re-freezes it into its slot (Candles/MirrorCandles reverse the liftoff).
+// Three colour targets for the lab candle's morph. GREEN reuses the field
+// candle recipe EXACTLY (so the liftoff hand-off is seamless); ICE is the frosty
+// scan state; RED is the bear recipe borrowed from the field's crash candles —
+// framed as a downside STRESS-TEST, never a signal.
 const LAB_POSE = {
   green: {
     color: new THREE.Color("#9fffd4"),
@@ -395,6 +399,13 @@ const LAB_POSE = {
     emissive: new THREE.Color("#9fdcff"),
     core: new THREE.Color("#e4f6ff"),
     wick: new THREE.Color("#cfeeff"),
+  },
+  red: {
+    color: new THREE.Color("#ffc0cf"),
+    attenuation: new THREE.Color("#ff2e63"),
+    emissive: new THREE.Color("#ff2e63"),
+    core: new THREE.Color("#ff5c86"),
+    wick: new THREE.Color("#ff2e63"),
   },
 };
 
@@ -467,6 +478,10 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
       lerp(0, target.z, move)
     );
     g.rotation.y = lt * Math.PI * 3.5; // spins out of the field, lands face-on
+    // phase-C "stress" tremor: a faint deterministic shear while the downside is
+    // shocked (pure f(lt), so it un-shudders on scrub-back)
+    const stress = smooth(0.66, 0.84, lt);
+    g.rotation.z = Math.sin(lt * 46) * 0.02 * stress;
     g.scale.setScalar(1 + 2.3 * smooth(0.1, 0.7, lt)); // floor candle → hero scale
     // the ANALYSIS stretch: body + wick elongate up/down while the footprint slims
     const s = smooth(0.45, 0.96, lt);
@@ -482,22 +497,42 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
     bodyRef.current?.scale.set(0.72 * slim, hEff * (1 + 1.6 * s), 0.72 * slim);
     coreRef.current?.scale.set(0.36 * slim, hEff * 0.66 * (1 + 1.9 * s), 0.36 * slim);
     wickRef.current?.scale.set(0.11 * slim, (c.wh - c.wl) * (1 + 2.3 * s) * (1 + 0.5 * hb), 0.11 * slim);
-    // green → ICE as it leaves the field
-    const k = smooth(0.12, 0.5, lt);
-    glass.color.lerpColors(LAB_POSE.green.color, LAB_POSE.ice.color, k);
-    glass.attenuationColor.lerpColors(LAB_POSE.green.attenuation, LAB_POSE.ice.attenuation, k);
-    glass.emissive.lerpColors(LAB_POSE.green.emissive, LAB_POSE.ice.emissive, k);
-    glass.attenuationDistance = lerp(1.1, 1.7, k);
-    glass.emissiveIntensity = lerp(0.22, 0.32, k);
-    glass.transmission = lerp(0.92, 0.97, k); // ice runs clearer than market glass…
-    glass.roughness = lerp(0.16, 0.23, k); // …but its surface picks up a frosted hint
-    core.emissive.lerpColors(LAB_POSE.green.core, LAB_POSE.ice.core, k);
-    // hero-scaled core is physically big — hold its intensity near field level so
-    // the ice face reads as glass around a lit heart, not a white blowout
-    core.emissiveIntensity = lerp(1.25, 1.45, k) + 0.12 * Math.sin(state.clock.elapsedTime * 2.2);
-    wick.emissive.lerpColors(LAB_POSE.green.wick, LAB_POSE.ice.wick, k);
-    wick.emissiveIntensity = lerp(1.7, 2.3, k);
-    if (light.current) light.current.intensity = 10 * k; // cool spill on the glass
+    // THREE-PHASE COLOUR MORPH — all pure f(lt), sequential smooth ramps so any
+    // channel is a clean chained lerp: start GREEN (matches the field candle at
+    // hand-off) → ICE (A, scan) → GREEN (B, bullish candidate) → RED (C, downside
+    // stress-test) → GREEN (R, settle to the confirmed paper candidate).
+    const A = smooth(0.12, 0.4, lt); // freeze to ice
+    const B = smooth(0.44, 0.62, lt); // warm to green
+    const C = smooth(0.66, 0.84, lt); // stress to red
+    const R = smooth(0.88, 0.985, lt); // settle back to green
+    const G = LAB_POSE.green, I = LAB_POSE.ice, D = LAB_POSE.red;
+    // dst = G→I(A)→G(B)→D(C)→G(R). .lerp mutates in place, so chaining composes.
+    const paint = (dst: THREE.Color, g: THREE.Color, i: THREE.Color, r: THREE.Color) =>
+      dst.copy(g).lerp(i, A).lerp(g, B).lerp(r, C).lerp(g, R);
+    const chain = (g: number, i: number, r: number) =>
+      lerp(lerp(lerp(lerp(g, i, A), g, B), r, C), g, R);
+    paint(glass.color, G.color, I.color, D.color);
+    paint(glass.attenuationColor, G.attenuation, I.attenuation, D.attenuation);
+    paint(glass.emissive, G.emissive, I.emissive, D.emissive);
+    paint(core.emissive, G.core, I.core, D.core);
+    paint(wick.emissive, G.wick, I.wick, D.wick);
+    // FROST held throughout (ice is frostiest); transmission stays glassy.
+    glass.roughness = chain(0.17, 0.24, 0.2);
+    glass.transmission = chain(0.92, 0.95, 0.9);
+    glass.attenuationDistance = chain(1.1, 1.7, 1.2);
+    glass.emissiveIntensity = chain(0.24, 0.3, 0.3);
+    // hero-scaled core is physically big — hold it DIM in the ice phase (1.05) so
+    // the frosted form + heart read as glass, not a white blowout; let it glow
+    // hotter once it takes on green/red colour (colour reads as a lit candle, not
+    // a bulb). Tame vs the old flat 1.85.
+    core.emissiveIntensity = chain(1.3, 1.05, 1.55) + 0.1 * Math.sin(state.clock.elapsedTime * 2.2);
+    wick.emissiveIntensity = chain(1.7, 1.95, 2.1);
+    if (light.current) {
+      // cool/green/red spill on the glass — dim in ice (tame), up in the coloured
+      // phases; ramps on with the liftoff so it never pops.
+      paint(light.current.color, G.attenuation, I.attenuation, D.attenuation);
+      light.current.intensity = smooth(0.06, 0.35, lt) * chain(3.0, 2.2, 9.0);
+    }
   });
   return (
     <group ref={group} visible={false}>
