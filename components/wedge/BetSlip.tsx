@@ -169,7 +169,7 @@ export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "select
       <button
         onClick={onPlace}
         disabled={!selected}
-        className="shrink-0 bg-bull px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg disabled:opacity-30"
+        className="shrink-0 bg-bull px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg disabled:opacity-30"
       >
         place →
       </button>

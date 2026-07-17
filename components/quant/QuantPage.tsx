@@ -349,7 +349,7 @@ export function QuantPage() {
       </section>
 
       {/* Bottom tape */}
-      <section className="mt-8 border-y border-border bg-bg-soft py-3 font-mono text-[11px] uppercase tracking-wider">
+      <section className="mt-8 overflow-hidden border-y border-border bg-bg-soft py-3 font-mono text-[11px] uppercase tracking-wider">
         <div className="flex marquee-slow gap-10 whitespace-nowrap text-fg-faint">
           {Array.from({ length: 2 }).map((_, k) => (
             <div key={k} className="flex shrink-0 gap-10">

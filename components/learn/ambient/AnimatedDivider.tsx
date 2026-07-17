@@ -9,7 +9,7 @@ export function AnimatedDivider({
   num?: string;
 }) {
   return (
-    <div className="relative bg-bg py-14">
+    <div className="relative overflow-hidden bg-bg py-14">
       {/* Background grid wash */}
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-15" />
 
@@ -27,7 +27,7 @@ export function AnimatedDivider({
         {/* Center diamond + label */}
         <div className="flex items-center gap-3 px-2">
           {num && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-fg-faint">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint sm:tracking-[0.4em]">
               §{num}
             </span>
           )}
@@ -38,7 +38,7 @@ export function AnimatedDivider({
             />
           </div>
           {label && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-bull whitespace-nowrap">
+            <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.2em] text-bull sm:tracking-[0.4em]">
               {label}
             </span>
           )}

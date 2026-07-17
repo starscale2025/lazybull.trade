@@ -92,7 +92,7 @@ export function TopBar({
   const list = query.trim() ? searchResults : SEED_SYMBOLS;
 
   return (
-    <div className="relative z-30 flex h-11 items-center gap-1 border-b border-border bg-bg-soft px-2 font-mono text-[11px] uppercase tracking-wider">
+    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 font-mono text-[11px] uppercase tracking-wider lg:h-11 lg:flex-nowrap lg:py-0">
       <div className="relative">
         <button
           onClick={() => setSymOpen((o) => !o)}

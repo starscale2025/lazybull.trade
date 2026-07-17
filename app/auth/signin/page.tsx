@@ -19,7 +19,7 @@ function SignInPanel() {
   const error = params.get("error");
 
   return (
-    <main className="grid min-h-screen place-items-center bg-bg px-5 text-fg">
+    <main className="relative grid min-h-screen place-items-center overflow-x-clip bg-bg px-5 text-fg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
       <div className="pointer-events-none absolute -top-20 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-bull/15 blur-[160px]" />
 

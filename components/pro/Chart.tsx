@@ -528,13 +528,16 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   }, [vp.yMin, vp.yMax]);
 
   const xTicks = useMemo(() => {
-    const stride = Math.max(1, Math.round(vp.span / 8));
+    // A "Mar 09, 26" label is ~64px — fit however many the pane width allows
+    // (8 on desktop, ~3 on a phone) instead of always cramming 8.
+    const maxTicks = Math.max(3, Math.min(8, Math.floor(innerW(geom) / 88)));
+    const stride = Math.max(1, Math.round(vp.span / maxTicks));
     const ticks: number[] = [];
     for (let i = Math.ceil(vp.start); i < vp.start + vp.span; i += stride) {
       if (i >= 0 && i < bars.length) ticks.push(i);
     }
     return ticks;
-  }, [vp.start, vp.span, bars.length]);
+  }, [vp.start, vp.span, bars.length, geom]);
 
   const slot = innerW(geom) / vp.span;
   const candleW = Math.max(1, slot * 0.65);
@@ -796,8 +799,9 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         )}
       </svg>
 
-      {/* OHLC legend top-left */}
-      <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-3 font-mono text-[11px]">
+      {/* OHLC legend top-left — wraps inside the pane on phones instead of
+          running under the price axis; single line as before on lg+ */}
+      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-70px)] flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[11px] lg:max-w-none lg:flex-nowrap">
         <span className="text-fg">{symbol}</span>
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim">{exchange}</span>

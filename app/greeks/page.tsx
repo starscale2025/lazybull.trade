@@ -548,7 +548,7 @@ export default function GreeksLabPage() {
                   aria-label="Symbol"
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value as (typeof SYMBOLS)[number])}
-                  className="h-8 appearance-none border border-border bg-surface pl-3 pr-8 font-mono text-[11px] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none"
+                  className="h-10 appearance-none border border-border bg-surface pl-3 pr-8 font-mono text-[11px] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none md:h-8"
                 >
                   {SYMBOLS.map((s) => (
                     <option key={s} value={s}>
@@ -590,7 +590,7 @@ export default function GreeksLabPage() {
                     data-surface-btn={k}
                     aria-pressed={surfaceKey === k}
                     onClick={() => setSurfaceKey(k)}
-                    className={`h-8 px-2.5 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                    className={`h-10 px-2.5 font-mono text-[10px] uppercase tracking-wider transition-colors md:h-8 ${
                       i > 0 ? "border-l border-border-soft" : ""
                     } ${surfaceKey === k ? "bg-bull/10 text-bull" : "text-fg-dim hover:bg-bg hover:text-fg"}`}
                   >
@@ -604,7 +604,7 @@ export default function GreeksLabPage() {
               aria-checked={teacher}
               aria-label="Teacher mode"
               onClick={() => setTeacher((t) => !t)}
-              className={`inline-flex items-center gap-3 rounded-full border px-4 py-2 transition-colors ${
+              className={`inline-flex items-center gap-3 rounded-full border px-4 py-3 transition-colors md:py-2 ${
                 teacher
                   ? "border-bull/60 bg-bull/10 shadow-[0_0_28px_-10px_var(--bull)]"
                   : "border-border bg-surface hover:border-fg-faint"

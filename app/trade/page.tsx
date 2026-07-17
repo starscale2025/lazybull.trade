@@ -601,8 +601,8 @@ export default function TradePage() {
                   ))}
                 </div>
                 <div className="mt-5 flex items-center justify-end gap-2">
-                  <button onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg">cancel</button>
-                  <button onClick={confirmBet} className="bg-bull px-5 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim">place this bet</button>
+                  <button onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg lg:py-2">cancel</button>
+                  <button onClick={confirmBet} className="bg-bull px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim lg:py-2">place this bet</button>
                 </div>
               </div>
             </motion.div>
@@ -787,7 +787,7 @@ function StrategyDetail({
       <button
         type="button"
         onClick={onPlace}
-        className="mt-3 flex w-full items-center justify-between border px-3 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider transition-opacity hover:opacity-85"
+        className="mt-3 flex w-full items-center justify-between border px-3 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider transition-opacity hover:opacity-85 lg:py-2.5"
         style={{ borderColor: tone.color, color: tone.color, background: tone.pillBg }}
       >
         <span className="inline-flex items-center gap-2">

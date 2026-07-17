@@ -130,7 +130,7 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
   const addSym = (s: string) => setList((l) => (l.includes(s) ? l : [...l, s]));
 
   return (
-    <aside className="flex w-[300px] shrink-0 flex-col border-l border-border bg-bg-soft">
+    <aside className="flex w-full flex-col border-t border-border bg-bg-soft lg:w-[300px] lg:shrink-0 lg:border-l lg:border-t-0">
       {/* Watchlist header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
         <span className="text-fg">Watchlist</span>
@@ -185,7 +185,7 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
       </div>
 
       {/* watchlist */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="max-h-[45vh] flex-1 overflow-y-auto lg:max-h-none">
         {list.map((sym) => {
           const q = quotes[sym];
           const active = sym === symbol.sym;

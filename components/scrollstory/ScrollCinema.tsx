@@ -317,7 +317,13 @@ export function ScrollCinema() {
     // Persistent render loop: smooth-scrubs progress toward the scroll position
     // AND keeps ambient time flowing, so the scene breathes even at rest (drifting
     // rain, marching dashes, pointer parallax) instead of freezing between scrolls.
-    const SMOOTH = 0.12; // lower = glidier, higher = tighter to the scroll
+    // lower = glidier, higher = tighter to the scroll. Low-end devices get a
+    // much glidier scrub: each frame advances less, so dropped frames read as
+    // ease rather than judder (the scene can't skip ahead between paints).
+    const LOW_END =
+      (navigator.hardwareConcurrency || 8) <= 4 ||
+      ((navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
+    const SMOOTH = LOW_END ? 0.055 : 0.1;
     const tick = (ts: number) => {
       if (disposed || collapsed) return;
       const now = ts / 1000;
@@ -571,7 +577,7 @@ export function ScrollCinema() {
             <button
               type="button"
               onClick={() => bailToStaticRef.current?.()}
-              className="border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg"
+              className="border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
             >
               Skip intro →
             </button>
@@ -632,11 +638,15 @@ export function ScrollCinema() {
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.62) 100%)" }}
         />
+        {/* NOTE: no -translate-x-1/2 class here — Tailwind 4 translates via the
+            native `translate` property, which would STACK with the imperative
+            style.transform (-50% again) set every frame in applyOverlays and
+            shove each beat half its width off-center. JS owns the transform. */}
         {COPY_BEATS.map((b, i) => (
           <div
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
-            className="absolute left-1/2 -translate-x-1/2 text-center"
+            className="absolute left-1/2 text-center"
             style={{ top: b.pos === "top" ? "14%" : "50%", opacity: 0, width: "min(92vw, 680px)" }}
           >
             <div
@@ -652,15 +662,14 @@ export function ScrollCinema() {
             "takes one candle into the lab". Terminal lines light up with scroll
             while the ice candle spins/stretches on the right; all values are
             driven imperatively in applyOverlays on the same clock. */}
+        {/* Position responsively via classes (JS only drives opacity/visibility):
+            desktop = left rail beside the candle; <md = bottom sheet so the panel
+            never sits on top of the ice candle on a phone. */}
         <div
           ref={labRef}
           data-lab-panel
-          className="absolute z-20 border border-border bg-black/85 font-mono backdrop-blur-sm"
+          className="absolute z-20 border border-border bg-black/85 font-mono backdrop-blur-sm max-md:bottom-[13vh] max-md:left-1/2 max-md:w-[min(92vw,420px)] max-md:-translate-x-1/2 md:left-[5vw] md:top-1/2 md:w-[min(40vw,440px)] md:-translate-y-1/2"
           style={{
-            left: "5vw",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "min(40vw, 440px)",
             opacity: 0,
             visibility: "hidden",
             boxShadow: "0 0 70px rgba(0,0,0,0.65), 0 0 28px rgba(191,232,255,0.07)",
@@ -670,7 +679,7 @@ export function ScrollCinema() {
             <span>quant-bot · candidate scan</span>
             <span style={{ color: "#bfe8ff" }}>ice-lab</span>
           </div>
-          <div className="px-3.5 py-3 text-[12px] leading-[1.8] text-fg">
+          <div className="px-3.5 py-3 text-[11px] leading-[1.7] text-fg md:text-[12px] md:leading-[1.8]">
             <div ref={(el) => { labLineRefs.current[0] = el; }} className="whitespace-nowrap" style={{ opacity: 0.3 }}>
               <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --scan NVDA --paper
             </div>
@@ -720,7 +729,7 @@ export function ScrollCinema() {
           ref={skipRef}
           type="button"
           onClick={handleSkip}
-          className="pointer-events-auto absolute bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
+          className="pointer-events-auto absolute bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
         >
           Skip intro ↓
         </button>

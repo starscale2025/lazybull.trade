@@ -367,7 +367,7 @@ function TimelineItem({
 
 export function About() {
   return (
-    <div className="flex flex-col bg-bg text-fg">
+    <div className="flex flex-col overflow-x-clip bg-bg text-fg">
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border bg-bg">

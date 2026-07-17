@@ -52,7 +52,7 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
             exit={{ x: 360 }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex h-full w-[360px] flex-col border-l border-bull/40 bg-bg shadow-2xl"
+            className="flex h-full w-[360px] max-w-full flex-col border-l border-bull/40 bg-bg shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-[0.25em]">
               <span className="text-bull">⚡ paper trade · {symbol}</span>

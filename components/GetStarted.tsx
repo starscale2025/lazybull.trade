@@ -275,8 +275,8 @@ export function GetStarted() {
             {/* the line, set like a title card — not a caption */}
             <div className="absolute inset-x-0 bottom-[8%] px-6 text-center">
               <div className="font-display text-bull text-[clamp(1.8rem,4.5vw,3.6rem)] leading-tight [text-shadow:0_2px_30px_rgba(0,0,0,0.95)]">
-                27 bots watching,
-                <br className="hidden sm:block" /> so you don&apos;t have to.
+                27 bots watching,{" "}
+                <br className="hidden sm:block" />so you don&apos;t have to.
               </div>
               <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
                 every tick · every greek · every regime

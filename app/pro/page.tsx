@@ -289,7 +289,7 @@ export default function ProPage() {
   }, [symbol, layout]);
 
   return (
-    <div ref={wrapperRef} className="flex h-screen flex-col overflow-hidden bg-bg text-fg">
+    <div ref={wrapperRef} className="flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
       {/* App bar */}
       <header className="flex h-12 items-center gap-2 border-b border-border bg-bg-soft px-3">
         <Link href="/" className="flex items-center gap-2 font-display text-sm tracking-tightest text-fg">
@@ -299,18 +299,18 @@ export default function ProPage() {
           </div>
           lazybull<span className="text-bull">.pro</span>
         </Link>
-        <div className="ml-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
+        <div className="ml-3 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
           <span>workspace · "godmode"</span>
           {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
         </div>
         <div className="ml-auto flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
           <button onClick={() => setAlertsOpen(true)} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">
-            ⚡ alerts {alerts.length > 0 && <span className="ml-1 text-cyan">{alerts.length}</span>}
+            ⚡<span className="hidden sm:inline"> alerts</span> {alerts.length > 0 && <span className="ml-1 text-cyan">{alerts.length}</span>}
           </button>
           <button onClick={toggleFullscreen} className="size-7 border border-border bg-bg text-fg-dim hover:text-fg" title="Fullscreen">⛶</button>
           <button onClick={onTrade} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">Trade</button>
-          <button onClick={saveWorkspace} className="h-7 bg-bull px-3 font-semibold text-bg hover:bg-bull-dim">Save · Share</button>
+          <button onClick={saveWorkspace} className="h-7 bg-bull px-3 font-semibold text-bg hover:bg-bull-dim">Save<span className="hidden sm:inline"> · Share</span></button>
         </div>
       </header>
 
@@ -337,7 +337,10 @@ export default function ProPage() {
         onPublish={saveWorkspace}
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* <lg: toolbar+chart become a fixed-height band and the right panel stacks
+          below (page scrolls); lg+: the original single-screen three-pane row. */}
+      <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
+        <div className="flex h-[62vh] min-h-[420px] shrink-0 overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
         <LeftToolbar
           tool={tool}
           setTool={setTool}
@@ -414,6 +417,7 @@ export default function ProPage() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
         </div>
 
         <RightPanel symbol={symbol} onPickSymbol={setSymbol} />

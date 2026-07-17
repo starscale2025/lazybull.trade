@@ -178,7 +178,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onPlace(); }}
-          className="inline-flex w-full items-center justify-between border px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors"
+          className="inline-flex w-full items-center justify-between border px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors lg:py-2.5"
           style={{ borderColor: tone.color, color: tone.color, background: selected ? tone.pillBg : "transparent" }}
         >
           <span className="inline-flex items-center gap-2">

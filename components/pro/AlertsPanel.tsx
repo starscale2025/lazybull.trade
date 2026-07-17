@@ -46,7 +46,7 @@ export function AlertsPanel({ open, onClose, symbol, spot, alerts, setAlerts }: 
             exit={{ x: 320 }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex h-full w-[320px] flex-col border-l border-cyan/40 bg-bg shadow-2xl"
+            className="flex h-full w-[320px] max-w-full flex-col border-l border-cyan/40 bg-bg shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-[0.25em]">
               <span className="text-cyan">⚡ alerts · {symbol}</span>

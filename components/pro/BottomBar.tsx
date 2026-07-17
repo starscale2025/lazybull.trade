@@ -44,7 +44,7 @@ export function BottomBar({ preset, onPreset, status }: { preset: string; onPres
           AUTO Y
         </span>
       </div>
-      <div className="flex items-center gap-3 text-fg-faint">
+      <div className="hidden items-center gap-3 text-fg-faint md:flex">
         <span>{status}</span>
         <span>·</span>
         <span className="tabular-nums text-fg-dim">{clock || "--:--:--"} UTC+5:30</span>
