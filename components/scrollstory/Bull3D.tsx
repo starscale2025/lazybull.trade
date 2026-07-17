@@ -212,9 +212,13 @@ function Bull() {
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
-    // 2.3 (was 2.6 for the plinthless CC model): the obsidian statue carries its
-    // own plinth in the bbox, so fit a hair smaller to keep full-silhouette headroom.
-    const s = 2.3 / size.y;
+    // 1.7 (was 2.3 for the compact standing obsidian statue): the crystal bull is
+    // a LUNGING sculpt, ~2.5x longer (z) than tall — at a 2.3-height fit it filled
+    // the whole frame, parked its nose ~1.7 units from the camera at rest and
+    // swallowed the aura cylinder (r ≤ 2.65) inside its own silhouette. 1.7 keeps
+    // body + aura framed through the rise/turntable and saves the nose-past-camera
+    // moment for the actual charge finale.
+    const s = 1.7 / size.y;
     root.scale.multiplyScalar(s);
     root.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     const mat = new THREE.MeshStandardMaterial({

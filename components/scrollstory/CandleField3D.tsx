@@ -470,10 +470,18 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
     g.scale.setScalar(1 + 2.3 * smooth(0.1, 0.7, lt)); // floor candle → hero scale
     // the ANALYSIS stretch: body + wick elongate up/down while the footprint slims
     const s = smooth(0.45, 0.96, lt);
-    const slim = 1 - 0.22 * s;
-    bodyRef.current?.scale.set(0.72 * slim, c.h * (1 + 1.6 * s), 0.72 * slim);
-    coreRef.current?.scale.set(0.36 * slim, c.h * 0.66 * (1 + 1.9 * s), 0.36 * slim);
-    wickRef.current?.scale.set(0.11 * slim, (c.wh - c.wl) * (1 + 2.3 * s), 0.11 * slim);
+    // ICICLE PROPORTION: LAB_I is a floor-chop candle (h ≈ 0.22, squatter than
+    // its 0.72 footprint), so raw scaling reads as a slab mid-flight. As it
+    // leaves the field the body ELONGATES toward a hero height and slims — and
+    // the wick outpaces it so the tips always spike past both ends. hb stays 0
+    // through the hand-off window (lt ≤ 0.15), so the liftoff pose still equals
+    // the field slot exactly. Pure f(lt) like every other pose term.
+    const hb = smooth(0.15, 0.55, lt);
+    const hEff = lerp(c.h, Math.max(c.h, 0.46), hb);
+    const slim = (1 - 0.22 * s) * (1 - 0.24 * hb);
+    bodyRef.current?.scale.set(0.72 * slim, hEff * (1 + 1.6 * s), 0.72 * slim);
+    coreRef.current?.scale.set(0.36 * slim, hEff * 0.66 * (1 + 1.9 * s), 0.36 * slim);
+    wickRef.current?.scale.set(0.11 * slim, (c.wh - c.wl) * (1 + 2.3 * s) * (1 + 0.5 * hb), 0.11 * slim);
     // green → ICE as it leaves the field
     const k = smooth(0.12, 0.5, lt);
     glass.color.lerpColors(LAB_POSE.green.color, LAB_POSE.ice.color, k);
@@ -481,11 +489,15 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
     glass.emissive.lerpColors(LAB_POSE.green.emissive, LAB_POSE.ice.emissive, k);
     glass.attenuationDistance = lerp(1.1, 1.7, k);
     glass.emissiveIntensity = lerp(0.22, 0.32, k);
+    glass.transmission = lerp(0.92, 0.97, k); // ice runs clearer than market glass…
+    glass.roughness = lerp(0.16, 0.23, k); // …but its surface picks up a frosted hint
     core.emissive.lerpColors(LAB_POSE.green.core, LAB_POSE.ice.core, k);
-    core.emissiveIntensity = lerp(1.25, 1.85, k) + 0.12 * Math.sin(state.clock.elapsedTime * 2.2);
+    // hero-scaled core is physically big — hold its intensity near field level so
+    // the ice face reads as glass around a lit heart, not a white blowout
+    core.emissiveIntensity = lerp(1.25, 1.45, k) + 0.12 * Math.sin(state.clock.elapsedTime * 2.2);
     wick.emissive.lerpColors(LAB_POSE.green.wick, LAB_POSE.ice.wick, k);
     wick.emissiveIntensity = lerp(1.7, 2.3, k);
-    if (light.current) light.current.intensity = 15 * k; // cool spill on the glass
+    if (light.current) light.current.intensity = 10 * k; // cool spill on the glass
   });
   return (
     <group ref={group} visible={false}>
