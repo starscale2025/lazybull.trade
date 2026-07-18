@@ -29,12 +29,18 @@ export function QuantPage() {
 
   // Live Yahoo OHLCV for the chosen symbol. Falls back to a deterministic
   // synthetic walk only if the fetch fails (custom symbol, network down, etc.).
-  const [liveCandles, setLiveCandles] = useState<Candle[] | null>(null);
-  const [dataSource, setDataSource] = useState<"live" | "synthetic">("synthetic");
+  // What the quote fetch actually depends on. Live bars are a function of the
+  // symbol and the window length only — never of seed/drift/vol.
+  const liveKey = `${symbol}|${bars}`;
+  // Tagged with the key it was fetched for, so a late response for a previous
+  // symbol can never be read as the current one.
+  const [live, setLive] = useState<{ key: string; candles: Candle[] } | null>(null);
+  const [status, setStatus] = useState<"loading" | "live" | "synthetic">("loading");
 
   useEffect(() => {
     let cancelled = false;
-    setLiveCandles(null);
+    const key = `${symbol}|${bars}`;
+    setStatus("loading");
     (async () => {
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&tf=D`);
@@ -44,17 +50,20 @@ export function QuantPage() {
           const tail = j.bars.slice(-bars).map((b: { o: number; h: number; l: number; c: number }) => ({
             o: b.o, h: b.h, l: b.l, c: b.c,
           }));
-          setLiveCandles(tail);
-          setDataSource("live");
+          setLive({ key, candles: tail });
+          setStatus("live");
           return;
         }
-        setDataSource("synthetic");
+        setStatus("synthetic");
       } catch {
-        if (!cancelled) setDataSource("synthetic");
+        if (!cancelled) setStatus("synthetic");
       }
     })();
     return () => { cancelled = true; };
   }, [symbol, bars]);
+
+  // Stale-guard: only accept live bars that were fetched for the CURRENT key.
+  const liveCandles = live && live.key === liveKey ? live.candles : null;
 
   const syntheticCandles = useMemo<Candle[]>(
     () => generateCandles(bars, seed + symbol.charCodeAt(0), spotForSymbol(symbol), drift, vol),
@@ -63,10 +72,28 @@ export function QuantPage() {
   const candles = liveCandles ?? syntheticCandles;
   const lastSpot = candles[candles.length - 1]?.c ?? 100;
 
-  // Auto-rerun: when dataset changes, invalidate all results
+  // The badge must describe the bars the bots are ACTUALLY computing on. It
+  // used to read from a `dataSource` flag that stayed "live" across a refetch
+  // while `candles` had already fallen back to the synthetic walk.
+  const dataSource: "live" | "synthetic" = liveCandles ? "live" : "synthetic";
+  // seed/drift/vol only feed `syntheticCandles`, which live data shadows
+  // entirely — on the live path they were fully enabled controls that changed
+  // nothing except to wipe every completed result.
+  const syntheticKnobsActive = !liveCandles;
+
+  // Invalidate results when the dataset the bots run on actually changes.
+  //
+  // This used to depend on the `liveCandles` ARRAY, which the fetch reassigned
+  // on every resolve — so a quote landing after a completed RUN ALL silently
+  // wiped it and the button looked broken. Keying on a string identity means a
+  // response that doesn't change the data doesn't destroy the run. The
+  // synthetic knobs only participate while they can actually affect the bars.
+  const datasetId = liveCandles
+    ? `live:${liveKey}`
+    : `syn:${symbol}|${bars}|${seed}|${drift}|${vol}`;
   useEffect(() => {
     setResults({});
-  }, [bars, seed, symbol, drift, vol, liveCandles]);
+  }, [datasetId]);
 
   /**
    * First-mount auto-run — fires the seeded bots once on initial page
@@ -83,6 +110,7 @@ export function QuantPage() {
   useEffect(() => {
     if (didAutoRunRef.current) return;
     if (active.length === 0) return;
+    if (status === "loading") return; // else we'd run on the synthetic fallback
     if (candles.length < 20) return; // wait for candles to be ready
     didAutoRunRef.current = true;
     // Defer to the next tick so the page paints once before the first
@@ -90,7 +118,7 @@ export function QuantPage() {
     const timer = setTimeout(() => runAll(), 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles.length, active.length]);
+  }, [candles.length, active.length, status]);
 
   function getDef(id: string): BotDef | undefined {
     return getBot(id) || customBots.find((b) => b.id === id);
@@ -312,6 +340,7 @@ export function QuantPage() {
         totalBots={BOT_REGISTRY.length + customBots.length}
         spot={lastSpot}
         dataSource={dataSource}
+        syntheticKnobsActive={syntheticKnobsActive}
       />
 
       <section className="mx-auto w-full max-w-[1500px] px-5 pt-5">

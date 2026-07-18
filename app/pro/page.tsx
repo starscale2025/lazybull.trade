@@ -55,15 +55,20 @@ export default function ProPage() {
   // ── undo / redo
   const undoStack = useRef<Drawing[][]>([]);
   const redoStack = useRef<Drawing[][]>([]);
-  const setDrawings = useCallback((next: Drawing[] | ((prev: Drawing[]) => Drawing[])) => {
-    _setDrawings((prev) => {
-      const nxt = typeof next === "function" ? (next as (p: Drawing[]) => Drawing[])(prev) : next;
-      undoStack.current.push(prev);
-      if (undoStack.current.length > 50) undoStack.current.shift();
+  // History bookkeeping must live OUTSIDE the state updater. React invokes
+  // updaters twice under StrictMode (on by default in the App Router), so each
+  // drawing pushed two identical snapshots and every other undo was a visible
+  // no-op. Mutating refs from inside an updater is unsound generally — React
+  // may re-invoke a discarded render's updaters in production too.
+  const setDrawings = useCallback(
+    (next: Drawing[] | ((prev: Drawing[]) => Drawing[])) => {
+      const nxt = typeof next === "function" ? (next as (p: Drawing[]) => Drawing[])(drawings) : next;
+      undoStack.current = [...undoStack.current, drawings].slice(-50);
       redoStack.current = [];
-      return nxt;
-    });
-  }, []);
+      _setDrawings(nxt);
+    },
+    [drawings]
+  );
   const undo = () => {
     const prev = undoStack.current.pop();
     if (!prev) return;
@@ -80,6 +85,14 @@ export default function ProPage() {
   // keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Never let chart shortcuts fire while the user is typing. Without this,
+      // Delete in the alert-note or symbol-search field wiped every drawing on
+      // the chart, and any note containing v/t/h/b/m/f/r silently rearmed the
+      // drawing tool so the next click drew instead of panned.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) {
+        return;
+      }
       const cmd = e.metaKey || e.ctrlKey;
       if (cmd && e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
       else if (cmd && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); redo(); }
@@ -376,6 +389,7 @@ export default function ProPage() {
                 bars={i === 0 ? bars : undefined}
                 meta={i === 0 ? meta : undefined}
                 exchangeFallback={i === 0 ? symbolMetaForChart.exch : ""}
+                chartType={chartType}
               />
             ))}
           </div>
@@ -473,6 +487,7 @@ function PaneChart({
   bars: barsProp,
   meta: metaProp,
   exchangeFallback,
+  chartType,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -482,6 +497,7 @@ function PaneChart({
   setDrawings: (d: Drawing[] | ((prev: Drawing[]) => Drawing[])) => void;
   color: string;
   indicators: string[];
+  chartType: Workspace["chart"];
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -521,6 +537,7 @@ function PaneChart({
         setDrawings={setDrawings}
         color={color}
         indicators={indicators}
+        chart={chartType}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}

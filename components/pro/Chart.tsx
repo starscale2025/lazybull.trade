@@ -36,6 +36,8 @@ type Props = {
   showVolume?: boolean;
   indicators: string[]; // ids
   replayBar?: number | null; // if set, hide bars after this index
+  /** Price-series style. The TopBar switcher used to set state nothing read. */
+  chart?: "candles" | "line" | "area" | "bars";
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
 };
@@ -61,6 +63,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     showVolume = true,
     indicators,
     replayBar = null,
+    chart = "candles",
     alerts,
     onAlertFire,
   },
@@ -612,8 +615,34 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           <IchimokuOverlay ichi={ind.ichi as { conv: (number | null)[]; base: (number | null)[]; spanA: (number | null)[]; spanB: (number | null)[] }} bars={bars} vp={vp} geom={geom} />
         )}
 
-        {/* candles — fade in left-to-right on initial mount + on bar change */}
-        {visibleBars.map((b, idx) => {
+        {/* price series — style selected in the TopBar switcher */}
+        {(chart === "line" || chart === "area") && visibleBars.length > 1 && (() => {
+          const pts = visibleBars.map((b) => `${xOfBar(b.i, vp, geom).toFixed(1)},${yOfPrice(b.c, vp, geom).toFixed(1)}`);
+          const up = visibleBars[visibleBars.length - 1].c >= visibleBars[0].c;
+          const c = up ? "var(--bull)" : "var(--bear)";
+          const x0 = xOfBar(visibleBars[0].i, vp, geom).toFixed(1);
+          const xN = xOfBar(visibleBars[visibleBars.length - 1].i, vp, geom).toFixed(1);
+          const floor = (geom.height - geom.padB).toFixed(1);
+          return (
+            <g key={`series-${introToken}`}>
+              {chart === "area" && (
+                <>
+                  <defs>
+                    <linearGradient id="chart-area-fill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={c} stopOpacity="0.28" />
+                      <stop offset="100%" stopColor={c} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d={`M${x0},${floor} L${pts.join(" L")} L${xN},${floor} Z`} fill="url(#chart-area-fill)" />
+                </>
+              )}
+              <polyline points={pts.join(" ")} fill="none" stroke={c} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+            </g>
+          );
+        })()}
+
+        {/* candles / OHLC bars — fade in left-to-right on initial mount + on bar change */}
+        {(chart === "candles" || chart === "bars") && visibleBars.map((b, idx) => {
           const x = xOfBar(b.i, vp, geom);
           const isUp = b.c >= b.o;
           const c = isUp ? "var(--bull)" : "var(--bear)";
@@ -624,6 +653,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           const top = Math.min(yO, yC);
           const bh = Math.max(1, Math.abs(yC - yO));
           const delayMs = introPlaying ? idx * 8 : 0;
+          const tick = Math.max(1.5, candleW / 2);
           return (
             <g
               key={`b-${b.i}-${introToken}`}
@@ -631,7 +661,15 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
               style={introPlaying ? { animationDelay: `${delayMs}ms` } : undefined}
             >
               <line x1={x} x2={x} y1={yH} y2={yL} stroke={c} strokeWidth={1} />
-              <rect x={x - candleW / 2} y={top} width={candleW} height={bh} fill={c} />
+              {chart === "bars" ? (
+                <>
+                  {/* OHLC: open tick left, close tick right */}
+                  <line x1={x - tick} x2={x} y1={yO} y2={yO} stroke={c} strokeWidth={1.2} />
+                  <line x1={x} x2={x + tick} y1={yC} y2={yC} stroke={c} strokeWidth={1.2} />
+                </>
+              ) : (
+                <rect x={x - candleW / 2} y={top} width={candleW} height={bh} fill={c} />
+              )}
             </g>
           );
         })}

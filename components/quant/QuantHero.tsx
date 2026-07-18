@@ -21,6 +21,7 @@ export function QuantHero({
   totalBots,
   spot,
   dataSource,
+  syntheticKnobsActive,
 }: {
   symbol: string;
   setSymbol: (s: string) => void;
@@ -40,7 +41,12 @@ export function QuantHero({
   totalBots: number;
   spot: number;
   dataSource: "live" | "synthetic";
+  /** seed/drift/vol only shape the synthetic walk — live bars shadow them. */
+  syntheticKnobsActive: boolean;
 }) {
+  const knobTitle = syntheticKnobsActive
+    ? "Shapes the synthetic price walk."
+    : "Inactive on live data — these only shape the synthetic fallback walk.";
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
@@ -171,26 +177,27 @@ export function QuantHero({
                     className="mt-2 w-full accent-bull"
                   />
                 </div>
-                {/* seed */}
-                <div className="bg-bg p-3">
+                {/* seed — synthetic only */}
+                <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     <span>seed</span>
-                    <span className="text-fg">{seed}</span>
+                    <span className="text-fg">{syntheticKnobsActive ? seed : "—"}</span>
                   </div>
                   <input
                     type="range"
                     min={1}
                     max={500}
                     value={seed}
+                    disabled={!syntheticKnobsActive}
                     onChange={(e) => setSeed(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull"
+                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
-                {/* drift */}
-                <div className="bg-bg p-3">
+                {/* drift — synthetic only */}
+                <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     <span>drift μ</span>
-                    <span className="text-fg">{drift.toFixed(2)}</span>
+                    <span className="text-fg">{syntheticKnobsActive ? drift.toFixed(2) : "—"}</span>
                   </div>
                   <input
                     type="range"
@@ -198,15 +205,16 @@ export function QuantHero({
                     max={0.5}
                     step={0.01}
                     value={drift}
+                    disabled={!syntheticKnobsActive}
                     onChange={(e) => setDrift(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull"
+                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
-                {/* vol */}
-                <div className="bg-bg p-3">
+                {/* vol — synthetic only */}
+                <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     <span>vol σ</span>
-                    <span className="text-fg">{vol.toFixed(2)}</span>
+                    <span className="text-fg">{syntheticKnobsActive ? vol.toFixed(2) : "—"}</span>
                   </div>
                   <input
                     type="range"
@@ -214,8 +222,9 @@ export function QuantHero({
                     max={5}
                     step={0.05}
                     value={vol}
+                    disabled={!syntheticKnobsActive}
                     onChange={(e) => setVol(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull"
+                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
                 {/* beginner */}

@@ -441,7 +441,13 @@ export default function GreeksLabPage() {
   const kMin = spot * M_LO;
   const kMax = spot * M_HI;
   const strike = m * spot;
-  const sliderStep = niceStep((kMax - kMin) / 50);
+  // An <input type="range"> only accepts values on the `min + n*step` lattice.
+  // With min = spot*0.8 (an arbitrary float) and a "nice" step, the top of the
+  // range was unreachable (SPY: a $7.32 dead band) and the initial thumb value
+  // snapped away from the real strike. Drive the slider in normalized ticks and
+  // map to a strike instead, so every strike in [kMin, kMax] is reachable.
+  const STRIKE_TICKS = 500;
+  const strikeTick = Math.round(((strike - kMin) / Math.max(1e-9, kMax - kMin)) * STRIKE_TICKS);
 
   // Live point — the real pricing engine, every render.
   const { price, greeks } = priceOption(spot, strike, yearsOf(days), R, vol, "C");
@@ -485,11 +491,18 @@ export default function GreeksLabPage() {
     const drag = dragRef.current;
     if (!drag || e.pointerId !== drag.id) return;
     const p = svgPoint(e);
-    // Horizontal drag → strike, vertical drag → days (up = further expiry).
-    const nextM = drag.m + ((p.x - drag.x) / AXIS_K.x) * (M_HI - M_LO);
-    const nextD = drag.d - ((p.y - drag.y) / 240) * D_MAX;
-    setM(clamp(nextM, M_LO, M_HI));
-    setDays(clamp(Math.round(nextD), D_MIN, D_MAX));
+    // The floor is an OBLIQUE basis: the days axis runs mostly sideways
+    // (AXIS_D = {556, -88}), so decomposing pointer travel as "screen-x = strike,
+    // screen-y = days" was wrong — a straight-up drag moved the handle up to
+    // 420px to the RIGHT and, on the gamma surface, slightly DOWN. Invert the
+    // 2x2 basis instead so the grabbed point tracks the cursor in any direction.
+    const dx = p.x - drag.x;
+    const dy = p.y - drag.y;
+    const det = AXIS_K.x * AXIS_D.y - AXIS_K.y * AXIS_D.x;
+    const du = (dx * AXIS_D.y - dy * AXIS_D.x) / det;
+    const dv = (-dx * AXIS_K.y + dy * AXIS_K.x) / det;
+    setM(clamp(drag.m + du * (M_HI - M_LO), M_LO, M_HI));
+    setDays(clamp(Math.round(drag.d + dv * D_MAX), D_MIN, D_MAX));
   }
 
   function onPointerEnd(e: React.PointerEvent<SVGSVGElement>) {
@@ -659,7 +672,7 @@ export default function GreeksLabPage() {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerEnd}
             onPointerCancel={onPointerEnd}
-            aria-label="Black-Scholes call price surface. Drag horizontally to change strike, vertically to change days to expiry."
+            aria-label="Black-Scholes call price surface. Drag the handle across the floor to change strike and days to expiry; use the sliders below for precise values."
           >
             <title>Black-Scholes call price surface</title>
             <defs>
@@ -717,12 +730,15 @@ export default function GreeksLabPage() {
             </div>
             <input
               type="range"
-              min={kMin}
-              max={kMax}
-              step={sliderStep}
-              value={strike}
+              min={0}
+              max={STRIKE_TICKS}
+              step={1}
+              value={strikeTick}
               aria-label="Strike"
-              onChange={(e) => setM(clamp(parseFloat(e.target.value) / spot, M_LO, M_HI))}
+              aria-valuetext={`$${fmtStrike(strike, spot)}`}
+              onChange={(e) =>
+                setM(clamp(M_LO + (Number(e.target.value) / STRIKE_TICKS) * (M_HI - M_LO), M_LO, M_HI))
+              }
               className="mt-2 h-1 w-full accent-bull"
             />
           </div>

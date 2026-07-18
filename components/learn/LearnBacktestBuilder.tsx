@@ -26,7 +26,11 @@ const SCENARIOS = [
 ];
 
 export function LearnBacktestBuilder() {
-  const [botId, setBotId] = useState("sma-cross");
+  // SMA(12)/SMA(26) never cross on the "bull" scenario's strongly-drifting walk,
+  // so the chapter's headline demo opened on a flat line and all-zero metrics —
+  // contradicting the body copy about the curve building bar by bar. MACD on the
+  // same scenario trades 11 times for +18.2%.
+  const [botId, setBotId] = useState("macd");
   const [scenarioKey, setScenarioKey] = useState("bull");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1
@@ -41,16 +45,8 @@ export function LearnBacktestBuilder() {
   );
 
   // Compute the full backtest once, slice to progress for animation.
-  const fullResult = useMemo<BotResult | null>(() => {
-    if (!def) return null;
-    try {
-      return Promise.resolve(def.run({ candles, symbol: "DEMO" }, Object.fromEntries(def.params.map((p) => [p.key, p.default])))) as never;
-    } catch {
-      return null;
-    }
-  }, [def, candles]);
-
-  // Resolve the (sync) result once.
+  // (A second `fullResult` useMemo used to run the identical backtest here and
+  // throw the result away — nothing ever read it.)
   const [result, setResult] = useState<BotResult | null>(null);
   useEffect(() => {
     if (!def) return;
@@ -111,7 +107,7 @@ export function LearnBacktestBuilder() {
 
   // Live stats up to cutoff.
   const stats = useMemo(() => {
-    if (!visibleEquity.length) return { ret: 0, sharpe: 0, maxDD: 0, trades: 0, wr: 0 };
+    if (!visibleEquity.length) return { ret: 0, sharpe: 0, maxDD: 0, trades: 0, wr: null as number | null };
     const eq = visibleEquity;
     const last = eq[eq.length - 1];
     const ret = last - 1;
@@ -123,19 +119,28 @@ export function LearnBacktestBuilder() {
     const sharpe = sd > 0 ? (mean / sd) * Math.sqrt(252) : 0;
     let peak = -Infinity, dd = 0;
     for (const v of eq) { peak = Math.max(peak, v); dd = Math.min(dd, (v - peak) / peak); }
-    const trades = visibleSignals.filter((s) => s.kind === "long" || s.kind === "short").length;
-    // crude win-rate: pair consecutive long/short, sign of price diff.
-    let wins = 0, total = 0;
-    let lastBuy: number | null = null;
+    // Trades and win rate MUST use the same state machine as backtestLongOnly,
+    // which drew the equity curve above. It is long-only: enter on the first
+    // `long` while flat, ignore further `long`s while in position, ignore
+    // `short`s while flat. Counting raw signal markers instead (and pairing each
+    // `short` with the most RECENT `long`) disagreed with the curve on both
+    // which trades exist and their entry price — the tile could read "100% win
+    // rate" above an equity curve that ended below 1.0.
+    let trades = 0, wins = 0, closed = 0;
+    let entry: number | null = null;
     for (const s of visibleSignals) {
-      if (s.kind === "long") lastBuy = candles[s.i].c;
-      else if (s.kind === "short" && lastBuy != null) {
-        total++;
-        if (candles[s.i].c > lastBuy) wins++;
-        lastBuy = null;
+      if (s.kind === "long" && entry == null) {
+        entry = candles[s.i].c;
+        trades++;
+      } else if (s.kind === "short" && entry != null) {
+        closed++;
+        if (candles[s.i].c > entry) wins++;
+        entry = null;
       }
     }
-    const wr = total > 0 ? wins / total : 0;
+    // null (not 0) when nothing has closed yet — "no round-trip yet" and "every
+    // trade lost" are not the same statement.
+    const wr = closed > 0 ? wins / closed : null;
     return { ret, sharpe, maxDD: dd, trades, wr };
   }, [visibleEquity, visibleSignals, candles]);
 
@@ -228,7 +233,11 @@ export function LearnBacktestBuilder() {
         <Stat label="Sharpe" value={stats.sharpe.toFixed(2)} tone={stats.sharpe > 1 ? "var(--bull)" : stats.sharpe > 0 ? "var(--cyan)" : "var(--bear)"} />
         <Stat label="Max DD" value={`${(stats.maxDD * 100).toFixed(1)}%`} tone="var(--bear)" />
         <Stat label="Trades" value={String(stats.trades)} tone="var(--fg)" />
-        <Stat label="Win rate" value={`${(stats.wr * 100).toFixed(0)}%`} tone={stats.wr > 0.5 ? "var(--bull)" : "var(--amber)"} />
+        <Stat
+          label="Win rate"
+          value={stats.wr == null ? "—" : `${(stats.wr * 100).toFixed(0)}%`}
+          tone={stats.wr == null ? "var(--fg-faint)" : stats.wr > 0.5 ? "var(--bull)" : "var(--amber)"}
+        />
       </div>
 
       <div className="border border-dashed border-border bg-bg p-3 font-mono text-[11px] tracking-wide text-fg-dim leading-relaxed">

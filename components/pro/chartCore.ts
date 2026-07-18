@@ -55,6 +55,16 @@ export function autoY(bars: Bar[], start: number, span: number) {
     if (bars[i].h > yMax) yMax = bars[i].h;
     if (bars[i].l < yMin) yMin = bars[i].l;
   }
+  // Entering replay shortens `bars` while the viewport still points past the
+  // new end: hi < lo, the loop never runs, and yMin/yMax stay ±Infinity — so
+  // pad was -Infinity and yOfPrice() emitted NaN into hundreds of SVG
+  // coordinates for a frame. Fall back to a sane unit range instead.
+  if (!Number.isFinite(yMin) || !Number.isFinite(yMax) || yMax <= yMin) {
+    const last = bars[bars.length - 1];
+    if (!last) return { yMin: 0, yMax: 1 };
+    const mid = last.c || 1;
+    return { yMin: mid * 0.99, yMax: mid * 1.01 };
+  }
   const pad = (yMax - yMin) * 0.08;
   return { yMin: yMin - pad, yMax: yMax + pad };
 }
