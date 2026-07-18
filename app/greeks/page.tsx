@@ -356,18 +356,28 @@ function GreekStatCard({
     .join(" ");
 
   return (
-    <div className="border border-border bg-surface p-4">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">{GREEK_COPY[greek].label}</div>
-      <div className="mt-2 flex items-end justify-between gap-2">
-        <div data-greek={greek} className="font-display text-2xl tracking-tightest tabular-nums text-fg lg:text-3xl">
+    <div className="border border-border bg-surface p-2 md:p-4">
+      <div className="font-mono text-[9px] uppercase tracking-wider text-fg-dim md:text-[10px]">
+        {GREEK_COPY[greek].label}
+      </div>
+      <div className="mt-1 flex items-end justify-between gap-2 md:mt-2">
+        <div
+          data-greek={greek}
+          className="font-display text-sm tracking-tightest tabular-nums text-fg md:text-2xl lg:text-3xl"
+        >
           {value}
         </div>
-        <svg viewBox="0 0 90 20" className="mb-1 h-4 w-[72px] shrink-0 text-bull" fill="none" aria-hidden>
+        {/* The sparkline and the teacher line are the two things that push a
+            card past ~55px; both are detail, so they wait for the wider grid. */}
+        <svg viewBox="0 0 90 20" className="mb-1 hidden h-4 w-[72px] shrink-0 text-bull md:block" fill="none" aria-hidden>
           <polyline points={points} stroke="currentColor" strokeWidth="1.2" />
         </svg>
       </div>
       {teacher && (
-        <div data-teacher-line className="mt-3 border-t border-border-soft pt-2 text-[11px] leading-relaxed text-fg-dim">
+        <div
+          data-teacher-line
+          className="mt-3 hidden border-t border-border-soft pt-2 text-[11px] leading-relaxed text-fg-dim md:block"
+        >
           {GREEK_COPY[greek].line}
         </div>
       )}
@@ -775,7 +785,11 @@ export default function GreeksLabPage() {
         </div>
 
         {/* five live Greek cards */}
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+        {/* Was grid-cols-2 on mobile: five cards wrapped to three rows (~400px),
+            so the drag surface and the readouts could never be on screen
+            together at 375x812 — the exact thing the headline asks you to do.
+            One compact row on mobile, full cards from md up. */}
+        <div className="mt-4 grid grid-cols-5 gap-1.5 md:grid-cols-5 md:gap-3">
           {GREEK_ORDER.map((g) => (
             <GreekStatCard
               key={g}
