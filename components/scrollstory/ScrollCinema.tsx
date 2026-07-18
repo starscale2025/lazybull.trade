@@ -151,6 +151,8 @@ export function ScrollCinema() {
     let collapsed = false;
     let creep = 0; // interval that eases the loading bar up during preload
     let onSceneLoad: (() => void) | null = null;
+    let onSceneError: (() => void) | null = null;
+    let sceneTimeout = 0;
     let pxS = 0; // damped pointer for layered parallax
     let pyS = 0;
 
@@ -427,10 +429,32 @@ export function ScrollCinema() {
     // ---- preload: scene + panel shots, then three.js + the bull model ----
     const shotsLoaded = new Promise<void>((resolve, reject) => {
       let done = false;
+      // The iframe firing `load` WITHOUT exposing initScene (dead/404 scene.html,
+      // a cross-origin read, a network abort) used to hit the bare `return`
+      // below, which neither resolved nor rejected — so Promise.all never
+      // settled, its .catch(() => setMode("static")) was unreachable, and the
+      // loading overlay sat at opacity 1 with scroll locked FOREVER. The
+      // documented static fallback could never engage.
+      let loadFired = false;
+      const fail = () => {
+        if (done || disposed) return;
+        done = true;
+        reject(new Error("scene"));
+      };
       const run = async () => {
         if (done || disposed) return;
-        const w = win();
-        if (!w?.initScene) return; // iframe not ready yet; the load listener retries
+        let w: ReturnType<typeof win>;
+        try {
+          w = win();
+        } catch {
+          return fail(); // cross-origin: the scene will never be reachable
+        }
+        if (!w?.initScene) {
+          // Before `load`, the iframe simply isn't ready yet and the listener
+          // retries. After it, initScene is never going to appear.
+          if (loadFired) fail();
+          return;
+        }
         done = true;
         try {
           await w.initScene({ shots: SHOTS, phases: ACTS, bullFrames: null });
@@ -442,9 +466,18 @@ export function ScrollCinema() {
           reject(new Error("scene"));
         }
       };
-      onSceneLoad = run;
-      iframe.addEventListener("load", run);
-      run(); // in case the iframe is already loaded
+      const onLoad = () => {
+        loadFired = true;
+        void run();
+      };
+      onSceneLoad = onLoad;
+      onSceneError = fail;
+      iframe.addEventListener("load", onLoad);
+      iframe.addEventListener("error", fail);
+      // Last-resort bound: if neither load nor error ever fires, still let the
+      // gate resolve to the static fallback rather than trapping the page.
+      sceneTimeout = window.setTimeout(fail, 20_000);
+      void run(); // in case the iframe is already loaded
     });
     // three.js chunks + BOTH GLBs — all inside the reveal gate. Revealing early
     // (the old 15s auto-bailout) handed slow machines a half-loaded act, so the
@@ -533,8 +566,10 @@ export function ScrollCinema() {
       window.clearTimeout(resizeTimer);
       window.clearTimeout(slowTimer);
       window.clearInterval(creep);
+      window.clearTimeout(sceneTimeout);
       rootStyle.overflow = prevOverflow; // never leave scroll locked
       if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
+      if (onSceneError) iframe.removeEventListener("error", onSceneError);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("pointerdown", onDown);
@@ -787,11 +822,16 @@ export function ScrollCinema() {
           <span />
         </div>
         <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
+        {/* `absolute bottom-7` anchored this to the sticky wrapper, which at
+            scrollY=0 has not yet reached its top-0 pin and therefore sits ~91px
+            down the page — putting the button fully BELOW the fold on mobile
+            (measured: top=832 against an 812px viewport, not tappable). Anchor
+            it to the viewport instead so it's reachable the moment you land. */}
         <button
           ref={skipRef}
           type="button"
           onClick={handleSkip}
-          className="pointer-events-auto absolute bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
+          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
         >
           Skip intro ↓
         </button>

@@ -40,7 +40,15 @@ export function LearnVolSmile() {
 
   const W = 720, H = 280, padL = 50, padR = 30, padT = 20, padB = 36;
   const innerW = W - padL - padR, innerH = H - padT - padB;
-  const ivMin = 0.10, ivMax = 0.65;
+  // Hard-coded [0.10, 0.65] clipped the wings out of the viewBox entirely at
+  // high skew/kurtosis (smileIV reaches 0.85, which maps to y = -60 in a
+  // 280-tall box) while the numeric panel below kept reporting the real values
+  // — chart and numbers disagreed. Derive the axis from the data instead.
+  const ivs = points.map((p) => p.iv);
+  const dataMin = Math.min(...ivs), dataMax = Math.max(...ivs);
+  const padIv = Math.max(0.02, (dataMax - dataMin) * 0.12);
+  const ivMin = Math.min(0.10, dataMin - padIv);
+  const ivMax = Math.max(0.65, dataMax + padIv);
   const xOf = (K: number) => padL + ((K - STRIKES[0]) / (STRIKES[STRIKES.length - 1] - STRIKES[0])) * innerW;
   const yOf = (iv: number) => padT + (1 - (iv - ivMin) / (ivMax - ivMin)) * innerH;
   const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${xOf(p.K).toFixed(1)},${yOf(p.iv).toFixed(1)}`).join(" ");

@@ -1,21 +1,54 @@
+import Link from "next/link";
 import pkg from "../package.json";
 
-const COLS = [
+// Every entry here used to be href="#" — 32 links plus the three legal ones,
+// all of which looked clickable and went nowhere. A link with no destination is
+// now rendered as plain muted text instead of pretending to navigate.
+type FooterLink = { label: string; href?: string };
+const COLS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Product",
-    links: ["Visual chain", "AI teacher", "Strategy detector", "Paper trading", "Safety wheels", "Roadmap"],
+    links: [
+      { label: "Visual chain", href: "/trade/chain" },
+      { label: "Strategy builder", href: "/trade" },
+      { label: "Greek surface", href: "/greeks" },
+      { label: "Quant workbench", href: "/quant" },
+      { label: "Pro charts", href: "/pro" },
+      { label: "Pricing", href: "/pricing" },
+    ],
   },
   {
     title: "Learn",
-    links: ["What's an option?", "Greeks 101", "Spreads 101", "Iron condors", "Glossary", "Worked examples"],
+    links: [
+      { label: "The three pieces", href: "/learn#three-pieces" },
+      { label: "Greeks 101", href: "/learn#greeks" },
+      { label: "The vol smile", href: "/learn#volsmile" },
+      { label: "Probability · 3 ways", href: "/learn#probability" },
+      { label: "The 5 families", href: "/learn#families" },
+      { label: "Backtest in motion", href: "/learn#backtest" },
+    ],
   },
   {
     title: "Build",
-    links: ["Public API", "Strategy SDK", "Embeddable chain", "Webhooks", "Docs", "Changelog"],
+    links: [
+      { label: "Bring your own bot", href: "/learn#byob" },
+      { label: "The AI quants", href: "/learn#ai-quants" },
+      { label: "Teacher mode", href: "/learn#teacher" },
+      { label: "Public API" },
+      { label: "Docs" },
+      { label: "Changelog" },
+    ],
   },
   {
     title: "About",
-    links: ["Manifesto", "Safety", "Press", "Brand kit", "Contact", "Status"],
+    links: [
+      { label: "Manifesto", href: "/about" },
+      { label: "Now go", href: "/learn#now-go" },
+      { label: "Press" },
+      { label: "Brand kit" },
+      { label: "Contact" },
+      { label: "Status" },
+    ],
   },
 ];
 
@@ -116,14 +149,15 @@ export function Footer() {
             <span className="italic">Make them visible. Make them safe.</span>
           </p>
           <div className="mt-6 flex items-center gap-2">
+            {/* No accounts published yet — render as badges, not dead links. */}
             {["TW", "GH", "DC", "TG", "YT"].map((s) => (
-              <a
+              <span
                 key={s}
-                href="#"
-                className="flex size-8 items-center justify-center border border-border bg-bg font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
+                title="Coming soon"
+                className="flex size-8 cursor-default items-center justify-center border border-border bg-bg font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-faint"
               >
                 {s}
-              </a>
+              </span>
             ))}
           </div>
         </div>
@@ -133,17 +167,30 @@ export function Footer() {
               {col.title}
             </div>
             <ul className="space-y-2.5">
-              {col.links.map((l) => (
-                <li key={l}>
-                  <a
-                    href="#"
-                    className="group inline-flex items-center gap-2 font-mono text-sm text-fg-dim transition-colors hover:text-fg"
-                  >
-                    <span className="text-fg-faint group-hover:text-bull">›</span>
-                    {l}
-                  </a>
-                </li>
-              ))}
+              {col.links.map((l) =>
+                l.href ? (
+                  <li key={l.label}>
+                    <Link
+                      href={l.href}
+                      className="group inline-flex items-center gap-2 font-mono text-sm text-fg-dim transition-colors hover:text-fg"
+                    >
+                      <span className="text-fg-faint group-hover:text-bull">›</span>
+                      {l.label}
+                    </Link>
+                  </li>
+                ) : (
+                  <li key={l.label}>
+                    <span
+                      className="inline-flex cursor-default items-center gap-2 font-mono text-sm text-fg-faint"
+                      title="Coming soon"
+                    >
+                      <span className="text-fg-faint">›</span>
+                      {l.label}
+                      <span className="text-[9px] uppercase tracking-wider text-fg-faint/70">soon</span>
+                    </span>
+                  </li>
+                )
+              )}
             </ul>
           </div>
         ))}
@@ -163,11 +210,13 @@ export function Footer() {
           <div className="flex items-center gap-3">
             <span>© 2026 lazybull labs</span>
             <span className="text-fg-faint">·</span>
-            <a href="#" className="hover:text-fg">privacy</a>
+            {/* These need real reviewed copy before they can be links — a dead
+                legal link on a trading-education product is worse than none. */}
+            <span className="cursor-default text-fg-faint/70" title="Coming soon">privacy</span>
             <span className="text-fg-faint">·</span>
-            <a href="#" className="hover:text-fg">terms</a>
+            <span className="cursor-default text-fg-faint/70" title="Coming soon">terms</span>
             <span className="text-fg-faint">·</span>
-            <a href="#" className="hover:text-fg">safety</a>
+            <Link href="/learn#now-go" className="hover:text-fg">safety</Link>
           </div>
         </div>
       </div>

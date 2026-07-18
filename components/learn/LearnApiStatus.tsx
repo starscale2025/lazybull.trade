@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+// NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
+// unconditional localhost fallback shipped "http://localhost:8000" to every
+// production visitor — each one then firing (and failing) requests at their own
+// machine. Only fall back to localhost in development.
 const API_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_QUANTAI_URL) ||
-  "http://localhost:8000";
+  (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 
 type Status = "checking" | "live" | "down";
 
@@ -16,6 +20,10 @@ export function LearnApiStatus({ endpoint }: { endpoint: string }) {
   useEffect(() => {
     let cancelled = false;
     const ping = async () => {
+      if (!API_BASE) {
+        if (!cancelled) { setStatus("down"); setInfo("not configured"); }
+        return;
+      }
       const t0 = performance.now();
       try {
         const ctrl = new AbortController();

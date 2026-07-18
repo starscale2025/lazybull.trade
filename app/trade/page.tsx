@@ -162,11 +162,25 @@ export default function TradePage() {
   const [high, setHigh] = useState(sym.spot * 1.06);
   const [days, setDays] = useState(35);
 
+  // The SYMBOLS seed spots are stale (late-2024 prices), and this effect used to
+  // anchor the band to `sym.spot` on symbol change ONLY — it never re-ran when
+  // the live quote landed. Every symbol therefore opened with its band entirely
+  // below spot, which made the thesis read "fall into $x–$y" for all of them,
+  // dropped the in-band probability to 0–30%, and built an all-bearish strategy
+  // menu from a band the user never chose.
+  //
+  // The pre-quote anchor is provisional; re-anchor once the first live quote for
+  // this symbol arrives, then leave the band alone so the 10s poll can't stomp a
+  // band the user has dragged.
+  const anchoredRef = useRef<string | null>(null);
   useEffect(() => {
-    setLow(sym.spot * 0.95);
-    setHigh(sym.spot * 1.06);
+    const stamp = `${sym.sym}:${quote ? "live" : "seed"}`;
+    if (anchoredRef.current === `${sym.sym}:live` || anchoredRef.current === stamp) return;
+    anchoredRef.current = stamp;
+    setLow(spot * 0.95);
+    setHigh(spot * 1.06);
     setDays(35);
-  }, [sym]);
+  }, [sym.sym, quote, spot]);
 
   const resetView = () => {
     setLow(spot * 0.95);
@@ -235,12 +249,8 @@ export default function TradePage() {
   })();
   const thesisSentence = `I think ${sym.sym} will ${direction} $${low.toFixed(2)} and $${high.toFixed(2)} by ${fmtDate(dateNDaysOut(days))}.`;
 
-  // under-the-hood tabs + anchor jumps (BetSlip uses these)
+  // under-the-hood tabs
   const [tab, setTab] = useState<TabId>("whatif");
-  const jumpTo = (id: string) => {
-    if (id === "manage") setTab("manage");
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const expiryStr = fmtDate(dateNDaysOut(days));
 

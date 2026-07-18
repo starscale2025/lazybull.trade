@@ -21,6 +21,11 @@ export function DeltaIcon({ size = 24, color = "currentColor" }: Props) {
       <motion.rect
         x="3" y="21" height="2" rx="0"
         width={0}
+        // width={0} alone keeps the SSR markup valid but does NOT seed Motion's
+        // own value store, so its first render still read `undefined` and the
+        // browser logged `<rect> attribute width: Expected length, "undefined"`
+        // on every load. `initial` is what populates the store.
+        initial={{ width: 0 }}
         fill={color}
         animate={{ width: [0, 18, 0] }}
         transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}

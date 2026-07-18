@@ -5,6 +5,9 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    // Next 16 no longer runs ESLint during `next build`, so `tsc --noEmit`
+    // is the only thing that can catch dead imports/locals.
+    "noUnusedLocals": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

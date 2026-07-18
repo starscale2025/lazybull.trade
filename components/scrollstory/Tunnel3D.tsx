@@ -223,7 +223,7 @@ const LINE_N = 340;
 const LINE_LEN = 1.6;
 const WRAP = 70; // z window around the camera the lines recycle through
 function SpeedLines() {
-  const { geo, mat, x, y, base, speed, par } = useMemo(() => {
+  const { geo, mat, base, speed, par } = useMemo(() => {
     const rnd = mulberry32(4242);
     const x = new Float32Array(LINE_N);
     const y = new Float32Array(LINE_N);

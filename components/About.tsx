@@ -63,7 +63,10 @@ const FOUNDERS = [
   },
   {
     no: "03",
-    src: "/pratham.jpg",
+    // No photo on file yet — public/pratham.jpg does not exist, and pointing at
+    // it made every /about load fire a 400 from the image optimizer before
+    // falling back. Leave undefined so the initials card renders directly.
+    src: undefined,
     name: "Pratham Verma",
     handle: "pratham.verma",
     role: "Co-Founder · Operations",
@@ -199,9 +202,11 @@ function Counter({
       const t = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
       setCount(Math.floor(eased * target));
-      if (t < 1) requestAnimationFrame(animate);
+      if (t < 1) raf = requestAnimationFrame(animate);
     };
-    requestAnimationFrame(animate);
+    let raf = requestAnimationFrame(animate);
+    // Cancel on unmount rather than counting up into a dead component.
+    return () => cancelAnimationFrame(raf);
   }, [inView, target, raw]);
 
   const formatted = raw
@@ -224,7 +229,7 @@ function FounderPhoto({
   color,
   name,
 }: {
-  src: string;
+  src?: string;
   color: string;
   name: string;
 }) {
@@ -238,7 +243,7 @@ function FounderPhoto({
 
   return (
     <div className="relative overflow-hidden border border-border bg-surface-2 aspect-3/4">
-      {errored ? (
+      {errored || !src ? (
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{

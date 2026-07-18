@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { usePaper } from "@/lib/stores";
 import { payoff } from "@/lib/pricing";
 
@@ -14,10 +13,6 @@ export function PositionsPanel({ spot }: { spot: number }) {
   const open = positions.filter((p) => p.status === "open");
   const closed = positions.filter((p) => p.status === "closed").slice(0, 5);
 
-  const unrealized = open.reduce(
-    (acc, p) => acc + payoff(p.legs, spot) - (p.cost > 0 ? -p.cost : -p.cost),
-    0
-  );
   const equity = cash + open.reduce((acc, p) => acc + p.cost, 0); // legs are already cash-out at open
 
   const totalPnl = (cash + open.reduce((acc, p) => acc + payoff(p.legs, spot), 0)) - startingCash;

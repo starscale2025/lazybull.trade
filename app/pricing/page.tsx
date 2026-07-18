@@ -81,6 +81,15 @@ const TIERS: Tier[] = [
   },
 ];
 
+// The badge used to hard-code "save 3.4 months", which no tier reaches — best
+// case is Pro at 3.08. Derive it so the claim can never contradict the dollar
+// figures this same page renders.
+const MAX_MONTHS_SAVED = Math.floor(
+  Math.max(
+    ...TIERS.filter((t) => t.monthly > 0).map((t) => ((t.monthly - t.annualMo) * 12) / t.monthly)
+  )
+);
+
 export default function PricingPage() {
   const [annual, setAnnual] = useState(true);
   return (
@@ -124,7 +133,7 @@ export default function PricingPage() {
               Billed annually
             </button>
             <span className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull">
-              save 3.4 months
+              save up to {MAX_MONTHS_SAVED} months
             </span>
           </div>
         </div>

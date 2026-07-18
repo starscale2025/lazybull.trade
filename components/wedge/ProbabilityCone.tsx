@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "motion/react";
 import type { MarketEvent } from "@/lib/events";
 
 type Pt = { i: number; t: number; c: number };
@@ -55,8 +54,6 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
 
   const xOf = (i: number) => PAD.L + (i / (totalBars - 1)) * inW;
   const yOf = (p: number) => PAD.T + ((maxPrice - p) / (maxPrice - minPrice)) * inH;
-  const priceOf = (y: number) => maxPrice - ((y - PAD.T) / inH) * (maxPrice - minPrice);
-  const daysOfX = (x: number) => Math.max(1, Math.round(((x - PAD.L) / inW) * (totalBars - 1) - histN + 1));
 
   // The cone path — 1σ, 2σ envelopes
   // Forecast horizon: bars from histN-1 to totalBars-1

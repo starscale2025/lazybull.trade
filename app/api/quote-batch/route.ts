@@ -42,13 +42,34 @@ async function fetchOne(symbol: string) {
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const symbols = (searchParams.get("symbols") || "")
-    .split(",")
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
+  // One unauthenticated GET used to fan out into one upstream Yahoo fetch per
+  // comma-separated entry, uncapped and un-deduplicated — ~1300 concurrent
+  // outbound requests within Next's URL limit. That's both a rate-limit/ban
+  // risk against the upstream and a cheap amplification primitive against us.
+  const MAX_SYMBOLS = 50;
+  const CONCURRENCY = 6;
+  const symbols = [
+    ...new Set(
+      (searchParams.get("symbols") || "")
+        .split(",")
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean)
+    ),
+  ].slice(0, MAX_SYMBOLS);
   if (!symbols.length) return NextResponse.json({ ok: true, quotes: [] });
 
-  const results = await Promise.all(symbols.map((s) => fetchOne(s)));
+  // Small worker pool rather than a bare Promise.all over everything.
+  const results: (Awaited<ReturnType<typeof fetchOne>>)[] = new Array(symbols.length).fill(null);
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, symbols.length) }, async () => {
+      for (;;) {
+        const i = cursor++;
+        if (i >= symbols.length) return;
+        results[i] = await fetchOne(symbols[i]);
+      }
+    })
+  );
   const quotes = results.filter(Boolean);
   return NextResponse.json({ ok: true, quotes });
 }

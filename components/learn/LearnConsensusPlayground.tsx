@@ -41,7 +41,6 @@ export function LearnConsensusPlayground() {
   const [scenario, setScenario] = useState<keyof typeof SCENARIOS>("bull");
   const [active, setActive] = useState<string[]>(ALL_BOTS.map((b) => b.id));
 
-  const bot = (id: string) => ALL_BOTS.find((b) => b.id === id)!;
   const scn = SCENARIOS[scenario];
 
   const tally = useMemo(() => {

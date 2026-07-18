@@ -106,6 +106,27 @@ export function QuantPage() {
    * effect above and require an explicit ▶ Run All — that's intentional,
    * we don't want bots silently rerunning every slider tick.
    */
+  // Every setTimeout below used to outlive unmount: the runAll stagger chain
+  // kept re-arming itself and calling setResults on a dead component, and
+  // addBot/flashLibrary's one-shots did the same. Track them all and clear on
+  // unmount.
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const later = (fn: () => void, ms: number) => {
+    const t = setTimeout(() => {
+      timersRef.current.delete(t);
+      fn();
+    }, ms);
+    timersRef.current.add(t);
+    return t;
+  };
+  useEffect(
+    () => () => {
+      for (const t of timersRef.current) clearTimeout(t);
+      timersRef.current.clear();
+    },
+    []
+  );
+
   const didAutoRunRef = useRef(false);
   useEffect(() => {
     if (didAutoRunRef.current) return;
@@ -160,7 +181,7 @@ export function QuantPage() {
         }
       }
       i++;
-      if (i < active.length) setTimeout(tick, RUN_STAGGER_MS);
+      if (i < active.length) later(tick, RUN_STAGGER_MS);
     };
     void tick();
   }
@@ -171,7 +192,7 @@ export function QuantPage() {
     for (const p of def.params) params[p.key] = p.default;
     const newActive = { uid, defId: def.id, params };
     setActive((a) => [...a, newActive]);
-    setTimeout(async () => {
+    later(async () => {
       try {
         const out = await Promise.resolve(def.run({ candles, symbol }, params));
         setResults((r) => ({ ...r, [uid]: out }));
@@ -247,7 +268,7 @@ export function QuantPage() {
   function flashLibrary() {
     setLibrarySpotlight(true);
     libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setTimeout(() => setLibrarySpotlight(false), 1200);
+    later(() => setLibrarySpotlight(false), 1200);
   }
 
   // ── Learn-page soft pointer (first-time visitor)

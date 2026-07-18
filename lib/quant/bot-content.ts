@@ -19,9 +19,9 @@ export type BotContent = {
 export const BOT_SIMPLE: Record<string, string> = {
   // ─────────────── AI QUANTS ───────────────
   "ai-consensus":
-    "Six different AI judges look at the same stock and each one votes 'up' or 'down' for the next month. If 5 or 6 of them agree, that's a strong signal worth taking seriously. If they're split 3-3, the market is genuinely confused and the smart move is to do nothing. The card shows you who voted and how confident the group is.",
+    "Six different AI judges look at the same stock and each one votes 'up' or 'down' for the next month. If 5 or 6 of them agree, that's the bot's strongest reading. If they're split 3-3, the models disagree and the bot reports no conviction. The card shows you who voted and how confident the group is.",
   "ai-direction":
-    "An AI brain made of 7 little decision-tree models, each guessing whether the price will go up or down 20 days from now. We average their guesses to get one probability. When the little models all agree (low spread), trust the answer more. When they disagree, they're guessing — sit it out.",
+    "An AI brain made of 7 little decision-tree models, each guessing whether the price will go up or down 20 days from now. We average their guesses to get one probability. When the little models all agree (low spread), that's the bot's highest-conviction state. When they disagree, they're effectively guessing and the output carries no edge.",
   "ai-magnitude":
     "Direction tells you which way the price will move. This bot tells you how big the move will be. A 0.5% move is just noise. A 5% move is real. The size of the predicted move IS the conviction.",
   "ai-quantile":
@@ -59,7 +59,7 @@ export const BOT_SIMPLE: Record<string, string> = {
   "zscore":
     "Z-score asks: how unusual is today's price compared to recent days? A z of -2 means 'cheaper than 97% of recent prices.' Most things drift back to average — so when the price gets weirdly cheap, buy; when it gets weirdly expensive, sell.",
   "hurst":
-    "One number that tells you what kind of market you're in. Above 0.5 = trends keep going (use trend bots). Below 0.5 = prices keep snapping back (use reversion bots). Around 0.5 = random, no edge today, save your money.",
+    "One number that tells you what kind of market you're in. Above 0.5 = trends keep going (use trend bots). Below 0.5 = prices keep snapping back (use reversion bots). Around 0.5 = random — the bot reports no exploitable edge.",
   "kalman":
     "A Kalman filter is what guides your phone's GPS — it blends what it expects with what it sees. Here it tracks the 'true' price hiding under the noise. When today's price wanders far from that filtered fair value, it tends to come back.",
   "linreg":
@@ -149,7 +149,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-magnitude": {
     intro:
-      "Direction's quieter sibling. Instead of asking 'up or down?', it predicts the size of the next 20-day move. A 0.5% expected return is meaningless noise; a 5% expected return is a real signal worth sizing up on. The sign tells you direction, the magnitude tells you conviction.",
+      "Direction's quieter sibling. Instead of asking 'up or down?', it predicts the size of the next 20-day move. A 0.5% expected return is meaningless noise; a 5% expected return clears the bot's noise floor and registers as a high-magnitude reading. The sign tells you direction, the magnitude tells you conviction.",
     shines: [
       "Position sizing decisions. Direction alone tells you which way to bet; magnitude tells you how much.",
       "Filtering Direction Ensemble's signals — when both bots agree on direction AND magnitude clears 3%, it's a stronger setup than either alone.",

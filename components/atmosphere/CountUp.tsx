@@ -43,6 +43,9 @@ export function CountUp({
     // Reset to the start value on mount (browser only) so we can animate up.
     setValue(from);
 
+    // The RAF chain used to run to completion even after unmount, calling
+    // setValue on a dead component every frame. Track and cancel it.
+    let raf = 0;
     const animate = () => {
       if (startedRef.current) return;
       startedRef.current = true;
@@ -52,10 +55,10 @@ export function CountUp({
         const t = Math.min(1, elapsed / duration);
         const v = from + (to - from) * easeOutCubic(t);
         setValue(v);
-        if (t < 1) requestAnimationFrame(tick);
+        if (t < 1) raf = requestAnimationFrame(tick);
         else setValue(to);
       };
-      requestAnimationFrame(tick);
+      raf = requestAnimationFrame(tick);
     };
 
     const io = new IntersectionObserver(
@@ -77,7 +80,10 @@ export function CountUp({
       animate();
     }
 
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [from, to, duration]);
 
   const formatted = (() => {

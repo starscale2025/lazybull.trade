@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fmt } from "./chartCore";
 import type { SymbolDef } from "./TopBar";
 const DEFAULT_LIST: { sym: string }[] = [

@@ -49,6 +49,26 @@ export function GsapScroller() {
 
     const wired = new WeakSet<Element>();
 
+    // GsapScroller lives in the ROOT layout, so it is never unmounted on a
+    // client-side route change and the cleanup below only runs on a full page
+    // teardown. The MutationObserver used to watch addedNodes only, so every
+    // soft navigation permanently added ScrollTriggers for elements the router
+    // had already removed — each holding a window resize listener and a strong
+    // reference to a detached DOM subtree. Measured: triggers grew 2 -> 4 -> 6
+    // -> 8 across /about <-> /learn navs and never decreased.
+    //
+    // Sweep triggers whose element has left the document before each new pass.
+    const sweepDetached = () => {
+      for (const st of ScrollTrigger.getAll()) {
+        const t = st.trigger as Element | undefined;
+        if (t && !document.contains(t)) {
+          st.kill();
+          // gsap keeps the tween alive independently of its trigger.
+          gsap.killTweensOf(t);
+        }
+      }
+    };
+
     const num = (el: HTMLElement, attr: string, fallback: number) => {
       const v = el.dataset[attr];
       return v != null && v !== "" ? Number(v) : fallback;
@@ -182,16 +202,23 @@ export function GsapScroller() {
 
     // Pick up nodes added by client-side navigation or late hydration.
     const mo = new MutationObserver((records) => {
+      let removed = false;
       for (const r of records) {
+        if (r.removedNodes.length) removed = true;
         for (const node of Array.from(r.addedNodes)) {
           if (node.nodeType !== 1) continue;
           const el = node as Element;
           if (el.matches?.("[data-gsap]") || el.querySelector?.("[data-gsap]")) {
+            sweepDetached();
             wire(el.parentNode ?? document);
+            removed = false;
             break;
           }
         }
       }
+      // A navigation that only tears down (no [data-gsap] in the new tree) still
+      // has to release the old page's triggers.
+      if (removed) sweepDetached();
     });
     mo.observe(document.body, { childList: true, subtree: true });
 

@@ -1,5 +1,5 @@
 import { CandleChart } from "./CandleChart";
-import { generateCandles, lastChange, type Candle } from "@/lib/candles";
+import { generateCandles, type Candle } from "@/lib/candles";
 import { ProCta } from "./ProCta";
 import { TerminalTilt } from "./atmosphere/TerminalTilt";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
@@ -37,7 +37,6 @@ async function fetchRealCandles(symbol: string, count: number): Promise<{ candle
 export async function Hero() {
   const { candles: realCandles, lastClose } = await fetchRealCandles("AMZN", 72);
   const candles = realCandles.length >= 30 ? realCandles : generateCandles(72, 11, 226, 0.18, 1.6);
-  const change = lastChange(candles);
   const spotLabel = lastClose ? `$${lastClose.toFixed(2)}` : "live";
 
   return (

@@ -124,8 +124,8 @@ export function LearnProbabilityComparison() {
         {/* Sliders */}
         <div className="lg:col-span-5 space-y-3">
           <div className="border border-border bg-surface p-4">
-            <Slider label="Low strike" value={low} setValue={(v) => setLow(Math.min(v, high - 1))} min={70} max={130} step={0.5} suffix="" />
-            <Slider label="High strike" value={high} setValue={(v) => setHigh(Math.max(v, low + 1))} min={70} max={140} step={0.5} suffix="" />
+            <Slider label="Low strike" value={low} setValue={(v) => setLow(Math.min(v, high - 1))} min={70} max={130} step={0.5} suffix="" prefix="$" />
+            <Slider label="High strike" value={high} setValue={(v) => setHigh(Math.max(v, low + 1))} min={70} max={140} step={0.5} suffix="" prefix="$" />
             <Slider label="Days to expiry" value={days} setValue={setDays} min={5} max={120} step={1} suffix="d" />
             <Slider label="Implied vol" value={iv * 100} setValue={(v) => setIv(v / 100)} min={5} max={120} step={1} suffix="%" />
           </div>
@@ -184,12 +184,14 @@ function ProbCard({ label, value, tone, subtitle, note }: { label: string; value
   );
 }
 
-function Slider({ label, value, setValue, min, max, step, suffix }: { label: string; value: number; setValue: (n: number) => void; min: number; max: number; step: number; suffix: string }) {
+// `prefix` exists because the "$" used to be hard-coded into the readout, so the
+// days and implied-vol sliders rendered as "$30d" and "$32%".
+function Slider({ label, value, setValue, min, max, step, suffix, prefix = "" }: { label: string; value: number; setValue: (n: number) => void; min: number; max: number; step: number; suffix: string; prefix?: string }) {
   return (
     <label className="flex flex-col gap-1 mb-3 last:mb-0">
       <span className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
         <span>{label}</span>
-        <span className="font-mono text-[12px] tabular-nums text-fg">${typeof value === "number" ? value.toFixed(step < 1 ? 1 : 0) : value}{suffix}</span>
+        <span className="font-mono text-[12px] tabular-nums text-fg">{prefix}{typeof value === "number" ? value.toFixed(step < 1 ? 1 : 0) : value}{suffix}</span>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => setValue(parseFloat(e.target.value))} className="h-1 w-full accent-bull" />
     </label>

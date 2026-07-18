@@ -1,7 +1,6 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useMemo } from "react";
 import { type Bet, storySentence } from "./PositionStory";
 import { priceOption } from "@/lib/pricing";
 

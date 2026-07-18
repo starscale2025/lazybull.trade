@@ -42,6 +42,9 @@ export function BigStat({
 
   useEffect(() => {
     if (!ref.current) return;
+    // Cancel the count-up on unmount — it used to keep calling setShown on a
+    // dead component for the full duration.
+    let raf = 0;
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -52,16 +55,19 @@ export function BigStat({
               const t = Math.min(1, (now - start) / duration);
               const eased = 1 - Math.pow(1 - t, 3);
               setShown(eased * value);
-              if (t < 1) requestAnimationFrame(tick);
+              if (t < 1) raf = requestAnimationFrame(tick);
             };
-            requestAnimationFrame(tick);
+            raf = requestAnimationFrame(tick);
           }
         });
       },
       { threshold: 0.4 }
     );
     obs.observe(ref.current);
-    return () => obs.disconnect();
+    return () => {
+      obs.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [value, seen, duration]);
 
   const display = decimals === 0 ? Math.floor(shown).toString() : shown.toFixed(decimals);

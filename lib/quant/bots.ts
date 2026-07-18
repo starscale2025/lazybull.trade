@@ -1,10 +1,9 @@
-import type { BotDef, BotResult, BotContext, Signal } from "./types";
+import type { BotDef, BotResult, Signal } from "./types";
 import { AI_BOTS } from "./ai-bots";
 import {
   closes,
   returns,
   sma,
-  ema,
   rsi,
   macd,
   bollinger,
@@ -620,7 +619,6 @@ const kellyBot: BotDef = {
     const b = w / l;
     const fStar = Math.max(0, (pw * b - (1 - pw)) / b);
     const fUse = fStar * frac;
-    const sizeRaw = bk * fStar;
     const sizeUsed = bk * fUse;
     const ev = pw * w - (1 - pw) * l;
     return {

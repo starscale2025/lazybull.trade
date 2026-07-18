@@ -9,13 +9,17 @@
 // `ai quants/models/<dir>/train.py` or `ai quants/serve.py`.
 
 import type { BotDef, BotContext, BotResult, Metric, Signal } from "./types";
-import { closes, fmtNum, fmtPct, fmtMoney } from "./series";
+import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
 
 // Base URL of the FastAPI service. Override with NEXT_PUBLIC_QUANTAI_URL.
+// NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
+// unconditional localhost fallback shipped "http://localhost:8000" to every
+// production visitor — each one then firing (and failing) requests at their own
+// machine. Only fall back to localhost in development.
 const API_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_QUANTAI_URL) ||
-  "http://localhost:8000";
+  (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 const API_HINT = `${API_BASE} · uvicorn serve:app`;
 
 type ApiStatus = "live" | "mock";
@@ -25,6 +29,9 @@ async function callApi<T>(
   body: unknown,
   timeoutMs = 8000,
 ): Promise<T> {
+  // No base configured (production without NEXT_PUBLIC_QUANTAI_URL): don't fire
+  // a same-origin request that can only 404 — go straight to the TS fallback.
+  if (!API_BASE) throw new Error("quant API not configured");
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -59,7 +66,7 @@ function statusMetric(status: ApiStatus, note?: string): Metric {
     label: "Source",
     value: "Mock",
     tone: "warn",
-    hint: note ?? `FastAPI offline (${API_BASE}) — using TS fallback`,
+    hint: note ?? (API_BASE ? `FastAPI offline (${API_BASE}) — using TS fallback` : "FastAPI not configured — using TS fallback"),
   };
 }
 
