@@ -216,9 +216,15 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         {/* Median forward */}
         <line x1={xOf(histN - 1)} x2={xOf(totalBars - 1)} y1={yOf(spot)} y2={yOf(spot)} stroke="var(--cyan)" strokeOpacity="0.4" strokeDasharray="4 4" />
 
-        {/* History line + filled area under it */}
-        <path d={`${histPath} L${xOf(histN - 1)},${size.h - PAD.B} L${xOf(0)},${size.h - PAD.B} Z`} fill="rgba(245,245,240,0.04)" className="svg-fade-in" />
-        <path d={histPath} fill="none" stroke="var(--fg)" strokeWidth="1.4" pathLength={1} className="svg-draw-in" />
+        {/* History line + filled area under it. Both are gated on histPath:
+            before the bars arrive it's "", which produced a `d` starting with
+            "L" (no moveto) and threw an SVG error on every page load. */}
+        {histPath && (
+          <>
+            <path d={`${histPath} L${xOf(histN - 1)},${size.h - PAD.B} L${xOf(0)},${size.h - PAD.B} Z`} fill="rgba(245,245,240,0.04)" className="svg-fade-in" />
+            <path d={histPath} fill="none" stroke="var(--fg)" strokeWidth="1.4" pathLength={1} className="svg-draw-in" />
+          </>
+        )}
 
         {/* "now" line */}
         <line x1={xOf(histN - 1)} x2={xOf(histN - 1)} y1={PAD.T} y2={size.h - PAD.B} stroke="var(--fg-faint)" strokeDasharray="2 4" />

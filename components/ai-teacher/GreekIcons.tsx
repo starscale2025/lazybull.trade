@@ -20,6 +20,7 @@ export function DeltaIcon({ size = 24, color = "currentColor" }: Props) {
       <line x1="3" y1="22" x2="21" y2="22" stroke={color} strokeOpacity="0.25" />
       <motion.rect
         x="3" y="21" height="2" rx="0"
+        width={0}
         fill={color}
         animate={{ width: [0, 18, 0] }}
         transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}

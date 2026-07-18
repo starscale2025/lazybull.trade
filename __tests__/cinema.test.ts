@@ -142,7 +142,8 @@ describe("candle3dOpacity", () => {
     expect(candle3dOpacity(0.3)).toBe(0);
     expect(candle3dOpacity(CANDLE3D.in0)).toBe(0);
     expect(candle3dOpacity(CANDLE3D.out1)).toBe(0);
-    expect(candle3dOpacity(0.6)).toBe(0);
+    // 0.605 is the tail now (the ice-lab beat widened it) — sample past it.
+    expect(candle3dOpacity(0.61)).toBe(0);
   });
   it("fades in, holds opaque through the foresight beats, dissolves out", () => {
     expect(candle3dOpacity((CANDLE3D.in0 + CANDLE3D.in1) / 2)).toBeCloseTo(0.5, 5);
@@ -151,9 +152,16 @@ describe("candle3dOpacity", () => {
     expect(candle3dOpacity(0.52)).toBe(1); // vindication beat
     expect(candle3dOpacity((CANDLE3D.out0 + CANDLE3D.out1) / 2)).toBeCloseTo(0.5, 5);
   });
-  it("stays inside the candle act", () => {
+  it("spans the candle act and clears before the next act's copy", () => {
     expect(CANDLE3D.in0).toBeGreaterThanOrEqual(ACTS.candle.from - 1e-9);
-    expect(CANDLE3D.out1).toBeLessThanOrEqual(ACTS.candle.to + 1e-9);
+    // The ice-lab beat deliberately lets the 3D layer fade a hair PAST the act
+    // boundary (a crossfade, so there's no black flash into safety). Two real
+    // invariants replace the old "must end by ACTS.candle.to":
+    //  1. it must be fully gone before the safety COPY takes the stage, and
+    //  2. that spill must stay a short crossfade, not a whole overlapping beat.
+    const safetyCopy = COPY_BEATS.find((b) => b.id === "safety")!;
+    expect(CANDLE3D.out1).toBeLessThanOrEqual(safetyCopy.from + 1e-9);
+    expect(CANDLE3D.out1 - ACTS.candle.to).toBeLessThanOrEqual(0.02 + 1e-9);
     expect(CANDLE3D.in0).toBeLessThan(CANDLE3D.in1);
     expect(CANDLE3D.in1).toBeLessThanOrEqual(CANDLE3D.out0);
     expect(CANDLE3D.out0).toBeLessThan(CANDLE3D.out1);

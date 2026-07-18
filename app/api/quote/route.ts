@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { deriveMarketState } from "@/lib/market-state";
 
 // Free public Yahoo Finance chart endpoint. Returns OHLCV bars + meta.
 // We proxy through our own route so the browser doesn't hit CORS issues.
@@ -92,7 +93,7 @@ export async function GET(req: Request) {
         fiftyTwoWeekLow: meta.fiftyTwoWeekLow,
         regularMarketVolume: meta.regularMarketVolume,
         gmtoffset: meta.gmtoffset,
-        marketState: meta.regularMarketTime ? "REGULAR" : "CLOSED",
+        marketState: deriveMarketState(meta),
       },
     });
   } catch (e) {

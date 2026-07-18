@@ -290,11 +290,18 @@ function probProfit(spot: number, iv: number, daysToExpiry: number, legs: Strate
   return hits / sims;
 }
 
+/** Strike increment the generated ladders snap to (also the minimum leg gap). */
+const STRIKE_STEP = 0.5;
+
 function summarise(legs: Strategy["legs"], spot: number) {
-  // sample 401 spots ±50% to find max/min and breakevens
-  const lo = spot * 0.5;
-  const hi = spot * 1.5;
-  const n = 401;
+  // Sample a grid guaranteed to contain every strike (with headroom past the
+  // outermost one), not a blind ±50% of spot: a strike outside that window made
+  // maxProfit/maxLoss and breakevens silently wrong — the payoff simply wasn't
+  // evaluated where the kink lives.
+  const strikes = legs.map((l) => l.strike).filter((k) => Number.isFinite(k));
+  const lo = Math.max(0, Math.min(spot * 0.5, ...strikes) * 0.8);
+  const hi = Math.max(spot * 1.5, ...strikes) * 1.2;
+  const n = 601;
   const step = (hi - lo) / (n - 1);
   let mx = -Infinity, mn = Infinity;
   const pts: { s: number; p: number }[] = [];
@@ -322,7 +329,7 @@ export function generateStrategies({
 }: { spot: number; low: number; high: number; daysToExpiry: number; iv: number }): Strategy[] {
   const t = Math.max(0.01, daysToExpiry / 365);
   const bias = biasFromThesis(spot, low, high);
-  const round = (v: number) => Math.round(v / 0.5) * 0.5;
+  const round = (v: number) => Math.round(v / STRIKE_STEP) * STRIKE_STEP;
 
   // Cheap & risky — long single option, ATM-ish in the direction of the bet
   const cheap: Strategy = (() => {
@@ -354,7 +361,9 @@ export function generateStrategies({
       kind: `Long ${K} put`,
       legs,
       cost: prem * 100,
-      maxProfit: K * 100,
+      // Best case is the stock going to zero: you collect the strike but you
+      // still paid the premium to get there.
+      maxProfit: Math.max(0, K - prem) * 100,
       maxLoss: -prem * 100,
       breakevens: sum.breakevens,
       prob: probProfit(spot, iv, daysToExpiry, legs),
@@ -369,10 +378,14 @@ export function generateStrategies({
     if (bias === "neutral" || bias === "volatile") {
       // Iron condor: short put at low, long put at low-5%; short call at high, long call at high+5%
       const wing = Math.max(round(spot * 0.05), round((high - low) * 0.4));
-      const Klp = round(low - wing);
-      const Ksp = round(low);
-      const Ksc = round(high);
-      const Klc = round(high + wing);
+      // Every strike must stay strictly positive and correctly ordered
+      // (Klp < Ksp < Ksc < Klc). A wide band used to push the long put wing to
+      // zero/negative, and midPrice() on a non-positive strike returns NaN —
+      // which propagated into cost, premiums and the whole card.
+      const Ksp = Math.max(STRIKE_STEP * 2, round(low));
+      const Klp = Math.max(STRIKE_STEP, Math.min(round(low - wing), Ksp - STRIKE_STEP));
+      const Ksc = Math.max(Ksp + STRIKE_STEP, round(high));
+      const Klc = Math.max(Ksc + STRIKE_STEP, round(high + wing));
       const lpP = midPrice(spot, Klp, t, iv, "P");
       const spP = midPrice(spot, Ksp, t, iv, "P");
       const scP = midPrice(spot, Ksc, t, iv, "C");
@@ -449,7 +462,10 @@ export function generateStrategies({
   const aggressive: Strategy = (() => {
     if (bias === "bullish" || bias === "neutral") {
       const Kl = round(spot);
-      const Ks = round(high);
+      // Short strike MUST sit above the long strike or this isn't a bull call
+      // spread at all — a band dragged below spot used to invert the legs and
+      // still label the result a debit spread.
+      const Ks = Math.max(round(high), Kl + STRIKE_STEP);
       const lP = midPrice(spot, Kl, t, iv, "C");
       const sP = midPrice(spot, Ks, t, iv, "C");
       const legs = [
@@ -471,7 +487,8 @@ export function generateStrategies({
       };
     }
     const Kl = round(spot);
-    const Ks = round(low);
+    // Mirror of the call side: the short put must sit BELOW the long put.
+    const Ks = Math.max(STRIKE_STEP, Math.min(round(low), Kl - STRIKE_STEP));
     const lP = midPrice(spot, Kl, t, iv, "P");
     const sP = midPrice(spot, Ks, t, iv, "P");
     const legs = [

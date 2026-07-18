@@ -307,9 +307,14 @@ export function backtestLongOnly(
       continue;
     }
     if (inPos && sig === -1) {
+      // Trade-level return — used ONLY for the win/loss tally.
       const ret = (prices[i] - entry) / entry;
       if (ret > 0) wins++;
-      eq.push(eq[eq.length - 1] * (1 + ret));
+      // Equity has already compounded bar-by-bar since entry (see the `inPos`
+      // branch below), so the exit bar contributes just its own move. Applying
+      // (1 + ret) here instead counted the whole trade a second time — a 3-bar
+      // +10% trade reported +18.8%, inflating every equity curve and Return %.
+      eq.push(eq[eq.length - 1] * (prices[i] / prices[i - 1]));
       inPos = false;
       continue;
     }

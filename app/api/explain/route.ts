@@ -1,27 +1,46 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
-type Body = {
-  strategy: string;
-  bias: string;
-  defined: boolean;
-  net: string;
-  maxProfit: number;
-  maxLoss: number;
-  breakevens: number[];
-  spot: number;
-  underlying: string;
-};
+// The body used to be cast straight from req.json() with no checks: a missing
+// `breakevens` threw on `.length` (raw 500), and unbounded strings flowed into
+// the paid LLM prompt. Note JSON has no Infinity — an unlimited maxProfit
+// arrives as null, so these are nullable and null MEANS unlimited.
+const BodySchema = z.object({
+  strategy: z.string().min(1).max(120),
+  bias: z.string().min(1).max(40),
+  defined: z.boolean(),
+  net: z.string().min(1).max(40),
+  maxProfit: z.number().nullable().default(null),
+  maxLoss: z.number().nullable().default(null),
+  breakevens: z.array(z.number().finite()).max(8).default([]),
+  spot: z.number().finite().positive(),
+  underlying: z.string().min(1).max(20),
+});
+type Body = z.infer<typeof BodySchema>;
+
+/** JSON has no Infinity: null means unbounded on the wire. */
+const num = (n: number | null) =>
+  typeof n === "number" && Number.isFinite(n) ? n.toFixed(0) : "unbounded";
+
+/** Largest body we'll accept (chars) — keeps junk out of the LLM bill. */
+const MAX_BODY_BYTES = 4_000;
 
 function mockExplanation(b: Body) {
-  const fmt = (n: number) =>
-    Number.isFinite(n) ? `$${Math.abs(n).toFixed(0)}` : "unlimited";
+  const fmt = (n: number | null) =>
+    typeof n === "number" && Number.isFinite(n) ? `$${Math.abs(n).toFixed(0)}` : "unlimited";
   const lossLine = b.defined
     ? `your worst case is losing ${fmt(b.maxLoss)} — that's the most you can ever lose on this trade.`
     : `your worst case is open-ended. If the move goes the wrong way without you closing, the loss can keep growing.`;
+  // null/non-finite maxProfit means UNLIMITED (e.g. a long call), not "you
+  // collected premium" — JSON drops Infinity to null, and the old check sent
+  // every unlimited-upside trade down the credit-strategy branch.
+  const mp = typeof b.maxProfit === "number" && Number.isFinite(b.maxProfit) ? b.maxProfit : null;
   const winLine =
-    Number.isFinite(b.maxProfit) && b.maxProfit > 0
-      ? `your best case is making ${fmt(b.maxProfit)}, which happens at expiry if the stock lands in the right zone.`
-      : `your best case is the premium you collected up front.`;
+    mp === null
+      ? `your best case is open-ended — the further the move runs your way, the more this gains.`
+      : mp > 0
+        ? `your best case is making ${fmt(mp)}, which happens at expiry if the stock lands in the right zone.`
+        : `your best case is the premium you collected up front.`;
   const beLine =
     b.breakevens.length > 0
       ? `Your break-even price${b.breakevens.length > 1 ? "s are" : " is"} ${b.breakevens
@@ -41,12 +60,30 @@ function mockExplanation(b: Body) {
 }
 
 export async function POST(req: Request) {
-  let body: Body;
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "payload too large" }, { status: 413 });
+  }
+
+  let raw: unknown;
   try {
-    body = await req.json();
+    const text = await req.text();
+    if (text.length > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "payload too large" }, { status: 413 });
+    }
+    raw = JSON.parse(text);
   } catch {
     return NextResponse.json({ error: "bad json" }, { status: 400 });
   }
+
+  const parsed = BodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid body", issues: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`) },
+      { status: 400 }
+    );
+  }
+  const body: Body = parsed.data;
 
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
@@ -61,8 +98,8 @@ Strategy: ${body.strategy}
 Underlying: ${body.underlying} (spot $${body.spot.toFixed(2)})
 Direction: ${body.bias}
 Net: ${body.net}
-Max profit: $${Number.isFinite(body.maxProfit) ? body.maxProfit.toFixed(0) : "unbounded"}
-Max loss: $${Number.isFinite(body.maxLoss) ? body.maxLoss.toFixed(0) : "unbounded"}
+Max profit: $${num(body.maxProfit)}
+Max loss: $${num(body.maxLoss)}
 Defined risk: ${body.defined}
 Breakevens: ${body.breakevens.map((b) => `$${b.toFixed(2)}`).join(", ") || "n/a"}`;
 

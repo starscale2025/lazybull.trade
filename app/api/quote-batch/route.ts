@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { deriveMarketState } from "@/lib/market-state";
 
 // Yahoo's v7/finance/quote endpoint now requires a crumb cookie. Use the
 // public /v8/finance/chart endpoint per symbol in parallel — it returns the
@@ -32,7 +33,7 @@ async function fetchOne(symbol: string) {
       chgPct,
       currency: meta.currency,
       exch: meta.fullExchangeName || meta.exchangeName,
-      marketState: meta.marketState || (meta.regularMarketTime ? "REGULAR" : "CLOSED"),
+      marketState: deriveMarketState(meta),
     };
   } catch {
     return null;
