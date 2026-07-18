@@ -113,13 +113,19 @@ export default function PricingPage() {
           <div className="mt-8 inline-flex items-center gap-3 border border-border bg-surface px-4 py-2.5">
             <button
               onClick={() => setAnnual(false)}
+              aria-pressed={!annual}
               className={`font-mono text-[11px] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
             >
               Billed monthly
             </button>
             <button
               onClick={() => setAnnual(!annual)}
-              aria-label="Toggle annual billing"
+              // The toggle's state was conveyed by colour alone — a screen
+              // reader (or anyone who can't see the green) got no signal at all
+              // about which billing period was active.
+              role="switch"
+              aria-checked={annual}
+              aria-label="Bill annually"
               className={`relative h-5 w-10 rounded-full border transition-colors ${annual ? "border-bull/60 bg-bull/20" : "border-border bg-bg"}`}
             >
               <span
@@ -128,6 +134,7 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() => setAnnual(true)}
+              aria-pressed={annual}
               className={`font-mono text-[11px] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
             >
               Billed annually

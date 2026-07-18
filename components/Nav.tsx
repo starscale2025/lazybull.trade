@@ -42,10 +42,13 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="hidden h-9 items-center gap-2 border border-border px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg sm:inline-flex">
-            <span className="text-fg-faint">⌘</span>K
-            <span className="text-fg-faint hidden lg:inline ml-1">Search</span>
-          </button>
+          {/* The ⌘K button lived here with no onClick and no global key handler:
+              the only command palette in the repo is components/admin/CommandPalette
+              and it is mounted solely by /admin, so both the click and the
+              advertised shortcut were inert on all 7 public routes while the
+              control styled itself as active. Removed until search actually
+              ships — mounting the ADMIN palette here would expose admin
+              commands to every visitor. */}
           <AuthButtons />
           <Link
             href="/trade"
