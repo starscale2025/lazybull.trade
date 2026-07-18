@@ -27,6 +27,11 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 360 });
   const dragRef = useRef<{ which: "low" | "high" | "both" | null; startY: number; startLow: number; startHigh: number; startTimeX?: number; startDays?: number } | null>(null);
+  // Drag listeners live on `window` and were only ever removed by their own
+  // mouseup. Unmounting mid-drag (route change, tab switch) leaked both of them
+  // plus the closure they captured. Keep a detach handle and clear it on unmount.
+  const detachRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => detachRef.current?.(), []);
 
   useEffect(() => {
     if (!wrapRef.current) return;
@@ -118,6 +123,15 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
     return (e as MouseEvent).clientX - rect.left;
   };
 
+  // The band had no price floor — only a low<high ordering check. Since the
+  // y-domain auto-expands to include `low` (see minPrice above), each drag
+  // travelled further than the last and the band reached large NEGATIVE prices
+  // in a handful of gestures, cascading NaN into probBS, the strategy cards and
+  // the thesis sentence. Bound the band to a sane multiple of spot.
+  const FLOOR = Math.max(0.01, spot * 0.01);
+  const CEIL = spot * 10;
+  const clampPrice = (v: number) => Math.max(FLOOR, Math.min(CEIL, v));
+
   const startDrag = (which: "low" | "high" | "both" | "expiry", e: React.MouseEvent) => {
     e.stopPropagation();
     if (which === "expiry") {
@@ -129,9 +143,14 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
       };
       const onUp = () => {
         dragRef.current = null;
+        detach();
+      };
+      const detach = () => {
+        detachRef.current = null;
         window.removeEventListener("mousemove", onMove);
         window.removeEventListener("mouseup", onUp);
       };
+      detachRef.current = detach;
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
       return;
@@ -141,19 +160,29 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
       const dy = screenY(ev) - dragRef.current!.startY;
       const dPrice = (dy / inH) * (maxPrice - minPrice);
       if (dragRef.current!.which === "low") {
-        onChangeLow(Math.min(high - 0.5, dragRef.current!.startLow - dPrice));
+        onChangeLow(clampPrice(Math.min(high - 0.5, dragRef.current!.startLow - dPrice)));
       } else if (dragRef.current!.which === "high") {
-        onChangeHigh(Math.max(low + 0.5, dragRef.current!.startHigh - dPrice));
+        onChangeHigh(clampPrice(Math.max(low + 0.5, dragRef.current!.startHigh - dPrice)));
       } else {
-        onChangeLow(dragRef.current!.startLow - dPrice);
-        onChangeHigh(dragRef.current!.startHigh - dPrice);
+        // Clamp the SHARED delta so dragging the whole band keeps its width and
+        // can't push either edge out of bounds.
+        const lo = dragRef.current!.startLow;
+        const hi = dragRef.current!.startHigh;
+        const shift = Math.max(FLOOR - lo, Math.min(CEIL - hi, -dPrice));
+        onChangeLow(lo + shift);
+        onChangeHigh(hi + shift);
       }
     };
     const onUp = () => {
       dragRef.current = null;
+      detach();
+    };
+    const detach = () => {
+      detachRef.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
+    detachRef.current = detach;
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   };

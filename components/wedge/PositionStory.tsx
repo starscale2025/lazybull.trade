@@ -8,7 +8,8 @@ export type Bet = {
   strategy: Strategy;
   thesisLow: number;
   thesisHigh: number;
-  expiry: string;
+  expiry: string; // DISPLAY ONLY — year-less ("Aug 23"); never Date.parse() this
+  expiryTs: number; // ms epoch — the real expiry, use this for any date math
   spotAtOpen: number;
   openedAt: number;
   cost: number;

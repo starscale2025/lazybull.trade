@@ -278,7 +278,7 @@ export function BotCell({
                   <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     conf{" "}
                     <DecimatedNumber
-                      value={`${(result.verdict.confidence * 100).toFixed(0)}%`}
+                      value={`${Math.min(100, Math.max(0, result.verdict.confidence * 100)).toFixed(0)}%`}
                       duration={DECIMATE_MS - 100}
                       active={decimating}
                       className="text-fg"

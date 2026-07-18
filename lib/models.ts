@@ -28,13 +28,19 @@ export type ModelInput = {
 // Black-Scholes risk-neutral probability of S_T ∈ [low, high]
 export function probBS({ spot, low, high, daysToExpiry, iv, rate = 0.045 }: ModelInput): number {
   if (daysToExpiry <= 0) return spot >= low && spot <= high ? 1 : 0;
+  // A dragged band could arrive non-positive; log() of that is NaN and
+  // Math.min(1, NaN) is NaN, so the "returns [0,1]" contract silently broke and
+  // "NaN% in band" rendered on the page. Clamp the inputs, not the output.
+  const lo = Math.max(1e-6, low);
+  const hi = Math.max(lo + 1e-6, high);
   const t = daysToExpiry / 365;
   const sigT = iv * Math.sqrt(t);
-  const d2L = (Math.log(spot / low) + (rate - 0.5 * iv * iv) * t) / sigT;
-  const d2H = (Math.log(spot / high) + (rate - 0.5 * iv * iv) * t) / sigT;
+  const d2L = (Math.log(spot / lo) + (rate - 0.5 * iv * iv) * t) / sigT;
+  const d2H = (Math.log(spot / hi) + (rate - 0.5 * iv * iv) * t) / sigT;
   const pBelow = ncdf(d2L); // P(S_T > low) … direction matters
   const pAbove = ncdf(d2H);
-  return Math.max(0, Math.min(1, pBelow - pAbove));
+  const p = Math.max(0, Math.min(1, pBelow - pAbove));
+  return Number.isFinite(p) ? p : 0;
 }
 
 // Monte-Carlo of GBM paths
@@ -352,7 +358,9 @@ export function generateStrategies({
         bias,
       };
     }
-    const K = round(Math.min(spot, high));
+    // Same positive-strike floor the condor/spread paths carry: midPrice() on a
+    // non-positive strike is NaN and poisons the whole card.
+    const K = Math.max(STRIKE_STEP, round(Math.min(spot, high)));
     const prem = midPrice(spot, K, t, iv, "P");
     const legs = [{ type: "P" as const, side: "long" as const, strike: K, qty: 1, premium: prem }];
     const sum = summarise(legs, spot);
@@ -434,9 +442,9 @@ export function generateStrategies({
         bias,
       };
     }
-    // bearish call credit spread
-    const Ks = round(high);
-    const Kl = round(high + Math.max(2, spot * 0.04));
+    // bearish call credit spread — floor the short leg, then keep long > short.
+    const Ks = Math.max(STRIKE_STEP, round(high));
+    const Kl = Math.max(Ks + STRIKE_STEP, round(Ks + Math.max(2, spot * 0.04)));
     const sC = midPrice(spot, Ks, t, iv, "C");
     const lC = midPrice(spot, Kl, t, iv, "C");
     const legs = [

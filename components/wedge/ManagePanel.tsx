@@ -14,7 +14,10 @@ type Props = {
 };
 
 function valueLive(b: Bet, spotAt: number, iv: number) {
-  const daysLeft = Math.max(1, Math.ceil((new Date(b.expiry).getTime() - Date.now()) / 86_400_000));
+  // `b.expiry` is a year-less display string ("Aug 23"); Date.parse() resolved it
+  // to 2001, so daysLeft pinned to 1 for EVERY position and each leg re-priced at
+  // one day to expiry — a just-opened iron condor showed its full max profit.
+  const daysLeft = Math.max(1, Math.ceil((b.expiryTs - Date.now()) / 86_400_000));
   const t = daysLeft / 365;
   let v = 0;
   for (const l of b.strategy.legs) {

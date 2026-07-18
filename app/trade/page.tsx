@@ -202,14 +202,15 @@ export default function TradePage() {
   const openCount = bets.filter((b) => b.status === "open").length;
 
   const placeBet = (s: Strategy) => {
-    const expiry = fmtDate(dateNDaysOut(days));
+    const expiryDate = dateNDaysOut(days);
     const b: Bet = {
       id: `bet-${Date.now()}`,
       symbol: sym.sym,
       strategy: s,
       thesisLow: low,
       thesisHigh: high,
-      expiry,
+      expiry: fmtDate(expiryDate),
+      expiryTs: expiryDate.getTime(),
       spotAtOpen: spot,
       openedAt: Date.now(),
       cost: s.cost,
@@ -730,10 +731,23 @@ function StrategyDetail({
   onPlace: () => void;
 }) {
   const tone = STRATEGY_TONE[s.id];
+  // NaN is not Infinity: `Number.isFinite(NaN)` is false and `NaN > 0` is false,
+  // so a failed computation used to print the confident-sounding "unbounded".
+  // Show an em-dash instead — never dress a broken number as a risk statement.
   const fmt = (n: number) =>
-    Number.isFinite(n) ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}` : n > 0 ? "uncapped" : "unbounded";
+    Number.isNaN(n)
+      ? "—"
+      : Number.isFinite(n)
+        ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}`
+        : n > 0
+          ? "uncapped"
+          : "unbounded";
   const definedRisk = Number.isFinite(s.maxLoss);
-  const chips: string[] = [s.cost > 0 ? "debit" : "credit", s.bias, ...(definedRisk ? ["defined risk"] : [])];
+  const chips: string[] = [
+    ...(Number.isFinite(s.cost) ? [s.cost > 0 ? "debit" : "credit"] : []),
+    s.bias,
+    ...(definedRisk ? ["defined risk"] : []),
+  ];
   const rr =
     Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0 ? s.maxProfit / Math.abs(s.maxLoss) : null;
   const rail: { k: string; v: string; c: string }[] = [

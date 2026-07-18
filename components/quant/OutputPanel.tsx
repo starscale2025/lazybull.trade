@@ -275,7 +275,7 @@ function AggregateVerdict({
       <div className="mt-2">
         <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <span>conviction</span>
-          <span>{(confidence * 100).toFixed(0)}%</span>
+          <span>{Math.min(100, Math.max(0, confidence * 100)).toFixed(0)}%</span>
         </div>
         <div className="mt-1 h-1.5 w-full bg-bg">
           <div

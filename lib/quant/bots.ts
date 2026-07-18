@@ -435,8 +435,13 @@ const hurstBot: BotDef = {
   params: [
     { key: "window", label: "Window", kind: "number", default: 128, min: 64, max: 256, step: 8 },
   ],
-  run: (ctx): BotResult => {
-    const px = closes(ctx.candles);
+  run: (ctx, p): BotResult => {
+    // The `window` param was declared in the UI and rendered as a slider, but
+    // run() never read it — moving it changed nothing. Honour it: analyse the
+    // most recent `window` closes.
+    const window = Math.round(num(p, "window", 128));
+    const all = closes(ctx.candles);
+    const px = all.slice(-Math.max(32, window));
     const h = hurst(px);
     let regime: "trend" | "revert" | "random" = "random";
     if (h > 0.55) regime = "trend";
@@ -459,7 +464,9 @@ const hurstBot: BotDef = {
             : regime === "revert"
             ? "Reversion regime — mean-reversion bots have edge here."
             : "Random walk — no statistical edge today.",
-        confidence: Math.abs(h - 0.5) * 2,
+        // Verdict.confidence is contracted to [0,1]; an out-of-range H used to
+        // render as "CONF 1418%" next to a bar clamped at 100%.
+        confidence: Math.min(1, Math.abs(h - 0.5) * 2),
       },
     };
   },
