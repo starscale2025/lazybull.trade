@@ -1,0 +1,348 @@
+{
+  "communities": {
+    "0": [
+      "cinema_acts",
+      "cinema_bull3d",
+      "cinema_candle3d",
+      "cinema_copy_beats",
+      "cinema_dive3d",
+      "cinema_flashopacity",
+      "cinema_test_acts",
+      "cinema_test_acts_positive_width",
+      "cinema_test_bull3dopacity_hands_off_before_homepage",
+      "cinema_test_bull3dopacity_zero_outside_window",
+      "cinema_test_candle3dopacity_clears_before_safety_copy",
+      "cinema_test_candle3dopacity_fade_hold_dissolve",
+      "cinema_test_candle3dopacity_zero_outside_window",
+      "cinema_test_copy_beats",
+      "cinema_test_copy_beats_inside_act_window",
+      "cinema_test_copy_beats_unique_ids_in_range",
+      "cinema_test_dive3dopacity_clears_before_regime",
+      "cinema_test_dive3dopacity_zero_outside_one_through_hold",
+      "cinema_test_flashopacity",
+      "cinema_test_flashopacity_triangle_over_matrix_act"
+    ],
+    "1": [
+      "market_state_derivemarketstate",
+      "market_state_test_closed_before_pre_opens",
+      "market_state_test_closed_overnight_weekend",
+      "market_state_test_derivemarketstate",
+      "market_state_test_empty_meta_never_throws",
+      "market_state_test_honours_provider_state",
+      "market_state_test_post_inside_session",
+      "market_state_test_pre_inside_session",
+      "market_state_test_regular_end_boundary",
+      "market_state_test_regular_inside_session",
+      "quant_math_test_hurst_no_659_outlier",
+      "quant_math_test_macd_no_fabricated_crossover",
+      "quant_math_test_sortino",
+      "quant_math_test_sortino_empty_series",
+      "quant_math_test_sortino_honours_rf",
+      "quant_math_test_sortino_unbounded_no_downside",
+      "series_sortino"
+    ],
+    "2": [
+      "cinema_test_clamp01_neutralizes_non_finite",
+      "market_state_test_no_periods_recency_fallback",
+      "material_hero_test_clamps_out_of_range_markers",
+      "material_hero_test_splitlayers",
+      "material_hero_test_splits_by_marker_index",
+      "materialhero_splitlayers",
+      "quant_math_test_hurst_degenerate_fallback",
+      "quant_math_test_macd",
+      "quant_math_test_macd_histogram_null_propagation",
+      "quant_math_test_macd_signal_null_until_seeded",
+      "quant_math_test_macd_signal_seeded_from_real_data",
+      "safety_test_daily_loss_limit_clamps_negative",
+      "safety_test_training_wheels_default_on",
+      "series_macd"
+    ],
+    "3": [
+      "detector_test_falls_back_to_custom",
+      "particle_curtain_test_buildcolumns",
+      "particle_curtain_test_deterministic_for_seed",
+      "particle_curtain_test_phase_speed_in_range",
+      "particlecurtain_buildcolumns",
+      "quant_math_test_hurst",
+      "quant_math_test_hurst_centres_random_walk",
+      "quant_math_test_hurst_random_regime_reachable",
+      "quant_math_test_hurst_separates_regimes",
+      "quant_math_test_hurst_stays_in_0_1",
+      "quant_math_test_reverting_generator",
+      "quant_math_test_series_generator",
+      "quant_math_test_trending_generator",
+      "series_hurst"
+    ],
+    "4": [
+      "cinema_act_order",
+      "cinema_test_acts_cover_0_1_contiguously",
+      "detector_test_strategy_detector",
+      "models_generatestrategies",
+      "models_probbs",
+      "pricing_leg",
+      "quant_math_test_probbs_input_clamping",
+      "quant_math_test_probbs_no_nan_non_positive_band",
+      "quant_math_test_probbs_normal_band",
+      "quant_math_test_strategy_strikes_positive_finite",
+      "quant_math_test_strikes_finite_money_every_card",
+      "strategy_math_test_generatestrategies_money_math",
+      "strategy_math_test_maxprofit_outside_50pct_grid",
+      "strategy_math_test_no_nan_anywhere"
+    ],
+    "5": [
+      "detector_detect",
+      "detector_test_detects_bull_call_spread",
+      "detector_test_detects_bull_put_spread",
+      "detector_test_detects_iron_butterfly",
+      "detector_test_detects_iron_condor",
+      "detector_test_detects_long_put",
+      "detector_test_detects_long_straddle",
+      "detector_test_detects_long_strangle",
+      "detector_test_naked_short_call_unbounded",
+      "strategy_math_test_spread_legs_ordered"
+    ],
+    "6": [
+      "backtest_longonly_test_backtestlongonly",
+      "backtest_longonly_test_multi_bar_10_percent_trade",
+      "backtest_longonly_test_multi_bar_loss_is_exact",
+      "backtest_longonly_test_one_bar_trade_unchanged",
+      "backtest_longonly_test_trades_and_win_rate",
+      "backtest_longonly_test_two_sequential_trades_compound",
+      "quant_math_test_sortino_downside_deviation",
+      "series_backtestlongonly",
+      "strategy_math_test_long_put_maxprofit_subtracts_premium"
+    ],
+    "7": [
+      "cinema_bull3dopacity",
+      "cinema_candle3dopacity",
+      "cinema_clamp01",
+      "cinema_dive3dopacity",
+      "cinema_test_bull3dopacity",
+      "cinema_test_bull3dopacity_fade_hold_dissolve",
+      "cinema_test_candle3dopacity",
+      "cinema_test_clamp01",
+      "cinema_test_dive3dopacity"
+    ],
+    "8": [
+      "detector_test_detects_long_call",
+      "safety_test_kill_switch_fires_on_loss_limit",
+      "safety_test_paper_close_updates_realized",
+      "safety_test_paper_open_subtracts_cost",
+      "safety_test_safety_kill_switch",
+      "stores_triggerkillswitch",
+      "stores_usepaper",
+      "stores_usesafety"
+    ],
+    "9": [
+      "quant_math_test_ts",
+      "tests_quant_math_test_median",
+      "tests_quant_math_test_overseeds",
+      "tests_quant_math_test_reverting",
+      "tests_quant_math_test_series",
+      "tests_quant_math_test_trending"
+    ],
+    "10": [
+      "cinema_beatopacity",
+      "cinema_test_beatopacity",
+      "cinema_test_beatopacity_ramps_and_plateaus",
+      "cinema_test_beatopacity_zero_outside_window"
+    ],
+    "11": [
+      "strategy_math_test_ts",
+      "tests_strategy_math_test_all",
+      "tests_strategy_math_test_finite"
+    ],
+    "12": [
+      "cinema_canvasopacity",
+      "cinema_test_canvasopacity",
+      "cinema_test_canvasopacity_holds_then_crossfades"
+    ],
+    "13": [
+      "tests_detector_test_mk",
+      "users_shaurya555_desktop_lazybull1_tests_detector_test_ts"
+    ],
+    "14": [
+      "market_state_test_ts",
+      "tests_market_state_test_at"
+    ],
+    "15": [
+      "backtest_longonly_test_ts",
+      "tests_backtest_longonly_test_fin"
+    ],
+    "16": [
+      "cinema_test_ts"
+    ],
+    "17": [
+      "particle_curtain_test_ts"
+    ],
+    "18": [
+      "users_shaurya555_desktop_lazybull1_tests_safety_test_ts"
+    ],
+    "19": [
+      "material_hero_test_ts"
+    ]
+  },
+  "cohesion": {
+    "0": 0.12,
+    "1": 0.14,
+    "2": 0.16,
+    "3": 0.2,
+    "4": 0.21,
+    "5": 0.27,
+    "6": 0.36,
+    "7": 0.22,
+    "8": 0.29,
+    "9": 0.33,
+    "10": 0.5,
+    "11": 0.67,
+    "12": 0.67,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0
+  },
+  "gods": [
+    {
+      "id": "detector_detect",
+      "label": "detect",
+      "degree": 11
+    },
+    {
+      "id": "market_state_derivemarketstate",
+      "label": "deriveMarketState",
+      "degree": 10
+    },
+    {
+      "id": "models_generatestrategies",
+      "label": "generateStrategies",
+      "degree": 8
+    },
+    {
+      "id": "cinema_acts",
+      "label": "ACTS",
+      "degree": 8
+    },
+    {
+      "id": "series_hurst",
+      "label": "hurst",
+      "degree": 7
+    },
+    {
+      "id": "quant_math_test_series_generator",
+      "label": "series() deterministic GBM-ish fixture",
+      "degree": 7
+    },
+    {
+      "id": "series_backtestlongonly",
+      "label": "backtestLongOnly",
+      "degree": 6
+    },
+    {
+      "id": "backtest_longonly_test_backtestlongonly",
+      "label": "describe: backtestLongOnly",
+      "degree": 6
+    },
+    {
+      "id": "cinema_test_clamp01_neutralizes_non_finite",
+      "label": "clamp01 clamps and neutralizes non-finite input",
+      "degree": 6
+    },
+    {
+      "id": "series_macd",
+      "label": "macd",
+      "degree": 5
+    }
+  ],
+  "surprises": [
+    {
+      "source": "no longer returns the -6.59 outlier at the 65/66-bar boundary",
+      "target": "hurst",
+      "source_files": [
+        "__tests__/quant-math.test.ts",
+        "lib/quant/series.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `no longer returns the -6.59 outlier at the 65/66-bar boundary` unexpectedly reaches hub `hurst`"
+    },
+    {
+      "source": "does not emit the fabricated first-bar crossover",
+      "target": "macd",
+      "source_files": [
+        "__tests__/quant-math.test.ts",
+        "lib/quant/series.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `does not emit the fabricated first-bar crossover` unexpectedly reaches hub `macd`"
+    },
+    {
+      "source": "matches hand-computed downside deviation",
+      "target": "sortino",
+      "source_files": [
+        "__tests__/quant-math.test.ts",
+        "lib/quant/series.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `matches hand-computed downside deviation` unexpectedly reaches hub `sortino`"
+    },
+    {
+      "source": "long put max profit subtracts the premium paid",
+      "target": "generateStrategies",
+      "source_files": [
+        "__tests__/strategy-math.test.ts",
+        "lib/models.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `long put max profit subtracts the premium paid` unexpectedly reaches hub `generateStrategies`"
+    },
+    {
+      "source": "detects a long call",
+      "target": "detect",
+      "source_files": [
+        "__tests__/detector.test.ts",
+        "lib/detector.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `detects a long call` unexpectedly reaches hub `detect`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `clamp01 clamps and neutralizes non-finite input` connect `Community 2` to `Community 3`, `Community 4`, `Community 7`?",
+      "why": "High betweenness centrality (0.167) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `generateStrategies` connect `Community 4` to `Community 5`, `Community 6`?",
+      "why": "High betweenness centrality (0.164) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `hurst` connect `Community 3` to `Community 1`, `Community 2`?",
+      "why": "High betweenness centrality (0.118) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `ACT_ORDER`, `describe: ACTS`, `every act has positive width` to the rest of the system?",
+      "why": "34 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.12 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

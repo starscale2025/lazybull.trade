@@ -1,0 +1,13 @@
+{
+  "runs": [
+    {
+      "date": "2026-07-19T20:21:44.780721+00:00",
+      "input_tokens": 100938,
+      "output_tokens": 0,
+      "files": 9,
+      "note": "Agent usage exposes only a combined subagent_tokens figure; recorded as input."
+    }
+  ],
+  "total_input_tokens": 100938,
+  "total_output_tokens": 0
+}

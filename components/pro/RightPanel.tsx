@@ -34,6 +34,26 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
     try { localStorage.setItem("lb-pro-watchlist", JSON.stringify(list)); } catch {}
   }, [list]);
 
+  // The voice co-pilot sends add/remove *intents* rather than writing storage
+  // itself — this component stays the single writer, so an agent edit can never
+  // race (and undo) a manual edit.
+  useEffect(() => {
+    const onAdd = (e: Event) => {
+      const t = (e as CustomEvent<{ ticker?: string }>).detail?.ticker?.trim().toUpperCase();
+      if (t) setList((cur) => (cur.includes(t) ? cur : [...cur, t]));
+    };
+    const onRemove = (e: Event) => {
+      const t = (e as CustomEvent<{ ticker?: string }>).detail?.ticker?.trim().toUpperCase();
+      if (t) setList((cur) => cur.filter((s) => s !== t));
+    };
+    window.addEventListener("lb-watchlist-add", onAdd);
+    window.addEventListener("lb-watchlist-remove", onRemove);
+    return () => {
+      window.removeEventListener("lb-watchlist-add", onAdd);
+      window.removeEventListener("lb-watchlist-remove", onRemove);
+    };
+  }, []);
+
   // poll quotes every 15s
   useEffect(() => {
     let alive = true;
