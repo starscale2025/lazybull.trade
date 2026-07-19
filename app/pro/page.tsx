@@ -11,7 +11,10 @@ import { BottomBar } from "@/components/pro/BottomBar";
 import { ReplayBar } from "@/components/pro/ReplayBar";
 import { AlertsPanel } from "@/components/pro/AlertsPanel";
 import { TradeDrawer } from "@/components/pro/TradeDrawer";
+import { VoiceAgent } from "@/components/pro/VoiceAgent";
 import type { Bar, Drawing, ToolKind } from "@/components/pro/chartCore";
+import type { PlacedOrder } from "@/lib/pro/voice/useVoiceAgent";
+import { computeAnalysis } from "@/lib/pro/voice/analysis";
 
 const PRESET_TO_LASTN: Record<string, number> = {
   "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
@@ -53,27 +56,36 @@ export default function ProPage() {
   const [intro, setIntro] = useState(true);
 
   // ── undo / redo
+  // Live mirror of drawings. The voice agent can emit several drawing actions in
+  // ONE reply, so history must be mutated synchronously against the latest value
+  // — doing it inside the setState updater (which React defers) corrupted
+  // undo/redo when actions were batched.
+  const drawingsRef = useRef<Drawing[]>(drawings);
+  drawingsRef.current = drawings;
+
   const undoStack = useRef<Drawing[][]>([]);
   const redoStack = useRef<Drawing[][]>([]);
   const setDrawings = useCallback((next: Drawing[] | ((prev: Drawing[]) => Drawing[])) => {
-    _setDrawings((prev) => {
-      const nxt = typeof next === "function" ? (next as (p: Drawing[]) => Drawing[])(prev) : next;
-      undoStack.current.push(prev);
-      if (undoStack.current.length > 50) undoStack.current.shift();
-      redoStack.current = [];
-      return nxt;
-    });
+    const prev = drawingsRef.current;
+    const nxt = typeof next === "function" ? (next as (p: Drawing[]) => Drawing[])(prev) : next;
+    undoStack.current.push(prev);
+    if (undoStack.current.length > 50) undoStack.current.shift();
+    redoStack.current = [];
+    drawingsRef.current = nxt; // keep the mirror correct for the next batched call
+    _setDrawings(nxt);
   }, []);
   const undo = () => {
     const prev = undoStack.current.pop();
     if (!prev) return;
-    redoStack.current.push(drawings);
+    redoStack.current.push(drawingsRef.current);
+    drawingsRef.current = prev;
     _setDrawings(prev);
   };
   const redo = () => {
     const next = redoStack.current.pop();
     if (!next) return;
-    undoStack.current.push(drawings);
+    undoStack.current.push(drawingsRef.current);
+    drawingsRef.current = next;
     _setDrawings(next);
   };
 
@@ -280,6 +292,231 @@ export default function ProPage() {
     return { sym: symbol.sym, exch: meta?.exchangeName || symbol.exch || "" };
   }, [symbol, meta]);
 
+  // ── voice co-pilot actions (the agent drives the workspace through these) ──
+  // We keep a per-render `latest` ref of the real implementations (so they always
+  // see fresh state), and expose a STABLE `voiceActions` object that delegates to
+  // it — that keeps the WebRTC session and idle timer from churning every render.
+  // Live mirrors so a multi-action reply (e.g. "set colour red then draw a line")
+  // reads the value the previous action just set, not the stale render snapshot.
+  const colorRef = useRef(color); colorRef.current = color;
+  const barsRef = useRef<Bar[]>(bars); barsRef.current = bars;
+  const alertsRef = useRef<Alert[]>(alerts); alertsRef.current = alerts;
+
+  // helpers for agent-drawn objects: bar index from "N bars ago", unique ids
+  const idxFromAgo = (ago = 0) => {
+    const li = Math.max(0, barsRef.current.length - 1);
+    return Math.max(0, Math.min(li, li - Math.max(0, Math.round(ago))));
+  };
+  const hasBars = () => barsRef.current.length > 0;
+  const rid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const readLS = <T,>(k: string, fallback: T): T => {
+    try { return JSON.parse(localStorage.getItem(k) || "null") ?? fallback; } catch { return fallback; }
+  };
+  // RightPanel owns the watchlist; we send it an intent rather than writing
+  // localStorage behind its back (which raced its own persist effect).
+  const watchlistIntent = (kind: "add" | "remove", ticker: string) => {
+    try { window.dispatchEvent(new CustomEvent(`lb-watchlist-${kind}`, { detail: { ticker } })); } catch {}
+  };
+
+  const voiceLatest = useRef<import("@/lib/pro/voice/useVoiceAgent").VoiceActions | null>(null);
+  voiceLatest.current = {
+    // ── chart ──
+    setSymbolByTicker: async (ticker: string) => {
+      const t = ticker.trim().toUpperCase();
+      if (!t) return { ok: false, error: "no ticker" };
+      const seed = SEED_SYMBOLS.find((s) => s.sym === t);
+      if (seed) { setSymbol(seed); return { ok: true, symbol: seed.sym, name: seed.name }; }
+      try {
+        const r = await fetch(`/api/symbol-search?q=${encodeURIComponent(t)}`);
+        const j = await r.json();
+        const hit = (j.items || [])[0] as { sym: string; name: string; exch: string } | undefined;
+        if (hit?.sym) { const s = { sym: hit.sym, name: hit.name, exch: hit.exch }; setSymbol(s); return { ok: true, symbol: s.sym, name: s.name }; }
+      } catch { /* fall through to raw ticker */ }
+      setSymbol({ sym: t, name: t, exch: "" });
+      return { ok: true, symbol: t, name: t };
+    },
+    setTimeframe,
+    setChartType: (c: string) => setChartType(c as Workspace["chart"]),
+    setLayout,
+    setRangePreset: (p: string) => { if (PRESET_TO_LASTN[p] != null) onPreset(p); },
+    zoomTo: (n: number) => chartRef.current?.fit(Math.max(5, Math.round(n))),
+    toggleFullscreen,
+    snapshot: () => chartRef.current?.snapshot(),
+    saveWorkspace: () => { void saveWorkspace(); },
+    // ── indicators ──
+    addIndicator: (id: string) => setIndicators((cur) => (cur.includes(id) ? cur : [...cur, id])),
+    removeIndicator: (id: string) => setIndicators((cur) => cur.filter((x) => x !== id)),
+    clearIndicators: () => setIndicators([]),
+    // ── drawing ──
+    selectTool: (t: string) => setTool(t as ToolKind),
+    setColor: (c: string) => setColor(c),
+    drawHorizontal: (price: number) =>
+      setDrawings((cur) => [...cur, { id: `d-${rid()}`, tool: "horizontal", p: price, color: colorRef.current }]),
+    drawTrendline: (fromPrice, toPrice, fromBarsAgo = 30, toBarsAgo = 0) => {
+      if (!hasBars()) return;
+      setDrawings((cur) => [...cur, {
+        id: `d-${rid()}`, tool: "trendline",
+        a: { i: idxFromAgo(fromBarsAgo), p: fromPrice },
+        b: { i: idxFromAgo(toBarsAgo), p: toPrice }, color: colorRef.current,
+      }]);
+    },
+    drawFib: (fromPrice, toPrice) => {
+      if (!hasBars()) return;
+      setDrawings((cur) => [...cur, {
+        id: `d-${rid()}`, tool: "fib",
+        a: { i: idxFromAgo(30), p: fromPrice },
+        b: { i: idxFromAgo(0), p: toPrice },
+      }]);
+    },
+    drawRect: (fromPrice, toPrice, fromBarsAgo = 20, toBarsAgo = 0) => {
+      if (!hasBars()) return;
+      setDrawings((cur) => [...cur, {
+        id: `d-${rid()}`, tool: "rect",
+        a: { i: idxFromAgo(fromBarsAgo), p: fromPrice },
+        b: { i: idxFromAgo(toBarsAgo), p: toPrice }, color: colorRef.current,
+      }]);
+    },
+    drawText: (price, text, barsAgo = 0) => {
+      if (!hasBars()) return;
+      setDrawings((cur) => [...cur, {
+        id: `d-${rid()}`, tool: "text", a: { i: idxFromAgo(barsAgo), p: price }, text, color: colorRef.current,
+      }]);
+    },
+    clearDrawings: () => setDrawings([]),
+    undo,
+    redo,
+    // ── alerts ──
+    createAlert: (price: number, cond: "above" | "below", note?: string) => {
+      // unique id — several create_alert actions can land in one model reply
+      const a: Alert = { id: `al-${rid()}`, price, cond, note, triggered: false };
+      alertsRef.current = [...alertsRef.current, a];
+      setAlerts((cur) => [...cur, a]);
+      showToast(`⚡ Alert · ${symbol.sym} ${cond} ${price.toFixed(2)}`, "ok");
+    },
+    deleteAlert: (price: number) => {
+      // Match by identity against the live mirror, never by a precomputed index —
+      // two deletes in one reply used to remove the wrong alert.
+      const tol = Math.max(0.01, Math.abs(price) * 0.005);
+      const target = alertsRef.current.find((a) => Math.abs(a.price - price) <= tol);
+      if (!target) return false;
+      alertsRef.current = alertsRef.current.filter((a) => a.id !== target.id);
+      setAlerts((cur) => cur.filter((a) => a.id !== target.id));
+      return true;
+    },
+    clearAlerts: () => { alertsRef.current = []; setAlerts([]); },
+    openAlerts: (open: boolean) => setAlertsOpen(open),
+    // ── replay ──
+    startReplay,
+    stopReplay: () => { setReplayActive(false); setReplayPlaying(false); },
+    setReplayPlaying: (p: boolean) => setReplayPlaying(p),
+    setReplaySpeed: (s: number) => setReplaySpeed(Math.max(1, Math.min(10, Math.round(s)))),
+    replaySeek: ({ to, step }) => setReplayCursor((c) => {
+      const max = Math.max(0, bars.length - 1);
+      const next = to != null ? to : c + (step ?? 0);
+      return Math.max(0, Math.min(max, Math.round(next)));
+    }),
+    // ── trading ──
+    openTradePanel: (open: boolean) => setTradeOpen(open),
+    // ── watchlist ──
+    addToWatchlist: (ticker: string) => {
+      const t = ticker.trim().toUpperCase();
+      if (t) watchlistIntent("add", t);
+    },
+    removeFromWatchlist: (ticker: string) => {
+      const t = ticker.trim().toUpperCase();
+      if (t) watchlistIntent("remove", t);
+    },
+    // ── data lookups ──
+    lookupSymbol: async (ticker: string) => {
+      const t = ticker.trim().toUpperCase();
+      if (!t) return { ok: false, error: "no ticker" };
+      try {
+        const r = await fetch(`/api/quote?symbol=${encodeURIComponent(t)}&tf=D`);
+        const j = await r.json();
+        if (!j.ok || !j.bars?.length) return { ok: false, error: j.error || "no data" };
+        const a = computeAnalysis(j.bars as Bar[], j.meta, t, t, "D");
+        return {
+          ok: true, symbol: t, price: a.price, change_pct: a.changePct, change_basis: a.changeBasis,
+          trend: a.trend, rsi: a.rsi, support: a.support, resistance: a.resistance,
+        };
+      } catch (e) { return { ok: false, error: (e as Error).message }; }
+    },
+    searchSymbols: async (q: string) => {
+      try {
+        const r = await fetch(`/api/symbol-search?q=${encodeURIComponent(q)}`);
+        const j = await r.json();
+        return { ok: true, results: (j.items || []).slice(0, 6) };
+      } catch (e) { return { ok: false, error: (e as Error).message }; }
+    },
+    // ── state read-back ──
+    getWorkspaceState: () => ({
+      symbol: symbol.sym,
+      timeframe,
+      chartType,
+      layout,
+      rangePreset: preset,
+      tool,
+      color,
+      indicators,
+      drawingCount: drawings.length,
+      // capped — this is injected into the model prompt every turn
+      alerts: alerts.slice(0, 20).map((a) => ({ price: a.price, cond: a.cond, note: a.note?.slice(0, 60), triggered: a.triggered })),
+      orders: readLS<PlacedOrder[]>("lb-pro-orders", []).slice(0, 10)
+        .map((o) => ({ side: o.side, qty: o.qty, sym: o.sym, price: o.price, type: o.type })),
+      watchlist: readLS<string[]>("lb-pro-watchlist", []).slice(0, 30),
+      replay: { active: replayActive, playing: replayPlaying, speed: replaySpeed, cursor: replayCursor, total: bars.length },
+    }),
+    // ── plumbing ──
+    onOrderPlaced: (o: PlacedOrder) => showToast(`⚡ Paper ${o.side.toUpperCase()} ${o.qty} ${o.sym} placed`, "ok"),
+    showToast,
+  };
+
+  // Stable delegate — always calls the freshest implementation above.
+  const voiceActions = useMemo<import("@/lib/pro/voice/useVoiceAgent").VoiceActions>(() => {
+    const L = () => voiceLatest.current!;
+    return {
+      setSymbolByTicker: (t) => L().setSymbolByTicker(t),
+      setTimeframe: (tf) => L().setTimeframe(tf),
+      setChartType: (c) => L().setChartType(c),
+      setLayout: (n) => L().setLayout(n),
+      setRangePreset: (p) => L().setRangePreset(p),
+      zoomTo: (n) => L().zoomTo(n),
+      toggleFullscreen: () => L().toggleFullscreen(),
+      snapshot: () => L().snapshot(),
+      saveWorkspace: () => L().saveWorkspace(),
+      addIndicator: (id) => L().addIndicator(id),
+      removeIndicator: (id) => L().removeIndicator(id),
+      clearIndicators: () => L().clearIndicators(),
+      selectTool: (t) => L().selectTool(t),
+      setColor: (c) => L().setColor(c),
+      drawHorizontal: (p) => L().drawHorizontal(p),
+      drawTrendline: (a, b, c, d) => L().drawTrendline(a, b, c, d),
+      drawFib: (a, b) => L().drawFib(a, b),
+      drawRect: (a, b, c, d) => L().drawRect(a, b, c, d),
+      drawText: (p, t, ago) => L().drawText(p, t, ago),
+      clearDrawings: () => L().clearDrawings(),
+      undo: () => L().undo(),
+      redo: () => L().redo(),
+      createAlert: (p, c, n) => L().createAlert(p, c, n),
+      deleteAlert: (p) => L().deleteAlert(p),
+      clearAlerts: () => L().clearAlerts(),
+      openAlerts: (o) => L().openAlerts(o),
+      startReplay: () => L().startReplay(),
+      stopReplay: () => L().stopReplay(),
+      setReplayPlaying: (p) => L().setReplayPlaying(p),
+      setReplaySpeed: (s) => L().setReplaySpeed(s),
+      replaySeek: (o) => L().replaySeek(o),
+      openTradePanel: (o) => L().openTradePanel(o),
+      addToWatchlist: (t) => L().addToWatchlist(t),
+      removeFromWatchlist: (t) => L().removeFromWatchlist(t),
+      lookupSymbol: (t) => L().lookupSymbol(t),
+      searchSymbols: (q) => L().searchSymbols(q),
+      getWorkspaceState: () => L().getWorkspaceState(),
+      onOrderPlaced: (o) => L().onOrderPlaced?.(o),
+      showToast: (t, tone) => L().showToast?.(t, tone),
+    };
+  }, []);
+
   // ── multi-pane layout
   const panes = useMemo(() => Array.from({ length: layout }, (_, i) => i), [layout]);
   const paneSymbols = useMemo<SymbolDef[]>(() => {
@@ -451,6 +688,16 @@ export default function ProPage() {
         onClose={() => setTradeOpen(false)}
         symbol={symbol.sym}
         spot={bars[bars.length - 1]?.c ?? 0}
+      />
+
+      {/* Voice co-pilot — scoped to /pro only */}
+      <VoiceAgent
+        symbol={symbol}
+        timeframe={timeframe}
+        bars={bars}
+        meta={meta}
+        indicators={indicators}
+        actions={voiceActions}
       />
     </div>
   );
