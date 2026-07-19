@@ -56,30 +56,46 @@ export default function ProPage() {
   const undoStack = useRef<Drawing[][]>([]);
   const redoStack = useRef<Drawing[][]>([]);
   // History bookkeeping must live OUTSIDE the state updater. React invokes
-  // updaters twice under StrictMode (on by default in the App Router), so each
-  // drawing pushed two identical snapshots and every other undo was a visible
-  // no-op. Mutating refs from inside an updater is unsound generally — React
-  // may re-invoke a discarded render's updaters in production too.
+  // updaters twice under StrictMode (on by default in the App Router), so
+  // pushing from inside meant every drawing recorded two identical snapshots
+  // and every other undo was a visible no-op. Mutating refs from inside an
+  // updater is unsound generally — React may re-invoke a discarded render's
+  // updaters in production too.
+  //
+  // But reading `drawings` straight from the render closure would trade that
+  // bug for a lost-update bug: two setDrawings calls in the same tick (rapid
+  // clicks, or a commit plus a follow-up) would both compute from the same
+  // stale array and the first would vanish. A ref updated synchronously on
+  // every write gives us both — history outside the updater AND correct
+  // chaining within a tick — and keeps the callback identity stable so child
+  // components never hold a stale copy.
+  const drawingsRef = useRef<Drawing[]>(drawings);
+  /** Single funnel for state + ref, so the two can never drift apart. */
+  const commitDrawings = useCallback((value: Drawing[]) => {
+    drawingsRef.current = value;
+    _setDrawings(value);
+  }, []);
   const setDrawings = useCallback(
     (next: Drawing[] | ((prev: Drawing[]) => Drawing[])) => {
-      const nxt = typeof next === "function" ? (next as (p: Drawing[]) => Drawing[])(drawings) : next;
-      undoStack.current = [...undoStack.current, drawings].slice(-50);
+      const prev = drawingsRef.current;
+      const nxt = typeof next === "function" ? (next as (p: Drawing[]) => Drawing[])(prev) : next;
+      undoStack.current = [...undoStack.current, prev].slice(-50);
       redoStack.current = [];
-      _setDrawings(nxt);
+      commitDrawings(nxt);
     },
-    [drawings]
+    [commitDrawings]
   );
   const undo = () => {
     const prev = undoStack.current.pop();
     if (!prev) return;
-    redoStack.current.push(drawings);
-    _setDrawings(prev);
+    redoStack.current.push(drawingsRef.current);
+    commitDrawings(prev);
   };
   const redo = () => {
     const next = redoStack.current.pop();
     if (!next) return;
-    undoStack.current.push(drawings);
-    _setDrawings(next);
+    undoStack.current.push(drawingsRef.current);
+    commitDrawings(next);
   };
 
   // keyboard shortcuts
@@ -235,7 +251,11 @@ export default function ProPage() {
       const ws = JSON.parse(raw) as Workspace;
       setSymbol(ws.symbol);
       setTimeframe(ws.timeframe);
-      _setDrawings(ws.drawings || []);
+      // Load a workspace WITHOUT recording an undo entry (there is nothing to
+      // undo back to), but still through the funnel so drawingsRef stays in
+      // sync — otherwise the first edit after a load would compute from the
+      // pre-load array and silently discard the loaded drawings.
+      commitDrawings(ws.drawings || []);
       setIndicators(ws.indicators || []);
       setLayout(ws.layout || 1);
       setChartType(ws.chart || "candles");
