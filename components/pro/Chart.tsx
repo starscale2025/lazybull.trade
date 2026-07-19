@@ -38,6 +38,8 @@ type Props = {
   replayBar?: number | null; // if set, hide bars after this index
   /** Price-series style. The TopBar switcher used to set state nothing read. */
   chart?: "candles" | "line" | "area" | "bars";
+  /** Open share position in this symbol, drawn as an average-entry line. */
+  position?: { qty: number; avgPrice: number } | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
 };
@@ -64,6 +66,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     indicators,
     replayBar = null,
     chart = "candles",
+    position = null,
     alerts,
     onAlertFire,
   },
@@ -762,6 +765,52 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
             </g>
           );
         })}
+
+        {/* Open position: average entry + live unrealized P&L.
+            Drawn from the shared paper account, so it is the same money the
+            /trade book and the kill switch see — not a /pro-local number. */}
+        {position && position.qty !== 0 && (() => {
+          const y = yOfPrice(position.avgPrice, vp, geom);
+          const last = bars[bars.length - 1]?.c;
+          const pnl = Number.isFinite(last) ? (last - position.avgPrice) * position.qty : 0;
+          const up = pnl >= 0;
+          const c = up ? "var(--bull)" : "var(--bear)";
+          const isLong = position.qty > 0;
+          const label = `${isLong ? "LONG" : "SHORT"} ${Math.abs(position.qty)} @ ${fmt(position.avgPrice, 2)}`;
+          const pnlLabel = `${up ? "+" : "−"}$${fmt(Math.abs(pnl), 2)}`;
+          // Width must account for BOTH strings plus the gap between them —
+          // sizing off the left label alone made the P&L overlap it.
+          const CH = 6.2; // jetbrains mono advance at 10px
+          const w = Math.max(160, 9 + label.length * CH + 14 + pnlLabel.length * CH + 9);
+          return (
+            <g>
+              <line
+                x1={geom.padL}
+                x2={size.w - geom.padR - 56}
+                y1={y}
+                y2={y}
+                stroke={c}
+                strokeWidth={1.4}
+                strokeDasharray="2 5"
+              />
+              <rect x={geom.padL + 4} y={y - 10} width={w} height={20} fill="var(--bg)" fillOpacity={0.85} stroke={c} />
+              <text x={geom.padL + 9} y={y + 4} fontFamily="var(--font-jetbrains)" fontSize="10" fill={c}>
+                {label}
+              </text>
+              <text
+                x={geom.padL + w - 5}
+                y={y + 4}
+                textAnchor="end"
+                fontFamily="var(--font-jetbrains)"
+                fontSize="10"
+                fontWeight="600"
+                fill={c}
+              >
+                {pnlLabel}
+              </text>
+            </g>
+          );
+        })()}
 
         {/* drawings */}
         {allDrawings.map((d) => (

@@ -15,6 +15,8 @@ import { VoiceAgent } from "@/components/pro/VoiceAgent";
 import type { Bar, Drawing, ToolKind } from "@/components/pro/chartCore";
 import type { PlacedOrder } from "@/lib/pro/voice/useVoiceAgent";
 import { computeAnalysis } from "@/lib/pro/voice/analysis";
+import { usePaper } from "@/lib/stores";
+import { unrealizedPnl } from "@/lib/paper-shares";
 
 const PRESET_TO_LASTN: Record<string, number> = {
   "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
@@ -130,6 +132,10 @@ export default function ProPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawings]);
 
+  // ── paper position (shared account — same cash the /trade book uses)
+  const sharePositions = usePaper((st) => st.shares);
+  const position = sharePositions[symbol.sym] ?? null;
+
   // ── alerts + replay
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertsOpen, setAlertsOpen] = useState(false);
@@ -151,6 +157,10 @@ export default function ProPage() {
   const [meta, setMeta] = useState<{ exchangeName?: string; currency?: string; regularMarketPrice?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchErr, setFetchErr] = useState<string | null>(null);
+
+  // Mark the open position to the latest bar. Declared here rather than beside
+  // `position` because it needs `bars`, which is fetched below.
+  const livePnl = unrealizedPnl(position, bars[bars.length - 1]?.c ?? NaN);
 
   useEffect(() => {
     let alive = true;
@@ -638,6 +648,7 @@ export default function ProPage() {
                 meta={i === 0 ? meta : undefined}
                 exchangeFallback={i === 0 ? symbolMetaForChart.exch : ""}
                 chartType={chartType}
+                position={i === 0 ? position : null}
               />
             ))}
           </div>
@@ -698,7 +709,24 @@ export default function ProPage() {
         />
       )}
 
-      <BottomBar preset={preset} onPreset={onPreset} status={`${drawings.length} drawing · ${indicators.length} indicator · ${alerts.length} alert · ${bars.length} bars`} />
+      <BottomBar
+        preset={preset}
+        onPreset={onPreset}
+        status={[
+          // Position first — it is the only line here that is about the user's
+          // money rather than the workspace.
+          position
+            ? `${position.qty > 0 ? "long" : "short"} ${Math.abs(position.qty)} @ ${position.avgPrice.toFixed(2)} · ` +
+              `${livePnl >= 0 ? "+" : "−"}$${Math.abs(livePnl).toFixed(2)}`
+            : null,
+          `${drawings.length} drawing`,
+          `${indicators.length} indicator`,
+          `${alerts.length} alert`,
+          `${bars.length} bars`,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+      />
 
       <AlertsPanel
         open={alertsOpen}
@@ -746,6 +774,7 @@ function PaneChart({
   meta: metaProp,
   exchangeFallback,
   chartType,
+  position,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -756,6 +785,7 @@ function PaneChart({
   color: string;
   indicators: string[];
   chartType: Workspace["chart"];
+  position: { qty: number; avgPrice: number } | null;
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -796,6 +826,7 @@ function PaneChart({
         color={color}
         indicators={indicators}
         chart={chartType}
+        position={position}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}

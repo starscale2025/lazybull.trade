@@ -6,6 +6,7 @@
 // can use either as a drop-in.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { placePaperOrder } from "@/lib/pro/paper";
 import { computeAnalysis } from "./analysis";
 import { PERSONAS, DEFAULT_PERSONA, type PersonaId } from "./personality";
 import { buildSystemPrompt, buildSnapshotContext, buildWorkspaceContext, parseBrainReply, type ChatMsg, type BrainAction } from "./brainProtocol";
@@ -21,7 +22,6 @@ import type {
 
 type Args = { getSnapshot: () => VoiceSnapshot; actions: VoiceActions; persona: PersonaId };
 
-const ORDERS_KEY = "lb-pro-orders";
 const MAX_HISTORY = 12;
 const ECHO_COOLDOWN_MS = 600; // wait out our own TTS tail before trusting the mic
 
@@ -91,12 +91,14 @@ export function useFreeVoiceAgent({ getSnapshot, actions, persona }: Args) {
   const placeStaged = useCallback((): { ok: boolean; order?: PlacedOrder; error?: string } => {
     const st = stagedRef.current;
     if (!st) return { ok: false, error: "no staged trade" };
-    const order: PlacedOrder = { id: `o-${Date.now()}`, side: st.side, type: st.orderType, qty: st.qty, price: st.estPrice, sym: st.sym, ts: Date.now() };
-    try {
-      const existing = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]") as PlacedOrder[];
-      localStorage.setItem(ORDERS_KEY, JSON.stringify([order, ...existing].slice(0, 30)));
-      window.dispatchEvent(new CustomEvent("lb-orders-changed"));
-    } catch {}
+    // Book through the shared paper account (cash, position, P&L) instead of
+    // writing the blotter directly — see lib/pro/paper.ts.
+    const placed = placePaperOrder({ sym: st.sym, side: st.side, type: st.orderType, qty: st.qty, price: st.estPrice });
+    if (!placed.ok) {
+      actionsRef.current.showToast?.(`Order rejected: ${placed.error}`, "warn");
+      return { ok: false, error: placed.error };
+    }
+    const order = placed.order;
     stagedRef.current = null;
     setStagedTrade(null);
     actionsRef.current.onOrderPlaced?.(order);

@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ChainCell, Leg } from "./pricing";
+import { applyFill, validateFill, type Fill, type SharePosition } from "./paper-shares";
 
 // ─────────────── strategy store ───────────────
 type StrategyState = {
@@ -69,10 +70,23 @@ type PaperState = {
   cash: number;
   startingCash: number;
   positions: Position[];
+  /**
+   * Share positions from /pro, keyed by symbol. They live in the SAME store as
+   * the option `positions` above so both books draw on one cash balance and one
+   * realized-P&L figure — /pro used to keep an unaccounted order log in its own
+   * localStorage key, outside the account and outside the kill switch.
+   *
+   * Separate field rather than a row in `positions` because a share holding is
+   * genuinely a different shape (signed qty + average price, no legs); flattening
+   * it into `legs` would have meant storing a lie.
+   */
+  shares: Record<string, SharePosition>;
   realizedToday: number;
   open: (p: Omit<Position, "id" | "openedAt" | "status" | "pnl">) => Position;
   close: (id: string, exitPnl: number) => void;
   closeAll: (reason: string) => void;
+  /** Book a share fill. Returns an error string instead of throwing. */
+  fillShares: (f: Fill) => { ok: boolean; error?: string; realized?: number };
   reset: () => void;
 };
 
@@ -82,6 +96,7 @@ export const usePaper = create<PaperState>()(
       cash: 100_000,
       startingCash: 100_000,
       positions: [],
+      shares: {},
       realizedToday: 0,
       open: (p) => {
         const id = `pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -107,9 +122,37 @@ export const usePaper = create<PaperState>()(
           });
           return { positions, cash };
         }),
-      reset: () => set({ cash: 100_000, positions: [], realizedToday: 0 }),
+      fillShares: (f) => {
+        const invalid = validateFill(f);
+        if (invalid) return { ok: false, error: invalid };
+        const s = get();
+        const { position, cashDelta, realizedDelta } = applyFill(s.shares[f.sym] ?? null, f);
+        const shares = { ...s.shares };
+        if (position) shares[f.sym] = position;
+        else delete shares[f.sym]; // flat positions are dropped, not kept at qty 0
+        set({
+          shares,
+          cash: s.cash + cashDelta,
+          // Share P&L lands in the same realizedToday the kill switch reads, so
+          // one daily loss limit governs both books.
+          realizedToday: s.realizedToday + realizedDelta,
+        });
+        return { ok: true, realized: realizedDelta };
+      },
+      reset: () => set({ cash: 100_000, positions: [], shares: {}, realizedToday: 0 }),
     }),
-    { name: "lb-paper" }
+    {
+      name: "lb-paper",
+      // `shares` was added after launch, so accounts persisted before this
+      // change deserialize without it. Without a merge that restores the
+      // default, every read of `shares` would be undefined and the /pro
+      // position panel would crash on first render for existing users.
+      version: 2,
+      migrate: (persisted) => {
+        const p = (persisted ?? {}) as Partial<PaperState>;
+        return { ...p, shares: p.shares ?? {} } as PaperState;
+      },
+    }
   )
 );
 

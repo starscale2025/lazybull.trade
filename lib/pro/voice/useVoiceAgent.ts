@@ -9,6 +9,7 @@
 // `actions` + `getSnapshot` the /pro page hands us.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { placePaperOrder } from "@/lib/pro/paper";
 import type { Bar } from "@/components/pro/chartCore";
 import { computeAnalysis, type QuoteMeta, type MarketAnalysis } from "./analysis";
 import { buildInstructions, PERSONAS, DEFAULT_PERSONA, type PersonaId } from "./personality";
@@ -120,7 +121,6 @@ type Args = {
   persona: PersonaId;
 };
 
-const ORDERS_KEY = "lb-pro-orders";
 
 export function useVoiceAgent({ getSnapshot, actions, persona }: Args) {
   const [status, setStatus] = useState<VoiceStatus>("idle");
@@ -200,15 +200,14 @@ export function useVoiceAgent({ getSnapshot, actions, persona }: Args) {
   const placeStaged = useCallback((): { ok: boolean; order?: PlacedOrder; error?: string } => {
     const st = stagedRef.current;
     if (!st) return { ok: false, error: "no staged trade to confirm" };
-    const order: PlacedOrder = {
-      id: `o-${Date.now()}`,
-      side: st.side, type: st.orderType, qty: st.qty, price: st.estPrice, sym: st.sym, ts: Date.now(),
-    };
-    try {
-      const existing = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]") as PlacedOrder[];
-      localStorage.setItem(ORDERS_KEY, JSON.stringify([order, ...existing].slice(0, 30)));
-      window.dispatchEvent(new CustomEvent("lb-orders-changed"));
-    } catch { /* localStorage unavailable — order still reported to UI */ }
+    // Book through the shared paper account (cash, position, P&L) instead of
+    // writing the blotter directly — see lib/pro/paper.ts.
+    const placed = placePaperOrder({ sym: st.sym, side: st.side, type: st.orderType, qty: st.qty, price: st.estPrice });
+    if (!placed.ok) {
+      actionsRef.current.showToast?.(`Order rejected: ${placed.error}`, "warn");
+      return { ok: false, error: placed.error };
+    }
+    const order = placed.order;
     stagedRef.current = null;
     setStagedTrade(null);
     actionsRef.current.onOrderPlaced?.(order);

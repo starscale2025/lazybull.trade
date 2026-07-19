@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { fmt } from "./chartCore";
+import { placePaperOrder, readBlotter, ORDERS_CHANGED } from "@/lib/pro/paper";
 
 type Order = { id: string; side: "buy" | "sell"; type: "market" | "limit"; qty: number; price: number; sym: string; ts: number };
 
@@ -20,37 +21,35 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
   const [price, setPrice] = useState(spot.toFixed(2));
   const [orders, setOrders] = useState<Order[]>(() => {
     if (typeof window === "undefined") return [];
-    try { return JSON.parse(localStorage.getItem("lb-pro-orders") || "[]") as Order[]; } catch { return []; }
+    return readBlotter();
   });
 
   // Re-read whenever the voice co-pilot places an order, so the ledger shown
   // here stays in sync instead of holding a stale mount-time snapshot.
   useEffect(() => {
-    const sync = () => {
-      try { setOrders(JSON.parse(localStorage.getItem("lb-pro-orders") || "[]") as Order[]); } catch {}
-    };
-    window.addEventListener("lb-orders-changed", sync);
-    return () => window.removeEventListener("lb-orders-changed", sync);
+    const sync = () => setOrders(readBlotter());
+    window.addEventListener(ORDERS_CHANGED, sync);
+    return () => window.removeEventListener(ORDERS_CHANGED, sync);
   }, []);
 
+  const [err, setErr] = useState<string | null>(null);
+
   const place = () => {
-    const o: Order = {
-      id: `o-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      side, type, sym: symbol,
+    // Booking goes through the shared account (cash, position, realized P&L)
+    // rather than straight into the blotter — see lib/pro/paper.ts.
+    const res = placePaperOrder({
+      sym: symbol,
+      side,
+      type,
       qty: parseFloat(qty) || 0,
       price: type === "market" ? spot : parseFloat(price) || spot,
-      ts: Date.now(),
-    };
-    // Merge against what's actually in storage (the agent may have written since
-    // we mounted) rather than overwriting the key with our own stale list.
-    let existing: Order[] = [];
-    try { existing = JSON.parse(localStorage.getItem("lb-pro-orders") || "[]") as Order[]; } catch {}
-    const next = [o, ...existing].slice(0, 30);
-    setOrders(next);
-    try {
-      localStorage.setItem("lb-pro-orders", JSON.stringify(next));
-      window.dispatchEvent(new CustomEvent("lb-orders-changed"));
-    } catch {}
+    });
+    if (!res.ok) {
+      setErr(res.error);
+      return;
+    }
+    setErr(null);
+    setOrders(readBlotter());
   };
 
   return (
@@ -127,6 +126,13 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
                 >
                   Place {side} {type} ↵
                 </button>
+                {/* The account refuses bad fills (qty 0, NaN price) rather than
+                    booking a position that would poison every later average. */}
+                {err && (
+                  <div role="alert" className="border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[10px] text-bear">
+                    {err}
+                  </div>
+                )}
               </div>
             </div>
 
