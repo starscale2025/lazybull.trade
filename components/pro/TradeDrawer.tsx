@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { fmt } from "./chartCore";
 
@@ -23,17 +23,34 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
     try { return JSON.parse(localStorage.getItem("lb-pro-orders") || "[]") as Order[]; } catch { return []; }
   });
 
+  // Re-read whenever the voice co-pilot places an order, so the ledger shown
+  // here stays in sync instead of holding a stale mount-time snapshot.
+  useEffect(() => {
+    const sync = () => {
+      try { setOrders(JSON.parse(localStorage.getItem("lb-pro-orders") || "[]") as Order[]); } catch {}
+    };
+    window.addEventListener("lb-orders-changed", sync);
+    return () => window.removeEventListener("lb-orders-changed", sync);
+  }, []);
+
   const place = () => {
     const o: Order = {
-      id: `o-${Date.now()}`,
+      id: `o-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       side, type, sym: symbol,
       qty: parseFloat(qty) || 0,
       price: type === "market" ? spot : parseFloat(price) || spot,
       ts: Date.now(),
     };
-    const next = [o, ...orders].slice(0, 30);
+    // Merge against what's actually in storage (the agent may have written since
+    // we mounted) rather than overwriting the key with our own stale list.
+    let existing: Order[] = [];
+    try { existing = JSON.parse(localStorage.getItem("lb-pro-orders") || "[]") as Order[]; } catch {}
+    const next = [o, ...existing].slice(0, 30);
     setOrders(next);
-    try { localStorage.setItem("lb-pro-orders", JSON.stringify(next)); } catch {}
+    try {
+      localStorage.setItem("lb-pro-orders", JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent("lb-orders-changed"));
+    } catch {}
   };
 
   return (
