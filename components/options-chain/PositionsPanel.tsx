@@ -9,13 +9,22 @@ export function PositionsPanel({ spot }: { spot: number }) {
   const cash = usePaper((s) => s.cash);
   const startingCash = usePaper((s) => s.startingCash);
   const realizedToday = usePaper((s) => s.realizedToday);
+  const shares = usePaper((s) => s.shares);
 
   const open = positions.filter((p) => p.status === "open");
   const closed = positions.filter((p) => p.status === "closed").slice(0, 5);
 
-  const equity = cash + open.reduce((acc, p) => acc + p.cost, 0); // legs are already cash-out at open
+  // The account's cash is SHARED with share bets placed on /pro and the
+  // QuickBet slip. Without adding those back, every dollar sitting in a share
+  // position read as a pure loss here (a $31k long showed as "P&L −$31k").
+  // This panel has a live spot for the CURRENT symbol only, so shares are
+  // valued at cost: they contribute their realized P&L (already inside cash)
+  // and zero unrealized — honest, if conservative. The live mark lives on /pro.
+  const shareBook = Object.values(shares).reduce((acc, sp) => acc + sp.qty * sp.avgPrice, 0);
 
-  const totalPnl = (cash + open.reduce((acc, p) => acc + payoff(p.legs, spot), 0)) - startingCash;
+  const equity = cash + shareBook + open.reduce((acc, p) => acc + p.cost, 0); // legs are already cash-out at open
+
+  const totalPnl = (cash + shareBook + open.reduce((acc, p) => acc + payoff(p.legs, spot), 0)) - startingCash;
 
   return (
     <div className="border border-border bg-bg">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { QuickBet } from "@/components/bet/QuickBet";
 import { generateCandles, type Candle } from "@/lib/candles";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
@@ -417,6 +418,9 @@ export function QuantPage() {
       </section>
 
       <ImportBotModal open={importOpen} onClose={() => setImportOpen(false)} onImport={importBot} />
+
+      {/* One-tap paper bet, fed the same candles the bots just ran on. */}
+      <QuickBet symbol={symbol} spot={lastSpot} candles={candles} />
     </>
   );
 }

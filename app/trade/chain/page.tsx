@@ -11,6 +11,7 @@ import { RiskWizard } from "@/components/safety/RiskWizard";
 import { SafetySettingsButton } from "@/components/safety/KillSwitch";
 import { useTeacher } from "@/lib/stores";
 import { GreekTrigger } from "@/components/ai-teacher/SpeechBubble";
+import { QuickBet } from "@/components/bet/QuickBet";
 
 const SYMBOLS = [
   { sym: "AMZN", name: "Amazon.com", spot: 226.45 },
@@ -144,6 +145,9 @@ export default function TradePage() {
           })
         }
       />
+
+      {/* One-tap paper bet; the slip also reflects any legs built on the chain. */}
+      <QuickBet symbol={sym.sym} spot={spot} />
     </main>
   );
 }

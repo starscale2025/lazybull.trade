@@ -1,0 +1,306 @@
+"use client";
+
+// The one-tap paper bet: UP or DOWN, a dollar stake, one button.
+//
+// Mounted on /quant and /trade/chain. Before you commit, the slip shows the
+// read from both halves of the product — what the quant jury says and what the
+// pricing models say. On /quant it runs on the SAME candles the page's bots
+// just ran on (so slip and page always agree there); elsewhere it fetches its
+// own daily bars.
+//
+// A bet books as shares on the SHARED paper account (lib/pro/paper.ts):
+// UP = buy $stake of stock, DOWN = short $stake. Same cash, same realized
+// P&L, same kill switch as every other page. Educational, paper only.
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { modelRead, quantRead } from "@/lib/bet-analysis";
+import { placePaperOrder } from "@/lib/pro/paper";
+import { usePaper, useSafety, useStrategy } from "@/lib/stores";
+import { unrealizedPnl } from "@/lib/paper-shares";
+import { detect } from "@/lib/detector";
+import type { Candle } from "@/lib/candles";
+
+type Props = {
+  symbol: string;
+  /** Live spot if the page already has one; falls back to the last close. */
+  spot?: number;
+  /** Daily bars if the page already fetched them; the slip fetches otherwise. */
+  candles?: Candle[];
+};
+
+const STAKES = [500, 1000, 5000] as const;
+
+export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
+  const [open, setOpen] = useState(false);
+  const [dir, setDir] = useState<"up" | "down">("up");
+  const [stake, setStake] = useState<number>(1000);
+  const [placed, setPlaced] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // ── bars: use the page's if given, else fetch daily bars once per symbol
+  const [fetched, setFetched] = useState<Candle[] | null>(null);
+  useEffect(() => {
+    if (candlesProp?.length) return; // page supplies them
+    let cancelled = false;
+    setFetched(null);
+    (async () => {
+      try {
+        const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&tf=D`);
+        const j = await r.json();
+        if (cancelled) return;
+        if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
+          setFetched(
+            j.bars.slice(-260).map((b: { o: number; h: number; l: number; c: number }) => ({
+              o: b.o, h: b.h, l: b.l, c: b.c,
+            }))
+          );
+        }
+      } catch {
+        /* slip stays in its loading state */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [symbol, candlesProp?.length]);
+
+  const candles = candlesProp?.length ? candlesProp : fetched;
+  const last = candles?.[candles.length - 1]?.c;
+  const mark = Number.isFinite(spot) && (spot as number) > 0 ? (spot as number) : last;
+
+  // ── the two reads (memoized: the jury is cheap but not free)
+  const reads = useMemo(() => {
+    if (!candles || candles.length < 30 || !Number.isFinite(mark)) return null;
+    return {
+      quant: quantRead(candles, symbol),
+      model: modelRead(candles, mark as number, 30),
+    };
+  }, [candles, symbol, mark]);
+
+  // ── context from the rest of the app
+  const legs = useStrategy((s) => s.legs);
+  const chainNote = useMemo(() => {
+    if (!legs.length) return null;
+    try {
+      const d = detect(legs);
+      return `${d.kind} · ${d.bias}${d.defined ? " · defined risk" : ""}`;
+    } catch {
+      return null;
+    }
+  }, [legs]);
+
+  const cash = usePaper((s) => s.cash);
+  const position = usePaper((s) => s.shares[symbol] ?? null);
+  const killed = useSafety((s) => s.killSwitchTriggered);
+  const livePnl = unrealizedPnl(position, mark ?? NaN);
+
+  // Reset transient state when the slip closes or the symbol changes.
+  const symRef = useRef(symbol);
+  useEffect(() => {
+    if (symRef.current !== symbol) {
+      symRef.current = symbol;
+      setPlaced(null);
+      setError(null);
+    }
+  }, [symbol]);
+
+  const qty = mark && stake > 0 ? +(stake / mark).toFixed(2) : 0;
+  // UP spends cash, so it needs the stake available. DOWN is a short sale and
+  // CREDITS cash in this no-margin teaching model, so it only needs a valid qty.
+  const canPlace = !killed && !!mark && qty > 0 && (dir === "down" || stake <= Math.max(0, cash));
+
+  const place = () => {
+    setError(null);
+    if (!mark) return;
+    if (killed) {
+      setError("Kill switch is on — no new bets until it resets.");
+      return;
+    }
+    // UP = buy, DOWN = short. Both book through the shared-account funnel.
+    const res = placePaperOrder({ sym: symbol, side: dir === "up" ? "buy" : "sell", type: "market", qty, price: mark });
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setPlaced(`${dir === "up" ? "▲ UP" : "▼ DOWN"} $${stake.toLocaleString()} on ${symbol} @ ${mark.toFixed(2)}`);
+  };
+
+  const pct = (x: number) => `${Math.round(x * 100)}%`;
+
+  return (
+    <div className="pointer-events-none fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 14, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 14, scale: 0.98 }}
+            transition={{ duration: 0.18 }}
+            className="pointer-events-auto w-[320px] border border-border bg-bg shadow-2xl"
+          >
+            {/* header */}
+            <div className="flex items-center justify-between border-b border-border px-3 py-2">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-fg">
+                Bet on <span className="text-bull">{symbol}</span>
+                <span className="ml-2 tabular-nums text-fg-dim">{mark ? `$${mark.toFixed(2)}` : "…"}</span>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close bet slip"
+                className="font-mono text-xs text-fg-faint hover:text-fg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {placed ? (
+              <div className="space-y-3 p-4">
+                <div className="border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] text-bull">
+                  ✓ Paper bet placed — {placed}
+                </div>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  cash ${Math.round(cash).toLocaleString()} · manage it on the PRO chart
+                </div>
+                <button
+                  onClick={() => setPlaced(null)}
+                  className="w-full border border-border py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg"
+                >
+                  Place another
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* direction — the whole bet in two buttons */}
+                <div className="grid grid-cols-2 gap-px bg-border p-px">
+                  <button
+                    onClick={() => setDir("up")}
+                    aria-pressed={dir === "up"}
+                    className={`py-3 font-mono text-sm font-semibold uppercase tracking-wider transition-colors ${
+                      dir === "up" ? "bg-bull text-bg" : "bg-bg text-fg-dim hover:text-fg"
+                    }`}
+                  >
+                    ▲ Up
+                  </button>
+                  <button
+                    onClick={() => setDir("down")}
+                    aria-pressed={dir === "down"}
+                    className={`py-3 font-mono text-sm font-semibold uppercase tracking-wider transition-colors ${
+                      dir === "down" ? "bg-bear text-bg" : "bg-bg text-fg-dim hover:text-fg"
+                    }`}
+                  >
+                    ▼ Down
+                  </button>
+                </div>
+
+                {/* stake */}
+                <div className="flex items-center gap-1.5 px-3 pt-3">
+                  {STAKES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setStake(s)}
+                      aria-pressed={stake === s}
+                      className={`flex-1 border py-1.5 font-mono text-[11px] tabular-nums transition-colors ${
+                        stake === s ? "border-bull/60 bg-bull/10 text-bull" : "border-border text-fg-dim hover:text-fg"
+                      }`}
+                    >
+                      ${s >= 1000 ? `${s / 1000}k` : s}
+                    </button>
+                  ))}
+                  <div className="flex items-center border border-border px-2 py-1.5">
+                    <span className="mr-1 font-mono text-[11px] text-fg-faint">$</span>
+                    <input
+                      value={stake}
+                      onChange={(e) => setStake(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                      aria-label="Custom stake in dollars"
+                      className="w-14 bg-transparent text-right font-mono text-[11px] tabular-nums text-fg outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* the two reads */}
+                <div className="space-y-2 px-3 py-3">
+                  <div className="border border-border-soft bg-surface px-2.5 py-2">
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">what the quants say</div>
+                    {reads ? (
+                      <div className="mt-1 font-mono text-[11px] leading-relaxed text-fg-dim">
+                        <span className={reads.quant.lean === "UP" ? "text-bull" : reads.quant.lean === "DOWN" ? "text-bear" : "text-fg"}>
+                          {reads.quant.lean === "NEUTRAL"
+                            ? "jury is split"
+                            : `${Math.max(reads.quant.up, reads.quant.down)}/${reads.quant.jurySize} bots lean ${reads.quant.lean}`}
+                        </span>
+                        {reads.quant.lean !== "NEUTRAL" && <> · conf {pct(reads.quant.confidence)}</>}
+                        <br />
+                        {reads.quant.regime.toLowerCase()} regime · H {reads.quant.h.toFixed(2)}
+                      </div>
+                    ) : (
+                      <div className="mt-1 font-mono text-[11px] text-fg-faint">reading the tape…</div>
+                    )}
+                  </div>
+                  <div className="border border-border-soft bg-surface px-2.5 py-2">
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">what the models say</div>
+                    {reads ? (
+                      <div className="mt-1 font-mono text-[11px] leading-relaxed text-fg-dim">
+                        <span className={reads.model.pUp >= 0.5 ? "text-bull" : "text-bear"}>
+                          {pct(reads.model.pUp)} chance above ${(mark as number).toFixed(0)}
+                        </span>{" "}
+                        in {reads.model.days}d
+                        <br />
+                        vol {pct(reads.model.vol)} · 1σ ${reads.model.lo.toFixed(0)}–${reads.model.hi.toFixed(0)}
+                      </div>
+                    ) : (
+                      <div className="mt-1 font-mono text-[11px] text-fg-faint">pricing the range…</div>
+                    )}
+                  </div>
+                  {chainNote && (
+                    <div className="border border-border-soft bg-surface px-2.5 py-2">
+                      <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">on your chain</div>
+                      <div className="mt-1 font-mono text-[11px] text-fg-dim">{chainNote}</div>
+                    </div>
+                  )}
+                  {position && position.qty !== 0 && (
+                    <div className="font-mono text-[10px] text-fg-faint">
+                      already {position.qty > 0 ? "long" : "short"} {Math.abs(position.qty)} @ {position.avgPrice.toFixed(2)} (
+                      <span className={livePnl >= 0 ? "text-bull" : "text-bear"}>
+                        {livePnl >= 0 ? "+" : "−"}${Math.abs(livePnl).toFixed(0)}
+                      </span>
+                      )
+                    </div>
+                  )}
+                </div>
+
+                {/* place */}
+                <div className="px-3 pb-3">
+                  <button
+                    onClick={place}
+                    disabled={!canPlace}
+                    className={`w-full py-2.5 font-mono text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      dir === "up" ? "bg-bull text-bg hover:bg-bull-dim" : "bg-bear text-bg hover:bg-bear-dim"
+                    } disabled:cursor-not-allowed disabled:opacity-40`}
+                  >
+                    {killed ? "kill switch on" : `Place $${stake.toLocaleString()} ${dir === "up" ? "▲ up" : "▼ down"} bet`}
+                  </button>
+                  {error && (
+                    <div role="alert" className="mt-2 border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[10px] text-bear">
+                      {error}
+                    </div>
+                  )}
+                  <div className="mt-2 text-center font-mono text-[9px] uppercase tracking-widest text-fg-faint">
+                    paper only · ${Math.round(cash).toLocaleString()} cash · not advice
+                  </div>
+                </div>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="pointer-events-auto flex items-center gap-2 border border-bull/50 bg-bg/90 px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull shadow-xl backdrop-blur transition-colors hover:bg-bull hover:text-bg"
+      >
+        <span className="size-1.5 rounded-full bg-bull pulse-dot" />
+        {open ? "Hide bet" : "Place a bet"}
+      </button>
+    </div>
+  );
+}
