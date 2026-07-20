@@ -11,14 +11,6 @@ export function SafetySettingsButton() {
   const paper = usePaper();
   const theme = useTheme();
 
-  // Watch realized P&L; trigger kill switch if breach.
-  useEffect(() => {
-    if (paper.realizedToday <= -safety.dailyLossLimit && !safety.killSwitchTriggered) {
-      safety.triggerKillSwitch(`Realized loss $${Math.abs(paper.realizedToday).toFixed(0)} hit limit $${safety.dailyLossLimit}`);
-      paper.closeAll("killswitch");
-    }
-  }, [paper.realizedToday, safety.dailyLossLimit, safety.killSwitchTriggered, safety, paper]);
-
   return (
     <>
       <button
@@ -102,7 +94,7 @@ export function SafetySettingsButton() {
         )}
       </AnimatePresence>
 
-      <KillSwitchOverlay />
+      {/* The overlay is rendered globally by KillSwitchSentinel (root layout). */}
     </>
   );
 }
@@ -128,6 +120,31 @@ function Toggle({ label, desc, checked, onChange }: { label: string; desc: strin
       </button>
     </div>
   );
+}
+
+/**
+ * Global daily-loss sentinel. Mount ONCE, in the root layout.
+ *
+ * The trigger effect and the overlay used to live inside SafetySettingsButton,
+ * which is rendered only by /trade/chain — so a user could lose any amount on
+ * /pro or /quant (both of which now book real share trades into the same
+ * account) and the limit could never arm, because nothing was watching. The
+ * guard has to outlive any one page.
+ */
+export function KillSwitchSentinel() {
+  const safety = useSafety();
+  const paper = usePaper();
+
+  useEffect(() => {
+    if (paper.realizedToday <= -safety.dailyLossLimit && !safety.killSwitchTriggered) {
+      safety.triggerKillSwitch(
+        `Realized loss $${Math.abs(paper.realizedToday).toFixed(0)} hit limit $${safety.dailyLossLimit}`
+      );
+      paper.closeAll("killswitch");
+    }
+  }, [paper.realizedToday, safety.dailyLossLimit, safety.killSwitchTriggered, safety, paper]);
+
+  return <KillSwitchOverlay />;
 }
 
 function KillSwitchOverlay() {

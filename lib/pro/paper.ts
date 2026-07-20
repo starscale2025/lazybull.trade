@@ -9,8 +9,8 @@
 // Everything now funnels through here: validate, book to the shared account,
 // then append to the blotter.
 
-import { usePaper } from "@/lib/stores";
-import type { Fill } from "@/lib/paper-shares";
+import { usePaper, useSafety } from "@/lib/stores";
+import { QTY_EPS, type Fill } from "@/lib/paper-shares";
 
 export const ORDERS_KEY = "lb-pro-orders";
 /** Blotter rows are display history; the account is the source of truth. */
@@ -36,7 +36,9 @@ export type PlaceInput = {
   price: number;
 };
 
-export type PlaceResult = { ok: true; order: PlacedOrder } | { ok: false; error: string };
+export type PlaceResult =
+  | { ok: true; order: PlacedOrder; /** false when the order-history write failed */ blotterWritten: boolean }
+  | { ok: false; error: string };
 
 export function readBlotter(): PlacedOrder[] {
   if (typeof window === "undefined") return [];
@@ -56,6 +58,33 @@ export function readBlotter(): PlacedOrder[] {
  * choose-your-own-fill-price. Callers should not imply resting orders in the UI.
  */
 export function placePaperOrder(input: PlaceInput): PlaceResult {
+  // ── safety gates live HERE, in the one funnel every caller shares.
+  //
+  // They were previously enforced per-caller, so OrderTicket and QuickBet
+  // checked the kill switch while TradeDrawer and both voice agents did not —
+  // three of five paths could open new risk during a breach. A guard that only
+  // some callers remember to apply is not a guard.
+  const safety = useSafety.getState();
+  const current = usePaper.getState().shares[input.sym]?.qty ?? 0;
+  const signed = input.side === "buy" ? input.qty : -input.qty;
+  const next = current + signed;
+  // Reducing exposure is always allowed — including while halted. Blocking a
+  // close during a kill switch would trap the user in the position that armed it.
+  const reducing = Math.abs(next) < Math.abs(current);
+
+  if (safety.killSwitchTriggered && !reducing) {
+    return { ok: false, error: "kill switch is on — only closing orders are allowed" };
+  }
+  // Training wheels promise "defined-risk only" (see RiskWizard). A short stock
+  // position has unbounded loss, so holding one contradicts the promise the
+  // user accepted. Closing a long is still fine; opening/holding a short is not.
+  if (safety.trainingWheels && next < -QTY_EPS) {
+    return {
+      ok: false,
+      error: "training wheels: short selling has unlimited risk — turn them off in Safety to allow it",
+    };
+  }
+
   const fill: Fill = {
     sym: input.sym,
     side: input.side,
@@ -81,13 +110,23 @@ export function placePaperOrder(input: PlaceInput): PlaceResult {
   // Re-read before writing: the voice agent may have appended since whatever
   // called us last rendered, and clobbering the key with a stale list loses
   // somebody else's order.
+  //
+  // If storage is failing (quota, private mode) the ACCOUNT fill above has
+  // already happened, so the blotter would silently fall behind the positions.
+  // Surface it: the trade is real, the receipt is not.
+  let blotterWritten = true;
   try {
     const next = [order, ...readBlotter()].slice(0, MAX_BLOTTER);
     localStorage.setItem(ORDERS_KEY, JSON.stringify(next));
+  } catch {
+    blotterWritten = false;
+  }
+  // Fire regardless so live panels re-read the account even when the write failed.
+  try {
     window.dispatchEvent(new CustomEvent(ORDERS_CHANGED));
   } catch {
-    /* storage unavailable — the account fill above still stands */
+    /* non-browser context */
   }
 
-  return { ok: true, order };
+  return { ok: true, order, blotterWritten };
 }

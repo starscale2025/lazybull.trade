@@ -21,6 +21,10 @@ type Props = {
 
 export function OrderTicket({ symbol, price, disabled = false, onResult }: Props) {
   const [qty, setQty] = useState("100");
+  // The a11y name and the disabled state must describe the quantity that will
+  // actually be booked, not the raw keystrokes ("1.2.3" parses to 1.2).
+  const parsedQty = parseFloat(qty);
+  const qtyLabel = Number.isFinite(parsedQty) && parsedQty > 0 ? String(parsedQty) : "no";
   const killed = useSafety((s) => s.killSwitchTriggered);
   const blocked = disabled || killed || !price;
 
@@ -57,7 +61,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         disabled={blocked}
         // Without this the button's a11y name is "Sell333.74" (or empty in
         // some trees) — the price is decoration, the action is what matters.
-        aria-label={`Sell ${qty} ${symbol} at market`}
+        aria-label={`Sell ${qtyLabel} ${symbol} at market`}
         className="flex flex-col items-center px-3 py-1 font-mono transition-colors enabled:hover:bg-bear enabled:hover:text-bg disabled:cursor-not-allowed text-bear"
       >
         <span className="text-[9px] font-semibold uppercase tracking-wider">Sell</span>
@@ -65,14 +69,18 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
       </button>
       <input
         value={qty}
+        // Keep the user's text as typed (minus junk); the store validates on
+        // submit. Silently rewriting input into a DIFFERENT valid number is
+        // worse than rejecting it — the user never sees the substitution.
         onChange={(e) => setQty(e.target.value.replace(/[^\d.]/g, ""))}
+        inputMode="decimal"
         aria-label="Order quantity"
         className="w-14 border-x border-border bg-transparent text-center font-mono text-[11px] tabular-nums text-fg outline-none"
       />
       <button
         onClick={() => submit("buy")}
         disabled={blocked}
-        aria-label={`Buy ${qty} ${symbol} at market`}
+        aria-label={`Buy ${qtyLabel} ${symbol} at market`}
         className="flex flex-col items-center px-3 py-1 font-mono transition-colors enabled:hover:bg-bull enabled:hover:text-bg disabled:cursor-not-allowed text-bull"
       >
         <span className="text-[9px] font-semibold uppercase tracking-wider">Buy</span>

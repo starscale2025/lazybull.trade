@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ChainCell, Leg } from "./pricing";
-import { applyFill, validateFill, type Fill, type SharePosition } from "./paper-shares";
+import { applyFill, sanitizeShares, validateFill, type Fill, type SharePosition } from "./paper-shares";
 
 // ─────────────── strategy store ───────────────
 type StrategyState = {
@@ -54,6 +54,43 @@ export const useStrategy = create<StrategyState>()((set) => ({
 }));
 
 // ─────────────── paper trading store ───────────────
+
+/**
+ * Read the freshest persisted account straight from storage.
+ *
+ * zustand `persist` hydrates ONCE at page load and then writes the whole store
+ * on every set(), with no re-read and no `storage` subscription. With two tabs
+ * open that made the account last-writer-wins at WHOLE-ACCOUNT granularity:
+ * tab B's fill stamped over tab A's, silently erasing entire positions and
+ * their cash impact (measured: a 100-share NVDA buy and its $20,281 debit
+ * vanished, while both fills still sat in the blotter).
+ *
+ * Re-reading immediately before a mutation narrows the race from "the whole
+ * account" to "two fills in the same millisecond", which is the difference
+ * between losing a position and losing nothing in practice. Returns null when
+ * storage is unavailable or unusable, in which case callers keep in-memory state.
+ */
+function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions"> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("lb-paper");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const st = parsed?.state;
+    if (!st || typeof st !== "object") return null;
+    const num = (v: unknown, fb: number) => (typeof v === "number" && Number.isFinite(v) ? v : fb);
+    return {
+      cash: num(st.cash, 100_000),
+      startingCash: num(st.startingCash, 100_000),
+      realizedToday: num(st.realizedToday, 0),
+      positions: Array.isArray(st.positions) ? st.positions : [],
+      shares: sanitizeShares(st.shares),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export type Position = {
   id: string;
   underlying: string;
@@ -120,17 +157,31 @@ export const usePaper = create<PaperState>()(
             }
             return p;
           });
-          return { positions, cash };
+          // The kill-switch overlay states that ALL positions have been closed.
+          // This used to ignore `shares` entirely, so every stock position from
+          // /pro and the bet slip stayed open behind a screen claiming they were
+          // flat. Return the cost basis to cash and drop them, matching the
+          // mark-to-zero convention the option legs already use.
+          let realized = s.realizedToday;
+          for (const pos of Object.values(s.shares)) {
+            cash += pos.qty * pos.avgPrice; // unwind at cost — no P&L invented
+            realized += 0;
+          }
+          return { positions, cash, shares: {}, realizedToday: realized };
         }),
       fillShares: (f) => {
         const invalid = validateFill(f);
         if (invalid) return { ok: false, error: invalid };
-        const s = get();
+        // Apply against the freshest account another tab may have written, not
+        // against this tab's page-load snapshot.
+        const fresh = readPersistedAccount();
+        const s = fresh ? { ...get(), ...fresh } : get();
         const { position, cashDelta, realizedDelta } = applyFill(s.shares[f.sym] ?? null, f);
         const shares = { ...s.shares };
         if (position) shares[f.sym] = position;
         else delete shares[f.sym]; // flat positions are dropped, not kept at qty 0
         set({
+          ...(fresh ?? {}),
           shares,
           cash: s.cash + cashDelta,
           // Share P&L lands in the same realizedToday the kill switch reads, so
@@ -150,7 +201,25 @@ export const usePaper = create<PaperState>()(
       version: 2,
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<PaperState>;
-        return { ...p, shares: p.shares ?? {} } as PaperState;
+        return { ...p, shares: sanitizeShares(p.shares) } as PaperState;
+      },
+      // migrate() only runs when the stored version differs. Anything already
+      // at v2 — including hand-edited or half-written localStorage — bypasses
+      // it, so sanitize on every hydration too. A `shares: null` or an array
+      // used to hard-crash /pro and /trade/chain on first render.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<PaperState>;
+        const num = (v: unknown, fallback: number) =>
+          typeof v === "number" && Number.isFinite(v) ? v : fallback;
+        return {
+          ...current,
+          ...p,
+          cash: num(p.cash, current.cash),
+          startingCash: num(p.startingCash, current.startingCash),
+          realizedToday: num(p.realizedToday, 0),
+          positions: Array.isArray(p.positions) ? p.positions : [],
+          shares: sanitizeShares(p.shares),
+        } as PaperState;
       },
     }
   )
@@ -209,3 +278,13 @@ export const useTeacher = create<TeacherState>((set) => ({
   bubble: undefined,
   setBubble: (b) => set({ bubble: b }),
 }));
+
+// Keep every open tab's view of the paper account converged. `persist` does not
+// subscribe to the `storage` event, so without this a second tab shows a stale
+// balance until reload — and the user sees two different accounts side by side.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === "lb-paper") void usePaper.persist.rehydrate();
+    if (e.key === "lb-safety") void useSafety.persist.rehydrate();
+  });
+}

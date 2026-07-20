@@ -3,7 +3,7 @@
 import { usePaper } from "@/lib/stores";
 import { payoff } from "@/lib/pricing";
 
-export function PositionsPanel({ spot }: { spot: number }) {
+export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string }) {
   const positions = usePaper((s) => s.positions);
   const close = usePaper((s) => s.close);
   const cash = usePaper((s) => s.cash);
@@ -17,10 +17,16 @@ export function PositionsPanel({ spot }: { spot: number }) {
   // The account's cash is SHARED with share bets placed on /pro and the
   // QuickBet slip. Without adding those back, every dollar sitting in a share
   // position read as a pure loss here (a $31k long showed as "P&L −$31k").
-  // This panel has a live spot for the CURRENT symbol only, so shares are
-  // valued at cost: they contribute their realized P&L (already inside cash)
-  // and zero unrealized — honest, if conservative. The live mark lives on /pro.
-  const shareBook = Object.values(shares).reduce((acc, sp) => acc + sp.qty * sp.avgPrice, 0);
+  //
+  // Valuing them ALL at cost then produced the opposite problem: this panel and
+  // /pro disagreed by the entire unrealized P&L on the same screen. Mark the
+  // symbol this page actually has a live spot for, and carry the rest at cost.
+  const shareBook = Object.values(shares).reduce(
+    (acc, sp) => acc + sp.qty * (sp.sym === symbol && Number.isFinite(spot) ? spot : sp.avgPrice),
+    0
+  );
+  // Positions still valued at cost, so the number below can be read honestly.
+  const unmarkedSyms = Object.values(shares).filter((sp) => sp.sym !== symbol).length;
 
   const equity = cash + shareBook + open.reduce((acc, p) => acc + p.cost, 0); // legs are already cash-out at open
 
@@ -34,6 +40,12 @@ export function PositionsPanel({ spot }: { spot: number }) {
           equity <span className="text-fg">${equity.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
         </span>
       </div>
+      {unmarkedSyms > 0 && (
+        // Say so rather than let the number quietly disagree with /pro.
+        <div className="border-b border-border-soft px-3 py-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+          {unmarkedSyms} stock position{unmarkedSyms > 1 ? "s" : ""} valued at cost — live marks on pro charts
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-px border-b border-border bg-border-soft">
         {[
           { k: "Cash", v: `$${cash.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, c: "text-fg" },

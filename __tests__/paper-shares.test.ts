@@ -4,6 +4,10 @@ import {
   marketValue,
   unrealizedPnl,
   validateFill,
+  MAX_QTY,
+  QTY_EPS,
+  sanitizePosition,
+  sanitizeShares,
   type Fill,
   type SharePosition,
 } from "@/lib/paper-shares";
@@ -186,5 +190,118 @@ describe("mark to market", () => {
   it("market value is signed by direction", () => {
     expect(marketValue(long, 250)).toBe(25_000);
     expect(marketValue(short, 250)).toBe(-25_000);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Regressions from the adversarial audit (21 confirmed findings).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("fractional dust never leaves an un-closeable position", () => {
+  it("a fractional round trip ends exactly flat, not at 5.55e-17", () => {
+    // buy 0.1 x3 then sell 0.3 — float sum is 0.30000000000000004
+    let pos = applyFill(null, buy(0.1, 100)).position;
+    pos = applyFill(pos, buy(0.1, 100)).position;
+    pos = applyFill(pos, buy(0.1, 100)).position;
+    const out = applyFill(pos, sell(0.3, 100));
+    expect(out.position, "dust position survived a full close").toBeNull();
+  });
+
+  it("closing the reported qty always flattens, across many fractional paths", () => {
+    for (let i = 1; i <= 200; i++) {
+      const q = i / 7; // non-representable in binary for most i
+      let p = applyFill(null, buy(q, 123.45)).position;
+      p = applyFill(p, buy(q, 200.1)).position;
+      const closed = applyFill(p, sell(Math.abs(p!.qty), 150));
+      expect(closed.position, `path i=${i} left dust`).toBeNull();
+    }
+  });
+
+  it("treats a sub-epsilon stored position as flat rather than a holding", () => {
+    expect(sanitizePosition({ sym: "X", qty: 1e-17, avgPrice: 100, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+  });
+});
+
+describe("corrupt persisted state cannot poison the account", () => {
+  it("rejects a position with a missing or non-finite avgPrice", () => {
+    // `prev?.avgPrice ?? 0` used to set the basis to $0 and invent the whole
+    // notional as realized profit on the next sell.
+    expect(sanitizePosition({ sym: "X", qty: 100, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+    expect(sanitizePosition({ sym: "X", qty: 100, avgPrice: NaN, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+    expect(sanitizePosition({ sym: "X", qty: 100, avgPrice: 0, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+    expect(sanitizePosition({ sym: "X", qty: 100, avgPrice: -5, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+  });
+
+  it("rejects a non-finite qty that would make realizedToday NaN", () => {
+    // A NaN realizedToday silently disables the daily-loss kill switch forever.
+    expect(sanitizePosition({ sym: "X", qty: NaN, avgPrice: 100, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+    expect(sanitizePosition({ sym: "X", qty: Infinity, avgPrice: 100, realized: 0, openedAt: 0, lastTs: 0 })).toBeNull();
+    const bad = { sym: "X", qty: NaN, avgPrice: 100, realized: 0, openedAt: 0, lastTs: 0 } as SharePosition;
+    const out = applyFill(bad, sell(10, 200));
+    expect(Number.isFinite(out.realizedDelta)).toBe(true);
+    expect(Number.isFinite(out.cashDelta)).toBe(true);
+  });
+
+  it("sanitizeShares survives null, arrays, strings and key/sym mismatch", () => {
+    expect(sanitizeShares(null)).toEqual({});
+    expect(sanitizeShares(undefined)).toEqual({});
+    expect(sanitizeShares("nope")).toEqual({});
+    expect(sanitizeShares([{ sym: "X", qty: 1, avgPrice: 1 }])).toEqual({});
+    // a row filed under the wrong key is dropped, not silently mis-attributed
+    expect(sanitizeShares({ AAPL: { sym: "NVDA", qty: 1, avgPrice: 1, realized: 0, openedAt: 0, lastTs: 0 } })).toEqual({});
+    const good = { AAPL: { sym: "AAPL", qty: 5, avgPrice: 10, realized: 0, openedAt: 0, lastTs: 0 } };
+    expect(Object.keys(sanitizeShares(good))).toEqual(["AAPL"]);
+  });
+});
+
+describe("fill bounds", () => {
+  it("refuses a quantity that would drive cash to -Infinity", () => {
+    expect(validateFill(buy(1e308, 100))).toMatch(/limit/);
+    expect(validateFill(buy(MAX_QTY * 2, 100))).toMatch(/limit/);
+    expect(validateFill(buy(MAX_QTY, 100))).toBeNull(); // the bound itself is allowed
+  });
+  it("refuses an absurd price", () => {
+    expect(validateFill(buy(1, 1e308))).toMatch(/limit/);
+  });
+});
+
+describe("property: invariants hold over random fill sequences", () => {
+  it("cash conservation, positive basis, and finiteness across 2000 sequences", () => {
+    let seed = 12345;
+    const rnd = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+    for (let s = 0; s < 2000; s++) {
+      let pos: SharePosition | null = null;
+      let cash = 0;
+      let realized = 0;
+      const fractional = s % 2 === 0;
+      for (let i = 0; i < 12; i++) {
+        const q = fractional ? (rnd() * 10 + 0.01) : Math.max(1, Math.floor(rnd() * 100));
+        const price = rnd() * 500 + 0.5;
+        const side = rnd() > 0.5 ? "buy" : "sell";
+        const f: Fill = { sym: "T", side, qty: q, price, ts: i };
+        if (validateFill(f)) continue;
+        const r = applyFill(pos, f);
+        pos = r.position;
+        cash += r.cashDelta;
+        realized += r.realizedDelta;
+        expect(Number.isFinite(cash), `seq ${s}: cash non-finite`).toBe(true);
+        expect(Number.isFinite(realized), `seq ${s}: realized non-finite`).toBe(true);
+        if (pos) {
+          expect(pos.avgPrice, `seq ${s}: non-positive basis`).toBeGreaterThan(0);
+          expect(Math.abs(pos.qty), `seq ${s}: dust kept as a position`).toBeGreaterThanOrEqual(QTY_EPS);
+        }
+      }
+      // Flatten and assert cash moved by exactly the realized total.
+      if (pos) {
+        const r = applyFill(pos, { sym: "T", side: pos.qty > 0 ? "sell" : "buy", qty: Math.abs(pos.qty), price: 250, ts: 99 });
+        expect(r.position, `seq ${s}: could not flatten`).toBeNull();
+        cash += r.cashDelta;
+        realized += r.realizedDelta;
+      }
+      expect(cash, `seq ${s}: cash != realized when flat`).toBeCloseTo(realized, 6);
+    }
   });
 });

@@ -115,11 +115,17 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   };
 
   const money = (n: number) => `$${fmt(n, 2)}`;
-  const signed = (n: number) => (
-    <span className={n >= 0 ? "text-bull" : "text-bear"}>
-      {n >= 0 ? "+" : "−"}${fmt(Math.abs(n), 2)}
-    </span>
-  );
+  // Round BEFORE choosing the sign. The fill price and the mark come from
+  // different sources (chart bars vs the quote poll), so a flat position could
+  // carry −0.0000001 and render the alarming "−$0.00" in red.
+  const signed = (n: number) => {
+    const r = Math.abs(n) < 0.005 ? 0 : n;
+    return (
+      <span className={r > 0 ? "text-bull" : r < 0 ? "text-bear" : "text-fg-dim"}>
+        {r >= 0 ? "+" : "−"}${fmt(Math.abs(r), 2)}
+      </span>
+    );
+  };
 
   return (
     <div className="border-t border-border bg-bg">

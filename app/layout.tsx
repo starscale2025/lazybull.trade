@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { KillSwitchSentinel } from "@/components/safety/KillSwitch";
 import { Fraunces, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -44,6 +45,9 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </SessionProvider>
+        {/* Daily-loss guard: global, because share trades now book from /pro
+            and /quant too, and the limit has to be watched everywhere. */}
+        <KillSwitchSentinel />
         <GsapScroller />
       </body>
     </html>

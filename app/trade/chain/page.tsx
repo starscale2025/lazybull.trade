@@ -131,7 +131,7 @@ export default function TradePage() {
         </div>
         <div className="col-span-12 lg:col-span-5 xl:col-span-4 flex flex-col gap-5">
           <StrategyCard underlying={sym.sym} spot={spot} />
-          <PositionsPanel spot={spot} />
+          <PositionsPanel spot={spot} symbol={sym.sym} />
         </div>
       </section>
 

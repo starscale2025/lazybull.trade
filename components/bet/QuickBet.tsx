@@ -34,7 +34,11 @@ const STAKES = [500, 1000, 5000] as const;
 export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
   const [open, setOpen] = useState(false);
   const [dir, setDir] = useState<"up" | "down">("up");
-  const [stake, setStake] = useState<number>(1000);
+  // Stake is held as TEXT while typing so a decimal point survives keystrokes;
+  // `stake` is the parsed value everything else reads.
+  const [stakeText, setStakeText] = useState("1000");
+  const stake = Math.max(0, parseFloat(stakeText) || 0);
+  const setStake = (n: number) => setStakeText(String(n));
   const [placed, setPlaced] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,8 +54,11 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
         const j = await r.json();
         if (cancelled) return;
         if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
+          // 180 to match the /quant workbench's default window — a different
+          // bar count made the SAME symbol report opposite Hurst regimes on
+          // /quant and /trade/chain at the same instant.
           setFetched(
-            j.bars.slice(-260).map((b: { o: number; h: number; l: number; c: number }) => ({
+            j.bars.slice(-180).map((b: { o: number; h: number; l: number; c: number }) => ({
               o: b.o, h: b.h, l: b.l, c: b.c,
             }))
           );
@@ -89,6 +96,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
   }, [legs]);
 
   const cash = usePaper((s) => s.cash);
+  const startingCash = usePaper((s) => s.startingCash);
   const position = usePaper((s) => s.shares[symbol] ?? null);
   const killed = useSafety((s) => s.killSwitchTriggered);
   const livePnl = unrealizedPnl(position, mark ?? NaN);
@@ -103,10 +111,21 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
     }
   }, [symbol]);
 
-  const qty = mark && stake > 0 ? +(stake / mark).toFixed(2) : 0;
-  // UP spends cash, so it needs the stake available. DOWN is a short sale and
-  // CREDITS cash in this no-margin teaching model, so it only needs a valid qty.
-  const canPlace = !killed && !!mark && qty > 0 && (dir === "down" || stake <= Math.max(0, cash));
+  // Was rounded to 2dp, so a $2 stake on a $333 share booked 0.01 shares —
+  // 24% over the advertised notional — and sub-$1.67 stakes rounded to 0 and
+  // could not be booked at all. Keep full precision; the account is fractional.
+  const qty = mark && stake > 0 ? stake / mark : 0;
+  // UP spends cash, so it needs the stake available. DOWN is a short sale that
+  // CREDITS cash in this no-margin model — but with NO ceiling one tap could
+  // mint arbitrary cash and thereby defeat UP's own gate, so bound it by the
+  // account's own size rather than leaving it open.
+  const maxShort = Math.max(0, Math.max(cash, 0) + Math.max(startingCash, 0));
+  const canPlace =
+    !killed &&
+    !!mark &&
+    qty > 0 &&
+    Number.isFinite(stake) &&
+    (dir === "down" ? stake <= maxShort : stake <= Math.max(0, cash));
 
   const place = () => {
     setError(null);
@@ -209,7 +228,10 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
                     <span className="mr-1 font-mono text-[11px] text-fg-faint">$</span>
                     <input
                       value={stake}
-                      onChange={(e) => setStake(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                      // Math.round() on every keystroke deleted the decimal
+                      // point mid-typing: "10.5" became 105 — a 10x bet. Keep
+                      // the raw string while editing and parse on use.
+                      onChange={(e) => setStakeText(e.target.value.replace(/[^\d.]/g, ""))}
                       aria-label="Custom stake in dollars"
                       className="w-14 bg-transparent text-right font-mono text-[11px] tabular-nums text-fg outline-none"
                     />

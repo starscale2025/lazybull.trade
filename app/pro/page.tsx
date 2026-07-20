@@ -137,7 +137,14 @@ export default function ProPage() {
 
   // ── paper position (shared account — same cash the /trade book uses)
   const sharePositions = usePaper((st) => st.shares);
-  const position = sharePositions[symbol.sym] ?? null;
+  // Belt-and-braces with the store's sanitizeShares: a single non-finite field
+  // reaching `.toFixed()` in the status strip whitescreened the whole workspace
+  // with no in-app recovery. Never let one bad row take the page down.
+  const rawPosition = sharePositions[symbol.sym] ?? null;
+  const position =
+    rawPosition && Number.isFinite(rawPosition.qty) && Number.isFinite(rawPosition.avgPrice)
+      ? rawPosition
+      : null;
 
   // ── alerts + replay
   const [alerts, setAlerts] = useState<Alert[]>([]);

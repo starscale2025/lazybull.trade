@@ -774,13 +774,18 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
             /trade book and the kill switch see — not a /pro-local number. */}
         {position && position.qty !== 0 && (() => {
           const y = yOfPrice(position.avgPrice, vp, geom);
-          const last = bars[bars.length - 1]?.c;
-          const pnl = Number.isFinite(last) ? (last - position.avgPrice) * position.qty : 0;
-          const up = pnl >= 0;
-          const c = up ? "var(--bull)" : "var(--bear)";
+          // `bars` is the REPLAY-TRUNCATED array during replay, so marking to
+          // its last close showed P&L against a historical price while the
+          // account held the position at the live one — a plausible-looking but
+          // fabricated number. Mark to the real last only; during replay show
+          // the position without a P&L rather than a wrong one.
+          const last = replayBar != null ? null : allBars[allBars.length - 1]?.c;
+          const pnl = last != null && Number.isFinite(last) ? (last - position.avgPrice) * position.qty : null;
+          const up = (pnl ?? 0) >= 0;
+          const c = pnl == null ? "var(--fg-dim)" : up ? "var(--bull)" : "var(--bear)";
           const isLong = position.qty > 0;
           const label = `${isLong ? "LONG" : "SHORT"} ${Math.abs(position.qty)} @ ${fmt(position.avgPrice, 2)}`;
-          const pnlLabel = `${up ? "+" : "−"}$${fmt(Math.abs(pnl), 2)}`;
+          const pnlLabel = pnl == null ? "replay" : `${up ? "+" : "−"}$${fmt(Math.abs(pnl), 2)}`;
           // Width must account for BOTH strings plus the gap between them —
           // sizing off the left label alone made the P&L overlap it.
           const CH = 6.2; // jetbrains mono advance at 10px
