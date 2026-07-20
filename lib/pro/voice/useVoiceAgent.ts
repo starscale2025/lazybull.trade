@@ -196,7 +196,7 @@ export function useVoiceAgent({ getSnapshot, actions, persona }: Args) {
     });
   }, []);
 
-  // ── paper-trade placement (same ledger shape TradeDrawer uses) ─────────
+  // ── paper-trade placement (books through the shared account funnel) ────
   const placeStaged = useCallback((): { ok: boolean; order?: PlacedOrder; error?: string } => {
     const st = stagedRef.current;
     if (!st) return { ok: false, error: "no staged trade to confirm" };

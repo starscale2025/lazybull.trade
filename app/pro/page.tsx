@@ -10,7 +10,6 @@ import { RightPanel } from "@/components/pro/RightPanel";
 import { BottomBar } from "@/components/pro/BottomBar";
 import { ReplayBar } from "@/components/pro/ReplayBar";
 import { AlertsPanel } from "@/components/pro/AlertsPanel";
-import { TradeDrawer } from "@/components/pro/TradeDrawer";
 import { OrderTicket } from "@/components/pro/OrderTicket";
 import { TradingPanel } from "@/components/pro/TradingPanel";
 import { OrderPanel } from "@/components/pro/OrderPanel";
@@ -826,12 +825,11 @@ export default function ProPage() {
         alerts={alerts}
         setAlerts={setAlerts}
       />
-      <TradeDrawer
-        open={tradeOpen}
-        onClose={() => setTradeOpen(false)}
-        symbol={symbol.sym}
-        spot={bars[bars.length - 1]?.c ?? 0}
-      />
+      {/* The old TradeDrawer is gone. It was a fixed inset-0 z-110 overlay bound
+          to the same `tradeOpen` flag as the docked OrderPanel, so it covered
+          the new panel entirely — and it still booked through the legacy
+          instant-fill path, which is why "limit" orders were filling at the
+          market. The docked panel is now the only order surface. */}
 
       {/* Voice co-pilot — scoped to /pro only */}
       <VoiceAgent

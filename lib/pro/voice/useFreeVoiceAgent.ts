@@ -87,7 +87,7 @@ export function useFreeVoiceAgent({ getSnapshot, actions, persona }: Args) {
     setTranscript((prev) => [...prev, { id, role, text, ts: Date.now() }].slice(-24));
   }, []);
 
-  // ── paper trade (same ledger shape as TradeDrawer) ─────────────────────
+  // ── paper trade (books through the shared account funnel) ──────────────
   const placeStaged = useCallback((): { ok: boolean; order?: PlacedOrder; error?: string } => {
     const st = stagedRef.current;
     if (!st) return { ok: false, error: "no staged trade" };

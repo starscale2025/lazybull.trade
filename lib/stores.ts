@@ -271,6 +271,27 @@ export const usePaper = create<PaperState>()(
       submitOrder: (input) => {
         const invalid = validateOrder(input);
         if (invalid) return { ok: false, error: invalid };
+
+        // ── safety gates live HERE, at the single entry point every order
+        // path shares, so no caller can forget them.
+        const safety = useSafety.getState();
+        const held = get().shares[input.sym]?.qty ?? 0;
+        const signedQty = input.side === "buy" ? input.qty : -input.qty;
+        const nextQty = held + signedQty;
+        // Reducing exposure is always allowed — including while halted.
+        // Blocking a close would trap the user in the position that armed it.
+        const reducing = Math.abs(nextQty) < Math.abs(held);
+        if (safety.killSwitchTriggered && !reducing) {
+          return { ok: false, error: "kill switch is on — only closing orders are allowed" };
+        }
+        // Training wheels promise defined risk; a short stock position has none.
+        if (safety.trainingWheels && nextQty < -1e-9 && !input.reduceOnly) {
+          return {
+            ok: false,
+            error: "training wheels: short selling has unlimited risk — turn them off in Safety to allow it",
+          };
+        }
+
         const now = Date.now();
         const order: WorkingOrder = {
           ...input,

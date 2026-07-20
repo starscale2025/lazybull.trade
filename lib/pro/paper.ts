@@ -2,15 +2,14 @@
 
 // The single place a /pro paper order is booked.
 //
-// There were three copies of this logic (TradeDrawer, useVoiceAgent,
+// There were three copies of this logic (the old trade drawer, useVoiceAgent,
 // useFreeVoiceAgent), each writing the `lb-pro-orders` blotter directly and
 // none of them touching the paper account — so /pro orders had no position, no
 // cash impact and no P&L, and the daily-loss kill switch could not see them.
 // Everything now funnels through here: validate, book to the shared account,
 // then append to the blotter.
 
-import { usePaper, useSafety } from "@/lib/stores";
-import { QTY_EPS, type Fill } from "@/lib/paper-shares";
+import { usePaper } from "@/lib/stores";
 
 export const ORDERS_KEY = "lb-pro-orders";
 /** Blotter rows are display history; the account is the source of truth. */
@@ -58,75 +57,40 @@ export function readBlotter(): PlacedOrder[] {
  * choose-your-own-fill-price. Callers should not imply resting orders in the UI.
  */
 export function placePaperOrder(input: PlaceInput): PlaceResult {
-  // ── safety gates live HERE, in the one funnel every caller shares.
-  //
-  // They were previously enforced per-caller, so OrderTicket and QuickBet
-  // checked the kill switch while TradeDrawer and both voice agents did not —
-  // three of five paths could open new risk during a breach. A guard that only
-  // some callers remember to apply is not a guard.
-  const safety = useSafety.getState();
-  const current = usePaper.getState().shares[input.sym]?.qty ?? 0;
-  const signed = input.side === "buy" ? input.qty : -input.qty;
-  const next = current + signed;
-  // Reducing exposure is always allowed — including while halted. Blocking a
-  // close during a kill switch would trap the user in the position that armed it.
-  const reducing = Math.abs(next) < Math.abs(current);
-
-  if (safety.killSwitchTriggered && !reducing) {
-    return { ok: false, error: "kill switch is on — only closing orders are allowed" };
-  }
-  // Training wheels promise "defined-risk only" (see RiskWizard). A short stock
-  // position has unbounded loss, so holding one contradicts the promise the
-  // user accepted. Closing a long is still fine; opening/holding a short is not.
-  if (safety.trainingWheels && next < -QTY_EPS) {
-    return {
-      ok: false,
-      error: "training wheels: short selling has unlimited risk — turn them off in Safety to allow it",
-    };
-  }
-
-  const fill: Fill = {
+  // Thin wrapper over the order engine so every path — the on-chart ticket, the
+  // position ✕, the panel close and both voice agents — books through ONE
+  // entry point and lands in the order history. This used to be a parallel
+  // instant-fill path, which is why "limit" orders filled at the market and why
+  // ticket fills never appeared in Orders.
+  const engine = usePaper.getState().submitOrder({
     sym: input.sym,
     side: input.side,
+    type: "market",
     qty: input.qty,
-    price: input.price,
-    ts: Date.now(),
-  };
-
-  // The account validates and is the thing that can refuse.
-  const res = usePaper.getState().fillShares(fill);
-  if (!res.ok) return { ok: false, error: res.error ?? "order rejected" };
+    tif: "gtc",
+    marketPrice: input.price,
+  });
+  if (!engine.ok) return { ok: false, error: engine.error ?? "order rejected" };
 
   const order: PlacedOrder = {
-    id: `o-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: engine.order!.id,
     side: input.side,
     type: input.type,
     qty: input.qty,
-    price: input.price,
+    price: engine.order!.fillPrice ?? input.price,
     sym: input.sym,
-    ts: fill.ts!,
+    ts: engine.order!.filledAt ?? Date.now(),
   };
-
-  // Re-read before writing: the voice agent may have appended since whatever
-  // called us last rendered, and clobbering the key with a stale list loses
-  // somebody else's order.
-  //
-  // If storage is failing (quota, private mode) the ACCOUNT fill above has
-  // already happened, so the blotter would silently fall behind the positions.
-  // Surface it: the trade is real, the receipt is not.
   let blotterWritten = true;
   try {
-    const next = [order, ...readBlotter()].slice(0, MAX_BLOTTER);
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(next));
+    localStorage.setItem(ORDERS_KEY, JSON.stringify([order, ...readBlotter()].slice(0, MAX_BLOTTER)));
   } catch {
     blotterWritten = false;
   }
-  // Fire regardless so live panels re-read the account even when the write failed.
   try {
     window.dispatchEvent(new CustomEvent(ORDERS_CHANGED));
   } catch {
     /* non-browser context */
   }
-
   return { ok: true, order, blotterWritten };
 }
