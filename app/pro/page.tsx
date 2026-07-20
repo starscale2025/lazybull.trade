@@ -13,6 +13,7 @@ import { AlertsPanel } from "@/components/pro/AlertsPanel";
 import { TradeDrawer } from "@/components/pro/TradeDrawer";
 import { OrderTicket } from "@/components/pro/OrderTicket";
 import { TradingPanel } from "@/components/pro/TradingPanel";
+import { OrderPanel } from "@/components/pro/OrderPanel";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { VoiceAgent } from "@/components/pro/VoiceAgent";
 import type { Bar, Drawing, ToolKind } from "@/components/pro/chartCore";
@@ -172,6 +173,35 @@ export default function ProPage() {
   // `position` because it needs `bars`, which is fetched below.
   const lastPrice = bars[bars.length - 1]?.c ?? null;
   const livePnl = unrealizedPnl(position, lastPrice ?? NaN);
+
+  // Feed the order book. Every price update sweeps working orders for this
+  // symbol, so a resting limit/stop fills the moment the market reaches it.
+  // Replay is excluded: filling against historical bars would book trades that
+  // never happened.
+  const markPrice = usePaper((st) => st.markPrice);
+  useEffect(() => {
+    if (replayActive || lastPrice == null) return;
+    markPrice(symbol.sym, lastPrice);
+  }, [markPrice, symbol.sym, lastPrice, replayActive]);
+
+  // Working orders for the charted symbol, drawn as lines.
+  const allOrders = usePaper((st) => st.orders);
+  const workingOrders = useMemo(
+    () =>
+      allOrders
+        .filter((o) => o.status === "working" && o.sym === symbol.sym)
+        .map((o) => ({
+          id: o.id,
+          side: o.side,
+          type: o.type as "limit" | "stop",
+          price: (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0,
+          qty: o.qty,
+          reduceOnly: !!o.reduceOnly,
+        }))
+        .filter((o) => o.price > 0),
+    [allOrders, symbol.sym]
+  );
+  const cancelOrder = usePaper((st) => st.cancelOrder);
 
   // TradingView-style ✕ on the position line: flatten at the last price.
   const closeAtMarket = () => {
@@ -688,6 +718,8 @@ export default function ProPage() {
                 chartType={chartType}
                 position={i === 0 ? position : null}
                 onClosePosition={i === 0 && !replayActive ? closeAtMarket : undefined}
+                workingOrders={i === 0 ? workingOrders : []}
+                onCancelOrder={i === 0 ? cancelOrder : undefined}
               />
             ))}
           </div>
@@ -731,6 +763,18 @@ export default function ProPage() {
           </AnimatePresence>
         </div>
         </div>
+
+        {/* Docked order panel — the primary trading surface, the way a real
+            terminal has one always in reach rather than behind a drawer. */}
+        {tradeOpen && (
+          <OrderPanel
+            symbol={symbol.sym}
+            price={lastPrice}
+            disabled={replayActive}
+            onResult={showToast}
+            onClose={() => setTradeOpen(false)}
+          />
+        )}
 
         <RightPanel symbol={symbol} onPickSymbol={setSymbol} />
       </div>
@@ -822,6 +866,8 @@ function PaneChart({
   chartType,
   position,
   onClosePosition,
+  workingOrders,
+  onCancelOrder,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -834,6 +880,8 @@ function PaneChart({
   chartType: Workspace["chart"];
   position: { qty: number; avgPrice: number } | null;
   onClosePosition?: () => void;
+  workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean }[];
+  onCancelOrder?: (id: string) => void;
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -876,6 +924,8 @@ function PaneChart({
         chart={chartType}
         position={position}
         onClosePosition={onClosePosition}
+        workingOrders={workingOrders}
+        onCancelOrder={onCancelOrder}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}

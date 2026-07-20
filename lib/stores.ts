@@ -4,6 +4,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ChainCell, Leg } from "./pricing";
 import { applyFill, sanitizeShares, validateFill, type Fill, type SharePosition } from "./paper-shares";
+import {
+  availableFunds as calcAvailable,
+  bracketFor,
+  sweep,
+  tifExpiry,
+  validateOrder,
+  type Order as WorkingOrder,
+} from "./paper-orders";
 
 // ─────────────── strategy store ───────────────
 type StrategyState = {
@@ -70,7 +78,7 @@ export const useStrategy = create<StrategyState>()((set) => ({
  * between losing a position and losing nothing in practice. Returns null when
  * storage is unavailable or unusable, in which case callers keep in-memory state.
  */
-function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions" | "trades"> | null {
+function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions" | "trades" | "orders"> | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("lb-paper");
@@ -85,6 +93,7 @@ function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "rea
       realizedToday: num(st.realizedToday, 0),
       positions: Array.isArray(st.positions) ? st.positions : [],
       trades: Array.isArray(st.trades) ? st.trades : [],
+      orders: Array.isArray(st.orders) ? st.orders : [],
       shares: sanitizeShares(st.shares),
     };
   } catch {
@@ -139,12 +148,21 @@ type PaperState = {
    * it into `legs` would have meant storing a lie.
    */
   shares: Record<string, SharePosition>;
+  /** The order book: working, filled, cancelled and expired orders. */
+  orders: WorkingOrder[];
   realizedToday: number;
   open: (p: Omit<Position, "id" | "openedAt" | "status" | "pnl">) => Position;
   close: (id: string, exitPnl: number) => void;
   closeAll: (reason: string) => void;
   /** Book a share fill. Returns an error string instead of throwing. */
   fillShares: (f: Fill) => { ok: boolean; error?: string; realized?: number };
+  /** Submit an order. Market fills now; limit/stop rest until price reaches them. */
+  submitOrder: (
+    o: Omit<WorkingOrder, "id" | "status" | "placedAt"> & { marketPrice?: number }
+  ) => { ok: boolean; error?: string; order?: WorkingOrder };
+  cancelOrder: (id: string) => void;
+  /** Advance the book against a live price. Called from the chart's quote poll. */
+  markPrice: (sym: string, price: number) => void;
   /** Set the paper account's starting capital and reset everything to it. */
   setStartingCash: (n: number) => void;
   reset: () => void;
@@ -160,6 +178,7 @@ export const usePaper = create<PaperState>()(
       startingCash: DEFAULT_CAPITAL,
       positions: [],
       shares: {},
+      orders: [],
       trades: [],
       realizedToday: 0,
       open: (p) => {
@@ -194,7 +213,12 @@ export const usePaper = create<PaperState>()(
             cash += pos.qty * pos.avgPrice; // unwind at cost — no P&L invented
             realized += 0;
           }
-          return { positions, cash, shares: {}, realizedToday: realized };
+          // Working orders must die with the positions — leaving a resting buy
+          // alive after a kill switch would re-open risk on the next tick.
+          const orders = s.orders.map((o) =>
+            o.status === "working" ? { ...o, status: "cancelled" as const, note: "kill switch" } : o
+          );
+          return { positions, cash, shares: {}, orders, realizedToday: realized };
         }),
       fillShares: (f) => {
         const invalid = validateFill(f);
@@ -244,18 +268,88 @@ export const usePaper = create<PaperState>()(
         });
         return { ok: true, realized: realizedDelta };
       },
+      submitOrder: (input) => {
+        const invalid = validateOrder(input);
+        if (invalid) return { ok: false, error: invalid };
+        const now = Date.now();
+        const order: WorkingOrder = {
+          ...input,
+          id: `ord-${now}-${Math.random().toString(36).slice(2, 7)}`,
+          status: "working",
+          placedAt: now,
+          expiresAt: tifExpiry(input.tif, now),
+        };
+
+        // Buying power: a BUY must be covered by funds not already reserved by
+        // other working orders. Reduce-only exits and sells are exempt — they
+        // release exposure rather than adding it.
+        const s = get();
+        if (order.side === "buy" && !order.reduceOnly) {
+          const px =
+            order.type === "market" ? input.marketPrice : order.type === "limit" ? order.limitPrice : order.stopPrice;
+          const need = Number.isFinite(px) ? (px as number) * order.qty : 0;
+          const free = calcAvailable(s.cash, s.orders);
+          if (need > free) {
+            return {
+              ok: false,
+              error: `not enough buying power — needs $${need.toFixed(2)}, $${Math.max(0, free).toFixed(2)} available`,
+            };
+          }
+        }
+
+        // A market order does not rest; fill it immediately at the mark.
+        if (order.type === "market") {
+          const px = input.marketPrice;
+          if (!Number.isFinite(px) || (px as number) <= 0) return { ok: false, error: "no market price available" };
+          const res = get().fillShares({ sym: order.sym, side: order.side, qty: order.qty, price: px as number, ts: now });
+          if (!res.ok) return { ok: false, error: res.error };
+          const filled: WorkingOrder = { ...order, status: "filled", filledAt: now, fillPrice: px as number };
+          const exits = bracketFor(filled, px as number, now);
+          set((st) => ({ orders: [filled, ...exits, ...st.orders].slice(0, 300) }));
+          return { ok: true, order: filled };
+        }
+
+        set((st) => ({ orders: [order, ...st.orders].slice(0, 300) }));
+        return { ok: true, order };
+      },
+
+      cancelOrder: (id) =>
+        set((st) => ({
+          orders: st.orders.map((o) =>
+            o.id === id && o.status === "working" ? { ...o, status: "cancelled", note: "cancelled by user" } : o
+          ),
+        })),
+
+      markPrice: (sym, price) => {
+        const s = get();
+        if (!s.orders.some((o) => o.status === "working" && o.sym === sym)) return;
+        const now = Date.now();
+        const res = sweep(s.orders, sym, price, now);
+        if (!res.fills.length && !res.cancelled.length) return;
+        // Book each fill through the same accounting path a manual trade uses.
+        for (const f of res.fills) {
+          get().fillShares({ sym: f.order.sym, side: f.order.side, qty: f.order.qty, price: f.price, ts: now });
+        }
+        // Entries that carried a bracket get their exits once they fill.
+        const born = res.fills.flatMap((f) =>
+          f.order.reduceOnly ? [] : bracketFor(f.order, f.price, now)
+        );
+        set({ orders: [...born, ...res.orders].slice(0, 300) });
+      },
+
       setStartingCash: (n) => {
         const capital = Number.isFinite(n) && n > 0 ? Math.min(n, 1e9) : DEFAULT_CAPITAL;
         // Changing the starting capital restarts the account — carrying old
         // positions and P&L into a new balance would make every historical
         // return percentage meaningless.
-        set({ cash: capital, startingCash: capital, positions: [], shares: {}, trades: [], realizedToday: 0 });
+        set({ cash: capital, startingCash: capital, positions: [], shares: {}, orders: [], trades: [], realizedToday: 0 });
       },
       reset: () =>
         set((s) => ({
           cash: s.startingCash,
           positions: [],
           shares: {},
+          orders: [],
           trades: [],
           realizedToday: 0,
         })),
@@ -269,7 +363,12 @@ export const usePaper = create<PaperState>()(
       version: 2,
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<PaperState>;
-        return { ...p, shares: sanitizeShares(p.shares), trades: Array.isArray(p.trades) ? p.trades : [] } as PaperState;
+        return {
+          ...p,
+          shares: sanitizeShares(p.shares),
+          orders: Array.isArray(p.orders) ? p.orders : [],
+          trades: Array.isArray(p.trades) ? p.trades : [],
+        } as PaperState;
       },
       // migrate() only runs when the stored version differs. Anything already
       // at v2 — including hand-edited or half-written localStorage — bypasses
@@ -286,6 +385,7 @@ export const usePaper = create<PaperState>()(
           startingCash: num(p.startingCash, current.startingCash),
           realizedToday: num(p.realizedToday, 0),
           positions: Array.isArray(p.positions) ? p.positions : [],
+          orders: Array.isArray(p.orders) ? p.orders.slice(0, 300) : [],
           trades: Array.isArray(p.trades)
             ? p.trades.filter((t) => t && Number.isFinite(t.pnl) && Number.isFinite(t.qty)).slice(0, MAX_TRADES)
             : [],

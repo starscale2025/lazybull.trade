@@ -42,6 +42,9 @@ type Props = {
   position?: { qty: number; avgPrice: number } | null;
   /** Close-at-market for the position badge's ✕ (TradingView-style). */
   onClosePosition?: () => void;
+  /** Resting orders for this symbol, drawn as cancellable lines. */
+  workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean }[];
+  onCancelOrder?: (id: string) => void;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
 };
@@ -70,6 +73,8 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     chart = "candles",
     position = null,
     onClosePosition,
+    workingOrders = [],
+    onCancelOrder,
     alerts,
     onAlertFire,
   },
@@ -765,6 +770,70 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
               <text x={geom.padL + 8} y={y + 3.5} fontFamily="var(--font-jetbrains)" fontSize="10" fill={c}>
                 ▲ {a.cond} {fmt(a.price, 2)}
               </text>
+            </g>
+          );
+        })}
+
+        {/* Resting orders. A working limit/stop is a real commitment sitting in
+            the book, so it belongs on the chart where the price will meet it —
+            not only in a table. Each carries its own ✕ to cancel. */}
+        {workingOrders.map((o) => {
+          const y = yOfPrice(o.price, vp, geom);
+          if (!Number.isFinite(y)) return null;
+          const c = o.reduceOnly
+            ? o.type === "limit"
+              ? "var(--cyan)" // take profit
+              : "var(--amber)" // stop loss
+            : o.side === "buy"
+              ? "var(--bull)"
+              : "var(--bear)";
+          const tag = o.reduceOnly
+            ? o.type === "limit" ? "TP" : "SL"
+            : `${o.side.toUpperCase()} ${o.type.toUpperCase()}`;
+          const text = `${tag} ${fmt(o.qty, 2)} @ ${fmt(o.price, 2)}`;
+          const w = 12 + text.length * 6.2 + 20;
+          return (
+            <g key={o.id}>
+              <line
+                x1={geom.padL}
+                x2={size.w - geom.padR - 56}
+                y1={y}
+                y2={y}
+                stroke={c}
+                strokeWidth={1}
+                strokeDasharray="5 4"
+                strokeOpacity={0.85}
+              />
+              <rect x={geom.padL + 4} y={y - 9} width={w} height={18} fill="var(--bg)" fillOpacity={0.9} stroke={c} />
+              <text x={geom.padL + 9} y={y + 3.5} fontFamily="var(--font-jetbrains)" fontSize="9.5" fill={c}>
+                {text}
+              </text>
+              {onCancelOrder && (
+                <g
+                  role="button"
+                  aria-label={`Cancel ${tag} order at ${fmt(o.price, 2)}`}
+                  className="cursor-pointer"
+                  // The chart pans/draws on mousedown — cancelling must not
+                  // also start a drawing underneath.
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancelOrder(o.id);
+                  }}
+                >
+                  <rect x={geom.padL + 4 + w - 18} y={y - 9} width={18} height={18} fill="transparent" />
+                  <text
+                    x={geom.padL + 4 + w - 9}
+                    y={y + 3.5}
+                    textAnchor="middle"
+                    fontFamily="var(--font-jetbrains)"
+                    fontSize="9.5"
+                    fill={c}
+                  >
+                    ✕
+                  </text>
+                </g>
+              )}
             </g>
           );
         })}

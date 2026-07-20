@@ -10,8 +10,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePaper, type ClosedTrade } from "@/lib/stores";
+import { availableFunds, ordersMargin } from "@/lib/paper-orders";
 import { unrealizedPnl } from "@/lib/paper-shares";
-import { placePaperOrder, readBlotter, ORDERS_CHANGED, type PlacedOrder } from "@/lib/pro/paper";
+import { placePaperOrder } from "@/lib/pro/paper";
 import { fmt } from "./chartCore";
 
 type Props = {
@@ -29,6 +30,12 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const startingCash = usePaper((s) => s.startingCash);
   const realizedToday = usePaper((s) => s.realizedToday);
   const trades = usePaper((s) => s.trades);
+  const book = usePaper((s) => s.orders);
+  const cancelOrder = usePaper((s) => s.cancelOrder);
+  const working = book.filter((o) => o.status === "working");
+  const history = book.filter((o) => o.status !== "working");
+  const free = availableFunds(cash, book);
+  const reserved = ordersMargin(book);
   const setStartingCash = usePaper((s) => s.setStartingCash);
   const resetAccount = usePaper((s) => s.reset);
 
@@ -37,15 +44,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const [capitalOpen, setCapitalOpen] = useState(false);
   const [capitalText, setCapitalText] = useState("");
   const [marks, setMarks] = useState<Record<string, number>>({});
-  const [orders, setOrders] = useState<PlacedOrder[]>([]);
 
-  // Blotter mirror for the Orders tab.
-  useEffect(() => {
-    setOrders(readBlotter());
-    const sync = () => setOrders(readBlotter());
-    window.addEventListener(ORDERS_CHANGED, sync);
-    return () => window.removeEventListener(ORDERS_CHANGED, sync);
-  }, []);
 
   // Live marks for every symbol we hold. The charted symbol is seeded from the
   // chart's own bars so its row never waits on the poll.
@@ -167,6 +166,14 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
         <span className="text-fg-faint">
           realized today <span className="tabular-nums">{signed(realizedToday)}</span>
         </span>
+        <span className="text-fg-faint">
+          available <span className="tabular-nums text-fg">{money(free)}</span>
+        </span>
+        {reserved > 0 && (
+          <span className="text-fg-faint">
+            orders margin <span className="tabular-nums text-amber">{money(reserved)}</span>
+          </span>
+        )}
         <span className="ml-auto flex items-center gap-2 text-fg-faint">
           <span className="hidden sm:inline">paper</span>
           <button
@@ -241,7 +248,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                 }`}
               >
                 {t}
-                {t === "orders" && orders.length > 0 && <span className="ml-1 text-fg-faint">{orders.length}</span>}
+                {t === "orders" && working.length > 0 && <span className="ml-1 text-bull">{working.length}</span>}
                 {t === "history" && trades.length > 0 && <span className="ml-1 text-fg-faint">{trades.length}</span>}
               </button>
             ))}
@@ -364,35 +371,105 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                   </table>
                 </div>
               )
-            ) : orders.length === 0 ? (
-              <div className="py-3 font-mono text-[11px] text-fg-faint">No orders yet.</div>
+            ) : working.length === 0 && history.length === 0 ? (
+              <div className="py-3 font-mono text-[11px] text-fg-faint">
+                No orders yet — place a limit or stop from the order panel and it will rest here until price reaches it.
+              </div>
             ) : (
-              <table className="w-full font-mono text-[11px] tabular-nums">
-                <thead>
-                  <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
-                    <th className="py-1 pr-3 font-normal">Time</th>
-                    <th className="pr-3 font-normal">Symbol</th>
-                    <th className="pr-3 font-normal">Side</th>
-                    <th className="pr-3 font-normal">Type</th>
-                    <th className="pr-3 text-right font-normal">Qty</th>
-                    <th className="text-right font-normal">Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((o) => (
-                    <tr key={o.id} className="border-t border-border-soft text-fg-dim">
-                      <td className="py-1.5 pr-3">
-                        {new Date(o.ts).toLocaleTimeString("en-US", { hour12: false })}
-                      </td>
-                      <td className="pr-3 text-fg">{o.sym}</td>
-                      <td className={`pr-3 uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
-                      <td className="pr-3 uppercase">{o.type}</td>
-                      <td className="pr-3 text-right">{fmt(o.qty, 2)}</td>
-                      <td className="text-right">{fmt(o.price, 2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="space-y-3">
+                <div>
+                  <div className="pb-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+                    working · {working.length}
+                  </div>
+                  {working.length === 0 ? (
+                    <div className="py-1 font-mono text-[11px] text-fg-faint">Nothing resting.</div>
+                  ) : (
+                    <table className="w-full font-mono text-[11px] tabular-nums">
+                      <thead>
+                        <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
+                          <th className="py-1 pr-3 font-normal">Symbol</th>
+                          <th className="pr-3 font-normal">Side</th>
+                          <th className="pr-3 font-normal">Type</th>
+                          <th className="pr-3 text-right font-normal">Qty</th>
+                          <th className="pr-3 text-right font-normal">Price</th>
+                          <th className="pr-3 font-normal">TIF</th>
+                          <th className="text-right font-normal" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {working.map((o) => (
+                          <tr key={o.id} className="border-t border-border-soft text-fg-dim">
+                            <td className="py-1.5 pr-3 text-fg">{o.sym}</td>
+                            <td className={`pr-3 uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
+                            <td className="pr-3 uppercase">
+                              {o.reduceOnly ? (o.type === "limit" ? "take profit" : "stop loss") : o.type}
+                            </td>
+                            <td className="pr-3 text-right">{fmt(o.qty, 2)}</td>
+                            <td className="pr-3 text-right">{fmt((o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0, 2)}</td>
+                            <td className="pr-3 uppercase">{o.tif}</td>
+                            <td className="text-right">
+                              <button
+                                onClick={() => {
+                                  cancelOrder(o.id);
+                                  onResult(`Cancelled ${o.side} ${o.sym}`, "ok");
+                                }}
+                                className="border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bear hover:text-bear"
+                              >
+                                ✕ cancel
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {history.length > 0 && (
+                  <div>
+                    <div className="pb-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+                      order history · {history.length}
+                    </div>
+                    <table className="w-full font-mono text-[11px] tabular-nums">
+                      <thead>
+                        <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
+                          <th className="py-1 pr-3 font-normal">Time</th>
+                          <th className="pr-3 font-normal">Symbol</th>
+                          <th className="pr-3 font-normal">Side</th>
+                          <th className="pr-3 font-normal">Type</th>
+                          <th className="pr-3 text-right font-normal">Qty</th>
+                          <th className="pr-3 text-right font-normal">Price</th>
+                          <th className="font-normal">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {history.slice(0, 40).map((o) => (
+                          <tr key={o.id} className="border-t border-border-soft text-fg-dim">
+                            <td className="py-1.5 pr-3">
+                              {new Date(o.filledAt ?? o.placedAt).toLocaleTimeString("en-US", { hour12: false })}
+                            </td>
+                            <td className="pr-3 text-fg">{o.sym}</td>
+                            <td className={`pr-3 uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
+                            <td className="pr-3 uppercase">{o.type}</td>
+                            <td className="pr-3 text-right">{fmt(o.qty, 2)}</td>
+                            <td className="pr-3 text-right">
+                              {fmt(o.fillPrice ?? (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0, 2)}
+                            </td>
+                            <td
+                              className={`uppercase ${
+                                o.status === "filled" ? "text-bull" : o.status === "rejected" ? "text-bear" : "text-fg-faint"
+                              }`}
+                              title={o.note}
+                            >
+                              {o.status}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
