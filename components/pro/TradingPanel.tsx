@@ -1,17 +1,16 @@
 "use client";
 
-// The TradingView-style bottom trading panel: an account strip that is always
-// visible, plus collapsible Positions / Orders tabs.
+// The paper-trading panel: a six-metric account strip that is always visible,
+// plus Positions / Orders / Order history / Balance history / Trading journal.
 //
-// Positions span EVERY symbol in the shared paper account, not just the one on
-// the chart, so marks for the others come from /api/quote-batch on a 10s poll.
-// A row with no live mark yet shows "—" and its close button stays disabled —
-// closing a position at a price we do not have would fabricate a fill.
+// Positions span EVERY symbol in the shared account, not just the charted one,
+// so marks for the others come from /api/quote-batch on a 10s poll. A row with
+// no live mark shows "—" and its close button stays disabled: closing at a
+// price we do not have would fabricate a fill.
 
 import { useEffect, useMemo, useState } from "react";
-import { usePaper, type ClosedTrade } from "@/lib/stores";
-import { availableFunds, ordersMargin } from "@/lib/paper-orders";
-import { unrealizedPnl } from "@/lib/paper-shares";
+import { usePaper, type BalanceEntry, type ClosedTrade } from "@/lib/stores";
+import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { fmt } from "./chartCore";
 
@@ -24,6 +23,15 @@ type Props = {
   onResult: (msg: string, tone?: "ok" | "warn") => void;
 };
 
+type Tab = "positions" | "orders" | "orderHistory" | "balance" | "journal";
+const TAB_LABEL: Record<Tab, string> = {
+  positions: "Positions",
+  orders: "Orders",
+  orderHistory: "Order history",
+  balance: "Balance history",
+  journal: "Trading journal",
+};
+
 export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }: Props) {
   const shares = usePaper((s) => s.shares);
   const cash = usePaper((s) => s.cash);
@@ -31,24 +39,27 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const realizedToday = usePaper((s) => s.realizedToday);
   const trades = usePaper((s) => s.trades);
   const book = usePaper((s) => s.orders);
+  const balanceLog = usePaper((s) => s.balanceLog);
+  const journal = usePaper((s) => s.journal);
   const cancelOrder = usePaper((s) => s.cancelOrder);
-  const working = book.filter((o) => o.status === "working");
-  const history = book.filter((o) => o.status !== "working");
-  const free = availableFunds(cash, book);
-  const reserved = ordersMargin(book);
+  const setJournalNote = usePaper((s) => s.setJournalNote);
+  const submitOrder = usePaper((s) => s.submitOrder);
   const setStartingCash = usePaper((s) => s.setStartingCash);
   const resetAccount = usePaper((s) => s.reset);
 
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"positions" | "orders" | "history">("positions");
+  const [tab, setTab] = useState<Tab>("positions");
   const [capitalOpen, setCapitalOpen] = useState(false);
   const [capitalText, setCapitalText] = useState("");
   const [marks, setMarks] = useState<Record<string, number>>({});
+  const [editing, setEditing] = useState<{ sym: string; tp: string; sl: string } | null>(null);
 
+  const working = book.filter((o) => o.status === "working");
+  const orderHistory = book.filter((o) => o.status !== "working");
 
   // Live marks for every symbol we hold. The charted symbol is seeded from the
   // chart's own bars so its row never waits on the poll.
-  const heldSyms = Object.keys(shares).sort();
+  const heldSyms = useMemo(() => Object.keys(shares).sort(), [shares]);
   const heldKey = heldSyms.join(",");
   useEffect(() => {
     if (!heldKey) return;
@@ -75,29 +86,35 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
     };
   }, [heldKey]);
 
+  /** Marks including the chart's own symbol, which is fresher than the poll. */
+  const allMarks = useMemo(() => {
+    const m = { ...marks };
+    if (chartSymbol && Number.isFinite(chartLast) && (chartLast as number) > 0) m[chartSymbol] = chartLast as number;
+    return m;
+  }, [marks, chartSymbol, chartLast]);
+
+  const metrics = useMemo(
+    () => accountMetrics({ cash, realizedToday, shares, orders: book, marks: allMarks }),
+    [cash, realizedToday, shares, book, allMarks]
+  );
+
   const markOf = (sym: string): number | null => {
-    if (sym === chartSymbol && Number.isFinite(chartLast)) return chartLast as number;
-    const m = marks[sym];
-    return Number.isFinite(m) ? m : null;
+    const m = allMarks[sym];
+    return Number.isFinite(m) && m > 0 ? m : null;
   };
 
   const rows = heldSyms.map((sym) => {
     const pos = shares[sym];
     const mark = markOf(sym);
-    return { sym, pos, mark, upnl: mark == null ? null : unrealizedPnl(pos, mark) };
+    const prot = protectionFor(sym, book);
+    return {
+      sym,
+      pos,
+      mark,
+      ...prot,
+      upnl: mark == null ? null : (mark - pos.avgPrice) * pos.qty,
+    };
   });
-
-  // Equity marks what it can and carries the rest at cost — same convention as
-  // the chain page's portfolio panel.
-  const { equity, totalUpnl } = useMemo(() => {
-    let eq = cash;
-    let u = 0;
-    for (const { pos, mark } of rows) {
-      eq += pos.qty * (mark ?? pos.avgPrice);
-      if (mark != null) u += (mark - pos.avgPrice) * pos.qty;
-    }
-    return { equity: eq, totalUpnl: u };
-  }, [rows, cash]);
 
   const stats = useMemo(() => {
     const n = trades.length;
@@ -126,10 +143,78 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
     onResult(`✓ Closed ${sym} — ${pnl >= 0 ? "+" : "−"}$${fmt(Math.abs(pnl), 2)} realized`, pnl >= 0 ? "ok" : "warn");
   };
 
+  /** Replace a position's protective orders with new ones. */
+  const applyProtection = (sym: string, tpText: string, slText: string) => {
+    const pos = shares[sym];
+    if (!pos) return;
+    const tp = parseFloat(tpText);
+    const sl = parseFloat(slText);
+    // Cancel the existing exits first, so we never end up with two take
+    // profits racing each other on the same position.
+    for (const o of book) {
+      if (o.status === "working" && o.sym === sym && o.reduceOnly) cancelOrder(o.id);
+    }
+    const exitSide = pos.qty > 0 ? "sell" : "buy";
+    let placed = 0;
+    if (Number.isFinite(tp) && tp > 0) {
+      const r = submitOrder({
+        sym, side: exitSide, type: "limit", qty: Math.abs(pos.qty),
+        limitPrice: tp, tif: "gtc", reduceOnly: true, parentId: `manual-${sym}`,
+      });
+      if (r.ok) placed++;
+      else onResult(`Take profit rejected: ${r.error}`, "warn");
+    }
+    if (Number.isFinite(sl) && sl > 0) {
+      const r = submitOrder({
+        sym, side: exitSide, type: "stop", qty: Math.abs(pos.qty),
+        stopPrice: sl, tif: "gtc", reduceOnly: true, parentId: `manual-${sym}`,
+      });
+      if (r.ok) placed++;
+      else onResult(`Stop loss rejected: ${r.error}`, "warn");
+    }
+    setEditing(null);
+    if (placed) onResult(`Protection updated on ${sym}`, "ok");
+  };
+
+  const exportCsv = () => {
+    let headers: string[] = [];
+    let data: (string | number)[][] = [];
+    const stamp = (ts: number) => new Date(ts).toISOString();
+    if (tab === "positions") {
+      headers = ["Symbol", "Side", "Quantity", "Avg fill price", "Take profit", "Stop loss", "Last", "Unrealized"];
+      data = rows.map((r) => [
+        r.sym, r.pos.qty > 0 ? "Long" : "Short", Math.abs(r.pos.qty), r.pos.avgPrice,
+        r.takeProfit ?? "", r.stopLoss ?? "", r.mark ?? "", r.upnl ?? "",
+      ]);
+    } else if (tab === "orders" || tab === "orderHistory") {
+      const src = tab === "orders" ? working : orderHistory;
+      headers = ["Time", "Symbol", "Side", "Type", "Qty", "Price", "TIF", "Status", "Note"];
+      data = src.map((o) => [
+        stamp(o.filledAt ?? o.placedAt), o.sym, o.side, o.type, o.qty,
+        o.fillPrice ?? (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? "", o.tif, o.status, o.note ?? "",
+      ]);
+    } else if (tab === "balance") {
+      headers = ["Time", "Kind", "Symbol", "Amount", "Balance", "Note"];
+      data = balanceLog.map((b) => [stamp(b.ts), b.kind, b.sym ?? "", b.amount, b.balance, b.note]);
+    } else {
+      headers = ["Closed", "Symbol", "Side", "Qty", "Entry", "Exit", "P&L", "Note"];
+      data = trades.map((t) => [
+        stamp(t.closedAt), t.sym, t.side, t.qty, t.entry, t.exit, t.pnl, journal[t.id] ?? "",
+      ]);
+    }
+    const blob = new Blob([toCsv(headers, data)], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `lazybull-${tab}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const money = (n: number) => `$${fmt(n, 2)}`;
   // Round BEFORE choosing the sign. The fill price and the mark come from
-  // different sources (chart bars vs the quote poll), so a flat position could
-  // carry −0.0000001 and render the alarming "−$0.00" in red.
+  // different sources, so a flat position could carry −0.0000001 and render
+  // the alarming "−$0.00" in red.
   const signed = (n: number) => {
     const r = Math.abs(n) < 0.005 ? 0 : n;
     return (
@@ -139,9 +224,12 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
     );
   };
 
+  const th = "pr-3 py-1 text-left font-normal";
+  const td = "py-1.5 pr-3";
+
   return (
     <div className="border-t border-border bg-bg">
-      {/* account strip — always visible, TradingView-style */}
+      {/* account strip — always visible */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider">
         <button
           onClick={() => setOpen((v) => !v)}
@@ -149,33 +237,22 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           className="flex items-center gap-1.5 text-fg-dim transition-colors hover:text-fg"
         >
           <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▴</span>
-          Trading panel
-          {heldSyms.length > 0 && (
-            <span className="border border-border px-1 text-[9px] text-fg">{heldSyms.length}</span>
-          )}
+          Paper trading
+          {heldSyms.length > 0 && <span className="border border-border px-1 text-[9px] text-fg">{heldSyms.length}</span>}
         </button>
-        <span className="text-fg-faint">
-          balance <span className="tabular-nums text-fg">{money(cash)}</span>
-        </span>
-        <span className="text-fg-faint">
-          equity <span className="tabular-nums text-fg">{money(equity)}</span>
-        </span>
-        <span className="text-fg-faint">
-          open p&l <span className="tabular-nums">{signed(totalUpnl)}</span>
-        </span>
-        <span className="text-fg-faint">
-          realized today <span className="tabular-nums">{signed(realizedToday)}</span>
-        </span>
-        <span className="text-fg-faint">
-          available <span className="tabular-nums text-fg">{money(free)}</span>
-        </span>
-        {reserved > 0 && (
-          <span className="text-fg-faint">
-            orders margin <span className="tabular-nums text-amber">{money(reserved)}</span>
-          </span>
-        )}
+        <Metric k="Account balance" v={money(metrics.balance)} />
+        <Metric k="Equity" v={money(metrics.equity)} />
+        <Metric k="Realized P&L" node={signed(metrics.realizedPnl)} />
+        <Metric k="Unrealized P&L" node={signed(metrics.unrealizedPnl)} />
+        <Metric k="Account margin" v={money(metrics.accountMargin)} />
+        <Metric k="Available funds" v={money(metrics.availableFunds)} />
+        {metrics.ordersMargin > 0 && <Metric k="Orders margin" v={money(metrics.ordersMargin)} tone="text-amber" />}
+        <Metric
+          k="Margin buffer"
+          v={`${(metrics.marginBuffer * 100).toFixed(2)}%`}
+          tone={metrics.marginBuffer < 0.2 ? "text-bear" : undefined}
+        />
         <span className="ml-auto flex items-center gap-2 text-fg-faint">
-          <span className="hidden sm:inline">paper</span>
           <button
             onClick={() => {
               setCapitalText(String(Math.round(startingCash)));
@@ -228,96 +305,276 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           >
             reset to {money(startingCash)}
           </button>
-          {/* Both actions wipe positions and history — say so before the click. */}
-          <span className="text-fg-faint normal-case">
-            Clears all positions, orders and trade history.
-          </span>
+          <span className="normal-case text-fg-faint">Clears all positions, orders and history.</span>
         </div>
       )}
 
       {open && (
         <div className="border-t border-border-soft">
           <div className="flex items-center gap-1 px-3 pt-2">
-            {(["positions", "orders", "history"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                aria-pressed={tab === t}
-                className={`px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                  tab === t ? "bg-surface text-fg" : "text-fg-faint hover:text-fg-dim"
-                }`}
-              >
-                {t}
-                {t === "orders" && working.length > 0 && <span className="ml-1 text-bull">{working.length}</span>}
-                {t === "history" && trades.length > 0 && <span className="ml-1 text-fg-faint">{trades.length}</span>}
-              </button>
-            ))}
+            {(Object.keys(TAB_LABEL) as Tab[]).map((t) => {
+              const count =
+                t === "positions" ? rows.length : t === "orders" ? working.length : t === "journal" ? trades.length : 0;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  aria-pressed={tab === t}
+                  className={`rounded-full px-3 py-1 font-mono text-[10px] tracking-wider transition-colors ${
+                    tab === t ? "bg-surface text-fg" : "text-fg-faint hover:text-fg-dim"
+                  }`}
+                >
+                  {TAB_LABEL[t]}
+                  {count > 0 && <span className="ml-1.5 text-fg-faint">{count}</span>}
+                </button>
+              );
+            })}
+            <button
+              onClick={exportCsv}
+              aria-label="Export this tab as CSV"
+              title="Export CSV"
+              className="ml-auto px-2 py-1 font-mono text-[13px] text-fg-faint transition-colors hover:text-fg"
+            >
+              ↓
+            </button>
           </div>
 
-          <div className="max-h-44 overflow-y-auto px-3 pb-2 pt-1">
-            {tab === "positions" ? (
-              rows.length === 0 ? (
-                <div className="py-3 font-mono text-[11px] text-fg-faint">
-                  No open positions — use the Buy/Sell buttons on the chart.
-                </div>
+          <div className="max-h-52 overflow-y-auto px-3 pb-2 pt-1">
+            {tab === "positions" &&
+              (rows.length === 0 ? (
+                <Empty>No open positions — buy or sell from the order panel.</Empty>
               ) : (
                 <table className="w-full font-mono text-[11px] tabular-nums">
                   <thead>
-                    <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
-                      <th className="py-1 pr-3 font-normal">Symbol</th>
-                      <th className="pr-3 font-normal">Side</th>
-                      <th className="pr-3 text-right font-normal">Qty</th>
-                      <th className="pr-3 text-right font-normal">Avg</th>
-                      <th className="pr-3 text-right font-normal">Last</th>
-                      <th className="pr-3 text-right font-normal">P&L</th>
-                      <th className="pr-3 text-right font-normal">Realized</th>
-                      <th className="text-right font-normal" />
+                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                      <th className={th}>Symbol</th>
+                      <th className={th}>Side</th>
+                      <th className={`${th} text-right`}>Quantity</th>
+                      <th className={`${th} text-right`}>Avg fill price</th>
+                      <th className={`${th} text-right`}>Take profit</th>
+                      <th className={`${th} text-right`}>Stop loss</th>
+                      <th className={`${th} text-right`}>Last price</th>
+                      <th className={`${th} text-right`}>Unrealized</th>
+                      <th className={th} />
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map(({ sym, pos, mark, upnl }) => (
-                      <tr key={sym} className="border-t border-border-soft text-fg-dim">
-                        <td className="py-1.5 pr-3 text-fg">{sym}</td>
-                        <td className={`pr-3 uppercase ${pos.qty > 0 ? "text-bull" : "text-bear"}`}>
-                          {pos.qty > 0 ? "long" : "short"}
+                    {rows.map((r) => {
+                      const isEditing = editing?.sym === r.sym;
+                      return (
+                        <tr key={r.sym} className="border-t border-border-soft text-fg-dim">
+                          <td className={`${td} text-fg`}>
+                            <span className="mr-1.5 border border-border px-1 text-[9px] text-fg-faint">
+                              {r.pos.qty > 0 ? "LONG" : "SHORT"}
+                            </span>
+                            {r.sym}
+                          </td>
+                          <td className={`${td} uppercase ${r.pos.qty > 0 ? "text-bull" : "text-bear"}`}>
+                            {r.pos.qty > 0 ? "Long" : "Short"}
+                          </td>
+                          <td className={`${td} text-right`}>{fmt(Math.abs(r.pos.qty), 2)}</td>
+                          <td className={`${td} text-right`}>{fmt(r.pos.avgPrice, 2)}</td>
+                          <td className={`${td} text-right`}>
+                            {isEditing ? (
+                              <input
+                                value={editing!.tp}
+                                onChange={(e) => setEditing({ ...editing!, tp: e.target.value.replace(/[^\d.]/g, "") })}
+                                aria-label={`Take profit for ${r.sym}`}
+                                className="w-16 border border-border bg-bg px-1 text-right text-cyan outline-none"
+                              />
+                            ) : r.takeProfit != null ? (
+                              <span className="text-cyan">{fmt(r.takeProfit, 2)}</span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td className={`${td} text-right`}>
+                            {isEditing ? (
+                              <input
+                                value={editing!.sl}
+                                onChange={(e) => setEditing({ ...editing!, sl: e.target.value.replace(/[^\d.]/g, "") })}
+                                aria-label={`Stop loss for ${r.sym}`}
+                                className="w-16 border border-border bg-bg px-1 text-right text-amber outline-none"
+                              />
+                            ) : r.stopLoss != null ? (
+                              <span className="text-amber">{fmt(r.stopLoss, 2)}</span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td className={`${td} text-right`}>{r.mark == null ? "—" : fmt(r.mark, 2)}</td>
+                          <td className={`${td} text-right`}>{r.upnl == null ? "—" : signed(r.upnl)}</td>
+                          <td className={`${td} text-right whitespace-nowrap`}>
+                            {isEditing ? (
+                              <>
+                                <button
+                                  onClick={() => applyProtection(r.sym, editing!.tp, editing!.sl)}
+                                  className="mr-1 border border-bull/50 px-1.5 text-[10px] text-bull hover:bg-bull hover:text-bg"
+                                >
+                                  save
+                                </button>
+                                <button
+                                  onClick={() => setEditing(null)}
+                                  className="border border-border px-1.5 text-[10px] text-fg-faint hover:text-fg"
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    setEditing({
+                                      sym: r.sym,
+                                      tp: r.takeProfit != null ? String(r.takeProfit) : "",
+                                      sl: r.stopLoss != null ? String(r.stopLoss) : "",
+                                    })
+                                  }
+                                  aria-label={`Edit protection for ${r.sym}`}
+                                  title="Set take profit / stop loss"
+                                  className="mr-2 text-fg-faint transition-colors hover:text-fg"
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  onClick={() => closePosition(r.sym)}
+                                  disabled={r.mark == null || replayActive}
+                                  aria-label={`Close ${r.sym}`}
+                                  title={
+                                    replayActive ? "Exit replay to close" : r.mark == null ? "Waiting for a live price" : "Close at market"
+                                  }
+                                  className="text-fg-faint transition-colors enabled:hover:text-bear disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ))}
+
+            {tab === "orders" &&
+              (working.length === 0 ? (
+                <Empty>Nothing resting — a limit or stop order will wait here until price reaches it.</Empty>
+              ) : (
+                <table className="w-full font-mono text-[11px] tabular-nums">
+                  <thead>
+                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                      <th className={th}>Symbol</th>
+                      <th className={th}>Side</th>
+                      <th className={th}>Type</th>
+                      <th className={`${th} text-right`}>Qty</th>
+                      <th className={`${th} text-right`}>Price</th>
+                      <th className={th}>TIF</th>
+                      <th className={th} />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {working.map((o) => (
+                      <tr key={o.id} className="border-t border-border-soft text-fg-dim">
+                        <td className={`${td} text-fg`}>{o.sym}</td>
+                        <td className={`${td} uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
+                        <td className={`${td} uppercase`}>
+                          {o.reduceOnly ? (o.type === "limit" ? "take profit" : "stop loss") : o.type}
                         </td>
-                        <td className="pr-3 text-right">{fmt(Math.abs(pos.qty), 2)}</td>
-                        <td className="pr-3 text-right">{fmt(pos.avgPrice, 2)}</td>
-                        <td className="pr-3 text-right">{mark == null ? "—" : fmt(mark, 2)}</td>
-                        <td className="pr-3 text-right">{upnl == null ? "—" : signed(upnl)}</td>
-                        <td className="pr-3 text-right">{signed(pos.realized)}</td>
-                        <td className="text-right">
+                        <td className={`${td} text-right`}>{fmt(o.qty, 2)}</td>
+                        <td className={`${td} text-right`}>{fmt((o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0, 2)}</td>
+                        <td className={`${td} uppercase`}>{o.tif}</td>
+                        <td className={`${td} text-right`}>
                           <button
-                            onClick={() => closePosition(sym)}
-                            disabled={mark == null || replayActive}
-                            title={
-                              replayActive
-                                ? "Exit replay to close"
-                                : mark == null
-                                  ? "Waiting for a live price"
-                                  : "Close at market"
-                            }
-                            className="border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-dim transition-colors enabled:hover:border-bear enabled:hover:text-bear disabled:cursor-not-allowed disabled:opacity-40"
+                            onClick={() => {
+                              cancelOrder(o.id);
+                              onResult(`Cancelled ${o.side} ${o.sym}`, "ok");
+                            }}
+                            className="border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bear hover:text-bear"
                           >
-                            ✕ close
+                            ✕ cancel
                           </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )
-            ) : tab === "history" ? (
-              trades.length === 0 ? (
-                <div className="py-3 font-mono text-[11px] text-fg-faint">
-                  No closed trades yet — your realized P&L will appear here once you close a position.
-                </div>
+              ))}
+
+            {tab === "orderHistory" &&
+              (orderHistory.length === 0 ? (
+                <Empty>No completed orders yet.</Empty>
+              ) : (
+                <table className="w-full font-mono text-[11px] tabular-nums">
+                  <thead>
+                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                      <th className={th}>Time</th>
+                      <th className={th}>Symbol</th>
+                      <th className={th}>Side</th>
+                      <th className={th}>Type</th>
+                      <th className={`${th} text-right`}>Qty</th>
+                      <th className={`${th} text-right`}>Price</th>
+                      <th className={th}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderHistory.slice(0, 60).map((o) => (
+                      <tr key={o.id} className="border-t border-border-soft text-fg-dim">
+                        <td className={td}>{new Date(o.filledAt ?? o.placedAt).toLocaleTimeString("en-US", { hour12: false })}</td>
+                        <td className={`${td} text-fg`}>{o.sym}</td>
+                        <td className={`${td} uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
+                        <td className={`${td} uppercase`}>{o.type}</td>
+                        <td className={`${td} text-right`}>{fmt(o.qty, 2)}</td>
+                        <td className={`${td} text-right`}>
+                          {fmt(o.fillPrice ?? (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0, 2)}
+                        </td>
+                        <td
+                          className={`${td} uppercase ${
+                            o.status === "filled" ? "text-bull" : o.status === "rejected" ? "text-bear" : "text-fg-faint"
+                          }`}
+                          title={o.note}
+                        >
+                          {o.status}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ))}
+
+            {tab === "balance" &&
+              (balanceLog.length === 0 ? (
+                <Empty>No cash movements yet.</Empty>
+              ) : (
+                <table className="w-full font-mono text-[11px] tabular-nums">
+                  <thead>
+                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                      <th className={th}>Time</th>
+                      <th className={th}>Type</th>
+                      <th className={th}>Detail</th>
+                      <th className={`${th} text-right`}>Amount</th>
+                      <th className={`${th} text-right`}>Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {balanceLog.slice(0, 80).map((b: BalanceEntry) => (
+                      <tr key={b.id} className="border-t border-border-soft text-fg-dim">
+                        <td className={td}>{new Date(b.ts).toLocaleTimeString("en-US", { hour12: false })}</td>
+                        <td className={`${td} uppercase`}>{b.kind}</td>
+                        <td className={td}>{b.note}</td>
+                        <td className={`${td} text-right`}>{signed(b.amount)}</td>
+                        <td className={`${td} text-right text-fg`}>{money(b.balance)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ))}
+
+            {tab === "journal" &&
+              (trades.length === 0 ? (
+                <Empty>No closed trades yet — your realized P&L and notes will appear here.</Empty>
               ) : (
                 <div className="space-y-2">
-                  {/* Realized equity curve: startingCash plus cumulative realized
-                      P&L, oldest to newest. Unrealized is deliberately excluded —
-                      a curve that moves with open positions is a mark, not a
-                      track record. */}
                   <EquityCurve startingCash={startingCash} trades={trades} />
                   <div className="grid grid-cols-4 gap-px bg-border-soft">
                     {[
@@ -334,15 +591,16 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                   </div>
                   <table className="w-full font-mono text-[11px] tabular-nums">
                     <thead>
-                      <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
-                        <th className="py-1 pr-3 font-normal">Closed</th>
-                        <th className="pr-3 font-normal">Symbol</th>
-                        <th className="pr-3 font-normal">Side</th>
-                        <th className="pr-3 text-right font-normal">Qty</th>
-                        <th className="pr-3 text-right font-normal">Entry</th>
-                        <th className="pr-3 text-right font-normal">Exit</th>
-                        <th className="pr-3 text-right font-normal">P&L</th>
-                        <th className="text-right font-normal">Return</th>
+                      <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                        <th className={th}>Closed</th>
+                        <th className={th}>Symbol</th>
+                        <th className={th}>Side</th>
+                        <th className={`${th} text-right`}>Qty</th>
+                        <th className={`${th} text-right`}>Entry</th>
+                        <th className={`${th} text-right`}>Exit</th>
+                        <th className={`${th} text-right`}>P&L</th>
+                        <th className={`${th} text-right`}>Return</th>
+                        <th className={th}>Note</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -351,18 +609,25 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                         const ret = basis > 0 ? t.pnl / basis : 0;
                         return (
                           <tr key={t.id} className="border-t border-border-soft text-fg-dim">
-                            <td className="py-1.5 pr-3">
-                              {new Date(t.closedAt).toLocaleTimeString("en-US", { hour12: false })}
-                            </td>
-                            <td className="pr-3 text-fg">{t.sym}</td>
-                            <td className={`pr-3 uppercase ${t.side === "long" ? "text-bull" : "text-bear"}`}>{t.side}</td>
-                            <td className="pr-3 text-right">{fmt(t.qty, 2)}</td>
-                            <td className="pr-3 text-right">{fmt(t.entry, 2)}</td>
-                            <td className="pr-3 text-right">{fmt(t.exit, 2)}</td>
-                            <td className="pr-3 text-right">{signed(t.pnl)}</td>
-                            <td className={`text-right ${ret >= 0 ? "text-bull" : "text-bear"}`}>
+                            <td className={td}>{new Date(t.closedAt).toLocaleTimeString("en-US", { hour12: false })}</td>
+                            <td className={`${td} text-fg`}>{t.sym}</td>
+                            <td className={`${td} uppercase ${t.side === "long" ? "text-bull" : "text-bear"}`}>{t.side}</td>
+                            <td className={`${td} text-right`}>{fmt(t.qty, 2)}</td>
+                            <td className={`${td} text-right`}>{fmt(t.entry, 2)}</td>
+                            <td className={`${td} text-right`}>{fmt(t.exit, 2)}</td>
+                            <td className={`${td} text-right`}>{signed(t.pnl)}</td>
+                            <td className={`${td} text-right ${ret >= 0 ? "text-bull" : "text-bear"}`}>
                               {ret >= 0 ? "+" : "−"}
                               {(Math.abs(ret) * 100).toFixed(2)}%
+                            </td>
+                            <td className={td}>
+                              <input
+                                defaultValue={journal[t.id] ?? ""}
+                                onBlur={(e) => setJournalNote(t.id, e.target.value)}
+                                placeholder="why did you take it?"
+                                aria-label={`Journal note for ${t.sym}`}
+                                className="w-40 border border-transparent bg-transparent px-1 text-fg-dim outline-none placeholder:text-fg-faint/60 hover:border-border focus:border-border focus:text-fg"
+                              />
                             </td>
                           </tr>
                         );
@@ -370,112 +635,24 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                     </tbody>
                   </table>
                 </div>
-              )
-            ) : working.length === 0 && history.length === 0 ? (
-              <div className="py-3 font-mono text-[11px] text-fg-faint">
-                No orders yet — place a limit or stop from the order panel and it will rest here until price reaches it.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <div className="pb-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
-                    working · {working.length}
-                  </div>
-                  {working.length === 0 ? (
-                    <div className="py-1 font-mono text-[11px] text-fg-faint">Nothing resting.</div>
-                  ) : (
-                    <table className="w-full font-mono text-[11px] tabular-nums">
-                      <thead>
-                        <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
-                          <th className="py-1 pr-3 font-normal">Symbol</th>
-                          <th className="pr-3 font-normal">Side</th>
-                          <th className="pr-3 font-normal">Type</th>
-                          <th className="pr-3 text-right font-normal">Qty</th>
-                          <th className="pr-3 text-right font-normal">Price</th>
-                          <th className="pr-3 font-normal">TIF</th>
-                          <th className="text-right font-normal" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {working.map((o) => (
-                          <tr key={o.id} className="border-t border-border-soft text-fg-dim">
-                            <td className="py-1.5 pr-3 text-fg">{o.sym}</td>
-                            <td className={`pr-3 uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
-                            <td className="pr-3 uppercase">
-                              {o.reduceOnly ? (o.type === "limit" ? "take profit" : "stop loss") : o.type}
-                            </td>
-                            <td className="pr-3 text-right">{fmt(o.qty, 2)}</td>
-                            <td className="pr-3 text-right">{fmt((o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0, 2)}</td>
-                            <td className="pr-3 uppercase">{o.tif}</td>
-                            <td className="text-right">
-                              <button
-                                onClick={() => {
-                                  cancelOrder(o.id);
-                                  onResult(`Cancelled ${o.side} ${o.sym}`, "ok");
-                                }}
-                                className="border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bear hover:text-bear"
-                              >
-                                ✕ cancel
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                {history.length > 0 && (
-                  <div>
-                    <div className="pb-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
-                      order history · {history.length}
-                    </div>
-                    <table className="w-full font-mono text-[11px] tabular-nums">
-                      <thead>
-                        <tr className="text-left text-[9px] uppercase tracking-wider text-fg-faint">
-                          <th className="py-1 pr-3 font-normal">Time</th>
-                          <th className="pr-3 font-normal">Symbol</th>
-                          <th className="pr-3 font-normal">Side</th>
-                          <th className="pr-3 font-normal">Type</th>
-                          <th className="pr-3 text-right font-normal">Qty</th>
-                          <th className="pr-3 text-right font-normal">Price</th>
-                          <th className="font-normal">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {history.slice(0, 40).map((o) => (
-                          <tr key={o.id} className="border-t border-border-soft text-fg-dim">
-                            <td className="py-1.5 pr-3">
-                              {new Date(o.filledAt ?? o.placedAt).toLocaleTimeString("en-US", { hour12: false })}
-                            </td>
-                            <td className="pr-3 text-fg">{o.sym}</td>
-                            <td className={`pr-3 uppercase ${o.side === "buy" ? "text-bull" : "text-bear"}`}>{o.side}</td>
-                            <td className="pr-3 uppercase">{o.type}</td>
-                            <td className="pr-3 text-right">{fmt(o.qty, 2)}</td>
-                            <td className="pr-3 text-right">
-                              {fmt(o.fillPrice ?? (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0, 2)}
-                            </td>
-                            <td
-                              className={`uppercase ${
-                                o.status === "filled" ? "text-bull" : o.status === "rejected" ? "text-bear" : "text-fg-faint"
-                              }`}
-                              title={o.note}
-                            >
-                              {o.status}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
+              ))}
           </div>
         </div>
       )}
     </div>
   );
+}
+
+function Metric({ k, v, node, tone }: { k: string; v?: string; node?: React.ReactNode; tone?: string }) {
+  return (
+    <span className="text-fg-faint">
+      {k} <span className={`tabular-nums ${tone ?? "text-fg"}`}>{node ?? v}</span>
+    </span>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <div className="py-3 font-mono text-[11px] text-fg-faint">{children}</div>;
 }
 
 /**
@@ -512,15 +689,12 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
   return (
     <div className="flex items-center gap-3 border border-border-soft bg-surface p-2">
       <svg viewBox={`0 0 ${W} ${H}`} className="h-11 flex-1" preserveAspectRatio="none" aria-hidden>
-        {/* starting-capital baseline, so above/below the line is readable at a glance */}
         <line x1={0} x2={W} y1={baseY} y2={baseY} stroke="var(--fg-faint)" strokeDasharray="3 4" strokeOpacity={0.5} />
         <path d={`M${d}`} fill="none" stroke={c} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="shrink-0 font-mono">
         <div className="text-[9px] uppercase tracking-wider text-fg-faint">realized equity</div>
-        <div className={`text-sm tabular-nums ${up ? "text-bull" : "text-bear"}`}>
-          ${fmt(last, 2)}
-        </div>
+        <div className={`text-sm tabular-nums ${up ? "text-bull" : "text-bear"}`}>${fmt(last, 2)}</div>
         <div className={`text-[10px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
           {up ? "+" : "−"}
           {(Math.abs((last - startingCash) / (startingCash || 1)) * 100).toFixed(2)}%

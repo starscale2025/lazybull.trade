@@ -78,7 +78,7 @@ export const useStrategy = create<StrategyState>()((set) => ({
  * between losing a position and losing nothing in practice. Returns null when
  * storage is unavailable or unusable, in which case callers keep in-memory state.
  */
-function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions" | "trades" | "orders"> | null {
+function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions" | "trades" | "orders" | "balanceLog" | "journal"> | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("lb-paper");
@@ -94,6 +94,8 @@ function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "rea
       positions: Array.isArray(st.positions) ? st.positions : [],
       trades: Array.isArray(st.trades) ? st.trades : [],
       orders: Array.isArray(st.orders) ? st.orders : [],
+      balanceLog: Array.isArray(st.balanceLog) ? st.balanceLog : [],
+      journal: st.journal && typeof st.journal === "object" && !Array.isArray(st.journal) ? st.journal : {},
       shares: sanitizeShares(st.shares),
     };
   } catch {
@@ -111,6 +113,19 @@ export type Position = {
   cost: number; // net debit (+) / credit (-) at open
   status: "open" | "closed";
   pnl: number; // realized when closed
+};
+
+/** A cash movement, for the Balance history ledger. */
+export type BalanceEntry = {
+  id: string;
+  ts: number;
+  kind: "trade" | "reset" | "capital";
+  sym?: string;
+  /** Signed change to cash. */
+  amount: number;
+  /** Cash AFTER the movement, so the ledger reconciles without re-summing. */
+  balance: number;
+  note: string;
 };
 
 /** One completed round-trip, for the portfolio history and the equity curve. */
@@ -137,6 +152,10 @@ type PaperState = {
    * session cannot grow localStorage without bound.
    */
   trades: ClosedTrade[];
+  /** Every cash movement, newest first. */
+  balanceLog: BalanceEntry[];
+  /** Free-text notes keyed by closed-trade id — the trading journal. */
+  journal: Record<string, string>;
   /**
    * Share positions from /pro, keyed by symbol. They live in the SAME store as
    * the option `positions` above so both books draw on one cash balance and one
@@ -161,6 +180,8 @@ type PaperState = {
     o: Omit<WorkingOrder, "id" | "status" | "placedAt"> & { marketPrice?: number }
   ) => { ok: boolean; error?: string; order?: WorkingOrder };
   cancelOrder: (id: string) => void;
+  /** Attach or clear a journal note on a closed trade. */
+  setJournalNote: (tradeId: string, note: string) => void;
   /** Advance the book against a live price. Called from the chart's quote poll. */
   markPrice: (sym: string, price: number) => void;
   /** Set the paper account's starting capital and reset everything to it. */
@@ -180,6 +201,8 @@ export const usePaper = create<PaperState>()(
       shares: {},
       orders: [],
       trades: [],
+      balanceLog: [],
+      journal: {},
       realizedToday: 0,
       open: (p) => {
         const id = `pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -257,11 +280,26 @@ export const usePaper = create<PaperState>()(
           });
         }
 
+        const nextCash = s.cash + cashDelta;
+        const balanceLog = [
+          {
+            id: `b-${f.ts ?? Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            ts: f.ts ?? Date.now(),
+            kind: "trade" as const,
+            sym: f.sym,
+            amount: cashDelta,
+            balance: nextCash,
+            note: `${f.side} ${f.qty} ${f.sym} @ ${f.price.toFixed(2)}`,
+          },
+          ...(s.balanceLog ?? []),
+        ].slice(0, MAX_TRADES);
+
         set({
           ...(fresh ?? {}),
           shares,
           trades: trades.slice(0, MAX_TRADES),
-          cash: s.cash + cashDelta,
+          balanceLog,
+          cash: nextCash,
           // Share P&L lands in the same realizedToday the kill switch reads, so
           // one daily loss limit governs both books.
           realizedToday: s.realizedToday + realizedDelta,
@@ -334,6 +372,14 @@ export const usePaper = create<PaperState>()(
         return { ok: true, order };
       },
 
+      setJournalNote: (tradeId, note) =>
+        set((st) => {
+          const journal = { ...st.journal };
+          if (note.trim()) journal[tradeId] = note;
+          else delete journal[tradeId]; // an empty note is no note, not an empty string
+          return { journal };
+        }),
+
       cancelOrder: (id) =>
         set((st) => ({
           orders: st.orders.map((o) =>
@@ -363,7 +409,26 @@ export const usePaper = create<PaperState>()(
         // Changing the starting capital restarts the account — carrying old
         // positions and P&L into a new balance would make every historical
         // return percentage meaningless.
-        set({ cash: capital, startingCash: capital, positions: [], shares: {}, orders: [], trades: [], realizedToday: 0 });
+        set({
+          cash: capital,
+          startingCash: capital,
+          positions: [],
+          shares: {},
+          orders: [],
+          trades: [],
+          journal: {},
+          balanceLog: [
+            {
+              id: `b-${Date.now()}`,
+              ts: Date.now(),
+              kind: "capital" as const,
+              amount: capital,
+              balance: capital,
+              note: `Account restarted at $${capital.toFixed(2)}`,
+            },
+          ],
+          realizedToday: 0,
+        });
       },
       reset: () =>
         set((s) => ({
@@ -372,6 +437,17 @@ export const usePaper = create<PaperState>()(
           shares: {},
           orders: [],
           trades: [],
+          journal: {},
+          balanceLog: [
+            {
+              id: `b-${Date.now()}`,
+              ts: Date.now(),
+              kind: "reset" as const,
+              amount: 0,
+              balance: s.startingCash,
+              note: `Account reset to $${s.startingCash.toFixed(2)}`,
+            },
+          ],
           realizedToday: 0,
         })),
     }),
@@ -389,6 +465,8 @@ export const usePaper = create<PaperState>()(
           shares: sanitizeShares(p.shares),
           orders: Array.isArray(p.orders) ? p.orders : [],
           trades: Array.isArray(p.trades) ? p.trades : [],
+          balanceLog: Array.isArray(p.balanceLog) ? p.balanceLog : [],
+          journal: p.journal && typeof p.journal === "object" && !Array.isArray(p.journal) ? p.journal : {},
         } as PaperState;
       },
       // migrate() only runs when the stored version differs. Anything already
@@ -407,6 +485,8 @@ export const usePaper = create<PaperState>()(
           realizedToday: num(p.realizedToday, 0),
           positions: Array.isArray(p.positions) ? p.positions : [],
           orders: Array.isArray(p.orders) ? p.orders.slice(0, 300) : [],
+          balanceLog: Array.isArray(p.balanceLog) ? p.balanceLog.slice(0, MAX_TRADES) : [],
+          journal: p.journal && typeof p.journal === "object" && !Array.isArray(p.journal) ? p.journal : {},
           trades: Array.isArray(p.trades)
             ? p.trades.filter((t) => t && Number.isFinite(t.pnl) && Number.isFinite(t.qty)).slice(0, MAX_TRADES)
             : [],
