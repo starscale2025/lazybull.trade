@@ -215,6 +215,30 @@ export function ordersMargin(orders: Order[]): number {
   }, 0);
 }
 
+/**
+ * Can this working order be moved to `price` without filling on the next tick?
+ *
+ * Dragging a stop loss above a long's market price turns it into an immediate
+ * market sell; dragging a take profit below it does the same. Neither is what
+ * the drag intended, so the caller refuses rather than silently liquidating the
+ * position the handle was protecting. Returns a reason, or null if the move is
+ * safe.
+ */
+export function validateMove(o: Order, price: number, marketPrice?: number): string | null {
+  if (!Number.isFinite(price) || price <= 0) return "price must be above 0";
+  if (o.status !== "working") return "order is no longer working";
+  if (!Number.isFinite(marketPrice)) return null; // no mark to judge against
+  const mkt = marketPrice as number;
+  // shouldFill answers exactly the question "would this fill right now?".
+  const moved = { ...o, [o.type === "limit" ? "limitPrice" : "stopPrice"]: price } as Order;
+  if (o.reduceOnly && shouldFill(moved, mkt)) {
+    return o.type === "limit"
+      ? "take profit would fill immediately — move it further from the market"
+      : "stop loss would fill immediately — move it further from the market";
+  }
+  return null;
+}
+
 /** Cash actually free to commit: balance minus what working orders reserve. */
 export function availableFunds(cash: number, orders: Order[]): number {
   return cash - ordersMargin(orders);

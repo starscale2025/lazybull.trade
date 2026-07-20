@@ -135,6 +135,8 @@ export default function ProPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawings]);
 
+  const lastPriceRef = useRef<number | null>(null);
+
   // ── paper position (shared account — same cash the /trade book uses)
   const sharePositions = usePaper((st) => st.shares);
   // Belt-and-braces with the store's sanitizeShares: a single non-finite field
@@ -171,6 +173,8 @@ export default function ProPage() {
   // Mark the open position to the latest bar. Declared here rather than beside
   // `position` because it needs `bars`, which is fetched below.
   const lastPrice = bars[bars.length - 1]?.c ?? null;
+  // moveOrder is defined above `bars`, so it reads the mark through a ref.
+  lastPriceRef.current = lastPrice;
   const livePnl = unrealizedPnl(position, lastPrice ?? NaN);
 
   // Feed the order book. Every price update sweeps working orders for this
@@ -201,6 +205,16 @@ export default function ProPage() {
     [allOrders, symbol.sym]
   );
   const cancelOrder = usePaper((st) => st.cancelOrder);
+  const moveOrderRaw = usePaper((st) => st.moveOrder);
+  /** Drag-commit for the chart's order lines; surfaces a refusal as a toast. */
+  const moveOrder = useCallback(
+    (id: string, price: number) => {
+      const res = moveOrderRaw(id, price, lastPriceRef.current ?? undefined);
+      if (!res.ok) showToast(res.error ?? "could not move order", "warn");
+      return res;
+    },
+    [moveOrderRaw]
+  );
 
   // TradingView-style ✕ on the position line: flatten at the last price.
   const closeAtMarket = () => {
@@ -719,6 +733,7 @@ export default function ProPage() {
                 onClosePosition={i === 0 && !replayActive ? closeAtMarket : undefined}
                 workingOrders={i === 0 ? workingOrders : []}
                 onCancelOrder={i === 0 ? cancelOrder : undefined}
+                onMoveOrder={i === 0 && !replayActive ? moveOrder : undefined}
               />
             ))}
           </div>
@@ -866,6 +881,7 @@ function PaneChart({
   onClosePosition,
   workingOrders,
   onCancelOrder,
+  onMoveOrder,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -880,6 +896,7 @@ function PaneChart({
   onClosePosition?: () => void;
   workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean }[];
   onCancelOrder?: (id: string) => void;
+  onMoveOrder?: (id: string, price: number) => { ok: boolean; error?: string };
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -924,6 +941,7 @@ function PaneChart({
         onClosePosition={onClosePosition}
         workingOrders={workingOrders}
         onCancelOrder={onCancelOrder}
+        onMoveOrder={onMoveOrder}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}

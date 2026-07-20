@@ -45,6 +45,8 @@ type Props = {
   /** Resting orders for this symbol, drawn as cancellable lines. */
   workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean }[];
   onCancelOrder?: (id: string) => void;
+  /** Commit a dragged order to a new price. Returns an error to surface. */
+  onMoveOrder?: (id: string, price: number) => { ok: boolean; error?: string };
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
 };
@@ -75,6 +77,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     onClosePosition,
     workingOrders = [],
     onCancelOrder,
+    onMoveOrder,
     alerts,
     onAlertFire,
   },
@@ -201,6 +204,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   }, [vp.start, vp.span, bars, yLocked]);
 
   // ── interactions
+  // Dragging a working order's line. `preview` is the price under the cursor,
+  // rendered live so the handle tracks the pointer before anything is committed.
+  const [orderDrag, setOrderDrag] = useState<{ id: string; preview: number } | null>(null);
+
   const [crosshair, setCrosshair] = useState<{ x: number; y: number } | null>(null);
   const draftRef = useRef<Drawing | null>(null);
   const [draft, _setDraft] = useState<Drawing | null>(null);
@@ -778,8 +785,12 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
             the book, so it belongs on the chart where the price will meet it —
             not only in a table. Each carries its own ✕ to cancel. */}
         {workingOrders.map((o) => {
-          const y = yOfPrice(o.price, vp, geom);
+          // While dragging, draw at the pointer's price so the line tracks the
+          // cursor; the store is only written on release.
+          const shownPrice = orderDrag?.id === o.id ? orderDrag.preview : o.price;
+          const y = yOfPrice(shownPrice, vp, geom);
           if (!Number.isFinite(y)) return null;
+          const dragging = orderDrag?.id === o.id;
           const c = o.reduceOnly
             ? o.type === "limit"
               ? "var(--cyan)" // take profit
@@ -790,19 +801,58 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           const tag = o.reduceOnly
             ? o.type === "limit" ? "TP" : "SL"
             : `${o.side.toUpperCase()} ${o.type.toUpperCase()}`;
-          const text = `${tag} ${fmt(o.qty, 2)} @ ${fmt(o.price, 2)}`;
+          const text = `${tag} ${fmt(o.qty, 2)} @ ${fmt(shownPrice, 2)}`;
           const w = 12 + text.length * 6.2 + 20;
+          const startDrag = (e: React.PointerEvent) => {
+            if (!onMoveOrder) return;
+            e.stopPropagation();
+            (e.target as Element).setPointerCapture?.(e.pointerId);
+            setOrderDrag({ id: o.id, preview: o.price });
+          };
+          const moveDrag = (e: React.PointerEvent) => {
+            if (orderDrag?.id !== o.id) return;
+            e.stopPropagation();
+            const rect = (e.currentTarget as SVGGraphicsElement).ownerSVGElement?.getBoundingClientRect();
+            if (!rect) return;
+            // The svg is scaled to its box, so convert client y into svg units
+            // before inverting the price mapping.
+            const svgY = ((e.clientY - rect.top) / rect.height) * geom.height;
+            setOrderDrag({ id: o.id, preview: priceOfY(svgY, vp, geom) });
+          };
+          const endDrag = (e: React.PointerEvent) => {
+            if (orderDrag?.id !== o.id) return;
+            e.stopPropagation();
+            const price = orderDrag.preview;
+            setOrderDrag(null);
+            if (Math.abs(price - o.price) > 1e-9) onMoveOrder?.(o.id, price);
+          };
+
           return (
-            <g key={o.id}>
+            <g
+              key={o.id}
+              className={onMoveOrder ? (dragging ? "cursor-grabbing" : "cursor-ns-resize") : undefined}
+              onPointerDown={startDrag}
+              onPointerMove={moveDrag}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+            >
+              {/* A wide invisible band gives the 1px line a real grab target. */}
+              <rect
+                x={geom.padL}
+                y={y - 7}
+                width={Math.max(0, size.w - geom.padR - 56 - geom.padL)}
+                height={14}
+                fill="transparent"
+              />
               <line
                 x1={geom.padL}
                 x2={size.w - geom.padR - 56}
                 y1={y}
                 y2={y}
                 stroke={c}
-                strokeWidth={1}
+                strokeWidth={dragging ? 1.8 : 1}
                 strokeDasharray="5 4"
-                strokeOpacity={0.85}
+                strokeOpacity={dragging ? 1 : 0.85}
               />
               <rect x={geom.padL + 4} y={y - 9} width={w} height={18} fill="var(--bg)" fillOpacity={0.9} stroke={c} />
               <text x={geom.padL + 9} y={y + 3.5} fontFamily="var(--font-jetbrains)" fontSize="9.5" fill={c}>

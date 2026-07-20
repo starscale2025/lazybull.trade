@@ -9,6 +9,7 @@ import {
   bracketFor,
   sweep,
   tifExpiry,
+  validateMove,
   validateOrder,
   type Order as WorkingOrder,
 } from "./paper-orders";
@@ -180,6 +181,8 @@ type PaperState = {
     o: Omit<WorkingOrder, "id" | "status" | "placedAt"> & { marketPrice?: number }
   ) => { ok: boolean; error?: string; order?: WorkingOrder };
   cancelOrder: (id: string) => void;
+  /** Move a working order to a new price — the chart's drag handles. */
+  moveOrder: (id: string, price: number, marketPrice?: number) => { ok: boolean; error?: string };
   /** Attach or clear a journal note on a closed trade. */
   setJournalNote: (tradeId: string, note: string) => void;
   /** Advance the book against a live price. Called from the chart's quote poll. */
@@ -370,6 +373,17 @@ export const usePaper = create<PaperState>()(
 
         set((st) => ({ orders: [order, ...st.orders].slice(0, 300) }));
         return { ok: true, order };
+      },
+
+      moveOrder: (id, price, marketPrice) => {
+        const st = get();
+        const o = st.orders.find((x) => x.id === id);
+        if (!o) return { ok: false, error: "order not found" };
+        const bad = validateMove(o, price, marketPrice);
+        if (bad) return { ok: false, error: bad };
+        const next = { ...o, [o.type === "limit" ? "limitPrice" : "stopPrice"]: price } as WorkingOrder;
+        set({ orders: st.orders.map((x) => (x.id === id ? next : x)) });
+        return { ok: true };
       },
 
       setJournalNote: (tradeId, note) =>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   availableFunds,
+  validateMove,
   bracketFor,
   fillPriceFor,
   ordersMargin,
@@ -251,5 +252,52 @@ describe("time in force", () => {
   it("week expires in seven days", () => {
     const now = Date.UTC(2026, 0, 1, 10);
     expect(tifExpiry("week", now)! - now).toBe(7 * 86_400_000);
+  });
+});
+
+
+describe("validateMove — dragging a protective order", () => {
+  // Long position: TP is a sell limit ABOVE the market, SL a sell stop BELOW it.
+  const tp = mk({ id: "tp", side: "sell", type: "limit", limitPrice: 120, reduceOnly: true, parentId: "e" });
+  const sl = mk({ id: "sl", side: "sell", type: "stop", stopPrice: 80, reduceOnly: true, parentId: "e" });
+
+  it("allows a move that keeps the order away from the market", () => {
+    expect(validateMove(tp, 130, 100)).toBeNull(); // TP further up
+    expect(validateMove(sl, 70, 100)).toBeNull(); // SL further down
+  });
+
+  it("refuses a take profit dragged BELOW the market — it would fill instantly", () => {
+    // A sell limit at 90 with the market at 100 is immediately marketable, so
+    // the drag would liquidate the position it was protecting.
+    expect(validateMove(tp, 90, 100)).toMatch(/fill immediately/);
+  });
+
+  it("refuses a stop loss dragged ABOVE the market", () => {
+    expect(validateMove(sl, 110, 100)).toMatch(/fill immediately/);
+  });
+
+  it("mirrors for a short position's exits", () => {
+    const shortTp = mk({ id: "tp", side: "buy", type: "limit", limitPrice: 80, reduceOnly: true });
+    const shortSl = mk({ id: "sl", side: "buy", type: "stop", stopPrice: 120, reduceOnly: true });
+    expect(validateMove(shortTp, 70, 100)).toBeNull();
+    expect(validateMove(shortSl, 130, 100)).toBeNull();
+    expect(validateMove(shortTp, 110, 100)).toMatch(/fill immediately/); // buy limit above market
+    expect(validateMove(shortSl, 90, 100)).toMatch(/fill immediately/); // buy stop below market
+  });
+
+  it("does not restrict a normal entry order — only protective ones", () => {
+    const entry = mk({ id: "e", side: "buy", type: "limit", limitPrice: 90 });
+    // Dragging an entry limit above the market is a legitimate marketable order.
+    expect(validateMove(entry, 110, 100)).toBeNull();
+  });
+
+  it("rejects junk prices and dead orders", () => {
+    expect(validateMove(tp, 0, 100)).toMatch(/above 0/);
+    expect(validateMove(tp, NaN, 100)).toMatch(/above 0/);
+    expect(validateMove({ ...tp, status: "filled" }, 130, 100)).toMatch(/no longer working/);
+  });
+
+  it("allows any price when there is no mark to judge against", () => {
+    expect(validateMove(tp, 90, undefined)).toBeNull();
   });
 });
