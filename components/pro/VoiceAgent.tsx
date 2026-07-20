@@ -39,7 +39,12 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
   const getSnapshot = useCallback((): VoiceSnapshot => inputsRef.current, []);
 
   const [persona, setPersona] = useState<PersonaId>(DEFAULT_PERSONA);
-  const [autoGreet, setAutoGreet] = useState(true);
+  // OFF by default. Auto-connecting opened the microphone the moment the chart
+  // loaded — before the user had asked for anything — which fires a browser
+  // permission prompt on arrival and leaves a live mic on a page whose job is
+  // charts. Grabbing a device unprompted is the user's call to make, so this is
+  // strictly opt-in and the preference persists once they do.
+  const [autoGreet, setAutoGreet] = useState(false);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
 
@@ -48,7 +53,9 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
     try {
       const p = localStorage.getItem(PERSONA_KEY) as PersonaId | null;
       if (p && PERSONAS[p]) setPersona(p);
-      if (localStorage.getItem(AUTO_KEY) === "off") setAutoGreet(false);
+      // Opt-IN: only a stored "on" enables it. An older install that saved
+      // nothing (or "off") correctly stays silent.
+      if (localStorage.getItem(AUTO_KEY) === "on") setAutoGreet(true);
     } catch {}
   }, []);
 
@@ -64,7 +71,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
   // otherwise reset the idle timer on every 30s quote poll).
   const { connect, disconnect, reconnect } = voice;
 
-  // auto-greet once, after the first bars land
+  // Auto-greet once, after the first bars land — only when explicitly enabled.
   const autoTried = useRef(false);
   useEffect(() => {
     if (!autoGreet || autoTried.current) return;
