@@ -40,6 +40,8 @@ type Props = {
   chart?: "candles" | "line" | "area" | "bars";
   /** Open share position in this symbol, drawn as an average-entry line. */
   position?: { qty: number; avgPrice: number } | null;
+  /** Close-at-market for the position badge's ✕ (TradingView-style). */
+  onClosePosition?: () => void;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
 };
@@ -67,6 +69,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     replayBar = null,
     chart = "candles",
     position = null,
+    onClosePosition,
     alerts,
     onAlertFire,
   },
@@ -781,7 +784,8 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           // Width must account for BOTH strings plus the gap between them —
           // sizing off the left label alone made the P&L overlap it.
           const CH = 6.2; // jetbrains mono advance at 10px
-          const w = Math.max(160, 9 + label.length * CH + 14 + pnlLabel.length * CH + 9);
+          const CLOSE_W = onClosePosition ? 20 : 0;
+          const w = Math.max(160, 9 + label.length * CH + 14 + pnlLabel.length * CH + 9) + CLOSE_W;
           return (
             <g>
               <line
@@ -798,7 +802,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 {label}
               </text>
               <text
-                x={geom.padL + w - 5}
+                x={geom.padL + w - 5 - CLOSE_W}
                 y={y + 4}
                 textAnchor="end"
                 fontFamily="var(--font-jetbrains)"
@@ -808,6 +812,33 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
               >
                 {pnlLabel}
               </text>
+              {onClosePosition && (
+                <g
+                  role="button"
+                  aria-label="Close position at market"
+                  className="cursor-pointer"
+                  // The chart svg pans/draws on mousedown — the ✕ must not
+                  // start a drawing while closing a position.
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClosePosition();
+                  }}
+                >
+                  <line x1={geom.padL + 4 + w - CLOSE_W} x2={geom.padL + 4 + w - CLOSE_W} y1={y - 10} y2={y + 10} stroke={c} strokeOpacity={0.5} />
+                  <rect x={geom.padL + 4 + w - CLOSE_W} y={y - 10} width={CLOSE_W} height={20} fill="transparent" />
+                  <text
+                    x={geom.padL + 4 + w - CLOSE_W / 2}
+                    y={y + 3.5}
+                    textAnchor="middle"
+                    fontFamily="var(--font-jetbrains)"
+                    fontSize="10"
+                    fill={c}
+                  >
+                    ✕
+                  </text>
+                </g>
+              )}
             </g>
           );
         })()}

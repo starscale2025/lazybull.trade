@@ -11,6 +11,9 @@ import { BottomBar } from "@/components/pro/BottomBar";
 import { ReplayBar } from "@/components/pro/ReplayBar";
 import { AlertsPanel } from "@/components/pro/AlertsPanel";
 import { TradeDrawer } from "@/components/pro/TradeDrawer";
+import { OrderTicket } from "@/components/pro/OrderTicket";
+import { TradingPanel } from "@/components/pro/TradingPanel";
+import { placePaperOrder } from "@/lib/pro/paper";
 import { VoiceAgent } from "@/components/pro/VoiceAgent";
 import type { Bar, Drawing, ToolKind } from "@/components/pro/chartCore";
 import type { PlacedOrder } from "@/lib/pro/voice/useVoiceAgent";
@@ -160,7 +163,26 @@ export default function ProPage() {
 
   // Mark the open position to the latest bar. Declared here rather than beside
   // `position` because it needs `bars`, which is fetched below.
-  const livePnl = unrealizedPnl(position, bars[bars.length - 1]?.c ?? NaN);
+  const lastPrice = bars[bars.length - 1]?.c ?? null;
+  const livePnl = unrealizedPnl(position, lastPrice ?? NaN);
+
+  // TradingView-style ✕ on the position line: flatten at the last price.
+  const closeAtMarket = () => {
+    if (!position || lastPrice == null || replayActive) return;
+    const res = placePaperOrder({
+      sym: symbol.sym,
+      side: position.qty > 0 ? "sell" : "buy",
+      type: "market",
+      qty: Math.abs(position.qty),
+      price: lastPrice,
+    });
+    if (!res.ok) {
+      showToast(`Close rejected: ${res.error}`, "warn");
+      return;
+    }
+    const pnl = (lastPrice - position.avgPrice) * position.qty;
+    showToast(`✓ Closed ${symbol.sym} — ${pnl >= 0 ? "+" : "−"}$${Math.abs(pnl).toFixed(2)} realized`, pnl >= 0 ? "ok" : "warn");
+  };
 
   useEffect(() => {
     let alive = true;
@@ -622,6 +644,15 @@ export default function ProPage() {
         />
 
         <div className="relative flex flex-1 overflow-hidden">
+          {/* On-chart order ticket — TradingView's SELL | qty | BUY, top-left */}
+          <div className="pointer-events-none absolute left-2 top-8 z-20">
+            <OrderTicket
+              symbol={symbol.sym}
+              price={lastPrice}
+              disabled={replayActive}
+              onResult={showToast}
+            />
+          </div>
           {/* Multi-pane chart layout */}
           <div className={`grid w-full h-full gap-px bg-border ${
             layout === 1 ? "grid-cols-1 grid-rows-1"
@@ -649,6 +680,7 @@ export default function ProPage() {
                 exchangeFallback={i === 0 ? symbolMetaForChart.exch : ""}
                 chartType={chartType}
                 position={i === 0 ? position : null}
+                onClosePosition={i === 0 && !replayActive ? closeAtMarket : undefined}
               />
             ))}
           </div>
@@ -708,6 +740,13 @@ export default function ProPage() {
           onClose={() => { setReplayActive(false); setReplayPlaying(false); }}
         />
       )}
+
+      <TradingPanel
+        chartSymbol={symbol.sym}
+        chartLast={lastPrice}
+        replayActive={replayActive}
+        onResult={showToast}
+      />
 
       <BottomBar
         preset={preset}
@@ -775,6 +814,7 @@ function PaneChart({
   exchangeFallback,
   chartType,
   position,
+  onClosePosition,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -786,6 +826,7 @@ function PaneChart({
   indicators: string[];
   chartType: Workspace["chart"];
   position: { qty: number; avgPrice: number } | null;
+  onClosePosition?: () => void;
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -827,6 +868,7 @@ function PaneChart({
         indicators={indicators}
         chart={chartType}
         position={position}
+        onClosePosition={onClosePosition}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}
