@@ -305,3 +305,33 @@ describe("property: invariants hold over random fill sequences", () => {
     }
   });
 });
+
+describe("closed-trade detection (history records every close, not just winners)", () => {
+  // The store records a round-trip when a fill runs OPPOSITE an open position.
+  // Gating on realized !== 0 dropped scratch trades from the history entirely.
+  const closes = (prevQty: number, side: "buy" | "sell") =>
+    Math.sign(side === "buy" ? 1 : -1) !== Math.sign(prevQty);
+
+  it("treats a break-even close as a close", () => {
+    const opened = applyFill(null, buy(100, 300)).position!;
+    const out = applyFill(opened, sell(100, 300));
+    expect(out.position).toBeNull();
+    expect(out.realizedDelta).toBe(0); // scratch — but still a completed trade
+    expect(closes(opened.qty, "sell")).toBe(true);
+  });
+
+  it("does not treat an ADD as a close", () => {
+    const opened = applyFill(null, buy(100, 300)).position!;
+    expect(closes(opened.qty, "buy")).toBe(false);
+    const added = applyFill(opened, buy(50, 320));
+    expect(added.realizedDelta).toBe(0);
+    expect(added.position!.qty).toBe(150);
+  });
+
+  it("counts a partial reduce and a cross as closes", () => {
+    const long = applyFill(null, buy(100, 300)).position!;
+    expect(closes(long.qty, "sell")).toBe(true);
+    const short = applyFill(null, sell(100, 300)).position!;
+    expect(closes(short.qty, "buy")).toBe(true);
+  });
+});

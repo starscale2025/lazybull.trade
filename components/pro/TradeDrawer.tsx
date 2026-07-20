@@ -18,7 +18,14 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [type, setType] = useState<"market" | "limit">("limit");
   const [qty, setQty] = useState("100");
-  const [price, setPrice] = useState(spot.toFixed(2));
+  // Was seeded from `spot` at mount — but the drawer mounts before the chart's
+  // bars resolve, so it opened showing "0.00" and stayed there. Track spot until
+  // the user actually edits the field.
+  const [price, setPrice] = useState(spot > 0 ? spot.toFixed(2) : "");
+  const [priceTouched, setPriceTouched] = useState(false);
+  useEffect(() => {
+    if (!priceTouched && spot > 0) setPrice(spot.toFixed(2));
+  }, [spot, priceTouched]);
   const [orders, setOrders] = useState<Order[]>(() => {
     if (typeof window === "undefined") return [];
     return readBlotter();
@@ -33,6 +40,12 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
   }, []);
 
   const [err, setErr] = useState<string | null>(null);
+  // A rejection from a previous attempt used to sit under the button after the
+  // user changed the order — a screenshot showed "short selling has unlimited
+  // risk" beneath a BUY. An error must not outlive the thing it describes.
+  useEffect(() => {
+    setErr(null);
+  }, [side, type, qty, price, symbol]);
 
   const place = () => {
     // Booking goes through the shared account (cash, position, realized P&L)
@@ -112,7 +125,10 @@ export function TradeDrawer({ open, onClose, symbol, spot }: Props) {
                   <input
                     value={type === "market" ? "MKT" : price}
                     disabled={type === "market"}
-                    onChange={(e) => setPrice(e.target.value)}
+                    onChange={(e) => {
+                      setPriceTouched(true);
+                      setPrice(e.target.value);
+                    }}
                     className="w-24 bg-transparent text-right text-fg outline-none"
                   />
                 </label>

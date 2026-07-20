@@ -70,7 +70,7 @@ export const useStrategy = create<StrategyState>()((set) => ({
  * between losing a position and losing nothing in practice. Returns null when
  * storage is unavailable or unusable, in which case callers keep in-memory state.
  */
-function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions"> | null {
+function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions" | "trades"> | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("lb-paper");
@@ -84,6 +84,7 @@ function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "rea
       startingCash: num(st.startingCash, 100_000),
       realizedToday: num(st.realizedToday, 0),
       positions: Array.isArray(st.positions) ? st.positions : [],
+      trades: Array.isArray(st.trades) ? st.trades : [],
       shares: sanitizeShares(st.shares),
     };
   } catch {
@@ -103,10 +104,30 @@ export type Position = {
   pnl: number; // realized when closed
 };
 
+/** One completed round-trip, for the portfolio history and the equity curve. */
+export type ClosedTrade = {
+  id: string;
+  sym: string;
+  side: "long" | "short"; // the direction of the position that was CLOSED
+  qty: number; // how much was closed by this fill
+  entry: number; // average entry of the closed portion
+  exit: number; // fill price
+  pnl: number; // realized on this close
+  openedAt: number;
+  closedAt: number;
+};
+
 type PaperState = {
   cash: number;
   startingCash: number;
   positions: Position[];
+  /**
+   * Realized round-trips, newest first. The blotter (`lb-pro-orders`) records
+   * every FILL; this records every CLOSE with its P&L, which is what a
+   * portfolio history and an equity curve actually need. Capped so a long
+   * session cannot grow localStorage without bound.
+   */
+  trades: ClosedTrade[];
   /**
    * Share positions from /pro, keyed by symbol. They live in the SAME store as
    * the option `positions` above so both books draw on one cash balance and one
@@ -124,16 +145,22 @@ type PaperState = {
   closeAll: (reason: string) => void;
   /** Book a share fill. Returns an error string instead of throwing. */
   fillShares: (f: Fill) => { ok: boolean; error?: string; realized?: number };
+  /** Set the paper account's starting capital and reset everything to it. */
+  setStartingCash: (n: number) => void;
   reset: () => void;
 };
+
+const MAX_TRADES = 200;
+const DEFAULT_CAPITAL = 100_000;
 
 export const usePaper = create<PaperState>()(
   persist(
     (set, get) => ({
-      cash: 100_000,
-      startingCash: 100_000,
+      cash: DEFAULT_CAPITAL,
+      startingCash: DEFAULT_CAPITAL,
       positions: [],
       shares: {},
+      trades: [],
       realizedToday: 0,
       open: (p) => {
         const id = `pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -176,13 +203,40 @@ export const usePaper = create<PaperState>()(
         // against this tab's page-load snapshot.
         const fresh = readPersistedAccount();
         const s = fresh ? { ...get(), ...fresh } : get();
-        const { position, cashDelta, realizedDelta } = applyFill(s.shares[f.sym] ?? null, f);
+        const before = s.shares[f.sym] ?? null;
+        const { position, cashDelta, realizedDelta } = applyFill(before, f);
         const shares = { ...s.shares };
         if (position) shares[f.sym] = position;
         else delete shares[f.sym]; // flat positions are dropped, not kept at qty 0
+
+        // Record a round-trip whenever this fill CLOSED quantity — which is
+        // exactly when it runs opposite an existing position. Gating on
+        // `realizedDelta !== 0` instead meant a scratch trade (exit == entry)
+        // left no trace at all, so the history silently omitted every
+        // break-even close. Derived from `before`, where the entry price and
+        // open time live.
+        const trades = [...(s.trades ?? [])];
+        const signedQty = f.side === "buy" ? f.qty : -f.qty;
+        const closedSomething = !!before && Math.sign(signedQty) !== Math.sign(before.qty);
+        if (closedSomething && before) {
+          const closedQty = Math.min(f.qty, Math.abs(before.qty));
+          trades.unshift({
+            id: `t-${f.ts ?? Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            sym: f.sym,
+            side: before.qty > 0 ? "long" : "short",
+            qty: closedQty,
+            entry: before.avgPrice,
+            exit: f.price,
+            pnl: realizedDelta,
+            openedAt: before.openedAt,
+            closedAt: f.ts ?? Date.now(),
+          });
+        }
+
         set({
           ...(fresh ?? {}),
           shares,
+          trades: trades.slice(0, MAX_TRADES),
           cash: s.cash + cashDelta,
           // Share P&L lands in the same realizedToday the kill switch reads, so
           // one daily loss limit governs both books.
@@ -190,7 +244,21 @@ export const usePaper = create<PaperState>()(
         });
         return { ok: true, realized: realizedDelta };
       },
-      reset: () => set({ cash: 100_000, positions: [], shares: {}, realizedToday: 0 }),
+      setStartingCash: (n) => {
+        const capital = Number.isFinite(n) && n > 0 ? Math.min(n, 1e9) : DEFAULT_CAPITAL;
+        // Changing the starting capital restarts the account — carrying old
+        // positions and P&L into a new balance would make every historical
+        // return percentage meaningless.
+        set({ cash: capital, startingCash: capital, positions: [], shares: {}, trades: [], realizedToday: 0 });
+      },
+      reset: () =>
+        set((s) => ({
+          cash: s.startingCash,
+          positions: [],
+          shares: {},
+          trades: [],
+          realizedToday: 0,
+        })),
     }),
     {
       name: "lb-paper",
@@ -201,7 +269,7 @@ export const usePaper = create<PaperState>()(
       version: 2,
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<PaperState>;
-        return { ...p, shares: sanitizeShares(p.shares) } as PaperState;
+        return { ...p, shares: sanitizeShares(p.shares), trades: Array.isArray(p.trades) ? p.trades : [] } as PaperState;
       },
       // migrate() only runs when the stored version differs. Anything already
       // at v2 — including hand-edited or half-written localStorage — bypasses
@@ -218,6 +286,9 @@ export const usePaper = create<PaperState>()(
           startingCash: num(p.startingCash, current.startingCash),
           realizedToday: num(p.realizedToday, 0),
           positions: Array.isArray(p.positions) ? p.positions : [],
+          trades: Array.isArray(p.trades)
+            ? p.trades.filter((t) => t && Number.isFinite(t.pnl) && Number.isFinite(t.qty)).slice(0, MAX_TRADES)
+            : [],
           shares: sanitizeShares(p.shares),
         } as PaperState;
       },
