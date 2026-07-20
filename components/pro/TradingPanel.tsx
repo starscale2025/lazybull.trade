@@ -240,19 +240,36 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           Paper trading
           {heldSyms.length > 0 && <span className="border border-border px-1 text-[9px] text-fg">{heldSyms.length}</span>}
         </button>
-        <Metric k="Account balance" v={money(metrics.balance)} />
+        <Metric k="Balance" v={money(metrics.balance)} />
         <Metric k="Equity" v={money(metrics.equity)} />
-        <Metric k="Realized P&L" node={signed(metrics.realizedPnl)} />
-        <Metric k="Unrealized P&L" node={signed(metrics.unrealizedPnl)} />
-        <Metric k="Account margin" v={money(metrics.accountMargin)} />
-        <Metric k="Available funds" v={money(metrics.availableFunds)} />
-        {metrics.ordersMargin > 0 && <Metric k="Orders margin" v={money(metrics.ordersMargin)} tone="text-amber" />}
+        <Metric k="P&L" node={signed(metrics.realizedPnl + metrics.unrealizedPnl)} />
         <Metric
-          k="Margin buffer"
-          v={`${(metrics.marginBuffer * 100).toFixed(2)}%`}
-          tone={metrics.marginBuffer < 0.2 ? "text-bear" : undefined}
+          k="Available"
+          v={money(metrics.availableFunds)}
+          tone={metrics.availableFunds < 0 ? "text-bear" : undefined}
         />
         <span className="ml-auto flex items-center gap-2 text-fg-faint">
+          {/* One click back to a clean account. This is the way out of a blown-up
+              balance, so it is a first-class control rather than buried. */}
+          <button
+            onClick={() => {
+              resetAccount();
+              // Also drop the saved workspace. A stray click on the layout
+              // control persists ×2/×4 forever and reads as "buying opened a
+              // new chart", with no obvious way back — so the one button people
+              // reach for when things look wrong clears that too.
+              try {
+                localStorage.removeItem("lb-pro-workspace");
+              } catch {
+                /* storage unavailable — the account still reset */
+              }
+              onResult(`Funds reset to ${money(startingCash)} · workspace cleared — reload to restore layout`, "ok");
+            }}
+            className="border border-bull/40 px-1.5 py-0.5 uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+            title={`Reset to ${money(startingCash)} — clears positions, orders, history and the saved layout`}
+          >
+            ↺ reset funds
+          </button>
           <button
             onClick={() => {
               setCapitalText(String(Math.round(startingCash)));
@@ -260,9 +277,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             }}
             aria-expanded={capitalOpen}
             className="border border-border px-1.5 py-0.5 uppercase tracking-wider transition-colors hover:border-fg-dim hover:text-fg"
-            title="Set starting capital or reset the account"
+            title="Change the starting capital"
           >
-            capital {money(startingCash)}
+            {money(startingCash)}
           </button>
         </span>
       </div>
@@ -311,6 +328,23 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
 
       {open && (
         <div className="border-t border-border-soft">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider">
+            <Metric k="Realized P&L" node={signed(metrics.realizedPnl)} />
+            <Metric k="Unrealized P&L" node={signed(metrics.unrealizedPnl)} />
+            <Metric k="Account margin" v={money(metrics.accountMargin)} />
+            <Metric k="Orders margin" v={money(metrics.ordersMargin)} tone={metrics.ordersMargin > 0 ? "text-amber" : undefined} />
+            <Metric
+              k="Margin buffer"
+              v={`${(metrics.marginBuffer * 100).toFixed(2)}%`}
+              tone={metrics.marginBuffer < 0.2 ? "text-bear" : undefined}
+            />
+            {metrics.unmarkedCount > 0 && (
+              <span className="normal-case text-fg-faint">
+                {metrics.unmarkedCount} position{metrics.unmarkedCount > 1 ? "s" : ""} valued at cost
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center gap-1 px-3 pt-2">
             {(Object.keys(TAB_LABEL) as Tab[]).map((t) => {
               const count =

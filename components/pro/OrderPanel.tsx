@@ -37,6 +37,11 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
   const [slText, setSlText] = useState("");
   const [tif, setTif] = useState<TimeInForce>("week");
   const [err, setErr] = useState<string | null>(null);
+  // Brackets and time-in-force matter, but not on every order. Default to the
+  // four controls a trade actually needs (side, type, price, size) and let the
+  // rest be asked for. The disclosure stays open once used, so it does not
+  // fight anyone who wants it every time.
+  const [advanced, setAdvanced] = useState(false);
 
   const submitOrder = usePaper((s) => s.submitOrder);
   const cash = usePaper((s) => s.cash);
@@ -210,56 +215,70 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
           </div>
         </div>
 
-        {/* brackets */}
-        <div className="border-t border-border-soft pt-3">
-          <div className={`${label} mb-2`}>exits</div>
-          <BracketRow
-            name="Take profit"
-            on={tpOn}
-            setOn={setTpOn}
-            value={tpText}
-            setValue={setTpText}
-            placeholder={refPrice ? (side === "buy" ? refPrice * 1.02 : refPrice * 0.98).toFixed(2) : ""}
-          />
-          <BracketRow
-            name="Stop loss"
-            on={slOn}
-            setOn={setSlOn}
-            value={slText}
-            setValue={setSlText}
-            placeholder={refPrice ? (side === "buy" ? refPrice * 0.98 : refPrice * 1.02).toFixed(2) : ""}
-          />
-        </div>
+        {/* advanced: brackets + time in force */}
+        <button
+          onClick={() => setAdvanced((v) => !v)}
+          aria-expanded={advanced}
+          className="flex w-full items-center gap-1.5 border-t border-border-soft pt-3 font-mono text-[9px] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg-dim"
+        >
+          <span className={`transition-transform ${advanced ? "rotate-90" : ""}`}>›</span>
+          exits &amp; time in force
+          {(tpOn || slOn) && <span className="text-bull">•</span>}
+        </button>
 
-        {/* time in force */}
-        {type !== "market" && (
-          <div>
-            <div className={`${label} mb-1`}>time in force</div>
-            <div className="flex gap-px bg-border">
-              {(["day", "week", "gtc"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTif(t)}
-                  aria-pressed={tif === t}
-                  className={`flex-1 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                    tif === t ? "bg-surface text-fg" : "bg-bg text-fg-faint hover:text-fg-dim"
-                  }`}
-                >
-                  {TIF_LABEL[t]}
-                </button>
-              ))}
-            </div>
+        {advanced && (
+          <div className="pt-2">
+            <div className={`${label} mb-2`}>exits</div>
+            <BracketRow
+              name="Take profit"
+              on={tpOn}
+              setOn={setTpOn}
+              value={tpText}
+              setValue={setTpText}
+              placeholder={refPrice ? (side === "buy" ? refPrice * 1.02 : refPrice * 0.98).toFixed(2) : ""}
+            />
+            <BracketRow
+              name="Stop loss"
+              on={slOn}
+              setOn={setSlOn}
+              value={slText}
+              setValue={setSlText}
+              placeholder={refPrice ? (side === "buy" ? refPrice * 0.98 : refPrice * 1.02).toFixed(2) : ""}
+            />
+
+            {/* time in force */}
+            {type !== "market" && (
+              <div className="mt-3">
+                <div className={`${label} mb-1`}>time in force</div>
+                <div className="flex gap-px bg-border">
+                  {(["day", "week", "gtc"] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTif(t)}
+                      aria-pressed={tif === t}
+                      className={`flex-1 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                        tif === t ? "bg-surface text-fg" : "bg-bg text-fg-faint hover:text-fg-dim"
+                      }`}
+                    >
+                      {TIF_LABEL[t]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* buying power */}
+        {/* buying power — two lines, because "can I afford this" is the only
+            question the panel needs to answer before you commit. */}
         <div className="space-y-1 border-t border-border-soft pt-3 font-mono text-[10px]">
-          <Row k="Available funds" v={`$${fmt(free, 2)}`} />
-          <Row k="Orders margin" v={`$${fmt(reserved, 2)}`} />
           <Row k="Order value" v={`$${fmt(notional, 2)}`} tone={notional > free && side === "buy" ? "text-bear" : undefined} />
-          {/* 1:1 is stated because a paper account that silently implied leverage
-              would teach the wrong lesson about position size. */}
-          <Row k="Leverage" v="1:1" />
+          <Row
+            k="Available funds"
+            v={`$${fmt(free, 2)}`}
+            tone={free < 0 ? "text-bear" : undefined}
+          />
+          {reserved > 0 && <Row k="Orders margin" v={`$${fmt(reserved, 2)}`} tone="text-amber" />}
         </div>
       </div>
 
