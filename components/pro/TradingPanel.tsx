@@ -8,7 +8,7 @@
 // no live mark shows "—" and its close button stays disabled: closing at a
 // price we do not have would fabricate a fill.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePaper, type BalanceEntry, type ClosedTrade } from "@/lib/stores";
 import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
 import { placePaperOrder } from "@/lib/pro/paper";
@@ -47,7 +47,12 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const setStartingCash = usePaper((s) => s.setStartingCash);
   const resetAccount = usePaper((s) => s.reset);
 
+  // A real sub-window: a title bar that stays put, a body that can be
+  // minimized away or expanded, and a draggable top edge to size it.
   const [open, setOpen] = useState(false);
+  const [maximized, setMaximized] = useState(false);
+  const [bodyH, setBodyH] = useState(208);
+  const resizeRef = useRef<{ startY: number; startH: number } | null>(null);
   const [tab, setTab] = useState<Tab>("positions");
   const [capitalOpen, setCapitalOpen] = useState(false);
   const [capitalText, setCapitalText] = useState("");
@@ -211,6 +216,26 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
     URL.revokeObjectURL(url);
   };
 
+  // Drag the window's top edge to resize. Listeners live on window so the
+  // pointer can leave the 4px handle mid-drag without the resize dying.
+  const startResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    resizeRef.current = { startY: e.clientY, startH: bodyH };
+    const onMove = (ev: PointerEvent) => {
+      const r = resizeRef.current;
+      if (!r) return;
+      // Dragging UP grows the panel, so the delta is inverted.
+      setBodyH(Math.max(120, Math.min(560, r.startH + (r.startY - ev.clientY))));
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+
   const money = (n: number) => `$${fmt(n, 2)}`;
   // Round BEFORE choosing the sign. The fill price and the mark come from
   // different sources, so a flat position could carry −0.0000001 and render
@@ -228,120 +253,153 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const td = "py-1.5 pr-3";
 
   return (
-    <div className="border-t border-border bg-bg">
-      {/* account strip — always visible */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider">
+    <div className="flex flex-col border-t border-border bg-bg">
+      {/* draggable top edge */}
+      {open && (
+        <div
+          onPointerDown={startResize}
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize the paper trading window"
+          className="h-1 shrink-0 cursor-ns-resize bg-transparent transition-colors hover:bg-bull/40"
+        />
+      )}
+
+      {/* title bar — always visible, like a docked window's chrome */}
+      <div className="flex items-center gap-2 border-b border-border-soft bg-surface px-3 py-1.5">
         <button
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex items-center gap-1.5 text-fg-dim transition-colors hover:text-fg"
+          className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-fg transition-colors hover:text-bull"
         >
-          <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▴</span>
-          Paper trading
-          {heldSyms.length > 0 && <span className="border border-border px-1 text-[9px] text-fg">{heldSyms.length}</span>}
+          <span className="grid size-4 place-items-center border border-bull/50 text-[8px] font-bold text-bull">LB</span>
+          Paper Trading
+          <span className={`text-fg-faint transition-transform ${open ? "" : "rotate-180"}`}>⌄</span>
         </button>
-        <Metric k="Balance" v={money(metrics.balance)} />
-        <Metric k="Equity" v={money(metrics.equity)} />
-        <Metric k="P&L" node={signed(metrics.realizedPnl + metrics.unrealizedPnl)} />
-        <Metric
-          k="Available"
-          v={money(metrics.availableFunds)}
-          tone={metrics.availableFunds < 0 ? "text-bear" : undefined}
-        />
-        <span className="ml-auto flex items-center gap-2 text-fg-faint">
-          {/* One click back to a clean account. This is the way out of a blown-up
-              balance, so it is a first-class control rather than buried. */}
+
+        {/* collapsed summary, so the bar is useful even when minimized */}
+        {!open && (
+          <span className="flex flex-wrap items-center gap-x-4 font-mono text-[10px] uppercase tracking-wider">
+            <Metric k="Equity" v={money(metrics.equity)} />
+            <Metric k="P&L" node={signed(metrics.realizedPnl + metrics.unrealizedPnl)} />
+            {rows.length > 0 && <Metric k="Positions" v={String(rows.length)} />}
+          </span>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => {
               resetAccount();
               // Also drop the saved workspace. A stray click on the layout
-              // control persists ×2/×4 forever and reads as "buying opened a
-              // new chart", with no obvious way back — so the one button people
-              // reach for when things look wrong clears that too.
+              // control persists x2/x4 forever and reads as "buying opened a
+              // new chart", with no obvious way back.
               try {
                 localStorage.removeItem("lb-pro-workspace");
               } catch {
                 /* storage unavailable — the account still reset */
               }
-              onResult(`Funds reset to ${money(startingCash)} · workspace cleared — reload to restore layout`, "ok");
+              onResult(`Funds reset to ${money(startingCash)} · workspace cleared`, "ok");
             }}
-            className="border border-bull/40 px-1.5 py-0.5 uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+            className="border border-bull/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
             title={`Reset to ${money(startingCash)} — clears positions, orders, history and the saved layout`}
           >
             ↺ reset funds
           </button>
           <button
-            onClick={() => {
-              setCapitalText(String(Math.round(startingCash)));
-              setCapitalOpen((v) => !v);
-            }}
-            aria-expanded={capitalOpen}
-            className="border border-border px-1.5 py-0.5 uppercase tracking-wider transition-colors hover:border-fg-dim hover:text-fg"
-            title="Change the starting capital"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Minimize paper trading"
+            title="Minimize"
+            className="px-1 font-mono text-[13px] leading-none text-fg-faint transition-colors hover:text-fg"
           >
-            {money(startingCash)}
+            —
           </button>
-        </span>
+          <button
+            onClick={() => {
+              setOpen(true);
+              setMaximized((v) => !v);
+            }}
+            aria-label={maximized ? "Restore paper trading" : "Maximize paper trading"}
+            title={maximized ? "Restore" : "Maximize"}
+            className="px-1 font-mono text-[11px] leading-none text-fg-faint transition-colors hover:text-fg"
+          >
+            {maximized ? "❐" : "⛶"}
+          </button>
+        </div>
       </div>
 
-      {capitalOpen && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-border-soft bg-surface px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
-          <label className="flex items-center gap-1.5 text-fg-faint">
-            starting capital
-            <span className="text-fg-dim">$</span>
-            <input
-              value={capitalText}
-              onChange={(e) => setCapitalText(e.target.value.replace(/[^\d.]/g, ""))}
-              inputMode="decimal"
-              aria-label="Starting capital in dollars"
-              className="w-24 border border-border bg-bg px-1.5 py-0.5 text-right tabular-nums text-fg outline-none"
-            />
-          </label>
-          <button
-            onClick={() => {
-              const n = parseFloat(capitalText);
-              if (!Number.isFinite(n) || n <= 0) {
-                onResult("Starting capital must be above 0", "warn");
-                return;
-              }
-              setStartingCash(n);
-              setCapitalOpen(false);
-              onResult(`Account restarted at $${fmt(n, 2)}`, "ok");
-            }}
-            className="border border-bull/50 px-2 py-0.5 text-bull transition-colors hover:bg-bull hover:text-bg"
-          >
-            set &amp; restart
-          </button>
-          <button
-            onClick={() => {
-              resetAccount();
-              setCapitalOpen(false);
-              onResult(`Account reset to $${fmt(startingCash, 2)}`, "ok");
-            }}
-            className="border border-border px-2 py-0.5 text-fg-dim transition-colors hover:border-bear hover:text-bear"
-          >
-            reset to {money(startingCash)}
-          </button>
-          <span className="normal-case text-fg-faint">Clears all positions, orders and history.</span>
-        </div>
-      )}
-
       {open && (
-        <div className="border-t border-border-soft">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider">
-            <Metric k="Realized P&L" node={signed(metrics.realizedPnl)} />
-            <Metric k="Unrealized P&L" node={signed(metrics.unrealizedPnl)} />
-            <Metric k="Account margin" v={money(metrics.accountMargin)} />
-            <Metric k="Orders margin" v={money(metrics.ordersMargin)} tone={metrics.ordersMargin > 0 ? "text-amber" : undefined} />
-            <Metric
+        <>
+          {/* account selector row */}
+          <div className="flex items-center gap-2 px-3 pt-2">
+            <button
+              onClick={() => {
+                setCapitalText(String(Math.round(startingCash)));
+                setCapitalOpen((v) => !v);
+              }}
+              aria-expanded={capitalOpen}
+              className="flex items-center gap-1.5 border border-border bg-surface px-2 py-1 font-mono text-[11px] text-fg transition-colors hover:border-fg-dim"
+              title="Change the starting capital"
+            >
+              lazybull paper <span className="text-fg-faint">USD</span>
+              <span className="text-fg-faint">⌄</span>
+            </button>
+            <span className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+              started {money(startingCash)}
+            </span>
+          </div>
+
+          {capitalOpen && (
+            <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 border border-border bg-surface px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+              <label className="flex items-center gap-1.5 text-fg-faint">
+                starting capital
+                <span className="text-fg-dim">$</span>
+                <input
+                  value={capitalText}
+                  onChange={(e) => setCapitalText(e.target.value.replace(/[^\d.]/g, ""))}
+                  inputMode="decimal"
+                  aria-label="Starting capital in dollars"
+                  className="w-24 border border-border bg-bg px-1.5 py-0.5 text-right tabular-nums text-fg outline-none"
+                />
+              </label>
+              <button
+                onClick={() => {
+                  const n = parseFloat(capitalText);
+                  if (!Number.isFinite(n) || n <= 0) {
+                    onResult("Starting capital must be above 0", "warn");
+                    return;
+                  }
+                  setStartingCash(n);
+                  setCapitalOpen(false);
+                  onResult(`Account restarted at $${fmt(n, 2)}`, "ok");
+                }}
+                className="border border-bull/50 px-2 py-0.5 text-bull transition-colors hover:bg-bull hover:text-bg"
+              >
+                set &amp; restart
+              </button>
+              <span className="normal-case text-fg-faint">Clears all positions, orders and history.</span>
+            </div>
+          )}
+
+          {/* metrics grid — label above value, two rows, like a broker's summary */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 px-3 pb-2 pt-3 sm:grid-cols-3 lg:grid-cols-5">
+            <Stat k="Account balance" v={money(metrics.balance)} />
+            <Stat k="Equity" v={money(metrics.equity)} />
+            <Stat k="Realized P&L" node={signed(metrics.realizedPnl)} />
+            <Stat k="Unrealized P&L" node={signed(metrics.unrealizedPnl)} />
+            <Stat k="Account margin" v={money(metrics.accountMargin)} />
+            <Stat k="Available funds" v={money(metrics.availableFunds)} tone={metrics.availableFunds < 0 ? "text-bear" : undefined} />
+            <Stat k="Orders margin" v={money(metrics.ordersMargin)} tone={metrics.ordersMargin > 0 ? "text-amber" : undefined} />
+            <Stat
               k="Margin buffer"
               v={`${(metrics.marginBuffer * 100).toFixed(2)}%`}
               tone={metrics.marginBuffer < 0.2 ? "text-bear" : undefined}
             />
             {metrics.unmarkedCount > 0 && (
-              <span className="normal-case text-fg-faint">
-                {metrics.unmarkedCount} position{metrics.unmarkedCount > 1 ? "s" : ""} valued at cost
-              </span>
+              <Stat
+                k="Valued at cost"
+                v={`${metrics.unmarkedCount} position${metrics.unmarkedCount > 1 ? "s" : ""}`}
+                tone="text-fg-faint"
+              />
             )}
           </div>
 
@@ -373,7 +431,10 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             </button>
           </div>
 
-          <div className="max-h-52 overflow-y-auto px-3 pb-2 pt-1">
+          <div
+            className="overflow-y-auto px-3 pb-2 pt-1"
+            style={{ height: maximized ? "min(60vh, 560px)" : bodyH }}
+          >
             {tab === "positions" &&
               (rows.length === 0 ? (
                 <Empty>No open positions — buy or sell from the order panel.</Empty>
@@ -671,12 +732,23 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                 </div>
               ))}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
 }
 
+/** Label above value — the broker-summary reading order, for the metrics grid. */
+function Stat({ k, v, node, tone }: { k: string; v?: string; node?: React.ReactNode; tone?: string }) {
+  return (
+    <div>
+      <div className="font-mono text-[10px] text-fg-faint">{k}</div>
+      <div className={`font-mono text-[13px] tabular-nums ${tone ?? "text-fg"}`}>{node ?? v}</div>
+    </div>
+  );
+}
+
+/** Inline label·value, for the collapsed title-bar summary. */
 function Metric({ k, v, node, tone }: { k: string; v?: string; node?: React.ReactNode; tone?: string }) {
   return (
     <span className="text-fg-faint">
