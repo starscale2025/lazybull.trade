@@ -189,21 +189,43 @@ export default function ProPage() {
 
   // Working orders for the charted symbol, drawn as lines.
   const allOrders = usePaper((st) => st.orders);
-  const workingOrders = useMemo(
-    () =>
-      allOrders
-        .filter((o) => o.status === "working" && o.sym === symbol.sym)
-        .map((o) => ({
-          id: o.id,
-          side: o.side,
-          type: o.type as "limit" | "stop",
-          price: (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0,
-          qty: o.qty,
-          reduceOnly: !!o.reduceOnly,
-        }))
-        .filter((o) => o.price > 0),
-    [allOrders, symbol.sym]
-  );
+  const workingOrders = useMemo(() => {
+    const live = allOrders.filter((o) => o.status === "working" && o.sym === symbol.sym);
+    const lines = live
+      .map((o) => ({
+        id: o.id,
+        side: o.side,
+        type: o.type as "limit" | "stop",
+        price: (o.type === "limit" ? o.limitPrice : o.stopPrice) ?? 0,
+        qty: o.qty,
+        reduceOnly: !!o.reduceOnly,
+        pending: false,
+      }))
+      .filter((o) => o.price > 0);
+
+    // A resting ENTRY carries its bracket as intent, not yet as orders — the
+    // exits are only created when it fills. Without drawing them you set a take
+    // profit and a stop loss and then see nothing on the chart, which reads as
+    // the feature being broken. Draw them as pending previews so the plan is
+    // visible before the entry is hit.
+    for (const o of live) {
+      if (o.reduceOnly) continue;
+      const exitSide = o.side === "buy" ? "sell" : "buy";
+      if (o.takeProfit) {
+        lines.push({
+          id: `${o.id}:tp`, side: exitSide, type: "limit",
+          price: o.takeProfit, qty: o.qty, reduceOnly: true, pending: true,
+        });
+      }
+      if (o.stopLoss) {
+        lines.push({
+          id: `${o.id}:sl`, side: exitSide, type: "stop",
+          price: o.stopLoss, qty: o.qty, reduceOnly: true, pending: true,
+        });
+      }
+    }
+    return lines;
+  }, [allOrders, symbol.sym]);
   const cancelOrder = usePaper((st) => st.cancelOrder);
   const moveOrderRaw = usePaper((st) => st.moveOrder);
   /** Drag-commit for the chart's order lines; surfaces a refusal as a toast. */
@@ -894,7 +916,7 @@ function PaneChart({
   chartType: Workspace["chart"];
   position: { qty: number; avgPrice: number } | null;
   onClosePosition?: () => void;
-  workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean }[];
+  workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean; pending?: boolean }[];
   onCancelOrder?: (id: string) => void;
   onMoveOrder?: (id: string, price: number) => { ok: boolean; error?: string };
   replayCursor: number | null;

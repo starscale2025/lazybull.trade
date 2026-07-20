@@ -43,7 +43,7 @@ type Props = {
   /** Close-at-market for the position badge's ✕ (TradingView-style). */
   onClosePosition?: () => void;
   /** Resting orders for this symbol, drawn as cancellable lines. */
-  workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean }[];
+  workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean; pending?: boolean }[];
   onCancelOrder?: (id: string) => void;
   /** Commit a dragged order to a new price. Returns an error to surface. */
   onMoveOrder?: (id: string, price: number) => { ok: boolean; error?: string };
@@ -788,9 +788,24 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           // While dragging, draw at the pointer's price so the line tracks the
           // cursor; the store is only written on release.
           const shownPrice = orderDrag?.id === o.id ? orderDrag.preview : o.price;
-          const y = yOfPrice(shownPrice, vp, geom);
-          if (!Number.isFinite(y)) return null;
+          const rawY = yOfPrice(shownPrice, vp, geom);
+          if (!Number.isFinite(rawY)) return null;
           const dragging = orderDrag?.id === o.id;
+          // An order priced outside the visible range used to render off-canvas
+          // and simply disappear — you set a take profit at 400 on a chart
+          // showing 282-386 and saw nothing. Pin it to the edge with an arrow
+          // instead, so the order is always accounted for even when its price
+          // is not in view.
+          const top = geom.padT;
+          const bottom = geom.height - PAD.B;
+          const offAbove = rawY < top;
+          const offBelow = rawY > bottom;
+          const offscreen = offAbove || offBelow;
+          // The OHLC header is an HTML overlay above the plot, so a badge
+          // pinned to the literal top edge lands on top of it. Drop pinned
+          // rows below that band; in-range rows keep the tight padding.
+          const HEADER = 26;
+          const y = Math.max(top + (offAbove ? HEADER : 9), Math.min(bottom - 9, rawY));
           const c = o.reduceOnly
             ? o.type === "limit"
               ? "var(--cyan)" // take profit
@@ -801,10 +816,11 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           const tag = o.reduceOnly
             ? o.type === "limit" ? "TP" : "SL"
             : `${o.side.toUpperCase()} ${o.type.toUpperCase()}`;
-          const text = `${tag} ${fmt(o.qty, 2)} @ ${fmt(shownPrice, 2)}`;
+          const text = `${offAbove ? "▲ " : offBelow ? "▼ " : ""}${tag}${o.pending ? "?" : ""} ${fmt(o.qty, 2)} @ ${fmt(shownPrice, 2)}`;
           const w = 12 + text.length * 6.2 + 20;
+          const canDrag = !!onMoveOrder && !offscreen && !o.pending;
           const startDrag = (e: React.PointerEvent) => {
-            if (!onMoveOrder) return;
+            if (!canDrag) return;
             e.stopPropagation();
             (e.target as Element).setPointerCapture?.(e.pointerId);
             setOrderDrag({ id: o.id, preview: o.price });
@@ -830,7 +846,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           return (
             <g
               key={o.id}
-              className={onMoveOrder ? (dragging ? "cursor-grabbing" : "cursor-ns-resize") : undefined}
+              className={canDrag ? (dragging ? "cursor-grabbing" : "cursor-ns-resize") : undefined}
               onPointerDown={startDrag}
               onPointerMove={moveDrag}
               onPointerUp={endDrag}
@@ -851,14 +867,26 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 y2={y}
                 stroke={c}
                 strokeWidth={dragging ? 1.8 : 1}
-                strokeDasharray="5 4"
-                strokeOpacity={dragging ? 1 : 0.85}
+                // Pending brackets are intent, not resting orders: finer dashes
+                // and lower opacity so the two are never confused at a glance.
+                strokeDasharray={o.pending ? "2 5" : "5 4"}
+                strokeOpacity={dragging ? 1 : o.pending ? 0.45 : 0.85}
               />
-              <rect x={geom.padL + 4} y={y - 9} width={w} height={18} fill="var(--bg)" fillOpacity={0.9} stroke={c} />
-              <text x={geom.padL + 9} y={y + 3.5} fontFamily="var(--font-jetbrains)" fontSize="9.5" fill={c}>
+              <rect
+                x={geom.padL + 4}
+                y={y - 9}
+                width={w}
+                height={18}
+                fill="var(--bg)"
+                fillOpacity={0.9}
+                stroke={c}
+                strokeOpacity={o.pending ? 0.5 : 1}
+                strokeDasharray={o.pending ? "3 3" : undefined}
+              />
+              <text x={geom.padL + 9} y={y + 3.5} fontFamily="var(--font-jetbrains)" fontSize="9.5" fill={c} fillOpacity={o.pending ? 0.75 : 1}>
                 {text}
               </text>
-              {onCancelOrder && (
+              {onCancelOrder && !o.pending && (
                 <g
                   role="button"
                   aria-label={`Cancel ${tag} order at ${fmt(o.price, 2)}`}
