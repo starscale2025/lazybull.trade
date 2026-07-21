@@ -4,6 +4,7 @@ import { Fraunces, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google"
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SessionProvider } from "@/components/SessionProvider";
+import { PaperSync } from "@/components/PaperSync";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
 
 const fraunces = Fraunces({
@@ -44,6 +45,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-bg text-fg selection:bg-bull selection:text-bg">
         <SessionProvider>
           <ThemeProvider>{children}</ThemeProvider>
+          {/* Cross-device paper-account replication — needs the session. */}
+          <PaperSync />
         </SessionProvider>
         {/* Daily-loss guard: global, because share trades now book from /pro
             and /quant too, and the limit has to be watched everywhere. */}
