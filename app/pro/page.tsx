@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import Link from "next/link";
+import { Nav } from "@/components/Nav";
 import { Chart, type ChartHandle, type Alert } from "@/components/pro/Chart";
 import { LeftToolbar } from "@/components/pro/LeftToolbar";
 import { TopBar, SEED_SYMBOLS, type SymbolDef } from "@/components/pro/TopBar";
@@ -716,16 +716,15 @@ export default function ProPage() {
 
   return (
     <div ref={wrapperRef} className="pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
-      {/* App bar */}
+      {/* Site navigation — same bar as every other page, so /pro is not a dead
+          end. The workspace strip below keeps the pro-only controls. */}
+      <Nav />
+      {/* App bar — brand lives in the Nav now; this strip is workspace status. */}
       <header className="flex h-12 items-center gap-2 border-b border-border bg-bg-soft px-3">
-        <Link href="/" className="flex items-center gap-2 font-display text-sm tracking-tightest text-fg">
-          <div className="relative flex size-6 items-center justify-center border border-fg/40 bg-bg">
-            <div className="absolute inset-[3px] bg-bull" />
-            <span className="relative font-mono text-[8px] font-bold text-bg">LB</span>
-          </div>
-          lazybull<span className="text-bull">.pro</span>
-        </Link>
-        <div className="ml-3 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
+        <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-bull">
+          pro
+        </span>
+        <div className="ml-1 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
           <span>workspace · "godmode"</span>
           {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
