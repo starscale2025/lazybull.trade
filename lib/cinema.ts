@@ -54,7 +54,7 @@ export type CopyBeat = {
 export const COPY_BEATS: CopyBeat[] = [
   { id: "boot", from: 0.006, to: 0.045, heading: "lazybull.trade", sub: "options — without the fog" },
   { id: "assembly", from: 0.075, to: 0.145, heading: "One terminal. Every tool.", sub: "27 bots · 13 models · 8 live demos" },
-  { id: "dive", from: 0.165, to: 0.235, heading: "0.4ms pricing engine", sub: "$100K paper — $0 real dollars at risk, ever" },
+  { id: "dive", from: 0.165, to: 0.235, heading: "0.4ms pricing engine", sub: "$5K paper — $0 real dollars at risk, ever" },
   { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "It reads the regime first.", sub: "Hurst says trend, reversion or noise — before a single trade." },
   { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "It saw the crash coming.", sub: "AI Direction Ensemble · ULTRA conviction" },
   // sits over the crash landing + pull-back, which end at CANDLE_BUILD_END —

@@ -65,7 +65,7 @@ export function IntroSequence() {
         </div>
         <div className="mt-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <span>signed-by · lazybull labs</span>
-          <span className="text-bull">paper · 100k</span>
+          <span className="text-bull">paper · 5k</span>
         </div>
       </div>
     </div>

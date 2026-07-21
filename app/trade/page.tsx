@@ -323,7 +323,7 @@ export default function TradePage() {
             </div>
             <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-bull">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-              paper only · $100k practice account
+              paper only · $5k practice account
             </span>
           </div>
 

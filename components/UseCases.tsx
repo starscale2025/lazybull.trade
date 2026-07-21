@@ -13,9 +13,9 @@ const PROFILES = [
     stats: [
       { k: "Time to first trade", v: "4m" },
       { k: "Risk wizard", v: "on" },
-      { k: "Paper balance", v: "$100k" },
+      { k: "Paper balance", v: "$5k" },
     ],
-    tools: ["Risk wizard", "Teacher", "Paper $100k", "Kill switch"],
+    tools: ["Risk wizard", "Teacher", "Paper $5k", "Kill switch"],
     seed: 3,
     color: "var(--bull)",
     accent: "bg-bull",

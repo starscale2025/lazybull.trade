@@ -52,7 +52,7 @@ const FEATURES = [
   "Visual options chain",
   "27 quant bots · 13 models",
   "AI crash detection",
-  "$100K paper account",
+  "$5K paper account",
 ];
 
 // Deterministic ghost candle series — a climb into a dip, echoing the cinema.
@@ -155,7 +155,7 @@ export function GetStarted() {
 
         <p className="max-w-xl font-mono text-sm leading-relaxed text-fg-dim md:text-base">
           27 bots, 13 models and 8 live demos in one terminal. Learn it, backtest it,
-          and only then trade it — on a $100K paper account, with an AI teacher over
+          and only then trade it — on a $5K paper account, with an AI teacher over
           every Greek and a kill switch under everything.
         </p>
 

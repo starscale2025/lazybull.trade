@@ -28,7 +28,7 @@ const TIERS: Tier[] = [
     blurb: "The whole primer. Real practice. Forever.",
     features: [
       "Full 14-chapter interactive primer",
-      "Unlimited paper trades · $100k account",
+      "Unlimited paper trades · $5k account",
       "AI teacher · 5 explains per day",
       "3 bots in the quant workbench",
       "1 saved workspace",

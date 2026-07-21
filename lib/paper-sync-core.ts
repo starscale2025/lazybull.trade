@@ -7,7 +7,7 @@
 // the latest sanitized snapshot per user at a monotonically increasing `rev`.
 
 import { sanitizeShares } from "./paper-shares";
-import type { usePaper } from "./stores";
+import { DEFAULT_CAPITAL, type usePaper } from "./stores";
 
 type PaperState = ReturnType<typeof usePaper.getState>;
 
@@ -22,6 +22,8 @@ export type PaperSnapshot = {
   trades: PaperState["trades"];
   balanceLog: PaperState["balanceLog"];
   journal: PaperState["journal"];
+  accountStartedAt: number;
+  resetCount: number;
 };
 
 export function pickSnapshot(s: PaperState): PaperSnapshot {
@@ -35,13 +37,15 @@ export function pickSnapshot(s: PaperState): PaperSnapshot {
     trades: s.trades,
     balanceLog: s.balanceLog,
     journal: s.journal,
+    accountStartedAt: s.accountStartedAt,
+    resetCount: s.resetCount,
   };
 }
 
 /** Coerce an untrusted snapshot (server or wire) into something safe to put
     in the store. Same spirit as the store's own hydration merge(): numbers
     finite-or-default, arrays are arrays, shares re-sanitized. */
-export function sanitizeSnapshot(raw: unknown, fallbackCapital = 100_000): PaperSnapshot {
+export function sanitizeSnapshot(raw: unknown, fallbackCapital = DEFAULT_CAPITAL): PaperSnapshot {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
   const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
@@ -59,6 +63,8 @@ export function sanitizeSnapshot(raw: unknown, fallbackCapital = 100_000): Paper
       o.journal && typeof o.journal === "object" && !Array.isArray(o.journal)
         ? (o.journal as PaperSnapshot["journal"])
         : {},
+    accountStartedAt: Math.max(0, num(o.accountStartedAt, 0)),
+    resetCount: Math.max(0, Math.round(num(o.resetCount, 0))),
   } as PaperSnapshot;
 }
 

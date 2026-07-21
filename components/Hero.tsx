@@ -57,7 +57,7 @@ export async function Hero() {
           <span className="hidden md:inline">AI TEACHER ON</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden md:inline">PAPER $100K</span>
+          <span className="hidden md:inline">PAPER $5K</span>
           <span className="hidden md:inline">·</span>
           <span>TRAINING WHEELS</span>
         </div>
@@ -129,7 +129,7 @@ export async function Hero() {
             LAZYBULL turns the options chain into a heatmap you{" "}
             <span className="text-fg">drag across</span> to build spreads, condors and straddles.
             An AI teacher hovers over every Greek and explains the trade like you're twelve.
-            Safety wheels, kill switch, $100k paper account — so you can learn without losing the rent.
+            Safety wheels, kill switch, $5k paper account — so you can learn without losing the rent.
           </p>
 
           {/* CTAs */}
@@ -150,7 +150,7 @@ export async function Hero() {
             </MagneticCTA>
             <ProCta />
             <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
-              Free · No card · Paper $100k
+              Free · No card · Paper $5k
             </span>
           </div>
 

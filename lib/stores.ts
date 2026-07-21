@@ -89,8 +89,8 @@ function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "rea
     if (!st || typeof st !== "object") return null;
     const num = (v: unknown, fb: number) => (typeof v === "number" && Number.isFinite(v) ? v : fb);
     return {
-      cash: num(st.cash, 100_000),
-      startingCash: num(st.startingCash, 100_000),
+      cash: num(st.cash, DEFAULT_CAPITAL),
+      startingCash: num(st.startingCash, DEFAULT_CAPITAL),
       realizedToday: num(st.realizedToday, 0),
       positions: Array.isArray(st.positions) ? st.positions : [],
       trades: Array.isArray(st.trades) ? st.trades : [],
@@ -171,6 +171,11 @@ type PaperState = {
   /** The order book: working, filled, cancelled and expired orders. */
   orders: WorkingOrder[];
   realizedToday: number;
+  /** When this account epoch began. 0 = untouched fresh account; the display
+      falls back to the oldest ledger entry, so the date is never invented. */
+  accountStartedAt: number;
+  /** How many times the account has been wiped (reset or capital restart). */
+  resetCount: number;
   open: (p: Omit<Position, "id" | "openedAt" | "status" | "pnl">) => Position;
   close: (id: string, exitPnl: number) => void;
   closeAll: (reason: string) => void;
@@ -193,7 +198,10 @@ type PaperState = {
 };
 
 const MAX_TRADES = 200;
-const DEFAULT_CAPITAL = 100_000;
+/** Starting capital for a brand-new paper account. $5k, deliberately small:
+    a beginner-sized stake teaches position sizing honestly — $100k made every
+    lesson feel free. Existing accounts keep whatever they started with. */
+export const DEFAULT_CAPITAL = 5_000;
 
 export const usePaper = create<PaperState>()(
   persist(
@@ -207,6 +215,10 @@ export const usePaper = create<PaperState>()(
       balanceLog: [],
       journal: {},
       realizedToday: 0,
+      // 0, not Date.now(): create() runs during SSR too, and a nondeterministic
+      // initial would hydration-mismatch anywhere the date renders.
+      accountStartedAt: 0,
+      resetCount: 0,
       open: (p) => {
         const id = `pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const pos: Position = { ...p, id, openedAt: Date.now(), status: "open", pnl: 0 };
@@ -476,6 +488,8 @@ export const usePaper = create<PaperState>()(
             },
           ],
           realizedToday: 0,
+          accountStartedAt: Date.now(),
+          resetCount: get().resetCount + 1,
         });
       },
       reset: () =>
@@ -497,6 +511,8 @@ export const usePaper = create<PaperState>()(
             },
           ],
           realizedToday: 0,
+          accountStartedAt: Date.now(),
+          resetCount: s.resetCount + 1,
         })),
     }),
     {
@@ -505,16 +521,28 @@ export const usePaper = create<PaperState>()(
       // change deserialize without it. Without a merge that restores the
       // default, every read of `shares` would be undefined and the /pro
       // position panel would crash on first render for existing users.
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<PaperState>;
+        const log = Array.isArray(p.balanceLog) ? p.balanceLog : [];
         return {
           ...p,
           shares: sanitizeShares(p.shares),
           orders: Array.isArray(p.orders) ? p.orders : [],
           trades: Array.isArray(p.trades) ? p.trades : [],
-          balanceLog: Array.isArray(p.balanceLog) ? p.balanceLog : [],
+          balanceLog: log,
           journal: p.journal && typeof p.journal === "object" && !Array.isArray(p.journal) ? p.journal : {},
+          // v3: epoch metadata. Pre-v3 accounts reconstruct a best-effort
+          // history from the ledger they already carry: the oldest entry is
+          // when this epoch started, and past reset/capital rows are counted
+          // (both are floors — the ledger caps at 200 rows).
+          accountStartedAt:
+            Number.isFinite(p.accountStartedAt) && (p.accountStartedAt as number) > 0
+              ? (p.accountStartedAt as number)
+              : (log[log.length - 1]?.ts ?? 0),
+          resetCount: Number.isFinite(p.resetCount)
+            ? (p.resetCount as number)
+            : log.filter((b) => b?.kind === "reset" || b?.kind === "capital").length,
         } as PaperState;
       },
       // migrate() only runs when the stored version differs. Anything already
@@ -539,6 +567,8 @@ export const usePaper = create<PaperState>()(
             ? p.trades.filter((t) => t && Number.isFinite(t.pnl) && Number.isFinite(t.qty)).slice(0, MAX_TRADES)
             : [],
           shares: sanitizeShares(p.shares),
+          accountStartedAt: num(p.accountStartedAt, 0),
+          resetCount: Math.max(0, Math.round(num(p.resetCount, 0))),
         } as PaperState;
       },
     }

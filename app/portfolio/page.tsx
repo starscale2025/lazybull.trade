@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { ResetFundsModal } from "@/components/ResetFundsModal";
 import { usePaper, type BalanceEntry, type ClosedTrade, type Position } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
@@ -47,9 +48,12 @@ export default function PortfolioPage() {
   const bets = usePaper((s) => s.positions);
   const cancelOrder = usePaper((s) => s.cancelOrder);
   const setJournalNote = usePaper((s) => s.setJournalNote);
+  const accountStartedAt = usePaper((s) => s.accountStartedAt);
+  const resetCount = usePaper((s) => s.resetCount);
 
   const [quotes, setQuotes] = useState<Record<string, QuoteRow>>({});
   const [toast, setToast] = useState<string | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
 
   const say = (msg: string) => {
     setToast(msg);
@@ -193,10 +197,14 @@ export default function PortfolioPage() {
     say(`Closed ${sym} — ${signedMoney(pnl)} realized`);
   };
 
-  const resetAccount = () => {
-    if (!window.confirm(`Reset the paper account to ${money(startingCash)}? Positions, orders, history and the ledger are cleared.`)) return;
+  // The account epoch: explicit stamp when one exists, else the oldest ledger
+  // entry — never an invented date.
+  const startedAt = accountStartedAt || balanceLog[balanceLog.length - 1]?.ts || null;
+
+  const confirmReset = () => {
     usePaper.getState().reset();
-    say(`Account reset to ${money(startingCash)}`);
+    setResetOpen(false);
+    say(`Portfolio wiped — fresh start at ${money(startingCash)}`);
   };
 
   return (
@@ -212,10 +220,24 @@ export default function PortfolioPage() {
               <span>one account · /pro · /trade · /quant</span>
             </div>
             <h1 className="mt-2 font-display text-3xl tracking-tightest">Portfolio</h1>
+            <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+              {startedAt ? (
+                <>
+                  started{" "}
+                  <span className="text-fg-dim">
+                    {new Date(startedAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
+                  </span>
+                </>
+              ) : (
+                "no activity yet"
+              )}
+              {" · "}
+              <span className="text-fg-dim">{resetCount}</span> reset{resetCount === 1 ? "" : "s"}
+            </div>
           </div>
           <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
             <button
-              onClick={resetAccount}
+              onClick={() => setResetOpen(true)}
               className="h-8 border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
             >
               ↺ reset funds
@@ -637,6 +659,8 @@ export default function PortfolioPage() {
           {toast}
         </div>
       )}
+
+      <ResetFundsModal open={resetOpen} onCancel={() => setResetOpen(false)} onConfirm={confirmReset} />
     </div>
   );
 }

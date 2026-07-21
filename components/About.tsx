@@ -132,7 +132,7 @@ const TIMELINE = [
   {
     date: "Sep 2025",
     label: "Closed Beta",
-    desc: "First closed beta opens beyond NST. 400 sign-ups in week one with zero paid ads. Safety rails and the $100k paper account become defaults.",
+    desc: "First closed beta opens beyond NST. 400 sign-ups in week one with zero paid ads. Safety rails and the $5k paper account become defaults.",
     color: "var(--cyan)",
     side: "right",
   },
@@ -505,7 +505,7 @@ export function About() {
                   {[
                     { icon: "→", text: "Visualise the options chain as a heatmap you drag to build strategies" },
                     { icon: "→", text: "An AI teacher explains every Greek, every risk, in plain English" },
-                    { icon: "→", text: "Safety rails, kill switches, and a $100k paper account — on by default" },
+                    { icon: "→", text: "Safety rails, kill switches, and a $5k paper account — on by default" },
                     { icon: "→", text: "0.4ms Black-Scholes pricing — faster than any retail platform on earth" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3">

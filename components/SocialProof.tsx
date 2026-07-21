@@ -129,7 +129,7 @@ export function SocialProof() {
                 </svg>
               </a>
               <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                no card · paper $100k · kill switch on
+                no card · paper $5k · kill switch on
               </p>
             </div>
           </div>

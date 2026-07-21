@@ -32,7 +32,7 @@ const STEPS = [
   {
     n: "04",
     title: "Paper-trade with seatbelts",
-    body: "Every paper trade pre-screens for unbounded loss with a 3-second cooldown. A daily-loss kill switch auto-closes everything if you hit your limit. $100k starting balance — never your real money.",
+    body: "Every paper trade pre-screens for unbounded loss with a 3-second cooldown. A daily-loss kill switch auto-closes everything if you hit your limit. $5k starting balance — never your real money.",
     glyph: "◉",
   },
 ];

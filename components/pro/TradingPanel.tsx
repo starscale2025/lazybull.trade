@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePaper, type BalanceEntry, type ClosedTrade } from "@/lib/stores";
 import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
 import { placePaperOrder } from "@/lib/pro/paper";
+import { ResetFundsModal } from "@/components/ResetFundsModal";
 import { fmt } from "./chartCore";
 
 type Props = {
@@ -57,6 +58,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const [tab, setTab] = useState<Tab>("positions");
   const [capitalOpen, setCapitalOpen] = useState(false);
   const [capitalText, setCapitalText] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
   const [marks, setMarks] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<{ sym: string; tp: string; sl: string } | null>(null);
 
@@ -303,20 +305,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             portfolio ↗
           </a>
           <button
-            onClick={() => {
-              resetAccount();
-              // Also drop the saved workspace. A stray click on the layout
-              // control persists x2/x4 forever and reads as "buying opened a
-              // new chart", with no obvious way back.
-              try {
-                localStorage.removeItem("lb-pro-workspace");
-              } catch {
-                /* storage unavailable — the account still reset */
-              }
-              onResult(`Funds reset to ${money(startingCash)} · workspace cleared`, "ok");
-            }}
+            onClick={() => setResetOpen(true)}
             className="border border-bull/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
-            title={`Reset to ${money(startingCash)} — clears positions, orders, history and the saved layout`}
+            title={`Reset to ${money(startingCash)} — wipes the ENTIRE portfolio (full warning before anything happens)`}
           >
             ↺ reset funds
           </button>
@@ -749,6 +740,24 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           </div>
         </>
       )}
+
+      <ResetFundsModal
+        open={resetOpen}
+        onCancel={() => setResetOpen(false)}
+        onConfirm={() => {
+          resetAccount();
+          // Also drop the saved workspace. A stray click on the layout
+          // control persists x2/x4 forever and reads as "buying opened a
+          // new chart", with no obvious way back.
+          try {
+            localStorage.removeItem("lb-pro-workspace");
+          } catch {
+            /* storage unavailable — the account still reset */
+          }
+          setResetOpen(false);
+          onResult(`Portfolio wiped — fresh start at ${money(startingCash)} · workspace cleared`, "ok");
+        }}
+      />
     </div>
   );
 }

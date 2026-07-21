@@ -19,6 +19,8 @@ const emptySnap = (over: Partial<PaperSnapshot> = {}): PaperSnapshot => ({
   trades: [],
   balanceLog: [],
   journal: {},
+  accountStartedAt: 0,
+  resetCount: 0,
   ...over,
 });
 
@@ -52,7 +54,7 @@ describe("PaperSnapshotSchema (the wire contract)", () => {
 describe("sanitizeSnapshot (untrusted → store-safe)", () => {
   it("turns garbage into a sane default account", () => {
     const s = sanitizeSnapshot({ cash: "lots", trades: "nope", journal: [1, 2] });
-    expect(s.cash).toBe(100_000);
+    expect(s.cash).toBe(5_000); // DEFAULT_CAPITAL — the $5k starter account
     expect(s.trades).toEqual([]);
     expect(s.journal).toEqual({});
   });
