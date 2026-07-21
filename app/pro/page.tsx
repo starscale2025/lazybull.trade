@@ -21,6 +21,7 @@ import type { PlacedOrder } from "@/lib/pro/voice/useVoiceAgent";
 import { computeAnalysis } from "@/lib/pro/voice/analysis";
 import { usePaper } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
+import { patchLastBar, reconcileBars } from "@/lib/live-bars";
 
 const PRESET_TO_LASTN: Record<string, number> = {
   "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
@@ -47,32 +48,6 @@ const DEFAULT_WORKSPACE: Workspace = {
   color: "#00ff87",
   alerts: [],
 };
-
-/** Fold a fresh trade price into the developing (last) bar: close moves,
-    high/low stretch. No-op when nothing changes, so it's cheap in updaters. */
-function patchLastBar(arr: Bar[], price: number): Bar[] {
-  const last = arr[arr.length - 1];
-  if (!last || last.c === price) return arr;
-  return [...arr.slice(0, -1), { ...last, c: price, h: Math.max(last.h, price), l: Math.min(last.l, price) }];
-}
-
-/** A just-fetched bar series can be STALER than the last quote tick (the bars
-    proxy and the quote poll cache separately for 30s). Order them by upstream
-    regularMarketTime: an older fetch gets the freshest trade patched into its
-    last bar; a newer fetch becomes the new freshest. */
-function reconcileBars(
-  bars: Bar[],
-  meta: { regularMarketPrice?: number; regularMarketTime?: number } | null | undefined,
-  sym: string,
-  freshestRef: { current: { sym: string; price: number; t: number } | null }
-): Bar[] {
-  const mt = meta?.regularMarketTime ?? 0;
-  const f = freshestRef.current;
-  if (f && f.sym === sym && f.t > mt) return patchLastBar(bars, f.price);
-  const mp = meta?.regularMarketPrice;
-  if (typeof mp === "number" && Number.isFinite(mp)) freshestRef.current = { sym, price: mp, t: mt };
-  return bars;
-}
 
 export default function ProPage() {
   // ── core state

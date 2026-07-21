@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QuickBet } from "@/components/bet/QuickBet";
 import { generateCandles, type Candle } from "@/lib/candles";
+import { applyTick, reconcileBars, type FreshestRef } from "@/lib/live-bars";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
 import { QuantHero } from "./QuantHero";
@@ -19,6 +20,24 @@ export function QuantPage() {
   const [seed, setSeed] = useState(11);
   const [drift, setDrift] = useState(0.18);
   const [vol, setVol] = useState(1.6);
+  // LIVE runs the bots on the real (delayed ~15s) Yahoo tape and keeps it
+  // ticking; SEED runs them on the deterministic synthetic walk with the
+  // seed/drift/vol knobs fully in play. Persisted so a returning tinkerer
+  // lands back in the sandbox they left.
+  const [mode, setModeState] = useState<"live" | "seed">(() => {
+    if (typeof window === "undefined") return "live";
+    try {
+      return localStorage.getItem("lb-quant-mode") === "seed" ? "seed" : "live";
+    } catch {
+      return "live";
+    }
+  });
+  const setMode = (m: "live" | "seed") => {
+    setModeState(m);
+    try {
+      localStorage.setItem("lb-quant-mode", m);
+    } catch {}
+  };
   const [beginner, setBeginner] = useState(true);
   const [active, setActive] = useState<ActiveBot[]>(() => seedActive());
   const [results, setResults] = useState<ResultsMap>({});
@@ -38,20 +57,27 @@ export function QuantPage() {
   const [live, setLive] = useState<{ key: string; candles: Candle[] } | null>(null);
   const [status, setStatus] = useState<"loading" | "live" | "synthetic">("loading");
 
+  // The freshest known trade, ordered by upstream regularMarketTime — the bars
+  // proxy and the spot poll cache separately, so either can be the staler
+  // snapshot. Same guard /pro uses (lib/live-bars).
+  const freshestRef = useRef<FreshestRef["current"]>(null);
+
   useEffect(() => {
+    if (mode !== "live") return;
     let cancelled = false;
     const key = `${symbol}|${bars}`;
     setStatus("loading");
-    (async () => {
+    const load = async () => {
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&tf=D`);
         const j = await r.json();
         if (cancelled) return;
         if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
-          const tail = j.bars.slice(-bars).map((b: { o: number; h: number; l: number; c: number }) => ({
+          const tail: Candle[] = j.bars.slice(-bars).map((b: { o: number; h: number; l: number; c: number }) => ({
             o: b.o, h: b.h, l: b.l, c: b.c,
           }));
-          setLive({ key, candles: tail });
+          // A 30s-cached refetch must never walk the tape behind a newer tick.
+          setLive({ key, candles: reconcileBars(tail, j.meta, symbol, freshestRef) });
           setStatus("live");
           return;
         }
@@ -59,41 +85,90 @@ export function QuantPage() {
       } catch {
         if (!cancelled) setStatus("synthetic");
       }
-    })();
-    return () => { cancelled = true; };
-  }, [symbol, bars]);
+    };
+    void load();
+    // Live means live: the tape refetches while you sit on the page. /quant
+    // used to fetch once and quietly go stale for the whole session.
+    const id = setInterval(() => void load(), 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [symbol, bars, mode]);
+
+  // 15s spot tick folded into the developing candle, so lastSpot and the
+  // QuickBet mark move between refetches. Bots do NOT silently re-run on
+  // ticks — results stay put until the dataset identity changes (below).
+  useEffect(() => {
+    if (mode !== "live") return;
+    let alive = true;
+    const key = `${symbol}|${bars}`;
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/quote-batch?symbols=${encodeURIComponent(symbol)}`);
+        const j = await r.json();
+        if (!alive || !j?.ok) return;
+        const q = (j.quotes as { sym: string; last?: number; marketTime?: number | null }[] | undefined)?.find(
+          (x) => x.sym === symbol
+        );
+        if (!q || q.last == null) return;
+        setLive((cur) => {
+          if (!cur || cur.key !== key) return cur;
+          const next = applyTick(cur.candles, { sym: symbol, price: q.last as number, t: q.marketTime ?? 0 }, symbol, freshestRef);
+          return next ? { key: cur.key, candles: next } : cur;
+        });
+      } catch {
+        /* keep the last tape on a failed tick */
+      }
+    };
+    void tick();
+    const id = setInterval(() => void tick(), 15_000);
+    return () => { alive = false; clearInterval(id); };
+  }, [symbol, bars, mode]);
 
   // Stale-guard: only accept live bars that were fetched for the CURRENT key.
-  const liveCandles = live && live.key === liveKey ? live.candles : null;
+  const liveCandles = mode === "live" && live && live.key === liveKey ? live.candles : null;
 
   const syntheticCandles = useMemo<Candle[]>(
     () => generateCandles(bars, seed + symbol.charCodeAt(0), spotForSymbol(symbol), drift, vol),
     [bars, seed, symbol, drift, vol]
   );
-  const candles = liveCandles ?? syntheticCandles;
+  // SEED mode is a deliberate choice of the synthetic tape; in LIVE mode the
+  // synthetic walk remains only as a visible fallback when the feed is down.
+  const candles = mode === "seed" ? syntheticCandles : (liveCandles ?? syntheticCandles);
   const lastSpot = candles[candles.length - 1]?.c ?? 100;
 
-  // The badge must describe the bars the bots are ACTUALLY computing on. It
-  // used to read from a `dataSource` flag that stayed "live" across a refetch
-  // while `candles` had already fallen back to the synthetic walk.
-  const dataSource: "live" | "synthetic" = liveCandles ? "live" : "synthetic";
-  // seed/drift/vol only feed `syntheticCandles`, which live data shadows
-  // entirely — on the live path they were fully enabled controls that changed
-  // nothing except to wipe every completed result.
-  const syntheticKnobsActive = !liveCandles;
+  // The badge must describe the bars the bots are ACTUALLY computing on.
+  // "fallback" is live mode without live data — same walk as seed, but shown
+  // as a degraded state with a banner rather than a chosen sandbox.
+  const dataSource: "live" | "seed" | "fallback" =
+    mode === "seed" ? "seed" : liveCandles ? "live" : "fallback";
+  // seed/drift/vol shape the tape only in SEED mode. In the live-mode fallback
+  // they stay frozen — a degraded feed shouldn't quietly become a sandbox.
+  const syntheticKnobsActive = mode === "seed";
 
   // Invalidate results when the dataset the bots run on actually changes.
   //
   // This used to depend on the `liveCandles` ARRAY, which the fetch reassigned
   // on every resolve — so a quote landing after a completed RUN ALL silently
   // wiped it and the button looked broken. Keying on a string identity means a
-  // response that doesn't change the data doesn't destroy the run. The
-  // synthetic knobs only participate while they can actually affect the bars.
-  const datasetId = liveCandles
-    ? `live:${liveKey}`
-    : `syn:${symbol}|${bars}|${seed}|${drift}|${vol}`;
+  // response that doesn't change the data doesn't destroy the run.
+  //
+  // In live mode the identity includes the bar COUNT: 15s ticks mutate the
+  // developing candle without changing it (results survive), while a refetch
+  // that appends a new session busts it. The knobs only participate in seed
+  // mode, where they can actually affect the bars.
+  const datasetId =
+    mode === "seed"
+      ? `syn:${symbol}|${bars}|${seed}|${drift}|${vol}`
+      : liveCandles
+        ? `live:${liveKey}:${liveCandles.length}`
+        : `fallback:${liveKey}`;
+  // When the last full run happened — shown beside the verdict so a result
+  // computed minutes ago on a moving tape is self-describing, since bots
+  // deliberately never re-run on their own.
+  const [ranAt, setRanAt] = useState<number | null>(null);
+
   useEffect(() => {
     setResults({});
+    setRanAt(null);
   }, [datasetId]);
 
   /**
@@ -132,7 +207,7 @@ export function QuantPage() {
   useEffect(() => {
     if (didAutoRunRef.current) return;
     if (active.length === 0) return;
-    if (status === "loading") return; // else we'd run on the synthetic fallback
+    if (mode === "live" && status === "loading") return; // else we'd run on the fallback walk mid-fetch
     if (candles.length < 20) return; // wait for candles to be ready
     didAutoRunRef.current = true;
     // Defer to the next tick so the page paints once before the first
@@ -161,6 +236,7 @@ export function QuantPage() {
 
   function runAll() {
     if (active.length === 0) return;
+    setRanAt(Date.now());
     const next: ResultsMap = {};
     setResults({});
     let i = 0;
@@ -343,6 +419,22 @@ export function QuantPage() {
           </div>
         </div>
       )}
+      {mode === "live" && status === "synthetic" && (
+        <div className="border-b border-amber/30 bg-amber/5 px-5 py-2">
+          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
+            <span className="text-amber">⚠ live feed unreachable</span>
+            <span className="normal-case tracking-normal text-fg-dim">
+              Showing a deterministic fallback tape — verdicts below are NOT about the real {symbol}.
+            </span>
+            <button
+              onClick={() => setMode("seed")}
+              className="ml-auto border border-amber/50 bg-amber/10 px-3 py-1 text-amber hover:bg-amber/20"
+            >
+              use seed mode →
+            </button>
+          </div>
+        </div>
+      )}
       <QuantHero
         symbol={symbol}
         setSymbol={setSymbol}
@@ -361,6 +453,8 @@ export function QuantPage() {
         activeCount={active.length}
         totalBots={BOT_REGISTRY.length + customBots.length}
         spot={lastSpot}
+        mode={mode}
+        setMode={setMode}
         dataSource={dataSource}
         syntheticKnobsActive={syntheticKnobsActive}
       />
@@ -394,7 +488,7 @@ export function QuantPage() {
           </div>
 
           <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)]" style={{ height: "calc(100vh - 2rem)" }}>
-            <OutputPanel runs={rows} symbol={symbol} spot={lastSpot} beginner={beginner} />
+            <OutputPanel runs={rows} symbol={symbol} spot={lastSpot} beginner={beginner} ranAt={ranAt} dataSource={dataSource} />
           </div>
         </div>
       </section>
@@ -419,8 +513,16 @@ export function QuantPage() {
 
       <ImportBotModal open={importOpen} onClose={() => setImportOpen(false)} onImport={importBot} />
 
-      {/* One-tap paper bet, fed the same candles the bots just ran on. */}
-      <QuickBet symbol={symbol} spot={lastSpot} candles={candles} />
+      {/* One-tap paper bet, fed the same candles the bots just ran on. Locked
+          in seed mode: synthetic prices must never book into the real shared
+          paper account. */}
+      <QuickBet
+        symbol={symbol}
+        spot={lastSpot}
+        candles={candles}
+        lockReason={mode === "seed" ? "seed tape — switch to live to bet at real prices" : null}
+        onUnlock={() => setMode("live")}
+      />
     </>
   );
 }

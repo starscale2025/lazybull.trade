@@ -14,11 +14,17 @@ export function OutputPanel({
   symbol,
   spot,
   beginner,
+  ranAt,
+  dataSource,
 }: {
   runs: RunRow[];
   symbol: string;
   spot: number;
   beginner: boolean;
+  /** When the last full run started — a verdict on a moving tape must say how
+      old it is, because bots deliberately never re-run on their own. */
+  ranAt?: number | null;
+  dataSource?: "live" | "seed" | "fallback";
 }) {
   const completed = runs.filter((r) => r.result !== null);
   const verdicts = completed.map((r) => r.result!.verdict);
@@ -49,6 +55,13 @@ export function OutputPanel({
         </div>
         <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           aggregate verdict for {symbol}
+          {ranAt != null && completed.length > 0 && (
+            <>
+              {" · ran "}
+              {new Date(ranAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
+              {dataSource ? ` on ${dataSource === "live" ? "live tape" : dataSource === "seed" ? "seed tape" : "fallback tape"}` : ""}
+            </>
+          )}
         </div>
       </div>
 

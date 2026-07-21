@@ -27,11 +27,16 @@ type Props = {
   spot?: number;
   /** Daily bars if the page already fetched them; the slip fetches otherwise. */
   candles?: Candle[];
+  /** When set, betting is locked and this explains why (e.g. seed tape —
+      synthetic prices must never book into the real shared paper account). */
+  lockReason?: string | null;
+  /** Offered as the way out of the lock (e.g. switch the page to live mode). */
+  onUnlock?: () => void;
 };
 
 const STAKES = [500, 1000, 5000] as const;
 
-export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
+export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnlock }: Props) {
   const [open, setOpen] = useState(false);
   const [dir, setDir] = useState<"up" | "down">("up");
   // Stake is held as TEXT while typing so a decimal point survives keystrokes;
@@ -121,6 +126,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
   // account's own size rather than leaving it open.
   const maxShort = Math.max(0, Math.max(cash, 0) + Math.max(startingCash, 0));
   const canPlace =
+    !lockReason &&
     !killed &&
     !!mark &&
     qty > 0 &&
@@ -130,6 +136,12 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
   const place = () => {
     setError(null);
     if (!mark) return;
+    // Defense in depth: the lock hides this button, but nothing else may book
+    // a synthetic-price fill into the shared account either.
+    if (lockReason) {
+      setError(lockReason);
+      return;
+    }
     if (killed) {
       setError("Kill switch is on — no new bets until it resets.");
       return;
@@ -171,7 +183,24 @@ export function QuickBet({ symbol, spot, candles: candlesProp }: Props) {
               </button>
             </div>
 
-            {placed ? (
+            {lockReason ? (
+              <div className="space-y-3 p-4">
+                <div className="border border-amber/40 bg-amber/10 px-3 py-2 font-mono text-[11px] leading-relaxed text-amber">
+                  ⚠ betting locked — {lockReason}
+                </div>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  bets book on your real paper account, so they only fill at real prices
+                </div>
+                {onUnlock && (
+                  <button
+                    onClick={onUnlock}
+                    className="w-full border border-bull bg-bull/10 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+                  >
+                    switch to live data
+                  </button>
+                )}
+              </div>
+            ) : placed ? (
               <div className="space-y-3 p-4">
                 <div className="border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] text-bull">
                   ✓ Paper bet placed — {placed}

@@ -20,6 +20,8 @@ export function QuantHero({
   activeCount,
   totalBots,
   spot,
+  mode,
+  setMode,
   dataSource,
   syntheticKnobsActive,
 }: {
@@ -40,13 +42,18 @@ export function QuantHero({
   activeCount: number;
   totalBots: number;
   spot: number;
-  dataSource: "live" | "synthetic";
-  /** seed/drift/vol only shape the synthetic walk — live bars shadow them. */
+  /** The user's chosen data mode. */
+  mode: "live" | "seed";
+  setMode: (m: "live" | "seed") => void;
+  /** What the bots are ACTUALLY running on — live mode degrades to "fallback"
+      when the feed is down. */
+  dataSource: "live" | "seed" | "fallback";
+  /** seed/drift/vol shape the tape only in seed mode. */
   syntheticKnobsActive: boolean;
 }) {
   const knobTitle = syntheticKnobsActive
-    ? "Shapes the synthetic price walk."
-    : "Inactive on live data — these only shape the synthetic fallback walk.";
+    ? "Shapes the deterministic seed tape."
+    : "Seed-mode only — switch the dataset to SEED to shape the tape.";
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
@@ -128,21 +135,48 @@ export function QuantHero({
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                 <span className="flex items-center gap-2">
                   dataset
-                  <span
-                    className={`inline-flex items-center gap-1 border px-1 py-px text-[9px] ${
-                      dataSource === "live"
-                        ? "border-bull/50 bg-bull/10 text-bull"
-                        : "border-amber/50 bg-amber/10 text-amber"
-                    }`}
-                    title={
-                      dataSource === "live"
-                        ? "real Yahoo Finance OHLCV"
-                        : "synthetic deterministic walk (Yahoo unavailable for this symbol)"
-                    }
-                  >
-                    <span className={`size-1 rounded-full ${dataSource === "live" ? "bg-bull pulse-dot" : "bg-amber"}`} />
-                    {dataSource === "live" ? "LIVE" : "SYNTH"}
+                  {/* the mode is a choice; the badge is the truth of what's running */}
+                  <span className="inline-flex border border-border" role="group" aria-label="Data mode">
+                    <button
+                      onClick={() => setMode("live")}
+                      aria-pressed={mode === "live"}
+                      title="Real Yahoo OHLCV, ticking every ~15s (delayed feed)"
+                      className={`px-1.5 py-px text-[9px] font-semibold transition-colors ${
+                        mode === "live" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
+                      }`}
+                    >
+                      LIVE
+                    </button>
+                    <button
+                      onClick={() => setMode("seed")}
+                      aria-pressed={mode === "seed"}
+                      title="Deterministic synthetic tape — same seed, same bars, every time"
+                      className={`px-1.5 py-px text-[9px] font-semibold transition-colors ${
+                        mode === "seed" ? "bg-cyan text-bg" : "bg-bg text-fg-faint hover:text-fg"
+                      }`}
+                    >
+                      SEED
+                    </button>
                   </span>
+                  {dataSource === "fallback" ? (
+                    <span
+                      className="inline-flex items-center gap-1 border border-amber/50 bg-amber/10 px-1 py-px text-[9px] text-amber"
+                      title="Live feed unreachable — running on the deterministic fallback walk"
+                    >
+                      <span className="size-1 rounded-full bg-amber" />
+                      OFFLINE
+                    </span>
+                  ) : (
+                    <span
+                      className={`inline-flex items-center gap-1 border px-1 py-px text-[9px] ${
+                        dataSource === "live" ? "border-bull/50 bg-bull/10 text-bull" : "border-cyan/50 bg-cyan/10 text-cyan"
+                      }`}
+                      title={dataSource === "live" ? "real Yahoo Finance OHLCV · delayed ~15s" : "deterministic seed tape"}
+                    >
+                      <span className={`size-1 rounded-full ${dataSource === "live" ? "bg-bull pulse-dot" : "bg-cyan"}`} />
+                      {dataSource === "live" ? "LIVE" : "DETERMINISTIC"}
+                    </span>
+                  )}
                 </span>
                 <span>spot ${spot.toFixed(2)}</span>
               </div>
