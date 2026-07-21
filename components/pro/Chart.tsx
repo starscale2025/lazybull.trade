@@ -38,6 +38,14 @@ type Props = {
   replayBar?: number | null; // if set, hide bars after this index
   /** Price-series style. The TopBar switcher used to set state nothing read. */
   chart?: "candles" | "line" | "area" | "bars";
+  /** Price-axis scale. Log flips every mapped element together (see chartCore). */
+  scale?: "linear" | "log";
+  /** Remove one indicator from the pane — the legend rows' per-row ✕. */
+  onRemoveIndicator?: (id: string) => void;
+  /** Right-click → place a resting limit at the clicked price. */
+  onTradeAt?: (side: "buy" | "sell", price: number) => void;
+  /** Right-click → create an alert at the clicked price. */
+  onAlertAt?: (price: number) => void;
   /** Open share position in this symbol, drawn as an average-entry line. */
   position?: { qty: number; avgPrice: number } | null;
   /** Close-at-market for the position badge's ✕ (TradingView-style). */
@@ -73,6 +81,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     indicators,
     replayBar = null,
     chart = "candles",
+    scale = "linear",
+    onRemoveIndicator,
+    onTradeAt,
+    onAlertAt,
     position = null,
     onClosePosition,
     workingOrders = [],
@@ -126,7 +138,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       const span = Math.min(120, allBars.length || 120);
       const start = Math.max(0, allBars.length - span);
       const yr = autoY(allBars, start, span);
-      setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+      setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
       setYLocked(false);
       setIntroToken((n) => n + 1);
       setIntroPlaying(true);
@@ -153,13 +165,13 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       const span = Math.min(120, sliced.length || 120);
       const start = Math.max(0, sliced.length - span);
       const yr = autoY(sliced, start, span);
-      setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+      setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
       setYLocked(false);
     } else if (!isReplaying && wasReplayingRef.current) {
       const span = Math.min(120, allBars.length || 120);
       const start = Math.max(0, allBars.length - span);
       const yr = autoY(allBars, start, span);
-      setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+      setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
       setYLocked(false);
     }
     wasReplayingRef.current = isReplaying;
@@ -209,6 +221,23 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   const [orderDrag, setOrderDrag] = useState<{ id: string; preview: number } | null>(null);
 
   const [crosshair, setCrosshair] = useState<{ x: number; y: number } | null>(null);
+  // Right-click context menu: chart-space point + the price under the cursor.
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; price: number } | null>(null);
+
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setCtxMenu(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [ctxMenu]);
+
+  // Fold the scale prop into the viewport so every yOfPrice/priceOfY caller —
+  // candles, drawings, order lines, crosshair — flips in the same frame.
+  useEffect(() => {
+    setVp((v) => (Boolean(v.log) === (scale === "log") ? v : { ...v, log: scale === "log" }));
+  }, [scale]);
   const draftRef = useRef<Drawing | null>(null);
   const [draft, _setDraft] = useState<Drawing | null>(null);
   const setDraft = (next: Drawing | null | ((prev: Drawing | null) => Drawing | null)) => {
@@ -290,7 +319,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     const span = Math.min(120, allBars.length);
     const start = Math.max(0, allBars.length - span);
     const yr = autoY(allBars, start, span);
-    setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+    setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
     setYLocked(false);
   };
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -332,6 +361,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   };
 
   const onMouseDown = (e: React.MouseEvent) => {
+    if (ctxMenu) setCtxMenu(null);
     const pt = screenPt(e);
     const d = dataPt(pt.x, pt.y);
     if (tool === "cursor") {
@@ -350,17 +380,17 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       return;
     }
     if (tool === "horizontal") {
-      setDrawings((prev) => [...prev, { id: newId(), tool: "horizontal", p: d.p, color }]);
+      setDrawings((prev) => [...prev, { id: newId(), tool: "horizontal", p: d.p, color, sym: symbol }]);
       return;
     }
     if (tool === "text") {
       const text = window.prompt("Note text:", "Note");
-      if (text) setDrawings((prev) => [...prev, { id: newId(), tool: "text", a: d, text, color }]);
+      if (text) setDrawings((prev) => [...prev, { id: newId(), tool: "text", a: d, text, color, sym: symbol }]);
       return;
     }
     if (tool === "callout") {
       const text = window.prompt("Callout:", "Watch this level");
-      if (text) setDrawings((prev) => [...prev, { id: newId(), tool: "callout", a: d, text, color }]);
+      if (text) setDrawings((prev) => [...prev, { id: newId(), tool: "callout", a: d, text, color, sym: symbol }]);
       return;
     }
     if (tool === "brush") {
@@ -396,9 +426,9 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       if ("a" in d && "b" in d) {
         const sameI = d.a.i === d.b.i;
         const sameP = Math.abs(d.a.p - d.b.p) < 1e-9;
-        if (!(sameI && sameP)) setDrawings((prev) => [...prev, d]);
+        if (!(sameI && sameP)) setDrawings((prev) => [...prev, { ...d, sym: symbol }]);
       } else if (d.tool === "brush" && d.pts.length > 1) {
-        setDrawings((prev) => [...prev, d]);
+        setDrawings((prev) => [...prev, { ...d, sym: symbol }]);
       }
     }
     setDraft(null);
@@ -418,6 +448,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setCtxMenu(null);
       const rect = wrap.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       // Horizontal scroll → pan; vertical scroll / pinch → zoom around cursor.
@@ -530,7 +561,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       const span = Math.min(lastN, allBars.length);
       const start = Math.max(0, allBars.length - span);
       const yr = autoY(allBars, start, span);
-      setVp({ start, span, yMin: yr.yMin, yMax: yr.yMax });
+      setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
       setYLocked(false);
     },
   }));
@@ -564,8 +595,16 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   const candleW = Math.max(1, slot * 0.65);
   const last = bars[bars.length - 1] || { c: 0, o: 0, h: 0, l: 0, v: 0, t: 0, i: 0 };
   const prev = bars[bars.length - 2] || last;
-  const change = last.c - prev.c;
-  const changePct = (change / (prev.c || 1)) * 100;
+
+  // The legend follows the crosshair, the way every terminal reads: hover a
+  // bar and O/H/L/C are THAT bar's, with change vs its previous close; leave
+  // the plot and it falls back to the latest bar.
+  const hoverIdx = crosshair ? Math.round(barOfX(crosshair.x, vp, geom)) : -1;
+  const hovered = hoverIdx >= 0 && hoverIdx < bars.length ? bars[hoverIdx] : null;
+  const legendBar = hovered ?? last;
+  const legendPrev = hovered ? bars[Math.max(0, hoverIdx - 1)] : prev;
+  const legendChange = legendBar.c - legendPrev.c;
+  const legendPct = (legendChange / (legendPrev.c || 1)) * 100;
 
   const allDrawings = draft ? [...drawings, draft] : drawings;
 
@@ -611,7 +650,14 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseLeave}
-        onContextMenu={(e) => e.preventDefault()}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          // Context menu only where trading callbacks exist (the primary pane).
+          if (!onTradeAt && !onAlertAt) return;
+          const pt = screenPt(e);
+          if (pt.y > candlesBottom) return; // volume / sub-panes: nothing to do
+          setCtxMenu({ x: pt.x, y: pt.y, price: priceOfY(pt.y, vp, geom) });
+        }}
       >
         {/* gridlines */}
         {yTicks.map((y, i) => {
@@ -1079,18 +1125,20 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         <span className="text-fg-dim">{timeframe}</span>
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim">O</span>
-        <span className="text-fg">{fmt(last.o, 2)}</span>
+        <span className="text-fg">{fmt(legendBar.o, 2)}</span>
         <span className="text-fg-dim">H</span>
-        <span className="text-fg">{fmt(last.h, 2)}</span>
+        <span className="text-fg">{fmt(legendBar.h, 2)}</span>
         <span className="text-fg-dim">L</span>
-        <span className="text-fg">{fmt(last.l, 2)}</span>
+        <span className="text-fg">{fmt(legendBar.l, 2)}</span>
         <span className="text-fg-dim">C</span>
-        <span className={change >= 0 ? "text-bull" : "text-bear"}>{fmt(last.c, 2)}</span>
-        <span className={change >= 0 ? "text-bull" : "text-bear"}>
-          {change >= 0 ? "+" : ""}
-          {fmt(change, 2)} ({change >= 0 ? "+" : ""}
-          {fmt(changePct, 2)}%)
+        <span className={legendChange >= 0 ? "text-bull" : "text-bear"}>{fmt(legendBar.c, 2)}</span>
+        <span className={legendChange >= 0 ? "text-bull" : "text-bear"}>
+          {legendChange >= 0 ? "+" : ""}
+          {fmt(legendChange, 2)} ({legendChange >= 0 ? "+" : ""}
+          {fmt(legendPct, 2)}%)
         </span>
+        <span className="text-fg-dim">Vol</span>
+        <span className="text-fg">{(legendBar.v / 1e6).toFixed(2)}M</span>
         {replayBar != null && (
           <>
             <span className="text-fg-faint">·</span>
@@ -1098,6 +1146,113 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           </>
         )}
       </div>
+
+      {/* indicator legend — one row per active indicator, value follows the
+          crosshair, per-row ✕ removes it without opening the dropdown. */}
+      {indicators.length > 0 && (
+        <div className="pointer-events-none absolute left-3 top-8 space-y-0.5 font-mono text-[10px]">
+          {indicators.map((id) => {
+            const meta = IND_META[id];
+            if (!meta) return null;
+            const li = hoverIdx >= 0 && hoverIdx < bars.length ? hoverIdx : bars.length - 1;
+            const v = indicatorValueAt(id, ind, li);
+            return (
+              <div key={id} className="flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full" style={{ background: meta.color }} />
+                <span className="text-fg-dim">{meta.label}</span>
+                {v != null && <span className="tabular-nums text-fg">{fmt(v, 2)}</span>}
+                {onRemoveIndicator && (
+                  <button
+                    onClick={() => onRemoveIndicator(id)}
+                    aria-label={`Remove ${meta.label}`}
+                    className="pointer-events-auto ml-0.5 text-fg-faint transition-colors hover:text-bear"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* right-click menu — trade and alert AT the price under the cursor,
+          which is the whole reason a chart context menu exists. */}
+      {ctxMenu && (
+        <div
+          className="absolute z-30 w-52 border border-border bg-bg py-1 font-mono text-[11px] shadow-2xl"
+          style={{
+            left: Math.min(ctxMenu.x, size.w - 220),
+            top: Math.min(ctxMenu.y, size.h - 190),
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-fg-faint">
+            @ {fmt(ctxMenu.price, 2)}
+          </div>
+          {onTradeAt && (
+            <>
+              <button
+                onClick={() => {
+                  onTradeAt("buy", ctxMenu.price);
+                  setCtxMenu(null);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-bull transition-colors hover:bg-surface-2"
+              >
+                Buy limit @ {fmt(ctxMenu.price, 2)}
+              </button>
+              <button
+                onClick={() => {
+                  onTradeAt("sell", ctxMenu.price);
+                  setCtxMenu(null);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-bear transition-colors hover:bg-surface-2"
+              >
+                Sell limit @ {fmt(ctxMenu.price, 2)}
+              </button>
+            </>
+          )}
+          {onAlertAt && (
+            <button
+              onClick={() => {
+                onAlertAt(ctxMenu.price);
+                setCtxMenu(null);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-fg-dim transition-colors hover:bg-surface-2 hover:text-fg"
+            >
+              Add alert @ {fmt(ctxMenu.price, 2)}
+            </button>
+          )}
+          <button
+            onClick={() => {
+              try {
+                void navigator.clipboard.writeText(ctxMenu.price.toFixed(2));
+              } catch {
+                /* clipboard unavailable */
+              }
+              setCtxMenu(null);
+            }}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-fg-dim transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            Copy price
+          </button>
+          <div className="mx-3 my-1 border-t border-border-soft" />
+          <button
+            onClick={() => {
+              const span = Math.min(250, allBars.length || 250);
+              const start = Math.max(0, allBars.length - span);
+              const yr = autoY(allBars, start, span);
+              setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
+              setYLocked(false);
+              setCtxMenu(null);
+            }}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-fg-dim transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            Reset chart view
+          </button>
+        </div>
+      )}
 
       {/* watermark */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -1108,6 +1263,34 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     </div>
   );
 });
+
+/** Legend metadata per indicator id — label + swatch colour. */
+const IND_META: Record<string, { label: string; color: string }> = {
+  ema20: { label: "EMA 20", color: "#22d3ee" },
+  ema50: { label: "EMA 50", color: "#a78bfa" },
+  rsi: { label: "RSI 14", color: "#22d3ee" },
+  macd: { label: "MACD", color: "var(--amber)" },
+  bb: { label: "BB 20·2σ", color: "var(--bull)" },
+  vwap: { label: "VWAP", color: "var(--amber)" },
+  ichimoku: { label: "Ichimoku", color: "var(--plasma)" },
+  supertrend: { label: "Supertrend", color: "var(--bear)" },
+};
+
+/** The value a legend row shows at bar `i` — null when the shape has no single number. */
+function indicatorValueAt(id: string, ind: Record<string, unknown>, i: number): number | null {
+  const arr = (v: unknown): number | null => {
+    const x = Array.isArray(v) ? (v as (number | null)[])[i] : null;
+    return typeof x === "number" && Number.isFinite(x) ? x : null;
+  };
+  if (id === "ema20") return arr(ind.ema20);
+  if (id === "ema50") return arr(ind.ema50);
+  if (id === "vwap") return arr(ind.vwap);
+  if (id === "rsi") return arr(ind.rsi);
+  if (id === "macd") return arr((ind.macd as { histogram?: unknown } | undefined)?.histogram);
+  if (id === "bb") return arr((ind.bb as { mid?: unknown } | undefined)?.mid);
+  // ichimoku / supertrend are multi-line shapes; a single number would lie.
+  return null;
+}
 
 // ── series helpers
 function SeriesLine({ values, bars, vp, geom, color, dashed }: { values: (number | null)[]; bars: Bar[]; vp: Viewport; geom: ChartGeom; color: string; dashed?: boolean }) {

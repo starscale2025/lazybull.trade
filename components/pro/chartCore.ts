@@ -9,6 +9,13 @@ export type Viewport = {
   span: number; // number of visible bars
   yMin: number;
   yMax: number;
+  /**
+   * Log-scale price axis. Kept ON the viewport rather than as a separate
+   * argument so every consumer of yOfPrice/priceOfY — candles, indicators,
+   * drawings, order lines, the crosshair — flips together and a drawing can
+   * never sit on a different scale than the candle it was anchored to.
+   */
+  log?: boolean;
 };
 
 export type ChartGeom = {
@@ -37,11 +44,24 @@ export function barOfX(x: number, vp: Viewport, g: ChartGeom) {
 
 export function yOfPrice(p: number, vp: Viewport, g: ChartGeom) {
   const h = innerH(g);
+  if (vp.log) {
+    // Map through log space. Guard non-positive inputs: a drawing dragged to
+    // p<=0 must clamp, not emit NaN into the SVG.
+    const lMin = Math.log(Math.max(vp.yMin, 1e-9));
+    const lMax = Math.log(Math.max(vp.yMax, 1e-9));
+    const lp = Math.log(Math.max(p, 1e-9));
+    return g.padT + ((lMax - lp) / (lMax - lMin || 1)) * h;
+  }
   return g.padT + ((vp.yMax - p) / (vp.yMax - vp.yMin)) * h;
 }
 
 export function priceOfY(y: number, vp: Viewport, g: ChartGeom) {
   const h = innerH(g);
+  if (vp.log) {
+    const lMin = Math.log(Math.max(vp.yMin, 1e-9));
+    const lMax = Math.log(Math.max(vp.yMax, 1e-9));
+    return Math.exp(lMax - ((y - g.padT) / h) * (lMax - lMin));
+  }
   return vp.yMax - ((y - g.padT) / h) * (vp.yMax - vp.yMin);
 }
 
@@ -114,7 +134,7 @@ export function genBars({
   return out;
 }
 
-export type Drawing =
+type DrawingShape_ =
   | { id: string; tool: "trendline"; a: { i: number; p: number }; b: { i: number; p: number }; color: string }
   | { id: string; tool: "horizontal"; p: number; color: string }
   | { id: string; tool: "ray"; a: { i: number; p: number }; b: { i: number; p: number }; color: string }
@@ -125,6 +145,14 @@ export type Drawing =
   | { id: string; tool: "brush"; pts: { i: number; p: number }[]; color: string }
   | { id: string; tool: "measure"; a: { i: number; p: number }; b: { i: number; p: number } }
   | { id: string; tool: "callout"; a: { i: number; p: number }; text: string; color: string };
+
+/**
+ * Every drawing may carry the symbol it was drawn on. Without this, a trendline
+ * drawn on AAPL rendered on NVDA's chart at the same bar/price coordinates —
+ * visually plausible and completely wrong. Legacy drawings (no sym) still show
+ * everywhere rather than disappearing from saved workspaces.
+ */
+export type Drawing = DrawingShape_ & { sym?: string };
 
 export type ToolKind =
   | "cursor"

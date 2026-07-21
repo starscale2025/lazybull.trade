@@ -12,7 +12,19 @@ function fmtIST(d: Date): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-export function BottomBar({ preset, onPreset, status }: { preset: string; onPreset: (p: string) => void; status: string }) {
+export function BottomBar({
+  preset,
+  onPreset,
+  status,
+  log = false,
+  onToggleLog,
+}: {
+  preset: string;
+  onPreset: (p: string) => void;
+  status: string;
+  log?: boolean;
+  onToggleLog?: () => void;
+}) {
   const [clock, setClock] = useState<string>("");
   useEffect(() => {
     setClock(fmtIST(new Date()));
@@ -38,11 +50,23 @@ export function BottomBar({ preset, onPreset, status }: { preset: string; onPres
         ))}
         <span
           className="ml-2 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 text-fg-dim"
-          title="Y-axis auto-scales to the visible range. Linear scale (log scale not yet supported)."
+          title="Y-axis auto-scales to the visible range."
         >
           <span className="size-1 rounded-full bg-bull" />
           AUTO Y
         </span>
+        {onToggleLog && (
+          <button
+            onClick={onToggleLog}
+            aria-pressed={log}
+            title={log ? "Log price scale — click for linear" : "Linear price scale — click for log"}
+            className={`inline-flex h-6 items-center border px-1.5 transition-colors ${
+              log ? "border-bull bg-bull/10 text-bull" : "border-transparent text-fg-dim hover:border-border hover:text-fg"
+            }`}
+          >
+            LOG
+          </button>
+        )}
       </div>
       <div className="hidden items-center gap-3 text-fg-faint md:flex">
         <span>{status}</span>

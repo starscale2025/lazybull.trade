@@ -13,6 +13,7 @@ import { AlertsPanel } from "@/components/pro/AlertsPanel";
 import { OrderTicket } from "@/components/pro/OrderTicket";
 import { TradingPanel } from "@/components/pro/TradingPanel";
 import { OrderPanel } from "@/components/pro/OrderPanel";
+import { SymbolSearch } from "@/components/pro/SymbolSearch";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { VoiceAgent } from "@/components/pro/VoiceAgent";
 import type { Bar, Drawing, ToolKind } from "@/components/pro/chartCore";
@@ -59,6 +60,9 @@ export default function ProPage() {
   const [chartType, setChartType] = useState<Workspace["chart"]>(DEFAULT_WORKSPACE.chart);
   const [preset, setPreset] = useState("All");
   const [intro, setIntro] = useState(true);
+  // The keystroke-driven symbol/interval box. `seed` is the key that opened it.
+  const [search, setSearch] = useState<{ open: boolean; seed: string }>({ open: false, seed: "" });
+  const [logScale, setLogScale] = useState(false);
 
   // ── undo / redo
   //
@@ -118,24 +122,44 @@ export default function ProPage() {
         return;
       }
       const cmd = e.metaKey || e.ctrlKey;
-      if (cmd && e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
-      else if (cmd && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); redo(); }
-      else if (!cmd && e.key === "v") setTool("cursor");
-      else if (!cmd && e.key === "t") setTool("trendline");
-      else if (!cmd && e.key === "h") setTool("horizontal");
-      else if (!cmd && e.key === "b") setTool("brush");
-      else if (!cmd && e.key === "m") setTool("measure");
-      else if (!cmd && e.key === "f") setTool("fib");
-      else if (!cmd && e.key === "r") setTool("rect");
-      else if (!cmd && e.key === "Delete" && drawings.length) setDrawings([]);
+      const key = e.key.toLowerCase();
+      if (cmd && key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if (cmd && (key === "y" || (e.shiftKey && key === "z"))) { e.preventDefault(); redo(); }
+      // Drawing tools on Alt+letter, the terminal convention — which frees
+      // every plain letter and digit for the search box below.
+      else if (e.altKey && !cmd && key === "v") { e.preventDefault(); setTool("cursor"); }
+      else if (e.altKey && !cmd && key === "t") { e.preventDefault(); setTool("trendline"); }
+      else if (e.altKey && !cmd && key === "h") { e.preventDefault(); setTool("horizontal"); }
+      else if (e.altKey && !cmd && key === "b") { e.preventDefault(); setTool("brush"); }
+      else if (e.altKey && !cmd && key === "m") { e.preventDefault(); setTool("measure"); }
+      else if (e.altKey && !cmd && key === "f") { e.preventDefault(); setTool("fib"); }
+      else if (e.altKey && !cmd && key === "r") { e.preventDefault(); setTool("rect"); }
+      else if (!cmd && e.key === "Delete" && drawings.length) {
+        // Clear only THIS symbol's drawings (legacy no-sym rows show here, so
+        // they count as this symbol's too). Other charts keep theirs.
+        setDrawings((prev) => prev.filter((d) => d.sym && d.sym !== symbol.sym));
+      }
       else if (!cmd && e.key === "Escape") setTool("cursor");
+      // The signature flow: start typing anywhere and the symbol/interval box
+      // opens with that keystroke already in it.
+      else if (!cmd && !e.altKey && e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
+        e.preventDefault();
+        setSearch({ open: true, seed: e.key });
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drawings]);
+  }, [drawings, symbol.sym]);
 
   const lastPriceRef = useRef<number | null>(null);
+
+  // Only this symbol's drawings render; legacy rows without a sym show
+  // everywhere rather than vanishing from old saved workspaces.
+  const visibleDrawings = useMemo(
+    () => drawings.filter((d) => !d.sym || d.sym === symbol.sym),
+    [drawings, symbol.sym]
+  );
 
   // ── paper position (shared account — same cash the /trade book uses)
   const sharePositions = usePaper((st) => st.shares);
@@ -236,6 +260,42 @@ export default function ProPage() {
       return res;
     },
     [moveOrderRaw]
+  );
+
+  // Right-click on the chart: rest a limit at that price, or drop an alert.
+  const submitOrderStore = usePaper((st) => st.submitOrder);
+  const tradeAtPrice = useCallback(
+    (side: "buy" | "sell", price: number) => {
+      const res = submitOrderStore({
+        sym: symbol.sym,
+        side,
+        type: "limit",
+        qty: 100,
+        limitPrice: Math.round(price * 100) / 100,
+        tif: "week",
+        marketPrice: lastPriceRef.current ?? undefined,
+      });
+      if (!res.ok) showToast(`Rejected: ${res.error}`, "warn");
+      else showToast(`LIMIT ${side} 100 ${symbol.sym} @ ${price.toFixed(2)} is working`, "ok");
+    },
+    [submitOrderStore, symbol.sym]
+  );
+  const alertAtPrice = useCallback(
+    (price: number) => {
+      const last = lastPriceRef.current;
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: `al-${Date.now()}`,
+          price: Math.round(price * 100) / 100,
+          // The alert should fire when price REACHES the level from here.
+          cond: last != null && price < last ? "below" : "above",
+          note: "from chart",
+        },
+      ]);
+      showToast(`Alert set @ ${price.toFixed(2)}`, "ok");
+    },
+    []
   );
 
   // TradingView-style ✕ on the position line: flatten at the last price.
@@ -586,7 +646,8 @@ export default function ProPage() {
       tool,
       color,
       indicators,
-      drawingCount: drawings.length,
+      // scoped to the visible chart — the co-pilot narrates what's on screen
+      drawingCount: visibleDrawings.length,
       // capped — this is injected into the model prompt every turn
       alerts: alerts.slice(0, 20).map((a) => ({ price: a.price, cond: a.cond, note: a.note?.slice(0, 60), triggered: a.triggered })),
       orders: readLS<PlacedOrder[]>("lb-pro-orders", []).slice(0, 10)
@@ -711,8 +772,8 @@ export default function ProPage() {
           setTool={setTool}
           color={color}
           setColor={setColor}
-          onClear={() => setDrawings([])}
-          count={drawings.length}
+          onClear={() => setDrawings((prev) => prev.filter((d) => d.sym && d.sym !== symbol.sym))}
+          count={visibleDrawings.length}
         />
 
         <div className="relative flex flex-1 overflow-hidden">
@@ -739,7 +800,7 @@ export default function ProPage() {
                 symbol={i === 0 ? symbol : paneSymbols[i] || symbol}
                 timeframe={timeframe}
                 tool={tool}
-                drawings={i === 0 ? drawings : []}
+                drawings={i === 0 ? visibleDrawings : []}
                 setDrawings={i === 0 ? setDrawings : () => {}}
                 color={color}
                 indicators={i === 0 ? indicators : []}
@@ -756,6 +817,10 @@ export default function ProPage() {
                 workingOrders={i === 0 ? workingOrders : []}
                 onCancelOrder={i === 0 ? cancelOrder : undefined}
                 onMoveOrder={i === 0 && !replayActive ? moveOrder : undefined}
+                scale={logScale ? "log" : "linear"}
+                onRemoveIndicator={i === 0 ? (id) => setIndicators((cur) => cur.filter((x) => x !== id)) : undefined}
+                onTradeAt={i === 0 && !replayActive ? tradeAtPrice : undefined}
+                onAlertAt={i === 0 ? alertAtPrice : undefined}
               />
             ))}
           </div>
@@ -828,6 +893,14 @@ export default function ProPage() {
         />
       )}
 
+      <SymbolSearch
+        open={search.open}
+        seed={search.seed}
+        onClose={() => setSearch({ open: false, seed: "" })}
+        onPickSymbol={(sm) => setSymbol(sm)}
+        onPickInterval={(tf) => setTimeframe(tf)}
+      />
+
       <TradingPanel
         chartSymbol={symbol.sym}
         chartLast={lastPrice}
@@ -838,6 +911,8 @@ export default function ProPage() {
       <BottomBar
         preset={preset}
         onPreset={onPreset}
+        log={logScale}
+        onToggleLog={() => setLogScale((v) => !v)}
         status={[
           // Position first — it is the only line here that is about the user's
           // money rather than the workspace.
@@ -845,7 +920,7 @@ export default function ProPage() {
             ? `${position.qty > 0 ? "long" : "short"} ${Math.abs(position.qty)} @ ${position.avgPrice.toFixed(2)} · ` +
               `${livePnl >= 0 ? "+" : "−"}$${Math.abs(livePnl).toFixed(2)}`
             : null,
-          `${drawings.length} drawing`,
+          `${visibleDrawings.length} drawing`,
           `${indicators.length} indicator`,
           `${alerts.length} alert`,
           `${bars.length} bars`,
@@ -904,6 +979,10 @@ function PaneChart({
   workingOrders,
   onCancelOrder,
   onMoveOrder,
+  scale,
+  onRemoveIndicator,
+  onTradeAt,
+  onAlertAt,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -919,6 +998,10 @@ function PaneChart({
   workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean; pending?: boolean }[];
   onCancelOrder?: (id: string) => void;
   onMoveOrder?: (id: string, price: number) => { ok: boolean; error?: string };
+  scale?: "linear" | "log";
+  onRemoveIndicator?: (id: string) => void;
+  onTradeAt?: (side: "buy" | "sell", price: number) => void;
+  onAlertAt?: (price: number) => void;
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -964,6 +1047,10 @@ function PaneChart({
         workingOrders={workingOrders}
         onCancelOrder={onCancelOrder}
         onMoveOrder={onMoveOrder}
+        scale={scale}
+        onRemoveIndicator={onRemoveIndicator}
+        onTradeAt={onTradeAt}
+        onAlertAt={onAlertAt}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}
