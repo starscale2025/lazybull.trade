@@ -127,7 +127,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
   const label = "font-mono text-[9px] uppercase tracking-wider text-fg-faint";
 
   return (
-    <aside className="flex h-full w-[300px] shrink-0 flex-col border-l border-border bg-bg">
+    <aside className="flex h-full w-[300px] shrink-0 flex-col border-l border-border bg-surface">
       {/* header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <span className="font-mono text-[12px] uppercase tracking-wider text-fg">

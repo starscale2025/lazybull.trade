@@ -21,6 +21,25 @@
   --grid-strong: rgba(245, 245, 240, 0.1);
 }
 
+/* /pro terminal re-skin — the marketing pages keep their stark near-black,
+   but a working screen needs layered surfaces: canvas darkest, chrome strips
+   one step up, panels another, inputs/hovers a third. Values sit around
+   TradingView's dark theme so the hierarchy reads instantly, in lazybull's
+   cool charcoal instead of TV blue. Accents (bull/bear) stay the brand. */
+.pro-theme {
+  --bg: #0e1217;
+  --bg-soft: #151b22;
+  --surface: #19212a;
+  --surface-2: #242e3a;
+  --border: #2d3845;
+  --border-soft: #232c36;
+  --fg: #eaeef3;
+  --fg-dim: #9aa5b1;
+  --fg-faint: #64707d;
+  --grid: rgba(234, 238, 243, 0.05);
+  --grid-strong: rgba(234, 238, 243, 0.1);
+}
+
 [data-theme="light"] {
   --bg: #f7f6f0;
   --bg-soft: #efeee6;

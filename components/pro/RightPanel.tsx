@@ -149,7 +149,7 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
   const addSym = (s: string) => setList((l) => (l.includes(s) ? l : [...l, s]));
 
   return (
-    <aside className="flex w-full flex-col border-t border-border bg-bg-soft lg:w-[300px] lg:shrink-0 lg:border-l lg:border-t-0">
+    <aside className="flex w-full flex-col border-t border-border bg-surface lg:w-[300px] lg:shrink-0 lg:border-l lg:border-t-0">
       {/* Watchlist header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
         <span className="text-fg">Watchlist</span>
@@ -177,7 +177,7 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
           />
         </div>
         {results.length > 0 && (
-          <div className="absolute left-2 right-2 top-11 z-30 max-h-72 overflow-y-auto border border-border bg-bg shadow-2xl">
+          <div className="absolute left-2 right-2 top-11 z-30 max-h-72 overflow-y-auto border border-border bg-surface shadow-2xl">
             {results.map((r) => (
               <button
                 key={r.sym}

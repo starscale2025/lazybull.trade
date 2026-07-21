@@ -1180,7 +1180,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           which is the whole reason a chart context menu exists. */}
       {ctxMenu && (
         <div
-          className="absolute z-30 w-52 border border-border bg-bg py-1 font-mono text-[11px] shadow-2xl"
+          className="absolute z-30 w-52 border border-border bg-surface py-1 font-mono text-[11px] shadow-2xl"
           style={{
             left: Math.min(ctxMenu.x, size.w - 220),
             top: Math.min(ctxMenu.y, size.h - 190),

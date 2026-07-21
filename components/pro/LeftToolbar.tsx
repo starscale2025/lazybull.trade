@@ -186,7 +186,7 @@ export function LeftToolbar({
         >
           <span className="size-4" style={{ background: color }} />
         </button>
-        <div className="absolute left-10 top-0 z-30 hidden flex-col gap-1 border border-border bg-bg p-1 shadow-2xl group-hover:flex">
+        <div className="absolute left-10 top-0 z-30 hidden flex-col gap-1 border border-border bg-surface p-1 shadow-2xl group-hover:flex">
           {COLORS.map((c) => (
             <button
               key={c}

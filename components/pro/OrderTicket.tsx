@@ -112,7 +112,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
     const up = staged.side === "buy";
     const drift = price != null ? price - staged.price : 0;
     return (
-      <div className="pointer-events-auto flex items-stretch border border-border bg-bg shadow-lg">
+      <div className="pointer-events-auto flex items-stretch border border-border bg-surface shadow-lg">
         <div className="flex flex-col justify-center px-3 py-1 font-mono">
           <span className={`text-[9px] font-semibold uppercase tracking-wider ${up ? "text-bull" : "text-bear"}`}>
             Confirm {staged.side}
@@ -155,7 +155,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
 
   return (
     <div
-      className={`pointer-events-auto flex items-stretch border border-border bg-bg/90 shadow-lg backdrop-blur-sm ${
+      className={`pointer-events-auto flex items-stretch border border-border bg-surface/90 shadow-lg backdrop-blur-sm ${
         blocked ? "opacity-50" : ""
       }`}
       title={

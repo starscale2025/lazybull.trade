@@ -715,7 +715,7 @@ export default function ProPage() {
   }, [symbol, layout]);
 
   return (
-    <div ref={wrapperRef} className="flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
+    <div ref={wrapperRef} className="pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
       {/* App bar */}
       <header className="flex h-12 items-center gap-2 border-b border-border bg-bg-soft px-3">
         <Link href="/" className="flex items-center gap-2 font-display text-sm tracking-tightest text-fg">

@@ -142,7 +142,7 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
         if (boxRef.current && !boxRef.current.contains(e.target as Node)) onClose();
       }}
     >
-      <div ref={boxRef} className="w-[440px] max-w-[92vw] border border-border bg-bg shadow-2xl">
+      <div ref={boxRef} className="w-[440px] max-w-[92vw] border border-border bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">Symbol search</span>
           <button
@@ -160,7 +160,7 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
           onKeyDown={onKeyDown}
           placeholder="Symbol… or an interval like 5, 1h, D"
           aria-label="Search symbols or type an interval"
-          className="w-full border-b border-border bg-bg px-3 py-3 font-mono text-[15px] uppercase tracking-wider text-fg outline-none placeholder:normal-case placeholder:text-fg-faint"
+          className="w-full border-b border-border bg-surface px-3 py-3 font-mono text-[15px] uppercase tracking-wider text-fg outline-none placeholder:normal-case placeholder:text-fg-faint"
         />
         <div className="max-h-[46vh] overflow-y-auto py-1" role="listbox" aria-label="Search results">
           {interval && (

@@ -253,7 +253,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const td = "py-1.5 pr-3";
 
   return (
-    <div className="flex flex-col border-t border-border bg-bg">
+    <div className="flex flex-col border-t border-border bg-surface">
       {/* draggable top edge */}
       {open && (
         <div

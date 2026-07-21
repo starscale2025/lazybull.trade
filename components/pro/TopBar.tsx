@@ -109,7 +109,7 @@ export function TopBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 top-9 z-40 w-[360px] border border-border bg-bg shadow-2xl"
+              className="absolute left-0 top-9 z-40 w-[360px] border border-border bg-surface shadow-2xl"
             >
               <div className="flex items-center gap-2 border-b border-border-soft p-2">
                 <span className="text-fg-faint">⌕</span>
