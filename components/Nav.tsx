@@ -49,6 +49,14 @@ export function Nav() {
               control styled itself as active. Removed until search actually
               ships — mounting the ADMIN palette here would expose admin
               commands to every visitor. */}
+          {/* Account pages sit with the account cluster, not the numbered rail —
+              the rail is already near its width budget at lg (see comment above). */}
+          <Link
+            href="/portfolio"
+            className="hidden h-9 items-center border border-border px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg md:inline-flex"
+          >
+            Portfolio
+          </Link>
           <AuthButtons />
           <Link
             href="/trade"

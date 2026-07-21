@@ -210,7 +210,25 @@ export const usePaper = create<PaperState>()(
       open: (p) => {
         const id = `pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const pos: Position = { ...p, id, openedAt: Date.now(), status: "open", pnl: 0 };
-        set((s) => ({ cash: s.cash - p.cost, positions: [pos, ...s.positions] }));
+        set((s) => ({
+          cash: s.cash - p.cost,
+          positions: [pos, ...s.positions],
+          // The ledger's contract is "every cash movement" — a bet's premium is
+          // one. Without this row the balance-after chain silently jumped at
+          // every option bet, and the portfolio's wagered total missed them.
+          balanceLog: [
+            {
+              id: `bal-${id}`,
+              ts: pos.openedAt,
+              kind: "trade" as const,
+              sym: p.underlying,
+              amount: -p.cost,
+              balance: s.cash - p.cost,
+              note: `bet open${p.cost < 0 ? " (credit)" : ""} · ${p.strategy}`,
+            },
+            ...s.balanceLog,
+          ].slice(0, MAX_TRADES),
+        }));
         return pos;
       },
       close: (id, exitPnl) =>
@@ -219,7 +237,7 @@ export const usePaper = create<PaperState>()(
           realizedToday: s.realizedToday + exitPnl,
           positions: s.positions.map((p) => (p.id === id ? { ...p, status: "closed", pnl: exitPnl } : p)),
         })),
-      closeAll: () =>
+      closeAll: (reason) =>
         set((s) => {
           let cash = s.cash;
           const positions = s.positions.map((p) => {
@@ -244,7 +262,23 @@ export const usePaper = create<PaperState>()(
           const orders = s.orders.map((o) =>
             o.status === "working" ? { ...o, status: "cancelled" as const, note: "kill switch" } : o
           );
-          return { positions, cash, shares: {}, orders, realizedToday: realized };
+          // One summary row so the ledger's balance-after chain survives the
+          // flatten — this path moves cash (cost basis returned) like any fill.
+          const balanceLog =
+            cash !== s.cash
+              ? [
+                  {
+                    id: `bal-flat-${Date.now()}`,
+                    ts: Date.now(),
+                    kind: "trade" as const,
+                    amount: cash - s.cash,
+                    balance: cash,
+                    note: `book flattened at cost (${reason})`,
+                  },
+                  ...s.balanceLog,
+                ].slice(0, MAX_TRADES)
+              : s.balanceLog;
+          return { positions, cash, shares: {}, orders, realizedToday: realized, balanceLog };
         }),
       fillShares: (f) => {
         const invalid = validateFill(f);

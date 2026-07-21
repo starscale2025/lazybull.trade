@@ -46,6 +46,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   const submitOrder = usePaper((s) => s.submitOrder);
   const setStartingCash = usePaper((s) => s.setStartingCash);
   const resetAccount = usePaper((s) => s.reset);
+  const optionBets = usePaper((s) => s.positions);
 
   // A real sub-window: a title bar that stays put, a body that can be
   // minimized away or expanded, and a draggable top edge to size it.
@@ -98,9 +99,16 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
     return m;
   }, [marks, chartSymbol, chartLast]);
 
+  // Open option bets carried at cost — they share this cash balance, so
+  // leaving them out made every bet read as an instant loss of its premium.
+  const openBetCost = useMemo(
+    () => optionBets.reduce((a, p) => (p.status === "open" ? a + p.cost : a), 0),
+    [optionBets]
+  );
+
   const metrics = useMemo(
-    () => accountMetrics({ cash, realizedToday, shares, orders: book, marks: allMarks }),
-    [cash, realizedToday, shares, book, allMarks]
+    () => accountMetrics({ cash, realizedToday, shares, orders: book, marks: allMarks, openBetCost }),
+    [cash, realizedToday, shares, book, allMarks, openBetCost]
   );
 
   const markOf = (sym: string): number | null => {
@@ -287,6 +295,13 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          <a
+            href="/portfolio"
+            className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+            title="Full portfolio — positions, history, wagered, ledger"
+          >
+            portfolio ↗
+          </a>
           <button
             onClick={() => {
               resetAccount();

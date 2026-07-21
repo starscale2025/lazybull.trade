@@ -1,29 +1,44 @@
-// Account metrics for the paper-trading panel.
+// Account metrics for the paper-trading panel and the portfolio page.
 //
-// Pure and separately tested, because these six numbers are the ones a user
-// reads to decide whether they can afford the next trade — and they have to
-// agree with each other. The identities below are the contract:
+// Pure and separately tested, because these numbers are the ones a user reads
+// to decide whether they can afford the next trade — and they have to agree
+// with each other. The identities below are the contract:
 //
-//   equity          = balance + unrealised
-//   accountMargin   = notional of OPEN positions (1:1 leverage)
+//   holdingsValue   = Σ signed qty × price over share positions
+//   betsAtCost      = Σ cost of OPEN option bets (debit +, credit −)
+//   equity          = balance + holdingsValue + betsAtCost
+//   accountMargin   = Σ |qty| × price (1:1 leverage)
 //   availableFunds  = equity − accountMargin − ordersMargin
 //   marginBuffer    = availableFunds / equity
+//
+// This store runs CASH-ACCOUNT accounting: a share buy deducts the full
+// notional from cash and a short credits its proceeds (see fillShares).
+// Equity therefore must add the holdings back — the previous contract
+// (equity = balance + unrealised) assumed a margin-style balance that never
+// moves on entry, so every purchase read as an instant loss of its own
+// notional: buy $32k of stock and the account showed −32.7% with zero P&L.
 //
 // Leverage is fixed at 1:1 rather than mimicking a broker's margin-rate table.
 // A teaching account that quietly granted leverage would understate what a
 // position actually costs, which is exactly the lesson it exists to teach.
+// Open option bets are carried at cost — pricing them live needs the chain
+// model, and a stale model price would invent P&L; the cost is at least true.
 
 import type { SharePosition } from "./paper-shares";
 import { ordersMargin as calcOrdersMargin, type Order } from "./paper-orders";
 
 export type AccountMetrics = {
-  /** Cash. What TradingView calls "Account balance". */
+  /** Cash. */
   balance: number;
-  /** Balance plus open-position P&L. */
+  /** Signed market value of share holdings (longs +, shorts −). */
+  holdingsValue: number;
+  /** Open option bets carried at cost (debit +, credit −). */
+  betsAtCost: number;
+  /** Account value: balance + holdingsValue + betsAtCost. */
   equity: number;
   /** Booked P&L for the session. */
   realizedPnl: number;
-  /** Mark-to-market P&L of everything still open. */
+  /** Mark-to-market P&L of open share positions. */
   unrealizedPnl: number;
   /** Capital tied up by open positions. */
   accountMargin: number;
@@ -44,9 +59,12 @@ export function accountMetrics(args: {
   orders: Order[];
   /** Live price per symbol. A symbol absent here is carried at cost. */
   marks: Record<string, number>;
+  /** Signed cost of OPEN option bets, so equity can carry them at cost. */
+  openBetCost?: number;
 }): AccountMetrics {
   const { cash, realizedToday, shares, orders, marks } = args;
 
+  let holdingsValue = 0;
   let unrealizedPnl = 0;
   let accountMargin = 0;
   let unmarkedCount = 0;
@@ -57,6 +75,7 @@ export function accountMetrics(args: {
     const hasMark = Number.isFinite(mark) && mark > 0;
     if (!hasMark) unmarkedCount++;
     const px = hasMark ? mark : pos.avgPrice;
+    holdingsValue += pos.qty * px;
     // A short's margin is its notional too — the exposure is symmetric even
     // though the cash moved the other way when it opened.
     accountMargin += Math.abs(pos.qty) * px;
@@ -64,7 +83,8 @@ export function accountMetrics(args: {
   }
 
   const balance = Number.isFinite(cash) ? cash : 0;
-  const equity = balance + unrealizedPnl;
+  const betsAtCost = Number.isFinite(args.openBetCost) ? (args.openBetCost as number) : 0;
+  const equity = balance + holdingsValue + betsAtCost;
   const ordersMargin = calcOrdersMargin(orders);
   const availableFunds = equity - accountMargin - ordersMargin;
   // Guard the divide: a wiped-out account should read 0% headroom, not NaN.
@@ -72,6 +92,8 @@ export function accountMetrics(args: {
 
   return {
     balance,
+    holdingsValue,
+    betsAtCost,
     equity,
     realizedPnl: Number.isFinite(realizedToday) ? realizedToday : 0,
     unrealizedPnl,

@@ -15,6 +15,7 @@ const LINKS = [
   { l: "Visual chain", href: "/trade" },
   { l: "Pro charts", href: "/pro" },
   { l: "Quant", href: "/quant" },
+  { l: "Portfolio", href: "/portfolio" },
   { l: "Greeks", href: "/greeks" },
   { l: "Pricing", href: "/pricing" },
   { l: "About", href: "/about" },
