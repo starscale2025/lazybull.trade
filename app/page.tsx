@@ -1,4 +1,3 @@
-import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
 import { GetStarted } from "@/components/GetStarted";
 import { CinemaGate } from "@/components/scrollstory/CinemaGate";
@@ -23,7 +22,9 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col">
         <TickerBar />
-        <Nav />
+        {/* No navbar here — the landing IS the navigation: the cinema hands off
+            to the hero, and the page directory inside GetStarted links every
+            page. Product pages keep the full <Nav />. */}
 
         <CinemaGate />
 

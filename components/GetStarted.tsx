@@ -1,8 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
 import { HungCard } from "./atmosphere/HungCard";
+import { AuthButtons } from "./AuthButtons";
+
+// The landing carries no navbar — this directory IS the site's front door.
+// Numbered like the rail on the product pages so the mental map carries over.
+const DIRECTORY = [
+  { n: "01", l: "Learn", href: "/learn", d: "zero to your first spread, in plain English" },
+  { n: "02", l: "Visual chain", href: "/trade", d: "drag across strikes — the payoff draws itself" },
+  { n: "03", l: "Pro charts", href: "/pro", d: "the terminal: drawing tools, replay, paper trading" },
+  { n: "04", l: "Quant", href: "/quant", d: "27 bots on live or seed tape, verdicts in English" },
+  { n: "05", l: "Greeks", href: "/greeks", d: "every Greek as a picture, an AI teacher on top" },
+  { n: "06", l: "Portfolio", href: "/portfolio", d: "your paper account — positions, wagered, history" },
+  { n: "07", l: "Pricing", href: "/pricing", d: "free while we build. what pro will include" },
+  { n: "08", l: "About", href: "/about", d: "why paper-only, and who's behind it" },
+] as const;
 
 // The single landing the cinema hands off to (and the page's real, crawlable
 // content). Live/glowing, but with continuous — not entrance — effects so the
@@ -60,6 +75,7 @@ const EMBERS = Array.from({ length: 9 }, (_, i) => ({
 }));
 
 export function GetStarted() {
+  const { status: authStatus } = useSession();
   return (
     <section
       data-getstarted
@@ -149,16 +165,26 @@ export function GetStarted() {
               href="/trade"
               className="gs-cta group relative inline-flex items-center gap-2 overflow-hidden bg-bull px-9 py-4 font-mono text-sm font-bold uppercase tracking-wider text-bg"
             >
-              <span className="relative z-10">Get started</span>
+              <span className="relative z-10">{authStatus === "authenticated" ? "Open the chain" : "Get started"}</span>
               <span className="relative z-10 transition-transform group-hover:translate-x-1" aria-hidden>→</span>
             </Link>
           </MagneticCTA>
-          <Link
-            href="/auth/signin"
-            className="font-mono text-sm uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-fg hover:underline"
-          >
-            or sign in
-          </Link>
+          {/* Session-aware: a signed-in user was being told to sign in. */}
+          {authStatus === "authenticated" ? (
+            <Link
+              href="/portfolio"
+              className="font-mono text-sm uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-fg hover:underline"
+            >
+              your portfolio →
+            </Link>
+          ) : (
+            <Link
+              href="/auth/signin"
+              className="font-mono text-sm uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-fg hover:underline"
+            >
+              or sign in
+            </Link>
+          )}
         </div>
 
         {/* feature chips hung on wires — damped pendulums, hover gives a push */}
@@ -170,6 +196,36 @@ export function GetStarted() {
               </span>
             </HungCard>
           ))}
+        </div>
+
+        {/* --- the page directory: with no navbar on the landing, this is the
+            site's front door. Numbered to match the rail on product pages. --- */}
+        <div className="mt-14 w-full max-w-5xl">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+              everything on the desk
+            </span>
+            <AuthButtons />
+          </div>
+          <nav aria-label="Site pages" className="grid grid-cols-1 gap-px border border-border bg-border text-left sm:grid-cols-2 lg:grid-cols-4">
+            {DIRECTORY.map((p) => (
+              <Link
+                key={p.href}
+                href={p.href}
+                className="group relative bg-bg/80 p-4 backdrop-blur-sm transition-colors hover:bg-surface"
+              >
+                <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{p.n}</span>
+                <span className="mt-1 flex items-center gap-2 font-display text-lg tracking-tightest text-fg">
+                  {p.l}
+                  <span className="translate-x-0 text-bull opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" aria-hidden>
+                    →
+                  </span>
+                </span>
+                <span className="mt-1 block font-mono text-[11px] leading-relaxed text-fg-dim">{p.d}</span>
+                <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100" />
+              </Link>
+            ))}
+          </nav>
         </div>
 
         {/* the AI that watches — FULL-BLEED live eye, type set ON the footage,
