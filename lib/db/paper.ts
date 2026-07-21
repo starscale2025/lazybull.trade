@@ -44,14 +44,15 @@ type PaperDoc = {
   updatedAt: Date;
 };
 
-let indexEnsured = false;
+let indexReady: Promise<unknown> | null = null;
 async function coll() {
   const c = (await db()).collection<PaperDoc>("paper_accounts");
-  if (!indexEnsured) {
-    indexEnsured = true;
-    // Lazy, once per process; failure is non-fatal (the query path still works).
-    c.createIndex({ userId: 1 }, { unique: true }).catch(() => {});
-  }
+  // AWAITED, not fire-and-forget: the baseRev-0 upsert relies on the unique
+  // index to turn a race against an existing doc into a duplicate-key error —
+  // without the index that race would insert a SECOND account doc. Failure is
+  // still non-fatal (reads work), just once per process.
+  indexReady ??= c.createIndex({ userId: 1 }, { unique: true }).catch(() => {});
+  await indexReady;
   return c;
 }
 
