@@ -2,6 +2,28 @@
 
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY", "QQQ", "BTC", "META", "MSFT", "GOOG"];
 
+/** A "?" that explains a knob on hover/focus — beginners shouldn't have to
+    guess what a seed or a drift is before they dare to touch one. */
+function InfoTip({ text }: { text: string }) {
+  return (
+    <span className="group/tip relative inline-flex">
+      <span
+        tabIndex={0}
+        aria-label={text}
+        className="inline-flex size-3.5 cursor-help items-center justify-center border border-border font-mono text-[8px] text-fg-faint transition-colors hover:border-fg-dim hover:text-fg focus:border-fg-dim focus:text-fg"
+      >
+        ?
+      </span>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 w-60 -translate-x-1/2 border border-border bg-surface p-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100"
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
 export function QuantHero({
   symbol,
   setSymbol,
@@ -183,7 +205,10 @@ export function QuantHero({
               <div className="grid grid-cols-2 gap-px bg-border">
                 {/* symbol */}
                 <div className="bg-bg p-3">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">symbol</div>
+                  <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                    symbol
+                    <InfoTip text="The instrument every bot studies. LIVE mode fetches its real daily candles from Yahoo; SEED mode deals a synthetic tape instead." />
+                  </div>
                   <div className="mt-1 flex items-center gap-2">
                     <select
                       value={symbol}
@@ -199,7 +224,10 @@ export function QuantHero({
                 {/* bars */}
                 <div className="bg-bg p-3">
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                    <span>bars</span>
+                    <span className="flex items-center gap-1.5">
+                      bars
+                      <InfoTip text="How many daily candles the bots see — the lookback window. 180 ≈ 9 months of trading days. More bars: steadier statistics, slower signals. Fewer: twitchier, reacts faster." />
+                    </span>
                     <span className="text-fg">{bars}</span>
                   </div>
                   <input
@@ -214,7 +242,10 @@ export function QuantHero({
                 {/* seed — synthetic only */}
                 <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                    <span>seed</span>
+                    <span className="flex items-center gap-1.5">
+                      seed
+                      <InfoTip text="The random seed of the synthetic tape. Same seed = exactly the same candles, every run — that's what makes seed-mode experiments repeatable. Change it to deal a different market. (Seed mode only.)" />
+                    </span>
                     <span className="text-fg">{syntheticKnobsActive ? seed : "—"}</span>
                   </div>
                   <input
@@ -230,7 +261,10 @@ export function QuantHero({
                 {/* drift — synthetic only */}
                 <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                    <span>drift μ</span>
+                    <span className="flex items-center gap-1.5">
+                      drift μ
+                      <InfoTip text="The synthetic tape's average daily push. Positive grinds the market up, negative bleeds it down, zero drifts sideways. Test a strategy in a bull tape, then flip the sign and see if it survives. (Seed mode only.)" />
+                    </span>
                     <span className="text-fg">{syntheticKnobsActive ? drift.toFixed(2) : "—"}</span>
                   </div>
                   <input
@@ -247,7 +281,10 @@ export function QuantHero({
                 {/* vol — synthetic only */}
                 <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                    <span>vol σ</span>
+                    <span className="flex items-center gap-1.5">
+                      vol σ
+                      <InfoTip text="How violently the synthetic tape swings bar to bar. Low = calm index-like candles; high = crypto-like whipsaw with fat tails. Reversion bots love low σ, breakout bots need high. (Seed mode only.)" />
+                    </span>
                     <span className="text-fg">{syntheticKnobsActive ? vol.toFixed(2) : "—"}</span>
                   </div>
                   <input
@@ -263,7 +300,10 @@ export function QuantHero({
                 </div>
                 {/* beginner */}
                 <div className="bg-bg p-3">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">teacher</div>
+                  <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                    teacher
+                    <InfoTip text="Plain-English mode: every bot adds a sentence explaining its verdict like a human would, instead of only formulas and numbers." />
+                  </div>
                   <button
                     onClick={() => setBeginner(!beginner)}
                     className={`mt-2 flex h-7 w-full items-center justify-between border px-2 font-mono text-[11px] uppercase tracking-wider ${

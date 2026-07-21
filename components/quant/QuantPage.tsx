@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { QuickBet } from "@/components/bet/QuickBet";
 import { generateCandles, type Candle } from "@/lib/candles";
 import { applyTick, reconcileBars, type FreshestRef } from "@/lib/live-bars";
+import { SYMBOL_PRESETS, presetSignature } from "@/lib/quant/presets";
 import { track } from "@/lib/track";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
@@ -42,7 +43,9 @@ export function QuantPage() {
     } catch {}
   };
   const [beginner, setBeginner] = useState(true);
-  const [active, setActive] = useState<ActiveBot[]>(() => seedActive());
+  // Boot with the symbol's recommended stack (why-labels in the strip below
+  // the hero) rather than a generic set.
+  const [active, setActive] = useState<ActiveBot[]>(() => presetActive("AMZN") ?? seedActive());
   const [results, setResults] = useState<ResultsMap>({});
   const [customBots, setCustomBots] = useState<BotDef[]>([]);
   const [importOpen, setImportOpen] = useState(false);
@@ -346,6 +349,33 @@ export function QuantPage() {
     addBot(def);
   }
 
+  // ── recommended stack per symbol. Auto-swaps ONLY while the workspace is
+  // exactly the last-applied preset — the moment the user customizes, their
+  // stack is theirs and symbol changes leave it alone.
+  const lastPresetSigRef = useRef<string | null>(
+    SYMBOL_PRESETS["AMZN"] ? presetSignature(SYMBOL_PRESETS["AMZN"].bots) : null
+  );
+
+  function applyPreset(sym: string) {
+    const rebuilt = presetActive(sym);
+    if (!rebuilt) return;
+    setActive(rebuilt);
+    setResults({});
+    lastPresetSigRef.current = presetSignature(rebuilt);
+    track("preset_applied", { symbol: sym, bots: rebuilt.length });
+  }
+
+  const symbolPreset = SYMBOL_PRESETS[symbol];
+  useEffect(() => {
+    if (!SYMBOL_PRESETS[symbol]) return;
+    const sig = presetSignature(active);
+    if (lastPresetSigRef.current && sig === lastPresetSigRef.current) {
+      const target = presetSignature(SYMBOL_PRESETS[symbol].bots);
+      if (sig !== target) applyPreset(symbol);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol]);
+
   // ── saved setups (profile-backed): the whole experiment as config.
   const setupState = (): QuantSetupState => ({
     symbol,
@@ -498,6 +528,54 @@ export function QuantPage() {
         syntheticKnobsActive={syntheticKnobsActive}
       />
 
+      {/* Recommended stack — which models suit THIS tape, and why. */}
+      {symbolPreset && (
+        <section className="mx-auto w-full max-w-[1500px] px-5 pt-4">
+          <div className="border border-border bg-surface">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border-soft px-3 py-2">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bull">
+                ★ recommended for {symbol}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                {symbolPreset.character}
+              </span>
+              {presetSignature(active) !== presetSignature(symbolPreset.bots) && (
+                <button
+                  onClick={() => applyPreset(symbol)}
+                  className="ml-auto border border-bull/50 bg-bull/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+                >
+                  apply this stack
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 gap-px bg-border-soft sm:grid-cols-2 lg:grid-cols-4">
+              {symbolPreset.bots.map((b) => {
+                const def = getBot(b.defId);
+                if (!def) return null;
+                const isActive = active.some((a) => a.defId === b.defId);
+                return (
+                  <button
+                    key={b.defId}
+                    onClick={() => {
+                      if (!isActive) addBot(def);
+                    }}
+                    title={isActive ? "already in the workspace" : "add to workspace"}
+                    className="group bg-bg p-3 text-left transition-colors hover:bg-surface-2"
+                  >
+                    <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg">
+                      <span className={`size-1.5 shrink-0 rounded-full ${isActive ? "bg-bull" : "bg-border"}`} />
+                      <span className="truncate">{def.name}</span>
+                      {!isActive && <span className="ml-auto shrink-0 text-fg-faint group-hover:text-bull">+ add</span>}
+                    </div>
+                    <div className="mt-1 font-mono text-[10px] normal-case leading-relaxed text-fg-dim">{b.why}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       <div className="mx-auto flex w-full max-w-[1500px] items-center justify-end px-5 pt-3">
         <SetupsBar getState={setupState} onApply={applySetup} />
       </div>
@@ -576,6 +654,21 @@ function spotForSymbol(s: string) {
     QQQ: 558, BTC: 95400, META: 745, MSFT: 458, GOOG: 195,
   };
   return map[s] ?? 100;
+}
+
+/** Build the active stack for a symbol's recommended preset, default params. */
+function presetActive(sym: string): ActiveBot[] | null {
+  const p = SYMBOL_PRESETS[sym];
+  if (!p) return null;
+  const out: ActiveBot[] = [];
+  for (const b of p.bots) {
+    const def = getBot(b.defId);
+    if (!def) continue;
+    const params: Record<string, number | string | boolean> = {};
+    for (const pr of def.params) params[pr.key] = pr.default;
+    out.push({ uid: `${b.defId}-${Math.random().toString(36).slice(2, 8)}`, defId: b.defId, params });
+  }
+  return out.length ? out : null;
 }
 
 function seedActive(): ActiveBot[] {
