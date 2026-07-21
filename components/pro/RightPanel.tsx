@@ -9,11 +9,17 @@ const DEFAULT_LIST: { sym: string }[] = [
   { sym: "BTC-USD" }, { sym: "ETH-USD" },
 ];
 
-type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string };
+type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string; marketTime?: number | null };
 
-type Props = { symbol: SymbolDef; onPickSymbol: (s: SymbolDef) => void };
+type Props = {
+  symbol: SymbolDef;
+  onPickSymbol: (s: SymbolDef) => void;
+  /** Fresh poll result for the charted symbol — the page patches it into the
+      developing candle so chart and rail never disagree on the last price. */
+  onQuote?: (sym: string, last: number, marketTime?: number) => void;
+};
 
-export function RightPanel({ symbol, onPickSymbol }: Props) {
+export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   const [list, setList] = useState<string[]>(() => {
     if (typeof window === "undefined") return DEFAULT_LIST.map((d) => d.sym);
     try {
@@ -66,12 +72,14 @@ export function RightPanel({ symbol, onPickSymbol }: Props) {
         const map: Record<string, LiveQuote> = {};
         for (const q of j.quotes as LiveQuote[]) map[q.sym] = q;
         setQuotes(map);
+        const live = map[symbol.sym];
+        if (live?.last != null) onQuote?.(symbol.sym, live.last, live.marketTime ?? undefined);
       } catch {}
     };
     fetchQuotes();
     const id = setInterval(fetchQuotes, 15000);
     return () => { alive = false; clearInterval(id); };
-  }, [list, symbol.sym]);
+  }, [list, symbol.sym, onQuote]);
 
   // tiny live price tick history (last ~60 samples) for the symbol
   useEffect(() => {

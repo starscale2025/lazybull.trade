@@ -87,6 +87,7 @@ export async function GET(req: Request) {
         exchangeName: meta.exchangeName,
         instrumentType: meta.instrumentType,
         regularMarketPrice: meta.regularMarketPrice,
+        regularMarketTime: meta.regularMarketTime,
         previousClose: meta.previousClose,
         chartPreviousClose: meta.chartPreviousClose,
         fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh,

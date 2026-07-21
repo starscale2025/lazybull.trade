@@ -48,6 +48,32 @@ const DEFAULT_WORKSPACE: Workspace = {
   alerts: [],
 };
 
+/** Fold a fresh trade price into the developing (last) bar: close moves,
+    high/low stretch. No-op when nothing changes, so it's cheap in updaters. */
+function patchLastBar(arr: Bar[], price: number): Bar[] {
+  const last = arr[arr.length - 1];
+  if (!last || last.c === price) return arr;
+  return [...arr.slice(0, -1), { ...last, c: price, h: Math.max(last.h, price), l: Math.min(last.l, price) }];
+}
+
+/** A just-fetched bar series can be STALER than the last quote tick (the bars
+    proxy and the quote poll cache separately for 30s). Order them by upstream
+    regularMarketTime: an older fetch gets the freshest trade patched into its
+    last bar; a newer fetch becomes the new freshest. */
+function reconcileBars(
+  bars: Bar[],
+  meta: { regularMarketPrice?: number; regularMarketTime?: number } | null | undefined,
+  sym: string,
+  freshestRef: { current: { sym: string; price: number; t: number } | null }
+): Bar[] {
+  const mt = meta?.regularMarketTime ?? 0;
+  const f = freshestRef.current;
+  if (f && f.sym === sym && f.t > mt) return patchLastBar(bars, f.price);
+  const mp = meta?.regularMarketPrice;
+  if (typeof mp === "number" && Number.isFinite(mp)) freshestRef.current = { sym, price: mp, t: mt };
+  return bars;
+}
+
 export default function ProPage() {
   // ── core state
   const [symbol, setSymbol] = useState<SymbolDef>(DEFAULT_WORKSPACE.symbol);
@@ -153,6 +179,15 @@ export default function ProPage() {
   }, [drawings, symbol.sym]);
 
   const lastPriceRef = useRef<number | null>(null);
+  // Which symbol the `bars` state currently holds — set beside every setBars
+  // from a fetch, read by the live-tick patch so a quote arriving mid-switch
+  // can never write one symbol's price into another symbol's candle.
+  const barsSymRef = useRef<string | null>(null);
+  // Freshest known trade for the charted symbol, ordered by the upstream
+  // regularMarketTime. The bars proxy and the quote poll are cached separately
+  // for 30s, so either can deliver the staler snapshot — whichever carries the
+  // newer exchange timestamp wins, in both directions.
+  const freshestRef = useRef<{ sym: string; price: number; t: number } | null>(null);
 
   // Only this symbol's drawings render; legacy rows without a sym show
   // everywhere rather than vanishing from old saved workspaces.
@@ -326,7 +361,8 @@ export default function ProPage() {
         const j = await r.json();
         if (!alive) return;
         if (!j.ok) throw new Error(j.error || "quote failed");
-        setBars(j.bars as Bar[]);
+        barsSymRef.current = symbol.sym;
+        setBars(reconcileBars(j.bars as Bar[], j.meta, symbol.sym, freshestRef));
         setMeta(j.meta || null);
       } catch (e) {
         if (!alive) return;
@@ -346,13 +382,34 @@ export default function ProPage() {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=${timeframe}`);
         const j = await r.json();
         if (j.ok) {
-          setBars(j.bars as Bar[]);
+          barsSymRef.current = symbol.sym;
+          setBars(reconcileBars(j.bars as Bar[], j.meta, symbol.sym, freshestRef));
           setMeta(j.meta || null);
         }
       } catch {}
     }, 30000);
     return () => clearInterval(id);
   }, [symbol.sym, timeframe, replayActive]);
+
+  // Live tick → developing candle. The quote rail polls every 15s while the
+  // bars proxy caches for 30s, so the chart's last price could sit a few cents
+  // behind the rail (326.81 on the tag vs 326.94 in the rail). Patching the
+  // fresh trade price into the last bar — close, stretched high/low — makes
+  // the tag, legend, P&L sweep and the rail read one number, the way a
+  // terminal's tick stream drives the current bar. Replay stays untouched:
+  // live ticks must never rewrite history mid-scrub.
+  const onLiveQuote = useCallback(
+    (sym: string, last: number, marketTime?: number) => {
+      if (replayActive || !Number.isFinite(last)) return;
+      if (sym !== barsSymRef.current) return;
+      const t = marketTime ?? 0;
+      const f = freshestRef.current;
+      if (f && f.sym === sym && f.t > t) return; // stale cache hit — never walk the tape backwards
+      freshestRef.current = { sym, price: last, t };
+      setBars((prev) => patchLastBar(prev, last));
+    },
+    [replayActive]
+  );
 
   // intro fade
   useEffect(() => {
@@ -876,7 +933,7 @@ export default function ProPage() {
           />
         )}
 
-        <RightPanel symbol={symbol} onPickSymbol={setSymbol} />
+        <RightPanel symbol={symbol} onPickSymbol={setSymbol} onQuote={onLiveQuote} />
       </div>
 
       {replayActive && (

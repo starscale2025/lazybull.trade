@@ -50,6 +50,9 @@ async function fetchOne(symbol: string) {
       currency: meta.currency,
       exch: meta.fullExchangeName || meta.exchangeName,
       marketState: deriveMarketState(meta),
+      // Upstream snapshot time — lets the client order this quote against the
+      // bars feed (both are 30s-cached separately, so either can be staler).
+      marketTime: meta.regularMarketTime ?? null,
     };
   } catch {
     return null;
