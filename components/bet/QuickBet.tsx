@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { modelRead, quantRead } from "@/lib/bet-analysis";
 import { placePaperOrder } from "@/lib/pro/paper";
+import { track } from "@/lib/track";
 import { usePaper, useSafety, useStrategy } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { detect } from "@/lib/detector";
@@ -152,6 +153,16 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
       setError(res.error);
       return;
     }
+    // The analysis shown at decision time is data gold: did people bet WITH
+    // the jury or against it, and how did that go?
+    track("bet_placed", {
+      sym: symbol,
+      dir,
+      stake,
+      jury_lean: reads?.quant.lean ?? null,
+      jury_conf: reads?.quant.confidence ?? null,
+      model_p_up: reads?.model.pUp ?? null,
+    });
     setPlaced(`${dir === "up" ? "▲ UP" : "▼ DOWN"} $${stake.toLocaleString()} on ${symbol} @ ${mark.toFixed(2)}`);
   };
 

@@ -755,7 +755,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             /* storage unavailable — the account still reset */
           }
           setResetOpen(false);
-          onResult(`Portfolio wiped — fresh start at ${money(startingCash)} · workspace cleared`, "ok");
+          onResult(`Portfolio wiped — fresh start at ${money(usePaper.getState().startingCash)} · workspace cleared`, "ok");
         }}
       />
     </div>

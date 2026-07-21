@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { PaperSync } from "@/components/PaperSync";
+import { Tracker } from "@/components/Tracker";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
 
 const fraunces = Fraunces({
@@ -47,6 +48,8 @@ export default function RootLayout({
           <ThemeProvider>{children}</ThemeProvider>
           {/* Cross-device paper-account replication — needs the session. */}
           <PaperSync />
+          {/* Product events: one page_view per route change. */}
+          <Tracker />
         </SessionProvider>
         {/* Daily-loss guard: global, because share trades now book from /pro
             and /quant too, and the limit has to be watched everywhere. */}

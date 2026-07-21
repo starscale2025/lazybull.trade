@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ChainCell, Leg } from "./pricing";
 import { applyFill, sanitizeShares, validateFill, type Fill, type SharePosition } from "./paper-shares";
+import { track } from "./track";
 import {
   availableFunds as calcAvailable,
   bracketFor,
@@ -241,6 +242,7 @@ export const usePaper = create<PaperState>()(
             ...s.balanceLog,
           ].slice(0, MAX_TRADES),
         }));
+        track("bet_opened", { underlying: p.underlying, strategy: p.strategy, cost: p.cost, legs: p.legs.length });
         return pos;
       },
       close: (id, exitPnl) =>
@@ -249,8 +251,9 @@ export const usePaper = create<PaperState>()(
           realizedToday: s.realizedToday + exitPnl,
           positions: s.positions.map((p) => (p.id === id ? { ...p, status: "closed", pnl: exitPnl } : p)),
         })),
-      closeAll: (reason) =>
-        set((s) => {
+      closeAll: (reason) => {
+        track("close_all", { reason });
+        return set((s) => {
           let cash = s.cash;
           const positions = s.positions.map((p) => {
             if (p.status === "open") {
@@ -291,7 +294,8 @@ export const usePaper = create<PaperState>()(
                 ].slice(0, MAX_TRADES)
               : s.balanceLog;
           return { positions, cash, shares: {}, orders, realizedToday: realized, balanceLog };
-        }),
+        });
+      },
       fillShares: (f) => {
         const invalid = validateFill(f);
         if (invalid) return { ok: false, error: invalid };
@@ -414,10 +418,12 @@ export const usePaper = create<PaperState>()(
           const filled: WorkingOrder = { ...order, status: "filled", filledAt: now, fillPrice: px as number };
           const exits = bracketFor(filled, px as number, now);
           set((st) => ({ orders: [filled, ...exits, ...st.orders].slice(0, 300) }));
+          track("order_submitted", { sym: order.sym, side: order.side, type: order.type, qty: order.qty, mode: "filled" });
           return { ok: true, order: filled };
         }
 
         set((st) => ({ orders: [order, ...st.orders].slice(0, 300) }));
+        track("order_submitted", { sym: order.sym, side: order.side, type: order.type, qty: order.qty, mode: "resting" });
         return { ok: true, order };
       },
 
@@ -491,10 +497,17 @@ export const usePaper = create<PaperState>()(
           accountStartedAt: Date.now(),
           resetCount: get().resetCount + 1,
         });
+        track("capital_changed", { to: capital });
       },
-      reset: () =>
-        set((s) => ({
-          cash: s.startingCash,
+      reset: () => {
+        track("funds_reset", { to: DEFAULT_CAPITAL });
+        // Reset is a FACTORY restart: it lands on the standard $5k starter
+        // stake regardless of what the account ran before — accounts opened
+        // under the old $100k default come down to $5k here. A custom capital
+        // is one click away afterwards (setStartingCash, the panel's editor).
+        return set((s) => ({
+          cash: DEFAULT_CAPITAL,
+          startingCash: DEFAULT_CAPITAL,
           positions: [],
           shares: {},
           orders: [],
@@ -506,14 +519,15 @@ export const usePaper = create<PaperState>()(
               ts: Date.now(),
               kind: "reset" as const,
               amount: 0,
-              balance: s.startingCash,
-              note: `Account reset to $${s.startingCash.toFixed(2)}`,
+              balance: DEFAULT_CAPITAL,
+              note: `Account reset to $${DEFAULT_CAPITAL.toFixed(2)}`,
             },
           ],
           realizedToday: 0,
           accountStartedAt: Date.now(),
           resetCount: s.resetCount + 1,
-        })),
+        }));
+      },
     }),
     {
       name: "lb-paper",
@@ -521,11 +535,11 @@ export const usePaper = create<PaperState>()(
       // change deserialize without it. Without a merge that restores the
       // default, every read of `shares` would be undefined and the /pro
       // position panel would crash on first render for existing users.
-      version: 3,
+      version: 4,
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<PaperState>;
         const log = Array.isArray(p.balanceLog) ? p.balanceLog : [];
-        return {
+        const out = {
           ...p,
           shares: sanitizeShares(p.shares),
           orders: Array.isArray(p.orders) ? p.orders : [],
@@ -544,6 +558,21 @@ export const usePaper = create<PaperState>()(
             ? (p.resetCount as number)
             : log.filter((b) => b?.kind === "reset" || b?.kind === "capital").length,
         } as PaperState;
+        // v4: the starter stake is $5k now. Only UNTOUCHED accounts rebase
+        // silently — an account with any history keeps its capital until the
+        // user chooses reset (which lands on $5k with the full warning).
+        const untouched =
+          out.trades.length === 0 &&
+          out.balanceLog.length === 0 &&
+          (!Array.isArray(out.positions) || out.positions.length === 0) &&
+          out.orders.length === 0 &&
+          Object.keys(out.shares).length === 0 &&
+          out.cash === out.startingCash;
+        if (untouched && out.startingCash !== DEFAULT_CAPITAL) {
+          out.startingCash = DEFAULT_CAPITAL;
+          out.cash = DEFAULT_CAPITAL;
+        }
+        return out;
       },
       // migrate() only runs when the stored version differs. Anything already
       // at v2 — including hand-edited or half-written localStorage — bypasses

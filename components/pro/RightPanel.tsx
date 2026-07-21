@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import { track } from "@/lib/track";
 import { fmt } from "./chartCore";
 import type { SymbolDef } from "./TopBar";
 const DEFAULT_LIST: { sym: string }[] = [
@@ -83,6 +84,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
     if (authStatus !== "authenticated") return;
     if (adoptingListRef.current) return; // the adopt itself isn't an edit
     const id = setTimeout(() => {
+      track("watchlist_changed", { count: list.length });
       void fetch("/api/watchlists", {
         method: "PUT",
         headers: { "content-type": "application/json" },

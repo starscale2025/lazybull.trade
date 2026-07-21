@@ -6,7 +6,7 @@
 // everywhere and spelled out in full.
 
 import { useEffect, useRef } from "react";
-import { usePaper } from "@/lib/stores";
+import { DEFAULT_CAPITAL, usePaper } from "@/lib/stores";
 import { fmt } from "@/components/pro/chartCore";
 
 export function ResetFundsModal({
@@ -21,6 +21,9 @@ export function ResetFundsModal({
 }) {
   const startingCash = usePaper((s) => s.startingCash);
   const resetCount = usePaper((s) => s.resetCount);
+  // Reset always lands on the standard starter stake — including accounts
+  // still running the old $100k default.
+  const target = DEFAULT_CAPITAL;
   const shares = usePaper((s) => s.shares);
   const orders = usePaper((s) => s.orders);
   const trades = usePaper((s) => s.trades);
@@ -69,7 +72,11 @@ export function ResetFundsModal({
           <p className="text-fg">
             This is not just a balance top-up. Confirming destroys everything this
             account has ever done and starts a brand-new portfolio at{" "}
-            <span className="text-bull">${fmt(startingCash, 2)}</span>:
+            <span className="text-bull">${fmt(target, 2)}</span>
+            {startingCash !== target && (
+              <> (the standard starter stake — your current ${fmt(startingCash, 0)} capital does not carry over)</>
+            )}
+            :
           </p>
           <ul className="space-y-1.5 border border-border-soft bg-bg/60 p-3">
             <li>
@@ -112,7 +119,7 @@ export function ResetFundsModal({
             onClick={onConfirm}
             className="bg-surface px-3 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bear transition-colors hover:bg-bear hover:text-bg"
           >
-            wipe it all — restart at ${fmt(startingCash, 0)}
+            wipe it all — restart at ${fmt(target, 0)}
           </button>
         </div>
       </div>

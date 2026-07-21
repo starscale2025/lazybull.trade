@@ -204,7 +204,7 @@ export default function PortfolioPage() {
   const confirmReset = () => {
     usePaper.getState().reset();
     setResetOpen(false);
-    say(`Portfolio wiped — fresh start at ${money(startingCash)}`);
+    say(`Portfolio wiped — fresh start at ${money(usePaper.getState().startingCash)}`);
   };
 
   return (

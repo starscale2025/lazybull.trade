@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { QuickBet } from "@/components/bet/QuickBet";
 import { generateCandles, type Candle } from "@/lib/candles";
 import { applyTick, reconcileBars, type FreshestRef } from "@/lib/live-bars";
+import { track } from "@/lib/track";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
 import { QuantHero } from "./QuantHero";
@@ -35,6 +36,7 @@ export function QuantPage() {
   });
   const setMode = (m: "live" | "seed") => {
     setModeState(m);
+    track("quant_mode", { mode: m });
     try {
       localStorage.setItem("lb-quant-mode", m);
     } catch {}
@@ -237,6 +239,7 @@ export function QuantPage() {
 
   function runAll() {
     if (active.length === 0) return;
+    track("quant_run_all", { symbol, mode, bots: active.length });
     setRanAt(Date.now());
     const next: ResultsMap = {};
     setResults({});

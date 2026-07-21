@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
+import { track } from "@/lib/track";
 
 export type QuantSetupState = {
   symbol: string;
@@ -78,6 +79,8 @@ export function SetupsBar({
       if (j?.ok) {
         setName("");
         say(`saved "${trimmed}"`);
+        const s = getState();
+        track("setup_saved", { symbol: s.symbol, mode: s.mode, bots: s.active.length });
         void refresh();
       } else {
         say(j?.error === "unauth" ? "sign in to save setups" : "save failed");
@@ -154,6 +157,7 @@ export function SetupsBar({
                     onApply(it.state);
                     setOpen(false);
                     say(`applied "${it.name}"`);
+                    track("setup_applied", { symbol: it.state?.symbol ?? null, mode: it.state?.mode ?? null });
                   }}
                   className="flex-1 truncate text-left normal-case tracking-normal text-fg hover:text-bull"
                   title={`${it.state.symbol} · ${it.state.mode} · ${it.state.active?.length ?? 0} bots`}

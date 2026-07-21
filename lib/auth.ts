@@ -9,6 +9,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { mongo } from "./mongo";
+import { logServerEvent } from "./db/events";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(mongo(), {
@@ -33,6 +34,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: "/auth/signin",
+  },
+  // Server-side facts go straight into the events stream — a client tracker
+  // can be blocked or closed mid-flow; this can't.
+  events: {
+    async signIn({ user, isNewUser }) {
+      await logServerEvent(isNewUser ? "signup" : "sign_in", user?.id, {
+        email_domain: user?.email?.split("@")[1] ?? null,
+      });
+    },
+    async signOut() {
+      await logServerEvent("sign_out");
+    },
   },
   trustHost: true,
 });
