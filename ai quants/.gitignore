@@ -6,3 +6,5 @@ data/cache/
 weights/*_test*
 weights/*_train.log
 repos/
+# trained artifacts: 186MB, fully reproducible via models/*/train.py — never commit
+weights/
