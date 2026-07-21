@@ -535,7 +535,7 @@ export const usePaper = create<PaperState>()(
       // change deserialize without it. Without a merge that restores the
       // default, every read of `shares` would be undefined and the /pro
       // position panel would crash on first render for existing users.
-      version: 4,
+      version: 5,
       migrate: (persisted) => {
         const p = (persisted ?? {}) as Partial<PaperState>;
         const log = Array.isArray(p.balanceLog) ? p.balanceLog : [];
@@ -558,9 +558,7 @@ export const usePaper = create<PaperState>()(
             ? (p.resetCount as number)
             : log.filter((b) => b?.kind === "reset" || b?.kind === "capital").length,
         } as PaperState;
-        // v4: the starter stake is $5k now. Only UNTOUCHED accounts rebase
-        // silently — an account with any history keeps its capital until the
-        // user chooses reset (which lands on $5k with the full warning).
+        // v4: the starter stake is $5k now — untouched accounts rebase silently.
         const untouched =
           out.trades.length === 0 &&
           out.balanceLog.length === 0 &&
@@ -571,6 +569,33 @@ export const usePaper = create<PaperState>()(
         if (untouched && out.startingCash !== DEFAULT_CAPITAL) {
           out.startingCash = DEFAULT_CAPITAL;
           out.cash = DEFAULT_CAPITAL;
+        }
+        // v5: accounts still on the OLD $100k default restart at $5k outright,
+        // history and all — v4's history-preserving gentleness just left every
+        // pre-change account confusingly rich forever. The ledger records the
+        // restart so the account doesn't read as factory-default (which would
+        // let a stale server copy adopt straight back over it).
+        if (out.startingCash === 100_000) {
+          const now = Date.now();
+          out.cash = DEFAULT_CAPITAL;
+          out.startingCash = DEFAULT_CAPITAL;
+          out.positions = [];
+          out.shares = {};
+          out.orders = [];
+          out.trades = [];
+          out.journal = {};
+          out.realizedToday = 0;
+          out.accountStartedAt = now;
+          out.balanceLog = [
+            {
+              id: `b-${now}`,
+              ts: now,
+              kind: "capital" as const,
+              amount: DEFAULT_CAPITAL,
+              balance: DEFAULT_CAPITAL,
+              note: `Account moved to the new $${DEFAULT_CAPITAL.toFixed(2)} starter stake`,
+            },
+          ];
         }
         return out;
       },
