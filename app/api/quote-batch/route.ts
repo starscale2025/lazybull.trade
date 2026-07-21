@@ -22,9 +22,25 @@ async function fetchOne(symbol: string) {
     if (!result) return null;
     const meta = result.meta || {};
     const last = meta.regularMarketPrice ?? meta.previousClose ?? 0;
-    const prev = meta.chartPreviousClose ?? meta.previousClose ?? last;
-    const chg = last - prev;
-    const chgPct = prev ? (chg / prev) * 100 : 0;
+    // Previous close must come from the daily bars, NOT meta.chartPreviousClose:
+    // that field is the close before the requested RANGE starts (Friday on a 2d
+    // request made on Tuesday), which overstated every day-change by days of
+    // drift — the watchlist said −2.31% while Google said −0.21%. The bar for
+    // the session `regularMarketPrice` belongs to is identified by exchange-day
+    // (gmtoffset); the newest bar from an earlier day is the true prev close.
+    const ts: number[] = result.timestamp || [];
+    const closes: (number | null)[] = result.indicators?.quote?.[0]?.close || [];
+    const off = meta.gmtoffset ?? 0;
+    const dayOf = (sec: number) => Math.floor((sec + off) / 86400);
+    const curDay = dayOf(meta.regularMarketTime ?? ts[ts.length - 1] ?? 0);
+    let prev: number | undefined;
+    for (let i = ts.length - 1; i >= 0; i--) {
+      const c = closes[i];
+      if (c != null && dayOf(ts[i]) < curDay) { prev = c; break; }
+    }
+    const prevClose: number = prev ?? meta.previousClose ?? meta.chartPreviousClose ?? last;
+    const chg = last - prevClose;
+    const chgPct = prevClose ? (chg / prevClose) * 100 : 0;
     return {
       sym: symbol,
       name: meta.longName || meta.shortName || symbol,
