@@ -7,6 +7,7 @@ import { applyTick, reconcileBars, type FreshestRef } from "@/lib/live-bars";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
 import { QuantHero } from "./QuantHero";
+import { SetupsBar, type QuantSetupState } from "./SetupsBar";
 import { BotLibrary } from "./BotLibrary";
 import { Workspace } from "./Workspace";
 import { OutputPanel } from "./OutputPanel";
@@ -342,6 +343,41 @@ export function QuantPage() {
     addBot(def);
   }
 
+  // ── saved setups (profile-backed): the whole experiment as config.
+  const setupState = (): QuantSetupState => ({
+    symbol,
+    bars,
+    mode,
+    seed,
+    drift,
+    vol,
+    // Registry bots only — custom imports are code, not config.
+    active: active.filter((a) => getBot(a.defId)).map(({ defId, params }) => ({ defId, params })),
+  });
+
+  function applySetup(s: QuantSetupState) {
+    if (!s || typeof s !== "object") return;
+    if (typeof s.symbol === "string" && s.symbol) setSymbol(s.symbol.toUpperCase().slice(0, 12));
+    if (Number.isFinite(s.bars)) setBars(Math.min(500, Math.max(60, Math.round(s.bars))));
+    if (s.mode === "live" || s.mode === "seed") setMode(s.mode);
+    if (Number.isFinite(s.seed)) setSeed(Math.min(500, Math.max(1, Math.round(s.seed))));
+    if (Number.isFinite(s.drift)) setDrift(Math.min(0.5, Math.max(-0.5, s.drift)));
+    if (Number.isFinite(s.vol)) setVol(Math.min(5, Math.max(0.2, s.vol)));
+    if (Array.isArray(s.active)) {
+      const rebuilt: ActiveBot[] = [];
+      for (const a of s.active.slice(0, 24)) {
+        if (!a || typeof a.defId !== "string" || !getBot(a.defId)) continue;
+        rebuilt.push({
+          uid: `${a.defId}-${Math.random().toString(36).slice(2, 8)}`,
+          defId: a.defId,
+          params: (a.params && typeof a.params === "object" ? a.params : {}) as ActiveBot["params"],
+        });
+      }
+      setActive(rebuilt);
+      setResults({});
+    }
+  }
+
   function flashLibrary() {
     setLibrarySpotlight(true);
     libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -459,7 +495,11 @@ export function QuantPage() {
         syntheticKnobsActive={syntheticKnobsActive}
       />
 
-      <section className="mx-auto w-full max-w-[1500px] px-5 pt-5">
+      <div className="mx-auto flex w-full max-w-[1500px] items-center justify-end px-5 pt-3">
+        <SetupsBar getState={setupState} onApply={applySetup} />
+      </div>
+
+      <section className="mx-auto w-full max-w-[1500px] px-5 pt-2">
         <div className="grid grid-cols-12 gap-4" style={{ minHeight: "calc(100vh - 80px)" }}>
           <div ref={libraryRef} className={`col-span-12 lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] transition-shadow duration-700 ${librarySpotlight ? "shadow-[0_0_0_2px_var(--bull),0_0_60px_-10px_var(--bull)]" : ""}`} style={{ height: "calc(100vh - 2rem)" }}>
             <BotLibrary

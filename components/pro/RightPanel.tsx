@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { fmt } from "./chartCore";
 import type { SymbolDef } from "./TopBar";
 const DEFAULT_LIST: { sym: string }[] = [
@@ -39,6 +40,57 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   useEffect(() => {
     try { localStorage.setItem("lb-pro-watchlist", JSON.stringify(list)); } catch {}
   }, [list]);
+
+  // ── profile sync via the /api/watchlists backend. localStorage stays the
+  // offline cache; signed in, the server copy is the cross-device truth.
+  const { status: authStatus } = useSession();
+  const listRef = useRef(list);
+  listRef.current = list;
+  const adoptingListRef = useRef(false);
+  const pulledRef = useRef(false);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated" || pulledRef.current) return;
+    pulledRef.current = true;
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/watchlists");
+        if (!alive || !r.ok) return;
+        const j = await r.json();
+        if (!j?.ok) return;
+        if (Array.isArray(j.symbols) && j.symbols.length) {
+          // Server copy exists → adopt it (and don't echo it straight back up).
+          adoptingListRef.current = true;
+          setList(j.symbols as string[]);
+          setTimeout(() => { adoptingListRef.current = false; }, 0);
+        } else {
+          // First sign-in from this account → seed the profile with the local list.
+          void fetch("/api/watchlists", {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ symbols: listRef.current }),
+          }).catch(() => {});
+        }
+      } catch {
+        /* offline — the debounced push below retries on the next edit */
+      }
+    })();
+    return () => { alive = false; };
+  }, [authStatus]);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated") return;
+    if (adoptingListRef.current) return; // the adopt itself isn't an edit
+    const id = setTimeout(() => {
+      void fetch("/api/watchlists", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ symbols: list }),
+      }).catch(() => {});
+    }, 2000);
+    return () => clearTimeout(id);
+  }, [list, authStatus]);
 
   // The voice co-pilot sends add/remove *intents* rather than writing storage
   // itself — this component stays the single writer, so an agent edit can never
