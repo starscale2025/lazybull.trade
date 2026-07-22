@@ -1,46 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { ScrollCinema } from "./ScrollCinema";
 
-// The cinema plays ONCE per visitor, ever — not once per pageview — and only
-// where it can actually compose:
+// The cinema is OPT-IN, never a gate. The landing page is always visible
+// first for everyone; the film plays only when someone chooses it via the
+// hero's "▶ watch the film" chip (or the ⌘K "replay" command), which sets
+// lb-cinema-replay and reloads.
 //
 // · phones (<768px) NEVER mount it: the boot act's laptop wireframe cannot
 //   compose at 390px — the audit's mobile first impression was a black void
-//   with three green lines. Mobile gets the designed static hero instead.
-// · replay (lb-cinema-replay, sessionStorage): the hero's "▶ replay the
-//   film" chip sets it — the intro is a possession now, not a toll. Replay
-//   overrides both the seen-flag and the signed-in skip, once.
-// · seen-flag (lb-cinema-seen): the landing has no navbar, so every logo
-//   click funnels back to "/"; without the flag anonymous users re-entered
-//   the scroll-locked preloader on every return.
-// · signed-in users skip it; first-time anonymous visitors get the film.
+//   with three green lines. Mobile gets the designed static hero.
+// · replay (lb-cinema-replay, sessionStorage): the ONLY thing that mounts the
+//   cinema now. Consumed once, so a normal reload lands on the page.
 //
-// `flags` starts null so ScrollCinema is never mounted speculatively (the
-// old gate preloaded ~2.5MB and locked scroll while the session was still
-// resolving, then threw it all away).
+// `flags` starts null so ScrollCinema is never mounted speculatively (the old
+// gate preloaded ~2.5MB and locked scroll while the session resolved). Sign-in
+// state no longer matters — nobody is forced through the intro.
 export function CinemaGate() {
-  const { status } = useSession();
-  const [flags, setFlags] = useState<null | { mobile: boolean; replay: boolean; seen: boolean }>(null);
+  const [flags, setFlags] = useState<null | { mobile: boolean; replay: boolean }>(null);
 
   useEffect(() => {
     try {
       const mobile = window.matchMedia("(max-width: 767px)").matches;
       const replay = sessionStorage.getItem("lb-cinema-replay") === "1";
       if (replay) sessionStorage.removeItem("lb-cinema-replay");
-      const seen = localStorage.getItem("lb-cinema-seen") === "1";
-      setFlags({ mobile, replay, seen });
+      setFlags({ mobile, replay });
     } catch {
-      setFlags({ mobile: false, replay: false, seen: false });
+      setFlags({ mobile: false, replay: false });
     }
   }, []);
 
   if (!flags) return null;
   if (flags.mobile) return null;
   if (flags.replay) return <ScrollCinema />;
-  if (flags.seen) return null;
-  if (status !== "unauthenticated") return null; // loading or signed-in
-  return <ScrollCinema />;
+  return null; // landing is always visible; the film is opt-in
 }

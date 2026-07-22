@@ -78,17 +78,14 @@ const EMBERS = Array.from({ length: 9 }, (_, i) => ({
 
 export function GetStarted() {
   const { status: authStatus } = useSession();
-  // "▶ replay the film" — the cinema is a possession, not a toll. Shown once
-  // you've seen it (or you're signed in and skipped it), desktop only (the
-  // cinema never mounts on phones).
+  // "▶ watch the film" — the cinema is opt-in now, never a gate. Offered to
+  // everyone on desktop (it never mounts on phones), first-timers included.
   const [canReplay, setCanReplay] = useState(false);
   useEffect(() => {
     try {
-      const seen = localStorage.getItem("lb-cinema-seen") === "1";
-      const desktop = window.matchMedia("(min-width: 768px)").matches;
-      setCanReplay(desktop && (seen || authStatus === "authenticated"));
+      setCanReplay(window.matchMedia("(min-width: 768px)").matches);
     } catch {}
-  }, [authStatus]);
+  }, []);
   const replay = () => {
     try {
       sessionStorage.setItem("lb-cinema-replay", "1");
@@ -213,7 +210,7 @@ export function GetStarted() {
             onClick={replay}
             className="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-faint transition-colors hover:text-bull"
           >
-            ▶ replay the film
+            ▶ watch the film
           </button>
         )}
 
