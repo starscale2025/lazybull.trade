@@ -22,7 +22,6 @@ import { AnimatedDivider } from "@/components/learn/ambient/AnimatedDivider";
 import { BigStat } from "@/components/learn/ambient/BigStat";
 import { ChapterNav } from "@/components/learn/ChapterNav";
 import { Diploma } from "@/components/learn/Diploma";
-import { ScrollScrub, ScrubBeat } from "@/components/atmosphere/ScrollScrub";
 import { SplitDesk, type DeskChapter } from "@/components/learn/SplitDesk";
 import type { PredictConfig } from "@/components/learn/Predict";
 import { LivingPage } from "@/components/learn/LivingPage";
@@ -543,45 +542,6 @@ export default function LearnPage() {
           </span>
         </div>
       </Link>
-
-      {/* §00.5 — the prism set piece: a PINNED scroll-scrubbed film. Scroll
-          drives the frame (reel language) while the copy beats swap. */}
-      <ScrollScrub
-        base="/media/scrub/prism"
-        frameCount={64}
-        poster="/media/learn/prism-hero@1600.webp"
-        posterAlt="Glass prism refracting light into a candlestick chart"
-        height="300vh"
-        className="border-b border-border bg-bg"
-      >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.66)_100%)]" />
-        <ScrubBeat from={0.02} to={0.42}>
-          <div className="px-5 text-center">
-            <div className="mb-5 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
-              ⟢ §00.5 · THE CURRICULUM, REFRACTED
-            </div>
-            <h2 className="font-display uppercase leading-[0.92] tracking-tightest text-fg text-[clamp(3rem,8.5vw,8.5rem)] [text-shadow:0_2px_40px_rgba(0,0,0,0.9)]">
-              Taught by light
-            </h2>
-          </div>
-        </ScrubBeat>
-        <ScrubBeat from={0.48} to={0.98}>
-          <div className="px-5 text-center">
-            <h2 className="font-display leading-[0.95] tracking-tightest text-fg text-[clamp(2.2rem,6vw,5.5rem)] [text-shadow:0_2px_40px_rgba(0,0,0,0.9)]">
-              One hard idea in.
-              <br />
-              <span className="italic font-light text-bull">A spectrum you can read.</span>
-            </h2>
-            <p className="mx-auto mt-6 max-w-[520px] font-mono text-[13px] leading-relaxed text-fg-dim [text-shadow:0_1px_16px_rgba(0,0,0,0.9)]">
-              Every chapter splits the jargon into signals — regime, direction,
-              odds — before you risk a single paper dollar.
-            </p>
-          </div>
-        </ScrubBeat>
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
-          scroll to refract
-        </div>
-      </ScrollScrub>
 
       <AnimatedDivider num="00→01" label="ENTER THE WORKBENCH" />
 
