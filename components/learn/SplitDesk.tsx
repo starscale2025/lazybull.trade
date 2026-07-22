@@ -16,6 +16,7 @@
 // the CSS swap, which self-limits to one shot and respects reduced-motion.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Predict, type PredictConfig } from "./Predict";
 
 export type Regime = "trend" | "random" | "revert" | "risk" | "options";
 
@@ -28,6 +29,7 @@ export type DeskChapter = {
   headline: ReactNode;
   thesis: ReactNode;
   body: ReactNode;
+  predict?: PredictConfig; // "call your shot" quiz shown in the copy
   aside?: ReactNode; // optional extra left content (stat strips, links)
   takeaway?: ReactNode;
   demo: ReactNode; // the interactive cell — mounted only while active
@@ -198,6 +200,8 @@ function ChapterCopy({ ch, active }: { ch: DeskChapter; active?: boolean }) {
       </div>
 
       <div className="mt-8 max-w-[54ch] font-display text-lg leading-relaxed text-fg-dim">{ch.body}</div>
+
+      {ch.predict && <Predict id={ch.id} cfg={ch.predict} />}
 
       {ch.aside && <div className="mt-10">{ch.aside}</div>}
     </>

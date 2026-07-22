@@ -26,6 +26,7 @@ import { LiveBadge } from "@/components/learn/ambient/LiveBadge";
 import { DataStreamRail } from "@/components/learn/ambient/DataStreamRail";
 import { ScrollScrub, ScrubBeat } from "@/components/atmosphere/ScrollScrub";
 import { SplitDesk, type DeskChapter } from "@/components/learn/SplitDesk";
+import type { PredictConfig } from "@/components/learn/Predict";
 
 export const metadata = {
   title: "Learn · Lazybull",
@@ -74,6 +75,51 @@ export default function LearnPage() {
     </span>
   );
 
+  // "Call your shot" — an intuition guess per demo chapter (phase L1). The
+  // pinned terminal is the reveal. Answers are remembered and feed L4's ledger.
+  const PREDICTS: Record<string, PredictConfig> = {
+    regime: {
+      question: "A price wanders with no memory of where it's been. Its Hurst exponent is closest to…",
+      options: [{ label: "0.2" }, { label: "0.5", correct: true }, { label: "0.8" }],
+      reveal: "0.5 is a pure random walk — no trend, no reversion. Drag the knob to 0.5 and the structure dissolves.",
+    },
+    liveDemo: {
+      question: "The fast moving average crosses ABOVE the slow one. The textbook signal is…",
+      options: [{ label: "Buy", correct: true }, { label: "Sell" }, { label: "Hold" }],
+      reveal: "A golden cross — fast over slow — is the classic long entry. Drag the periods and watch the crossings move.",
+    },
+    backtest: {
+      question: "Bot A returns +40%, Bot B returns +18%. Which is the better strategy?",
+      options: [{ label: "A, clearly" }, { label: "Can't tell yet", correct: true }, { label: "B" }],
+      reveal: "You can't tell from return alone — you need Sharpe. A's +40% might ride a 60% drawdown. Run it and see.",
+    },
+    consensus: {
+      question: "One bot flashes BUY at 60% confidence. How much should you trust it?",
+      options: [{ label: "A lot" }, { label: "Barely", correct: true }, { label: "Fully" }],
+      reveal: "One bot is a guess. Trust is earned when many independent models line up — toggle more and watch the tier flip.",
+    },
+    greeks: {
+      question: "You're long a call and the stock rips up fast. Which Greek just paid you most?",
+      options: [{ label: "Theta" }, { label: "Delta", correct: true }, { label: "Rho" }],
+      reveal: "Delta — your directional exposure. Drag the strike and watch it climb toward 1 as the call goes deep ITM.",
+    },
+    volsmile: {
+      question: "A 15%-OTM put vs a 15%-OTM call — which one costs more?",
+      options: [{ label: "The put", correct: true }, { label: "The call" }, { label: "Same" }],
+      reveal: "The put. Markets price crash risk above rally risk — that asymmetry is the skew. Drag it to see.",
+    },
+    probability: {
+      question: "Three models price the same option's odds. They return…",
+      options: [{ label: "The same" }, { label: "Different odds", correct: true }, { label: "Nonsense" }],
+      reveal: "Different answers — that gap is model risk. Drag the band into the tails and watch them diverge.",
+    },
+    dataset: {
+      question: "You re-run the exact same seed twice. The chart comes back…",
+      options: [{ label: "Identical", correct: true }, { label: "Random" }, { label: "Similar-ish" }],
+      reveal: "Identical — same seed, same market, every time. That reproducibility is the whole point.",
+    },
+  };
+
   // The demo chapters as data, fed to the sticky-terminal Desk in three runs:
   // §01 (solo) · §03–§08 (the sustained six-demo desk) · §10 (solo). Copy is
   // verbatim from the old chapters; the Desk owns the composition now.
@@ -81,6 +127,7 @@ export default function LearnPage() {
     {
       num: "01", id: "regime", label: "THE MARKET HAS THREE MODES", regime: "random",
       hint: "DRAG THE KNOB →",
+      predict: PREDICTS.regime,
       headline: (
         <>
           {HL("Trending.", "italic font-light text-bull pull-quote-glow", "0.1s")}
@@ -120,6 +167,7 @@ export default function LearnPage() {
     {
       num: "03", id: "live-demo", label: "LIVE DEMO", regime: "trend",
       hint: "LIVE · YAHOO FEED",
+      predict: PREDICTS.liveDemo,
       headline: (
         <>
           {HL("One bot.", "text-fg", "0.1s")}
@@ -141,6 +189,7 @@ export default function LearnPage() {
     {
       num: "04", id: "backtest", label: "BACKTEST IN MOTION", regime: "risk",
       hint: "6 BOTS × 3 SCENARIOS",
+      predict: PREDICTS.backtest,
       headline: (
         <>
           {HL("Same bot.", "text-fg", "0.1s")}
@@ -169,6 +218,7 @@ export default function LearnPage() {
     {
       num: "05", id: "consensus", label: "WHY STACK BOTS", regime: "trend",
       hint: "12 BOTS · 3 SCENARIOS",
+      predict: PREDICTS.consensus,
       headline: (
         <>
           {HL("One bot is", "text-fg-dim", "0.1s")}
@@ -192,6 +242,7 @@ export default function LearnPage() {
     {
       num: "06", id: "greeks", label: "THE GREEKS, DANCING", regime: "options",
       hint: "DRAG STRIKE · HOVER GREEK",
+      predict: PREDICTS.greeks,
       headline: (
         <>
           {HL("Five numbers", "text-fg", "0.1s")}
@@ -234,6 +285,7 @@ export default function LearnPage() {
     {
       num: "07", id: "volsmile", label: "THE VOL SMILE", regime: "options",
       hint: "SKEW · KURTOSIS",
+      predict: PREDICTS.volsmile,
       headline: (
         <>
           {HL("A 15%-OTM put", "text-fg", "0.1s")}
@@ -261,6 +313,7 @@ export default function LearnPage() {
     {
       num: "08", id: "probability", label: "PROBABILITY · THREE WAYS", regime: "risk",
       hint: "DRAG THE BAND",
+      predict: PREDICTS.probability,
       headline: (
         <>
           {HL("Three models.", "text-fg", "0.1s")}
@@ -286,6 +339,7 @@ export default function LearnPage() {
     {
       num: "10", id: "dataset", label: "STRESS-TEST ANY MARKET", regime: "random",
       hint: "CLICK A KNOB → LEARN IT",
+      predict: PREDICTS.dataset,
       headline: (
         <>
           {HL("Five knobs.", "text-fg", "0.1s")}
