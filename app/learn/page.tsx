@@ -25,6 +25,7 @@ import { BigStat } from "@/components/learn/ambient/BigStat";
 import { LiveBadge } from "@/components/learn/ambient/LiveBadge";
 import { DataStreamRail } from "@/components/learn/ambient/DataStreamRail";
 import { ScrollScrub, ScrubBeat } from "@/components/atmosphere/ScrollScrub";
+import { SplitDesk, type DeskChapter } from "@/components/learn/SplitDesk";
 
 export const metadata = {
   title: "Learn · Lazybull",
@@ -47,11 +48,6 @@ const TICKER_JARGON_A = [
   "ALPHA", "BETA", "SHARPE", "SORTINO", "CALMAR", "MAX DRAWDOWN",
   "WALK-FORWARD", "EMBARGO", "OUT-OF-SAMPLE", "INFORMATION COEFFICIENT",
 ];
-const TICKER_JARGON_B = [
-  "DELTA", "GAMMA", "THETA", "VEGA", "RHO", "VOL SMILE", "SKEW",
-  "KURTOSIS", "FAT TAILS", "BLACK-SCHOLES", "HESTON", "MERTON JUMP",
-  "IMPLIED VOL", "REALIZED VOL", "VEGA EXPOSURE",
-];
 const TICKER_JARGON_C = [
   "BOOTSTRAP", "QUANTILE", "PINBALL LOSS", "GBM", "MULBERRY32",
   "TRIPLE-BARRIER", "DE PRADO", "META-LABELING", "FRACTIONAL DIFF",
@@ -70,6 +66,244 @@ export default function LearnPage() {
     bots: BOT_REGISTRY.filter((b) => b.category === cat),
     blurb: CATEGORY_BLURB[cat],
   })).filter((f) => f.bots.length > 0);
+
+  // Headline line — the phosphor reveal used across every chapter headline.
+  const HL = (text: React.ReactNode, cls: string, delay: string) => (
+    <span className={`block hero-headline-line ${cls}`} style={{ animationDelay: delay }}>
+      {text}
+    </span>
+  );
+
+  // The demo chapters as data, fed to the sticky-terminal Desk in three runs:
+  // §01 (solo) · §03–§08 (the sustained six-demo desk) · §10 (solo). Copy is
+  // verbatim from the old chapters; the Desk owns the composition now.
+  const RUN_1: DeskChapter[] = [
+    {
+      num: "01", id: "regime", label: "THE MARKET HAS THREE MODES", regime: "random",
+      hint: "DRAG THE KNOB →",
+      headline: (
+        <>
+          {HL("Trending.", "italic font-light text-bull pull-quote-glow", "0.1s")}
+          {HL("Random.", "italic font-light text-fg-dim", "0.32s")}
+          {HL("Reverting.", "italic font-light text-cyan", "0.55s")}
+        </>
+      ),
+      thesis: "One slider. Three regimes. Three winning bots.",
+      body: (
+        <>
+          Every market — every stock, every minute, every quarter — sits somewhere on this
+          spectrum. The single most important question in quant trading is{" "}
+          <span className="text-fg italic">which regime are you in right now</span>, because the
+          answer tells you which bot family will pay off and which will burn you. Drag the knob;
+          watch the chart morph. The Hurst exponent — the number controlling the drag — is what
+          our regime detector reads off real markets.
+        </>
+      ),
+      aside: (
+        <div className="grid grid-cols-3 gap-px border border-border bg-border">
+          <div className="bg-bg p-4"><BigStat value={0.5} label="random walk threshold" tone="fg-faint" size="sm" decimals={2} /></div>
+          <div className="bg-bg p-4"><BigStat value={0.3} label="strongly mean-reverting" tone="cyan" size="sm" decimals={2} /></div>
+          <div className="bg-bg p-4"><BigStat value={0.7} label="strongly trending" tone="bull" size="sm" decimals={2} /></div>
+        </div>
+      ),
+      takeaway: (
+        <Takeaway>
+          &quot;The bot that wins in a trend <span className="text-bear italic">dies in a chop</span>.
+          Detect first, act second.&quot;
+        </Takeaway>
+      ),
+      demo: <LearnRegimeVisualizer />,
+    },
+  ];
+
+  const RUN_2: DeskChapter[] = [
+    {
+      num: "03", id: "live-demo", label: "LIVE DEMO", regime: "trend",
+      hint: "LIVE · YAHOO FEED",
+      headline: (
+        <>
+          {HL("One bot.", "text-fg", "0.1s")}
+          {HL("One chart.", "italic font-light text-bull", "0.3s")}
+          {HL("Nothing fake.", "italic font-light text-fg-dim", "0.5s")}
+        </>
+      ),
+      thesis: "SMA crossover. Real AMZN bars. Drag the periods.",
+      body: (
+        <>
+          Below is the textbook moving-average-crossover bot, running on real AMZN daily bars
+          fetched from Yahoo on page load. Drag the period sliders — the math recomputes
+          instantly, in your browser, with no round-trip. Every signal you see was just computed
+          by your CPU.
+        </>
+      ),
+      demo: <LearnLiveDemo />,
+    },
+    {
+      num: "04", id: "backtest", label: "BACKTEST IN MOTION", regime: "risk",
+      hint: "6 BOTS × 3 SCENARIOS",
+      headline: (
+        <>
+          {HL("Same bot.", "text-fg", "0.1s")}
+          {HL("Wins one regime,", "italic font-light text-bull", "0.3s")}
+          {HL("loses the next.", "italic font-light text-bear pull-quote-glow", "0.5s")}
+        </>
+      ),
+      thesis: "Sharpe matters. Drawdown matters. Pure return doesn't.",
+      body: (
+        <>
+          Pick a bot. Pick a market scenario. Hit run. The equity curve builds bar by bar in real
+          time, with Sharpe, max drawdown, and win rate filling in as the simulation progresses.
+          That&apos;s when it clicks: high return ≠ good strategy. You want{" "}
+          <span className="text-fg italic">Sharpe</span> — return per unit of bumpy ride — not
+          just upside.
+        </>
+      ),
+      takeaway: (
+        <Takeaway>
+          &quot;<span className="text-bull italic">Sharpe &gt; 1</span> separates real edge from
+          lucky upside. Most retail strategies don&apos;t clear it.&quot;
+        </Takeaway>
+      ),
+      demo: <LearnBacktestBuilder />,
+    },
+    {
+      num: "05", id: "consensus", label: "WHY STACK BOTS", regime: "trend",
+      hint: "12 BOTS · 3 SCENARIOS",
+      headline: (
+        <>
+          {HL("One bot is", "text-fg-dim", "0.1s")}
+          {HL("a guess.", "italic font-light text-fg", "0.3s")}
+          {HL("Six agreeing", "italic font-light text-bull pull-quote-glow", "0.55s")}
+          {HL("is a signal.", "text-fg-dim", "0.78s")}
+        </>
+      ),
+      thesis: "Toggle bots. Watch tier flip. Agreement is the alpha.",
+      body: (
+        <>
+          Watch the conviction band slide as more models fall into line. Tweak the dataset —
+          drift, vol, seed — and see how robust the agreement is. That&apos;s how a workbench
+          separates real edges from chart-pattern wishful thinking. The historical accuracy band
+          of <span className="text-bull italic">ULTRA tier</span> consensus is 65–77% on embargoed
+          walk-forward CV.
+        </>
+      ),
+      demo: <LearnConsensusPlayground />,
+    },
+    {
+      num: "06", id: "greeks", label: "THE GREEKS, DANCING", regime: "options",
+      hint: "DRAG STRIKE · HOVER GREEK",
+      headline: (
+        <>
+          {HL("Five numbers", "text-fg", "0.1s")}
+          {HL("tell you everything", "italic font-light text-cyan pull-quote-glow", "0.32s")}
+          {HL("about an option.", "italic font-light text-fg-dim", "0.55s")}
+        </>
+      ),
+      thesis: "Drag the strike. All five Greeks update at once.",
+      body: (
+        <>
+          Delta, Gamma, Theta, Vega, Rho. Drag the strike below — every Greek updates
+          simultaneously. Hover any of them for a one-line plain-English explanation. By the time
+          you&apos;ve dragged the strike across the smile, you&apos;ll have the intuitions
+          textbooks take chapters to build.
+        </>
+      ),
+      aside: (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-5 gap-2 border border-border bg-surface p-4">
+            {[
+              { sym: "Δ", label: "Delta", tone: "var(--bull)" },
+              { sym: "Γ", label: "Gamma", tone: "var(--cyan)" },
+              { sym: "Θ", label: "Theta", tone: "var(--amber)" },
+              { sym: "ν", label: "Vega", tone: "var(--plasma)" },
+              { sym: "ρ", label: "Rho", tone: "var(--bear)" },
+            ].map((g) => (
+              <div key={g.sym} className="text-center">
+                <div className="font-display italic font-light leading-none" style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", color: g.tone }}>{g.sym}</div>
+                <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">{g.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <Link href="/greeks" className="font-mono text-[11px] uppercase tracking-[0.2em] text-bull transition-colors hover:text-bull-dim">open the full surface lab →</Link>
+          </div>
+        </div>
+      ),
+      demo: <LearnGreekSurface />,
+    },
+    {
+      num: "07", id: "volsmile", label: "THE VOL SMILE", regime: "options",
+      hint: "SKEW · KURTOSIS",
+      headline: (
+        <>
+          {HL("A 15%-OTM put", "text-fg", "0.1s")}
+          {HL("costs more than", "italic font-light text-fg-dim", "0.32s")}
+          {HL("a 15%-OTM call.", "italic font-light text-plasma pull-quote-glow", "0.55s")}
+        </>
+      ),
+      thesis: "Crashes happen faster than rallies. The market knows.",
+      body: (
+        <>
+          Black-Scholes assumes one flat volatility. Real markets don&apos;t. Out-of-the-money
+          puts trade at higher implied vol than equidistant calls because the market knows crashes
+          happen faster than rallies. Drag the skew and kurtosis sliders to see exactly how far
+          reality drifts from the textbook.
+        </>
+      ),
+      takeaway: (
+        <Takeaway>
+          &quot;Black-Scholes is a beautiful model.{" "}
+          <span className="text-plasma italic">Heston is a useful one.</span>&quot;
+        </Takeaway>
+      ),
+      demo: <LearnVolSmile />,
+    },
+    {
+      num: "08", id: "probability", label: "PROBABILITY · THREE WAYS", regime: "risk",
+      hint: "DRAG THE BAND",
+      headline: (
+        <>
+          {HL("Three models.", "text-fg", "0.1s")}
+          {HL("One question.", "italic font-light text-fg-dim", "0.32s")}
+          {HL("Three answers.", "italic font-light text-amber pull-quote-glow", "0.55s")}
+        </>
+      ),
+      thesis: "The gap is model risk. Most platforms hide it.",
+      body: (
+        <>
+          &quot;Will the price land in this band by expiry?&quot; Black-Scholes, Monte Carlo, and
+          an empirical fat-tailed model give you three different probabilities. Drag the band into
+          the wings and watch them disagree. That gap is{" "}
+          <span className="text-fg italic">model risk</span> — a real cost most retail platforms
+          hide from you.
+        </>
+      ),
+      demo: <LearnProbabilityComparison />,
+    },
+  ];
+
+  const RUN_3: DeskChapter[] = [
+    {
+      num: "10", id: "dataset", label: "STRESS-TEST ANY MARKET", regime: "random",
+      hint: "CLICK A KNOB → LEARN IT",
+      headline: (
+        <>
+          {HL("Five knobs.", "text-fg", "0.1s")}
+          {HL("Each in", "italic font-light text-fg-dim", "0.32s")}
+          {HL("plain English.", "italic font-light text-amber", "0.55s")}
+        </>
+      ),
+      thesis: "Symbol · Bars · Seed · Drift · Vol. Click any.",
+      body: (
+        <>
+          The dataset card on every quant page lets you stress-test bots against any market. Drag
+          each slider — the chart redraws deterministically. Same seed, same chart, every time.
+          That&apos;s reproducibility nobody else in retail finance offers.
+        </>
+      ),
+      demo: <LearnDatasetPlayground />,
+    },
+  ];
 
   return (
     <main className="flex min-h-screen flex-col bg-bg text-fg">
@@ -300,56 +534,7 @@ export default function LearnPage() {
       {/* ═════════════════════════════════════════════════════════════════
           §01 REGIME ENGINE
           ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="01" id="regime" label="THE MARKET HAS THREE MODES" bg="soft">
-        <ChapterHeadline>
-          <span className="block hero-headline-line italic font-light text-bull pull-quote-glow" style={{ animationDelay: "0.1s" }}>
-            Trending.
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.32s" }}>
-            Random.
-          </span>
-          <span className="block hero-headline-line italic font-light text-cyan" style={{ animationDelay: "0.55s" }}>
-            Reverting.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          One slider. Three regimes. Three winning bots.
-        </div>
-
-        <ChapterBody para="01.A">
-          Every market — every stock, every minute, every quarter — sits somewhere on this
-          spectrum. The single most important question in quant trading is{" "}
-          <span className="text-fg italic">which regime are you in right now</span>, because the
-          answer tells you which bot family will pay off and which will burn you. Drag the
-          knob below; watch the chart morph. The Hurst exponent — the number controlling the
-          drag — is what our regime detector reads off real markets.
-        </ChapterBody>
-
-        {/* Stat strip */}
-        <div className="mt-12 grid grid-cols-3 gap-px bg-border border border-border">
-          <div className="bg-bg p-5">
-            <BigStat value={0.5} label="random walk threshold" tone="fg-faint" size="sm" decimals={2} />
-          </div>
-          <div className="bg-bg p-5">
-            <BigStat value={0.3} label="strongly mean-reverting" tone="cyan" size="sm" decimals={2} />
-          </div>
-          <div className="bg-bg p-5">
-            <BigStat value={0.7} label="strongly trending" tone="bull" size="sm" decimals={2} />
-          </div>
-        </div>
-
-        <TerminalFrame label="TERMINAL §01" hint="DRAG THE KNOB →">
-          <LearnRegimeVisualizer />
-        </TerminalFrame>
-
-        <Takeaway>
-          "The bot that wins in a trend{" "}
-          <span className="text-bear italic">dies in a chop</span>.
-          Detect first, act second."
-        </Takeaway>
-      </Chapter>
+      <SplitDesk chapters={RUN_1} />
 
       <TickerStrip items={TICKER_JARGON_A} reverse />
       <AnimatedDivider num="01→02" label="THE PRIMITIVES" />
@@ -409,256 +594,8 @@ export default function LearnPage() {
 
       <AnimatedDivider num="02→03" label="REAL DATA · REAL MATH" />
 
-      {/* ═════════════════════════════════════════════════════════════════
-          §03 LIVE DEMO
-          ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="03" id="live-demo" label="LIVE DEMO" bg="soft">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
-            One bot.
-          </span>
-          <span className="block hero-headline-line italic font-light text-bull" style={{ animationDelay: "0.3s" }}>
-            One chart.
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.5s" }}>
-            Nothing fake.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          SMA crossover. Real AMZN bars. Drag the periods.
-        </div>
-
-        <ChapterBody para="03.A">
-          Below is the textbook moving-average-crossover bot, running on real AMZN daily bars
-          fetched from Yahoo on page load. Drag the period sliders — the math recomputes
-          instantly, in your browser, with no round-trip. Every signal you see was just
-          computed by your CPU.
-        </ChapterBody>
-
-        <TerminalFrame label="TERMINAL §03" hint="LIVE · YAHOO FEED">
-          <LearnLiveDemo />
-        </TerminalFrame>
-      </Chapter>
-
-      <TickerStrip items={TICKER_JARGON_C} />
-      <AnimatedDivider num="03→04" label="EQUITY CURVES" />
-
-      {/* ═════════════════════════════════════════════════════════════════
-          §04 BACKTEST
-          ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="04" id="backtest" label="BACKTEST IN MOTION">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
-            Same bot.
-          </span>
-          <span className="block hero-headline-line italic font-light text-bull" style={{ animationDelay: "0.3s" }}>
-            Wins one regime,
-          </span>
-          <span className="block hero-headline-line italic font-light text-bear pull-quote-glow" style={{ animationDelay: "0.5s" }}>
-            loses the next.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          Sharpe matters. Drawdown matters. Pure return doesn&apos;t.
-        </div>
-
-        <ChapterBody para="04.A">
-          Pick a bot. Pick a market scenario. Hit run. The equity curve builds bar by bar in
-          real time, with Sharpe, max drawdown, and win rate filling in as the simulation
-          progresses. That&apos;s when it clicks: high return ≠ good strategy. You want
-          <span className="text-fg italic"> Sharpe</span> — return per unit of bumpy ride —
-          not just upside.
-        </ChapterBody>
-
-        <TerminalFrame label="TERMINAL §04" hint="6 BOTS × 3 SCENARIOS">
-          <LearnBacktestBuilder />
-        </TerminalFrame>
-
-        <Takeaway>
-          "<span className="text-bull italic">Sharpe &gt; 1</span> separates real edge from
-          lucky upside. Most retail strategies don&apos;t clear it."
-        </Takeaway>
-      </Chapter>
-
-      <AnimatedDivider num="04→05" label="STACK & VOTE" />
-
-      {/* ═════════════════════════════════════════════════════════════════
-          §05 CONSENSUS
-          ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="05" id="consensus" label="WHY STACK BOTS" bg="soft">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg-dim" style={{ animationDelay: "0.1s" }}>
-            One bot is
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg" style={{ animationDelay: "0.3s" }}>
-            a guess.
-          </span>
-          <span className="block hero-headline-line italic font-light text-bull pull-quote-glow" style={{ animationDelay: "0.55s" }}>
-            Six agreeing
-          </span>
-          <span className="block hero-headline-line text-fg-dim" style={{ animationDelay: "0.78s" }}>
-            is a signal.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          Toggle bots. Watch tier flip. Agreement is the alpha.
-        </div>
-
-        <ChapterBody para="05.A">
-          Watch the conviction band slide as more models fall into line. Tweak the dataset —
-          drift, vol, seed — and see how robust the agreement is. That&apos;s how a workbench
-          separates real edges from chart-pattern wishful thinking. The historical accuracy
-          band of <span className="text-bull italic">ULTRA tier</span> consensus is 65–77% on
-          embargoed walk-forward CV.
-        </ChapterBody>
-
-        <TerminalFrame label="TERMINAL §05" hint="12 BOTS · 3 SCENARIOS">
-          <LearnConsensusPlayground />
-        </TerminalFrame>
-      </Chapter>
-
-      <TickerStrip items={TICKER_JARGON_B} reverse speed="slow" />
-      <AnimatedDivider num="05→06" label="THE GREEK PANTHEON" />
-
-      {/* ═════════════════════════════════════════════════════════════════
-          §06 GREEKS
-          ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="06" id="greeks" label="THE GREEKS, DANCING">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
-            Five numbers
-          </span>
-          <span className="block hero-headline-line italic font-light text-cyan pull-quote-glow" style={{ animationDelay: "0.32s" }}>
-            tell you everything
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.55s" }}>
-            about an option.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          Drag the strike. All five Greeks update at once.
-        </div>
-
-        <ChapterBody para="06.A">
-          Delta, Gamma, Theta, Vega, Rho. Drag the strike below — every Greek updates
-          simultaneously. Hover any of them for a one-line plain-English explanation. By the
-          time you&apos;ve dragged the strike across the smile, you&apos;ll have the intuitions
-          textbooks take chapters to build.
-        </ChapterBody>
-
-        {/* Greek-letter watermarks */}
-        <div className="mt-12 grid grid-cols-5 gap-2 border border-border bg-surface p-6">
-          {[
-            { sym: "Δ", label: "Delta", tone: "var(--bull)" },
-            { sym: "Γ", label: "Gamma", tone: "var(--cyan)" },
-            { sym: "Θ", label: "Theta", tone: "var(--amber)" },
-            { sym: "ν", label: "Vega", tone: "var(--plasma)" },
-            { sym: "ρ", label: "Rho", tone: "var(--bear)" },
-          ].map((g) => (
-            <div key={g.sym} className="text-center">
-              <div className="font-display italic font-light leading-none" style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", color: g.tone }}>
-                {g.sym}
-              </div>
-              <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">{g.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <TerminalFrame label="TERMINAL §06" hint="DRAG STRIKE · HOVER GREEK">
-          <LearnGreekSurface />
-        </TerminalFrame>
-
-        <div className="mt-3 flex justify-end">
-          <Link href="/greeks" className="font-mono text-[11px] uppercase tracking-[0.2em] text-bull transition-colors hover:text-bull-dim">
-            open the full surface lab →
-          </Link>
-        </div>
-      </Chapter>
-
-      <AnimatedDivider num="06→07" label="THE SMILE" />
-
-      {/* ═════════════════════════════════════════════════════════════════
-          §07 VOL SMILE
-          ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="07" id="volsmile" label="THE VOL SMILE" bg="soft">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
-            A 15%-OTM put
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.32s" }}>
-            costs more than
-          </span>
-          <span className="block hero-headline-line italic font-light text-plasma pull-quote-glow" style={{ animationDelay: "0.55s" }}>
-            a 15%-OTM call.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          Crashes happen faster than rallies. The market knows.
-        </div>
-
-        <ChapterBody para="07.A">
-          Black-Scholes assumes one flat volatility. Real markets don&apos;t. Out-of-the-money
-          puts trade at higher implied vol than equidistant calls because the market knows
-          crashes happen faster than rallies. Drag the skew and kurtosis sliders to see
-          exactly how far reality drifts from the textbook.
-        </ChapterBody>
-
-        <TerminalFrame label="TERMINAL §07" hint="SKEW · KURTOSIS">
-          <LearnVolSmile />
-        </TerminalFrame>
-
-        <Takeaway>
-          "Black-Scholes is a beautiful model.{" "}
-          <span className="text-plasma italic">Heston is a useful one.</span>"
-        </Takeaway>
-      </Chapter>
-
-      <TickerStrip items={TICKER_JARGON_B} />
-      <AnimatedDivider num="07→08" label="MODEL RISK" />
-
-      {/* ═════════════════════════════════════════════════════════════════
-          §08 PROBABILITY
-          ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="08" id="probability" label="PROBABILITY · THREE WAYS">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
-            Three models.
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.32s" }}>
-            One question.
-          </span>
-          <span className="block hero-headline-line italic font-light text-amber pull-quote-glow" style={{ animationDelay: "0.55s" }}>
-            Three answers.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          The gap is model risk. Most platforms hide it.
-        </div>
-
-        <ChapterBody para="08.A">
-          &quot;Will the price land in this band by expiry?&quot; Black-Scholes, Monte Carlo,
-          and an empirical fat-tailed model give you three different probabilities. Drag the
-          band into the wings and watch them disagree. That gap is{" "}
-          <span className="text-fg italic">model risk</span> — a real cost most retail
-          platforms hide from you.
-        </ChapterBody>
-
-        <TerminalFrame label="TERMINAL §08" hint="DRAG THE BAND">
-          <LearnProbabilityComparison />
-        </TerminalFrame>
-      </Chapter>
+      {/* §03–§08 — the sustained six-demo Desk (one pinned terminal). */}
+      <SplitDesk chapters={RUN_2} />
 
       <AnimatedDivider num="08→09" label="THE BOT CATALOG" />
 
@@ -750,34 +687,8 @@ export default function LearnPage() {
       {/* ═════════════════════════════════════════════════════════════════
           §10 DATASET
           ═════════════════════════════════════════════════════════════════ */}
-      <Chapter num="10" id="dataset" label="STRESS-TEST ANY MARKET">
-        <ChapterHeadline>
-          <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
-            Five knobs.
-          </span>
-          <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.32s" }}>
-            Each in
-          </span>
-          <span className="block hero-headline-line italic font-light text-amber" style={{ animationDelay: "0.55s" }}>
-            plain English.
-          </span>
-        </ChapterHeadline>
-
-        <div className="mt-6 max-w-[60ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-          <span className="text-cyan/60 mr-2">↳</span>
-          Symbol · Bars · Seed · Drift · Vol. Click any.
-        </div>
-
-        <ChapterBody para="10.A">
-          The dataset card on every quant page lets you stress-test bots against any market.
-          Drag each slider — the chart redraws deterministically. Same seed, same chart, every
-          time. That&apos;s reproducibility nobody else in retail finance offers.
-        </ChapterBody>
-
-        <TerminalFrame label="TERMINAL §10" hint="CLICK A KNOB → LEARN IT">
-          <LearnDatasetPlayground />
-        </TerminalFrame>
-      </Chapter>
+      {/* §10 — the Desk returns for the dataset stress-test. */}
+      <SplitDesk chapters={RUN_3} />
 
       <AnimatedDivider num="10→11" label="ELI12" />
 
@@ -1132,41 +1043,6 @@ function ChapterBody({
         <div className="max-w-[64ch] font-display text-xl leading-relaxed text-fg-dim">
           {children}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function TerminalFrame({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="relative mt-20">
-      <div className="absolute -top-3 left-0 right-0 z-10 flex items-center justify-between bg-bg px-2">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]">
-          <span className="size-1 rounded-full bg-bull pulse-dot" />
-          <span className="text-bull">{label}</span>
-          <span className="text-fg-faint">·</span>
-          <span className="text-fg-faint">INTERACTIVE</span>
-        </div>
-        {hint && (
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
-            {hint}
-          </div>
-        )}
-      </div>
-      <div className="relative border border-border bg-bg p-5 sm:p-7 ambient-glow">
-        <div className="pointer-events-none absolute -left-px -top-px size-3 border-l border-t border-bull" />
-        <div className="pointer-events-none absolute -right-px -top-px size-3 border-r border-t border-bull" />
-        <div className="pointer-events-none absolute -left-px -bottom-px size-3 border-l border-b border-bull" />
-        <div className="pointer-events-none absolute -right-px -bottom-px size-3 border-r border-b border-bull" />
-        {children}
       </div>
     </div>
   );

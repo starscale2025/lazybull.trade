@@ -966,6 +966,30 @@ html, body {
 }
 .crt-flicker { animation: crt-flicker 8s ease-in-out infinite; }
 
+/* ── The Desk (/learn): channel-change on demo swap. One-shot flicker overlay
+      + a fade/scale entrance for the incoming demo. The terminal swaps its
+      live cell as you cross each chapter; this is the "changing the channel"
+      beat that sells it. Reduced-motion snaps (both null out below). ── */
+@keyframes desk-flicker {
+  0% { opacity: 0.9; }
+  20% { opacity: 0.15; }
+  35% { opacity: 0.75; }
+  55% { opacity: 0.05; }
+  75% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+@keyframes desk-swap-in {
+  0% { opacity: 0; transform: translateY(6px) scale(0.995); }
+  100% { opacity: 1; transform: none; }
+}
+.desk-flicker { animation: desk-flicker 320ms steps(5) forwards; }
+.desk-swap-in { animation: desk-swap-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .desk-flicker { display: none; }
+  .desk-swap-in { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cursor-spotlight, .ambient-orb, .scroll-progress-fill,
   .orb-drift-1, .orb-drift-2, .orb-drift-3 {
