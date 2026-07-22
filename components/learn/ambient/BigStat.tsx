@@ -42,41 +42,48 @@ export function BigStat({
   // to 0 only at the moment it actually starts playing.
   const [shown, setShown] = useState(value);
   const [seen, setSeen] = useState(false);
+  const startedRef = useRef(false); // one-shot; NOT in the effect deps
   const color = TONE_COLOR[tone];
 
   useEffect(() => {
-    if (!ref.current) return;
+    const el = ref.current;
+    if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setSeen(true); // underline still lands; the number never scrambles
+      setShown(value);
       return;
     }
-    // Cancel the count-up on unmount — it used to keep calling setShown on a
-    // dead component for the full duration.
+    // The count-up start is gated by a REF, not the `seen` state, and `seen`
+    // is deliberately absent from the deps below. Earlier this effect listed
+    // `seen`, so setSeen(true) re-ran it mid-animation and the cleanup's
+    // cancelAnimationFrame killed the count-up after one frame — freezing the
+    // number at ~0. Now the running rAF is only cancelled on real unmount.
     let raf = 0;
     const obs = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting && !seen) {
-            setSeen(true);
-            const start = performance.now();
-            const tick = (now: number) => {
-              const t = Math.min(1, (now - start) / duration);
-              const eased = 1 - Math.pow(1 - t, 3);
-              setShown(eased * value);
-              if (t < 1) raf = requestAnimationFrame(tick);
-            };
-            raf = requestAnimationFrame(tick);
-          }
-        });
+        for (const e of entries) {
+          if (!e.isIntersecting || startedRef.current) continue;
+          startedRef.current = true;
+          setSeen(true);
+          setShown(0); // snap to 0 the instant it starts playing
+          const start = performance.now();
+          const tick = (now: number) => {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            setShown(t >= 1 ? value : eased * value);
+            if (t < 1) raf = requestAnimationFrame(tick);
+          };
+          raf = requestAnimationFrame(tick);
+        }
       },
-      { threshold: 0.4 }
+      { threshold: 0.35 }
     );
-    obs.observe(ref.current);
+    obs.observe(el);
     return () => {
       obs.disconnect();
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [value, seen, duration]);
+  }, [value, duration]);
 
   const safe = Math.max(0, shown); // a stat block can never read negative
   const display = decimals === 0 ? Math.floor(safe).toString() : safe.toFixed(decimals);
