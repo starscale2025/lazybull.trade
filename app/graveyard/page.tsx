@@ -23,6 +23,7 @@ const FALLEN: Grave[] = [
   { name: "TradeOverview.tsx", lines: 369, born: "a second /trade", epitaph: "369 lines re-explaining a page that already explained itself." },
   { name: "UseCases.tsx", lines: 215, born: "three personas", epitaph: "The day trader, the student, the quant — read like a template because they were one." },
   { name: "Partners.tsx", lines: 119, born: "a logo wall", epitaph: "Logos of partners who had not, in fact, partnered." },
+  { name: "LearnGreekSurface.tsx", lines: 254, born: "§06's flat greek plot", epitaph: "A fine 2D chart. Then §06 grew a third dimension you can orbit, and flat wasn't enough." },
 ];
 
 const total = FALLEN.reduce((a, g) => a + g.lines, 0);

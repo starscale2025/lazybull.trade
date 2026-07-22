@@ -10,7 +10,7 @@ import { LearnLiveDemo } from "@/components/learn/LearnLiveDemo";
 import { LearnDatasetPlayground } from "@/components/learn/LearnDatasetPlayground";
 import { LearnConsensusPlayground } from "@/components/learn/LearnConsensusPlayground";
 import { LearnRegimeVisualizer } from "@/components/learn/LearnRegimeVisualizer";
-import { LearnGreekSurface } from "@/components/learn/LearnGreekSurface";
+import { GreekSurface3D } from "@/components/learn/GreekSurface3D";
 import { LearnBacktestBuilder } from "@/components/learn/LearnBacktestBuilder";
 import { LearnVolSmile } from "@/components/learn/LearnVolSmile";
 import { LearnProbabilityComparison } from "@/components/learn/LearnProbabilityComparison";
@@ -281,7 +281,7 @@ export default function LearnPage() {
           </div>
         </div>
       ),
-      demo: <LearnGreekSurface />,
+      demo: <GreekSurface3D />,
     },
     {
       num: "07", id: "volsmile", label: "THE VOL SMILE", regime: "options",
