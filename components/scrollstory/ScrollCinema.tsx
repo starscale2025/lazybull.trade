@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
@@ -116,14 +117,25 @@ export function ScrollCinema() {
     dive3dReadyRef.current = true;
   };
 
-  // Skip the intro: land at the end (Get Started at top via the -100vh overlap),
-  // then run the same play-once collapse so it can't be scrolled back into. No
-  // one is trapped in the long scroll.
-  const handleSkip = () => {
+  // Skip the intro: THE SHATTER — you break the fourth wall to get to the
+  // desk. A portaled glass-crack burst plays over the reveal (it survives the
+  // cinema's own unmount), then the same play-once collapse runs so the
+  // intro can't be scrolled back into. Reduced-motion skips the theatrics.
+  const [shatter, setShatter] = useState(false);
+  const doSkip = () => {
     const s = sectionRef.current;
     if (!s) return;
     window.scrollTo(0, s.offsetTop + s.offsetHeight - window.innerHeight + 4);
     collapseRef.current?.();
+  };
+  const handleSkip = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      doSkip();
+      return;
+    }
+    setShatter(true);
+    window.setTimeout(doSkip, 180); // glass cracks, then the page is simply there
+    window.setTimeout(() => setShatter(false), 700);
   };
   // "cinema" until proven otherwise; flips to static for reduced-motion or load failure
   const [mode, setMode] = useState<"cinema" | "static">("cinema");
@@ -884,6 +896,43 @@ export function ScrollCinema() {
         `}</style>
       </div>
       </section>
+      {shatter && typeof document !== "undefined" && createPortal(<ShatterOverlay />, document.body)}
     </>
+  );
+}
+
+/** The glass-crack burst the skip plays — deterministic jagged radials, no
+    randomness at render (scrub/replay discipline applies even to exits). */
+function ShatterOverlay() {
+  const cracks: string[] = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2 + Math.sin(i * 7.3) * 0.22;
+    const k1 = 16 + ((i * 37) % 11);
+    const k2 = 34 + ((i * 53) % 15);
+    const r = 58 + ((i * 29) % 13);
+    const bend1 = Math.sin(i * 3.1) * 4;
+    const bend2 = Math.cos(i * 5.7) * 5;
+    const x = (t: number, b: number) => 50 + Math.cos(a) * t + Math.cos(a + Math.PI / 2) * b;
+    const y = (t: number, b: number) => 50 + Math.sin(a) * t + Math.sin(a + Math.PI / 2) * b;
+    cracks.push(
+      `M50,50 L${x(k1, bend1).toFixed(1)},${y(k1, bend1).toFixed(1)} L${x(k2, bend2).toFixed(1)},${y(k2, bend2).toFixed(1)} L${x(r, 0).toFixed(1)},${y(r, 0).toFixed(1)}`
+    );
+  }
+  return (
+    <div className="shatter-overlay" aria-hidden>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+        {cracks.map((d, i) => (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke={i % 3 === 0 ? "rgba(0,255,135,0.75)" : "rgba(245,245,240,0.6)"}
+            strokeWidth={i % 4 === 0 ? 0.35 : 0.18}
+          />
+        ))}
+        <circle cx="50" cy="50" r="3.5" fill="none" stroke="rgba(0,255,135,0.8)" strokeWidth="0.3" />
+        <circle cx="50" cy="50" r="7" fill="none" stroke="rgba(245,245,240,0.35)" strokeWidth="0.15" />
+      </svg>
+    </div>
   );
 }

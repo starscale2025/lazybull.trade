@@ -13,6 +13,7 @@ import { usePaper, type BalanceEntry, type ClosedTrade } from "@/lib/stores";
 import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { ResetFundsModal } from "@/components/ResetFundsModal";
+import { RollingNumber } from "./RollingNumber";
 import { fmt } from "./chartCore";
 
 type Props = {
@@ -289,11 +290,24 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           <span className={`text-fg-faint transition-transform ${open ? "" : "rotate-180"}`}>⌄</span>
         </button>
 
-        {/* collapsed summary, so the bar is useful even when minimized */}
+        {/* collapsed summary, so the bar is useful even when minimized. The
+            money ROLLS between values (beat 3 of the fill ritual) — a fill
+            should read as movement, not a silent mutation. */}
         {!open && (
           <span className="flex flex-wrap items-center gap-x-4 font-mono text-[10px] uppercase tracking-wider">
-            <Metric k="Equity" v={money(metrics.equity)} />
-            <Metric k="P&L" node={signed(metrics.realizedPnl + metrics.unrealizedPnl)} />
+            <Metric k="Equity" node={<RollingNumber value={metrics.equity} format={money} />} />
+            <Metric
+              k="P&L"
+              node={(() => {
+                const pnl = metrics.realizedPnl + metrics.unrealizedPnl;
+                const r = Math.abs(pnl) < 0.005 ? 0 : pnl;
+                return (
+                  <span className={r > 0 ? "text-bull" : r < 0 ? "text-bear" : "text-fg-dim"}>
+                    <RollingNumber value={r} format={(n) => `${n >= 0 ? "+" : "−"}$${fmt(Math.abs(n), 2)}`} />
+                  </span>
+                );
+              })()}
+            />
             {rows.length > 0 && <Metric k="Positions" v={String(rows.length)} />}
           </span>
         )}

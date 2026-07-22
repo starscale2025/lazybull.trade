@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   autoY,
   barOfX,
@@ -65,6 +65,8 @@ type Props = {
   onClosePosition?: () => void;
   /** Resting orders for this symbol, drawn as cancellable lines. */
   workingOrders?: { id: string; side: "buy" | "sell"; type: "limit" | "stop"; price: number; qty: number; reduceOnly: boolean; pending?: boolean }[];
+  /** Ephemeral fill events — each plays the ~700ms fill ritual at its price. */
+  fills?: { id: string; price: number; side: "buy" | "sell" }[];
   onCancelOrder?: (id: string) => void;
   /** Commit a dragged order to a new price. Returns an error to surface. */
   onMoveOrder?: (id: string, price: number) => { ok: boolean; error?: string };
@@ -101,6 +103,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     position = null,
     onClosePosition,
     workingOrders = [],
+    fills,
     onCancelOrder,
     onMoveOrder,
     alerts,
@@ -233,7 +236,35 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   // rendered live so the handle tracks the pointer before anything is committed.
   const [orderDrag, setOrderDrag] = useState<{ id: string; preview: number } | null>(null);
 
-  const [crosshair, setCrosshair] = useState<{ x: number; y: number } | null>(null);
+  // THE FIDELITY LADDER — the crosshair lives OUTSIDE React's render. Raw
+  // mousemove used to setState on this 1,700-line component, reconciling the
+  // whole SVG per pointer event (a render flood on 120Hz input). Now the
+  // pointer writes a ref and notifies (rAF-coalesced) only the three tiny
+  // subscriber components that actually follow the cursor: the crosshair
+  // overlay, the OHLC legend values, and the indicator legend values.
+  const hoverPtRef = useRef<{ x: number; y: number } | null>(null);
+  const hoverSubsRef = useRef(new Set<() => void>());
+  const hoverRafRef = useRef(0);
+  const hoverApi = useMemo<HoverApi>(
+    () => ({
+      subscribe: (fn: () => void) => {
+        hoverSubsRef.current.add(fn);
+        return () => {
+          hoverSubsRef.current.delete(fn);
+        };
+      },
+      get: () => hoverPtRef.current,
+    }),
+    []
+  );
+  const setHover = (pt: { x: number; y: number } | null) => {
+    hoverPtRef.current = pt;
+    if (hoverRafRef.current) return;
+    hoverRafRef.current = requestAnimationFrame(() => {
+      hoverRafRef.current = 0;
+      for (const fn of hoverSubsRef.current) fn();
+    });
+  };
   // Right-click context menu: chart-space point + the price under the cursor.
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; price: number } | null>(null);
 
@@ -344,21 +375,32 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   const dataPt = (x: number, y: number) => ({ i: barOfX(x, vp, geom), p: priceOfY(y, vp, geom) });
   const newId = () => `dr-${Math.random().toString(36).slice(2, 8)}`;
 
+  const panPendingRef = useRef<{ start: number; yMin: number; yMax: number } | null>(null);
+  const panRafRef = useRef(0);
   const onMouseMove = (e: React.MouseEvent) => {
     const pt = screenPt(e);
-    setCrosshair(pt);
+    setHover(pt);
     if (panRef.current && tool === "cursor") {
       const dx = pt.x - panRef.current.x;
       const dy = pt.y - panRef.current.y;
       const slot = innerW(geom) / panRef.current.vp.span;
       const dBars = -dx / slot;
       const dPrice = (dy / innerH(geom)) * (panRef.current.vp.yMax - panRef.current.vp.yMin);
-      setVp({
+      // rAF-coalesced: one viewport commit per frame no matter the input Hz.
+      // Updater form on flush — the plain-object form here silently dropped
+      // the viewport's `log` flag, snapping log charts to linear mid-pan.
+      panPendingRef.current = {
         start: Math.max(-50, Math.min(allBars.length - 5, panRef.current.vp.start + dBars)),
-        span: panRef.current.vp.span,
         yMin: panRef.current.vp.yMin + dPrice,
         yMax: panRef.current.vp.yMax + dPrice,
-      });
+      };
+      if (!panRafRef.current) {
+        panRafRef.current = requestAnimationFrame(() => {
+          panRafRef.current = 0;
+          const pending = panPendingRef.current;
+          if (pending) setVp((v) => ({ ...v, ...pending }));
+        });
+      }
       setYLocked(true);
       return;
     }
@@ -448,7 +490,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   };
 
   const onMouseLeave = () => {
-    setCrosshair(null);
+    setHover(null);
     onMouseUp();
   };
 
@@ -611,17 +653,6 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   const slot = innerW(geom) / vp.span;
   const candleW = Math.max(1, slot * 0.65);
   const last = bars[bars.length - 1] || { c: 0, o: 0, h: 0, l: 0, v: 0, t: 0, i: 0 };
-  const prev = bars[bars.length - 2] || last;
-
-  // The legend follows the crosshair, the way every terminal reads: hover a
-  // bar and O/H/L/C are THAT bar's, with change vs its previous close; leave
-  // the plot and it falls back to the latest bar.
-  const hoverIdx = crosshair ? Math.round(barOfX(crosshair.x, vp, geom)) : -1;
-  const hovered = hoverIdx >= 0 && hoverIdx < bars.length ? bars[hoverIdx] : null;
-  const legendBar = hovered ?? last;
-  const legendPrev = hovered ? bars[Math.max(0, hoverIdx - 1)] : prev;
-  const legendChange = legendBar.c - legendPrev.c;
-  const legendPct = (legendChange / (legendPrev.c || 1)) * 100;
 
   const allDrawings = draft ? [...drawings, draft] : drawings;
 
@@ -992,6 +1023,30 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         {/* Open position: average entry + live unrealized P&L.
             Drawn from the shared paper account, so it is the same money the
             /trade book and the kill switch see — not a /pro-local number. */}
+        {/* THE FILL RITUAL — beat 1: the row flashes side-color; beat 2: a
+            ring bleeds outward from the fill price. Ephemeral (parent prunes
+            after ~900ms); reduced-motion collapses it to a brief color tick. */}
+        {fills?.map((f) => {
+          const y = yOfPrice(f.price, vp, geom);
+          if (y < geom.padT - 10 || y > size.h - geom.padB + 10) return null;
+          const c = f.side === "buy" ? "var(--bull)" : "var(--bear)";
+          return (
+            <g key={f.id} pointerEvents="none">
+              <line
+                className="fill-flash"
+                x1={geom.padL}
+                x2={size.w - geom.padR}
+                y1={y}
+                y2={y}
+                stroke={c}
+                strokeWidth={2}
+              />
+              <circle className="fill-ring" cx={size.w - geom.padR - 14} cy={y} r={9} fill="none" stroke={c} strokeWidth={1.6} />
+              <circle className="fill-ring" style={{ animationDelay: "120ms" }} cx={size.w - geom.padR - 14} cy={y} r={9} fill="none" stroke={c} strokeWidth={0.8} />
+            </g>
+          );
+        })}
+
         {position && position.qty !== 0 && (() => {
           const y = yOfPrice(position.avgPrice, vp, geom);
           // `bars` is the REPLAY-TRUNCATED array during replay, so marking to
@@ -1125,29 +1180,8 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           onDoubleClick={onXAxisDoubleClick}
         />
 
-        {/* crosshair */}
-        {crosshair && (
-          <g pointerEvents="none">
-            <line x1={crosshair.x} x2={crosshair.x} y1={geom.padT} y2={geom.height - PAD.B} stroke="rgba(245,245,240,0.2)" strokeDasharray="3 3" />
-            <line x1={geom.padL} x2={size.w - geom.padR} y1={crosshair.y} y2={crosshair.y} stroke="rgba(245,245,240,0.2)" strokeDasharray="3 3" />
-            <rect x={size.w - geom.padR + 2} y={crosshair.y - 9} width={geom.padR - 4} height={18} fill="var(--surface-2)" stroke="var(--border)" />
-            <text x={size.w - geom.padR / 2} y={crosshair.y + 3.5} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fill="var(--fg)">
-              {fmt(priceOfY(crosshair.y, vp, geom), 2)}
-            </text>
-            {(() => {
-              const i = Math.round(barOfX(crosshair.x, vp, geom));
-              if (i < 0 || i >= bars.length) return null;
-              return (
-                <g>
-                  <rect x={crosshair.x - 40} y={geom.height - PAD.B + 2} width={80} height={16} fill="var(--surface-2)" stroke="var(--border)" />
-                  <text x={crosshair.x} y={geom.height - PAD.B + 13} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg)">
-                    {fmtTime(bars[i].t)}
-                  </text>
-                </g>
-              );
-            })()}
-          </g>
-        )}
+        {/* crosshair — a hover SUBSCRIBER; pointer motion re-renders only this */}
+        <CrosshairOverlay hover={hoverApi} vp={vp} geom={geom} sizeW={size.w} padB={PAD.B} bars={bars} />
       </svg>
 
       {/* OHLC legend top-left — wraps inside the pane on phones instead of
@@ -1159,21 +1193,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim">{timeframe}</span>
         <span className="text-fg-faint">·</span>
-        <span className="text-fg-dim">O</span>
-        <span className="text-fg">{fmt(legendBar.o, 2)}</span>
-        <span className="text-fg-dim">H</span>
-        <span className="text-fg">{fmt(legendBar.h, 2)}</span>
-        <span className="text-fg-dim">L</span>
-        <span className="text-fg">{fmt(legendBar.l, 2)}</span>
-        <span className="text-fg-dim">C</span>
-        <span className={legendChange >= 0 ? "text-bull" : "text-bear"}>{fmt(legendBar.c, 2)}</span>
-        <span className={legendChange >= 0 ? "text-bull" : "text-bear"}>
-          {legendChange >= 0 ? "+" : ""}
-          {fmt(legendChange, 2)} ({legendChange >= 0 ? "+" : ""}
-          {fmt(legendPct, 2)}%)
-        </span>
-        <span className="text-fg-dim">Vol</span>
-        <span className="text-fg">{(legendBar.v / 1e6).toFixed(2)}M</span>
+        <OhlcHoverLegend hover={hoverApi} bars={bars} vp={vp} geom={geom} />
         {replayBar != null && (
           <>
             <span className="text-fg-faint">·</span>
@@ -1189,13 +1209,11 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           {indicators.map((id) => {
             const meta = IND_META[id];
             if (!meta) return null;
-            const li = hoverIdx >= 0 && hoverIdx < bars.length ? hoverIdx : bars.length - 1;
-            const v = indicatorValueAt(id, ind, li);
             return (
               <div key={id} className="flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full" style={{ background: meta.color }} />
                 <span className="text-fg-dim">{meta.label}</span>
-                {v != null && <span className="tabular-nums text-fg">{fmt(v, 2)}</span>}
+                <IndicatorHoverValue hover={hoverApi} id={id} ind={ind} bars={bars} vp={vp} geom={geom} />
                 {VERIFIED_MATH[id] && (
                   <span
                     className="pointer-events-auto cursor-help text-bull/80"
@@ -1335,6 +1353,96 @@ const VERIFIED_MATH: Record<string, string> = {
   macd: "MACD(12,26,9): hist = (EMA12−EMA26) − signal — pinned by __tests__/pro-indicators.test.ts",
   bb: "Bollinger(20,2): SMA ± 2σ — pinned by __tests__/pro-indicators.test.ts",
 };
+
+// ── hover subscribers (the fidelity ladder) ────────────────────────────────
+// Pointer motion notifies these three tiny components through HoverApi; the
+// 1,700-line chart tree never re-renders for a crosshair move.
+type HoverApi = {
+  subscribe: (fn: () => void) => () => void;
+  get: () => { x: number; y: number } | null;
+};
+
+function useHoverPt(hover: HoverApi) {
+  return useSyncExternalStore(hover.subscribe, hover.get, () => null);
+}
+
+function CrosshairOverlay({
+  hover, vp, geom, sizeW, padB, bars,
+}: {
+  hover: HoverApi; vp: Viewport; geom: ChartGeom; sizeW: number; padB: number; bars: Bar[];
+}) {
+  const pt = useHoverPt(hover);
+  if (!pt) return null;
+  const i = Math.round(barOfX(pt.x, vp, geom));
+  return (
+    <g pointerEvents="none">
+      <line x1={pt.x} x2={pt.x} y1={geom.padT} y2={geom.height - padB} stroke="rgba(245,245,240,0.2)" strokeDasharray="3 3" />
+      <line x1={geom.padL} x2={sizeW - geom.padR} y1={pt.y} y2={pt.y} stroke="rgba(245,245,240,0.2)" strokeDasharray="3 3" />
+      <rect x={sizeW - geom.padR + 2} y={pt.y - 9} width={geom.padR - 4} height={18} fill="var(--surface-2)" stroke="var(--border)" />
+      <text x={sizeW - geom.padR / 2} y={pt.y + 3.5} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fill="var(--fg)">
+        {fmt(priceOfY(pt.y, vp, geom), 2)}
+      </text>
+      {i >= 0 && i < bars.length && (
+        <g>
+          <rect x={pt.x - 40} y={geom.height - padB + 2} width={80} height={16} fill="var(--surface-2)" stroke="var(--border)" />
+          <text x={pt.x} y={geom.height - padB + 13} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg)">
+            {fmtTime(bars[i].t)}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+function OhlcHoverLegend({
+  hover, bars, vp, geom,
+}: {
+  hover: HoverApi; bars: Bar[]; vp: Viewport; geom: ChartGeom;
+}) {
+  const pt = useHoverPt(hover);
+  const last = bars[bars.length - 1];
+  const prev = bars[bars.length - 2] || last;
+  if (!last) return null;
+  const hoverIdx = pt ? Math.round(barOfX(pt.x, vp, geom)) : -1;
+  const hovered = hoverIdx >= 0 && hoverIdx < bars.length ? bars[hoverIdx] : null;
+  const bar = hovered ?? last;
+  const prevBar = hovered ? bars[Math.max(0, hoverIdx - 1)] : prev;
+  const change = bar.c - prevBar.c;
+  const pct = (change / (prevBar.c || 1)) * 100;
+  const tone = change >= 0 ? "text-bull" : "text-bear";
+  return (
+    <>
+      <span className="text-fg-dim">O</span>
+      <span className="text-fg">{fmt(bar.o, 2)}</span>
+      <span className="text-fg-dim">H</span>
+      <span className="text-fg">{fmt(bar.h, 2)}</span>
+      <span className="text-fg-dim">L</span>
+      <span className="text-fg">{fmt(bar.l, 2)}</span>
+      <span className="text-fg-dim">C</span>
+      <span className={tone}>{fmt(bar.c, 2)}</span>
+      <span className={tone}>
+        {change >= 0 ? "+" : ""}
+        {fmt(change, 2)} ({change >= 0 ? "+" : ""}
+        {fmt(pct, 2)}%)
+      </span>
+      <span className="text-fg-dim">Vol</span>
+      <span className="text-fg">{(bar.v / 1e6).toFixed(2)}M</span>
+    </>
+  );
+}
+
+function IndicatorHoverValue({
+  hover, id, ind, bars, vp, geom,
+}: {
+  hover: HoverApi; id: string; ind: IndicatorData; bars: Bar[]; vp: Viewport; geom: ChartGeom;
+}) {
+  const pt = useHoverPt(hover);
+  const hoverIdx = pt ? Math.round(barOfX(pt.x, vp, geom)) : -1;
+  const li = hoverIdx >= 0 && hoverIdx < bars.length ? hoverIdx : bars.length - 1;
+  const v = indicatorValueAt(id, ind, li);
+  if (v == null) return null;
+  return <span className="tabular-nums text-fg">{fmt(v, 2)}</span>;
+}
 
 /** The value a legend row shows at bar `i` — null when the shape has no single number. */
 function indicatorValueAt(id: string, ind: IndicatorData, i: number): number | null {

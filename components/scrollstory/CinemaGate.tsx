@@ -4,31 +4,43 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ScrollCinema } from "./ScrollCinema";
 
-// The cinema plays ONCE per visitor, ever — not once per pageview. It skips
-// for signed-in users AND for anyone who has already played (or skipped) it:
-// the landing has no navbar, so every logo click funnels back to "/", and
-// without the seen-flag anonymous users re-entered the scroll-locked
-// preloader on every return. Renders the cinema as a bare sibling so its
-// section.nextElementSibling is Get Started.
+// The cinema plays ONCE per visitor, ever — not once per pageview — and only
+// where it can actually compose:
 //
-// `seen` starts null so we never mount ScrollCinema speculatively: the old
-// gate mounted it while the session was still "loading", which kicked off the
-// full preload (the three.js chunk, two GLBs, eight shots ≈ 2.5MB) and a
-// scroll lock that a signed-in user's resolving session immediately threw
-// away.
+// · phones (<768px) NEVER mount it: the boot act's laptop wireframe cannot
+//   compose at 390px — the audit's mobile first impression was a black void
+//   with three green lines. Mobile gets the designed static hero instead.
+// · replay (lb-cinema-replay, sessionStorage): the hero's "▶ replay the
+//   film" chip sets it — the intro is a possession now, not a toll. Replay
+//   overrides both the seen-flag and the signed-in skip, once.
+// · seen-flag (lb-cinema-seen): the landing has no navbar, so every logo
+//   click funnels back to "/"; without the flag anonymous users re-entered
+//   the scroll-locked preloader on every return.
+// · signed-in users skip it; first-time anonymous visitors get the film.
+//
+// `flags` starts null so ScrollCinema is never mounted speculatively (the
+// old gate preloaded ~2.5MB and locked scroll while the session was still
+// resolving, then threw it all away).
 export function CinemaGate() {
   const { status } = useSession();
-  const [seen, setSeen] = useState<boolean | null>(null);
+  const [flags, setFlags] = useState<null | { mobile: boolean; replay: boolean; seen: boolean }>(null);
 
   useEffect(() => {
     try {
-      setSeen(localStorage.getItem("lb-cinema-seen") === "1");
+      const mobile = window.matchMedia("(max-width: 767px)").matches;
+      const replay = sessionStorage.getItem("lb-cinema-replay") === "1";
+      if (replay) sessionStorage.removeItem("lb-cinema-replay");
+      const seen = localStorage.getItem("lb-cinema-seen") === "1";
+      setFlags({ mobile, replay, seen });
     } catch {
-      setSeen(false);
+      setFlags({ mobile: false, replay: false, seen: false });
     }
   }, []);
 
-  if (status === "loading" || seen === null) return null;
-  if (status === "authenticated" || seen) return null;
+  if (!flags) return null;
+  if (flags.mobile) return null;
+  if (flags.replay) return <ScrollCinema />;
+  if (flags.seen) return null;
+  if (status !== "unauthenticated") return null; // loading or signed-in
   return <ScrollCinema />;
 }

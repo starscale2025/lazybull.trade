@@ -154,6 +154,63 @@ html, body {
   border-radius: 1px;
 }
 
+/* ── Route veil: a phosphor settle between pages (app/template.tsx). ── */
+@keyframes route-veil-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.route-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 255, 135, 0.03) 50%, transparent 100%),
+    var(--bg);
+  animation: route-veil-out 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-veil { display: none; }
+}
+
+/* ── The fill ritual: money moments get a heartbeat (Chart.tsx). ──
+   Beat 1: the price row flashes side-color. Beat 2: a ring bleeds outward
+   from the fill price. (Beat 3 — the numbers roll — is RollingNumber.) */
+@keyframes fill-ring {
+  0% { transform: scale(0.25); opacity: 0.9; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.fill-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fill-ring 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes fill-flash {
+  0% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+.fill-flash {
+  animation: fill-flash 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill-ring { display: none; }
+  .fill-flash { animation-duration: 1ms; }
+}
+
+/* ── The shatter: skipping the cinema breaks the glass (ScrollCinema). ── */
+@keyframes shatter-burst {
+  0% { opacity: 0; transform: scale(0.6); }
+  18% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+.shatter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  pointer-events: none;
+  animation: shatter-burst 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* Skip link — hidden until it IS the focus. */
 .skip-link {
   position: fixed;
@@ -444,7 +501,7 @@ html, body {
 }
 .chart-candle-in {
   opacity: 0;
-  animation: chart-candle-in 0.22s linear forwards;
+  animation: chart-candle-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .chart-candle-in { animation: none; opacity: 1; }

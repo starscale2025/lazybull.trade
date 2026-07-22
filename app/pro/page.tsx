@@ -223,6 +223,39 @@ export default function ProPage() {
 
   // Working orders for the charted symbol, drawn as lines.
   const allOrders = usePaper((st) => st.orders);
+
+  // THE FILL RITUAL — a fill is the emotional peak of a trading sim and it
+  // used to be a silent state mutation. Diff order statuses: anything that
+  // just became "filled" (resting order filling, or a market order arriving
+  // already-filled) spawns a ~700ms pulse on the chart at its fill price.
+  // The first pass only primes the map so historical fills never replay.
+  const [fillRituals, setFillRituals] = useState<
+    { id: string; price: number; side: "buy" | "sell" }[]
+  >([]);
+  const orderStatusRef = useRef<Map<string, string> | null>(null);
+  useEffect(() => {
+    const prev = orderStatusRef.current;
+    orderStatusRef.current = new Map(allOrders.map((o) => [o.id, o.status]));
+    if (!prev) return; // priming pass
+    const fresh: { id: string; price: number; side: "buy" | "sell" }[] = [];
+    for (const o of allOrders) {
+      if (o.status !== "filled" || o.sym !== symbol.sym) continue;
+      const was = prev.get(o.id);
+      if (was === "filled" || was === "cancelled" || was === "expired") continue;
+      const price = o.fillPrice ?? o.limitPrice ?? o.stopPrice;
+      if (!Number.isFinite(price)) continue;
+      fresh.push({ id: o.id, price: price as number, side: o.side });
+    }
+    if (fresh.length) {
+      setFillRituals((cur) => [...cur, ...fresh]);
+      const ids = new Set(fresh.map((f) => f.id));
+      window.setTimeout(
+        () => setFillRituals((cur) => cur.filter((f) => !ids.has(f.id))),
+        900
+      );
+    }
+  }, [allOrders, symbol.sym]);
+
   const workingOrders = useMemo(() => {
     const live = allOrders.filter((o) => o.status === "working" && o.sym === symbol.sym);
     const lines = live
@@ -846,6 +879,7 @@ export default function ProPage() {
                 position={i === 0 ? position : null}
                 onClosePosition={i === 0 && !replayActive ? closeAtMarket : undefined}
                 workingOrders={i === 0 ? workingOrders : []}
+                fills={i === 0 ? fillRituals : undefined}
                 onCancelOrder={i === 0 ? cancelOrder : undefined}
                 onMoveOrder={i === 0 && !replayActive ? moveOrder : undefined}
                 scale={logScale ? "log" : "linear"}
@@ -999,6 +1033,7 @@ function PaneChart({
   indicators,
   replayCursor,
   alerts,
+  fills,
   onAlertFire,
   chartRef,
   bars: barsProp,
@@ -1036,6 +1071,7 @@ function PaneChart({
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
+  fills?: { id: string; price: number; side: "buy" | "sell" }[];
   chartRef?: React.RefObject<ChartHandle | null>;
   bars?: Bar[];
   meta?: { exchangeName?: string } | null;
@@ -1085,6 +1121,7 @@ function PaneChart({
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}
+        fills={fills}
       />
     </div>
   );

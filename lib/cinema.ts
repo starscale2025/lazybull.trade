@@ -74,8 +74,16 @@ export function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
+
+/** Smoothstep 0→1: the copy beats breathe with the same non-linear taste the
+    ice-lab finale uses, instead of popping at constant velocity. */
+const ss01 = (t: number) => {
+  const x = clamp01(t);
+  return x * x * (3 - 2 * x);
+};
+
 /**
- * Opacity for a copy beat: 0 at/outside [from,to], linear ramp over `fade`
+ * Opacity for a copy beat: 0 at/outside [from,to], smoothstep ramp over `fade`
  * inside each edge, plateau of 1 between the ramps.
  */
 export function beatOpacity(
@@ -87,7 +95,7 @@ export function beatOpacity(
   if (p <= beat.from || p >= beat.to) return 0;
   const f = Math.min(fade, (beat.to - beat.from) / 2);
   if (f <= 0) return 1;
-  return Math.min(1, (p - beat.from) / f, (beat.to - p) / f);
+  return ss01(Math.min(1, (p - beat.from) / f, (beat.to - p) / f));
 }
 
 /**
@@ -131,9 +139,9 @@ export type Fade4 = { in0: number; in1: number; out0: number; out1: number };
 function windowOpacity(progress: number, w: Fade4): number {
   const p = clamp01(progress);
   if (p <= w.in0 || p >= w.out1) return 0;
-  if (p < w.in1) return (p - w.in0) / (w.in1 - w.in0);
+  if (p < w.in1) return ss01((p - w.in0) / (w.in1 - w.in0));
   if (p <= w.out0) return 1;
-  return 1 - (p - w.out0) / (w.out1 - w.out0);
+  return ss01(1 - (p - w.out0) / (w.out1 - w.out0));
 }
 
 // The dive act as a REAL 3D tunnel flythrough — a corridor of app screens.

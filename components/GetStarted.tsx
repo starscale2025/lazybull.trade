@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
 import { HungCard } from "./atmosphere/HungCard";
@@ -76,6 +77,23 @@ const EMBERS = Array.from({ length: 9 }, (_, i) => ({
 
 export function GetStarted() {
   const { status: authStatus } = useSession();
+  // "▶ replay the film" — the cinema is a possession, not a toll. Shown once
+  // you've seen it (or you're signed in and skipped it), desktop only (the
+  // cinema never mounts on phones).
+  const [canReplay, setCanReplay] = useState(false);
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem("lb-cinema-seen") === "1";
+      const desktop = window.matchMedia("(min-width: 768px)").matches;
+      setCanReplay(desktop && (seen || authStatus === "authenticated"));
+    } catch {}
+  }, [authStatus]);
+  const replay = () => {
+    try {
+      sessionStorage.setItem("lb-cinema-replay", "1");
+    } catch {}
+    window.location.assign("/");
+  };
   return (
     <section
       data-getstarted
@@ -188,6 +206,15 @@ export function GetStarted() {
             </Link>
           )}
         </div>
+
+        {canReplay && (
+          <button
+            onClick={replay}
+            className="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-faint transition-colors hover:text-bull"
+          >
+            ▶ replay the film
+          </button>
+        )}
 
         {/* feature chips hung on wires — damped pendulums, hover gives a push */}
         <div className="mt-2 flex flex-wrap items-start justify-center gap-6">
