@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
+import { TruthBadge } from "@/components/pro/TruthBadge";
 import { Chart, type ChartHandle, type Alert } from "@/components/pro/Chart";
 import { LeftToolbar } from "@/components/pro/LeftToolbar";
 import { TopBar, SEED_SYMBOLS, type SymbolDef } from "@/components/pro/TopBar";
@@ -812,6 +813,9 @@ export default function ProPage() {
           <span>workspace · "godmode"</span>
           {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
+        </div>
+        <div className="ml-2">
+          <TruthBadge />
         </div>
         <div className="ml-auto flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
           <button onClick={() => setAlertsOpen(true)} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">

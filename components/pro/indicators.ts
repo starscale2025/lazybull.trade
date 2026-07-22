@@ -86,11 +86,17 @@ export function bollinger(closes: number[], period = 20, mult = 2) {
  * "session" VWAP of a daily bar is just its typical price, which is a line
  * that teaches nothing. Anchoring is decided from the bar spacing.
  *
- * HISTORY: this function shipped comparing a date string against a string
- * LENGTH, so the sums reset every bar and the "VWAP" the default workspace
- * drew was typical price in a trench coat. The regression is pinned by
- * __tests__/pro-indicators.test.ts — the test imports THIS module, the one
- * that is actually on screen.
+ * HISTORY, chapter 1: this function shipped comparing a date string against a
+ * string LENGTH, so the sums reset every bar and the "VWAP" the default
+ * workspace drew was typical price in a trench coat. Chapter 2: the FIX keyed
+ * sessions by toDateString() — the viewer's LOCAL calendar day — so a US
+ * session (13:30–20:00 UTC) crossed midnight for viewers east of UTC and the
+ * anchor reset mid-session at, e.g., midnight IST. Caught by the lesson tape
+ * tests running on an IST machine. Sessions now key by UTC day — one answer
+ * for every viewer, and no strings at the crime scene at all. Both
+ * regressions are pinned by __tests__/pro-indicators.test.ts and
+ * __tests__/broken-vwap-lesson.test.ts — importing THIS module, the one that
+ * is actually on screen.
  */
 export function vwap(bars: Bar[]): Series {
   const out: Series = new Array(bars.length).fill(null);
@@ -107,10 +113,14 @@ export function vwap(bars: Bar[]): Series {
 
   let cumPv = 0;
   let cumV = 0;
-  let lastDay = "";
+  let lastDay = -1;
   for (let i = 0; i < bars.length; i++) {
     if (intraday) {
-      const dayKey = new Date(bars[i].t).toDateString();
+      const d = new Date(bars[i].t);
+      // UTC day key: a US regular session (13:30–20:00 UTC) never crosses UTC
+      // midnight, so this is viewer-timezone-independent. Local keys reset
+      // mid-session for anyone east of UTC.
+      const dayKey = d.getUTCFullYear() * 10_000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
       if (dayKey !== lastDay) {
         cumPv = 0;
         cumV = 0;

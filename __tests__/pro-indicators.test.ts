@@ -111,6 +111,17 @@ describe("vwap — the one we shipped broken", () => {
     expect(out[1]).toBeCloseTo(150, 10); // day 1 stayed cumulative
   });
 
+  it("REGRESSION 2: sessions key by UTC day, not the viewer's local day", () => {
+    // The FIX for regression 1 keyed sessions by toDateString() — the local
+    // calendar day. These two bars (18:25 and 18:30 UTC, same US session)
+    // straddle midnight IST: local keys reset the anchor between them for any
+    // viewer east of UTC. UTC keys must NOT reset — same UTC day.
+    const t0 = Date.UTC(2026, 6, 20, 18, 25);
+    const bars = [bar(t0, 110, 90, 100, 100), bar(t0 + 5 * 60_000, 210, 190, 200, 300)];
+    const out = vwap(bars);
+    expect(out[1]).toBeCloseTo(175, 10); // cumulative across the local-midnight seam
+  });
+
   it("anchors across the WHOLE series on daily bars — a per-bar 'session' VWAP of daily data is just typical price, which teaches nothing", () => {
     const t0 = Date.UTC(2026, 6, 1);
     const bars = [bar(t0, 110, 90, 100, 100), bar(t0 + DAY, 210, 190, 200, 300)];

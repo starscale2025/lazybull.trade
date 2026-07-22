@@ -233,6 +233,29 @@ export default function LearnPage() {
         <TickerStrip items={TICKER_JARGON_D} />
       </section>
 
+      {/* CHAPTER ZERO — the confession. The flagship chapter dissects the
+          VWAP bug WE shipped. It goes first because it earns the right for
+          everything below it to be believed. */}
+      <Link
+        href="/learn/broken-vwap"
+        className="group relative block border-b border-bear/30 bg-bear/5 transition-colors hover:bg-bear/10"
+      >
+        <div className="mx-auto flex max-w-[1280px] flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4">
+          <span className="border border-bear/40 bg-bear/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-bear">
+            ch. 0 — the confession
+          </span>
+          <span className="font-display text-[17px] italic tracking-tight text-fg">
+            Anatomy of a Broken VWAP
+          </span>
+          <span className="hidden font-mono text-[11px] text-fg-dim md:inline">
+            we shipped it wrong · the full autopsy, with the live bug · toggle broken → fixed
+          </span>
+          <span className="ml-auto font-mono text-[11px] uppercase tracking-wider text-fg-faint transition-colors group-hover:text-bear">
+            read the autopsy →
+          </span>
+        </div>
+      </Link>
+
       {/* §00.5 — the prism set piece: a PINNED scroll-scrubbed film. Scroll
           drives the frame (reel language) while the copy beats swap. */}
       <ScrollScrub

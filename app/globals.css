@@ -211,6 +211,42 @@ html, body {
   animation: shatter-burst 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* ── The Synthetic Truth badge: the site's ONE glitch, 400ms, resolving into
+      a checkmark (TruthBadge). Reserved for the one claim that matters —
+      noise settling into truth. Reduced-motion never mounts the layers, but
+      the guard below is belt-and-braces. ── */
+@keyframes truth-glitch-a {
+  0%   { clip-path: inset(0 0 55% 0); transform: translate(-2px, -1px); opacity: 0.9; }
+  25%  { clip-path: inset(45% 0 0 0); transform: translate(2px, 1px); }
+  50%  { clip-path: inset(20% 0 35% 0); transform: translate(-1px, 0); }
+  75%  { clip-path: inset(0 0 70% 0); transform: translate(1px, -1px); }
+  100% { clip-path: inset(0 0 100% 0); transform: none; opacity: 0; }
+}
+@keyframes truth-glitch-b {
+  0%   { clip-path: inset(60% 0 0 0); transform: translate(2px, 1px); opacity: 0.9; }
+  25%  { clip-path: inset(0 0 60% 0); transform: translate(-2px, 0); }
+  50%  { clip-path: inset(40% 0 15% 0); transform: translate(1px, -1px); }
+  75%  { clip-path: inset(65% 0 0 0); transform: translate(-1px, 1px); }
+  100% { clip-path: inset(100% 0 0 0); transform: none; opacity: 0; }
+}
+@keyframes truth-base-jitter {
+  0%, 100% { transform: none; }
+  30% { transform: translateX(1px); }
+  60% { transform: translateX(-1px); }
+}
+@keyframes truth-check-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.truth-glitch-a { animation: truth-glitch-a 400ms steps(4) both; }
+.truth-glitch-b { animation: truth-glitch-b 400ms steps(4) both; }
+.truth-glitch-base { animation: truth-base-jitter 400ms steps(4) both; }
+.truth-check-in { animation: truth-check-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .truth-glitch-a, .truth-glitch-b { animation: none; opacity: 0; }
+  .truth-glitch-base, .truth-check-in { animation: none; }
+}
+
 /* Skip link — hidden until it IS the focus. */
 .skip-link {
   position: fixed;
