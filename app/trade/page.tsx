@@ -342,7 +342,7 @@ export default function TradePage() {
                   {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
                 </span>
               </div>
-              <div className="mt-1 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint lg:mt-0">
+              <div className="mt-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint lg:mt-0">
                 <span className={`size-1.5 rounded-full ${quote ? "bg-bull pulse-dot" : "bg-amber"}`} />
                 {quote ? `live price · ${quote.exch ?? "us market"}` : "seed price · connecting"}
               </div>
@@ -357,23 +357,23 @@ export default function TradePage() {
                   { k: "iv", v: `${(sym.iv * 100).toFixed(1)}%` },
                 ].map((s) => (
                   <div key={s.k} className="px-4 text-right first:pl-0">
-                    <div className="text-[9px] uppercase tracking-wider text-fg-faint">{s.k}</div>
+                    <div className="text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
                     <div className="mt-1 text-lg tabular-nums text-fg lg:mt-0.5 lg:text-base">{s.v}</div>
                   </div>
                 ))}
                 <div className="px-4 pr-0 text-right">
-                  <div className="text-[9px] uppercase tracking-wider text-fg-faint">earnings</div>
+                  <div className="text-[10px] uppercase tracking-wider text-fg-faint">earnings</div>
                   <div className="mt-1 flex items-baseline justify-end gap-1.5 lg:mt-0.5">
                     <span className="text-lg tabular-nums text-fg lg:text-base">{earnLabel}</span>
                     {earnDays != null && (
-                      <span className="border border-bull/40 bg-bull/10 px-1 py-px text-[9px] uppercase tracking-wider text-bull">
+                      <span className="border border-bull/40 bg-bull/10 px-1 py-px text-[10px] uppercase tracking-wider text-bull">
                         {earnDays}d
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-amber">
+              <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-amber">
                 <span className="size-1 rounded-full bg-amber" />
                 illustrative · synthetic iv
               </span>
@@ -494,7 +494,7 @@ export default function TradePage() {
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">strategy · pick one of three</span>
               <Link
                 href="/trade/chain"
-                className="border border-border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
+                className="border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
               >
                 edit legs ✎
               </Link>
@@ -540,7 +540,7 @@ export default function TradePage() {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`shrink-0 border px-2 py-1 font-mono text-[9px] uppercase tracking-[0.15em] transition-colors ${
+                  className={`shrink-0 border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
                     tab === t.id
                       ? "border-bull/60 bg-bull/10 text-bull"
                       : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
@@ -606,7 +606,7 @@ export default function TradePage() {
                     { k: "win odds", v: `${(confirm.strategy.prob * 100).toFixed(0)}%`, c: "text-fg" },
                   ].map((s) => (
                     <div key={s.k} className="bg-bg p-3">
-                      <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{s.k}</div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
                       <div className={`mt-1 font-mono text-base tabular-nums ${s.c}`}>{s.v}</div>
                     </div>
                   ))}
@@ -686,10 +686,10 @@ function InBandRing({ prob }: { prob: number }) {
           <span className="font-display text-2xl leading-none tracking-tightest tabular-nums" style={{ color: tone }}>
             {Math.round(prob * 100)}%
           </span>
-          <span className="mt-1 font-mono text-[8px] uppercase tracking-[0.25em] text-fg-dim">in band</span>
+          <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-dim">in band</span>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
         <span className="size-2 shrink-0 border border-bull/60 bg-bull/20" aria-hidden />
         <span className="leading-tight">probability<br />@ expiration</span>
       </div>
@@ -701,7 +701,7 @@ function InBandRing({ prob }: { prob: number }) {
 function LegsList({ s }: { s: Strategy }) {
   return (
     <div className="border-t border-border">
-      <div className="flex items-center justify-between bg-bg-soft px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="flex items-center justify-between bg-bg-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
         <span>legs · selected</span>
         <span>mid px</span>
       </div>
@@ -777,7 +777,7 @@ function StrategyDetail({
         {chips.map((c, i) => (
           <span
             key={c}
-            className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+            className={`border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
               i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
             }`}
           >
@@ -793,7 +793,7 @@ function StrategyDetail({
       <div className="mt-3 flex items-stretch gap-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <PnlSparkline s={s} spot={spot} className="w-full min-h-16 flex-1" />
-          <div className="mt-1 text-center font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+          <div className="mt-1 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
             p/l @ expiration
           </div>
         </div>
@@ -820,7 +820,7 @@ function StrategyDetail({
         </span>
         <span>→</span>
       </button>
-      <div className="mt-1.5 text-right font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="mt-1.5 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
         {Math.round(prob * 100)}% in band · black-scholes · paper only
       </div>
     </div>
@@ -862,13 +862,13 @@ function TeacherPanel({
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
         <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">
           ai teacher
-          <span className="border border-bull/40 bg-bull/10 px-1 py-px font-mono text-[8px] uppercase tracking-[0.2em] text-bull">beta</span>
+          <span className="border border-bull/40 bg-bull/10 px-1 py-px font-mono text-[10px] uppercase tracking-[0.2em] text-bull">beta</span>
         </span>
         <button
           type="button"
           onClick={onExplain}
           disabled={!selected || narrating}
-          className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
+          className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
           explain this position
         </button>
@@ -911,7 +911,7 @@ function TeacherPanel({
           </svg>
         </button>
       </form>
-      <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
         describes the position you built · education, not advice
       </div>
     </section>

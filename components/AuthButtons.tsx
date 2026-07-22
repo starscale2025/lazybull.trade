@@ -63,7 +63,7 @@ export function AuthButtons() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={u.image} alt="" className="size-6 rounded-full" />
         ) : (
-          <span className="grid size-6 place-items-center border border-border bg-bg font-mono text-[9px] font-bold text-bull">
+          <span className="grid size-6 place-items-center border border-border bg-bg font-mono text-[10px] font-bold text-bull">
             {initials || "··"}
           </span>
         )}

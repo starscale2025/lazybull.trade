@@ -90,7 +90,7 @@ export function AlertsPanel({ open, onClose, symbol, spot, alerts, setAlerts }: 
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              <div className="border-b border-border-soft px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+              <div className="border-b border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                 {alerts.length} active
               </div>
               {alerts.map((a) => (

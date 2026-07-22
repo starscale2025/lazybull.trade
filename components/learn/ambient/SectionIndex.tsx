@@ -59,7 +59,7 @@ export function SectionIndex() {
       aria-label="Chapter navigation"
     >
       <div className="border border-border bg-bg/70 backdrop-blur-md px-2 py-3">
-        <div className="mb-2 px-1 font-mono text-[8px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
           INDEX
         </div>
         <ul className="space-y-1.5">
@@ -70,7 +70,7 @@ export function SectionIndex() {
               <li key={s.id}>
                 <a
                   href={`#${s.id}`}
-                  className="group flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.25em] transition-colors"
+                  className="group flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] transition-colors"
                   style={{ color: isActive ? "var(--bull)" : isPassed ? "var(--fg-dim)" : "var(--fg-faint)" }}
                 >
                   <span
@@ -92,7 +92,7 @@ export function SectionIndex() {
             );
           })}
         </ul>
-        <div className="mt-3 border-t border-border pt-2 px-1 font-mono text-[8px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="mt-3 border-t border-border pt-2 px-1 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
           {String(active + 1).padStart(2, "0")} / {SECTIONS.length}
         </div>
       </div>

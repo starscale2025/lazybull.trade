@@ -12,6 +12,7 @@ import type { QuoteMeta } from "@/lib/pro/voice/analysis";
 import { PERSONAS, DEFAULT_PERSONA, type PersonaId } from "@/lib/pro/voice/personality";
 import { useVoiceAgent, type VoiceActions, type VoiceSnapshot } from "@/lib/pro/voice/useVoiceAgent";
 import { useFreeVoiceAgent } from "@/lib/pro/voice/useFreeVoiceAgent";
+import { DockSlot } from "@/components/Dock";
 
 // "free" (default) = browser speech + OpenRouter free model, $0.
 // "openai"        = paid OpenAI Realtime voice. Set NEXT_PUBLIC_VOICE_PROVIDER=openai to switch.
@@ -136,7 +137,8 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
   const connecting = status === "connecting";
 
   return (
-    <div className="fixed bottom-4 right-4 z-[120] flex flex-col items-end gap-2 font-mono">
+    <DockSlot order={30}>
+    <div className="flex flex-col items-end gap-2 font-mono">
       {/* Panel */}
       <AnimatePresence>
         {open && (status === "live" || status === "connecting" || status === "error") && (
@@ -257,7 +259,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                       cancel
                     </button>
                   </div>
-                  <div className="mt-1.5 text-[9px] lowercase text-fg-faint">simulated · stored locally · reversible</div>
+                  <div className="mt-1.5 text-[10px] lowercase text-fg-faint">simulated · stored locally · reversible</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -277,7 +279,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                 />
                 <button type="submit" disabled={!live || !draft.trim()} className="border border-border px-2 py-1 text-[11px] text-fg-dim hover:text-fg disabled:opacity-40">↵</button>
               </form>
-              <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left text-[9px] uppercase tracking-wider text-fg-faint hover:text-fg-dim">
+              <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left text-[10px] uppercase tracking-wider text-fg-faint hover:text-fg-dim">
                 auto-greet on open: <span className={autoGreet ? "text-bull" : "text-fg-faint"}>{autoGreet ? "on" : "off"}</span>
               </button>
             </div>
@@ -314,5 +316,6 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
         </span>
       </button>
     </div>
+    </DockSlot>
   );
 }

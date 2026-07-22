@@ -80,7 +80,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             onChange={(e) => setSpotAt(parseFloat(e.target.value))}
             className="w-full accent-bull"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[9px] text-fg-faint">
+          <div className="mt-1 flex items-center justify-between font-mono text-[10px] text-fg-faint">
             <span>${range.lo.toFixed(0)}</span>
             <span>spot ${spot.toFixed(2)}</span>
             <span>${range.hi.toFixed(0)}</span>
@@ -101,7 +101,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             onChange={(e) => setDaysGone(parseInt(e.target.value))}
             className="w-full accent-amber"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[9px] text-fg-faint">
+          <div className="mt-1 flex items-center justify-between font-mono text-[10px] text-fg-faint">
             <span>now</span>
             <span>{remaining}d to expiry</span>
             <span>expiry</span>

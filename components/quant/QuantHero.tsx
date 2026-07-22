@@ -10,7 +10,7 @@ function InfoTip({ text }: { text: string }) {
       <span
         tabIndex={0}
         aria-label={text}
-        className="inline-flex size-3.5 cursor-help items-center justify-center border border-border font-mono text-[8px] text-fg-faint transition-colors hover:border-fg-dim hover:text-fg focus:border-fg-dim focus:text-fg"
+        className="inline-flex size-3.5 cursor-help items-center justify-center border border-border font-mono text-[10px] text-fg-faint transition-colors hover:border-fg-dim hover:text-fg focus:border-fg-dim focus:text-fg"
       >
         ?
       </span>
@@ -136,7 +136,7 @@ export function QuantHero({
               </span>
             </div>
 
-            <h1 className="font-display tracking-tightest text-[clamp(2.6rem,7.5vw,6.4rem)] leading-[0.88] text-fg">
+            <h1 className="wonk-type font-display tracking-tightest text-[clamp(2.6rem,7.5vw,6.4rem)] leading-[0.88] text-fg">
               run math
               <br />
               <span className="italic font-light text-cyan phosphor" style={{ textShadow: "0 0 20px rgba(0,229,255,0.4), 0 0 4px rgba(0,229,255,0.7)" }}>at the market</span>
@@ -163,7 +163,7 @@ export function QuantHero({
                       onClick={() => setMode("live")}
                       aria-pressed={mode === "live"}
                       title="Real Yahoo OHLCV, ticking every ~15s (delayed feed)"
-                      className={`px-1.5 py-px text-[9px] font-semibold transition-colors ${
+                      className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
                         mode === "live" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
                       }`}
                     >
@@ -173,7 +173,7 @@ export function QuantHero({
                       onClick={() => setMode("seed")}
                       aria-pressed={mode === "seed"}
                       title="Deterministic synthetic tape — same seed, same bars, every time"
-                      className={`px-1.5 py-px text-[9px] font-semibold transition-colors ${
+                      className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
                         mode === "seed" ? "bg-cyan text-bg" : "bg-bg text-fg-faint hover:text-fg"
                       }`}
                     >
@@ -182,7 +182,7 @@ export function QuantHero({
                   </span>
                   {dataSource === "fallback" ? (
                     <span
-                      className="inline-flex items-center gap-1 border border-amber/50 bg-amber/10 px-1 py-px text-[9px] text-amber"
+                      className="inline-flex items-center gap-1 border border-amber/50 bg-amber/10 px-1 py-px text-[10px] text-amber"
                       title="Live feed unreachable — running on the deterministic fallback walk"
                     >
                       <span className="size-1 rounded-full bg-amber" />
@@ -190,7 +190,7 @@ export function QuantHero({
                     </span>
                   ) : (
                     <span
-                      className={`inline-flex items-center gap-1 border px-1 py-px text-[9px] ${
+                      className={`inline-flex items-center gap-1 border px-1 py-px text-[10px] ${
                         dataSource === "live" ? "border-bull/50 bg-bull/10 text-bull" : "border-cyan/50 bg-cyan/10 text-cyan"
                       }`}
                       title={dataSource === "live" ? "real Yahoo Finance OHLCV · delayed ~15s" : "deterministic seed tape"}

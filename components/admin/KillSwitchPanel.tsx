@@ -67,7 +67,7 @@ export function KillSwitchPanel() {
             <div className={`text-3xl ${armed ? "text-bear" : "text-fg"}`}>
               {armed ? countdown : "ARM"}
             </div>
-            <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
               {armed ? "auto-fires in" : "press to arm"}
             </div>
           </div>
@@ -82,7 +82,7 @@ export function KillSwitchPanel() {
       </div>
 
       <div className="border-t border-border-soft">
-        <div className="border-b border-border-soft px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+        <div className="border-b border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           recent fires
         </div>
         <div className="divide-y divide-border-soft">

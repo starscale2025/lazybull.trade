@@ -357,7 +357,7 @@ function GreekStatCard({
 
   return (
     <div className="border border-border bg-surface p-2 md:p-4">
-      <div className="font-mono text-[9px] uppercase tracking-wider text-fg-dim md:text-[10px]">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim md:text-[10px]">
         {GREEK_COPY[greek].label}
       </div>
       <div className="mt-1 flex items-end justify-between gap-2 md:mt-2">
@@ -526,7 +526,7 @@ export default function GreeksLabPage() {
     source === "live" ? (
       <span
         data-source="live"
-        className="inline-flex items-center gap-1.5 border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-bull"
+        className="inline-flex items-center gap-1.5 border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-bull"
       >
         <span className="size-1 rounded-full bg-bull" />
         Live
@@ -534,7 +534,7 @@ export default function GreeksLabPage() {
     ) : source === "synthetic" ? (
       <span
         data-source="synthetic"
-        className="inline-flex items-center gap-1.5 border border-border bg-bg px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint"
+        className="inline-flex items-center gap-1.5 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint"
       >
         <span className="size-1 rounded-full bg-fg-faint" />
         Synthetic
@@ -542,7 +542,7 @@ export default function GreeksLabPage() {
     ) : (
       <span
         data-source="loading"
-        className="inline-flex items-center gap-1.5 border border-border bg-bg px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint"
+        className="inline-flex items-center gap-1.5 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint"
       >
         ···
       </span>
@@ -595,7 +595,7 @@ export default function GreeksLabPage() {
               {sourceChip}
               <span
                 data-vol
-                className={`inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] ${
+                className={`inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${
                   volSource === "realized"
                     ? "border-border bg-surface text-fg-dim"
                     : "border-border bg-bg text-fg-faint"

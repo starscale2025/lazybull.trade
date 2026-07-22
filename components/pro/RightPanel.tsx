@@ -248,9 +248,9 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
               >
                 <div>
                   <div className="text-fg">{r.sym}</div>
-                  <div className="text-[9px] normal-case tracking-normal text-fg-faint">{r.name}</div>
+                  <div className="text-[10px] normal-case tracking-normal text-fg-faint">{r.name}</div>
                 </div>
-                <span className="text-[9px] text-fg-faint">{r.exch}</span>
+                <span className="text-[10px] text-fg-faint">{r.exch}</span>
               </button>
             ))}
           </div>
@@ -258,7 +258,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       </div>
 
       {/* column header */}
-      <div className="grid grid-cols-12 gap-2 border-b border-border-soft px-3 py-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+      <div className="grid grid-cols-12 gap-2 border-b border-border-soft px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
         <span className="col-span-5">Symbol</span>
         <span className="col-span-3 text-right">Last</span>
         <span className="col-span-2 text-right">Chg</span>
@@ -301,7 +301,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             <span className="text-fg">{symMeta.sym}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className={`px-1.5 py-0.5 text-[9px] ${live?.marketState === "REGULAR" ? "border border-bull/40 text-bull" : "border border-border text-fg-faint"}`}>
+            <span className={`px-1.5 py-0.5 text-[10px] ${live?.marketState === "REGULAR" ? "border border-bull/40 text-bull" : "border border-border text-fg-faint"}`}>
               {live?.marketState || "—"}
             </span>
           </div>
@@ -346,7 +346,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
                 <div className="font-display text-base tabular-nums" style={{ color: colour }}>
                   {v != null ? `${v >= 0 ? "+" : ""}${fmt(v, 2)}%` : "—"}
                 </div>
-                <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{k}</div>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{k}</div>
               </div>
             );
           })}
@@ -361,7 +361,7 @@ function SymBadge({ sym }: { sym: string }) {
   const c = palette[sym.charCodeAt(0) % palette.length];
   return (
     <span className="flex size-4 items-center justify-center" style={{ borderColor: c, color: c, border: `1px solid ${c}` }}>
-      <span className="text-[7px] font-bold leading-none">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
+      <span className="text-[10px] font-bold leading-none">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
     </span>
   );
 }

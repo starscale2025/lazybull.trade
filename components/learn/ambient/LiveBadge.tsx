@@ -8,7 +8,7 @@ export function LiveBadge() {
       aria-hidden
       style={{ marginTop: "8px" }}
     >
-      <div className="flex items-center gap-2 border border-bull/40 bg-bg/80 px-2 py-1 backdrop-blur-sm font-mono text-[9px] uppercase tracking-[0.35em]">
+      <div className="flex items-center gap-2 border border-bull/40 bg-bg/80 px-2 py-1 backdrop-blur-sm font-mono text-[10px] uppercase tracking-[0.35em]">
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
         <span className="text-bull">LIVE</span>
         <span className="text-fg-faint">/</span>

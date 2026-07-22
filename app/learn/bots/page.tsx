@@ -85,7 +85,7 @@ export default function BotsIndex() {
                       {b.glyph}
                     </span>
                     {b.endpoint && (
-                      <span className="border border-bear/40 bg-bear/10 px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider text-bear">
+                      <span className="border border-bear/40 bg-bear/10 px-1 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bear">
                         AI
                       </span>
                     )}

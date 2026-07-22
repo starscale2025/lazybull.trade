@@ -284,7 +284,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           aria-expanded={open}
           className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-fg transition-colors hover:text-bull"
         >
-          <span className="grid size-4 place-items-center border border-bull/50 text-[8px] font-bold text-bull">LB</span>
+          <span className="grid size-4 place-items-center border border-bull/50 text-[10px] font-bold text-bull">LB</span>
           Paper Trading
           <span className={`text-fg-faint transition-transform ${open ? "" : "rotate-180"}`}>⌄</span>
         </button>
@@ -351,7 +351,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               lazybull paper <span className="text-fg-faint">USD</span>
               <span className="text-fg-faint">⌄</span>
             </button>
-            <span className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
               started {money(startingCash)}
             </span>
           </div>
@@ -449,7 +449,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               ) : (
                 <table className="w-full font-mono text-[11px] tabular-nums">
                   <thead>
-                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
                       <th className={th}>Symbol</th>
                       <th className={th}>Side</th>
                       <th className={`${th} text-right`}>Quantity</th>
@@ -467,7 +467,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                       return (
                         <tr key={r.sym} className="border-t border-border-soft text-fg-dim">
                           <td className={`${td} text-fg`}>
-                            <span className="mr-1.5 border border-border px-1 text-[9px] text-fg-faint">
+                            <span className="mr-1.5 border border-border px-1 text-[10px] text-fg-faint">
                               {r.pos.qty > 0 ? "LONG" : "SHORT"}
                             </span>
                             {r.sym}
@@ -566,7 +566,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               ) : (
                 <table className="w-full font-mono text-[11px] tabular-nums">
                   <thead>
-                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
                       <th className={th}>Symbol</th>
                       <th className={th}>Side</th>
                       <th className={th}>Type</th>
@@ -610,7 +610,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               ) : (
                 <table className="w-full font-mono text-[11px] tabular-nums">
                   <thead>
-                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
                       <th className={th}>Time</th>
                       <th className={th}>Symbol</th>
                       <th className={th}>Side</th>
@@ -651,7 +651,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               ) : (
                 <table className="w-full font-mono text-[11px] tabular-nums">
                   <thead>
-                    <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
                       <th className={th}>Time</th>
                       <th className={th}>Type</th>
                       <th className={th}>Detail</th>
@@ -687,14 +687,14 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                       { k: "Worst", v: stats.n ? `−$${fmt(Math.abs(stats.worst), 2)}` : "—", c: "text-bear" },
                     ].map((x) => (
                       <div key={x.k} className="bg-bg p-1.5">
-                        <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{x.k}</div>
+                        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{x.k}</div>
                         <div className={`font-mono text-[11px] tabular-nums ${x.c}`}>{x.v}</div>
                       </div>
                     ))}
                   </div>
                   <table className="w-full font-mono text-[11px] tabular-nums">
                     <thead>
-                      <tr className="text-[9px] uppercase tracking-wider text-fg-faint">
+                      <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
                         <th className={th}>Closed</th>
                         <th className={th}>Symbol</th>
                         <th className={th}>Side</th>
@@ -825,7 +825,7 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
         <path d={`M${d}`} fill="none" stroke={c} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="shrink-0 font-mono">
-        <div className="text-[9px] uppercase tracking-wider text-fg-faint">realized equity</div>
+        <div className="text-[10px] uppercase tracking-wider text-fg-faint">realized equity</div>
         <div className={`text-sm tabular-nums ${up ? "text-bull" : "text-bear"}`}>${fmt(last, 2)}</div>
         <div className={`text-[10px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
           {up ? "+" : "−"}

@@ -50,7 +50,7 @@ function OddsRing({ prob }: { prob: number }) {
         <div className="font-display text-2xl tracking-tightest tabular-nums" style={{ color: tone }}>
           {(prob * 100).toFixed(0)}%
         </div>
-        <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">odds in band · BS</div>
+        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">odds in band · BS</div>
       </div>
     </div>
   );
@@ -69,7 +69,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
       <div className="flex flex-col gap-4 p-4">
         {/* the thesis, compact — mirrors the sentence up top */}
         <div>
-          <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">thesis</div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">thesis</div>
           <div className="mt-1 font-display text-lg leading-snug tracking-tightest text-fg">
             {sym} closes <span className="text-bull">${low.toFixed(2)}–${high.toFixed(2)}</span>
             <span className="text-fg-dim"> by </span>
@@ -85,10 +85,10 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
         {selected ? (
           <div>
             <div className="flex items-baseline justify-between">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">strategy</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">strategy</div>
               <button
                 onClick={() => onJump("pick")}
-                className="font-mono text-[9px] uppercase tracking-wider text-fg-dim underline-offset-2 hover:text-bull hover:underline"
+                className="font-mono text-[10px] uppercase tracking-wider text-fg-dim underline-offset-2 hover:text-bull hover:underline"
               >
                 change
               </button>
@@ -118,7 +118,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
                 },
               ].map((s) => (
                 <div key={s.k} className="bg-bg p-2.5">
-                  <div className="font-mono text-[8px] uppercase tracking-wider text-fg-faint">{s.k}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
                   <div className={`mt-0.5 font-mono text-sm tabular-nums ${s.c}`}>{s.v}</div>
                 </div>
               ))}

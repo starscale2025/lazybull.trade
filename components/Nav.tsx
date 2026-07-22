@@ -9,7 +9,7 @@ export function Nav() {
         <Link href="/" className="group flex items-center gap-2.5">
           <div className="relative flex size-7 items-center justify-center border border-fg/40 bg-bg">
             <div className="absolute inset-0.75 bg-bull" />
-            <span className="relative font-mono text-[9px] font-bold text-bg">LB</span>
+            <span className="relative font-mono text-[10px] font-bold text-bg">LB</span>
           </div>
           <span className="font-display text-lg font-medium tracking-tightest text-fg">
             lazybull

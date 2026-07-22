@@ -186,7 +186,7 @@ export function LearnBacktestBuilder() {
                 <div className={`font-mono text-[11px] uppercase tracking-wider ${s.key === scenarioKey ? "text-bull" : "text-fg-dim"}`}>
                   {s.label}
                 </div>
-                <div className="mt-1 font-mono text-[9px] text-fg-faint">
+                <div className="mt-1 font-mono text-[10px] text-fg-faint">
                   μ={s.drift.toFixed(2)} · σ={s.vol.toFixed(1)}
                 </div>
               </button>

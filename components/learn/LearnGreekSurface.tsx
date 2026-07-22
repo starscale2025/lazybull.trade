@@ -119,7 +119,7 @@ export function LearnGreekSurface() {
           onChange={(e) => setStrike(parseInt(e.target.value))}
           className="mt-2 h-1 w-full accent-bull"
         />
-        <div className="mt-1 flex justify-between font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+        <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <span>$70 deep ITM put / OTM call</span>
           <span>$100 ATM</span>
           <span>$130 OTM put / ITM call</span>

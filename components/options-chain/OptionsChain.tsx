@@ -170,12 +170,12 @@ export function OptionsChain({ underlying, spot }: Props) {
 
       {/* Chain grid */}
       <div className="overflow-x-auto" onMouseLeave={() => setHover(null)}>
-        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <span className="col-span-5 text-center text-bull">— calls —</span>
           <span className="text-center text-fg">strike</span>
           <span className="col-span-5 text-center text-bear">— puts —</span>
         </div>
-        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <span>iv</span>
           <span className="text-right">vol</span>
           <span className="text-right">oi</span>

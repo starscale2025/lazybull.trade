@@ -20,7 +20,7 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
           <span className="size-1.5 rounded-full bg-amber" />
           event horizon · next {daysToExpiry}d
         </div>
-        <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <Legend tone="var(--bear)" label="earnings" />
           <Legend tone="var(--amber)" label="fed" />
           <Legend tone="var(--cyan)" label="cpi" />
@@ -33,8 +33,8 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
         <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
         <div className="absolute left-0 top-1/2 -translate-y-1/2 size-2 rounded-full bg-cyan" title="now" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 size-2 rounded-full bg-amber" title="expiry" />
-        <div className="absolute -top-1 left-2 font-mono text-[9px] uppercase tracking-wider text-cyan">now</div>
-        <div className="absolute -top-1 right-2 font-mono text-[9px] uppercase tracking-wider text-amber">exp</div>
+        <div className="absolute -top-1 left-2 font-mono text-[10px] uppercase tracking-wider text-cyan">now</div>
+        <div className="absolute -top-1 right-2 font-mono text-[10px] uppercase tracking-wider text-amber">exp</div>
 
         {within.map((e, i) => {
           const day = (new Date(e.date).getTime() - baseDate.getTime()) / 86_400_000;

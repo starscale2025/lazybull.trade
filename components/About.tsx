@@ -277,7 +277,7 @@ function FounderPhoto({
       {/* Name badge */}
       <div className="absolute inset-x-4 bottom-4">
         <div className="border border-border bg-bg/80 backdrop-blur-sm p-3">
-          <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">
             // founder
           </div>
           <div className="mt-1 font-display text-xl tracking-tightest text-fg">
@@ -667,7 +667,7 @@ export function About() {
                   <div className="grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
                     {f.stats.map((s) => (
                       <div key={s.k} className="bg-bg p-3">
-                        <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint truncate">
+                        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint truncate">
                           {s.k}
                         </div>
                         <div

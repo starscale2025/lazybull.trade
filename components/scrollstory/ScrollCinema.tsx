@@ -823,7 +823,7 @@ export function ScrollCinema() {
               <span className="text-fg-dim">→</span> historical agreement <span className="text-bull">6/6 models</span> · paper pick staged
             </div>
           </div>
-          <div className="border-t border-border px-3.5 py-1.5 text-[9px] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
+          <div className="border-t border-border px-3.5 py-1.5 text-[10px] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
             simulated · educational — not advice
           </div>
         </div>

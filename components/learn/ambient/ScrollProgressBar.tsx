@@ -29,7 +29,7 @@ export function ScrollProgressBar() {
         }}
       />
       <div
-        className="absolute right-2 top-2 flex items-center gap-1 font-mono text-[8px] uppercase tracking-[0.3em] text-bull"
+        className="absolute right-2 top-2 flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.3em] text-bull"
         style={{ opacity: pct > 0.02 ? 1 : 0, transition: "opacity 220ms" }}
       >
         <span className="size-[3px] rounded-full bg-bull pulse-dot" />

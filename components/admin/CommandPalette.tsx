@@ -106,7 +106,7 @@ export function CommandPalette() {
                 <span>{c.label}</span>
               </div>
               {c.hint && (
-                <span className="font-mono text-[9px] uppercase tracking-wider text-bear">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-bear">
                   {c.hint}
                 </span>
               )}
@@ -118,7 +118,7 @@ export function CommandPalette() {
             </div>
           )}
         </div>
-        <div className="border-t border-border-soft px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+        <div className="border-t border-border-soft px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           ↑↓ navigate · ↵ run · esc close
         </div>
       </div>

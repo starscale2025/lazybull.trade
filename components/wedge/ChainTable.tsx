@@ -101,7 +101,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
       <div className="overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <div className="min-w-[840px]">
           {/* column headers — stick to the top of the internal scrollport */}
-          <div className={`${cellGrid} border-b border-border-soft bg-bg px-3 font-mono text-[9px] uppercase tracking-wider text-fg-faint lg:sticky lg:top-0 lg:z-20 [&>span]:py-1.5`}>
+          <div className={`${cellGrid} border-b border-border-soft bg-bg px-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint lg:sticky lg:top-0 lg:z-20 [&>span]:py-1.5`}>
             <span>delta</span>
             <span className="text-right">bid</span>
             <span className="text-right">ask</span>
@@ -165,7 +165,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
           <span className="text-fg-faint">{strikes.length} strikes</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 text-[9px] tracking-[0.2em] text-amber">
+          <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 text-[10px] tracking-[0.2em] text-amber">
             <span className="size-1 rounded-full bg-amber" />
             synthetic chain · illustrative
           </span>

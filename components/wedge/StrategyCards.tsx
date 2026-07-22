@@ -47,7 +47,7 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
                 <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5" style={{ background: tone.color }} aria-hidden />
               )}
               <span
-                className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 text-[9px] uppercase tracking-wider"
+                className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 text-[10px] uppercase tracking-wider"
                 style={{ color: tone.color, background: tone.pillBg }}
               >
                 <span className="size-1 rounded-full" style={{ background: tone.color }} />
@@ -146,7 +146,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
           {chips.map((c, i) => (
             <span
               key={c}
-              className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+              className={`border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
                 i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
               }`}
             >
@@ -164,7 +164,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
       <div className="flex flex-col gap-1.5">
         {rail.map((it) => (
           <div key={it.k} className="flex items-baseline justify-between gap-3">
-            <span className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{it.k}</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{it.k}</span>
             <span className={`text-right font-mono text-sm tabular-nums ${it.c ?? "text-fg"}`}>{it.v}</span>
           </div>
         ))}

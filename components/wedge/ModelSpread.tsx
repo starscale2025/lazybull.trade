@@ -92,7 +92,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                     style={{ background: meta.tone, opacity: disabled ? 0.3 : 1 }}
                   />
                 </div>
-                <div className="mt-0.5 font-mono text-[9px] tracking-normal text-fg-faint">{meta.explain}</div>
+                <div className="mt-0.5 font-mono text-[10px] tracking-normal text-fg-faint">{meta.explain}</div>
               </div>
               <div className="col-span-2 flex items-center justify-end gap-1.5 font-mono tabular-nums">
                 <span className="text-base text-fg">{v != null ? `${(v * 100).toFixed(0)}%` : "—"}</span>

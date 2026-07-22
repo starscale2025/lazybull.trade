@@ -684,9 +684,9 @@ function Stat({
     tone == null || tone === 0 ? "text-fg" : tone > 0 ? "text-bull" : "text-bear";
   return (
     <div className="bg-surface p-3">
-      <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint">{label}</div>
+      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">{label}</div>
       <div className={`mt-1 font-mono ${big ? "text-[16px]" : "text-[13px]"} tabular-nums ${color}`}>{value}</div>
-      {sub && <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-fg-faint">{sub}</div>}
+      {sub && <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">{sub}</div>}
     </div>
   );
 }

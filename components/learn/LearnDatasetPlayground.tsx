@@ -114,7 +114,7 @@ function Slider({ value, setValue, min, max, step, suffix }: { value: number; se
     <label className="flex flex-col gap-1">
       <span className="flex items-center justify-between font-mono text-[11px] tabular-nums text-fg">
         <span>{value.toFixed(step < 1 ? 2 : 0)}{suffix}</span>
-        <span className="text-fg-faint text-[9px]">{min} → {max}</span>
+        <span className="text-fg-faint text-[10px]">{min} → {max}</span>
       </span>
       <input
         type="range"

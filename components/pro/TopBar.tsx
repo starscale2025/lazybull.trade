@@ -136,10 +136,10 @@ export function TopBar({
                         <SymGlyph sym={s.sym} />
                         <div className="flex flex-col">
                           <span className="text-fg leading-tight">{s.sym}</span>
-                          <span className="text-[9px] text-fg-faint normal-case tracking-normal">{s.name}</span>
+                          <span className="text-[10px] text-fg-faint normal-case tracking-normal">{s.name}</span>
                         </div>
                       </div>
-                      <span className="text-[9px] text-fg-faint">{s.exch}</span>
+                      <span className="text-[10px] text-fg-faint">{s.exch}</span>
                     </button>
                   </li>
                 ))}
@@ -147,7 +147,7 @@ export function TopBar({
                   <li className="px-3 py-4 text-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">no matches</li>
                 )}
               </ul>
-              <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[9px] text-fg-faint">
+              <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] text-fg-faint">
                 live data via Yahoo Finance
               </div>
             </motion.div>
@@ -237,7 +237,7 @@ export function TopBar({
                           <span className="size-2.5" style={{ background: i.color }} />
                           <div className="flex flex-col">
                             <span className="text-fg leading-tight">{i.label}</span>
-                            <span className="text-[9px] text-fg-faint normal-case tracking-normal">{i.desc}</span>
+                            <span className="text-[10px] text-fg-faint normal-case tracking-normal">{i.desc}</span>
                           </div>
                         </div>
                         <span className={`size-3 border ${on ? "border-bull bg-bull" : "border-fg-faint"}`} aria-hidden />
@@ -345,7 +345,7 @@ function SymGlyph({ sym }: { sym: string }) {
   const c = palette[sym.charCodeAt(0) % palette.length];
   return (
     <span className="flex size-5 items-center justify-center border" style={{ borderColor: c, color: c }}>
-      <span className="text-[8px] font-bold">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
+      <span className="text-[10px] font-bold">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
     </span>
   );
 }

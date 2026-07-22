@@ -21,6 +21,7 @@ import { usePaper, useSafety, useStrategy } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { detect } from "@/lib/detector";
 import type { Candle } from "@/lib/candles";
+import { DockSlot } from "@/components/Dock";
 
 type Props = {
   symbol: string;
@@ -169,7 +170,8 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
   const pct = (x: number) => `${Math.round(x * 100)}%`;
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
+    <DockSlot order={20}>
+    <div className="flex flex-col items-end gap-2">
       <AnimatePresence>
         {open && (
           <motion.div
@@ -281,7 +283,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                 {/* the two reads */}
                 <div className="space-y-2 px-3 py-3">
                   <div className="border border-border-soft bg-surface px-2.5 py-2">
-                    <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">what the quants say</div>
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">what the quants say</div>
                     {reads ? (
                       <div className="mt-1 font-mono text-[11px] leading-relaxed text-fg-dim">
                         <span className={reads.quant.lean === "UP" ? "text-bull" : reads.quant.lean === "DOWN" ? "text-bear" : "text-fg"}>
@@ -298,7 +300,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                     )}
                   </div>
                   <div className="border border-border-soft bg-surface px-2.5 py-2">
-                    <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">what the models say</div>
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">what the models say</div>
                     {reads ? (
                       <div className="mt-1 font-mono text-[11px] leading-relaxed text-fg-dim">
                         <span className={reads.model.pUp >= 0.5 ? "text-bull" : "text-bear"}>
@@ -314,7 +316,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                   </div>
                   {chainNote && (
                     <div className="border border-border-soft bg-surface px-2.5 py-2">
-                      <div className="font-mono text-[9px] uppercase tracking-widest text-fg-faint">on your chain</div>
+                      <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">on your chain</div>
                       <div className="mt-1 font-mono text-[11px] text-fg-dim">{chainNote}</div>
                     </div>
                   )}
@@ -345,7 +347,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                       {error}
                     </div>
                   )}
-                  <div className="mt-2 text-center font-mono text-[9px] uppercase tracking-widest text-fg-faint">
+                  <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-fg-faint">
                     paper only · ${Math.round(cash).toLocaleString()} cash · not advice
                   </div>
                 </div>
@@ -364,5 +366,6 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
         {open ? "Hide bet" : "Place a bet"}
       </button>
     </div>
+    </DockSlot>
   );
 }

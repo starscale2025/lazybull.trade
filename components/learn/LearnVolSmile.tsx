@@ -122,7 +122,7 @@ export function LearnVolSmile() {
             <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">skew (ρ)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{skew.toFixed(2)}</div>
             <input type="range" min={-1} max={1} step={0.05} value={skew} onChange={(e) => setSkew(parseFloat(e.target.value))} className="mt-3 h-1 w-full accent-bull" />
-            <div className="mt-1 flex justify-between font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
               <span>− call-rich</span><span>flat</span><span>+ put-rich</span>
             </div>
             <p className="mt-3 text-[11px] leading-relaxed text-fg-dim">
@@ -134,7 +134,7 @@ export function LearnVolSmile() {
             <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">smile depth (kurtosis)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{kurt.toFixed(2)}</div>
             <input type="range" min={0} max={1.5} step={0.05} value={kurt} onChange={(e) => setKurt(parseFloat(e.target.value))} className="mt-3 h-1 w-full accent-bull" />
-            <div className="mt-1 flex justify-between font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
               <span>flat</span><span>deep smile</span>
             </div>
             <p className="mt-3 text-[11px] leading-relaxed text-fg-dim">

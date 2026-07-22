@@ -93,7 +93,7 @@ export function PlainGreeks({
           <button
             type="button"
             onClick={onDetails}
-            className="font-mono text-[9px] uppercase tracking-wider text-fg-dim transition-colors hover:text-bull"
+            className="font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:text-bull"
           >
             details →
           </button>
@@ -135,7 +135,7 @@ export function PlainGreeks({
               );
             })}
           </ul>
-          <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[8px] uppercase tracking-[0.2em] text-fg-faint">
+          <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
             net across {s.legs.length} leg{s.legs.length > 1 ? "s" : ""} · black-scholes · live
           </div>
         </>

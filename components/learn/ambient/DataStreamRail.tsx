@@ -43,12 +43,12 @@ export function DataStreamRail() {
       aria-hidden
     >
       <div className="border border-border bg-bg/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 border-b border-border px-3 py-2 font-mono text-[8px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="flex items-center gap-2 border-b border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
           <span className="size-1 rounded-full bg-bull pulse-dot" />
           <span>TELEMETRY</span>
           <span className="ml-auto text-bull">{SEEDS.length}</span>
         </div>
-        <ul className="font-mono text-[9px] tabular-nums">
+        <ul className="font-mono text-[10px] tabular-nums">
           {SEEDS.map((s, i) => {
             const v = vals[i];
             const dir = v > prev[i] ? "up" : v < prev[i] ? "down" : "flat";
@@ -68,7 +68,7 @@ export function DataStreamRail() {
             );
           })}
         </ul>
-        <div className="border-t border-border px-3 py-2 font-mono text-[8px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="border-t border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
           REFRESH 0.85s
         </div>
       </div>

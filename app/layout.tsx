@@ -6,11 +6,20 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { PaperSync } from "@/components/PaperSync";
 import { Tracker } from "@/components/Tracker";
+import { DockProvider } from "@/components/Dock";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
+  // The TRUE italic family. Every accent line on this site is italic, and for
+  // months not one italic file shipped — the whole brand leaned on
+  // browser-synthesized shears of the roman (font-synthesis-style: none in
+  // globals.css now makes that regression impossible).
+  style: ["normal", "italic"],
+  // SOFT/WONK were preloaded dead weight for just as long. They're alive now:
+  // --market-wonk (set from the live VIX by the ticker) drives them, so the
+  // letterforms themselves carry the day's volatility. See .wonk-type.
   axes: ["SOFT", "WONK", "opsz"],
   display: "swap",
 });
@@ -51,9 +60,11 @@ export default function RootLayout({
           {/* display:contents — a real <main> landmark and skip target with
               ZERO layout effect on the flex chains inside. */}
           <ThemeProvider>
-            <main id="main" className="contents">
-              {children}
-            </main>
+            <DockProvider>
+              <main id="main" className="contents">
+                {children}
+              </main>
+            </DockProvider>
           </ThemeProvider>
           {/* Cross-device paper-account replication — needs the session. */}
           <PaperSync />

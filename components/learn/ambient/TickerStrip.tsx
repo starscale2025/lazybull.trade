@@ -22,7 +22,7 @@ export function TickerStrip({
       <div className={`relative flex ${animationClass} gap-12 py-3 font-mono text-[10px] uppercase tracking-[0.3em] whitespace-nowrap`}>
         {repeated.map((item, i) => (
           <span key={i} className="flex items-center gap-3 shrink-0">
-            <span style={{ color: TONE_COLORS[i % TONE_COLORS.length] }} className="text-[8px]">
+            <span style={{ color: TONE_COLORS[i % TONE_COLORS.length] }} className="text-[10px]">
               ◆
             </span>
             <span className="text-fg">{item}</span>

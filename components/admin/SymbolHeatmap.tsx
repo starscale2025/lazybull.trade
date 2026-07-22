@@ -51,7 +51,7 @@ export function SymbolHeatmap({ rows }: { rows: SymbolRow[] }) {
                     style={{ width: `${(t * 100).toFixed(0)}%` }}
                   />
                 </div>
-                <div className="mt-1 flex items-center justify-between font-mono text-[9px] tabular-nums text-fg-faint">
+                <div className="mt-1 flex items-center justify-between font-mono text-[10px] tabular-nums text-fg-faint">
                   <span>iv {r.iv.toFixed(1)}%</span>
                   <span>{(r.volume / 1_000_000).toFixed(2)}M vol</span>
                 </div>

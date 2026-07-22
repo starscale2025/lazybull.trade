@@ -106,7 +106,7 @@ export default function LearnPage() {
         <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
         {/* Top edge tape */}
-        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-2 font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
           <div className="flex items-center gap-3">
             <span className="size-1 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">LIVE FEED</span>
@@ -544,7 +544,7 @@ export default function LearnPage() {
               <div className="font-display italic font-light leading-none" style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", color: g.tone }}>
                 {g.sym}
               </div>
-              <div className="mt-2 font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">{g.label}</div>
+              <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">{g.label}</div>
             </div>
           ))}
         </div>
@@ -858,7 +858,7 @@ export default function LearnPage() {
         </ChapterBody>
 
         <div className="mt-12 relative">
-          <div className="absolute -top-3 left-0 z-10 flex items-center gap-2 bg-bg px-2 font-mono text-[9px] uppercase tracking-[0.3em]">
+          <div className="absolute -top-3 left-0 z-10 flex items-center gap-2 bg-bg px-2 font-mono text-[10px] uppercase tracking-[0.3em]">
             <span className="size-1 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">SAMPLE BOT · 10 LINES</span>
             <span className="text-fg-faint">·</span>
@@ -1126,14 +1126,14 @@ function TerminalFrame({
   return (
     <div className="relative mt-20">
       <div className="absolute -top-3 left-0 right-0 z-10 flex items-center justify-between bg-bg px-2">
-        <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em]">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]">
           <span className="size-1 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">{label}</span>
           <span className="text-fg-faint">·</span>
           <span className="text-fg-faint">INTERACTIVE</span>
         </div>
         {hint && (
-          <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">
+          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
             {hint}
           </div>
         )}

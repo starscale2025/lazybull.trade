@@ -114,7 +114,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
     return (
       <div className="pointer-events-auto flex items-stretch border border-border bg-surface shadow-lg">
         <div className="flex flex-col justify-center px-3 py-1 font-mono">
-          <span className={`text-[9px] font-semibold uppercase tracking-wider ${up ? "text-bull" : "text-bear"}`}>
+          <span className={`text-[10px] font-semibold uppercase tracking-wider ${up ? "text-bull" : "text-bear"}`}>
             Confirm {staged.side}
           </span>
           <span className="text-[11px] tabular-nums text-fg-dim">
@@ -174,7 +174,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         aria-label={`Sell ${qtyLabel} ${symbol} at market`}
         className="flex flex-col items-center px-3 py-1 font-mono transition-colors enabled:hover:bg-bear enabled:hover:text-bg disabled:cursor-not-allowed text-bear"
       >
-        <span className="text-[9px] font-semibold uppercase tracking-wider">Sell</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider">Sell</span>
         <span className="text-[11px] tabular-nums">{price ? fmt(price, 2) : "—"}</span>
       </button>
       <input
@@ -193,7 +193,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         aria-label={`Buy ${qtyLabel} ${symbol} at market`}
         className="flex flex-col items-center px-3 py-1 font-mono transition-colors enabled:hover:bg-bull enabled:hover:text-bg disabled:cursor-not-allowed text-bull"
       >
-        <span className="text-[9px] font-semibold uppercase tracking-wider">Buy</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider">Buy</span>
         <span className="text-[11px] tabular-nums">{price ? fmt(price, 2) : "—"}</span>
       </button>
       <button
@@ -202,7 +202,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         aria-checked={oneClick}
         aria-label="One-click trading"
         title={oneClick ? "One-click trading ON — click to require confirmation" : "One-click trading OFF"}
-        className={`border-l border-border px-2 font-mono text-[9px] uppercase tracking-wider transition-colors ${
+        className={`border-l border-border px-2 font-mono text-[10px] uppercase tracking-wider transition-colors ${
           oneClick ? "bg-amber/20 text-amber" : "text-fg-faint hover:text-fg-dim"
         }`}
       >

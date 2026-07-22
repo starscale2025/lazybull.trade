@@ -143,7 +143,7 @@ export function GetStarted() {
         {/* The page's h1 — it used to live inside CrystalHero, a component
             that was never mounted, leaving the landing led by an h2. */}
         <h1
-          className="font-display text-fg"
+          className="wonk-type font-display text-fg"
           style={{ fontSize: "clamp(2.75rem, 7.5vw, 6rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 0 40px rgba(0,0,0,0.6)" }}
         >
           Options you can{" "}
@@ -293,7 +293,7 @@ export function GetStarted() {
                 P(down) <span className="font-bold">71%</span>
               </div>
               <div className="mt-1 flex items-center gap-1.5">
-                <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-fg-dim">confidence</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">confidence</span>
                 <span className="flex gap-px" aria-hidden>
                   {Array.from({ length: 10 }, (_, i) => (
                     <span key={i} className={`h-1.5 w-1 ${i < 7 ? "bg-bull" : "bg-fg-faint/40"}`} />

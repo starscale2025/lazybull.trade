@@ -135,7 +135,7 @@ export function LearnRegimeVisualizer() {
               onChange={(e) => setH(parseFloat(e.target.value))}
               className="mt-4 h-1 w-full accent-bull"
             />
-            <div className="mt-1 flex justify-between font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
               <span>0.3 reverting</span>
               <span>0.5 random</span>
               <span>0.7 trending</span>

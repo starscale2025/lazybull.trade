@@ -122,7 +122,7 @@ export function BotLibrary({
                         {b.name}
                       </span>
                       {b.category === "ai" && (
-                        <span className="border border-bear/50 bg-bear/10 px-1 font-mono text-[8px] uppercase tracking-wider text-bear" title={b.endpoint ?? "ai quants"}>
+                        <span className="border border-bear/50 bg-bear/10 px-1 font-mono text-[10px] uppercase tracking-wider text-bear" title={b.endpoint ?? "ai quants"}>
                           AI
                         </span>
                       )}
@@ -159,7 +159,7 @@ export function BotLibrary({
                 rel="noopener noreferrer"
                 title={`Read about ${b.name} — math, code, when it works, when it fails`}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-1.5 right-2 z-10 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-fg-faint hover:border-cyan hover:text-cyan"
+                className="absolute bottom-1.5 right-2 z-10 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint hover:border-cyan hover:text-cyan"
               >
                 ⓘ About
               </a>

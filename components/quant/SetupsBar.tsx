@@ -177,7 +177,7 @@ export function SetupsBar({
               </div>
             ))
           )}
-          <div className="border-t border-border-soft px-3 py-1.5 text-[9px] normal-case tracking-normal text-fg-faint">
+          <div className="border-t border-border-soft px-3 py-1.5 text-[10px] normal-case tracking-normal text-fg-faint">
             custom imported bots aren't saved — they're code, not config
           </div>
         </div>

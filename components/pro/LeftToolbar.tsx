@@ -202,7 +202,7 @@ export function LeftToolbar({
       <div className="my-auto" />
 
       {/* drawings count */}
-      <div className="flex flex-col items-center gap-0.5 font-mono text-[8px] uppercase tracking-wider text-fg-faint">
+      <div className="flex flex-col items-center gap-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
         <span>{count}</span>
         <span>drws</span>
       </div>

@@ -134,7 +134,7 @@ export function BotCell({
           <div className="min-w-0">
             <div className="flex items-center gap-2 font-display text-base tracking-tightest">
               {def.name}
-              <span className="hidden font-mono text-[9px] uppercase tracking-wider text-fg-faint sm:inline">
+              <span className="hidden font-mono text-[10px] uppercase tracking-wider text-fg-faint sm:inline">
                 / {def.category}
               </span>
             </div>
@@ -225,7 +225,7 @@ export function BotCell({
                   <span className="text-fg">{def.module}</span>
                 </div>
               )}
-              <div className="col-span-full text-fg-faint text-[9px] flex items-center justify-between gap-3">
+              <div className="col-span-full text-fg-faint text-[10px] flex items-center justify-between gap-3">
                 <span>
                   outputs are deterministic mocks · swap for `await fetch(API + endpoint)` once the FastAPI service is up
                 </span>
@@ -315,7 +315,7 @@ export function BotCell({
                     height={160}
                     width={720}
                   />
-                  <div className="absolute left-2 top-1.5 flex gap-3 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+                  <div className="absolute left-2 top-1.5 flex gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       <span className="size-1.5 bg-fg" /> close
                     </span>
@@ -339,7 +339,7 @@ export function BotCell({
                     width={720}
                     histogram={result.pane.kind === "histogram"}
                   />
-                  <div className="absolute left-2 top-1.5 flex gap-3 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+                  <div className="absolute left-2 top-1.5 flex gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                     {result.pane.series.map((s) => (
                       <span key={s.label} className="flex items-center gap-1.5">
                         <span className="size-1.5" style={{ background: s.color }} />
@@ -449,7 +449,7 @@ function ParamControl({
         className="h-1 w-full accent-bull"
       />
       {spec.hint && (
-        <span className="font-mono text-[9px] text-fg-faint">{spec.hint}</span>
+        <span className="font-mono text-[10px] text-fg-faint">{spec.hint}</span>
       )}
     </label>
   );

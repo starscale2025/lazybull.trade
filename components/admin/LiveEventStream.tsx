@@ -63,7 +63,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`border px-1.5 py-0.5 text-[9px] transition-colors ${
+              className={`border px-1.5 py-0.5 text-[10px] transition-colors ${
                 filter === f
                   ? "border-bull bg-bull/10 text-bull"
                   : "border-border text-fg-dim hover:text-fg"
@@ -74,7 +74,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
           ))}
           <button
             onClick={() => setPaused(!paused)}
-            className={`ml-2 border px-1.5 py-0.5 text-[9px] transition-colors ${
+            className={`ml-2 border px-1.5 py-0.5 text-[10px] transition-colors ${
               paused ? "border-amber bg-amber/10 text-amber" : "border-border text-fg-dim hover:text-fg"
             }`}
           >
@@ -99,7 +99,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
                   <span className={`size-1 rounded-full ${c.dot} ${isFresh ? "pulse-dot" : ""}`} />
                   <span className="text-fg-faint tabular-nums">{relTime(e.t)}</span>
                 </div>
-                <span className={`border px-1 py-0 text-[9px] uppercase tracking-wider ${c.bg}`}>
+                <span className={`border px-1 py-0 text-[10px] uppercase tracking-wider ${c.bg}`}>
                   {e.level}
                 </span>
                 <div className="truncate">

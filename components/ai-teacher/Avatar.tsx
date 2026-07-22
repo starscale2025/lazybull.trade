@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { useTeacher } from "@/lib/stores";
 import { GreekMeta, type GreekKey } from "./GreekIcons";
+import { DockSlot } from "@/components/Dock";
 
 export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
   const { bubble, setBubble } = useTeacher();
@@ -18,7 +19,8 @@ export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
   }, []);
 
   return (
-    <div className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3">
+    <DockSlot order={10}>
+    <div className="flex flex-col items-end gap-3">
       <AnimatePresence>
         {bubble && (
           <motion.div
@@ -105,5 +107,6 @@ export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
         </span>
       </motion.button>
     </div>
+    </DockSlot>
   );
 }

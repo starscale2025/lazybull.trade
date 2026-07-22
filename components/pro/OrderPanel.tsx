@@ -124,7 +124,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
     );
   };
 
-  const label = "font-mono text-[9px] uppercase tracking-wider text-fg-faint";
+  const label = "font-mono text-[10px] uppercase tracking-wider text-fg-faint";
 
   return (
     <aside className="flex h-full w-[300px] shrink-0 flex-col border-l border-border bg-surface">
@@ -238,7 +238,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                         key={m}
                         onClick={() => setQtyMode(m)}
                         aria-pressed={qtyMode === m}
-                        className={`px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+                        className={`px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
                           qtyMode === m ? "bg-surface-2 text-fg" : "text-fg-faint hover:text-fg-dim"
                         }`}
                       >
@@ -348,7 +348,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                 {err}
               </div>
             )}
-            <div className="mt-2 text-center font-mono text-[9px] uppercase tracking-widest text-fg-faint">
+            <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-fg-faint">
               paper only · not advice
             </div>
           </div>
@@ -541,7 +541,7 @@ function DomLadder({ symbol, price, onPick }: { symbol: string; price: number | 
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+      <div className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
         {symbol} · click a price to use it
       </div>
       {rows.map((r) => (
@@ -554,7 +554,7 @@ function DomLadder({ symbol, price, onPick }: { symbol: string; price: number | 
           <span className="text-fg">{fmt(r.price, 2)}</span>
         </button>
       ))}
-      <div className="px-3 py-2 font-mono text-[9px] leading-relaxed text-fg-faint">
+      <div className="px-3 py-2 font-mono text-[10px] leading-relaxed text-fg-faint">
         Illustrative ladder — this paper account has no level-2 feed, so no sizes
         are shown rather than invented ones.
       </div>

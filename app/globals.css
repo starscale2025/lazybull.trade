@@ -9,7 +9,10 @@
   --border-soft: #161616;
   --fg: #f5f5f0;
   --fg-dim: #8a8a82;
-  --fg-faint: #4a4a44;
+  /* RADAR default: ≥4.5:1 on #050505. The old #4a4a44 (~2.3:1) carried
+     hundreds of 9–11px labels — text that failed to exist. The whisper
+     aesthetic survives as the opt-in STEALTH mode below. */
+  --fg-faint: #767670;
   --bull: #00ff87;
   --bull-dim: #00b85f;
   --bear: #ff2e63;
@@ -19,6 +22,21 @@
   --plasma: #c9ff00;
   --grid: rgba(245, 245, 240, 0.05);
   --grid-strong: rgba(245, 245, 240, 0.1);
+}
+
+/* ── STEALTH — the whisper terminal, by choice ─────────────────────────────
+   The original sub-AA faint tier, preserved as an OPT-IN reading mode for
+   operators who want the low-glow fiction (toggle in the footer, persisted,
+   plainly labeled "sub-AA by choice"). Accessibility is the default; the
+   vibe is a reward, never a toll. */
+[data-contrast="stealth"] {
+  --fg-faint: #4a4a44;
+}
+[data-contrast="stealth"] .pro-theme {
+  --fg-faint: #64707d;
+}
+[data-contrast="stealth"][data-theme="light"] {
+  --fg-faint: #9a9a8e;
 }
 
 /* /pro terminal re-skin — the marketing pages keep their stark near-black,
@@ -35,7 +53,7 @@
   --border-soft: #232c36;
   --fg: #eaeef3;
   --fg-dim: #9aa5b1;
-  --fg-faint: #64707d;
+  --fg-faint: #8a99a8; /* ≥4.5:1 on the pro canvas (was #64707d ≈ 3.7:1) */
   --grid: rgba(234, 238, 243, 0.05);
   --grid-strong: rgba(234, 238, 243, 0.1);
 }
@@ -49,7 +67,7 @@
   --border-soft: #e6e4d6;
   --fg: #0c0c0c;
   --fg-dim: #5a5a52;
-  --fg-faint: #9a9a8e;
+  --fg-faint: #6e6e64; /* ≥4.5:1 on the light canvas (was #9a9a8e ≈ 2.6:1) */
   --bull: #00a85a;
   --bull-dim: #00803f;
   --bear: #d61f4a;
@@ -97,7 +115,27 @@ html, body {
   color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "ss01", "ss02", "cv11";
+  /* Real italics ship now (Fraunces style:["normal","italic"] in layout.tsx).
+     This makes the old failure impossible: if an italic face is ever missing
+     again, the browser must NOT fake a slant from the roman. */
+  font-synthesis-style: none;
+}
+
+/* ── THE VOLATILITY WONK ─────────────────────────────────────────────────
+   Fraunces' SOFT/WONK axes were preloaded on every page and never moved —
+   ~120KB of dead weight. Now they're an indicator: the ticker maps the live
+   VIX onto --market-wonk (0 calm → 1 violent), and display type wearing
+   .wonk-type lets the letterforms themselves go slightly feral with the tape.
+   Calm market: composed, upright serifs. VIX spike: wonky cuts, softer
+   terminals. Quantized to 0.1 steps upstream so it breathes, not jitters. */
+/* Chromium neither recomputes var() inside font-variation-settings on
+   dynamic custom-property changes NOR transitions the property reliably.
+   So: this rule only makes late-MOUNTING elements correct via the var;
+   all movement is a JS tween in lib/wonk.ts writing inline values. */
+.wonk-type {
+  font-variation-settings:
+    "WONK" var(--market-wonk, 0),
+    "SOFT" calc(var(--market-wonk, 0) * 60);
 }
 
 ::selection {

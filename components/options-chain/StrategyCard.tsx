@@ -170,7 +170,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             { k: "Net cost", v: `${cost >= 0 ? "" : "+"}$${Math.abs(cost / 100).toFixed(2)}`, c: cost >= 0 ? "text-fg-dim" : "text-bull" },
           ].map((s) => (
             <div key={s.k} className="bg-bg p-3">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{s.k}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
               <div className={`mt-1 font-mono text-base tabular-nums ${s.c}`}>{s.v}</div>
             </div>
           ))}
@@ -180,7 +180,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
       {/* Legs */}
       {legs.length > 0 && (
         <div className="border-t border-border-soft">
-          <div className="grid grid-cols-12 gap-2 border-b border-border-soft bg-bg-soft px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-fg-faint">
+          <div className="grid grid-cols-12 gap-2 border-b border-border-soft bg-bg-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
             <span className="col-span-2">side</span>
             <span className="col-span-2">type</span>
             <span className="col-span-2">strike</span>

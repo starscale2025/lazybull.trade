@@ -1,5 +1,6 @@
 import Link from "next/link";
 import pkg from "../package.json";
+import { ContrastToggle } from "./ContrastToggle";
 
 // Every entry here used to be href="#" — 32 links plus the three legal ones,
 // all of which looked clickable and went nowhere. A link with no destination is
@@ -109,7 +110,7 @@ export function Footer() {
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="1.6"
-          className="select-none font-display leading-[0.82] text-fg"
+          className="wonk-type select-none font-display leading-[0.82] text-fg"
           style={{
             fontSize: "clamp(4rem, 13vw, 13rem)",
             letterSpacing: "-0.02em",
@@ -186,7 +187,7 @@ export function Footer() {
                     >
                       <span className="text-fg-faint">›</span>
                       {l.label}
-                      <span className="text-[9px] uppercase tracking-wider text-fg-faint/70">soon</span>
+                      <span className="text-[10px] uppercase tracking-wider text-fg-faint/70">soon</span>
                     </span>
                   </li>
                 )
@@ -206,6 +207,8 @@ export function Footer() {
             <span>v{pkg.version}</span>
             <span className="text-fg-faint hidden md:inline">·</span>
             <span className="hidden md:inline">region · iad-1</span>
+            <span className="text-fg-faint hidden md:inline">·</span>
+            <ContrastToggle />
           </div>
           <div className="flex items-center gap-3">
             <span>© 2026 lazybull labs</span>

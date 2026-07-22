@@ -258,7 +258,7 @@ function AggregateVerdict({
             <div className="font-display text-2xl tracking-tightest text-fg">
               {agreeing} <span className="text-fg-faint">of</span> {total}
             </div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">
+            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
               models agree
             </div>
           </div>
@@ -280,7 +280,7 @@ function AggregateVerdict({
           { l: "warn", v: counts.warn, c: "text-amber" },
         ].map((row) => (
           <div key={row.l} className="bg-bg p-2 text-center">
-            <div className="font-mono text-[9px] uppercase tracking-wider text-fg-faint">{row.l}</div>
+            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{row.l}</div>
             <div className={`font-mono text-base tabular-nums ${row.c}`}>{row.v}</div>
           </div>
         ))}

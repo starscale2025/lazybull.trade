@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { applyWonk, wonkFromVix } from "@/lib/wonk";
 
 const SYMBOLS = [
   "AMZN", "NVDA", "TSLA", "AAPL", "MSFT", "AMD",
@@ -48,6 +49,12 @@ export function TickerBar() {
           setQuotes(j.quotes);
           const ms = j.quotes.find((q: Quote) => q.sym === "SPY")?.marketState;
           if (ms) setMarketState(ms);
+          // The Volatility Wonk: the live VIX drives Fraunces' WONK/SOFT axes
+          // (see lib/wonk.ts and .wonk-type in globals.css).
+          const vix = j.quotes.find((q: Quote) => q.sym === "^VIX")?.last;
+          if (typeof vix === "number" && Number.isFinite(vix)) {
+            applyWonk(wonkFromVix(vix));
+          }
         }
       } catch {
         /* keep prior quotes on transient error */
