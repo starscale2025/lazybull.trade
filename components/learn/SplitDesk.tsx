@@ -20,6 +20,17 @@ import { Predict, type PredictConfig } from "./Predict";
 
 export type Regime = "trend" | "random" | "revert" | "risk" | "options";
 
+// The regime → accent used for the living-page hue. Set inline on .learn-hue
+// so the DECLARED value changes each swap and `transition: color` fires
+// (a var that mutates underneath a transition freezes — the WONK lesson).
+const ACCENT: Record<Regime, string> = {
+  trend: "var(--bull)",
+  random: "var(--fg-dim)",
+  revert: "var(--cyan)",
+  risk: "var(--amber)",
+  options: "var(--plasma)",
+};
+
 export type DeskChapter = {
   num: string;
   id: string;
@@ -131,8 +142,13 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
       className="relative grid border-b border-border lg:grid-cols-[minmax(0,1fr)_minmax(0,46%)]"
       data-regime={current.regime}
     >
+      {/* living-page layers: regime hue (cross-fades with the active chapter)
+          + VIX-driven grain. Behind the columns, non-interactive. */}
+      <div className="learn-hue" style={{ color: ACCENT[current.regime] }} aria-hidden />
+      <div className="learn-grain" aria-hidden />
+
       {/* LEFT — the book */}
-      <div className="relative">
+      <div className="relative z-[1]">
         {chapters.map((ch, i) => (
           <section
             key={ch.id}
@@ -150,7 +166,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
       </div>
 
       {/* RIGHT — the terminal (sticky) */}
-      <div className="relative border-l border-border">
+      <div className="relative z-[1] border-l border-border">
         <div className="sticky top-14 flex h-[calc(100dvh-3.5rem)] flex-col justify-center px-5 py-8 xl:px-8">
           <DeskFrame label={`TERMINAL §${current.num}`} hint={current.hint} live>
             <div className="relative">

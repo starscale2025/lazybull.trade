@@ -27,6 +27,7 @@ import { DataStreamRail } from "@/components/learn/ambient/DataStreamRail";
 import { ScrollScrub, ScrubBeat } from "@/components/atmosphere/ScrollScrub";
 import { SplitDesk, type DeskChapter } from "@/components/learn/SplitDesk";
 import type { PredictConfig } from "@/components/learn/Predict";
+import { LivingPage } from "@/components/learn/LivingPage";
 
 export const metadata = {
   title: "Learn · Lazybull",
@@ -363,6 +364,8 @@ export default function LearnPage() {
     <main className="flex min-h-screen flex-col bg-bg text-fg">
       {/* Boot intro */}
       <BootSequence />
+      {/* Live VIX → --learn-vix (the page breathes with market fear) */}
+      <LivingPage />
       {/* Sticky chrome */}
       <ScrollProgressBar />
       <LiveBadge />
