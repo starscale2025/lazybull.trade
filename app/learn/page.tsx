@@ -17,13 +17,11 @@ import { LearnProbabilityComparison } from "@/components/learn/LearnProbabilityC
 
 // Ambient motion
 import { BootSequence } from "@/components/learn/ambient/BootSequence";
-import { ScrollProgressBar } from "@/components/learn/ambient/ScrollProgressBar";
-import { SectionIndex } from "@/components/learn/ambient/SectionIndex";
 import { TickerStrip } from "@/components/learn/ambient/TickerStrip";
 import { AnimatedDivider } from "@/components/learn/ambient/AnimatedDivider";
 import { BigStat } from "@/components/learn/ambient/BigStat";
-import { LiveBadge } from "@/components/learn/ambient/LiveBadge";
-import { DataStreamRail } from "@/components/learn/ambient/DataStreamRail";
+import { ChapterNav } from "@/components/learn/ChapterNav";
+import { Diploma } from "@/components/learn/Diploma";
 import { ScrollScrub, ScrubBeat } from "@/components/atmosphere/ScrollScrub";
 import { SplitDesk, type DeskChapter } from "@/components/learn/SplitDesk";
 import type { PredictConfig } from "@/components/learn/Predict";
@@ -366,11 +364,10 @@ export default function LearnPage() {
       <BootSequence />
       {/* Live VIX → --learn-vix (the page breathes with market fear) */}
       <LivingPage />
-      {/* Sticky chrome */}
-      <ScrollProgressBar />
-      <LiveBadge />
-      <SectionIndex />
-      <DataStreamRail />
+      {/* One navigator: named chapters + jump, the learning equity curve, the
+          LIVE pulse, and the mobile progress bar — folds in what used to be
+          SectionIndex + ScrollProgressBar + LiveBadge (DataStreamRail retired). */}
+      <ChapterNav />
 
       <TickerBar />
       <Nav />
@@ -992,6 +989,9 @@ export default {
             href="/learn/bots"
           />
         </div>
+
+        {/* The payoff: your paper diploma, tallying the shots you called. */}
+        <Diploma />
 
         <div className="mt-20 border-t border-border pt-12">
           <div className="grid grid-cols-12 gap-6">

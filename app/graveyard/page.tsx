@@ -70,6 +70,12 @@ export default function Graveyard() {
           made the cut.
         </p>
 
+        <p className="mt-4 text-center font-mono text-[11px] leading-relaxed text-fg-faint">
+          And four rails retired when /learn became the Desk — SectionIndex, ScrollProgressBar,
+          LiveBadge, DataStreamRail (237 lines) — seven decorative systems folded into one
+          named navigator.
+        </p>
+
         <div className="mt-8 border-t border-border-soft pt-6 text-center font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
           scripts/guard.mjs watches the gate now · nothing dead ships again
         </div>
