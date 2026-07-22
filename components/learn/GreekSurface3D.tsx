@@ -18,7 +18,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { priceOption, type Greeks } from "@/lib/pricing";
-import { subscribeFrame } from "@/lib/ambient-clock";
+import { subscribeFrame, useInView } from "@/lib/ambient-clock";
 
 type GreekKey = "delta" | "gamma" | "theta" | "vega";
 
@@ -64,6 +64,7 @@ export function GreekSurface3D() {
   const dragging = useRef(false);
   const grid = useMemo(() => buildGrid(greek), [greek]);
   const accent = GREEKS.find((g) => g.key === greek)!.accent;
+  const inView = useInView(canvasRef, "100px"); // gates the idle spin (mobile mounts every demo)
 
   // Imperative draw — reads rotation refs, so idle spin and drag never
   // re-render React.
@@ -147,16 +148,18 @@ export function GreekSurface3D() {
     return () => window.removeEventListener("resize", onResize);
   }, [draw]);
 
-  // Idle auto-spin on the ambient clock (frozen in hidden tabs; skipped for
-  // reduced motion). Drag pauses it.
+  // Idle auto-spin on the ambient clock — only while on screen (mobile mounts
+  // all demos at once), frozen in hidden tabs, skipped for reduced motion.
+  // Drag pauses it.
   useEffect(() => {
+    if (!inView) return;
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     return subscribeFrame((_now, dt) => {
       if (dragging.current) return;
       yaw.current += dt * 0.18;
       draw();
     });
-  }, [draw]);
+  }, [draw, inView]);
 
   // Pointer orbit.
   const onDown = (e: React.PointerEvent) => {
