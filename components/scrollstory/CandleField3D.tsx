@@ -13,6 +13,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
 import { Grid, Line } from "@react-three/drei";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { CANDLE3D, CANDLE_BUILD_END, candleLabT } from "@/lib/cinema";
 
@@ -182,8 +183,11 @@ function useCrystalGeometry(fallback: THREE.BufferGeometry) {
   useEffect(() => {
     let disposed = false;
     let loaded: THREE.BufferGeometry | null = null;
-    import("three/examples/jsm/loaders/GLTFLoader.js").then(({ GLTFLoader }) => {
-      if (disposed) return;
+    // STATIC import (top of file), not a nested dynamic one: this component is
+    // already inside the cinema's lazy chunk, and the extra async boundary
+    // here split the module graph so the bundle shipped three.js TWICE
+    // (2 × 852KB, both with WebGLRenderer — 34% of the static payload).
+    {
       new GLTFLoader().load(
         "/models/candle-crystal.glb",
         (gltf) => {
@@ -210,7 +214,7 @@ function useCrystalGeometry(fallback: THREE.BufferGeometry) {
         undefined,
         () => {} // load failure → keep the box
       );
-    });
+    }
     return () => {
       disposed = true;
       loaded?.dispose();

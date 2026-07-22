@@ -25,6 +25,9 @@ const SECTIONS = [
 
 export function SectionIndex() {
   const [active, setActive] = useState(0);
+  // The rail YIELDS: it used to squat over the hero stat cards at the top and
+  // the footer link columns at the end. Now it only exists between them.
+  const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
     const onScroll = () => {
@@ -38,6 +41,11 @@ export function SectionIndex() {
         }
       }
       setActive(found);
+      const hero = document.getElementById("hero");
+      const footer = document.querySelector("footer");
+      const heroGone = hero ? hero.getBoundingClientRect().bottom < window.innerHeight * 0.55 : true;
+      const footerIn = footer ? footer.getBoundingClientRect().top < window.innerHeight : false;
+      setHidden(!heroGone || footerIn);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -46,7 +54,8 @@ export function SectionIndex() {
 
   return (
     <nav
-      className="fixed right-4 top-1/2 z-[40] hidden -translate-y-1/2 xl:block"
+      className="fixed right-4 top-1/2 z-[40] hidden -translate-y-1/2 transition-opacity duration-300 xl:block"
+      style={{ opacity: hidden ? 0 : 1, pointerEvents: hidden ? "none" : "auto" }}
       aria-label="Chapter navigation"
     >
       <div className="border border-border bg-bg/70 backdrop-blur-md px-2 py-3">

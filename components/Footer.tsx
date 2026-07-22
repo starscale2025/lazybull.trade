@@ -210,20 +210,22 @@ export function Footer() {
           <div className="flex items-center gap-3">
             <span>© 2026 lazybull labs</span>
             <span className="text-fg-faint">·</span>
-            {/* These need real reviewed copy before they can be links — a dead
-                legal link on a trading-education product is worse than none. */}
-            <span className="cursor-default text-fg-faint/70" title="Coming soon">privacy</span>
+            {/* Real pages now — the Honesty Ledger (plain-English clauses, each
+                with a what-this-means note). */}
+            <Link href="/privacy" className="hover:text-fg">privacy</Link>
             <span className="text-fg-faint">·</span>
-            <span className="cursor-default text-fg-faint/70" title="Coming soon">terms</span>
+            <Link href="/terms" className="hover:text-fg">terms</Link>
             <span className="text-fg-faint">·</span>
             <Link href="/learn#now-go" className="hover:text-fg">safety</Link>
           </div>
         </div>
       </div>
 
-      {/* Disclaimer — confidently visible. Safety story is brand, not fine print. */}
+      {/* Disclaimer — confidently visible. Safety story is brand, not fine print.
+          Capped at a readable measure (was a 150-char full-width line) and given
+          right-side clearance so no floating control ever sits on legal text. */}
       <div className="relative border-t border-border bg-bg">
-        <p className="mx-auto max-w-[1400px] px-5 py-5 font-mono text-[11px] leading-relaxed text-fg-dim">
+        <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 font-mono text-[11px] leading-relaxed text-fg-dim sm:pr-5">
           LAZYBULL is an educational platform for learning about options. We do
           not accept real funds, are not a registered broker-dealer, and do not
           provide investment advice. Paper-trading results are simulated using

@@ -80,19 +80,42 @@ export function bollinger(closes: number[], period = 20, mult = 2) {
   return { mid, upper, lower };
 }
 
+/**
+ * VWAP. Session-anchored on intraday bars (cumulative sums reset at each new
+ * calendar day); series-anchored on daily-and-coarser bars — because a
+ * "session" VWAP of a daily bar is just its typical price, which is a line
+ * that teaches nothing. Anchoring is decided from the bar spacing.
+ *
+ * HISTORY: this function shipped comparing a date string against a string
+ * LENGTH, so the sums reset every bar and the "VWAP" the default workspace
+ * drew was typical price in a trench coat. The regression is pinned by
+ * __tests__/pro-indicators.test.ts — the test imports THIS module, the one
+ * that is actually on screen.
+ */
 export function vwap(bars: Bar[]): Series {
   const out: Series = new Array(bars.length).fill(null);
+  if (!bars.length) return out;
+  // The MINIMUM bar spacing is the true bar interval — intraday series always
+  // contain adjacent same-session bars, while their overnight jumps are
+  // outliers a median could land on. Min < 20h ⇒ intraday ⇒ session anchors.
+  let minGap = Infinity;
+  for (let i = 1; i < Math.min(bars.length, 40); i++) {
+    const g = bars[i].t - bars[i - 1].t;
+    if (g > 0 && g < minGap) minGap = g;
+  }
+  const intraday = Number.isFinite(minGap) && minGap < 20 * 3_600_000;
+
   let cumPv = 0;
   let cumV = 0;
-  let lastDay = -1;
+  let lastDay = "";
   for (let i = 0; i < bars.length; i++) {
-    const day = new Date(bars[i].t).toDateString().length; // simple, recomputed below
-    const dayKey = new Date(bars[i].t).toDateString();
-    // reset on session change (UTC day) — close-enough for demo
-    if (dayKey !== `${lastDay}`) {
-      cumPv = 0;
-      cumV = 0;
-      lastDay = day;
+    if (intraday) {
+      const dayKey = new Date(bars[i].t).toDateString();
+      if (dayKey !== lastDay) {
+        cumPv = 0;
+        cumV = 0;
+        lastDay = dayKey;
+      }
     }
     const tp = (bars[i].h + bars[i].l + bars[i].c) / 3;
     cumPv += tp * bars[i].v;

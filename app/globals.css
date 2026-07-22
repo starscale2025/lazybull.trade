@@ -105,6 +105,36 @@ html, body {
   color: var(--bg);
 }
 
+/* THE FOCUS LAW (WCAG 2.4.7). Deliberately UNLAYERED so it outranks every
+   Tailwind `outline-none` utility (utilities live in a cascade layer;
+   unlayered styles win) — there were 31 of them and a keyboard user tabbed
+   this terminal by faith. Keyboard focus is always visible, everywhere;
+   mouse focus stays quiet via :focus-visible. */
+:focus-visible {
+  outline: 2px solid var(--bull);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* Skip link — hidden until it IS the focus. */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 12px;
+  z-index: 200;
+  padding: 8px 14px;
+  background: var(--bull);
+  color: var(--bg);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: top 0.15s ease-out;
+}
+.skip-link:focus-visible {
+  top: 12px;
+}
+
 /* Grid backgrounds */
 .bg-grid {
   background-image:
@@ -167,6 +197,18 @@ html, body {
 
 .marquee-reverse {
   animation: marquee-reverse 60s linear infinite;
+}
+
+/* WCAG 2.2.2: the ticker is auto-moving, infinite, and on every page — it
+   must stop for prefers-reduced-motion AND be pausable by control. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee, .marquee-slow, .marquee-reverse { animation: none; }
+  .pulse-dot { animation: none; }
+}
+.marquee-paused .marquee,
+.marquee-paused .marquee-slow,
+.marquee-paused .marquee-reverse {
+  animation-play-state: paused;
 }
 
 /* Ticker pulse */

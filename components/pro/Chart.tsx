@@ -20,7 +20,20 @@ import {
   distToSeg,
   type Bar,
 } from "./chartCore";
-import { bollinger, ema, ichimoku, macd, rsi, supertrend, vwap } from "./indicators";
+import { bollinger, ema, ichimoku, macd, rsi, supertrend, vwap, type Series } from "./indicators";
+
+/** Every indicator's exact shape — inferred from the math module itself so a
+    renamed field breaks the build here instead of blanking a legend. */
+type IndicatorData = {
+  ema20?: Series;
+  ema50?: Series;
+  rsi?: Series;
+  macd?: ReturnType<typeof macd>;
+  bb?: ReturnType<typeof bollinger>;
+  vwap?: Series;
+  ichi?: ReturnType<typeof ichimoku>;
+  st?: ReturnType<typeof supertrend>;
+};
 
 export type Alert = { id: string; price: number; cond: "above" | "below"; note?: string; triggered?: boolean };
 
@@ -514,8 +527,12 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
   // ── derived series
   const closes = useMemo(() => bars.map((b) => b.c), [bars]);
-  const ind = useMemo(() => {
-    const out: Record<string, unknown> = {};
+  const ind = useMemo((): IndicatorData => {
+    // Typed per-id shapes, NOT Record<string, unknown>: the legend once read
+    // `.histogram` off a shape that only has `.hist` and the compiler was
+    // structurally prevented from noticing — the MACD legend value silently
+    // never rendered.
+    const out: IndicatorData = {};
     if (indicators.includes("ema20")) out.ema20 = ema(closes, 20);
     if (indicators.includes("ema50")) out.ema50 = ema(closes, 50);
     if (indicators.includes("rsi")) out.rsi = rsi(closes, 14);
@@ -671,12 +688,12 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
         {/* Indicator overlays — Bollinger Bands fill */}
         {indicators.includes("bb") && (
-          <BBOverlay bb={ind.bb as { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] }} bars={bars} vp={vp} geom={geom} />
+          <BBOverlay bb={ind.bb!} bars={bars} vp={vp} geom={geom} />
         )}
 
         {/* Ichimoku cloud */}
         {indicators.includes("ichimoku") && (
-          <IchimokuOverlay ichi={ind.ichi as { conv: (number | null)[]; base: (number | null)[]; spanA: (number | null)[]; spanB: (number | null)[] }} bars={bars} vp={vp} geom={geom} />
+          <IchimokuOverlay ichi={ind.ichi!} bars={bars} vp={vp} geom={geom} />
         )}
 
         {/* price series — style selected in the TopBar switcher */}
@@ -740,16 +757,16 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
         {/* Indicator overlay lines (drawn on top of candles) */}
         {indicators.includes("ema20") && (
-          <SeriesLine values={ind.ema20 as (number | null)[]} bars={bars} vp={vp} geom={geom} color="#22d3ee" />
+          <SeriesLine values={ind.ema20!} bars={bars} vp={vp} geom={geom} color="#22d3ee" />
         )}
         {indicators.includes("ema50") && (
-          <SeriesLine values={ind.ema50 as (number | null)[]} bars={bars} vp={vp} geom={geom} color="#a78bfa" />
+          <SeriesLine values={ind.ema50!} bars={bars} vp={vp} geom={geom} color="#a78bfa" />
         )}
         {indicators.includes("vwap") && (
-          <SeriesLine values={ind.vwap as (number | null)[]} bars={bars} vp={vp} geom={geom} color="#ffb800" />
+          <SeriesLine values={ind.vwap!} bars={bars} vp={vp} geom={geom} color="#ffb800" />
         )}
         {indicators.includes("supertrend") && (
-          <SeriesLine values={(ind.st as { trend: (number | null)[] }).trend} bars={bars} vp={vp} geom={geom} color="#ff2e63" dashed />
+          <SeriesLine values={ind.st!.trend} bars={bars} vp={vp} geom={geom} color="#ff2e63" dashed />
         )}
 
         {/* volume — same fast-forward stagger as the candles above */}
@@ -936,6 +953,16 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 <g
                   role="button"
                   aria-label={`Cancel ${tag} order at ${fmt(o.price, 2)}`}
+                  // aria that promises a button must deliver one: reachable
+                  // by Tab, fired by Enter/Space (WCAG 2.1.1 / 4.1.2).
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onCancelOrder(o.id);
+                    }
+                  }}
                   className="cursor-pointer"
                   // The chart pans/draws on mousedown — cancelling must not
                   // also start a drawing underneath.
@@ -1014,6 +1041,14 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 <g
                   role="button"
                   aria-label="Close position at market"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onClosePosition();
+                    }
+                  }}
                   className="cursor-pointer"
                   // The chart svg pans/draws on mousedown — the ✕ must not
                   // start a drawing while closing a position.
@@ -1050,13 +1085,13 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         {bottomPanes.map((paneId, idx) => {
           const top = subPaneTops[idx];
           if (paneId === "rsi") {
-            const rsiVals = ind.rsi as (number | null)[];
+            const rsiVals = ind.rsi!;
             return (
               <RsiPane key="rsi" values={rsiVals} bars={bars} vp={vp} top={top} height={paneH} chartW={size.w} padL={geom.padL} padR={geom.padR} />
             );
           }
           if (paneId === "macd") {
-            const m = ind.macd as { line: (number | null)[]; signal: (number | null)[]; hist: (number | null)[] };
+            const m = ind.macd!;
             return <MacdPane key="macd" m={m} bars={bars} vp={vp} top={top} height={paneH} chartW={size.w} padL={geom.padL} padR={geom.padR} />;
           }
           return null;
@@ -1161,6 +1196,15 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 <span className="size-1.5 rounded-full" style={{ background: meta.color }} />
                 <span className="text-fg-dim">{meta.label}</span>
                 {v != null && <span className="tabular-nums text-fg">{fmt(v, 2)}</span>}
+                {VERIFIED_MATH[id] && (
+                  <span
+                    className="pointer-events-auto cursor-help text-bull/80"
+                    title={VERIFIED_MATH[id]}
+                    aria-label={`${meta.label} formula, verified: ${VERIFIED_MATH[id]}`}
+                  >
+                    ✓
+                  </span>
+                )}
                 {onRemoveIndicator && (
                   <button
                     onClick={() => onRemoveIndicator(id)}
@@ -1276,18 +1320,34 @@ const IND_META: Record<string, { label: string; color: string }> = {
   supertrend: { label: "Supertrend", color: "var(--bear)" },
 };
 
+/**
+ * VERIFIED MATH — every line on this chart carries its own proof. The text is
+ * the formula plus the literal test that pins it; the tests import
+ * components/pro/indicators.ts, the module that is actually on screen.
+ * An education product's math should never be taken on faith — including ours:
+ * VWAP shipped broken once (see the history note in indicators.ts).
+ */
+const VERIFIED_MATH: Record<string, string> = {
+  ema20: "EMA(20): αP + (1−α)·EMA₋₁, α = 2/21 — pinned by __tests__/pro-indicators.test.ts",
+  ema50: "EMA(50): αP + (1−α)·EMA₋₁, α = 2/51 — pinned by __tests__/pro-indicators.test.ts",
+  vwap: "VWAP: Σ(typical·vol) / Σvol, session-anchored intraday, series-anchored on daily — pinned by __tests__/pro-indicators.test.ts (incl. the regression for the bug we shipped)",
+  rsi: "RSI(14): 100 − 100/(1+RS), Wilder smoothing — pinned by __tests__/pro-indicators.test.ts",
+  macd: "MACD(12,26,9): hist = (EMA12−EMA26) − signal — pinned by __tests__/pro-indicators.test.ts",
+  bb: "Bollinger(20,2): SMA ± 2σ — pinned by __tests__/pro-indicators.test.ts",
+};
+
 /** The value a legend row shows at bar `i` — null when the shape has no single number. */
-function indicatorValueAt(id: string, ind: Record<string, unknown>, i: number): number | null {
-  const arr = (v: unknown): number | null => {
-    const x = Array.isArray(v) ? (v as (number | null)[])[i] : null;
+function indicatorValueAt(id: string, ind: IndicatorData, i: number): number | null {
+  const arr = (v: Series | undefined): number | null => {
+    const x = v?.[i];
     return typeof x === "number" && Number.isFinite(x) ? x : null;
   };
   if (id === "ema20") return arr(ind.ema20);
   if (id === "ema50") return arr(ind.ema50);
   if (id === "vwap") return arr(ind.vwap);
   if (id === "rsi") return arr(ind.rsi);
-  if (id === "macd") return arr((ind.macd as { histogram?: unknown } | undefined)?.histogram);
-  if (id === "bb") return arr((ind.bb as { mid?: unknown } | undefined)?.mid);
+  if (id === "macd") return arr(ind.macd?.hist);
+  if (id === "bb") return arr(ind.bb?.mid);
   // ichimoku / supertrend are multi-line shapes; a single number would lie.
   return null;
 }

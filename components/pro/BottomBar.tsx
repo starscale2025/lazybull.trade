@@ -32,8 +32,10 @@ export function BottomBar({
     return () => clearInterval(id);
   }, []);
 
+  // pr-16 reserves the voice-FAB corner — the mic used to sit ON the status
+  // clock (and the panel's reset button above). Dock system lands in Phase 1.
   return (
-    <div className="flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 font-mono text-[10px] uppercase tracking-wider">
+    <div className="flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 pr-16 font-mono text-[10px] uppercase tracking-wider">
       <div className="flex items-center gap-1">
         {PRESETS.map((p) => (
           <button

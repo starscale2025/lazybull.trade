@@ -36,12 +36,20 @@ export function BigStat({
   size?: "lg" | "md" | "sm";
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(0);
+  // Starts AT the value, not 0: SSR markup, screenshots, and any paint before
+  // the observer fires must show the truth — a hero stat caught reading
+  // "0 BOTS IN THE REGISTRY" looks broken, not animated. The count-up snaps
+  // to 0 only at the moment it actually starts playing.
+  const [shown, setShown] = useState(value);
   const [seen, setSeen] = useState(false);
   const color = TONE_COLOR[tone];
 
   useEffect(() => {
     if (!ref.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setSeen(true); // underline still lands; the number never scrambles
+      return;
+    }
     // Cancel the count-up on unmount — it used to keep calling setShown on a
     // dead component for the full duration.
     let raf = 0;
@@ -70,7 +78,8 @@ export function BigStat({
     };
   }, [value, seen, duration]);
 
-  const display = decimals === 0 ? Math.floor(shown).toString() : shown.toFixed(decimals);
+  const safe = Math.max(0, shown); // a stat block can never read negative
+  const display = decimals === 0 ? Math.floor(safe).toString() : safe.toFixed(decimals);
   const fontSize =
     size === "lg" ? "clamp(4.5rem, 11vw, 9rem)" : size === "md" ? "clamp(3rem, 6vw, 6rem)" : "clamp(2rem, 4vw, 4rem)";
 

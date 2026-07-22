@@ -276,7 +276,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
       )}
 
       {/* title bar — always visible, like a docked window's chrome */}
-      <div className="flex items-center gap-2 border-b border-border-soft bg-surface px-3 py-1.5">
+      {/* pr-16: keep RESET FUNDS and the window controls clear of the voice
+          FAB pinned at bottom-right (Dock system comes in Phase 1). */}
+      <div className="flex items-center gap-2 border-b border-border-soft bg-surface px-3 pr-16 py-1.5">
         <button
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}

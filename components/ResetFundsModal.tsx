@@ -29,6 +29,7 @@ export function ResetFundsModal({
   const trades = usePaper((s) => s.trades);
   const bets = usePaper((s) => s.positions);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const openPositions = Object.values(shares).filter((p) => p && p.qty !== 0).length;
   const workingOrders = orders.filter((o) => o.status === "working").length;
@@ -43,6 +44,24 @@ export function ResetFundsModal({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
+      // Focus trap: aria-modal told assistive tech the background is gone —
+      // Tab must not be allowed to wander into it anyway.
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && (active === last || !dialogRef.current.contains(active))) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -60,7 +79,7 @@ export function ResetFundsModal({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="w-[440px] max-w-full border border-bear/50 bg-surface shadow-2xl">
+      <div ref={dialogRef} className="w-[440px] max-w-full border border-bear/50 bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-bear/30 bg-bear/10 px-4 py-2.5">
           <span className="font-mono text-[13px] text-bear">⚠</span>
           <h2 id="reset-funds-title" className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-bear">

@@ -14,10 +14,12 @@ const ss = (a: number, b: number, x: number) => {
 };
 
 // Lazy so three.js only loads for users who actually get the cinema (not the
-// reduced-motion static fallback, and not until after first paint).
-const Bull3D = lazy(() => import("./Bull3D"));
-const CandleField3D = lazy(() => import("./CandleField3D"));
-const Tunnel3D = lazy(() => import("./Tunnel3D"));
+// reduced-motion static fallback, and not until after first paint) — but
+// through ONE boundary (three-stage.ts): three separate lazy chunks used to
+// duplicate the entire three.js graph, shipping WebGLRenderer twice.
+const Bull3D = lazy(() => import("./three-stage").then((m) => ({ default: m.Bull3D })));
+const CandleField3D = lazy(() => import("./three-stage").then((m) => ({ default: m.CandleField3D })));
+const Tunnel3D = lazy(() => import("./three-stage").then((m) => ({ default: m.Tunnel3D })));
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -89,6 +91,11 @@ export function ScrollCinema() {
   // panel screenshots, three.js and the bull model are all loaded — then the
   // scroll animation is enabled. No more scrolling into half-loaded frames.
   const [loading, setLoading] = useState(true);
+  // After the play-once collapse, the heavy children UNMOUNT (React state, not
+  // display:none) so R3F disposes all three WebGL contexts, composer targets
+  // and GLB geometry — hiding the section used to pin tens of MB of GPU
+  // memory under a display:none div for the life of the page.
+  const [dead, setDead] = useState(false);
   const [loadPct, setLoadPct] = useState(8);
   const [reveal, setReveal] = useState(false);
   // gate held >10s → show "still loading" + a skip-to-static choice (we never
@@ -203,12 +210,18 @@ export function ScrollCinema() {
         if (Math.abs(delta) > 1) window.scrollBy(0, delta);
       };
       keepHeroInPlace();
+      // Played through (or skipped) once — never replay the toll booth. The
+      // no-navbar IA sends every logo click back to "/", so without this flag
+      // anonymous users re-entered the scroll-locked preloader every time.
+      try { localStorage.setItem("lb-cinema-seen", "1"); } catch {}
       requestAnimationFrame(() => {
         keepHeroInPlace();
         rootStyle.overflowAnchor = prevAnchor;
         // Removing 1400vh invalidates every other ScrollTrigger's start/end
         // (e.g. the footer's data-gsap reveals) — recompute so they still fire.
         ScrollTrigger.refresh();
+        // Now that layout has settled, free the GPU: unmount canvases + iframe.
+        setDead(true);
       });
     };
     collapseRef.current = collapse; // let the Skip button trigger the same collapse
@@ -484,7 +497,7 @@ export function ScrollCinema() {
     // loader now holds until everything the cinema plays is actually here.
     // Failures stay non-fatal (allSettled): a dead chunk/GLB reveals with its
     // 2D fallback — slow is not broken, and broken still degrades gracefully.
-    const GATE_STEPS = 6; // scene+shots · 3 chunks · 2 GLBs → the REAL progress bar
+    const GATE_STEPS = 4; // scene+shots · the ONE three-stage chunk · 2 GLBs → the REAL progress bar
     let gateDone = 0;
     const step = <T,>(p: Promise<T>): Promise<T> => {
       const bump = () => {
@@ -496,9 +509,7 @@ export function ScrollCinema() {
       return p;
     };
     const extras = Promise.allSettled([
-      step(import("./Bull3D")),
-      step(import("./CandleField3D")),
-      step(import("./Tunnel3D")),
+      step(import("./three-stage")),
       step(fetch("/models/bull-crystal.glb").then((r) => r.arrayBuffer())),
       step(fetch("/models/candle-crystal.glb").then((r) => r.arrayBuffer())),
     ]);
@@ -539,6 +550,7 @@ export function ScrollCinema() {
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
       rootStyle.overflow = prevOverflow;
+      try { localStorage.setItem("lb-cinema-seen", "1"); } catch {}
       setMode("static");
     };
     Promise.all([step(shotsLoaded), extras, minTime]).then(reveal).catch(() => {
@@ -655,19 +667,20 @@ export function ScrollCinema() {
             </span>
             <span className="tabular-nums text-bull/90">{Math.round(loadPct)}%</span>
           </div>
-          {/* >10s in the gate: name the wait and offer the static page instead —
-              a choice, never an automatic half-loaded reveal */}
-          <div
-            className="relative flex flex-col items-center gap-3 transition-opacity duration-500"
-            style={{ opacity: slowLoad ? 1 : 0, pointerEvents: slowLoad ? "auto" : "none" }}
-          >
-            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+          {/* The exit is available from second 0 — for the first 10 seconds of a
+              slow load this overlay used to cover the only skip button, leaving
+              no way out of a locked scroll. */}
+          <div className="relative flex flex-col items-center gap-3">
+            <div
+              className="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-faint transition-opacity duration-500"
+              style={{ opacity: slowLoad ? 1 : 0 }}
+            >
               still loading the heavy bits…
             </div>
             <button
               type="button"
               onClick={() => bailToStaticRef.current?.()}
-              className="border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
+              className="pointer-events-auto border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
             >
               Skip intro →
             </button>
@@ -684,6 +697,7 @@ export function ScrollCinema() {
           the section — otherwise the section's opaque bg stays over the real Hero
           in the -100vh overlap and the handoff reveals black instead of the page. */}
       <div ref={stickyRef} className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg">
+        {!dead && (<>
         <iframe
           ref={frameRef}
           src="/cinema/scene.html"
@@ -722,6 +736,7 @@ export function ScrollCinema() {
             <Bull3D active={bull3dActive} onReady={handleBullReady} />
           </Suspense>
         </div>
+        </>)}
         {/* film grain layer: scanlines + vignette unify the 2D and 3D acts */}
         <div className="pointer-events-none absolute inset-0 scanlines opacity-[0.13]" />
         <div

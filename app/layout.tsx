@@ -44,8 +44,17 @@ export default function RootLayout({
       className={`${fraunces.variable} ${jetbrainsMono.variable} ${funnel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-fg selection:bg-bull selection:text-bg">
+        <a href="#main" className="skip-link">
+          skip to content
+        </a>
         <SessionProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          {/* display:contents — a real <main> landmark and skip target with
+              ZERO layout effect on the flex chains inside. */}
+          <ThemeProvider>
+            <main id="main" className="contents">
+              {children}
+            </main>
+          </ThemeProvider>
           {/* Cross-device paper-account replication — needs the session. */}
           <PaperSync />
           {/* Product events: one page_view per route change. */}

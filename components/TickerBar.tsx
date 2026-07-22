@@ -68,6 +68,7 @@ export function TickerBar() {
     return () => clearInterval(id);
   }, []);
 
+  const [paused, setPaused] = useState(false);
   const items = quotes.length > 0 ? [...quotes, ...quotes] : [];
   const stateLabel =
     marketState === "REGULAR" ? "NYSE OPEN" :
@@ -77,12 +78,23 @@ export function TickerBar() {
     "WAITING…";
 
   return (
-    <div className="relative overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider">
+    <div
+      className={`relative overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
+    >
       <div className="absolute inset-y-0 left-0 z-10 flex items-center gap-2 bg-bg pl-3 pr-4 border-r border-border">
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
         <span className="text-bull">LIVE</span>
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim hidden sm:inline">{stateLabel}</span>
+        {/* WCAG 2.2.2 — an auto-moving ticker on every page must be pausable */}
+        <button
+          onClick={() => setPaused((v) => !v)}
+          aria-pressed={paused}
+          aria-label={paused ? "Resume ticker scrolling" : "Pause ticker scrolling"}
+          className="ml-1 text-fg-faint transition-colors hover:text-fg"
+        >
+          {paused ? "▶" : "⏸"}
+        </button>
       </div>
       <div className="flex marquee gap-8 py-2 pl-32">
         {items.length === 0 ? (

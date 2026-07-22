@@ -189,7 +189,7 @@ export function OptionsChain({ underlying, spot }: Props) {
           <span className="text-right">iv</span>
         </div>
 
-        <div role="grid" aria-label="options chain" className="select-none">
+        <div aria-label="options chain" className="select-none">
           {strikes.map((K, rowIdx) => {
             const row = byStrike.get(K)!;
             const atm = Math.abs(K - spot) < 1.2;
@@ -203,14 +203,24 @@ export function OptionsChain({ underlying, spot }: Props) {
             return (
               <div
                 key={K}
-                role="row"
                 className={`grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft px-3 py-2 font-mono text-[11px] tabular-nums transition-colors ${
                   atm ? "bg-bull/[0.04]" : ""
                 }`}
               >
-                {/* CALL side cell (one button covering bid/ask area for selection) */}
+                {/* CALL side cell (one button covering bid/ask area for selection).
+                    Keyboard is first-class (WCAG 2.1.1): Enter/Space toggles a
+                    long leg, Shift+Enter shorts — mousedown alone made these
+                    <button>s announce as buttons and then answer to nothing. */}
                 <button
                   onMouseDown={() => onDragStart(row.call, "long")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onDragStart(row.call, e.shiftKey ? "short" : "long");
+                    }
+                  }}
+                  aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} call, bid ${row.call.bid.toFixed(2)}, ask ${row.call.ask.toFixed(2)}${callSelected ? ", selected" : ""}. Enter to go long, Shift+Enter to short.`}
+                  aria-pressed={callSelected}
                   onMouseEnter={(e) =>
                     setHover({ cell: row.call, x: e.currentTarget.offsetLeft, y: e.currentTarget.offsetTop })
                   }
@@ -245,6 +255,14 @@ export function OptionsChain({ underlying, spot }: Props) {
                 {/* PUT side cell */}
                 <button
                   onMouseDown={() => onDragStart(row.put, "long")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onDragStart(row.put, e.shiftKey ? "short" : "long");
+                    }
+                  }}
+                  aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} put, bid ${row.put.bid.toFixed(2)}, ask ${row.put.ask.toFixed(2)}${putSelected ? ", selected" : ""}. Enter to go long, Shift+Enter to short.`}
+                  aria-pressed={putSelected}
                   onMouseEnter={(e) =>
                     setHover({ cell: row.put, x: e.currentTarget.offsetLeft, y: e.currentTarget.offsetTop })
                   }

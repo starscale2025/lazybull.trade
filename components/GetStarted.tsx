@@ -140,7 +140,9 @@ export function GetStarted() {
           <span className="size-1.5 rounded-full bg-bull pulse-dot" /> paper-only · $0 at risk, ever
         </span>
 
-        <h2
+        {/* The page's h1 — it used to live inside CrystalHero, a component
+            that was never mounted, leaving the landing led by an h2. */}
+        <h1
           className="font-display text-fg"
           style={{ fontSize: "clamp(2.75rem, 7.5vw, 6rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 0 40px rgba(0,0,0,0.6)" }}
         >
@@ -151,7 +153,7 @@ export function GetStarted() {
           <span className="text-bull crt-flicker" style={{ marginLeft: "-0.04em" }}>
             .
           </span>
-        </h2>
+        </h1>
 
         <p className="max-w-xl font-mono text-sm leading-relaxed text-fg-dim md:text-base">
           27 bots, 13 models and 8 live demos in one terminal. Learn it, backtest it,
