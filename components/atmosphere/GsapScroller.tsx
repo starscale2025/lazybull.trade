@@ -76,9 +76,11 @@ export function GsapScroller() {
 
     const wire = (root: ParentNode = document) => {
       const els = root.querySelectorAll<HTMLElement>("[data-gsap]");
+      let wiredAny = false;
       els.forEach((el) => {
         if (wired.has(el)) return;
         wired.add(el);
+        wiredAny = true;
 
         const pattern = el.dataset.gsap;
         if (!pattern) return;
@@ -194,7 +196,10 @@ export function GsapScroller() {
           }
         }
       });
-      ScrollTrigger.refresh();
+      // Only re-measure every trigger when this pass actually wired something.
+      // The MutationObserver fires on unrelated DOM churn (toasts, live regions,
+      // the ticker) — a full ScrollTrigger.refresh() on each was pure waste.
+      if (wiredAny) ScrollTrigger.refresh();
     };
 
     // Initial pass.
@@ -223,12 +228,19 @@ export function GsapScroller() {
     mo.observe(document.body, { childList: true, subtree: true });
 
     // Refresh on resize / font load — layout shifts invalidate triggers.
-    const onResize = () => ScrollTrigger.refresh();
+    // DEBOUNCED: a raw resize handler ran a full re-measure of every trigger
+    // on every one of the dozens of events a drag-resize fires.
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 180);
+    };
     window.addEventListener("resize", onResize);
     document.fonts?.ready?.then(() => ScrollTrigger.refresh());
 
     return () => {
       mo.disconnect();
+      if (resizeTimer) clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };

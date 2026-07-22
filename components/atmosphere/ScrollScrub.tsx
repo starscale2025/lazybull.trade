@@ -15,6 +15,7 @@
 // wrapper, and beat helpers can fade copy in/out per progress range.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { subscribeFrame } from "@/lib/ambient-clock";
 
 export function scrubFrameSrc(base: string, i: number) {
   return `${base}/f-${String(i).padStart(3, "0")}.webp`;
@@ -77,7 +78,7 @@ export function ScrollScrub({
     const frames: (HTMLImageElement | null)[] = Array(frameCount).fill(null);
     let started = false;
     let disposed = false;
-    let raf = 0;
+    let unsubTick: (() => void) | null = null;
     let target = 0;
     let current = -1; // force first draw
     let drawnIdx = -1;
@@ -136,14 +137,6 @@ export function ScrollScrub({
       for (let k = 0; k < CONCURRENCY; k++) next();
     };
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) startLoading();
-      },
-      { rootMargin: "200% 0px" }
-    );
-    io.observe(section);
-
     const tick = () => {
       if (disposed) return;
       const rect = section.getBoundingClientRect();
@@ -156,13 +149,32 @@ export function ScrollScrub({
         draw(idx);
       }
       section.style.setProperty("--scrub", current.toFixed(4));
-      raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
+
+    // The tick used to be a permanent rAF from mount — a getBoundingClientRect
+    // + CSS-var write every frame for the life of the page even when the
+    // section was nowhere near the viewport. Now the SAME IntersectionObserver
+    // that triggers loading also gates the tick: it rides the shared ambient
+    // clock only while the section is on/near screen (and freezes with the
+    // tab), then unsubscribes.
+    const io = new IntersectionObserver(
+      (entries) => {
+        const onScreen = entries.some((e) => e.isIntersecting);
+        if (onScreen) {
+          startLoading();
+          if (!unsubTick) unsubTick = subscribeFrame(tick);
+        } else if (unsubTick) {
+          unsubTick();
+          unsubTick = null;
+        }
+      },
+      { rootMargin: "200% 0px" }
+    );
+    io.observe(section);
 
     return () => {
       disposed = true;
-      cancelAnimationFrame(raf);
+      unsubTick?.();
       io.disconnect();
     };
   }, [base, frameCount]);

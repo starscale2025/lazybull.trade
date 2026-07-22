@@ -8,8 +8,11 @@
  * comma, slash, plus) passes through unchanged so the silhouette of the
  * number stays recognisable while the digits resolve.
  *
- * Drives an rAF loop, not a `setInterval`, so the scramble animates at
- * monitor refresh rate and pauses when the tab is backgrounded.
+ * Rides the shared ambient clock (lib/ambient-clock) and writes each frame's
+ * scramble straight to the span's textContent via a ref — NOT setState. The
+ * quant run-all cascade fires dozens of these at once; the old per-frame
+ * setState stacked dozens of React commits per frame. Now zero re-renders
+ * happen during the scramble; React only renders the final value once.
  *
  * `active` lets the parent (BotCell) gate when the animation plays — the
  * scramble runs only during the `decimating` phase. Outside that window,
@@ -17,7 +20,8 @@
  * snapshot tests, and copy-paste all see the real number.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { subscribeFrame } from "@/lib/ambient-clock";
 
 const GLYPHS = "0123456789ΔΣΩαβγλμπφ▓▒░╱╲┃┣┫";
 
@@ -47,28 +51,26 @@ export function DecimatedNumber({
   active?: boolean;
   className?: string;
 }) {
-  const [display, setDisplay] = useState(active ? scrambleAll(value) : value);
-  const rafRef = useRef<number | null>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (!active) {
-      setDisplay(value);
-      return;
-    }
+    const node = spanRef.current;
+    if (!node) return;
 
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setDisplay(value);
+    if (!active || reduce) {
+      node.textContent = value;
       return;
     }
 
-    const start = performance.now();
+    node.textContent = scrambleAll(value);
+    let start = 0;
 
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(1, elapsed / duration);
+    const unsub = subscribeFrame((now) => {
+      if (!start) start = now;
+      const progress = Math.min(1, (now - start) / duration);
 
       // Resolve characters left-to-right with a small lead-in so the very
       // last digit doesn't sit alone scrambling.
@@ -77,34 +79,26 @@ export function DecimatedNumber({
       let out = "";
       for (let i = 0; i < value.length; i++) {
         const ch = value[i];
-        if (i < resolveCount) {
-          out += ch;
-        } else if (/[A-Za-z0-9]/.test(ch)) {
-          out += randomGlyph(ch);
-        } else {
-          // Punctuation passes through so the shape of the number is stable.
-          out += ch;
-        }
+        if (i < resolveCount) out += ch;
+        else if (/[A-Za-z0-9]/.test(ch)) out += randomGlyph(ch);
+        // Punctuation passes through so the shape of the number is stable.
+        else out += ch;
       }
-      setDisplay(out);
+      node.textContent = out;
 
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        setDisplay(value);
-        rafRef.current = null;
+      if (progress >= 1) {
+        node.textContent = value;
+        unsub();
       }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
+    });
+    return unsub;
   }, [value, duration, active]);
 
+  // Initial paint: the resolved value (or a scramble that the effect
+  // immediately takes over). aria-label always carries the true value.
   return (
-    <span className={className} aria-label={value}>
-      {display}
+    <span ref={spanRef} className={className} aria-label={value}>
+      {value}
     </span>
   );
 }

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "cinema:capture": "node scripts/cinema/capture.mjs"
+    "cinema:capture": "node scripts/cinema/capture.mjs",
+    "guard": "node scripts/guard.mjs",
+    "verify": "tsc --noEmit && vitest run && next build && node scripts/guard.mjs"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.2",

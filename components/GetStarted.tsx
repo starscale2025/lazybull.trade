@@ -34,17 +34,18 @@ const lazyLoop = (el: HTMLVideoElement | null) => {
   el.muted = true;
   if (el.dataset.lazyloop) return; // ref callbacks re-run; wire once
   el.dataset.lazyloop = "1";
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Keep observing (the old code disconnected after first play): a 1.2MB webm
+  // decoding in a loop forever once seen was a battery tax by design. Now it
+  // plays when on screen and PAUSES when it scrolls away.
   const io = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          el.play().catch(() => {});
-        }
-        io.disconnect();
+        if (entry.isIntersecting && !reduce) el.play().catch(() => {});
+        else el.pause();
       }
     },
-    { rootMargin: "600px 0px" } // start fetching a beat before it scrolls in
+    { rootMargin: "300px 0px" }
   );
   io.observe(el);
 };
