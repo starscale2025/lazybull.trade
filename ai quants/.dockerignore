@@ -1,0 +1,13 @@
+# Keep the image lean — but NOTE: weights/ is deliberately NOT ignored here.
+# It's gitignored (reproducible), yet the running service needs it, so it must
+# ship inside the image.
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.DS_Store
+data/cache/
+graphify-out/
+INTEGRATION/
+*.log
+.git/
