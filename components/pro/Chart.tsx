@@ -21,6 +21,7 @@ import {
   type Bar,
 } from "./chartCore";
 import { bollinger, ema, ichimoku, macd, rsi, supertrend, vwap, type Series } from "./indicators";
+import { narrate } from "@/lib/narrator";
 
 /** Every indicator's exact shape — inferred from the math module itself so a
     renamed field breaks the build here instead of blanking a legend. */
@@ -494,6 +495,28 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     onMouseUp();
   };
 
+  // 1,255 bars finally have words: focus the chart and the arrow keys step a
+  // keyboard crosshair bar-by-bar (Home/End jump, Escape clears). The hover
+  // subscribers draw it exactly like a mouse crosshair, and each step is
+  // narrated politely for screen readers.
+  const kbIdxRef = useRef<number | null>(null);
+  const onChartKeyDown = (e: React.KeyboardEvent) => {
+    if (!bars.length) return;
+    const step = (delta: number) => {
+      const cur = kbIdxRef.current ?? bars.length - 1;
+      const next = Math.max(0, Math.min(bars.length - 1, cur + delta));
+      kbIdxRef.current = next;
+      const b = bars[next];
+      setHover({ x: xOfBar(next, vp, geom), y: yOfPrice(b.c, vp, geom) });
+      narrate(`${fmtTime(b.t)}: open ${fmt(b.o, 2)}, high ${fmt(b.h, 2)}, low ${fmt(b.l, 2)}, close ${fmt(b.c, 2)}.`);
+    };
+    if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+    else if (e.key === "Home") { e.preventDefault(); kbIdxRef.current = null; step(-(bars.length)); }
+    else if (e.key === "End") { e.preventDefault(); kbIdxRef.current = null; step(0); }
+    else if (e.key === "Escape") { kbIdxRef.current = null; setHover(null); }
+  };
+
   // Wheel zoom — bound as a native non-passive listener so preventDefault()
   // actually cancels the browser pinch-zoom (Ctrl+wheel from trackpad).
   // React's synthetic onWheel is passive, where preventDefault is a silent no-op.
@@ -694,6 +717,14 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         width="100%"
         height="100%"
         viewBox={`0 0 ${size.w} ${size.h}`}
+        // The chart has words now: focusable, self-describing, and the arrow
+        // keys walk a narrated keyboard crosshair (WCAG 2.1.1 — this surface
+        // previously had zero keyboard reach and zero text alternative).
+        tabIndex={0}
+        role="application"
+        aria-roledescription="price chart"
+        aria-label={`${symbol} ${timeframe} chart, ${bars.length} bars, last close ${fmt(last.c, 2)}. Arrow keys step through bars, Escape clears.`}
+        onKeyDown={onChartKeyDown}
         onMouseMove={onMouseMove}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}

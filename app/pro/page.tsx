@@ -22,6 +22,7 @@ import { computeAnalysis } from "@/lib/pro/voice/analysis";
 import { usePaper } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { patchLastBar, reconcileBars } from "@/lib/live-bars";
+import { registerCommands } from "@/lib/command-deck";
 
 const PRESET_TO_LASTN: Record<string, number> = {
   "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
@@ -524,6 +525,24 @@ export default function ProPage() {
 
   // ── trade drawer
   const onTrade = () => setTradeOpen(true);
+
+  // The desk's actions, addressable from the ⌘K Command Deck — hotkeys shown
+  // where a direct one exists, so the deck doubles as the shortcut reference.
+  useEffect(() => {
+    return registerCommands("pro", [
+      { id: "pro-search", label: "Search symbol / change interval", group: "chart", hotkey: "any key", run: () => setSearch({ open: true, seed: "" }) },
+      { id: "pro-log", label: logScale ? "Switch to linear scale" : "Switch to log scale", group: "chart", run: () => setLogScale((v) => !v) },
+      { id: "pro-replay", label: "Start bar replay", group: "chart", run: startReplay },
+      { id: "pro-trade", label: "Open the trade ticket", group: "trade", run: onTrade },
+      { id: "pro-save", label: "Save · share workspace", group: "workspace", run: () => void saveWorkspace() },
+      { id: "pro-undo", label: "Undo drawing", group: "chart", hotkey: "⌘Z", run: undo },
+      { id: "pro-tool-trend", label: "Trend line tool", group: "tools", hotkey: "⌥T", run: () => setTool("trendline") },
+      { id: "pro-tool-horiz", label: "Horizontal line tool", group: "tools", hotkey: "⌥H", run: () => setTool("horizontal") },
+      { id: "pro-tool-fib", label: "Fib retracement tool", group: "tools", hotkey: "⌥F", run: () => setTool("fib") },
+      { id: "pro-fullscreen", label: "Toggle fullscreen", group: "view", run: () => void toggleFullscreen() },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logScale]);
 
   // ── replay activation
   const startReplay = () => {

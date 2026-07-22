@@ -7,6 +7,8 @@ import { SessionProvider } from "@/components/SessionProvider";
 import { PaperSync } from "@/components/PaperSync";
 import { Tracker } from "@/components/Tracker";
 import { DockProvider } from "@/components/Dock";
+import { CommandDeck } from "@/components/CommandDeck";
+import { Narrator } from "@/components/Narrator";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
 
 const fraunces = Fraunces({
@@ -70,6 +72,10 @@ export default function RootLayout({
           <PaperSync />
           {/* Product events: one page_view per route change. */}
           <Tracker />
+          {/* ⌘K — every action on the desk, keyboard-first. */}
+          <CommandDeck />
+          {/* The terminal's spoken voice: fills, kill switch, resets → aria-live. */}
+          <Narrator />
         </SessionProvider>
         {/* Daily-loss guard: global, because share trades now book from /pro
             and /quant too, and the limit has to be watched everywhere. */}

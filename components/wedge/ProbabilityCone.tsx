@@ -111,13 +111,13 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const xExpiry = xOf(totalBars - 1);
 
   // ── interactions
-  const screenY = (e: React.MouseEvent | MouseEvent) => {
+  const screenY = (e: { clientY: number }) => {
     const rect = wrapRef.current!.getBoundingClientRect();
-    return (e as MouseEvent).clientY - rect.top;
+    return e.clientY - rect.top;
   };
-  const screenX = (e: React.MouseEvent | MouseEvent) => {
+  const screenX = (e: { clientX: number }) => {
     const rect = wrapRef.current!.getBoundingClientRect();
-    return (e as MouseEvent).clientX - rect.left;
+    return e.clientX - rect.left;
   };
 
   // The band had no price floor — only a low<high ordering check. Since the
@@ -129,11 +129,15 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const CEIL = spot * 10;
   const clampPrice = (v: number) => Math.max(FLOOR, Math.min(CEIL, v));
 
-  const startDrag = (which: "low" | "high" | "both" | "expiry", e: React.MouseEvent) => {
+  // Pointer events end-to-end (the audit's "mouse-only corpse on touch"):
+  // pointermove/up/cancel on window serves mouse, pen AND touch; the handles
+  // set touch-action:none so the browser never steals the gesture for scroll.
+  const startDrag = (which: "low" | "high" | "both" | "expiry", e: React.PointerEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (which === "expiry") {
       dragRef.current = { which: null, startY: 0, startLow: low, startHigh: high, startTimeX: screenX(e), startDays: daysToExpiry };
-      const onMove = (ev: MouseEvent) => {
+      const onMove = (ev: PointerEvent) => {
         const dx = screenX(ev) - (dragRef.current!.startTimeX as number);
         const days = (dragRef.current!.startDays as number) + Math.round((dx / inW) * (totalBars - histN));
         onChangeDays?.(Math.max(1, Math.min(365, days)));
@@ -144,16 +148,18 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
       };
       const detach = () => {
         detachRef.current = null;
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
       };
       detachRef.current = detach;
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
       return;
     }
     dragRef.current = { which, startY: screenY(e), startLow: low, startHigh: high };
-    const onMove = (ev: MouseEvent) => {
+    const onMove = (ev: PointerEvent) => {
       const dy = screenY(ev) - dragRef.current!.startY;
       const dPrice = (dy / inH) * (maxPrice - minPrice);
       if (dragRef.current!.which === "low") {
@@ -176,12 +182,14 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
     };
     const detach = () => {
       detachRef.current = null;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
     detachRef.current = detach;
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   };
 
   // y ticks
@@ -209,6 +217,39 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
 
   return (
     <div ref={wrapRef} className="relative h-full w-full select-none overflow-hidden bg-bg">
+      {/* Typed fallback for the band (WCAG 2.5.1 — the drag is never the only
+          path): on touch the drag was a mouse-only corpse and the whole page
+          priced off a default band the user never chose. */}
+      <div className="absolute left-2 top-2 z-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <label className="flex items-center gap-1">
+          hi
+          <input
+            type="number"
+            value={Number(high.toFixed(2))}
+            step={1}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              if (Number.isFinite(v)) onChangeHigh(clampPrice(Math.max(low + 0.5, v)));
+            }}
+            aria-label="Band high price"
+            className="w-16 border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bull outline-none focus:border-bull"
+          />
+        </label>
+        <label className="flex items-center gap-1">
+          lo
+          <input
+            type="number"
+            value={Number(low.toFixed(2))}
+            step={1}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              if (Number.isFinite(v)) onChangeLow(clampPrice(Math.min(high - 0.5, v)));
+            }}
+            aria-label="Band low price"
+            className="w-16 border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bear outline-none focus:border-bear"
+          />
+        </label>
+      </div>
       <svg width="100%" height="100%" viewBox={`0 0 ${size.w} ${size.h}`}>
         <defs>
           <linearGradient id="cone-grad" x1="0" x2="1" y1="0" y2="0">
@@ -267,12 +308,12 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           stroke="var(--bull)"
           strokeOpacity="0.5"
           strokeDasharray="6 3"
-          onMouseDown={(e) => startDrag("both", e)}
-          style={{ cursor: "grab" }}
+          onPointerDown={(e) => startDrag("both", e)}
+          style={{ cursor: "grab", touchAction: "none" }}
         />
 
         {/* High handle */}
-        <g onMouseDown={(e) => startDrag("high", e)} style={{ cursor: "ns-resize" }}>
+        <g onPointerDown={(e) => startDrag("high", e)} style={{ cursor: "ns-resize", touchAction: "none" }}>
           <line x1={xOf(histN - 1)} x2={xExpiry} y1={yHigh} y2={yHigh} stroke="var(--bull)" strokeWidth="1.4" />
           <rect x={size.w - PAD.R + 2} y={yHigh - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
           <text x={size.w - PAD.R / 2} y={yHigh + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
@@ -280,7 +321,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           </text>
         </g>
         {/* Low handle */}
-        <g onMouseDown={(e) => startDrag("low", e)} style={{ cursor: "ns-resize" }}>
+        <g onPointerDown={(e) => startDrag("low", e)} style={{ cursor: "ns-resize", touchAction: "none" }}>
           <line x1={xOf(histN - 1)} x2={xExpiry} y1={yLow} y2={yLow} stroke="var(--bull)" strokeWidth="1.4" />
           <rect x={size.w - PAD.R + 2} y={yLow - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
           <text x={size.w - PAD.R / 2} y={yLow + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
@@ -313,7 +354,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         })()}
 
         {/* Expiry handle (drag along x) */}
-        <g onMouseDown={(e) => startDrag("expiry", e)} style={{ cursor: "ew-resize" }}>
+        <g onPointerDown={(e) => startDrag("expiry", e)} style={{ cursor: "ew-resize", touchAction: "none" }}>
           <line x1={xExpiry} x2={xExpiry} y1={PAD.T} y2={size.h - PAD.B} stroke="var(--amber)" strokeWidth="1.4" strokeDasharray="2 4" />
           <rect x={xExpiry - 36} y={PAD.T} width="72" height="16" fill="var(--amber)" />
           <text x={xExpiry} y={PAD.T + 11} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fontWeight="600" fill="var(--bg)">

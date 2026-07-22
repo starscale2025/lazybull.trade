@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { modelRead, quantRead } from "@/lib/bet-analysis";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { track } from "@/lib/track";
+import { narrate } from "@/lib/narrator";
 import { usePaper, useSafety, useStrategy } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { detect } from "@/lib/detector";
@@ -164,6 +165,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
       jury_conf: reads?.quant.confidence ?? null,
       model_p_up: reads?.model.pUp ?? null,
     });
+    narrate(`Bet placed — ${dir} $${stake.toLocaleString()} on ${symbol} at ${mark.toFixed(2)}.`);
     setPlaced(`${dir === "up" ? "▲ UP" : "▼ DOWN"} $${stake.toLocaleString()} on ${symbol} @ ${mark.toFixed(2)}`);
   };
 

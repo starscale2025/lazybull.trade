@@ -75,6 +75,13 @@ export function OptionsChain({ underlying, spot }: Props) {
     return map;
   }, [chain]);
 
+  // key → cell lookup for elementFromPoint hit-testing during drag-select
+  const cellByKey = useMemo(() => {
+    const m = new Map<string, ChainCell>();
+    for (const cell of chain) m.set(`${cell.expiry}|${cell.strike}|${cell.type}`, cell);
+    return m;
+  }, [chain]);
+
   // IV range for heatmap normalization
   const ivRange = useMemo(() => {
     const ivs = chain.map((c) => c.iv);
@@ -85,31 +92,90 @@ export function OptionsChain({ underlying, spot }: Props) {
   const selected = useStrategy((s) => s.selected);
   const toggle = useStrategy((s) => s.toggle);
 
-  // Drag selection
-  const dragRef = useRef<{ active: boolean; touched: Set<string> }>({ active: false, touched: new Set() });
-  const onDragStart = (cell: ChainCell, side: "long" | "short") => {
-    dragRef.current.active = true;
-    dragRef.current.touched.clear();
-    const key = `${cell.expiry}|${cell.strike}|${cell.type}`;
-    dragRef.current.touched.add(key);
-    toggle(cell, side);
-  };
-  const onDragEnter = (cell: ChainCell, side: "long" | "short") => {
-    if (!dragRef.current.active) return;
-    const key = `${cell.expiry}|${cell.strike}|${cell.type}`;
-    if (dragRef.current.touched.has(key)) return;
-    dragRef.current.touched.add(key);
-    toggle(cell, side);
-  };
-  useEffect(() => {
-    const stop = () => (dragRef.current.active = false);
-    window.addEventListener("mouseup", stop);
-    window.addEventListener("touchend", stop);
-    return () => {
-      window.removeEventListener("mouseup", stop);
-      window.removeEventListener("touchend", stop);
+  // ── the selection grammar, pointer-native (WCAG 2.5.1: the gesture is never
+  // the only path — the LONG/SHORT control below arms the tap side):
+  //   tap                 → toggle leg with the ARMED side
+  //   drag across cells   → multi-select with the armed side (elementFromPoint
+  //                         hit-testing; the old mouseover wiring was a corpse
+  //                         on touch)
+  //   drag DOWN on a cell → SHORT that leg — you literally pull the strike
+  //                         under the line (fine pointers; touch scrolls, so
+  //                         touch shorts via the armed control)
+  //   right-click         → short (desktop bonus, kept)
+  //   Enter / Shift+Enter → armed side / opposite (keyboard)
+  const [armedSide, setArmedSide] = useState<"long" | "short">("long");
+  const cellKey = (c: ChainCell) => `${c.expiry}|${c.strike}|${c.type}`;
+  const gestureRef = useRef<{
+    origin: ChainCell;
+    startX: number;
+    startY: number;
+    fine: boolean;
+    touched: Set<string>;
+    multi: boolean;
+    done: boolean;
+  } | null>(null);
+
+  const SHORT_DRAG_PX = 26;
+
+  const onCellPointerDown = (cell: ChainCell, e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {
+      /* capture is an optimization (keeps moves flowing off-element); a
+         browser refusing it must not kill the gesture */
+    }
+    gestureRef.current = {
+      origin: cell,
+      startX: e.clientX,
+      startY: e.clientY,
+      fine: e.pointerType !== "touch",
+      touched: new Set([cellKey(cell)]),
+      multi: false,
+      done: false,
     };
-  }, []);
+  };
+
+  const onCellPointerMove = (e: React.PointerEvent) => {
+    const g = gestureRef.current;
+    if (!g || g.done) return;
+    const dx = e.clientX - g.startX;
+    const dy = e.clientY - g.startY;
+    // drag-to-short: pull the origin cell downward past the threshold
+    if (g.fine && !g.multi && dy > SHORT_DRAG_PX && Math.abs(dx) < 40) {
+      g.done = true;
+      toggle(g.origin, "short");
+      navigator.vibrate?.(12);
+      return;
+    }
+    // cross-cell drag-select (any pointer type)
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.("[data-ck]") as HTMLElement | null;
+    const ck = el?.dataset.ck;
+    if (ck && !g.touched.has(ck)) {
+      const target = cellByKey.get(ck);
+      if (target) {
+        if (!g.multi) {
+          // entering multi mode: the origin cell joins the selection too
+          g.multi = true;
+          toggle(g.origin, armedSide);
+        }
+        g.touched.add(ck);
+        toggle(target, armedSide);
+      }
+    }
+  };
+
+  const onCellPointerUp = (e: React.PointerEvent) => {
+    const g = gestureRef.current;
+    gestureRef.current = null;
+    if (!g || g.done || g.multi) return;
+    const moved = Math.hypot(e.clientX - g.startX, e.clientY - g.startY);
+    if (moved < 10) toggle(g.origin, armedSide); // a tap
+  };
+
+  const onCellPointerCancel = () => {
+    gestureRef.current = null;
+  };
 
   // Tooltip state (hover)
   const [hover, setHover] = useState<{ cell: ChainCell; x: number; y: number } | null>(null);
@@ -151,6 +217,34 @@ export function OptionsChain({ underlying, spot }: Props) {
               {e.label} <span className="text-fg-faint ml-1">{e.daysToExpiry}d</span>
             </button>
           ))}
+        </div>
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          {/* the ARMED side for taps/keyboard — the drag-down-to-short gesture
+              is a shortcut, never the only path (WCAG 2.5.1) */}
+          <span className="text-fg-faint">tap =</span>
+          <span className="inline-flex border border-border" role="group" aria-label="Side armed for tap">
+            <button
+              onClick={() => setArmedSide("long")}
+              aria-pressed={armedSide === "long"}
+              className={`px-2 py-0.5 font-semibold transition-colors ${
+                armedSide === "long" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
+              }`}
+            >
+              LONG
+            </button>
+            <button
+              onClick={() => setArmedSide("short")}
+              aria-pressed={armedSide === "short"}
+              className={`px-2 py-0.5 font-semibold transition-colors ${
+                armedSide === "short" ? "bg-bear text-bg" : "bg-bg text-fg-faint hover:text-fg"
+              }`}
+            >
+              SHORT
+            </button>
+          </span>
+          <span className="hidden text-fg-faint lg:inline" title="On mouse/pen: press a cell and pull it downward past ~26px to short it directly">
+            · drag ↓ = short
+          </span>
         </div>
         <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           <span>IV heatmap</span>
@@ -212,29 +306,32 @@ export function OptionsChain({ underlying, spot }: Props) {
                     long leg, Shift+Enter shorts — mousedown alone made these
                     <button>s announce as buttons and then answer to nothing. */}
                 <button
-                  onMouseDown={() => onDragStart(row.call, "long")}
+                  data-ck={`${row.call.expiry}|${row.call.strike}|C`}
+                  onPointerDown={(e) => onCellPointerDown(row.call, e)}
+                  onPointerMove={onCellPointerMove}
+                  onPointerUp={onCellPointerUp}
+                  onPointerCancel={onCellPointerCancel}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      onDragStart(row.call, e.shiftKey ? "short" : "long");
+                      toggle(row.call, e.shiftKey ? (armedSide === "long" ? "short" : "long") : armedSide);
                     }
                   }}
-                  aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} call, bid ${row.call.bid.toFixed(2)}, ask ${row.call.ask.toFixed(2)}${callSelected ? ", selected" : ""}. Enter to go long, Shift+Enter to short.`}
+                  aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} call, bid ${row.call.bid.toFixed(2)}, ask ${row.call.ask.toFixed(2)}${callSelected ? ", selected" : ""}. Enter to go ${armedSide}, Shift+Enter for the opposite.`}
                   aria-pressed={callSelected}
+                  style={{ touchAction: "pan-y", backgroundColor: callSelected ? undefined : callBg }}
                   onMouseEnter={(e) =>
                     setHover({ cell: row.call, x: e.currentTarget.offsetLeft, y: e.currentTarget.offsetTop })
                   }
-                  onMouseOver={() => onDragEnter(row.call, "long")}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    onDragStart(row.call, "short");
+                    toggle(row.call, "short");
                   }}
                   className={`col-span-5 grid grid-cols-5 items-center gap-1 border px-2 py-1 text-left transition-all ${
                     callSelected
                       ? "border-bull bg-bull/15 text-fg"
                       : "border-transparent text-fg-dim hover:border-bull/40 hover:text-fg"
                   }`}
-                  style={{ backgroundColor: callSelected ? undefined : callBg }}
                 >
                   <span className="text-fg-faint">{(row.call.iv * 100).toFixed(0)}%</span>
                   <span className="text-right">{row.call.vol}</span>
@@ -254,29 +351,32 @@ export function OptionsChain({ underlying, spot }: Props) {
 
                 {/* PUT side cell */}
                 <button
-                  onMouseDown={() => onDragStart(row.put, "long")}
+                  data-ck={`${row.put.expiry}|${row.put.strike}|P`}
+                  onPointerDown={(e) => onCellPointerDown(row.put, e)}
+                  onPointerMove={onCellPointerMove}
+                  onPointerUp={onCellPointerUp}
+                  onPointerCancel={onCellPointerCancel}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      onDragStart(row.put, e.shiftKey ? "short" : "long");
+                      toggle(row.put, e.shiftKey ? (armedSide === "long" ? "short" : "long") : armedSide);
                     }
                   }}
-                  aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} put, bid ${row.put.bid.toFixed(2)}, ask ${row.put.ask.toFixed(2)}${putSelected ? ", selected" : ""}. Enter to go long, Shift+Enter to short.`}
+                  aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} put, bid ${row.put.bid.toFixed(2)}, ask ${row.put.ask.toFixed(2)}${putSelected ? ", selected" : ""}. Enter to go ${armedSide}, Shift+Enter for the opposite.`}
                   aria-pressed={putSelected}
+                  style={{ touchAction: "pan-y", backgroundColor: putSelected ? undefined : putBg }}
                   onMouseEnter={(e) =>
                     setHover({ cell: row.put, x: e.currentTarget.offsetLeft, y: e.currentTarget.offsetTop })
                   }
-                  onMouseOver={() => onDragEnter(row.put, "long")}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    onDragStart(row.put, "short");
+                    toggle(row.put, "short");
                   }}
                   className={`col-span-5 grid grid-cols-5 items-center gap-1 border px-2 py-1 text-left transition-all ${
                     putSelected
                       ? "border-bear bg-bear/15 text-fg"
                       : "border-transparent text-fg-dim hover:border-bear/40 hover:text-fg"
                   }`}
-                  style={{ backgroundColor: putSelected ? undefined : putBg }}
                 >
                   <span className="text-bear">{row.put.bid.toFixed(2)}</span>
                   <span className="text-right text-bear">{row.put.ask.toFixed(2)}</span>
