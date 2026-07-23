@@ -1,6 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY", "QQQ", "BTC", "META", "MSFT", "GOOG"];
+
+/** Live countdown to the next feed retry, shown when the live feed is throttled
+    so the user knows the tape isn't stuck — it recovers on its own. Owns its
+    own 1s tick so the big hero doesn't re-render every second. */
+function RetryCountdown({ retryAt }: { retryAt?: number | null }) {
+  const [secs, setSecs] = useState<number | null>(null);
+  useEffect(() => {
+    if (!retryAt) {
+      setSecs(null);
+      return;
+    }
+    const tick = () => setSecs(Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [retryAt]);
+  if (secs == null) return null;
+  return <span className="text-amber/80">· live in {secs}s</span>;
+}
 
 /** A "?" that explains a knob on hover/focus — beginners shouldn't have to
     guess what a seed or a drift is before they dare to touch one. */
@@ -45,6 +66,7 @@ export function QuantHero({
   mode,
   setMode,
   dataSource,
+  retryAt,
   syntheticKnobsActive,
 }: {
   symbol: string;
@@ -70,6 +92,8 @@ export function QuantHero({
   /** What the bots are ACTUALLY running on — live mode degrades to "fallback"
       when the feed is down. */
   dataSource: "live" | "seed" | "fallback";
+  /** When the next live-feed retry fires (ms epoch), for the OFFLINE countdown. */
+  retryAt?: number | null;
   /** seed/drift/vol shape the tape only in seed mode. */
   syntheticKnobsActive: boolean;
 }) {
@@ -182,11 +206,19 @@ export function QuantHero({
                   </span>
                   {dataSource === "fallback" ? (
                     <span
-                      className="inline-flex items-center gap-1 border border-amber/50 bg-amber/10 px-1 py-px text-[10px] text-amber"
-                      title="Live feed unreachable — running on the deterministic fallback walk"
+                      className="inline-flex items-center gap-1 border border-amber/50 bg-amber/10 px-1.5 py-px text-[10px] text-amber"
+                      title="The free data feed got rate-limited by the provider, so the bots are on a deterministic stand-in tape. It retries automatically — the live tape returns on its own."
                     >
                       <span className="size-1 rounded-full bg-amber" />
                       OFFLINE
+                      <RetryCountdown retryAt={retryAt} />
+                      <a
+                        href="/pricing"
+                        className="ml-1 border-l border-amber/30 pl-1.5 normal-case text-amber/90 underline-offset-2 hover:text-amber hover:underline"
+                        title="Real-time, un-throttled market data — coming to Pro. See the plans."
+                      >
+                        real-time →
+                      </a>
                     </span>
                   ) : (
                     <span

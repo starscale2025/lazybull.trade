@@ -62,6 +62,8 @@ export function QuantPage() {
   // symbol can never be read as the current one.
   const [live, setLive] = useState<{ key: string; candles: Candle[] } | null>(null);
   const [status, setStatus] = useState<"loading" | "live" | "synthetic">("loading");
+  // When the next live-feed retry fires — powers the OFFLINE "live in Ns" countdown.
+  const [retryAt, setRetryAt] = useState<number | null>(null);
 
   // The freshest known trade, ordered by upstream regularMarketTime — the bars
   // proxy and the spot poll cache separately, so either can be the staler
@@ -85,11 +87,16 @@ export function QuantPage() {
           // A 30s-cached refetch must never walk the tape behind a newer tick.
           setLive({ key, candles: reconcileBars(tail, j.meta, symbol, freshestRef) });
           setStatus("live");
+          setRetryAt(null);
           return;
         }
         setStatus("synthetic");
+        setRetryAt(Date.now() + 30_000); // the poll retries every 30s
       } catch {
-        if (!cancelled) setStatus("synthetic");
+        if (!cancelled) {
+          setStatus("synthetic");
+          setRetryAt(Date.now() + 30_000);
+        }
       }
     };
     void load();
@@ -525,6 +532,7 @@ export function QuantPage() {
         mode={mode}
         setMode={setMode}
         dataSource={dataSource}
+        retryAt={retryAt}
         syntheticKnobsActive={syntheticKnobsActive}
       />
 
