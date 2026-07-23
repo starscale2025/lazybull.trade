@@ -1,0 +1,20 @@
+# Fly.io config for the LAZYBULL quant AI service.
+# If the name "lazybull-quant" is already taken, change `app` to anything unique
+# (and run `fly apps create <that-name>` with the same value).
+app = "lazybull-quant"
+primary_region = "bom"   # Mumbai — the browser calls this service directly, so put it near your users
+
+[build]
+  # uses the Dockerfile in this folder (CPU-only torch)
+
+[http_service]
+  internal_port = 8000
+  force_https = true          # lazybull.us is https; the service must be too
+  auto_stop_machines = "suspend"   # idle → suspended RAM; resumes fast (keeps models loaded)
+  auto_start_machines = true
+  min_machines_running = 0    # cheapest. If a first hit ever still shows "Mock"
+                              # (cold start > the site's 8s timeout), set this to 1.
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "2gb"              # torch + the 11 models need headroom; 1gb may OOM on boot
