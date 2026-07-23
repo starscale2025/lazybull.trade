@@ -22,17 +22,40 @@ export async function GET(req: Request) {
   const symbol = (searchParams.get("symbol") || "AAPL").toUpperCase();
   const tf = searchParams.get("tf") || "D";
   const cfg = RANGE_INTERVAL[tf] ?? RANGE_INTERVAL.D;
+  // Daily/weekly/monthly bars barely move intraday — cache them 5 min so one
+  // fetch serves everyone and Yahoo sees ~10× fewer requests (fewer 429s →
+  // fewer "OFFLINE" fallbacks). Intraday stays fresh at 30s.
+  const cacheS = /^(D|W|M)$/.test(tf) ? 300 : 30;
 
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${cfg.range}&interval=${cfg.interval}&includePrePost=false&events=div%2Csplits`;
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?range=${cfg.range}&interval=${cfg.interval}&includePrePost=false&events=div%2Csplits`;
+  // Yahoo throttles/blocks datacenter IPs (Vercel), which surfaces as "OFFLINE"
+  // on /quant even though the same fetch works from a home IP. A realistic
+  // browser UA + a query1→query2 failover cuts those misses.
+  const UA =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
   try {
-    const r = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (lazybullpro/1.0)" },
-      signal: AbortSignal.timeout(6000), // a blackholed upstream must never wedge the server
-      next: { revalidate: 30 },
-    });
-    if (!r.ok) throw new Error(`yahoo ${r.status}`);
-    const j = await r.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let j: any = null;
+    let lastErr = "yahoo unreachable";
+    for (const host of ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"]) {
+      try {
+        const r = await fetch(host + path, {
+          headers: { "User-Agent": UA, Accept: "application/json" },
+          signal: AbortSignal.timeout(6000), // a blackholed upstream must never wedge the server
+          next: { revalidate: cacheS },
+        });
+        if (!r.ok) {
+          lastErr = `yahoo ${r.status}`;
+          continue;
+        }
+        j = await r.json();
+        break;
+      } catch (e) {
+        lastErr = e instanceof Error ? e.message : String(e);
+      }
+    }
+    if (!j) throw new Error(lastErr);
     const result = j?.chart?.result?.[0];
     if (!result) throw new Error("no result");
     const ts: number[] = result.timestamp || [];
