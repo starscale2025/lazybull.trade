@@ -12,6 +12,7 @@ import type { BotDef, BotContext, BotResult, Metric, Signal } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
 import { snapshotLookup } from "./snapshot";
+import { runSequenceCnn } from "./onnx-cnn";
 
 // Base URL of the FastAPI service. Override with NEXT_PUBLIC_QUANTAI_URL.
 // NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
@@ -23,7 +24,7 @@ const API_BASE =
   (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 const API_HINT = `${API_BASE} · uvicorn serve:app`;
 
-type ApiStatus = "live" | "snapshot" | "mock";
+type ApiStatus = "live" | "device" | "snapshot" | "mock";
 
 async function callApi<T>(
   endpoint: string,
@@ -62,6 +63,16 @@ function statusMetric(status: ApiStatus, note?: string): Metric {
       hint: "live FastAPI inference",
     };
   }
+  if (status === "device") {
+    // The real trained model, run in the browser (onnxruntime-web WASM).
+    return {
+      key: "source",
+      label: "Source",
+      value: "On-device NN",
+      tone: "bull",
+      hint: "ran on your machine (WASM) — the real trained model, no server",
+    };
+  }
   if (status === "snapshot") {
     // Real trained-model output, baked to a daily static snapshot (no server).
     return {
@@ -89,6 +100,9 @@ type ApiBotConfig<TReq, TRes> = {
   request: (ctx: BotContext, p: Record<string, unknown>) => TReq;
   build: (data: TRes, ctx: BotContext, p: Record<string, unknown>) => BotResult;
   mock: (ctx: BotContext, p: Record<string, unknown>) => BotResult;
+  /** Optional on-device inference (onnxruntime-web) — the real model in the
+      browser, no server. Returns an API-shaped result, or null if unavailable. */
+  device?: (ctx: BotContext, p: Record<string, unknown>) => Promise<TRes | null>;
 };
 
 function aiBot<TReq, TRes>(
@@ -111,7 +125,16 @@ function aiBot<TReq, TRes>(
           liveErr = (err instanceof Error ? err.message : String(err)).slice(0, 120);
         }
       }
-      // 2. baked snapshot — real trained-model output, no server needed.
+      // 2. on-device NN — the real trained model in your browser (free tier).
+      if (cfg.device) {
+        try {
+          const data = await cfg.device(ctx, p);
+          if (data) return withStatus(cfg.build(data, ctx, p), "device");
+        } catch {
+          /* fall through */
+        }
+      }
+      // 3. baked snapshot — real trained-model output, no server needed.
       try {
         const ticker = (req as { ticker?: string })?.ticker;
         const snap = await snapshotLookup<TRes>(base.endpoint, ticker);
@@ -119,7 +142,7 @@ function aiBot<TReq, TRes>(
       } catch {
         /* fall through to the TS surrogate */
       }
-      // 3. deterministic TS surrogate.
+      // 4. deterministic TS surrogate.
       return withStatus(cfg.mock(ctx, p), "mock", liveErr || undefined);
     },
   };
@@ -798,6 +821,13 @@ const sequenceCnn: BotDef = aiBot<DirReq, SeqRes>(
   },
   {
     request: dirRequest,
+    // Free tier: run the real CNN on the user's machine (onnxruntime-web).
+    device: async (ctx) => {
+      const res = await runSequenceCnn(ctx.symbol.toUpperCase());
+      return res
+        ? { expected_return: res.expectedReturn, direction: res.direction, horizon_days: 20 }
+        : null;
+    },
     build: (data) => {
       const pred = data.expected_return;
       return {
