@@ -5,7 +5,34 @@ The browser calls this FastAPI service directly. In production the site reads
 throws "quant API not configured" and falls back to the deterministic TS
 surrogate labelled **Mock**. Three steps fix it.
 
-## 1 · Deploy this folder (with the weights)
+## Free option (no card): Hugging Face Spaces
+
+16 GB RAM, HTTPS, zero billing setup. It sleeps when idle — the first hit after
+a nap may show Mock, then flips to Python NN once warm.
+
+1. huggingface.co → sign up (free) → **New Space** → SDK: **Docker** → blank.
+2. Clone the Space and copy this service into it, weights via Git LFS:
+
+   ```bash
+   git clone https://huggingface.co/spaces/<you>/lazybull-quant
+   cd lazybull-quant
+   git lfs install
+   git lfs track "*.pt" "*.pkl"
+   SRC="/Users/shaurya555/Desktop/lazybulllllll/laztbull/ai quants"
+   cp "$SRC"/{serve.py,requirements.txt,Dockerfile,hf-README.md} .
+   cp -r "$SRC"/{models,shared,weights} .
+   mv hf-README.md README.md          # HF needs this frontmatter at the root
+   git add .gitattributes .
+   git commit -m "lazybull quant service"
+   git push
+   ```
+
+3. HF builds the Docker image and serves it at
+   `https://<you>-lazybull-quant.hf.space` → open `/health` to confirm.
+
+Then jump to **step 2** below (set `NEXT_PUBLIC_QUANTAI_URL` + redeploy).
+
+## 1 · Deploy this folder (with the weights) — paid hosts (Fly / Railway)
 
 `weights/` (173 MB) is gitignored — reproducible, but the running service
 needs it — so deploy with a tool that uploads your **local** directory, not a
