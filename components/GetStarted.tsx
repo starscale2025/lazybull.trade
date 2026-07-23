@@ -20,6 +20,69 @@ const DIRECTORY = [
   { n: "08", l: "About", href: "/about", d: "why paper-only, and who's behind it" },
 ] as const;
 
+// The hero HUD's index column — driven by the SAME /api/quote-batch feed (and
+// 30s server cache) as the ticker below it, so its QQQ/VIX are provably
+// identical to the ticker's and can never contradict it. Symbols are a subset
+// of the ticker's, so this adds ZERO new upstream calls. Decorative
+// (aria-hidden); shows muted "—" placeholders until the first quote lands —
+// never a stale hardcoded number.
+const HUD_SYMBOLS = ["SPY", "QQQ", "IWM", "GLD", "^VIX"] as const;
+const HUD_DISPLAY: Record<string, string> = { "^VIX": "VIX" };
+type HudQuote = { sym: string; last?: number; chgPct?: number };
+
+function HudIndexColumn() {
+  const [rows, setRows] = useState(() =>
+    HUD_SYMBOLS.map((s) => ({ s: HUD_DISPLAY[s] ?? s, v: "—", c: "", up: true }))
+  );
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const r = await fetch(`/api/quote-batch?symbols=${HUD_SYMBOLS.join(",")}`);
+        const j = await r.json();
+        if (cancelled || !j?.ok || !Array.isArray(j.quotes)) return;
+        const by = new Map<string, HudQuote>((j.quotes as HudQuote[]).map((q) => [q.sym, q]));
+        setRows(
+          HUD_SYMBOLS.map((sym) => {
+            const q = by.get(sym);
+            const disp = HUD_DISPLAY[sym] ?? sym;
+            if (!q || typeof q.last !== "number") return { s: disp, v: "—", c: "", up: true };
+            const up = (q.chgPct ?? 0) >= 0;
+            const v =
+              q.last >= 1000
+                ? q.last.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : q.last.toFixed(2);
+            return { s: disp, v, c: `${up ? "+" : "−"}${Math.abs(q.chgPct ?? 0).toFixed(2)}%`, up };
+          })
+        );
+      } catch {
+        /* keep prior rows on a transient error */
+      }
+    };
+    run();
+    const id = setInterval(run, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+  return (
+    <div
+      className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left font-mono text-[11px] tracking-wider md:block"
+      aria-hidden
+    >
+      {rows.map((r) => (
+        <div key={r.s} className="border-b border-bull/20 pb-1.5 text-bull/90">
+          <div>
+            {r.s} <span className="text-fg-dim">{r.v}</span>
+          </div>
+          {r.c && <div className={r.up ? "text-bull" : "text-bear"}>{r.c}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // The single landing the cinema hands off to (and the page's real, crawlable
 // content). Live/glowing, but with continuous — not entrance — effects so the
 // baked reveal frame matches and the handoff stays seamless.
@@ -326,23 +389,8 @@ export function GetStarted() {
                 </span>
               </div>
             </div>
-            {/* left index column (ref 06) */}
-            <div className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left font-mono text-[11px] tracking-wider md:block" aria-hidden>
-              {[
-                { s: "SPX", v: "5,278.06", c: "+0.48%", up: true },
-                { s: "QQQ", v: "452.19", c: "+0.71%", up: true },
-                { s: "ESM4", v: "5,279.25", c: "+0.50%", up: true },
-                { s: "NQM4", v: "18,352.75", c: "+0.68%", up: true },
-                { s: "VIX", v: "12.94", c: "−1.22%", up: false },
-              ].map((r) => (
-                <div key={r.s} className="border-b border-bull/20 pb-1.5 text-bull/90">
-                  <div>
-                    {r.s} <span className="text-fg-dim">{r.v}</span>
-                  </div>
-                  <div className={r.up ? "text-bull" : "text-bear"}>{r.c}</div>
-                </div>
-              ))}
-            </div>
+            {/* left index column — live, cache-shared with the ticker (ref 06) */}
+            <HudIndexColumn />
             {[
               { l: "78%", t: "20%", label: "IV 0.41", d: "-1.1s" },
               { l: "76%", t: "62%", label: "Δ −0.32", d: "-2.2s" },
