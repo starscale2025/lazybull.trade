@@ -12,7 +12,7 @@ import type { BotDef, BotContext, BotResult, Metric, Signal } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
 import { snapshotLookup } from "./snapshot";
-import { runSequenceCnn } from "./onnx-cnn";
+import { runSequenceCnn, runTransformer } from "./onnx";
 
 // Base URL of the FastAPI service. Override with NEXT_PUBLIC_QUANTAI_URL.
 // NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
@@ -892,6 +892,13 @@ const transformerSeq: BotDef = aiBot<DirReq, SeqRes>(
   },
   {
     request: dirRequest,
+    // Free tier: run the real transformer on the user's machine (onnxruntime-web).
+    device: async (ctx) => {
+      const res = await runTransformer(ctx.symbol.toUpperCase());
+      return res
+        ? { expected_return: res.expectedReturn, direction: res.direction, horizon_days: 20 }
+        : null;
+    },
     build: (data) => {
       const pred = data.expected_return;
       return {
