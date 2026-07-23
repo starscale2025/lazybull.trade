@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col bg-bg text-fg">
+    <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <TickerBar />
       <Nav />
       <QuantPage />

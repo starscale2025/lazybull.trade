@@ -155,8 +155,9 @@ export function QuantHero({
 
       <div className="relative mx-auto max-w-[1500px] px-5 pb-6 pt-10 lg:pt-14">
         <div className="grid grid-cols-12 items-end gap-5">
-          {/* Title block */}
-          <div className="col-span-12 lg:col-span-7 flex flex-col gap-5">
+          {/* Title block — on mobile it drops BELOW the workbench panel so a
+              phone user lands on the actual tool, not a full screen of copy. */}
+          <div className="order-2 col-span-12 flex flex-col gap-5 lg:order-1 lg:col-span-7">
             <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
               <span className="inline-flex items-center gap-2 border border-cyan/40 bg-cyan/5 px-2 py-1 text-cyan">
                 <span className="size-1.5 rounded-full bg-cyan pulse-dot" /> quant · for everyone
@@ -184,8 +185,8 @@ export function QuantHero({
             </p>
           </div>
 
-          {/* Symbol & seed controls */}
-          <div className="col-span-12 lg:col-span-5">
+          {/* Symbol & seed controls — first on mobile (the tool), right column on desktop */}
+          <div className="order-1 col-span-12 lg:order-2 lg:col-span-5">
             <div className="border border-border bg-surface">
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                 <span className="flex items-center gap-2">

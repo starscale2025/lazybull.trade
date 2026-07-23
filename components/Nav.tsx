@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthButtons } from "./AuthButtons";
 import { MobileMenu } from "./MobileMenu";
+import { NAV_DIRECTORY } from "@/lib/directory";
 
 export function Nav() {
   return (
@@ -20,21 +21,13 @@ export function Nav() {
         {/* lg (not md): at 768–1023 the full rail + ⌘K + CTA is ~970px wide and
             forces horizontal scroll — the hamburger covers that band instead. */}
         <div className="hidden items-center gap-1 lg:flex">
-          {[
-            { l: "Learn", href: "/learn" },
-            { l: "Visual chain", href: "/trade" },
-            { l: "Pro charts", href: "/pro" },
-            { l: "Quant", href: "/quant" },
-            { l: "Greeks", href: "/greeks" },
-            { l: "Pricing", href: "/pricing" },
-            { l: "About", href: "/about" },
-          ].map((item, i) => (
+          {NAV_DIRECTORY.map((item) => (
             <Link
               key={item.l}
               href={item.href}
               className="group relative flex h-9 items-center px-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:text-fg xl:px-3"
             >
-              <span className="text-fg-faint">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-fg-faint">{item.n}</span>
               <span className="ml-2">{item.l}</span>
               <span className="absolute inset-x-2 bottom-1 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100 xl:inset-x-3" />
             </Link>

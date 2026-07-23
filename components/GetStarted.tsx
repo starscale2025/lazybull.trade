@@ -6,19 +6,11 @@ import { useSession } from "next-auth/react";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
 import { HungCard } from "./atmosphere/HungCard";
 import { AuthButtons } from "./AuthButtons";
+import { SITE_DIRECTORY as DIRECTORY } from "@/lib/directory";
 
 // The landing carries no navbar — this directory IS the site's front door.
-// Numbered like the rail on the product pages so the mental map carries over.
-const DIRECTORY = [
-  { n: "01", l: "Learn", href: "/learn", d: "zero to your first spread, in plain English" },
-  { n: "02", l: "Visual chain", href: "/trade", d: "drag across strikes — the payoff draws itself" },
-  { n: "03", l: "Pro charts", href: "/pro", d: "the terminal: drawing tools, replay, paper trading" },
-  { n: "04", l: "Quant", href: "/quant", d: "27 bots on live or seed tape, verdicts in English" },
-  { n: "05", l: "Greeks", href: "/greeks", d: "every Greek as a picture, an AI teacher on top" },
-  { n: "06", l: "Portfolio", href: "/portfolio", d: "your paper account — positions, wagered, history" },
-  { n: "07", l: "Pricing", href: "/pricing", d: "free while we build. what pro will include" },
-  { n: "08", l: "About", href: "/about", d: "why paper-only, and who's behind it" },
-] as const;
+// Numbered from the shared canonical list (lib/directory) so the same link
+// shows the same number here and in the product-page rail.
 
 // The hero HUD's index column — driven by the SAME /api/quote-batch feed (and
 // 30s server cache) as the ticker below it, so its QQQ/VIX are provably

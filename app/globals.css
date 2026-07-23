@@ -1235,3 +1235,18 @@ html, body {
   }
   .cell-running-rail { animation: none; }
 }
+
+/* Touch ergonomics — on coarse (touch) pointers ONLY, give the dense terminal
+   controls a comfortable vertical hit area. Scoped to .tap-floor containers so
+   it never touches the desktop (pointer: fine is untouched) and never inflates
+   layouts on precise pointers. min-height (not min-width) so it grows the tap
+   zone without forcing inline chips wider and wrapping the rows. */
+@media (pointer: coarse) {
+  .tap-floor button,
+  .tap-floor a[href],
+  .tap-floor select,
+  .tap-floor [role="button"],
+  .tap-floor [role="switch"] {
+    min-height: 32px;
+  }
+}

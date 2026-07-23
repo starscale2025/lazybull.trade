@@ -486,7 +486,9 @@ export function QuantPage() {
 
   return (
     <>
-      {showLearnBanner && (
+      {/* Never stack two banners: the reconnect notice takes precedence over the
+          first-time tip so the workbench is never pushed down by both at once. */}
+      {showLearnBanner && !(mode === "live" && status === "synthetic") && (
         <div className="border-b border-bull/30 bg-bull/5 px-5 py-2.5">
           <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />

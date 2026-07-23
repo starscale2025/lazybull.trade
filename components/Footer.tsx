@@ -202,7 +202,7 @@ export function Footer() {
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
           <div className="flex items-center gap-3">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            <span className="text-bull">paper-only beta · stable</span>
+            <span className="text-bull">paper-only · pre-soft-launch</span>
             <span className="text-fg-faint">·</span>
             <span>v{pkg.version}</span>
             <span className="text-fg-faint hidden md:inline">·</span>
