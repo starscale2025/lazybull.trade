@@ -238,10 +238,58 @@ export function GsapScroller() {
     window.addEventListener("resize", onResize);
     document.fonts?.ready?.then(() => ScrollTrigger.refresh());
 
+    // Late media (the hero video, images) and the mobile address-bar show/hide
+    // shift every "top X%" start AFTER the first measure. If a reveal was
+    // measured against a stale position it can sit stuck at its hidden `from`
+    // state — which is exactly how the big footer wordmark's reveal-clip stayed
+    // half/fully clipped on phones. Re-measure once all media is in, plus a
+    // short safety beat after mount so no trigger is left on a stale position.
+    const onLoad = () => ScrollTrigger.refresh();
+    if (document.readyState === "complete") onLoad();
+    else window.addEventListener("load", onLoad, { once: true });
+    const safetyTimer = setTimeout(() => ScrollTrigger.refresh(), 400);
+
+    // Hard guarantee for reveal-clip (the big footer wordmark, etc.): a
+    // scroll-reveal must NEVER leave an element stuck at its hidden `from` clip.
+    // If one is FULLY on screen yet still clipped, snap it open. Two gates keep
+    // this from ever interrupting a live reveal: during active scrolling only
+    // the >90%-clipped (never-fired) case is snapped, and a settled element is
+    // fully opened 2.5s after scrolling stops — longer than any reveal runs.
+    let scrollThrottled = false;
+    let settleTimer: ReturnType<typeof setTimeout> | null = null;
+    const unstick = (minClippedPct: number) => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      document.querySelectorAll<HTMLElement>('[data-gsap="reveal-clip"]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (!(r.height > 0 && r.top >= 0 && r.bottom <= vh)) return;
+        const clip = el.style.clipPath || getComputedStyle(el).clipPath;
+        const m = /inset\(\s*\S+\s+(\d+(?:\.\d+)?)%/.exec(clip || "");
+        if (m && parseFloat(m[1]) > minClippedPct) el.style.clipPath = "inset(0px 0px 0px 0px)";
+      });
+    };
+    const onScroll = () => {
+      if (!scrollThrottled) {
+        scrollThrottled = true;
+        setTimeout(() => {
+          scrollThrottled = false;
+          unstick(90);
+        }, 200);
+      }
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => unstick(1), 2500);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const unstickInitial = setTimeout(() => unstick(1), 2500); // on-screen-at-load case
+
     return () => {
       mo.disconnect();
       if (resizeTimer) clearTimeout(resizeTimer);
+      clearTimeout(safetyTimer);
+      clearTimeout(unstickInitial);
+      if (settleTimer) clearTimeout(settleTimer);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("load", onLoad);
+      window.removeEventListener("scroll", onScroll);
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };
   }, []);
