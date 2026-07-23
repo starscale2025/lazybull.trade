@@ -11,6 +11,7 @@
 import type { BotDef, BotContext, BotResult, Metric, Signal } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
+import { snapshotLookup } from "./snapshot";
 
 // Base URL of the FastAPI service. Override with NEXT_PUBLIC_QUANTAI_URL.
 // NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
@@ -22,7 +23,7 @@ const API_BASE =
   (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 const API_HINT = `${API_BASE} · uvicorn serve:app`;
 
-type ApiStatus = "live" | "mock";
+type ApiStatus = "live" | "snapshot" | "mock";
 
 async function callApi<T>(
   endpoint: string,
@@ -61,6 +62,16 @@ function statusMetric(status: ApiStatus, note?: string): Metric {
       hint: "live FastAPI inference",
     };
   }
+  if (status === "snapshot") {
+    // Real trained-model output, baked to a daily static snapshot (no server).
+    return {
+      key: "source",
+      label: "Source",
+      value: "Python NN",
+      tone: "bull",
+      hint: note ? `trained NN · snapshot ${note}` : "trained NN · daily snapshot",
+    };
+  }
   return {
     key: "source",
     label: "Source",
@@ -89,13 +100,27 @@ function aiBot<TReq, TRes>(
     run: async (ctx, params) => {
       const p = params as Record<string, unknown>;
       if (!base.endpoint) return withStatus(cfg.mock(ctx, p), "mock");
-      try {
-        const data = await callApi<TRes>(base.endpoint, cfg.request(ctx, p));
-        return withStatus(cfg.build(data, ctx, p), "live");
-      } catch (err) {
-        const note = err instanceof Error ? err.message : String(err);
-        return withStatus(cfg.mock(ctx, p), "mock", note.slice(0, 120));
+      const req = cfg.request(ctx, p);
+      let liveErr = "";
+      // 1. live FastAPI inference — only when a base URL is actually configured.
+      if (API_BASE) {
+        try {
+          const data = await callApi<TRes>(base.endpoint, req);
+          return withStatus(cfg.build(data, ctx, p), "live");
+        } catch (err) {
+          liveErr = (err instanceof Error ? err.message : String(err)).slice(0, 120);
+        }
       }
+      // 2. baked snapshot — real trained-model output, no server needed.
+      try {
+        const ticker = (req as { ticker?: string })?.ticker;
+        const snap = await snapshotLookup<TRes>(base.endpoint, ticker);
+        if (snap) return withStatus(cfg.build(snap.data, ctx, p), "snapshot", snap.generated);
+      } catch {
+        /* fall through to the TS surrogate */
+      }
+      // 3. deterministic TS surrogate.
+      return withStatus(cfg.mock(ctx, p), "mock", liveErr || undefined);
     },
   };
 }
