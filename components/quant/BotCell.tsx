@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ActiveBot, BotDef, BotResult, ParamSpec, Tone } from "@/lib/quant/types";
+import { SOURCE_META, sourceForCategory } from "@/lib/quant/provenance";
 import { closes } from "@/lib/quant/series";
 import type { Candle } from "@/lib/candles";
 import { PriceWithOverlay, PaneLine, EquitySpark } from "./MiniViz";
@@ -38,6 +39,15 @@ const VERDICT_BG: Record<string, string> = {
   sell: "bg-bear/15 text-bear border-bear/30",
   hold: "bg-fg/5 text-fg-dim border-border",
   warn: "bg-amber/15 text-amber border-amber/30",
+};
+
+// Provenance badge tint per source tone.
+const BADGE_CLS: Record<Tone, string> = {
+  bull: "border-bull/40 text-bull",
+  bear: "border-bear/40 text-bear",
+  neutral: "border-border text-fg-dim",
+  warn: "border-amber/40 text-amber",
+  info: "border-cyan/40 text-cyan",
 };
 
 export function BotCell({
@@ -117,6 +127,7 @@ export function BotCell({
   const decimating = phase === "decimating";
 
   const verdictCls = result ? VERDICT_BG[result.verdict.side] : VERDICT_BG.hold;
+  const srcMeta = result ? SOURCE_META[result.source ?? sourceForCategory(def.category)] : null;
   const isRunning = phase === "streaming";
 
   return (
@@ -227,7 +238,7 @@ export function BotCell({
               )}
               <div className="col-span-full text-fg-faint text-[10px] flex items-center justify-between gap-3">
                 <span>
-                  outputs are deterministic mocks · swap for `await fetch(API + endpoint)` once the FastAPI service is up
+                  this bot&apos;s output source is shown on its card — on-device NN (WASM), hosted API, exact math, or snapshot. hover the badge for what it means.
                 </span>
                 <a
                   href={`/learn/bots/${def.id}`}
@@ -261,7 +272,7 @@ export function BotCell({
             />
           ) : (
             <div className="space-y-3 cell-result-in">
-              {/* Verdict pill */}
+              {/* Verdict + provenance */}
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-2 border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${verdictCls}`}
@@ -274,23 +285,51 @@ export function BotCell({
                   />
                 </span>
                 <span className="text-[12px] text-fg">{result.verdict.text}</span>
-                {typeof result.verdict.confidence === "number" && (
-                  <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                    conf{" "}
-                    <DecimatedNumber
-                      value={`${Math.min(100, Math.max(0, result.verdict.confidence * 100)).toFixed(0)}%`}
-                      duration={DECIMATE_MS - 100}
-                      active={decimating}
-                      className="text-fg"
-                    />
-                  </span>
-                )}
+
+                <div className="ml-auto flex items-center gap-2">
+                  {/* honest source badge — hover for what it is */}
+                  {srcMeta && (
+                    <span
+                      title={`${srcMeta.tip}${result.sourceNote ? `\n\n(${result.sourceNote})` : ""}`}
+                      className={`inline-flex cursor-help items-center gap-1.5 border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${BADGE_CLS[srcMeta.tone]}`}
+                    >
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {srcMeta.label}
+                    </span>
+                  )}
+                  {result.horizon && (
+                    <span
+                      title="Prediction horizon"
+                      className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint"
+                    >
+                      {result.horizon}
+                    </span>
+                  )}
+                  {typeof result.verdict.confidence === "number" && (
+                    <span
+                      title="Model confidence in this verdict"
+                      className="font-mono text-[10px] uppercase tracking-wider text-fg-faint"
+                    >
+                      conf{" "}
+                      <DecimatedNumber
+                        value={`${Math.min(100, Math.max(0, result.verdict.confidence * 100)).toFixed(0)}%`}
+                        duration={DECIMATE_MS - 100}
+                        active={decimating}
+                        className="text-fg"
+                      />
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Metrics */}
               <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4">
                 {result.metrics.map((m) => (
-                  <div key={m.key} className="bg-bg p-2.5">
+                  <div
+                    key={m.key}
+                    title={m.hint || undefined}
+                    className={`bg-bg p-2.5 ${m.hint ? "cursor-help" : ""}`}
+                  >
                     <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
                       {m.label}
                     </div>

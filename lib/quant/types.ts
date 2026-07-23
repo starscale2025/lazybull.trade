@@ -40,6 +40,20 @@ export type Signal = {
 
 export type Tone = "bull" | "bear" | "neutral" | "warn" | "info";
 
+// Where a bot's output actually came from — surfaced on every card so the
+// provenance is honest (no more "Mock" on real Black-Scholes math).
+export type SourceId =
+  | "hosted" // live inference on our servers (paid tier)
+  | "device-cnn" // 1D-CNN in the browser (WASM)
+  | "device-transformer" // transformer in the browser (WASM)
+  | "snapshot" // real trained-model output, daily static snapshot
+  | "black-scholes" // exact closed-form options math, client-side
+  | "monte-carlo" // simulation-based estimate, client-side
+  | "statistical" // classical statistical estimator, client-side
+  | "technical" // classical technical-analysis rule, client-side
+  | "heuristic" // lightweight deterministic stand-in for an unreachable NN
+  | "custom"; // a hot-loaded bot the user imported
+
 export type Metric = {
   key: string;
   label: string;
@@ -71,6 +85,11 @@ export type BotResult = {
   verdict: Verdict;
   // optional equity curve from a backtest (relative pnl)
   equity?: number[];
+  // provenance — where this output came from (defaults to the bot's category
+  // if unset). `sourceNote` carries a date/version for the badge tooltip.
+  source?: SourceId;
+  sourceNote?: string;
+  horizon?: string; // e.g. "20d" — the prediction horizon, when applicable
 };
 
 export type BotContext = {

@@ -123,7 +123,9 @@ function buildLines(
   }
 
   if (def.endpoint) {
-    lines.push({ text: `api · POST ${def.endpoint}`, tone: "info" });
+    // the model route — the card's source badge says where it actually ran
+    // (on-device WASM, hosted API, snapshot…), so don't imply a POST here.
+    lines.push({ text: `model · ${def.endpoint}`, tone: "info" });
   } else if (def.module) {
     lines.push({ text: `src · ${def.module}` });
   }

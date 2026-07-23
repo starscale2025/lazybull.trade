@@ -8,11 +8,12 @@
 // Provenance for every bot points at the python module under
 // `ai quants/models/<dir>/train.py` or `ai quants/serve.py`.
 
-import type { BotDef, BotContext, BotResult, Metric, Signal } from "./types";
+import type { BotDef, BotContext, BotResult, Signal, SourceId } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
 import { snapshotLookup } from "./snapshot";
 import { runSequenceCnn, runTransformer } from "./onnx";
+import { sourceForCategory } from "./provenance";
 
 // Base URL of the FastAPI service. Override with NEXT_PUBLIC_QUANTAI_URL.
 // NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
@@ -23,8 +24,6 @@ const API_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_QUANTAI_URL) ||
   (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 const API_HINT = `${API_BASE} · uvicorn serve:app`;
-
-type ApiStatus = "live" | "device" | "snapshot" | "mock";
 
 async function callApi<T>(
   endpoint: string,
@@ -53,47 +52,16 @@ async function callApi<T>(
   }
 }
 
-function statusMetric(status: ApiStatus, note?: string): Metric {
-  if (status === "live") {
-    return {
-      key: "source",
-      label: "Source",
-      value: "Python NN",
-      tone: "bull",
-      hint: "live FastAPI inference",
-    };
-  }
-  if (status === "device") {
-    // The real trained model, run in the browser (onnxruntime-web WASM).
-    return {
-      key: "source",
-      label: "Source",
-      value: "On-device NN",
-      tone: "bull",
-      hint: "ran on your machine (WASM) — the real trained model, no server",
-    };
-  }
-  if (status === "snapshot") {
-    // Real trained-model output, baked to a daily static snapshot (no server).
-    return {
-      key: "source",
-      label: "Source",
-      value: "Python NN",
-      tone: "bull",
-      hint: note ? `trained NN · snapshot ${note}` : "trained NN · daily snapshot",
-    };
-  }
+// Attach honest provenance to a bot result — the card renders a badge from
+// `source` (see lib/quant/provenance). `note` becomes the badge's date/version
+// sub-line; `horizonDays` the prediction horizon.
+function withSource(result: BotResult, source: SourceId, note?: string, horizonDays?: number): BotResult {
   return {
-    key: "source",
-    label: "Source",
-    value: "Mock",
-    tone: "warn",
-    hint: note ?? (API_BASE ? `FastAPI offline (${API_BASE}) — using TS fallback` : "FastAPI not configured — using TS fallback"),
+    ...result,
+    source,
+    sourceNote: note,
+    horizon: horizonDays ? `${horizonDays}d` : result.horizon,
   };
-}
-
-function withStatus(result: BotResult, status: ApiStatus, note?: string): BotResult {
-  return { ...result, metrics: [statusMetric(status, note), ...result.metrics] };
 }
 
 type ApiBotConfig<TReq, TRes> = {
@@ -103,6 +71,11 @@ type ApiBotConfig<TReq, TRes> = {
   /** Optional on-device inference (onnxruntime-web) — the real model in the
       browser, no server. Returns an API-shaped result, or null if unavailable. */
   device?: (ctx: BotContext, p: Record<string, unknown>) => Promise<TRes | null>;
+  /** Which on-device source to label when `device` runs. */
+  deviceSource?: SourceId;
+  /** What the non-NN fallback ACTUALLY is (exact Black-Scholes, a heuristic,
+      …). Defaults from the bot's category. */
+  fallbackSource?: SourceId;
 };
 
 function aiBot<TReq, TRes>(
@@ -113,37 +86,38 @@ function aiBot<TReq, TRes>(
     ...base,
     run: async (ctx, params) => {
       const p = params as Record<string, unknown>;
-      if (!base.endpoint) return withStatus(cfg.mock(ctx, p), "mock");
+      const fallback = cfg.fallbackSource ?? sourceForCategory(base.category);
+      if (!base.endpoint) return withSource(cfg.mock(ctx, p), fallback);
       const req = cfg.request(ctx, p);
-      let liveErr = "";
-      // 1. live FastAPI inference — only when a base URL is actually configured.
+      const hz = (d: unknown) => (d as { horizon_days?: number })?.horizon_days;
+      // 1. hosted API (paid tier) — only when a base URL is configured.
       if (API_BASE) {
         try {
           const data = await callApi<TRes>(base.endpoint, req);
-          return withStatus(cfg.build(data, ctx, p), "live");
-        } catch (err) {
-          liveErr = (err instanceof Error ? err.message : String(err)).slice(0, 120);
+          return withSource(cfg.build(data, ctx, p), "hosted", "live", hz(data));
+        } catch {
+          /* fall through */
         }
       }
       // 2. on-device NN — the real trained model in your browser (free tier).
       if (cfg.device) {
         try {
           const data = await cfg.device(ctx, p);
-          if (data) return withStatus(cfg.build(data, ctx, p), "device");
+          if (data) return withSource(cfg.build(data, ctx, p), cfg.deviceSource ?? "device-cnn", "computed just now", hz(data));
         } catch {
           /* fall through */
         }
       }
-      // 3. baked snapshot — real trained-model output, no server needed.
+      // 3. daily snapshot — real trained-model output, no server needed.
       try {
         const ticker = (req as { ticker?: string })?.ticker;
         const snap = await snapshotLookup<TRes>(base.endpoint, ticker);
-        if (snap) return withStatus(cfg.build(snap.data, ctx, p), "snapshot", snap.generated);
+        if (snap) return withSource(cfg.build(snap.data, ctx, p), "snapshot", snap.generated, hz(snap.data));
       } catch {
-        /* fall through to the TS surrogate */
+        /* fall through to the client fallback */
       }
-      // 4. deterministic TS surrogate.
-      return withStatus(cfg.mock(ctx, p), "mock", liveErr || undefined);
+      // 4. deterministic client fallback — exact math or a heuristic per the bot.
+      return withSource(cfg.mock(ctx, p), fallback);
     },
   };
 }
@@ -822,6 +796,7 @@ const sequenceCnn: BotDef = aiBot<DirReq, SeqRes>(
   {
     request: dirRequest,
     // Free tier: run the real CNN on the user's machine (onnxruntime-web).
+    deviceSource: "device-cnn",
     device: async (ctx) => {
       const res = await runSequenceCnn(ctx.symbol.toUpperCase());
       return res
@@ -893,6 +868,7 @@ const transformerSeq: BotDef = aiBot<DirReq, SeqRes>(
   {
     request: dirRequest,
     // Free tier: run the real transformer on the user's machine (onnxruntime-web).
+    deviceSource: "device-transformer",
     device: async (ctx) => {
       const res = await runTransformer(ctx.symbol.toUpperCase());
       return res
@@ -1050,7 +1026,7 @@ const tripleBarrier: BotDef = {
     const pHitBot = (1 - pUp) * 0.7;
     const pTimeOut = 1 - pHitTop - pHitBot;
     const label = pHitTop > pHitBot && pHitTop > pTimeOut ? "+1 (TP)" : pHitBot > pTimeOut ? "−1 (SL)" : "0 (TO)";
-    return withStatus(
+    return withSource(
       {
         signals: [],
         metrics: [
@@ -1070,8 +1046,7 @@ const tripleBarrier: BotDef = {
           confidence: Math.abs(pHitTop - pHitBot),
         },
       },
-      "mock",
-      "no FastAPI endpoint yet",
+      "statistical",
     );
   },
 };
