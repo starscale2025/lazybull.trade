@@ -17,17 +17,17 @@ const FOUNDERS = [
     color: "var(--cyan)",
     borderClass: "border-cyan/30",
     glowBg: "rgba(0,229,255,0.08)",
-    bio: "Shaurya is where LazyBull started. A CS student at Newton School of Technology, he kept watching friends lose money on options trades they didn't fully understand — and decided the interfaces, not the people, were broken.",
-    longBio: "The whole thing began with Shaurya sketching a drag-to-build options chain on the back of a notebook in an NST hostel room. He'd been teaching himself derivatives pricing on the side, and the gap between what a retail platform showed you and what was actually happening under the hood drove him crazy. The first crude prototype was his — everything else grew from that seed.",
+    bio: "Shaurya is where LazyBull started. A CS student teaching himself derivatives on the side, he kept watching friends lose money on options trades they didn't fully understand — and decided the interfaces, not the people, were broken.",
+    longBio: "The whole thing began with Shaurya sketching a drag-to-build options chain on the back of a notebook. He'd been teaching himself derivatives pricing for months, and the gap between what a retail platform showed you and what was actually happening under the hood drove him crazy. The first crude prototype was his — everything else grew from that seed.",
     achievements: [
-      { icon: "✦", text: "CS student, Newton School of Technology (NST)" },
+      { icon: "✦", text: "Teaching himself derivatives & options pricing" },
       { icon: "◈", text: "Originated the drag-to-build chain concept" },
       { icon: "▲", text: "Hand-rolled the first Black-Scholes prototype in C++" },
-      { icon: "◎", text: "Co-founded NST's Quant & Markets reading group" },
+      { icon: "◎", text: "Owns the on-device ML + quant models" },
       { icon: "⬡", text: "Maintains the pricing engine and Greeks math" },
     ],
     stats: [
-      { k: "Idea pitched in", v: "2024" },
+      { k: "Idea started", v: "2026" },
       { k: "Whiteboards filled", v: "27" },
       { k: "Cold brews / wk", v: "12" },
     ],
@@ -44,14 +44,14 @@ const FOUNDERS = [
     color: "var(--bull)",
     borderClass: "border-bull/30",
     glowBg: "rgba(0,255,135,0.08)",
-    bio: "Joshmann took Shaurya's idea and made it shippable. Also a student at NST, he refined the rough prototype into the visual language, motion, and product flow LazyBull is built around today.",
-    longBio: "When Shaurya showed him the first scrappy chain mockup, Joshmann saw the whole product hiding inside it. He spent the next few months reshaping the UX — the heatmap grid, the drag interactions, the AI teacher panel — and turned a clever student project into something a stranger could open and instantly understand. Product, design, and front-end are his domain.",
+    bio: "Joshmann took Shaurya's idea and made it shippable. He refined the rough prototype into the visual language, motion, and product flow LazyBull is built around today.",
+    longBio: "When Shaurya showed him the first scrappy chain mockup, Joshmann saw the whole product hiding inside it. He spent the next few months reshaping the UX — the heatmap grid, the drag interactions, the AI teacher panel — and turned a clever prototype into something a stranger could open and instantly understand. Product, design, and front-end are his domain.",
     achievements: [
-      { icon: "✦", text: "Student at Newton School of Technology (NST)" },
-      { icon: "◈", text: "Refined Shaurya's prototype into the shipping product" },
+      { icon: "✦", text: "Turned the prototype into a product you can just open" },
+      { icon: "◈", text: "Refined Shaurya's prototype into the product it is today" },
       { icon: "▲", text: "Designed the visual chain, motion system, and AI teacher UI" },
       { icon: "◎", text: "Owns the front-end, design system, and brand" },
-      { icon: "⬡", text: "Drove the first closed beta from 0 → 400 users" },
+      { icon: "⬡", text: "Built the heatmap grid and drag-to-build interactions" },
     ],
     stats: [
       { k: "Pixel iterations", v: "2.4k" },
@@ -74,18 +74,18 @@ const FOUNDERS = [
     color: "var(--plasma)",
     borderClass: "border-plasma/30",
     glowBg: "rgba(180,120,255,0.08)",
-    bio: "Pratham joined later — and turned a strong idea into a real company. He took the prototype, the vision, and the loose roadmap, and pulled them into a shipping plan, a beta program, and the business behind LazyBull.",
+    bio: "Pratham joined later — and turned a strong idea into a real company. He took the prototype, the vision, and the loose roadmap, and pulled them into a launch plan, an early-access program, and the business behind LazyBull.",
     longBio: "By the time Pratham came in, the product worked but the company didn't. He brought structure: a roadmap, a feedback loop with early users, a real onboarding flow, and the safety-rail philosophy that runs through every page. If Shaurya is the why and Joshmann is the how, Pratham is the when, where, and who-for.",
     achievements: [
-      { icon: "✦", text: "Student at Newton School of Technology (NST)" },
-      { icon: "◈", text: "Solidified the vision into a roadmap and beta program" },
+      { icon: "✦", text: "Owns ops, strategy, and growth" },
+      { icon: "◈", text: "Solidified the vision into a roadmap and launch plan" },
       { icon: "▲", text: "Designed the safety-rail and paper-trade onboarding" },
-      { icon: "◎", text: "Owns ops, growth, and early-user research" },
-      { icon: "⬡", text: "Ran 120+ user interviews with new options traders" },
+      { icon: "◎", text: "Runs early-user research and the feedback loop" },
+      { icon: "⬡", text: "Talks to new options traders every week" },
     ],
     stats: [
       { k: "Specs written", v: "39" },
-      { k: "User interviews", v: "120+" },
+      { k: "User chats", v: "ongoing" },
       { k: "Sticky notes", v: "∞" },
     ],
     tag: "Ops · Strategy · Research",
@@ -95,53 +95,46 @@ const FOUNDERS = [
 
 const TIMELINE = [
   {
-    date: "Jan 2024",
+    date: "Early 2026",
     label: "The Spark",
-    desc: "Shaurya, mid-semester at NST, sketches a drag-to-build options chain on a hostel whiteboard after watching friends lose money on trades they didn't understand.",
+    desc: "Shaurya sketches a drag-to-build options chain on a whiteboard after watching friends lose money on trades they didn't understand.",
     color: "var(--cyan)",
     side: "left",
   },
   {
-    date: "Mar 2024",
-    label: "Joshmann Refines It",
+    date: "2026",
+    label: "Joshmann Shapes It",
     desc: "Joshmann sees the prototype and immediately reshapes it — the heatmap, the motion, the AI teacher panel. The rough idea starts to look like a product.",
     color: "var(--bull)",
     side: "right",
   },
   {
-    date: "Jul 2024",
-    label: "First Prototype Ships",
-    desc: "Visual chain, live Greeks, and a working paper trade flow go live for a tiny circle of NST friends. Word spreads inside the campus first.",
+    date: "2026",
+    label: "First Prototype",
+    desc: "Visual chain, live Greeks, and a working paper-trade flow come together for a tiny circle of early testers.",
     color: "var(--amber)",
     side: "left",
   },
   {
-    date: "Nov 2024",
+    date: "2026",
     label: "Pratham Joins",
-    desc: "Pratham comes in and turns scattered Notion docs into a real roadmap. Safety rails, onboarding, and a proper beta program all get owners.",
+    desc: "Pratham turns scattered docs into a real roadmap. Safety rails, onboarding, and early-user research all get owners.",
     color: "var(--plasma)",
     side: "right",
   },
   {
-    date: "Mar 2025",
-    label: "AI Teacher Born",
-    desc: "The AI teacher layer ships. Greeks, IV, and risk metrics finally explain themselves in plain English — average session length triples.",
+    date: "2026",
+    label: "On-device AI",
+    desc: "The AI teacher and on-device quant models ship — Greeks, IV, and predictions that explain themselves and run right in your browser.",
     color: "var(--bull)",
     side: "left",
-  },
-  {
-    date: "Sep 2025",
-    label: "Closed Beta",
-    desc: "First closed beta opens beyond NST. 400 sign-ups in week one with zero paid ads. Safety rails and the $5k paper account become defaults.",
-    color: "var(--cyan)",
-    side: "right",
   },
   {
     date: "Now",
-    label: "lazybull.trade",
-    desc: "Three founders, one mission: a full pro workspace, quant tools, safety rails, and an AI teacher for every Greek. The bull is just getting started.",
-    color: "var(--bull)",
-    side: "left",
+    label: "Pre-soft-launch",
+    desc: "Three founders, one mission: a full pro workspace, quant tools, safety rails, and an AI teacher for every Greek. Getting ready to open the doors.",
+    color: "var(--cyan)",
+    side: "right",
   },
 ];
 
@@ -173,10 +166,10 @@ const VALUES = [
 ];
 
 const COUNTERS = [
-  { label: "Active traders", value: 50000, suffix: "+", display: "50k+" },
-  { label: "Strategies built", value: 2000000, suffix: "+", display: "2M+" },
-  { label: "Countries", value: 42, suffix: "", display: "42" },
   { label: "Chain latency", value: 0, suffix: "ms", display: "0.4ms", raw: true },
+  { label: "Quant bots", value: 27, suffix: "", display: "27" },
+  { label: "Trained models", value: 13, suffix: "", display: "13" },
+  { label: "To start", value: 0, suffix: "", display: "$0", raw: true },
 ];
 
 function Counter({
@@ -390,7 +383,7 @@ export function About() {
           </div>
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            <span>Founded 2024 · NST</span>
+            <span>Founded 2026 · Pre-soft-launch</span>
           </div>
         </div>
 
@@ -407,7 +400,7 @@ export function About() {
                 the team
               </span>
               <span className="border border-border bg-surface px-2 py-1 text-fg-dim">
-                3 founders · 1 mission · built at NST
+                3 founders · 1 mission · pre-soft-launch
               </span>
             </div>
 
@@ -421,9 +414,8 @@ export function About() {
             </h1>
 
             <p className="mt-8 max-w-[56ch] text-balance text-base leading-relaxed text-fg-dim md:text-lg">
-              LazyBull was built by three students at{" "}
-              <span className="text-fg">Newton School of Technology</span> who
-              believed options trading was being made{" "}
+              LazyBull was built by three founders who believed options trading
+              was being made{" "}
               <span className="text-fg">artificially complex</span> to keep
               retail traders on the wrong side of the trade. We're changing
               that.
@@ -438,10 +430,10 @@ export function About() {
             transition={{ duration: 0.7, ease, delay: 0.2 }}
           >
             {[
-              { k: "Founded", v: "2024" },
-              { k: "Built at", v: "NST" },
-              { k: "Stage", v: "Beta" },
+              { k: "Founded", v: "2026" },
+              { k: "Stage", v: "Pre-launch" },
               { k: "Model", v: "B2C SaaS" },
+              { k: "To start", v: "$0" },
             ].map((s) => (
               <div key={s.k} className="bg-bg p-4">
                 <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
@@ -474,7 +466,7 @@ export function About() {
                 <span className="size-2.5 rounded-full bg-amber" />
                 <span className="size-2.5 rounded-full bg-bull" />
                 <span className="ml-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
-                  mission.md — lazybull v1.4
+                  mission.md — lazybull
                 </span>
               </div>
               <div className="flex items-center gap-2 font-mono text-[10px] text-fg-faint">
@@ -515,7 +507,7 @@ export function About() {
                   ))}
                 </div>
                 <div className="mt-6 border-t border-border-soft pt-4 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                  <span className="text-bull">STATUS:</span> SHIPPING · v1.4 STABLE
+                  <span className="text-bull">STATUS:</span> PRE-SOFT-LAUNCH
                 </div>
               </div>
             </div>
@@ -708,7 +700,7 @@ export function About() {
             transition={{ duration: 0.6, ease }}
           >
             <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
-              ⟢ Section 02 / Impact
+              ⟢ Section 02 / The build
             </span>
             <h2 className="font-display text-[clamp(2.4rem,5.5vw,5rem)] leading-[0.92] tracking-tightest text-fg">
               The bull,
@@ -911,7 +903,7 @@ export function About() {
                 {Array.from({ length: 2 }).map((_, k) => (
                   <div key={k} className="flex shrink-0 gap-10">
                     {[
-                      "Built at NST",
+                      "pre-soft-launch",
                       "3 founders",
                       "0.4ms pricing",
                       "AI teacher on",
