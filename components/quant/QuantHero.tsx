@@ -1,24 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRetryCountdown } from "./RetryCountdown";
 
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY", "QQQ", "BTC", "META", "MSFT", "GOOG"];
 
 /** Live countdown to the next feed retry, shown when the live feed is throttled
-    so the user knows the tape isn't stuck — it recovers on its own. Owns its
-    own 1s tick so the big hero doesn't re-render every second. */
+    so the user knows the tape isn't stuck — it recovers on its own. */
 function RetryCountdown({ retryAt }: { retryAt?: number | null }) {
-  const [secs, setSecs] = useState<number | null>(null);
-  useEffect(() => {
-    if (!retryAt) {
-      setSecs(null);
-      return;
-    }
-    const tick = () => setSecs(Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [retryAt]);
+  const secs = useRetryCountdown(retryAt);
   if (secs == null) return null;
   return <span className="text-amber/80">· live in {secs}s</span>;
 }

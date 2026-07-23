@@ -9,6 +9,7 @@ import { track } from "@/lib/track";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
 import { QuantHero } from "./QuantHero";
+import { useRetryCountdown } from "./RetryCountdown";
 import { SetupsBar, type QuantSetupState } from "./SetupsBar";
 import { BotLibrary } from "./BotLibrary";
 import { Workspace } from "./Workspace";
@@ -16,6 +17,14 @@ import { OutputPanel } from "./OutputPanel";
 import { ImportBotModal } from "./ImportBotModal";
 
 type ResultsMap = Record<string, BotResult>;
+
+/** "live returns automatically in Ns." — the reconnect banner's tail, ticking
+    off the same wired `retryAt`. Reads "shortly" in the brief gap before the
+    next retry is scheduled. Isolated so its 1s tick doesn't re-render the page. */
+function LiveReturnsIn({ retryAt }: { retryAt?: number | null }) {
+  const secs = useRetryCountdown(retryAt);
+  return <>live returns automatically{secs != null ? ` in ${secs}s` : " shortly"}.</>;
+}
 
 export function QuantPage() {
   const [symbol, setSymbol] = useState("AMZN");
@@ -496,15 +505,22 @@ export function QuantPage() {
         </div>
       )}
       {mode === "live" && status === "synthetic" && (
-        <div className="border-b border-amber/30 bg-amber/5 px-5 py-2">
-          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
-            <span className="text-amber">⚠ live feed unreachable</span>
+        <div className="border-b border-border-soft bg-bg-soft px-5 py-2">
+          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px]">
+            <span className="inline-flex items-center gap-1.5 uppercase tracking-wider text-cyan/90">
+              <span className="size-1.5 rounded-full bg-cyan/80" />
+              Live data temporarily unavailable
+            </span>
+            {/* Calm + self-healing: the tape reconnects on its own (countdown),
+                so this reads as a graceful degrade, not a breakage. Never say the
+                market is "delayed" — it's our connection that dropped, not the
+                market. Verdicts run on a safe practice tape meanwhile. */}
             <span className="normal-case tracking-normal text-fg-dim">
-              Showing a deterministic fallback tape — verdicts below are NOT about the real {symbol}.
+              Showing a practice tape while we reconnect — <LiveReturnsIn retryAt={retryAt} />
             </span>
             <button
               onClick={() => setMode("seed")}
-              className="ml-auto border border-amber/50 bg-amber/10 px-3 py-1 text-amber hover:bg-amber/20"
+              className="ml-auto border border-border px-3 py-1 uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
             >
               use seed mode →
             </button>
