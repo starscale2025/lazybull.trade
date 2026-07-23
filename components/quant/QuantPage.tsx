@@ -73,6 +73,10 @@ export function QuantPage() {
   const [status, setStatus] = useState<"loading" | "live" | "synthetic">("loading");
   // When the next live-feed retry fires — powers the OFFLINE "live in Ns" countdown.
   const [retryAt, setRetryAt] = useState<number | null>(null);
+  // Which upstream served the live bars + when they last refreshed — feeds the
+  // dataset provenance line ("Source · live • Twelve Data · updated Ns ago").
+  const [liveSource, setLiveSource] = useState<string | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
   // The freshest known trade, ordered by upstream regularMarketTime — the bars
   // proxy and the spot poll cache separately, so either can be the staler
@@ -97,6 +101,8 @@ export function QuantPage() {
           setLive({ key, candles: reconcileBars(tail, j.meta, symbol, freshestRef) });
           setStatus("live");
           setRetryAt(null);
+          setLiveSource(j.source ?? null);
+          setUpdatedAt(Date.now());
           return;
         }
         setStatus("synthetic");
@@ -549,6 +555,8 @@ export function QuantPage() {
         setMode={setMode}
         dataSource={dataSource}
         retryAt={retryAt}
+        liveSource={liveSource}
+        updatedAt={updatedAt}
         syntheticKnobsActive={syntheticKnobsActive}
       />
 

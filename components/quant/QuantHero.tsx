@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRetryCountdown } from "./RetryCountdown";
 
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY", "QQQ", "BTC", "META", "MSFT", "GOOG"];
@@ -10,6 +11,19 @@ function RetryCountdown({ retryAt }: { retryAt?: number | null }) {
   const secs = useRetryCountdown(retryAt);
   if (secs == null) return null;
   return <span className="text-amber/80">· live in {secs}s</span>;
+}
+
+/** "updated Ns ago" — freshness of the live tape, on its own 1s clock (isolated
+    so the big hero doesn't re-render every second). */
+function UpdatedAgo({ since }: { since?: number | null }) {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => force((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (!since) return <>updating…</>;
+  const secs = Math.max(0, Math.round((Date.now() - since) / 1000));
+  return <>updated {secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m`} ago</>;
 }
 
 /** A "?" that explains a knob on hover/focus — beginners shouldn't have to
@@ -56,6 +70,8 @@ export function QuantHero({
   setMode,
   dataSource,
   retryAt,
+  liveSource,
+  updatedAt,
   syntheticKnobsActive,
 }: {
   symbol: string;
@@ -83,6 +99,10 @@ export function QuantHero({
   dataSource: "live" | "seed" | "fallback";
   /** When the next live-feed retry fires (ms epoch), for the OFFLINE countdown. */
   retryAt?: number | null;
+  /** Which upstream served the live bars ("twelvedata" | "yahoo"), for provenance. */
+  liveSource?: string | null;
+  /** When the live tape last refreshed (ms epoch), for "updated Ns ago". */
+  updatedAt?: number | null;
   /** seed/drift/vol shape the tape only in seed mode. */
   syntheticKnobsActive: boolean;
 }) {
@@ -175,7 +195,7 @@ export function QuantHero({
                     <button
                       onClick={() => setMode("live")}
                       aria-pressed={mode === "live"}
-                      title="Real Yahoo OHLCV, ticking every ~15s (delayed feed)"
+                      title="Real market OHLCV, ticking every ~15s (delayed feed)"
                       className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
                         mode === "live" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
                       }`}
@@ -204,7 +224,7 @@ export function QuantHero({
                       <a
                         href="/pricing"
                         className="ml-1 border-l border-amber/30 pl-1.5 normal-case text-amber/90 underline-offset-2 hover:text-amber hover:underline"
-                        title="Real-time, un-throttled market data — coming to Pro. See the plans."
+                        title="Real-time, un-throttled market data — coming to Power. See the plans."
                       >
                         real-time →
                       </a>
@@ -214,7 +234,7 @@ export function QuantHero({
                       className={`inline-flex items-center gap-1 border px-1 py-px text-[10px] ${
                         dataSource === "live" ? "border-bull/50 bg-bull/10 text-bull" : "border-cyan/50 bg-cyan/10 text-cyan"
                       }`}
-                      title={dataSource === "live" ? "real Yahoo Finance OHLCV · delayed ~15s" : "deterministic seed tape"}
+                      title={dataSource === "live" ? "Real market OHLCV from the live feed · delayed ~15s" : "deterministic seed tape"}
                     >
                       <span className={`size-1 rounded-full ${dataSource === "live" ? "bg-bull pulse-dot" : "bg-cyan"}`} />
                       {dataSource === "live" ? "LIVE" : "DETERMINISTIC"}
@@ -222,6 +242,30 @@ export function QuantHero({
                   )}
                 </span>
                 <span>spot ${spot.toFixed(2)}</span>
+              </div>
+              {/* Dataset provenance — one honest line. LIVE names its real feed
+                  and freshness; PRACTICE reads as an intentional, reproducible
+                  choice rather than "fake data". */}
+              <div className="border-b border-border-soft bg-bg px-3 py-1.5 font-mono text-[10px] leading-relaxed text-fg-faint">
+                {mode === "seed" ? (
+                  <>
+                    <span className="uppercase tracking-wider text-cyan/80">Practice mode</span>
+                    <span> — a deterministic tape (same inputs → same candles every run), so every decision is reproducible.</span>
+                  </>
+                ) : dataSource === "fallback" ? (
+                  <>
+                    <span className="uppercase tracking-wider text-fg-dim">Source</span>
+                    <span> · practice tape while we reconnect to the live feed.</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="uppercase tracking-wider text-fg-dim">Source</span>
+                    <span>
+                      {" · live • "}
+                      {liveSource === "twelvedata" ? "Twelve Data" : "Yahoo Finance"} · <UpdatedAgo since={updatedAt} />
+                    </span>
+                  </>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-px bg-border">
                 {/* symbol */}

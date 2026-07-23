@@ -47,7 +47,7 @@ const TIERS: Tier[] = [
       "Unlimited saved workspaces",
       "Priority support",
     ],
-    cta: { label: "Get started", href: "/auth/signin" },
+    cta: { label: "Join early access", href: "/auth/signin" },
   },
   {
     name: "Pro",
@@ -61,7 +61,7 @@ const TIERS: Tier[] = [
       "Pro charting suite · shareable workspaces",
       "Early access to new features",
     ],
-    cta: { label: "Get started", href: "/auth/signin" },
+    cta: { label: "Join early access", href: "/auth/signin" },
     popular: true,
   },
   {
