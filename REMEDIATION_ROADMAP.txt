@@ -1,339 +1,453 @@
 ═══════════════════════════════════════════════════════════════════════════════
   [ROADMAP] LAZYBULL.TRADE — THE PHOENIX PROTOCOL
-  Remediation Architecture · one disciplined 14-day sprint
-  Input: The Executioner's Report (15 seated judges, mean 5.67, zero "would ship")
-  Doctrine: every wound becomes a signature. Fix nothing quietly.
+  Remediation Architecture · post-flight ledger + the next frontier
+  Input:  The Executioner's file-anchored autopsy (mean 5.67, zero "would ship")
+  Status: SHIPPED. This is no longer a plan — it is a receipt, re-verified against
+          the live tree by an 8-agent codebase audit (464k tokens, 139 file reads).
+  Doctrine: every wound became a signature. Nothing was fixed quietly.
 ═══════════════════════════════════════════════════════════════════════════════
 
-  The Executioner was right about one thing above all: the depth was never
-  the problem. The engine has 206 tests; the skin has 850 whispers nobody
-  can read. So the protocol is inverted from the usual rescue: we are not
-  adding ambition, we are PAYING FOR the ambition already shipped —
-  and charging admission where we pay.
+  READ THIS FIRST — THE HONEST FRAME
+  ----------------------------------
+  The autopsy has already been answered. Phases 0–5 are in the tree, verified
+  file-by-file. So this document is inverted from a rescue plan: it does not
+  propose, it PROVES — each cure named, each mechanism anchored to the code that
+  ships it, each elevation that turned a bug into a brand asset marked done.
+
+  It is also not a victory lap. Three cures shipped as ◐ PARTIAL, a handful of
+  small bugs survived the sweep, and the product now carries ONE genuine unshipped
+  frontier — SCALE — that no amount of design flare can paper over. Those are
+  listed with the same brutality the Executioner used on us. A roadmap that only
+  applauds itself is the thing we were accused of. This one keeps the receipts
+  AND the invoice.
+
+  Legend:  ✅ shipped & verified   ◐ partial (real gap named)   🐛 live bug
+           🧹 cleanup debt         → ELEVATION (the wound-to-asset move, done)
+           ⇧ CEILING (honest scale limit)    ✚ BREAK IT (the sprint-2 lever)
 
 ───────────────────────────────────────────────────────────────────────────────
-PHASE 0 — THE SURGICAL STRIKE  (Days 1–2 · non-negotiable cures)
+PHASE 0 — THE SURGICAL STRIKE   (non-negotiable cures: the math, the law, the glass)
 "Do not be creative with the math, the law, or the broken glass."
 ───────────────────────────────────────────────────────────────────────────────
 
--- THE VWAP LIE ENDS AT 9:30 --
-  BUG   components/pro/indicators.ts:89 — `new Date(t).toDateString().length`
-        compares a date against a STRING LENGTH (~15), so cumulative sums
-        reset every bar. The default amber line on /pro is (H+L+C)/3 cosplay.
-  CURE  const day = new Date(t).toDateString();
-        if (day !== lastDay) { cumPv = 0; cumV = 0; lastDay = day; }
-        …and collapse the twin math libraries: lib/quant/series.ts becomes the
-        ONE tested module; components/pro/indicators.ts re-exports from it.
-        Regression tests that import the ON-SCREEN module (currently zero).
-  ALSO  Chart.tsx:1289 `ind.macd.histogram` → `hist`; replace the
-        Record<string, unknown> indicator map with a per-id discriminated
-        union so the type system is ALLOWED to catch the next one.
-  ELEVATION → "VERIFIED MATH." Every indicator legend row gains a small ✓.
-        Hover: the formula + the literal test assertion that pins it
-        ("vwap resets at session open — pinned by indicators.test.ts:41").
-        An education product whose every line of math carries its own proof
-        is not a bugfix. It is a category claim no competitor makes.
+-- FIXING THE VWAP LIE: MATH THAT CARRIES ITS OWN PROOF --
+  ✅ components/pro/indicators.ts · Chart.tsx · TruthBadge.tsx
+     __tests__/pro-indicators.test.ts · __tests__/broken-vwap-lesson.test.ts
+  MECHANISM  VWAP is session-anchored (UTC-day key, cumulative Σ(typical·vol)/Σvol;
+             series-anchored on daily); MACD is EMA12−EMA26, signal EMA9, hist=line−signal
+             — and Chart.tsx draws THAT module, not a second cosplay copy. 17 vitest
+             cases pin it, including two named VWAP session-reset regressions.
+  → ELEVATION "VERIFIED MATH." Every indicator legend row renders a green ✓ from a
+             VERIFIED_MATH map whose hover text is the literal formula + the test file
+             that pins it. An education product where every line of math carries its
+             own proof is a category claim no competitor makes.
+  → NEXT      Make the ✓ a real one-click proof (a popover embedding the literal test
+             assertion + a tiny live fixture) instead of a hover-title.
 
--- THE ACCESSIBILITY FLOOR (THE LAWSUIT LINE) --
-  · app/globals.css: ONE global rule —
-      :focus-visible { outline: 2px solid var(--bull); outline-offset: 2px; }
-    then purge all 31 `outline-none` (24 files) or pair each with a visible
-    replacement. Zero exceptions.
-  · OptionsChain.tsx:213 — the call/put <button>s get onClick + onKeyDown
-    (Enter/Space). Shorting leaves onContextMenu (see Phase 3 for the gesture).
-  · Chart.tsx:937,1015 — every <g role="button"> gets tabIndex={0} + key
-    handlers, or loses the role. No aria that promises a door with no handle.
-  · .marquee / .pulse-dot join the prefers-reduced-motion blocks; TickerBar
-    gets a pause control (WCAG 2.2.2 — first pixel row of every page).
-  · ResetFundsModal: focus trap + `inert` on the background.
-  · Skip-to-content link; landing h1 precedes the hero h2.
+-- THE ACCESSIBILITY FLOOR: THE LAWSUIT LINE, HELD --
+  ✅ app/globals.css · app/layout.tsx · components/pro/TruthBadge.tsx
+  MECHANISM  One UNLAYERED :focus-visible ring (bull-green, 2px) that deliberately
+             outranks every Tailwind outline-none utility; a .skip-link revealing on
+             focus into a real <main id="main"> landmark. Keyboard is broad: 8 files
+             wire onKeyDown, the ledger modal does Escape-close + Tab focus-trap +
+             restore-focus, across 82 aria-label / 27 aria-pressed / 31 role= .
+  🐛 DEBT     Two role="teacher" attributes are INVALID ARIA — silently ignored by
+             assistive tech. Swap to a valid role (group/img) and add an axe /
+             eslint-jsx-a11y gate to the verify script so invalid roles fail CI, not
+             the eye. (Sprint-2, listed in the DEBT LEDGER below.)
 
--- THE LAW OF THE LEDGER (/terms, /privacy) --
-  Blank legal pages on a finance-adjacent product are a due-diligence flare.
-  Ship real pages Day 1 in the product's own voice — "The Honesty Ledger":
-  every clause in plain English, each with a mono teacher-note annotation
-  ("WHAT THIS MEANS: your money is never real here, so it can never be lost
-  here"). Scope is genuinely small: education-only service, Google auth,
-  events analytics, no payments. FLAG: outside counsel review is an external
-  dependency — the pages ship now, the review badge lands when it lands.
+-- THE HONESTY LEDGER AS LEGAL COPY (◐ ONE PAGE STILL OWED) --
+  ◐ app/terms/page.tsx · app/privacy/page.tsx · components/Footer.tsx
+  MECHANISM  /terms and /privacy ship as "the honesty ledger": a shared Clause({n,
+             title,means}) renders each numbered section with a mono "WHAT THIS
+             MEANS ·" plain-English gloss in a bull-tinted callout, each carrying a
+             candid "pending counsel review" chip. Microcopy that buys trust instead
+             of burning it.
+  ◐ GAP      There is NO app/safety route. The Footer "safety" link points at
+             /learn#now-go; the real safety UI (KillSwitch, RiskWizard, PreTradeModal)
+             lives in components/safety/ but is not a legal page.
+  ✚ CURE     Create app/safety/page.tsx reusing the same Clause pattern (kill-switch,
+             training-wheels, paper-only-risk, self-exclusion — in plain English) and
+             repoint the footer. Completes the three-page ledger. (Law → Sprint-2.)
 
--- ONE THREE.JS, NOT TWO (−1.7MB, −34% OF THE PAYLOAD) --
-  CAUSE two 852KB chunks both containing WebGLRenderer — the
-        three/examples/jsm subpath imports (SkeletonUtils in Bull3D.tsx,
-        dynamic GLTFLoader in CandleField3D.tsx:185) split the module graph.
-  CURE  create lib/three.ts as the single doorway (re-export three +
-        GLTFLoader + DRACOLoader + SkeletonUtils); every consumer imports
-        from it; kill the dynamic loader import. CI guard: build then
-        `grep -c WebGLRenderer .next/static/chunks/*` must equal 1.
-  BONUS unmount, don't hide: collapse() flips React state → cinema returns
-        null → R3F disposes three contexts + composer targets + GLBs.
-        CinemaGate refuses to mount while useSession is "loading."
-
--- BROKEN GLASS, SWEPT --
-  · Learn BigStat: clamp the count-up at 0. "−1 TRAINED ML MODELS" on the
-    flagship education hero is the cheapest fix on this list.
-  · Day-1 FAB truce: reserve bottom padding + lift RESET FUNDS clear of the
-    mic. (The real cure is the Dock — Phase 1.)
-  · Dead code exorcism: delete Hero, CrystalHero, SocialProof (with its stale
-    $100,000), Partners, UseCases, TradeOverview (~1,000 lines), plus
-    tmp-audit-band*.mjs ×4, build_output.txt, sweep-bots.mjs. knip config
-    (entry: app/**; ignore: "ai quants/**") keeps the graveyard closed.
-  · Cinema seen-flag + skip-at-second-0 (details in Phase 2 — but the FLAG
-    itself is Phase 0; nobody replays the toll booth after Day 2).
+-- THREE.JS DUPLICATION: 1.7MB SHAVED, GUARDED FOREVER --
+  ✅ components/scrollstory/three-stage.ts · ScrollCinema.tsx · scripts/guard.mjs
+  MECHANISM  three-stage.ts is a single barrel re-exporting Bull3D/CandleField3D/
+             Tunnel3D so all three collapse into ONE lazy chunk — killing the old
+             2×852KB WebGLRenderer duplication (34% of payload). guard.mjs (in
+             `npm run verify`) HARD-FAILS if >1 chunk carries WebGLRenderer, enforces
+             total ≤4.6MB / largest ≤1.6MB, and warns on orphans.
+  → NEXT      Run guard.mjs in CI on every PR (not just local) with a committed
+             bundle-size baseline, so growth trends are visible, not just the ceiling.
 
 ───────────────────────────────────────────────────────────────────────────────
-PHASE 1 — THE DESIGN SYSTEM RESURRECTION  (Days 3–6)
-"From fake italics to a typeface that feels the tape."
+PHASE 1 — THE DESIGN SYSTEM RESURRECTION   (from fake italics to volatility variables)
 ───────────────────────────────────────────────────────────────────────────────
 
--- FIXING THE FAUX SLANT: THE WONK IS A VOLATILITY METRIC --
-  TRUTH FIRST (the Executioner would check): Fraunces has NO slnt axis.
-  The slant lives in its true italic FAMILY — which we never shipped — while
-  we preload 120KB of SOFT/WONK axes we never once move. So:
-  1) app/layout.tsx: style: ["normal", "italic"] on Fraunces.
-     globals.css: `font-synthesis-style: none;` — faux slants can never
-     regress. Every accent line on the site becomes the drawn letterform
-     the license was paying for.
-  2) THE LIVING AXIS. The dead SOFT/WONK weight becomes the market's pulse:
-     the quote poll (already ticking every 15s) writes one CSS variable —
-       --market-wonk: clamp(0, realizedVol / VOL_CEIL, 1)
-     Display headings subscribe:
-       font-variation-settings: "WONK" var(--market-wonk),
-                                "SOFT" calc(var(--market-wonk) * 60);
-     Calm tape → composed, upright serifs. Violent tape → the letterforms
-     themselves go slightly feral. 200ms house-curve transition, quantized
-     to 0.1 steps so it breathes rather than jitters; frozen under
-     prefers-reduced-motion. The type IS an indicator. Nobody has this.
+-- FIXING THE FAUX SLANT: ITALICS ARE A VOLATILITY METRIC --
+  ✅ lib/wonk.ts · app/globals.css · app/layout.tsx · TickerBar.tsx · QuantHero.tsx
+  MECHANISM  Fraunces loads a GENUINE italic subfamily with font-synthesis-style:none
+             — no browser slant-fake — across 77 italic usages. Then the bug becomes
+             an instrument: the live ^VIX (off the SSE quote stream) runs through
+             wonkFromVix (clamp (vix−12)/28 → 0..1) and applyWonk tweens the WONK/SOFT
+             axes inline on every .wonk-type headline. When the tape gets violent, the
+             serifs physically warp. The letterforms ARE a volatility read-out.
+  → NEXT      Expose --market-wonk via an aria-live legend so the "type is an
+             indicator" idea is legible to screen readers and skimmers too, not only
+             to those who notice sub-pixel serif warp.
 
--- THE OLIVE PURGE: RADAR BY DEFAULT, STEALTH BY CHOICE --
-  The 2.3:1 microtype was a mood board billed to beginners' retinas. Invert
-  the deal:
-  · TOKEN SURGERY: marketing --fg-faint #4a4a44 → #767670 (≥4.5:1 on
-    #050505); pro-theme faint #64707d → #8494a4; text floor 11px (12px on
-    coarse pointers); the 8px tier (22 uses) is executed without appeal.
-  · TWO READING MODES, honestly framed:
-      RADAR  (default) — AA everywhere. The site you can actually read.
-      STEALTH (opt-in toggle, persisted) — the low-glow whisper terminal for
-      operators who want the fiction, labeled plainly: "sub-AA by choice."
-    Accessibility is the default; the vibe is the reward, never the toll.
-  · ACCENT RATIONING: one accent hue per viewport on marketing pages.
-    Cyan demoted to data-semantic (info/alerts), amber to warnings,
-    plasma retired. The headline formula (white roman + colored italic ×15
-    files) is broken on half the pages — alternates already in the DNA:
-    the mono-stamp, the number-led head, the underline sweep.
+-- THE OLIVE WHISPER, REDEEMED: RADAR & STEALTH --
+  ✅ components/ContrastToggle.tsx · ThemeProvider.tsx · app/globals.css
+  MECHANISM  RADAR is the DEFAULT now — --fg-faint lifted to WCAG AA ≥4.5:1 across
+             dark (#767670), light (#6e6e64), pro (#8a99a8). STEALTH is a deliberate
+             choice: ContrastToggle (honest "sub-AA by choice" title) flips
+             data-contrast="stealth" to restore the original whisper tier for
+             power users, persisted (lb-contrast) and re-applied on boot by
+             ThemeProvider so no page flashes the wrong mode. The 11px mono went from
+             a failure to a gated "whisper mode."
+  → NEXT      A prefers-contrast:more query to auto-force RADAR, and surface the
+             toggle in the Command Deck rather than only the footer.
 
--- THE CAPTAIN'S CONSOLE: ENDING FLOATING ANARCHY --
-  Six confirmed occlusions (mic over RESET FUNDS; PLACE A BET over the
-  consensus meter, the leaderboard, the LEGAL DISCLAIMER) all trace to two
-  components hardcoding the same corner. Structural cure, one component:
-  · components/Dock.tsx — a single fixed slot manager, bottom-right,
-    env(safe-area-inset-*) aware. Pages REGISTER occupants (voice, bet,
-    teacher) via context; the Dock renders ONE console chip that fans out
-    into a vertical tray on tap/hover; body reserves var(--dock-clearance).
-  · Collapsed, it reads as a tiny status console (mic state · bet armed) —
-    on-brand chrome instead of SaaS-blob confetti. No element may ever
-    render fixed outside the Dock. Lint rule enforces it.
+-- THE MICROTYPE FLOOR (◐ CONTRAST DONE, SIZE STILL OWED) --
+  ◐ app/globals.css
+  MECHANISM  The CONTRAST floor shipped: the fg-faint AA lift explicitly names the
+             "9–11px labels — text that failed to exist," the 8px tier is fully purged
+             (0 uses), plus font-synthesis-style:none + antialiasing.
+  ◐ GAP      There is NO size floor. No min-font-size exists; the only coarse-pointer
+             rule sets tap-target min-height (not font size). 9px mono survives in 7
+             places and 530 text-[10px] uses remain below 11px.
+  ✚ CURE     A .micro utility / @media(pointer:coarse) rule that clamps sub-11px mono
+             to 11px (12px on touch), and convert the residual 9–10px labels — so the
+             floor is enforced structurally, not merely implied by contrast. (Sprint-2.)
 
-───────────────────────────────────────────────────────────────────────────────
-PHASE 2 — THE CHOREOGRAPHY OF MONEY  (Days 6–9)
-"The cinema taught the language. Now the product must speak it."
-───────────────────────────────────────────────────────────────────────────────
-
--- DEMOLISHING THE TOLL BOOTH --
-  · localStorage lb-cinema-seen: first visit plays the film; every return
-    lands on the hero with a small "▶ replay the film" chip. The cinema
-    stops being a tax and becomes a possession — a thing the site HAS.
-  · Skip from second 0: the skip control renders inside the preload gate
-    overlay itself (currently buried under z-[120] for up to 10s).
-  · THE SHATTER: skipping plays a 300ms glass-crack — a prebuilt SVG crack
-    burst + the existing collapse handoff. Narrative: you broke the fourth
-    wall to get to the desk. Cheap to build; feels expensive.
-  · Mobile (<768px) never mounts the cinema: it gets a designed static
-    hero (poster frame + headline + directory), because the 390px "three
-    green lines in the void" first impression is over.
-
--- THE FIDELITY LADDER: SPEED AS A VISIBLE VIRTUE --
-  The terminal re-renders 1,640 lines of SVG per raw mousemove. The sprint
-  cure is imperative, not a canvas rewrite (that's the post-sprint ticket):
-  · Crosshair + hover legend move OUT of React state into two ref'd nodes
-    written directly inside ONE rAF-coalesced pointer handler. Pan coalesces
-    setVp to rAF.
-  · During high-velocity drags the chart sheds sub-pixel decoration (grid,
-    legend values update at 10Hz) and restores on settle — with the house
-    fast-attack/long-settle curve, so even the degrade is choreographed.
-  · The status bar earns a tiny "60fps" tick. A terminal that ADVERTISES
-    its frame budget is a flex no template can fake.
-
--- THE FILL RITUAL: MONEY MOMENTS GET A HEARTBEAT --
-  Today an order fills and a number silently mutates. Three beats, one
-  clock, ~600ms total, all springs from the existing motion stack:
-  1) The working-order line flashes side-color and COLLAPSES into the fill
-     point (the drag system already knows the geometry).
-  2) A radial pulse bleeds outward from the fill price across the row —
-     bull wash up, bear wash down. This moves because money moved.
-  3) The P&L and account figures ROLL — odometer morph, decimal sliding
-     into place (DecimatedNumber's mechanics, rebuilt ref-based per
-     Phase 4, reused for a purpose instead of a Matrix cliché).
-  Same ritual, smaller amplitude, for P&L tick direction. Reduced-motion:
-  color change + toast only.
-
--- CONNECTIVE TISSUE --
-  · app/template.tsx: a 200ms phosphor-wipe route veil, so the cinema's
-    language survives navigation instead of hard-cutting to 2009.
-  · lib/cinema.ts:78 — the linear beatOpacity/windowOpacity ramps adopt the
-    smoothstep already defined at ScrollCinema.tsx:11. One timeline, one
-    taste.
-  · chart-candle-in (globals.css:367) trades linear for the house quint —
-    the terminal's signature entrance finally snaps.
+-- FAB & FLOATING ANARCHY: THE DOCK --
+  ✅ components/Dock.tsx · app/layout.tsx · VoiceAgent.tsx · bet/QuickBet.tsx · Avatar.tsx
+  MECHANISM  DockProvider (mounted once at root) is a single pointer-events-none,
+             safe-area-aware, fixed bottom-right flex column. Every floating control
+             wraps itself in <DockSlot order={n}> that createPortals into that shared
+             column; CSS `order` stacks them (mic 30 · QuickBet/place-a-bet 20 · AI
+             avatar 10) so no two floating controls can ever occupy the same pixels.
+             The overlapping-FAB anarchy is architecturally impossible now.
+  🧹 DEBT     "reset-funds" is still an inline button (not a DockSlot); the promised
+             ESLint invariant ("no fixed bottom-* right-*") is enforced by review, not
+             lint; two stale "Dock lands in Phase 1" comments remain in BottomBar/
+             TradingPanel. Cleanup, not danger.
 
 ───────────────────────────────────────────────────────────────────────────────
-PHASE 3 — UX & THE INVISIBLE HAND  (Days 9–11)
-"Make the keyboard a weapon, the phone a first-class desk, the narrator a voice."
+PHASE 2 — THE CHOREOGRAPHY OF MONEY   (the cinema sang; the product now speaks)
 ───────────────────────────────────────────────────────────────────────────────
 
--- THE OPERATOR'S DECK: A11Y AS A POWER-USER FEATURE --
-  /pro is already keystroke-driven (type-to-search, Alt-tools). Finish the
-  thought:
-  · ⌘K COMMAND DECK — generalize the admin CommandPalette into a public
-    layer: every action, fuzzy-searchable, each row showing its hotkey.
-    First Tab press on /pro surfaces a one-time coach mark: "⌘K — the whole
-    desk, no mouse."
-  · The global :focus-visible ring renders as phosphor BRACKETS [ ] around
-    the focused control — the focus system wearing the brand instead of
-    fighting it. Tab order becomes a designed path, not an apology.
+-- THE INTRO TOLL BOOTH: BREAK THE GLASS TO ENTER --
+  ✅ components/scrollstory/CinemaGate.tsx · ScrollCinema.tsx · app/globals.css
+  MECHANISM  The film is OPT-IN, never a gate. CinemaGate mounts the cinema only when
+             sessionStorage lb-cinema-replay === "1" (never on phones, never
+             speculatively), consuming the flag once. The hero "▶ watch the film" chip
+             and the ⌘K "replay" command are its only setters. Skipping fires THE
+             SHATTER: a portaled, deterministic 14-radial glass-crack SVG burst
+             (shatter-burst keyframes) then a play-once collapse so the intro can't be
+             scrolled back. Reduced-motion skips the theatrics. Tactile, not decorative.
+  → NEXT      A localStorage "seen" flag so returning visitors auto-skip (sessionStorage
+             only survives the tab), and navigator.vibrate + a short glass-crack sound so
+             the shatter is FELT.
 
--- DRAG-TO-SHORT: KILLING THE RIGHT-CLICK PARADOX --
-  Shorting via onContextMenu is impossible on iOS and invisible everywhere.
-  · The chain goes Pointer Events end-to-end (pointerdown/pointermove hit-
-    testing replaces the dead mouseover drag-select).
-  · New grammar: tap = long. DRAG DOWNWARD past a threshold = short — the
-    row tints bear as you pull it under, with a subtle notch haptic
-    (navigator.vibrate where available). You literally pull the strike
-    below the line. Intuitive, native to touch, and visually ours.
-  · WCAG 2.5.1 honored: an explicit LONG/SHORT segmented control ships
-    beside the gesture — gestures are never the only path.
-  · ProbabilityCone handles: pointer events + setPointerCapture +
-    touch-action:none, plus visible low/high number inputs. The /trade
-    thesis band stops being frozen on half the web.
+-- THE FIDELITY LADDER (◐ RENDER-AVOIDANCE, NOT YET A DOWNGRADE) --
+  ◐ components/pro/Chart.tsx
+  MECHANISM  The name ships and it IS perf-as-a-feature — but by a different mechanism
+             than the autopsy imagined. The crosshair/hover/pan state lives OUTSIDE
+             React as a ref + rAF-coalesced useSyncExternalStore, so pointer motion
+             re-renders only three tiny subscriber components instead of reconciling
+             the ~1,700-line SVG per event. This is why the drag no longer floods.
+  ◐ GAP      There is NO canvas fallback and NO velocity measurement. Fidelity is never
+             actually reduced — React is simply kept out of the loop. The literal
+             "SVG→canvas on high-velocity drag" ladder is unbuilt.
+  ✚ CURE     Sample pointer velocity (dx/dt) during pan/axis-drag; above a threshold
+             rasterize candle bodies to a cached <canvas> layer (or a decimated SVG
+             path) and restore full SVG on pointerup / when velocity decays. Ship it as
+             a visible "Eco-Mode" chip so the trade-off reads as intent. (Sprint-2.)
 
--- THE NARRATOR: SCREEN-READER POETRY, SHARED WITH THE VOICE --
-  Instead of raw aria-live noise, one lib/narrator.ts composes market
-  commentary from store events (the events pipeline already funnels them):
-    "Filled — one hundred Apple at 326.90."
-    "You're up twelve dollars. Stop holding two percent below."
-    "Kill switch armed: book flattened."
-  · Rendered to a polite aria-live region (fills assertive), throttled,
-    deduplicated.
-  · The SAME strings feed the voice co-pilot's captions — one narrative
-    layer serving screen readers, voice, and toasts. The a11y layer stops
-    being compliance and becomes the product's spoken voice.
-  · The chart gains its words: a visually-hidden OHLC summary + arrow-key
-    crosshair stepping. 1,255 bars finally have a sentence.
-
-───────────────────────────────────────────────────────────────────────────────
-PHASE 4 — THE DURABILITY PATCH  (Days 11–12)
-"Stop the clocks that don't tick. Free the memory that doesn't move."
-───────────────────────────────────────────────────────────────────────────────
-
--- ONE AMBIENT CLOCK TO RULE THE DECORATIONS --
-  lib/ambient-clock.ts: a single shared ticker with IO-gated subscribers.
-  · HungCard's FOUR immortal pendulum rAFs → four callbacks on one clock,
-    asleep offscreen, at rest when settled.
-  · ScrollScrub's per-frame getBoundingClientRect loop → starts/stops with
-    its existing IntersectionObserver.
-  · DecimatedNumber → writes textContent via ref inside the shared tick
-    (no setState-per-frame; the quant run-all cascade stops stacking dozens
-    of React commits).
-  · document.hidden freezes PHYSICS while data polls continue — return to a
-    snapshot, never a jittery replay.
-  · GsapScroller: debounce the resize refresh; skip refresh when wire()
-    attached nothing.
-  · lazyLoop keeps observing: webm loops pause() on exit, play() on entry.
-    The battery tax ends.
-
--- THE GRAVEYARD (DEAD CODE, HONORED) --
-  The exorcism happened in Phase 0; the headstone is the easter egg:
-  /graveyard — a hidden mono route (footer: "site map ▸ the graveyard")
-  listing the fallen: name, line count, epitaph.
-    "CrystalHero.tsx · 129 lines · claimed to be three.js; was a webp."
-    "SocialProof.tsx · 140 lines · still believed in $100,000."
-  Radical honesty as brand voice, ten minutes of build time, and the kind
-  of detail juries screenshot.
-
--- GUARDRAILS SO IT STAYS FIXED --
-  size-limit budget in CI (fail > 3.5MB static); the WebGLRenderer==1 chunk
-  grep; knip in CI; axe smoke-test on /, /trade, /pro, /quant.
+-- THE THREE-BEAT FILL RITUAL: MONEY MOMENTS GET A HEARTBEAT --
+  ✅ app/pro/page.tsx · Chart.tsx · RollingNumber.tsx · TradingPanel.tsx · globals.css
+  MECHANISM  page.tsx diffs order statuses each tick; any order that just flipped to
+             "filled" spawns an ephemeral fillRitual at its fill price (pruned ~900ms,
+             primed so history never replays). BEAT 1+2 render on the chart as a
+             side-colored "fill-flash" price line + two outward-bleeding "fill-ring"
+             circles (globals.css keyframes). BEAT 3 is the RollingNumber odometer — a
+             ~450ms fast-attack / long-settle tween on Equity and realized+unrealized
+             P&L. Every beat has a reduced-motion collapse. The climax is no longer mute.
+  → NEXT      Scale the punch by fill NOTIONAL (a $50k fill should hit harder than a
+             $500 one), add a one-frame background color-bleed on the P&L tile synced to
+             the ring, optionally with haptics.
 
 ───────────────────────────────────────────────────────────────────────────────
-PHASE 5 — THE AWWWARDS X-FACTOR  (Days 12–14)
-"Double down on the only thing nobody else can copy: the honesty."
+PHASE 3 — UX & THE INVISIBLE HAND   (accessibility as the X-factor, not the apology)
 ───────────────────────────────────────────────────────────────────────────────
 
--- THE SYNTHETIC TRUTH BADGE --
-  A live provenance chip in the product header:
-     SYNTHETIC CHAIN · REAL QUOTES (DELAYED) · $0 REAL RISK
-  Mounts with a 400ms glitch that RESOLVES into a checkmark — the site's
-  one glitch effect, reserved for the one claim that matters. Click opens
-  the Honesty Ledger panel: three columns — WHAT'S REAL (Yahoo quotes,
-  trained models, your decisions), WHAT'S SYNTHETIC (the BS option chain,
-  seed tapes), WHAT'S YOURS (the paper account, the history). The
-  Executioner called honesty our best asset; this makes it furniture.
+-- THE KEYBOARD PATH: THE COMMAND DECK --
+  ✅ components/CommandDeck.tsx · lib/command-deck.ts · app/pro/page.tsx · layout.tsx
+  MECHANISM  ⌘K/Ctrl+K opens a fuzzy-searchable palette backed by an external-store
+             registry: each page registerCommands under a scope id and unregisters on
+             unmount via useSyncExternalStore. Global nav is always live; /pro registers
+             chart/tool commands whose displayed <kbd> hotkeys map to REAL keydown
+             bindings in the same file — so the deck IS the shortcut reference. A
+             one-time Tab coach-mark turns "you tabbed" into "you found the power layer."
+  🧹 DEBT     The hotkey column is only populated on /pro, and the deck only click-runs a
+             command (it never dispatches a command's declared hotkey globally). NEXT: a
+             global hotkey dispatcher + a "?" cheat-sheet + real bindings for high-value
+             global actions (contrast toggle, replay film).
 
--- THE LESSON THAT CONFESSES: "ANATOMY OF A BROKEN VWAP" --
-  Scoped truthfully: the full choose-your-own-adventure /learn rebuild is
-  a NEXT-sprint epic. What ships in THIS sprint is its flagship chapter —
-  an interactive autopsy of our own Phase-0 bug:
-  · A live chart cell with a toggle: BROKEN (the string-length session
-    reset — the line you're seeing is just typical price) vs FIXED (true
-    session-anchored VWAP snapping into place).
-  · The teacher note tells the truth: "We shipped this bug. Here's how you
-    catch it, and here's the test that now makes it impossible."
-  · Ends by opening the VERIFIED MATH ✓ on /pro.
-  A trading school that dissects its own defect in public is unforgettable
-  in a way no phosphor glow will ever be. The bug becomes the syllabus.
+-- MOBILE SHORTING: DRAG-TO-SHORT (◐ MOBILE-AWARE, NOT YET MOBILE-NATIVE) --
+  ✅ components/options-chain/OptionsChain.tsx
+  MECHANISM  Each chain cell wires onPointerDown/Move/Up/Cancel with setPointerCapture.
+             A downward drag past 26px (|dx|<40) toggles that leg SHORT and fires
+             navigator.vibrate(12); a horizontal cross-cell drag multi-selects via
+             elementFromPoint hit-testing. Keyboard parity (Enter = armed side,
+             Shift+Enter = opposite) means the gesture is never the only path — WCAG
+             2.5.1 respected. The right-click paradox is broken.
+  ◐ CAVEAT    Honest correction to the original framing: the short-drag is gated to FINE
+             pointers; touch retains pan-y scroll and shorts via the armed toggle, and
+             onContextMenu is KEPT, not replaced. ✚ NEXT: a live "ghost of the strike
+             pulled under the mid-line" that commits at threshold, and a
+             long-press-then-drag variant so the signature gesture itself works on touch.
+
+-- SCREEN READER POETRY: THE NARRATOR --
+  ✅ lib/narrator.ts · components/Narrator.tsx · Chart.tsx · bet/QuickBet.tsx
+  MECHANISM  narrator.ts composes plain-English market commentary into two
+             visually-hidden aria-live regions — assertive/role=alert for fills,
+             polite/role=status for the rest — with 3s de-stutter and a clear-then-set
+             dance for exact repeats, deliberately AVOIDING rAF so a fill in a
+             backgrounded tab still announces. It speaks every fill by name ("stop-loss
+             active"), the kill switch, resets; the chart narrates OHLC as you keyboard
+             bar-to-bar; QuickBet narrates placed bets. The a11y layer became a unique
+             audio-narrative layer of the product.
+  → NEXT      Wire narrate() into the voice co-pilot's captions (the header promises it;
+             no TTS sink exists yet) + a verbosity control + quote-tick throttling.
 
 ───────────────────────────────────────────────────────────────────────────────
-  SPRINT MAP
-───────────────────────────────────────────────────────────────────────────────
-  D1–2   Phase 0 complete (math, law, floor, dedupe, glass, flags)
-  D3–6   Phase 1 (italics+wonk · radar/stealth tokens · Dock)
-  D6–9   Phase 2 (toll booth · fidelity ladder · fill ritual · veil)
-  D9–11  Phase 3 (⌘K deck · drag-to-short · narrator)
-  D11–12 Phase 4 (ambient clock · graveyard · CI guards)
-  D12–14 Phase 5 (truth badge · VWAP lesson) + re-convene the Tribunal
-  POST-SPRINT BACKLOG (named, not hidden): canvas chart port · full /learn
-  adventure · Fraunces axis play on marketing heroes · India geo-gate.
-
-───────────────────────────────────────────────────────────────────────────────
-  DAY 1 vs DAY 14 — THE FELT DIFFERENCE
+PHASE 4 — OPTIMIZATION & THE DURABILITY PATCH   (stop the clocks that don't tick)
 ───────────────────────────────────────────────────────────────────────────────
 
-  HOMEPAGE
-  Day 1   A 1500vh toll booth you cannot skip for 10 seconds, replayed on
-          every visit, shipping three.js twice; a black void on phones;
-          faux-slanted headlines over olive whispers at 2.3:1; a smiley
-          blob squatting on the risk disclaimer.
-  Day 14  First visit: the film, skippable from frame zero, ending in a
-          shatter you chose. Every return: straight to a hero whose real
-          Fraunces italics subtly WONK with today's volatility, over AA
-          text, one accent, one Dock — and a "replay the film" chip that
-          turns the intro into a possession. 1.7MB lighter before paint.
+-- ONE CLOCK: THE ROGUE rAF EXORCISM --
+  ✅ lib/ambient-clock.ts · DecimatedNumber.tsx · BrokenVwap.tsx · GreekSurface3D.tsx
+  MECHANISM  One module-global Set of frame callbacks, driven by a SINGLE
+             requestAnimationFrame that runs only while it has subscribers AND the
+             document is visible. A visibilitychange listener cancels the rAF on blur
+             and resets last=0 on resume, so a hidden tab returns to a SNAPSHOT, not a
+             jittery fast-forward replay. Consumers gate on a shared useInView
+             IntersectionObserver. The physics freeze; the data keeps polling.
+  🧹 DEBT     The exported useAmbientFrame hook is DEAD (all four consumers call
+             subscribeFrame directly), and always-on rAF loops still live in
+             CockpitTopBar and ScrollCinema. Migrate those two + delete the dead hook to
+             make the consolidation total.
 
-  /PRO
-  Day 1   A brilliant TradingView transcription that re-renders 1,640
-          lines of SVG per mousemove, teaches a mathematically wrong VWAP
-          by default, fills orders in dead silence, hides RESET FUNDS
-          under a microphone, and cannot be operated without a mouse.
-  Day 14  VWAP carries a ✓ that opens its own proof. Fills land as a
-          three-beat ritual — line collapses, color bleeds, numbers roll.
-          The crosshair glides at frame rate on an imperative overlay.
-          Tab draws phosphor brackets; ⌘K opens the whole desk; the
-          narrator speaks every fill to ears and screen readers alike.
-          The mic lives in the Console, and RESET FUNDS breathes free.
+-- DEAD CODE EXORCISM: THE GRAVEYARD MUSEUM --
+  ✅ app/graveyard/page.tsx · Footer.tsx · pro/TruthBadge.tsx · scripts/guard.mjs
+  MECHANISM  A real route renders eight deleted components as headstone cards — name,
+             exact git line count, born-as line, epitaph — plus a computed
+             total-lines-deleted figure, framing deletion as radical brand honesty.
+             Genuinely discoverable: linked "⚰ the graveyard" from the footer and the
+             TruthBadge. guard.mjs runs a poor-man's-knip orphan scan on every build.
+  🧹 DEBT     The FALLEN roster + line counts are hand-transcribed (they drift); the
+             orphan regex matches a basename anywhere in an import path (a Card.tsx reads
+             "used" whenever HungCard is imported → false negatives). NEXT: regenerate the
+             roster from `git show --stat`; anchor the regex or swap in knip and promote
+             the orphan check from WARN to a gated fail.
 
-  The thesis of the protocol, one line:
-  STOP APOLOGIZING WITH FIXES. CHARGE ADMISSION FOR THEM.
+───────────────────────────────────────────────────────────────────────────────
+PHASE 5 — THE "AWWWARDS" X-FACTOR   (the undeniable hook)
+───────────────────────────────────────────────────────────────────────────────
+
+-- THE ONE GLITCH: SYNTHETIC TRUTH AS THE PITCH --
+  ✅ components/pro/TruthBadge.tsx · app/globals.css · app/pro/page.tsx
+  MECHANISM  TruthBadge mounts with a deliberate 400ms RGB-split glitch — reserved as
+             the site's ONE glitch — that resolves into a green checkmark. The chip reads
+             "synthetic chain · real quotes (delayed) · $0 real risk" and opens the
+             Honesty Ledger modal: three columns, WHAT'S REAL / WHAT'S SYNTHETIC /
+             WHAT'S YOURS. "Not real money" was inverted into the strongest line in the
+             pitch: learn risk-free, and we'll prove exactly what's fake.
+  → NEXT      It only mounts on /pro. Promote it into the global Nav or the landing hero
+             so the glitch-resolving-to-truth is the FIRST thing every visitor sees.
+
+-- THE TERMINAL THAT TEACHES YOU: THE /LEARN REBUILD --
+  ✅ app/learn/page.tsx · components/learn/SplitDesk.tsx · Predict.tsx · BrokenVwap.tsx
+     app/learn/broken-vwap/page.tsx · broken-vwap-math.ts · Diploma.tsx
+  MECHANISM  SplitDesk pins one live TERMINAL on the right while chapter copy scrolls on
+             the left; a per-scroll getBoundingClientRect read (chosen over
+             IntersectionObserver so it works in hidden tabs) flips the active chapter
+             with a CRT channel-flicker, keyed-remounting only the active demo. Predict
+             renders a "call your shot" quiz before each demo, persisted to localStorage
+             and fed to the Diploma. And the confession: the Broken VWAP lesson toggles
+             broken↔fixed and tweens the SVG path ~500ms so the fix physically snaps in —
+             drawing the REAL vwap() imported from indicators.ts against vwapBroken,
+             backed by a test. Walls of text became a choose-your-own-adventure where the
+             old bug is the teacher.
+  → NEXT      Fold the confession in as an actual "Chapter Zero" INSIDE the SplitDesk
+             (it's a separate sub-route today) and gate the Diploma on having toggled the
+             break — so the wound is taught in the same instrument as everything else.
+
+───────────────────────────────────────────────────────────────────────────────
+PHASE 6 — THE FRONTIER   (NEW · the one thing design flare cannot fix: SCALE)
+"The skin is undeniable. The pipe is honest. Now make the pipe survive 10,000."
+───────────────────────────────────────────────────────────────────────────────
+
+  This phase did not exist in the original autopsy — it is the debt the NEW work
+  incurred. The market-data + streaming layer is real, tested, and shipped; its
+  limits are architectural, not cosmetic, and must be named as loudly as the skin.
+
+-- THE PROVIDER SEAM + CHAIN --
+  ✅ lib/market-data/{provider,index,alpaca,twelvedata,finnhub,yahoo}.ts
+  MECHANISM  One MarketDataProvider interface; routes import only getProvider(). The
+             orchestrator walks Alpaca→TwelveData→Finnhub→Yahoo→cache→synthetic, skips
+             dead/breaker-open providers, gap-fills indices Alpaca can't serve, and
+             preserves the pre-existing route shapes exactly.
+  → NEXT      Per-symbol routing policy (crypto→keyless browser socket, indices→TwelveData,
+             equities→Alpaca) so each asset class rides its best provider, not one global
+             ordering.
+
+-- BREAKERS · DEDUP · CACHE · PROVENANCE --
+  ✅ lib/market-data/{health,cache,index,provider}.ts · app/api/status/route.ts
+  MECHANISM  Per-provider breaker (3 qualifying fails → 30s open, half-open retry);
+             in-flight dedup Map (N identical keys share ONE upstream promise);
+             KV-or-memory cache (3s/60s/600s freshness, 24h stale retention for Tier-C
+             last-good); every response stamped {provider,tier A/B/C/D,cacheAge,isRealtime}.
+  ⇧ CEILING  The dedup Map AND the breaker are per-instance/in-process. On a warm fleet,
+             the 3s quote TTL expiring triggers a CROSS-INSTANCE CACHE STAMPEDE — every
+             instance re-fetches the same symbol at once — and a downed provider is
+             re-discovered instance-by-instance.
+  ✚ BREAK IT KV single-flight lock (SET NX on lock:<key>, short expiry): exactly one
+             instance refreshes on expiry while the rest serve last-good until it lands.
+             Move the breaker counters into that same KV → one shared fleet-wide view of
+             provider health.
+
+-- SSE STREAMING TRANSPORT --
+  ✅ app/api/stream/quotes/route.ts · lib/streaming/{manager,useLiveQuotes}.ts
+  MECHANISM  A thin Node ReadableStream pumps getQuotes every ~2s over a 55s cycle then
+             emits bye (under Vercel maxDuration=60) for seamless reconnect, pushing only
+             changed prices + hb heartbeats. The browser StreamingManager holds ONE
+             EventSource for the union of all subscribers' symbols, fans changed quotes
+             out ≤10fps, and falls back to polling after 4 failed attempts. "One upstream
+             per symbol" comes from the cache+dedup, not a shared socket — honest ~2–3s.
+  ⇧ CEILING  This scales to ~1,000 CONCURRENT viewers on Vercel. Each EventSource pins a
+             serverless function for its full 55s cycle; concurrency is bounded by
+             Vercel's function limit, not CPU. Beyond ~1k, new streams fail → clients
+             degrade to polling.
+  ✚ BREAK IT A single always-on edge worker / Durable Object holding ONE upstream Alpaca
+             socket, fanning ticks to all browsers. Because the manager AND route are
+             already transport-agnostic (documented in both), that worker emits the
+             identical `quotes` event shape with ZERO client or route change. This is the
+             one place the "no workers on Vercel" constraint must eventually yield — and
+             the codebase is already shaped to accept it as a drop-in.
+
+-- P0 RELIABILITY FIXES --
+  ✅ route.ts · manager.ts · guard.ts · index.ts (+ 4 named test files)
+  MECHANISM  P0-1 per-pump try (a failed fetch never kills the stream) · P0-2 heartbeat on
+             its own clock (a slow provider can't fake a stale-reconnect) · P0-3 backoff
+             no longer reset by hello (kills the ~1s reconnect hot-loop) · P0-4
+             CHAIN_DEADLINE_MS=7s caps the whole chain walk · P0-5 per-IP guard (8
+             concurrent / 30-per-min / 50 symbols). Every fix has a unit test.
+  ⇧ CEILING  The guard (and breaker) are per-instance → the per-IP cap is really
+             per-IP-per-INSTANCE; a client spread across warm instances can exceed 8.
+  ✚ BREAK IT Back the guard counters with KV atomic INCR/DECR keyed by IP (same TTL
+             window) for a true global ceiling — sharing one KV source of truth with the
+             single-flight lock and the breaker.
 
 ═══════════════════════════════════════════════════════════════════════════════
-  END OF ROADMAP — re-convene the Executioner on Day 14. We want the 7.5.
+  THE DEBT LEDGER — the disciplined next sprint (kept honest, on purpose)
+═══════════════════════════════════════════════════════════════════════════════
+  LAW      ◐ app/safety/page.tsx — the third honesty-ledger page (Clause pattern + repoint footer)
+  TYPE     ◐ font-SIZE floor — .micro clamp of sub-11px mono on coarse pointers (contrast floor is done)
+  MOTION   ◐ Fidelity Ladder — the literal velocity→canvas downgrade + an "Eco-Mode" chip
+  A11Y     🐛 role="teacher" ×2 → valid role + an axe/eslint-jsx-a11y CI gate
+  ENGINE   🧹 delete the dead useAmbientFrame hook; migrate CockpitTopBar + ScrollCinema off their own rAF
+  DOCK     🧹 the "no fixed bottom-* right-*" ESLint invariant; port reset-funds into a DockSlot; kill 2 stale comments
+  HONESTY  🧹 regenerate the /graveyard roster from `git show --stat`; anchor the orphan regex (or swap knip) → gated fail
+  REACH    → promote the TruthBadge + the WONK legend to global; global hotkey dispatch for the Command Deck
+  SCALE    ✚ KV single-flight lock · KV atomic guard/breaker · the edge-worker socket fan-out (the 10k unlock)
+
+───────────────────────────────────────────────────────────────────────────────
+  SPRINT-2 UPDATE — the ledger above is now PAID (D1–D5 shipped & pushed)
+───────────────────────────────────────────────────────────────────────────────
+  Each line ran on its own commit, each gated (tsc · vitest · next build · guard).
+  Tests grew 206 → 251. What shipped, and the remainder kept honestly open:
+
+  ✅ D1  a9b7a54  LAW + A11Y — app/safety/page.tsx (the third honesty-ledger page,
+                 Clause pattern), footer repointed /learn#now-go → /safety, and the
+                 role="teacher" false-alarm defused by renaming the prop to `speaker`
+                 (it was a local speaker prop, never DOM ARIA — an audit false positive).
+  ✅ D2  bc05a85  TYPE + ENGINE — coarse-pointer font-SIZE floor (sub-11px mono → 11px),
+                 dead useAmbientFrame hook deleted. (ScrollCinema's rAF kept BY DESIGN —
+                 it's the replay scene loop, not a rogue ambient clock.)
+  ✅ D3  4356a95  HONESTY + DOCK — orphan-scan regex anchored (a suffix collision can no
+                 longer hide a real orphan); the "no fixed bottom-* right-* outside the
+                 Dock" invariant is now a HARD guard check; 2 stale "Dock lands in Phase 1"
+                 comments killed.
+  ✅ D4  4df19c3  REACH — TruthBadge promoted into the global Nav (site-wide glitch→✓);
+                 a WONK aria-live legend announces the live volatility BAND to screen
+                 readers; a bare `?` opens the Command Deck as a cheat-sheet.
+  ✅ D5  85dafb4  SCALE (Vercel-native half) — a shared lib/kv.ts client; a single-flight
+                 refresh lock (SET NX) so ONE instance refreshes a stale key while the rest
+                 serve last-good → the cross-instance STAMPEDE is dead; a fleet-wide atomic
+                 per-IP SSE guard (KV INCR/DECR), fails-soft to per-instance memory. Both
+                 KV-optional: with no KV env, behavior is exactly as before.
+
+  ✚ STILL DEFERRED (named, not hidden):
+     • the edge-worker / Durable-Object socket fan-out (the true >1k-concurrent unlock) —
+       breaks "Vercel-only"; the transport is already worker-agnostic, so it's a drop-in
+       once you make the infra call.
+     • breaker counters in KV (one fleet-wide health view) — optional follow-on to D5.
+     • the Fidelity-Ladder literal canvas downgrade + "Eco-Mode" chip (MOTION).
+     • reset-funds → a DockSlot (UX judgment); the /graveyard roster auto-regen from
+       `git show --stat`; an eslint-jsx-a11y CI gate (the project deliberately runs NO
+       eslint — tsc + vitest + build + guard.mjs is the gate).
+
+═══════════════════════════════════════════════════════════════════════════════
+  DAY 1  vs  DAY 14   —  how the two hero surfaces FEEL (autopsy → shipped)
+═══════════════════════════════════════════════════════════════════════════════
+
+  ── THE HOMEPAGE ──────────────────────────────────────────────────────────────
+  DAY 1 (the autopsy):  A forced 2.5MB cinema you cannot skip, then a static hero.
+     The wordmark is a faux-slanted italic. The ticker whispers in 11px olive text
+     no one can read at AA. Two VIX numbers disagree on one screen. It smells like
+     an ambitious template that hasn't decided what it is.
+
+  DAY 14 (shipped):  The film is a CHOICE — the landing greets you first; press
+     "watch the film" and you can SHATTER the glass to enter. The "lazybull." wordmark
+     is a real italic that visibly WARPS with live volatility — the type is an
+     instrument. The ticker is AA by default (RADAR), with STEALTH as an opt-in
+     power-user whisper. The hero HUD reads the same live feed as the ticker, so no
+     two numbers ever disagree. It feels like a bespoke terminal that knows exactly
+     what it is — and proves it.
+
+  ── /PRO ──────────────────────────────────────────────────────────────────────
+  DAY 1 (the autopsy):  A default VWAP line that is quietly (H+L+C)/3 cosplay. A
+     chart that re-renders ~1,700 lines of SVG on every mousemove and lags on drag.
+     A P&L number that just… changes. Floating buttons that overlap the kill switch.
+     Focus rings suppressed. It looks powerful and behaves like a demo.
+
+  DAY 14 (shipped):  Every indicator legend carries a green ✓ — hover it for the
+     formula and the test that pins it. The crosshair glides because pointer state
+     lives outside React; the drag no longer floods. When an order fills, the chart
+     pulses a ring outward from the fill line and the equity odometer rolls — the
+     money moment has a heartbeat. The mic, the bet, and the avatar sit in one Dock,
+     never on top of each other. ⌘K opens a command deck that doubles as the hotkey
+     map; a Narrator speaks every fill to screen readers by name. A single glitch
+     resolves into "Synthetic Truth: $0 real risk." It reads like a $100k bespoke
+     system because every former wound now carries its own proof.
+
+  ── THE SPRINT-2 HORIZON (what "Day 14" of the NEXT sprint buys) ───────────────
+     The third legal page lands; the size-floor makes the densest labels legible on
+     any phone; the Fidelity Ladder trades detail for framerate under a violent drag
+     and calls it Eco-Mode; and the streaming pipe stops bowing at ~1,000 — a single
+     edge worker holds one upstream socket and fans the same event shape to 10,000,
+     with a KV single-flight lock ending the cache stampede. The skin is already
+     undeniable. Sprint 2 makes the pipe as durable as the skin is beautiful.
+
+═══════════════════════════════════════════════════════════════════════════════
+  Verdict: Phases 0–5 SHIPPED and re-verified against the tree. The Debt Ledger
+  (D1–D5) is now PAID too — the third legal page, the size floor, the guard
+  hardening, the global signatures, and the Vercel-native scale levers (single-
+  flight lock + fleet-wide guard) all shipped and pushed, 251 tests green. What
+  remains is ONE honest infra decision — the edge-worker socket fan-out (the
+  >1k-concurrent unlock) — plus a short, named tail of optional polish. Every
+  wound became a signature. We kept the receipts — and the invoice — and then
+  paid the invoice.
 ═══════════════════════════════════════════════════════════════════════════════
