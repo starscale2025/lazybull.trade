@@ -26,6 +26,15 @@ function UpdatedAgo({ since }: { since?: number | null }) {
   return <>updated {secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m`} ago</>;
 }
 
+/** Feed-provider id → display label for the provenance line. */
+const SOURCE_LABEL: Record<string, string> = {
+  alpaca: "Alpaca",
+  twelvedata: "Twelve Data",
+  finnhub: "Finnhub",
+  yahoo: "Yahoo Finance",
+};
+const sourceLabel = (s?: string | null) => (s && SOURCE_LABEL[s]) || "the live feed";
+
 /** A "?" that explains a knob on hover/focus — beginners shouldn't have to
     guess what a seed or a drift is before they dare to touch one. */
 function InfoTip({ text }: { text: string }) {
@@ -263,7 +272,7 @@ export function QuantHero({
                     <span className="uppercase tracking-wider text-fg-dim">Source</span>
                     <span>
                       {" · live • "}
-                      {liveSource === "twelvedata" ? "Twelve Data" : "Yahoo Finance"} · <UpdatedAgo since={updatedAt} />
+                      {sourceLabel(liveSource)} · <UpdatedAgo since={updatedAt} />
                     </span>
                   </>
                 )}
