@@ -1,5 +1,6 @@
 import { getProvider } from "@/lib/market-data";
 import type { Quote } from "@/lib/market-data/provider";
+import { tryAcquire, release } from "@/lib/streaming/guard";
 
 // Server-Sent Events transport for live quotes. The browser opens ONE
 // EventSource here (via the client StreamingManager) and prices PUSH — no
@@ -26,9 +27,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Vercel cap; we close a beat before and the client reconnects
 
-const TICK_MS = 2000; // push cadence (bounded by the 3s quote cache upstream)
-const CYCLE_MS = 55_000; // close cleanly before maxDuration; EventSource reconnects seamlessly
-const HEARTBEAT_EVERY = 1; // ticks between `:` heartbeats (every tick here)
+// Timings, env-overridable so tests can drive fast cycles (read per-request).
+const cfg = () => ({
+  tick: Number(process.env.SSE_TICK_MS) || 2000, // push cadence (bounded by the 3s quote cache)
+  cycle: Number(process.env.SSE_CYCLE_MS) || 55_000, // close before maxDuration; client reconnects
+  heartbeat: Number(process.env.SSE_HEARTBEAT_MS) || 5000, // emitted on its OWN clock (P0-2)
+});
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -41,8 +45,28 @@ export async function GET(req: Request) {
         .map((s) => s.trim().toUpperCase())
         .filter(Boolean)
     ),
-  ].slice(0, 50);
+  ].slice(0, 50); // P0-5: symbol count capped
 
+  // P0-5: per-IP connection + rate cap (lightweight, per-instance).
+  const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown")
+    .split(",")[0]
+    .trim();
+  const gate = tryAcquire(ip);
+  if (!gate.ok) {
+    return new Response(JSON.stringify({ ok: false, error: gate.reason }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "5" },
+    });
+  }
+  let guardReleased = false;
+  const releaseGuard = () => {
+    if (!guardReleased) {
+      guardReleased = true;
+      release(ip);
+    }
+  };
+
+  const { tick: TICK_MS, cycle: CYCLE_MS, heartbeat: HEARTBEAT_MS } = cfg();
   const enc = new TextEncoder();
   let closed = false;
   // Client disconnect → stop the loop promptly (frees the upstream poll).
@@ -72,6 +96,7 @@ export async function GET(req: Request) {
       sendEvent("hello", { symbols, at: Date.now() });
 
       if (!symbols.length) {
+        releaseGuard();
         controller.close();
         return;
       }
@@ -79,40 +104,54 @@ export async function GET(req: Request) {
       // Last price we sent per symbol → only push what actually changed.
       const lastSent = new Map<string, number>();
       let seq = 0;
-      let tick = 0;
       const startedAt = Date.now();
+
+      // P0-2: heartbeats run on their OWN clock, so a slow (or failing) provider
+      // fetch can never delay them — the client won't stale-reconnect just
+      // because getQuotes took a while.
+      const hb = setInterval(heartbeat, HEARTBEAT_MS);
+
+      // P0-1: a single failed tick must NOT tear down the stream. Swallow + log;
+      // the client keeps its last values and its heartbeats, and the next tick
+      // retries. Only a client disconnect or the cycle boundary ends the stream.
+      const safePump = async (initial: boolean) => {
+        try {
+          const { quotes, provenance } = await getProvider().getQuotes(symbols);
+          const changed: Quote[] = initial
+            ? quotes
+            : quotes.filter((q) => lastSent.get(q.sym) !== q.last);
+          for (const q of quotes) lastSent.set(q.sym, q.last);
+          if (changed.length) sendEvent("quotes", { quotes: changed, provenance }, ++seq);
+        } catch (e) {
+          console.error(
+            "[stream/quotes] pump failed (stream stays alive):",
+            e instanceof Error ? e.message : e
+          );
+        }
+      };
 
       try {
         // Prime immediately so a fresh (re)connection repopulates without waiting.
-        await pump(true);
+        await safePump(true);
         while (!closed && Date.now() - startedAt < CYCLE_MS) {
           await sleep(TICK_MS);
           if (closed) break;
-          await pump(false);
+          await safePump(false);
         }
         sendEvent("bye", { reason: "cycle" });
-      } catch (e) {
-        sendEvent("error", { message: e instanceof Error ? e.message : String(e) });
       } finally {
+        clearInterval(hb);
+        releaseGuard();
         try {
           controller.close();
         } catch {
           /* already closed */
         }
       }
-
-      async function pump(initial: boolean) {
-        const { quotes, provenance } = await getProvider().getQuotes(symbols);
-        const changed: Quote[] = initial
-          ? quotes
-          : quotes.filter((q) => lastSent.get(q.sym) !== q.last);
-        for (const q of quotes) lastSent.set(q.sym, q.last);
-        if (changed.length) sendEvent("quotes", { quotes: changed, provenance }, ++seq);
-        if (tick++ % HEARTBEAT_EVERY === 0) heartbeat();
-      }
     },
     cancel() {
       closed = true;
+      releaseGuard();
     },
   });
 

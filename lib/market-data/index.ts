@@ -34,6 +34,29 @@ const usable = (p: MarketDataProvider) => p.available() && breakerClosed(p.name(
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const liveTier = (isRealtime: boolean): Provenance["tier"] => (isRealtime ? "A" : "B");
 
+// P0-4: bound the TOTAL time one request spends walking the chain. Per-provider
+// timeouts are 6s, so 4 providers could stack to ~24s; this caps the whole walk
+// and shrinks each provider's slice to the remaining budget so we fail over
+// earlier instead of hanging a caller. "timeout" in the message means the
+// breaker counts it (see isQualifyingFailure). The abandoned upstream fetch
+// still aborts on its own internal timeout.
+const CHAIN_DEADLINE_MS = 7000;
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error("chain timeout")), ms);
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      }
+    );
+  });
+}
+
 /** Provenance for a cache hit: fresh (isRealtime tier) vs stale (Tier C). */
 function cachedProv(entry: CacheEntry<unknown>, stale: boolean): Provenance {
   return {
@@ -50,7 +73,8 @@ function cachedProv(entry: CacheEntry<unknown>, stale: boolean): Provenance {
 export type BarsResponse = (BarsResult & { provenance: Provenance }) | null; // null → Tier D
 export type QuotesResponse = { quotes: Quote[]; provenance: Provenance };
 
-export function createOrchestrator(chain: MarketDataProvider[]) {
+export function createOrchestrator(chain: MarketDataProvider[], opts?: { deadlineMs?: number }) {
+  const deadlineMs = opts?.deadlineMs ?? CHAIN_DEADLINE_MS;
   // In-flight de-duplication: 200 clients hitting the same symbol at once share
   // ONE upstream promise instead of firing 200 identical provider calls.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,10 +95,13 @@ export function createOrchestrator(chain: MarketDataProvider[]) {
       if (cached && ageMs(cached) < freshMs) {
         return { ...cached.data, provenance: cachedProv(cached, false) };
       }
+      const deadline = Date.now() + deadlineMs;
       for (const p of chain) {
         if (!usable(p)) continue;
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) break; // chain budget spent — fall to cache / Tier D
         try {
-          const res = await p.getBars(symbol, tf);
+          const res = await withTimeout(p.getBars(symbol, tf), remaining);
           recordSuccess(p.name());
           await cacheSet<BarsResult>(
             key,
@@ -115,11 +142,14 @@ export function createOrchestrator(chain: MarketDataProvider[]) {
       const collected: Quote[] = [];
       let anyRealtime = false;
       let firstProvider = "";
+      const deadline = Date.now() + deadlineMs;
       for (const p of chain) {
         if (!remaining.size) break;
         if (!usable(p)) continue;
+        const timeLeft = deadline - Date.now();
+        if (timeLeft <= 0) break; // chain budget spent — fall to cache / Tier D
         try {
-          const got = await p.getQuotes([...remaining]);
+          const got = await withTimeout(p.getQuotes([...remaining]), timeLeft);
           recordSuccess(p.name());
           let contributed = false;
           for (const q of got) {

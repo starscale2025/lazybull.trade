@@ -206,3 +206,33 @@ describe("tier D — no data anywhere", () => {
     expect(res!.provenance.provider).toBe("on");
   });
 });
+
+// A provider that never resolves — simulates a hung/blackholed upstream.
+const hanging: MarketDataProvider = {
+  name: () => "hang",
+  supportsRealtime: () => true,
+  supportsCrypto: () => true,
+  supportsIntraday: () => true,
+  available: () => true,
+  health: () => ({ name: "hang", available: true, failures: 0, trippedUntil: 0, lastSuccess: 0 }),
+  getQuote: () => new Promise<never>(() => {}),
+  getQuotes: () => new Promise<never>(() => {}),
+  getBars: () => new Promise<never>(() => {}),
+};
+
+describe("global provider timeout (P0-4)", () => {
+  it("bounds total time when a provider hangs — returns Tier D, never hangs the caller", async () => {
+    const o = createOrchestrator([hanging], { deadlineMs: 80 });
+    const start = Date.now();
+    const res = await o.getBars("AAPL", "D");
+    expect(res).toBeNull(); // no data → Tier D, not an infinite wait
+    expect(Date.now() - start).toBeLessThan(1000); // bounded by the ~80ms deadline
+  });
+
+  it("leaves the happy path unchanged — a fast provider serves well under the deadline", async () => {
+    const good = fake({ name: "good", realtime: true, bars: someBars });
+    const o = createOrchestrator([good], { deadlineMs: 80 });
+    const res = await o.getBars("AAPL", "D");
+    expect(res!.provenance.provider).toBe("good");
+  });
+});

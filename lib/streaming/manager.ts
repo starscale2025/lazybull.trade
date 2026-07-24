@@ -24,6 +24,7 @@ export type StreamMode = "idle" | "connecting" | "streaming" | "polling";
 
 const THROTTLE_MS = 100; // coalesce fan-out to ≤10fps
 const STALE_MS = 12_000; // no message (incl. heartbeat) this long → force reconnect
+const STABLE_MS = 5_000; // uptime before a connection counts as "stable" (P0-3)
 const MAX_SSE_ATTEMPTS = 4; // then fall back to polling (and keep retrying SSE)
 const POLL_MS = 5_000;
 const SSE_RETRY_WHILE_POLLING_MS = 30_000;
@@ -61,6 +62,7 @@ class StreamingManager {
 
   private debounce: ReturnType<typeof setTimeout> | null = null;
   private reconnectT: ReturnType<typeof setTimeout> | null = null;
+  private stableT: ReturnType<typeof setTimeout> | null = null;
   private staleT: ReturnType<typeof setInterval> | null = null;
   private pollT: ReturnType<typeof setInterval> | null = null;
   private sseRetryT: ReturnType<typeof setTimeout> | null = null;
@@ -83,6 +85,11 @@ class StreamingManager {
 
   getMode(): StreamMode {
     return this.mode;
+  }
+
+  /** Test-only: current reconnect-attempt counter (proves backoff isn't reset early). */
+  __attempts(): number {
+    return this.attempts;
   }
 
   // Debounce union changes so rapid mount/unmount (route changes) don't thrash
@@ -120,15 +127,23 @@ class StreamingManager {
 
     es.addEventListener("hello", () => {
       this.mode = "streaming";
-      this.attempts = 0;
       this.lastMessageAt = Date.now();
       this.stopPolling(); // SSE recovered — leave polling fallback
+      // P0-3: do NOT reset the reconnect counter on hello — the server sends it
+      // on EVERY connect, so resetting here defeats backoff and lets a
+      // post-hello flap reconnect every ~1s forever. Count the connection as
+      // stable only after STABLE_MS of uninterrupted uptime…
+      if (this.stableT) clearTimeout(this.stableT);
+      this.stableT = setTimeout(() => {
+        this.attempts = 0;
+      }, STABLE_MS);
     });
     es.addEventListener("hb", () => {
       this.lastMessageAt = Date.now();
     });
     es.addEventListener("quotes", (e) => {
       this.lastMessageAt = Date.now();
+      this.attempts = 0; // …or the moment real data arrives, whichever comes first
       this.ingest((e as MessageEvent).data);
     });
     es.addEventListener("bye", () => {
@@ -151,6 +166,7 @@ class StreamingManager {
 
   private scheduleReconnect(prompt: boolean) {
     if (this.staleT) clearInterval(this.staleT);
+    if (this.stableT) clearTimeout(this.stableT); // a dropped connection was not stable
     this.attempts += 1;
     const union = this.currentUnion.split(",").filter(Boolean);
     if (!union.length) return;
@@ -256,6 +272,7 @@ class StreamingManager {
       this.es = null;
     }
     if (this.staleT) clearInterval(this.staleT);
+    if (this.stableT) clearTimeout(this.stableT);
     if (this.reconnectT) clearTimeout(this.reconnectT);
     this.stopPolling();
   }
