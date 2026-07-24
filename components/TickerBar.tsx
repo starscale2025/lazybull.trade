@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { applyWonk, wonkFromVix } from "@/lib/wonk";
+import { useLiveQuotes } from "@/lib/streaming/useLiveQuotes";
 
 const SYMBOLS = [
   "AMZN", "NVDA", "TSLA", "AAPL", "MSFT", "AMD",
@@ -11,17 +12,7 @@ const SYMBOLS = [
 
 const DISPLAY: Record<string, string> = { "^VIX": "VIX" };
 
-type Quote = {
-  sym: string;
-  last: number;
-  chgPct: number;
-  marketState?: string;
-};
-
 function fmtPrice(n: number): string {
-  if (n >= 1000) return n.toFixed(2);
-  if (n >= 100) return n.toFixed(2);
-  if (n >= 10) return n.toFixed(2);
   return n.toFixed(2);
 }
 function fmtPct(p: number): string {
@@ -33,40 +24,19 @@ function fmtClock(d: Date): string {
 }
 
 export function TickerBar() {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
+  // Live prices now PUSH over one shared SSE stream (see lib/streaming) instead
+  // of this component polling — the marquee ticks the moment a quote changes,
+  // with no per-component interval. The manager falls back to polling
+  // /api/quote-batch automatically if the stream can't establish.
+  const live = useLiveQuotes(SYMBOLS);
   const [clock, setClock] = useState<string>("");
-  const [marketState, setMarketState] = useState<string>("");
 
-  // Live quote poll
+  // The Volatility Wonk: the live VIX drives Fraunces' WONK/SOFT axes
+  // (see lib/wonk.ts and .wonk-type in globals.css).
+  const vix = live["^VIX"]?.last;
   useEffect(() => {
-    let cancelled = false;
-    const fetchAll = async () => {
-      try {
-        const r = await fetch(`/api/quote-batch?symbols=${SYMBOLS.join(",")}`);
-        const j = await r.json();
-        if (cancelled) return;
-        if (j?.ok && Array.isArray(j.quotes)) {
-          setQuotes(j.quotes);
-          const ms = j.quotes.find((q: Quote) => q.sym === "SPY")?.marketState;
-          if (ms) setMarketState(ms);
-          // The Volatility Wonk: the live VIX drives Fraunces' WONK/SOFT axes
-          // (see lib/wonk.ts and .wonk-type in globals.css).
-          const vix = j.quotes.find((q: Quote) => q.sym === "^VIX")?.last;
-          if (typeof vix === "number" && Number.isFinite(vix)) {
-            applyWonk(wonkFromVix(vix));
-          }
-        }
-      } catch {
-        /* keep prior quotes on transient error */
-      }
-    };
-    fetchAll();
-    const id = setInterval(fetchAll, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+    if (typeof vix === "number" && Number.isFinite(vix)) applyWonk(wonkFromVix(vix));
+  }, [vix]);
 
   // Wall clock
   useEffect(() => {
@@ -76,7 +46,9 @@ export function TickerBar() {
   }, []);
 
   const [paused, setPaused] = useState(false);
+  const quotes = SYMBOLS.map((s) => live[s]).filter((q): q is NonNullable<typeof q> => !!q);
   const items = quotes.length > 0 ? [...quotes, ...quotes] : [];
+  const marketState = live["SPY"]?.marketState ?? "";
   const stateLabel =
     marketState === "REGULAR" ? "NYSE OPEN" :
     marketState === "PRE" ? "PRE-MARKET" :
@@ -106,7 +78,7 @@ export function TickerBar() {
       <div className="flex marquee gap-8 py-2 pl-32">
         {items.length === 0 ? (
           <span className="flex items-center gap-2 whitespace-nowrap shrink-0 text-fg-faint">
-            fetching live quotes from Yahoo Finance…
+            connecting to the live quote stream…
           </span>
         ) : (
           items.map((t, i) => {

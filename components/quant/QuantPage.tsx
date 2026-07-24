@@ -10,6 +10,7 @@ import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
 import { QuantHero } from "./QuantHero";
 import { useRetryCountdown } from "./RetryCountdown";
+import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
 import { SetupsBar, type QuantSetupState } from "./SetupsBar";
 import { BotLibrary } from "./BotLibrary";
 import { Workspace } from "./Workspace";
@@ -121,35 +122,26 @@ export function QuantPage() {
     return () => { cancelled = true; clearInterval(id); };
   }, [symbol, bars, mode]);
 
-  // 15s spot tick folded into the developing candle, so lastSpot and the
-  // QuickBet mark move between refetches. Bots do NOT silently re-run on
-  // ticks — results stay put until the dataset identity changes (below).
+  // Live spot now STREAMS over the shared SSE feed (lib/streaming) instead of a
+  // 15s poll — folded into the developing candle so lastSpot + the QuickBet mark
+  // move as ticks arrive (incremental: applyTick updates/appends the last candle,
+  // never reloading the dataset). Bots do NOT silently re-run on ticks — results
+  // stay put until the dataset identity changes.
+  const liveQuote = useLiveQuote(mode === "live" ? symbol : null);
   useEffect(() => {
-    if (mode !== "live") return;
-    let alive = true;
+    if (mode !== "live" || !liveQuote || liveQuote.last == null) return;
     const key = `${symbol}|${bars}`;
-    const tick = async () => {
-      try {
-        const r = await fetch(`/api/quote-batch?symbols=${encodeURIComponent(symbol)}`);
-        const j = await r.json();
-        if (!alive || !j?.ok) return;
-        const q = (j.quotes as { sym: string; last?: number; marketTime?: number | null }[] | undefined)?.find(
-          (x) => x.sym === symbol
-        );
-        if (!q || q.last == null) return;
-        setLive((cur) => {
-          if (!cur || cur.key !== key) return cur;
-          const next = applyTick(cur.candles, { sym: symbol, price: q.last as number, t: q.marketTime ?? 0 }, symbol, freshestRef);
-          return next ? { key: cur.key, candles: next } : cur;
-        });
-      } catch {
-        /* keep the last tape on a failed tick */
-      }
-    };
-    void tick();
-    const id = setInterval(() => void tick(), 15_000);
-    return () => { alive = false; clearInterval(id); };
-  }, [symbol, bars, mode]);
+    setLive((cur) => {
+      if (!cur || cur.key !== key) return cur;
+      const next = applyTick(
+        cur.candles,
+        { sym: symbol, price: liveQuote.last, t: liveQuote.marketTime ?? 0 },
+        symbol,
+        freshestRef
+      );
+      return next ? { key: cur.key, candles: next } : cur;
+    });
+  }, [liveQuote, mode, symbol, bars]);
 
   // Stale-guard: only accept live bars that were fetched for the CURRENT key.
   const liveCandles = mode === "live" && live && live.key === liveKey ? live.candles : null;
