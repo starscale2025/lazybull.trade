@@ -22,7 +22,7 @@ import type { PlacedOrder } from "@/lib/pro/voice/useVoiceAgent";
 import { computeAnalysis } from "@/lib/pro/voice/analysis";
 import { usePaper } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
-import { patchLastBar, reconcileBars } from "@/lib/live-bars";
+import { patchLastBar, reconcileBars, syntheticBars } from "@/lib/live-bars";
 import { registerCommands } from "@/lib/command-deck";
 
 const PRESET_TO_LASTN: Record<string, number> = {
@@ -205,6 +205,9 @@ export default function ProPage() {
   const [meta, setMeta] = useState<{ exchangeName?: string; currency?: string; regularMarketPrice?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchErr, setFetchErr] = useState<string | null>(null);
+  // true when the visible bars are the deterministic synthetic tape (the live
+  // feed was unavailable) rather than real quotes — surfaced honestly in the bar.
+  const [synthetic, setSynthetic] = useState(false);
 
   // Mark the open position to the latest bar. Declared here rather than beside
   // `position` because it needs `bars`, which is fetched below.
@@ -374,9 +377,18 @@ export default function ProPage() {
         barsSymRef.current = symbol.sym;
         setBars(reconcileBars(j.bars as Bar[], j.meta, symbol.sym, freshestRef));
         setMeta(j.meta || null);
-      } catch (e) {
+        setSynthetic(false);
+      } catch {
         if (!alive) return;
-        setFetchErr((e as Error).message);
+        // Feed unavailable (every provider unconfigured + Yahoo 429s, offline, an
+        // unknown symbol): fall back to a deterministic synthetic tape so the
+        // terminal stays fully usable (draw / indicators / replay). Labelled
+        // synthetic in the app bar — never presented as real quotes.
+        barsSymRef.current = symbol.sym;
+        setBars(syntheticBars(symbol.sym, timeframe) as Bar[]);
+        setMeta(null);
+        setSynthetic(true);
+        setFetchErr(null); // we HAVE bars (synthetic) — not a dead error state
       } finally {
         if (alive) setLoading(false);
       }
@@ -395,6 +407,7 @@ export default function ProPage() {
           barsSymRef.current = symbol.sym;
           setBars(reconcileBars(j.bars as Bar[], j.meta, symbol.sym, freshestRef));
           setMeta(j.meta || null);
+          setSynthetic(false); // feed recovered (or a key was added) → back to live
         }
       } catch {}
     }, 30000);
@@ -812,6 +825,11 @@ export default function ProPage() {
         <div className="ml-1 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
           <span>workspace · "godmode"</span>
           {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
+          {synthetic && !loading && (
+            <span className="text-amber" title="Live feed unavailable — showing a deterministic synthetic tape, not real quotes. Add a data key to go live.">
+              · synthetic tape
+            </span>
+          )}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
         </div>
         <div className="ml-2">
@@ -945,7 +963,7 @@ export default function ProPage() {
                     lazybull<span className="text-bull italic">.pro</span>
                   </motion.div>
                   <motion.div initial={{ width: 0 }} animate={{ width: "200px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="h-px bg-bull" />
-                  <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">connecting to yahoo finance</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">connecting to the market feed</div>
                 </div>
               </motion.div>
             )}
@@ -1110,10 +1128,20 @@ function PaneChart({
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=${timeframe}`);
         const j = await r.json();
-        if (!alive || !j.ok) return;
+        if (!alive) return;
+        if (!j.ok) {
+          setBars(syntheticBars(symbol.sym, timeframe) as Bar[]); // secondary pane: same synthetic fallback
+          setMeta(null);
+          return;
+        }
         setBars(j.bars as Bar[]);
         setMeta(j.meta || null);
-      } catch {}
+      } catch {
+        if (alive) {
+          setBars(syntheticBars(symbol.sym, timeframe) as Bar[]);
+          setMeta(null);
+        }
+      }
     })();
     return () => { alive = false; };
   }, [primary, symbol.sym, timeframe, barsProp, metaProp]);
