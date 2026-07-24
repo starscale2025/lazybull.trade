@@ -219,7 +219,7 @@ export function Footer() {
             <span className="text-fg-faint">·</span>
             <Link href="/terms" className="hover:text-fg">terms</Link>
             <span className="text-fg-faint">·</span>
-            <Link href="/learn#now-go" className="hover:text-fg">safety</Link>
+            <Link href="/safety" className="hover:text-fg">safety</Link>
             <span className="text-fg-faint">·</span>
             {/* the easter egg: our deleted components, buried honestly */}
             <Link href="/graveyard" className="text-fg-faint hover:text-bear" title="Components that didn't make it">⚰ the graveyard</Link>

@@ -877,7 +877,7 @@ function TeacherPanel({
       <div className="flex max-h-[300px] min-h-[160px] flex-col gap-3 overflow-y-auto p-3 lg:max-h-[240px] lg:min-h-[120px]">
         {thread.length === 0 && !narrating && (
           <TeacherBubble
-            role="teacher"
+            speaker="teacher"
             text={
               selected
                 ? `This panel describes the ${selected.kind} you built — max profit, max loss, breakevens, and what can go wrong. Press "explain this position", or type a question below.`
@@ -886,9 +886,9 @@ function TeacherPanel({
           />
         )}
         {thread.map((m, i) => (
-          <TeacherBubble key={i} role={m.role} text={m.text} />
+          <TeacherBubble key={i} speaker={m.role} text={m.text} />
         ))}
-        {narrating && <TeacherBubble role="teacher" text="teacher is thinking…" thinking />}
+        {narrating && <TeacherBubble speaker="teacher" text="teacher is thinking…" thinking />}
         <div ref={endRef} />
       </div>
 
@@ -918,8 +918,10 @@ function TeacherPanel({
   );
 }
 
-function TeacherBubble({ role, text, thinking }: { role: "user" | "teacher"; text: string; thinking?: boolean }) {
-  if (role === "user") {
+// `speaker` (not `role`) so a JSX `speaker="teacher"` can never be misread as a
+// DOM ARIA role — it styles the chat bubble, it is never a DOM attribute.
+function TeacherBubble({ speaker, text, thinking }: { speaker: "user" | "teacher"; text: string; thinking?: boolean }) {
+  if (speaker === "user") {
     return (
       <div className="flex justify-end">
         <div className="max-w-[85%] border border-border bg-bg-soft px-3 py-2 text-[12px] leading-relaxed text-fg">{text}</div>
