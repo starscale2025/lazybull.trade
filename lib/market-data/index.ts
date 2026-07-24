@@ -23,7 +23,15 @@ import { alpaca } from "./alpaca";
 import { twelvedata } from "./twelvedata";
 import { finnhub } from "./finnhub";
 import { yahoo } from "./yahoo";
-import { ageMs, cacheBackend, cacheGet, cacheSet, type CacheEntry } from "./cache";
+import {
+  acquireRefreshLock,
+  ageMs,
+  cacheBackend,
+  cacheGet,
+  cacheSet,
+  releaseRefreshLock,
+  type CacheEntry,
+} from "./cache";
 import { allHealth, breakerClosed, isQualifyingFailure, recordFailure, recordSuccess } from "./health";
 
 /** Default priority order. First usable provider that returns real data wins. */
@@ -95,37 +103,48 @@ export function createOrchestrator(chain: MarketDataProvider[], opts?: { deadlin
       if (cached && ageMs(cached) < freshMs) {
         return { ...cached.data, provenance: cachedProv(cached, false) };
       }
-      const deadline = Date.now() + deadlineMs;
-      for (const p of chain) {
-        if (!usable(p)) continue;
-        const remaining = deadline - Date.now();
-        if (remaining <= 0) break; // chain budget spent — fall to cache / Tier D
-        try {
-          const res = await withTimeout(p.getBars(symbol, tf), remaining);
-          recordSuccess(p.name());
-          await cacheSet<BarsResult>(
-            key,
-            { data: res, storedAt: Date.now(), provider: p.name(), isRealtime: p.supportsRealtime() },
-            STALE_RETENTION_S
-          );
-          return {
-            ...res,
-            provenance: {
-              provider: p.name(),
-              tier: liveTier(p.supportsRealtime()),
-              updatedAt: Date.now(),
-              cacheAge: 0,
-              isRealtime: p.supportsRealtime(),
-              isCached: false,
-            },
-          };
-        } catch (e) {
-          // Only 429/5xx/timeout count against the breaker; a clean miss doesn't.
-          if (isQualifyingFailure(e)) recordFailure(p.name(), errMsg(e));
-        }
+      // Single-flight across instances: only the lock holder refreshes a
+      // stale/cold key; everyone else serves last-good so a popular symbol's
+      // expiry can't stampede the upstream. No-op (always true) without KV.
+      const holdsLock = await acquireRefreshLock(key);
+      if (!holdsLock && cached) {
+        return { ...cached.data, provenance: cachedProv(cached, true) }; // Tier C while another instance refreshes
       }
-      if (cached) return { ...cached.data, provenance: cachedProv(cached, true) }; // Tier C
-      return null; // Tier D → route returns {ok:false}, client keeps its practice tape
+      try {
+        const deadline = Date.now() + deadlineMs;
+        for (const p of chain) {
+          if (!usable(p)) continue;
+          const remaining = deadline - Date.now();
+          if (remaining <= 0) break; // chain budget spent — fall to cache / Tier D
+          try {
+            const res = await withTimeout(p.getBars(symbol, tf), remaining);
+            recordSuccess(p.name());
+            await cacheSet<BarsResult>(
+              key,
+              { data: res, storedAt: Date.now(), provider: p.name(), isRealtime: p.supportsRealtime() },
+              STALE_RETENTION_S
+            );
+            return {
+              ...res,
+              provenance: {
+                provider: p.name(),
+                tier: liveTier(p.supportsRealtime()),
+                updatedAt: Date.now(),
+                cacheAge: 0,
+                isRealtime: p.supportsRealtime(),
+                isCached: false,
+              },
+            };
+          } catch (e) {
+            // Only 429/5xx/timeout count against the breaker; a clean miss doesn't.
+            if (isQualifyingFailure(e)) recordFailure(p.name(), errMsg(e));
+          }
+        }
+        if (cached) return { ...cached.data, provenance: cachedProv(cached, true) }; // Tier C
+        return null; // Tier D → route returns {ok:false}, client keeps its practice tape
+      } finally {
+        if (holdsLock) await releaseRefreshLock(key);
+      }
     });
   }
 
@@ -136,60 +155,70 @@ export function createOrchestrator(chain: MarketDataProvider[], opts?: { deadlin
       if (cached && ageMs(cached) < FRESH_TTL_S.quote * 1000) {
         return { quotes: cached.data, provenance: cachedProv(cached, false) };
       }
-      // Gap-fill: Alpaca can't serve indices (^VIX); the next provider backfills
-      // only the still-missing symbols, so no symbol is lost to a coverage gap.
-      const remaining = new Set(symbols);
-      const collected: Quote[] = [];
-      let anyRealtime = false;
-      let firstProvider = "";
-      const deadline = Date.now() + deadlineMs;
-      for (const p of chain) {
-        if (!remaining.size) break;
-        if (!usable(p)) continue;
-        const timeLeft = deadline - Date.now();
-        if (timeLeft <= 0) break; // chain budget spent — fall to cache / Tier D
-        try {
-          const got = await withTimeout(p.getQuotes([...remaining]), timeLeft);
-          recordSuccess(p.name());
-          let contributed = false;
-          for (const q of got) {
-            if (remaining.has(q.sym)) {
-              collected.push(q);
-              remaining.delete(q.sym);
-              contributed = true;
+      // Single-flight across instances (see getBars): the lock holder refreshes,
+      // the rest serve last-good rather than stampede the upstream.
+      const holdsLock = await acquireRefreshLock(key);
+      if (!holdsLock && cached) {
+        return { quotes: cached.data, provenance: cachedProv(cached, true) }; // Tier C while another instance refreshes
+      }
+      try {
+        // Gap-fill: Alpaca can't serve indices (^VIX); the next provider backfills
+        // only the still-missing symbols, so no symbol is lost to a coverage gap.
+        const remaining = new Set(symbols);
+        const collected: Quote[] = [];
+        let anyRealtime = false;
+        let firstProvider = "";
+        const deadline = Date.now() + deadlineMs;
+        for (const p of chain) {
+          if (!remaining.size) break;
+          if (!usable(p)) continue;
+          const timeLeft = deadline - Date.now();
+          if (timeLeft <= 0) break; // chain budget spent — fall to cache / Tier D
+          try {
+            const got = await withTimeout(p.getQuotes([...remaining]), timeLeft);
+            recordSuccess(p.name());
+            let contributed = false;
+            for (const q of got) {
+              if (remaining.has(q.sym)) {
+                collected.push(q);
+                remaining.delete(q.sym);
+                contributed = true;
+              }
             }
+            if (contributed) {
+              firstProvider ||= p.name();
+              if (p.supportsRealtime()) anyRealtime = true;
+            }
+          } catch (e) {
+            if (isQualifyingFailure(e)) recordFailure(p.name(), errMsg(e));
           }
-          if (contributed) {
-            firstProvider ||= p.name();
-            if (p.supportsRealtime()) anyRealtime = true;
-          }
-        } catch (e) {
-          if (isQualifyingFailure(e)) recordFailure(p.name(), errMsg(e));
         }
-      }
-      if (collected.length) {
-        await cacheSet<Quote[]>(
-          key,
-          { data: collected, storedAt: Date.now(), provider: firstProvider, isRealtime: anyRealtime },
-          STALE_RETENTION_S
-        );
+        if (collected.length) {
+          await cacheSet<Quote[]>(
+            key,
+            { data: collected, storedAt: Date.now(), provider: firstProvider, isRealtime: anyRealtime },
+            STALE_RETENTION_S
+          );
+          return {
+            quotes: collected,
+            provenance: {
+              provider: firstProvider,
+              tier: liveTier(anyRealtime),
+              updatedAt: Date.now(),
+              cacheAge: 0,
+              isRealtime: anyRealtime,
+              isCached: false,
+            },
+          };
+        }
+        if (cached) return { quotes: cached.data, provenance: cachedProv(cached, true) }; // Tier C
         return {
-          quotes: collected,
-          provenance: {
-            provider: firstProvider,
-            tier: liveTier(anyRealtime),
-            updatedAt: Date.now(),
-            cacheAge: 0,
-            isRealtime: anyRealtime,
-            isCached: false,
-          },
+          quotes: [],
+          provenance: { provider: "none", tier: "D", updatedAt: Date.now(), cacheAge: 0, isRealtime: false, isCached: false },
         };
+      } finally {
+        if (holdsLock) await releaseRefreshLock(key);
       }
-      if (cached) return { quotes: cached.data, provenance: cachedProv(cached, true) }; // Tier C
-      return {
-        quotes: [],
-        provenance: { provider: "none", tier: "D", updatedAt: Date.now(), cacheAge: 0, isRealtime: false, isCached: false },
-      };
     });
   }
 

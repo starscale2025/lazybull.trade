@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown")
     .split(",")[0]
     .trim();
-  const gate = tryAcquire(ip);
+  const gate = await tryAcquire(ip);
   if (!gate.ok) {
     return new Response(JSON.stringify({ ok: false, error: gate.reason }), {
       status: 429,
@@ -62,7 +62,9 @@ export async function GET(req: Request) {
   const releaseGuard = () => {
     if (!guardReleased) {
       guardReleased = true;
-      release(ip);
+      // Fire-and-forget: freeing the slot must not block teardown, and it runs
+      // from sync contexts (ReadableStream cancel). Errors are swallowed inside.
+      void release(ip);
     }
   };
 

@@ -14,6 +14,8 @@
 // The cache must never break the request path: every KV call is timed out and
 // its errors are swallowed (get → null, set → no-op).
 
+import { kvCommand, kvEnabled } from "@/lib/kv";
+
 export type CacheEntry<T> = {
   data: T;
   /** epoch ms the data was fetched from a provider. */
@@ -23,12 +25,8 @@ export type CacheEntry<T> = {
   isRealtime: boolean;
 };
 
-const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
-const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
-const KV_ENABLED = !!(KV_URL && KV_TOKEN);
-
 export function cacheBackend(): "kv" | "memory" {
-  return KV_ENABLED ? "kv" : "memory";
+  return kvEnabled() ? "kv" : "memory";
 }
 
 // ── in-process fallback ───────────────────────────────────────────────────
@@ -52,26 +50,12 @@ function memSet(key: string, value: string, ttlS: number) {
   mem.set(key, { value, expireAt: Date.now() + ttlS * 1000 });
 }
 
-// ── Upstash / Vercel-KV REST (single-command POST, no SDK) ────────────────
-async function kvCommand(cmd: (string | number)[]): Promise<unknown> {
-  const r = await fetch(KV_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${KV_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify(cmd),
-    signal: AbortSignal.timeout(2000), // KV must never wedge a request
-    cache: "no-store",
-  });
-  if (!r.ok) throw new Error(`kv ${r.status}`);
-  const j = (await r.json()) as { result?: unknown };
-  return j.result ?? null;
-}
-
 // ── public API ────────────────────────────────────────────────────────────
 
 /** Read the last-good entry for a key, or null. Never throws. */
 export async function cacheGet<T>(key: string): Promise<CacheEntry<T> | null> {
   try {
-    const raw = KV_ENABLED ? ((await kvCommand(["GET", key])) as string | null) : memGet(key);
+    const raw = kvEnabled() ? ((await kvCommand(["GET", key])) as string | null) : memGet(key);
     if (!raw) return null;
     return JSON.parse(raw) as CacheEntry<T>;
   } catch {
@@ -90,10 +74,45 @@ export async function cacheSet<T>(
 ): Promise<void> {
   const value = JSON.stringify(entry);
   try {
-    if (KV_ENABLED) await kvCommand(["SET", key, value, "EX", retentionS]);
+    if (kvEnabled()) await kvCommand(["SET", key, value, "EX", retentionS]);
     else memSet(key, value, retentionS);
   } catch {
     /* a failed cache write must never break the response */
+  }
+}
+
+// ── single-flight refresh lock (KV-only) ──────────────────────────────────
+// On a stale/cold key, exactly ONE instance should hit the upstream provider;
+// the rest serve last-good. This ends the cross-instance STAMPEDE where every
+// warm serverless instance refreshes the same popular symbol the instant its
+// short TTL lapses (N× the provider quota burn, all at once).
+//
+// Without KV there is nothing to coordinate across instances, so every instance
+// owns its own refresh (exactly today's behavior) → acquire returns true. And it
+// FAILS OPEN on any KV error: the lock is an optimization, never a correctness
+// gate, so a coordination hiccup must never block a refresh.
+const REFRESH_LOCK_TTL_S = 10; // > the 7s chain deadline, so it can't lapse mid-refresh
+
+/** Try to become the ONE instance that refreshes `key`. true → go fetch. */
+export async function acquireRefreshLock(
+  key: string,
+  ttlS: number = REFRESH_LOCK_TTL_S
+): Promise<boolean> {
+  if (!kvEnabled()) return true;
+  try {
+    return (await kvCommand(["SET", `lock:${key}`, "1", "NX", "EX", ttlS])) === "OK";
+  } catch {
+    return true; // KV hiccup must not block refreshes
+  }
+}
+
+/** Release a refresh lock early (best-effort; it also self-expires at ttlS). */
+export async function releaseRefreshLock(key: string): Promise<void> {
+  if (!kvEnabled()) return;
+  try {
+    await kvCommand(["DEL", `lock:${key}`]);
+  } catch {
+    /* the lock self-expires; a lost DEL only delays the next refresh slightly */
   }
 }
 
