@@ -37,6 +37,10 @@ export function TickerBar() {
   useEffect(() => {
     if (typeof vix === "number" && Number.isFinite(vix)) applyWonk(wonkFromVix(vix));
   }, [vix]);
+  // WONK legend — announce the volatility BAND (not every tick, so it doesn't
+  // spam), so screen readers + skimmers know the headline type reacts to it.
+  const wonkBand =
+    typeof vix !== "number" ? null : vix < 15 ? "calm" : vix < 20 ? "normal" : vix < 28 ? "elevated" : "high";
 
   // Wall clock
   useEffect(() => {
@@ -60,6 +64,16 @@ export function TickerBar() {
     <div
       className={`relative overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
     >
+      {/* WONK legend — the headline serif warps with the VIX; this makes that
+          "the type IS a volatility gauge" signal legible to screen readers and
+          skimmers. Band-only text so it announces on regime flips, not ticks. */}
+      <span className="sr-only" aria-live="polite">
+        {wonkBand
+          ? `Market volatility is ${wonkBand}. The headline type ${
+              wonkBand === "calm" ? "sits calm and upright." : "warps with the tape."
+            }`
+          : ""}
+      </span>
       <div className="absolute inset-y-0 left-0 z-10 flex items-center gap-2 bg-bg pl-3 pr-4 border-r border-border">
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
         <span className="text-bull">LIVE</span>

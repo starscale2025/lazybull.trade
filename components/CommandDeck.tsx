@@ -63,18 +63,33 @@ export function CommandDeck() {
     ]);
   }, [router]);
 
-  // ⌘K / Ctrl+K toggles; the palette owns its own keys while open.
+  // ⌘K / Ctrl+K toggles; the palette owns its own keys while open. A bare `?`
+  // also opens it as a cheat-sheet (the deck IS the shortcut list), but only
+  // when you're not typing into a field — otherwise it would eat the character.
   useEffect(() => {
+    const isTyping = (el: EventTarget | null) => {
+      const n = el as HTMLElement | null;
+      if (!n) return false;
+      const tag = n.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || n.isContentEditable;
+    };
+    const openDeck = () =>
+      setOpen((v) => {
+        if (!v) {
+          setQ("");
+          setActive(0);
+        }
+        return !v;
+      });
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((v) => {
-          if (!v) {
-            setQ("");
-            setActive(0);
-          }
-          return !v;
-        });
+        openDeck();
+        return;
+      }
+      if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping(e.target)) {
+        e.preventDefault();
+        openDeck();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -188,6 +203,21 @@ export function CommandDeck() {
                   )}
                 </button>
               ))}
+            </div>
+            <div className="flex items-center gap-3 border-t border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+              <span className="flex items-center gap-1">
+                <kbd className="border border-border px-1">↑</kbd>
+                <kbd className="border border-border px-1">↓</kbd>
+                move
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="border border-border px-1">↵</kbd>
+                run
+              </span>
+              <span className="ml-auto flex items-center gap-1">
+                <kbd className="border border-border px-1">?</kbd>
+                opens this
+              </span>
             </div>
           </div>
         </div>

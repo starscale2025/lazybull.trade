@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthButtons } from "./AuthButtons";
 import { MobileMenu } from "./MobileMenu";
+import { TruthBadge } from "./pro/TruthBadge";
 import { NAV_DIRECTORY } from "@/lib/directory";
 
 export function Nav() {
@@ -35,6 +36,11 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* The Synthetic-Truth badge, promoted off /pro so the glitch→checkmark
+              is site-wide furniture. xl+ only, to spare the tight lg rail band. */}
+          <div className="hidden items-center xl:flex">
+            <TruthBadge />
+          </div>
           {/* The ⌘K button lived here with no onClick and no global key handler:
               the only command palette in the repo is components/admin/CommandPalette
               and it is mounted solely by /admin, so both the click and the
