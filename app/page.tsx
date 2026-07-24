@@ -9,8 +9,8 @@ import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ScrollReveal } from "@/components/atmosphere/ScrollReveal";
 
 // The homepage is now the scroll-cinema: it tells the whole product story as one
-// animated sequence, then hands off to a single Get Started. It auto-plays once
-// per session for everyone — logged in or not (see CinemaGate). The marketing
+// animated sequence, then hands off to a single Get Started. It auto-plays on
+// every load for everyone — logged in or not (see CinemaGate). The marketing
 // sections it replaced live on in git history if we ever want them back.
 export default function Home() {
   return (
