@@ -17,7 +17,7 @@
 // Data polling (quotes, sync) lives on its own setInterval and is deliberately
 // NOT on this clock — the market keeps moving while decoration sleeps.
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 
 type FrameCb = (now: number, dt: number) => void;
 
@@ -61,17 +61,6 @@ export function subscribeFrame(cb: FrameCb): () => void {
   return () => {
     subs.delete(cb);
   };
-}
-
-/** Ride the shared clock while `enabled`. The callback is kept in a ref so a
-    changing closure never forces a resubscribe. */
-export function useAmbientFrame(cb: FrameCb, enabled = true): void {
-  const cbRef = useRef(cb);
-  cbRef.current = cb;
-  useEffect(() => {
-    if (!enabled) return;
-    return subscribeFrame((now, dt) => cbRef.current(now, dt));
-  }, [enabled]);
 }
 
 /** Is this element in (or near) the viewport? One re-render on enter/exit —

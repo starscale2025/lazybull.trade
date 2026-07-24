@@ -1250,3 +1250,16 @@ html, body {
     min-height: 32px;
   }
 }
+
+/* Legibility floor — on coarse (touch) pointers ONLY, lift the very smallest
+   mono labels (9–10px) up to 11px so the densest chrome stays readable on a
+   phone, WITHOUT disturbing the deliberate desktop (pointer: fine) density. A
+   deliberately tiny 1–2px lift so it can't reflow tight rows. The RADAR contrast
+   floor already made these labels AA-legible; this makes the tiniest ones big
+   enough to read on glass. (Coarse-only, so it's inert on precise pointers.) */
+@media (pointer: coarse) {
+  .text-\[9px\],
+  .text-\[10px\] {
+    font-size: 11px;
+  }
+}
