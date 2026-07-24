@@ -73,8 +73,13 @@ const ok = (msg) => console.log("✓ " + msg);
     // Only consider reusable components (skip route files, which are entered by the router).
     if (!f.startsWith("components/")) continue;
     const base = f.split("/").pop().replace(/\.tsx?$/, "");
-    // Is this basename referenced by any import/from string other than its own file?
-    const importRe = new RegExp(`(from\\s+["'][^"']*${base}["']|import\\(["'][^"']*${base}["']\\))`);
+    // Is this basename referenced by any import/from string other than its own
+    // file? Anchor `base` to a full path SEGMENT — `(?:[^"']*/)?base` requires it
+    // to sit right after a "/" (or the opening quote for a bare import), so a
+    // suffix collision (Card being "used" whenever HungCard is imported) can no
+    // longer hide a real orphan.
+    const seg = `(?:[^"']*/)?${base}`;
+    const importRe = new RegExp(`(from\\s+["']${seg}["']|import\\(["']${seg}["']\\))`);
     if (!importRe.test(corpus)) orphans.push(f);
   }
   if (orphans.length) {
@@ -83,6 +88,33 @@ const ok = (msg) => console.log("✓ " + msg);
   } else {
     ok("no orphaned components");
   }
+}
+
+// ── 4. the Dock invariant (FAIL) ────────────────────────────────────────────
+// The Dock (components/Dock.tsx) is the ONE place a floating control may pin to
+// the bottom-right corner; anything else there re-creates the overlapping-FAB
+// anarchy the Dock fixed. Fail if any component pins fixed + bottom-* + right-*
+// outside the Dock. Heuristic on static className values (misses interpolated
+// classes) but catches the common regression.
+{
+  const offenders = [];
+  const scan = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) {
+        scan(p);
+        continue;
+      }
+      if (!e.name.endsWith(".tsx")) continue;
+      if (p.endsWith(join("components", "Dock.tsx"))) continue; // the one sanctioned corner
+      const src = readFileSync(p, "utf8");
+      const values = [...src.matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)].map((m) => m[1] ?? m[2] ?? "");
+      if (values.some((v) => /\bfixed\b/.test(v) && /bottom-/.test(v) && /right-/.test(v))) offenders.push(p);
+    }
+  };
+  scan("components");
+  if (offenders.length) fail(`fixed bottom-right control outside the Dock (re-dock it): ${offenders.join(", ")}`);
+  else ok("dock invariant: no rogue bottom-right FABs");
 }
 
 if (failed) {
