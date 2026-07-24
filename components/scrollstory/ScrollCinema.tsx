@@ -225,7 +225,12 @@ export function ScrollCinema() {
       // Played through (or skipped) once — never replay the toll booth. The
       // no-navbar IA sends every logo click back to "/", so without this flag
       // anonymous users re-entered the scroll-locked preloader every time.
-      try { localStorage.setItem("lb-cinema-seen", "1"); } catch {}
+      try {
+        localStorage.setItem("lb-cinema-seen", "1");
+        // Consume the per-session auto-play so a same-session reload / nav back to
+        // "/" doesn't replay the intro (CinemaGate reads this). A new session replays.
+        sessionStorage.setItem("lb-cinema-autoplayed", "1");
+      } catch {}
       requestAnimationFrame(() => {
         keepHeroInPlace();
         rootStyle.overflowAnchor = prevAnchor;
@@ -562,7 +567,12 @@ export function ScrollCinema() {
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
       rootStyle.overflow = prevOverflow;
-      try { localStorage.setItem("lb-cinema-seen", "1"); } catch {}
+      try {
+        localStorage.setItem("lb-cinema-seen", "1");
+        // Consume the per-session auto-play so a same-session reload / nav back to
+        // "/" doesn't replay the intro (CinemaGate reads this). A new session replays.
+        sessionStorage.setItem("lb-cinema-autoplayed", "1");
+      } catch {}
       setMode("static");
     };
     Promise.all([step(shotsLoaded), extras, minTime]).then(reveal).catch(() => {
