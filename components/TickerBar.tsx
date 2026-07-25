@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { applyWonk, wonkFromVix } from "@/lib/wonk";
 import { useLiveQuotes } from "@/lib/streaming/useLiveQuotes";
+import { syntheticQuotes } from "@/lib/live-bars";
 
 const SYMBOLS = [
   "AMZN", "NVDA", "TSLA", "AAPL", "MSFT", "AMD",
@@ -31,9 +32,53 @@ export function TickerBar() {
   const live = useLiveQuotes(SYMBOLS);
   const [clock, setClock] = useState<string>("");
 
-  // The Volatility Wonk: the live VIX drives Fraunces' WONK/SOFT axes
-  // (see lib/wonk.ts and .wonk-type in globals.css).
-  const vix = live["^VIX"]?.last;
+  const liveQuotes = SYMBOLS.map((s) => live[s]).filter((q): q is NonNullable<typeof q> => !!q);
+  const haveLive = liveQuotes.length > 0;
+
+  // The stream can be perfectly healthy (hello + heartbeats) and still carry NO
+  // quotes — that's Tier D: every provider unconfigured or rate-limited. The rail
+  // used to sit on "connecting…" forever in that case. After a grace period we
+  // fall back to the deterministic simulated tape and SAY SO (the LIVE lamp flips
+  // to SIM), so the desk looks alive without ever passing fake prices off as real.
+  const [feedDead, setFeedDead] = useState(false);
+  useEffect(() => {
+    if (haveLive) {
+      setFeedDead(false); // real quotes arrived (or came back) → live wins
+      return;
+    }
+    const id = setTimeout(() => setFeedDead(true), 6000);
+    return () => clearTimeout(id);
+  }, [haveLive]);
+
+  const simBase = useMemo(() => syntheticQuotes(SYMBOLS), []);
+  const usingSim = feedDead && !haveLive;
+
+  // A tape whose digits never move reads as frozen, so the simulated rail
+  // breathes: one 4s timer nudges every price along a bounded sine (±0.15%),
+  // phase-shifted per symbol. Bounded (not a walk) so it can't drift somewhere
+  // silly over a long-lived tab, and it only runs while the feed is down.
+  const [simTick, setSimTick] = useState(0);
+  useEffect(() => {
+    if (!usingSim) return;
+    const id = setInterval(() => setSimTick((t) => t + 1), 4000);
+    return () => clearInterval(id);
+  }, [usingSim]);
+
+  const quotes = usingSim
+    ? simBase.map((q, i) => {
+        const prev = q.last - q.chg;
+        const last = q.last * (1 + Math.sin((simTick + i * 7) * 0.7) * 0.0015);
+        const chg = last - prev;
+        return { ...q, last, chg, chgPct: prev ? (chg / prev) * 100 : 0 };
+      })
+    : liveQuotes;
+
+  // The Volatility Wonk: the VIX drives Fraunces' WONK/SOFT axes (see lib/wonk.ts
+  // and .wonk-type in globals.css) — from the simulated tape too, so the type
+  // still breathes while the feed is down.
+  // Read the STABLE base (not the breathing tick) so the type doesn't re-warp
+  // every 4 seconds while the feed is down.
+  const vix = usingSim ? simBase.find((q) => q.sym === "^VIX")?.last : live["^VIX"]?.last;
   useEffect(() => {
     if (typeof vix === "number" && Number.isFinite(vix)) applyWonk(wonkFromVix(vix));
   }, [vix]);
@@ -50,10 +95,10 @@ export function TickerBar() {
   }, []);
 
   const [paused, setPaused] = useState(false);
-  const quotes = SYMBOLS.map((s) => live[s]).filter((q): q is NonNullable<typeof q> => !!q);
   const items = quotes.length > 0 ? [...quotes, ...quotes] : [];
   const marketState = live["SPY"]?.marketState ?? "";
   const stateLabel =
+    usingSim ? "SIMULATED TAPE" :
     marketState === "REGULAR" ? "NYSE OPEN" :
     marketState === "PRE" ? "PRE-MARKET" :
     marketState === "POST" ? "POST-MARKET" :
@@ -75,8 +120,13 @@ export function TickerBar() {
           : ""}
       </span>
       <div className="absolute inset-y-0 left-0 z-10 flex items-center gap-2 bg-bg pl-3 pr-4 border-r border-border">
-        <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-        <span className="text-bull">LIVE</span>
+        {/* The lamp must never say LIVE over simulated prices — that's the one
+            lie this rail could tell. Amber SIM + a still dot when the feed is
+            down; green pulsing LIVE only over real quotes. */}
+        <span className={`size-1.5 rounded-full ${usingSim ? "bg-amber" : "bg-bull pulse-dot"}`} />
+        <span className={usingSim ? "text-amber" : "text-bull"} title={usingSim ? "No live feed — showing a deterministic simulated tape, not real quotes." : undefined}>
+          {usingSim ? "SIM" : "LIVE"}
+        </span>
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim hidden sm:inline">{stateLabel}</span>
         {/* WCAG 2.2.2 — an auto-moving ticker on every page must be pausable */}

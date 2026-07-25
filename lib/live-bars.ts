@@ -29,6 +29,21 @@ const TF_MS: Record<string, number> = {
  * replay all keep working. The caller MUST label it synthetic — it is NEVER real
  * market data. Same symbol → same tape (reproducible).
  */
+/**
+ * Plausible starting spots, so a synthetic tape doesn't render absurd numbers
+ * (a $60 S&P 500, a 400 VIX) — an index especially must sit in its real order of
+ * magnitude or the chart axis and the WONK volatility mapping read as broken.
+ * Anything unlisted derives from the symbol seed. These are STARTING points for
+ * a random walk, never quoted as real prices.
+ */
+const SPOT_HINTS: Record<string, number> = {
+  "^VIX": 17, "^GSPC": 5800, "^IXIC": 19000, "^DJI": 43000, "^RUT": 2300,
+  "^NSEI": 24000, "^NSEBANK": 51000,
+  SPY: 580, QQQ: 500, IWM: 230, GLD: 250,
+  AAPL: 230, MSFT: 430, NVDA: 135, AMZN: 205, GOOGL: 175, META: 590,
+  TSLA: 250, AMD: 150, NFLX: 700, AVGO: 175, COIN: 200, PLTR: 40, GME: 25,
+};
+
 export function syntheticBars(
   sym: string,
   tf: string,
@@ -37,8 +52,12 @@ export function syntheticBars(
   let seed = 0;
   for (let i = 0; i < sym.length; i++) seed = (seed * 31 + sym.charCodeAt(i)) | 0;
   seed = Math.abs(seed) || 7;
-  const spot = 40 + (seed % 460); // 40..500, stable per symbol
-  const candles = generateCandles(count, seed, spot, 0.05, 1.3);
+  const spot = SPOT_HINTS[sym] ?? 40 + (seed % 460); // known symbols look sane; others stable per seed
+  // generateCandles moves by an ABSOLUTE amount per bar, so a fixed vol would
+  // walk a 17-handle VIX up to ~36 (max-warping the site's WONK type) while
+  // leaving a 5800 index visually flat. Scale both to the spot: ~1.2%/bar of
+  // noise, ~+7% of drift across the window, at any price magnitude.
+  const candles = generateCandles(count, seed, spot, 0.02, spot * 0.012);
   const step = TF_MS[tf] ?? TF_MS.D;
   const end = Math.floor(Date.now() / step) * step; // align the last bar to the interval
   let v = seed;
@@ -52,6 +71,24 @@ export function syntheticBars(
     c: c.c,
     v: Math.round(spot * 1000 * (0.5 + rnd())),
   }));
+}
+
+/**
+ * Quote-shaped synthetic prices for the ticker rail, derived from the SAME tape
+ * syntheticBars() renders — so a symbol's ticker price equals its chart's last
+ * close instead of two fabricated numbers disagreeing on one screen (the exact
+ * "two VIX numbers" bug the audit caught). Callers MUST label it simulated.
+ */
+export function syntheticQuotes(
+  syms: string[]
+): { sym: string; last: number; chg: number; chgPct: number }[] {
+  return syms.map((sym) => {
+    const bars = syntheticBars(sym, "D");
+    const last = bars[bars.length - 1]?.c ?? 100;
+    const prev = bars[bars.length - 2]?.c ?? last;
+    const chg = last - prev;
+    return { sym, last, chg, chgPct: prev ? (chg / prev) * 100 : 0 };
+  });
 }
 
 /** The freshest known trade for one symbol, ordered by exchange timestamp. */
