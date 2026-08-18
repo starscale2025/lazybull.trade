@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Privacy — lazybull",
   description:
-    "The privacy ledger: exactly what lazybull collects (a Google profile, a paper account, product events), why, and what it never touches — money, cards, real trades.",
+    "The privacy ledger: exactly what lazybull collects (a Google profile, a paper account, product events), where the voice co-pilot sends what you say, and what it never touches — money, cards, real trades.",
 };
 
 // The privacy half of the Honesty Ledger. Same voice as /terms: every section
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
       <main className="mx-auto w-full max-w-[900px] flex-1 px-5 pb-24 pt-12">
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
-          <span>privacy policy · effective 22 july 2026</span>
+          <span>privacy policy · effective 18 august 2026</span>
           <span className="border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-amber" title="Written plainly and in good faith; formal legal review is scheduled.">
             pending counsel review
           </span>
@@ -74,16 +74,45 @@ export default function PrivacyPage() {
           </p>
         </Clause>
 
-        <Clause n="04" title="What we do with it" means="run the product, fix the product, improve the product. We don't sell data, we don't run ad trackers, and we don't share it except the infrastructure that hosts it.">
+        <Clause n="04" title="What we do with it" means="run the product, fix the product, improve the product. We don't sell data and we don't run ad trackers. The only outsiders are the infrastructure that hosts it, Google, and the AI providers in clause 05.">
           <p>
             We use your data to operate the features you use (sync, sign-in), to debug problems, and — via aggregate
             product events — to decide what to build next. We do not sell or rent personal data, and we run no
             third-party advertising trackers. The only parties that touch data are the infrastructure providers that
-            host it (e.g. our database and hosting) and Google, which handles the sign-in itself.
+            host it (e.g. our database and hosting), Google, which handles the sign-in itself and — on Chrome and
+            Edge — the speech recognition behind the free voice engine, and — if you use the voice co-pilot or an AI
+            explainer — the AI providers named in clause 05.
           </p>
         </Clause>
 
-        <Clause n="05" title="How long, and how to leave" means="data stays while your account is active; email us and we delete the lot. Signed-out data is yours to clear from your own browser.">
+        <Clause n="05" title="Voice and the AI features" means="the voice co-pilot only works by sending what you say — and what's on your chart — to an AI company. Both engines ship the same workspace picture. The free one also runs your microphone through the browser's speech recognition (Google, on Chrome and Edge) and then through OpenRouter, whose free models keep prompts and may train on them. Nothing forces you to use it — the rest of the product works without it.">
+          <p>
+            The co-pilot has no brain of its own. Whichever engine you run, it is shown the same picture of your
+            workspace — symbol, indicators, alerts and their notes, watchlist, paper orders — plus the computed read of
+            the live chart. The free engine attaches both to every turn; the premium engine is handed them whenever it
+            reads your screen, which it does from the opening greeting onward. Your name, email, and session are not
+            part of any of it — but everything you say to the co-pilot is.
+          </p>
+          <p>
+            On the <strong className="text-fg">free voice engine</strong>, your speech is turned into text by your
+            browser's built-in recognition: on Chrome and Edge — the browsers this engine actually works in — that
+            means the raw microphone audio is uploaded to <strong className="text-fg">Google's speech service</strong>.
+            The transcript then goes with the context above to <strong className="text-fg">OpenRouter</strong>, which
+            routes it to a free community model. Free models are only served to accounts that allow prompt logging, so
+            assume the provider stores those prompts and may use them to train future models.
+          </p>
+          <p>
+            The <strong className="text-fg">premium voice engine</strong> streams your microphone audio from your
+            browser straight to <strong className="text-fg">OpenAI</strong>, and sends the same workspace and chart
+            context down the same connection — so it discloses more than the free engine, not less, just to one named
+            company instead of two. The options explainers send the trade's parameters (strategy, strikes, break-evens
+            — not who you are) to OpenAI too. If you would rather none of this leaves your machine, don't start the
+            co-pilot and don't press explain; nothing else on lazybull talks to a model. Moving the free engine onto a
+            paid, no-retention tier is the fix we want, and this clause changes the day it lands.
+          </p>
+        </Clause>
+
+        <Clause n="06" title="How long, and how to leave" means="data stays while your account is active; email us and we delete the lot. Signed-out data is yours to clear from your own browser.">
           <p>
             Account data is kept while your account is active. To delete your account and everything attached to it,
             email{" "}
@@ -93,7 +122,7 @@ export default function PrivacyPage() {
           </p>
         </Clause>
 
-        <Clause n="06" title="Changes and contact" means="material changes move the effective date at the top. Same address for every question.">
+        <Clause n="07" title="Changes and contact" means="material changes move the effective date at the top. Same address for every question.">
           <p>
             If this policy changes materially, the effective date above changes with it. Questions, requests, or
             complaints:{" "}
