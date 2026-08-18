@@ -4,23 +4,45 @@
 // onnxruntime-web (WASM), zero server. Each fetches the SAME daily OHLCV the
 // Python service uses (/api/quote?tf=D) and applies the SAME normalization as
 // `ai quants/serve.py` (last N bars, OHLC ÷ last close, volume ÷ mean volume,
-// shape 1×N×5), so the output matches the trained model. The WASM loads from a
-// CDN so it never bloats the repo; any failure returns null and the bot falls
-// back to the snapshot, then the TS surrogate.
+// shape 1×N×5), so the output matches the trained model. Any failure returns
+// null and the bot falls back to the snapshot, then the TS surrogate.
+//
+// The runtime is SELF-HOSTED (threat model R-09). It used to load from
+// cdn.jsdelivr.net with no integrity check, which meant a third party could
+// swap the code that runs on a user's machine AND forced both
+// `script-src https://cdn.jsdelivr.net` and `connect-src` allowances into the
+// CSP. Three choices make the local copy work and stay small:
+//   • `onnxruntime-web/wasm`, not the bare package. The default entry is the
+//     JSEP build (WebGPU/WebNN) and wants ort-wasm-simd-threaded.jsep.wasm —
+//     26 MB, far too much to commit. The CPU build is 13 MB and these nets are
+//     a 60-bar CNN and a 252-bar encoder; WASM runs them in milliseconds.
+//   • wasmPaths as a FILE override, not a directory prefix. Given a prefix the
+//     loader dynamically `import()`s ort-wasm-simd-threaded.mjs from it — that
+//     import is the only reason script-src ever needed a CDN host. Given
+//     `{ wasm }` it uses the Emscripten glue already inlined in the bundle and
+//     fetches nothing but the binary.
+//   • numThreads = 1. The multi-threaded path needs SharedArrayBuffer, i.e.
+//     COOP/COEP cross-origin isolation app-wide, which would cut off the
+//     same-origin cinema iframe and the OpenAI WebRTC handshake. Single-thread
+//     is also what the browser falls back to anyway without isolation.
+// public/ort/ort-wasm-simd-threaded.wasm is a verbatim copy of
+// node_modules/onnxruntime-web/dist/ — re-copy it whenever the pinned
+// onnxruntime-web version in package.json moves, or inference stops loading.
 
 import type { InferenceSession } from "onnxruntime-web";
 
-const ORT_VERSION = "1.27.0"; // keep in sync with package.json onnxruntime-web
+const ORT_WASM = "/ort/ort-wasm-simd-threaded.wasm";
 const MODEL_VER = "2"; // bump to cache-bust the .onnx files when re-exported
 
-type Ort = typeof import("onnxruntime-web");
+type Ort = typeof import("onnxruntime-web/wasm");
 let ortP: Promise<Ort> | null = null;
 const sessions: Record<string, Promise<InferenceSession>> = {};
 
 async function getOrt(): Promise<Ort> {
   if (!ortP) {
-    ortP = import("onnxruntime-web").then((ort) => {
-      ort.env.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
+    ortP = import("onnxruntime-web/wasm").then((ort) => {
+      ort.env.wasm.wasmPaths = { wasm: ORT_WASM };
+      ort.env.wasm.numThreads = 1;
       return ort;
     });
   }
