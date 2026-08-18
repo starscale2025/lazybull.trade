@@ -1,14 +1,18 @@
 // Admin cockpit.
 //
-// ⚠️  AUTH IS DISABLED RIGHT NOW (dev convenience).
-// Before pushing to prod, re-enable the gate by:
-//   1. uncommenting the `auth()` import + `isAdmin` import below
-//   2. uncommenting the auth-check block in AdminPage()
-// The gate logic is preserved verbatim — you should not need to rewrite it.
+// The gate a visitor actually meets is `app/admin/layout.tsx`: it runs before
+// React descends into this page, and it owns the 403 screen that explains a
+// denial. The check below is the second layer — deliberately silent, because
+// it is unreachable while the layout gate exists and a duplicate 403 screen
+// here would only be markup that drifts. It earns its place by making a
+// refactor that deletes the layout gate fail closed rather than open.
+//
+// Access auditing (R-07) belongs to the layout and ONLY the layout: it is the
+// gate that sees denials, and a second writer here would double-count grants.
 
-// import { redirect } from "next/navigation";
-// import { auth } from "@/lib/auth";
-// import { isAdmin } from "@/lib/admin";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { isAdmin } from "@/lib/admin";
 import {
   kpis,
   healthSeries,
@@ -40,36 +44,23 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// Server component — auth happens here, before any admin module renders.
-export default async function AdminPage() {
-  // ── DEV GATE OFF ──────────────────────────────────────────────────────
-  // Keep this block intact. Re-enable before deploy:
-  //
-  //   const session = await auth();
-  //   const email = session?.user?.email ?? null;
-  //   if (!session) redirect("/auth/signin?callbackUrl=/admin");
-  //   if (!isAdmin(email)) {
-  //     return (
-  //       <main className="flex min-h-screen items-center justify-center bg-bg p-8 text-fg">
-  //         <div className="max-w-md border border-border bg-surface p-8 text-center">
-  //           <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-bear">⊘ unauthorized</div>
-  //           <h1 className="mt-3 font-display text-3xl tracking-tightest">Cockpit is admin-only.</h1>
-  //           <p className="mt-3 text-sm text-fg-dim">
-  //             You're signed in as <span className="text-fg">{email}</span>, but this email
-  //             isn't on the admin allow-list. Ask the founder to add it to{" "}
-  //             <code className="bg-bg px-1 py-0.5 text-bull">ADMIN_EMAILS</code>.
-  //           </p>
-  //           <div className="mt-6 flex items-center justify-center gap-2">
-  //             <a href="/" className="border border-border bg-bg px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg">← home</a>
-  //             <a href="/api/auth/signout" className="border border-border bg-bg px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear">sign out</a>
-  //           </div>
-  //         </div>
-  //       </main>
-  //     );
-  //   }
-  // ──────────────────────────────────────────────────────────────────────
+// Explicit guard: never prerender or cache this route — the gate must read the
+// live session on every request. auth()'s cookie access already forces dynamic
+// rendering; this pins that behavior against future refactors.
+export const dynamic = "force-dynamic";
 
-  const email = "dev@lazybull.local";
+// Server component — auth is re-checked here, before any admin module renders.
+export default async function AdminPage() {
+  // ── AUTH GATE (second layer) ──────────────────────────────────────────
+  // Anonymous → sign-in. Signed-in but not on the allow-list (including a
+  // session with no email at all) → home. The `!email` arm is not redundant
+  // with `isAdmin`, which already rejects null: it is what narrows `email` to
+  // a string for the render below. Runs before any admin data is pulled.
+  const session = await auth();
+  const email = session?.user?.email ?? null;
+  if (!session) redirect("/auth/signin?callbackUrl=/admin");
+  if (!email || !isAdmin(email)) redirect("/");
+  // ──────────────────────────────────────────────────────────────────────
 
   // Pull all data on the server. Mock today; swap to real Mongo aggregates
   // later — the component contract stays the same.
@@ -192,7 +183,7 @@ export default async function AdminPage() {
               <span>data refreshes once per minute · seeded</span>
             </div>
             <div className="flex items-center gap-3">
-              <span>signed in as <span className="text-fg">{email}</span> <span className="ml-2 border border-amber/40 bg-amber/5 px-1.5 py-0.5 text-amber">auth · off</span></span>
+              <span>signed in as <span className="text-fg">{email}</span> <span className="ml-2 border border-bull/40 bg-bull/5 px-1.5 py-0.5 text-bull">auth · on</span></span>
               <span className="text-fg-faint">·</span>
               <span>press <span className="text-bull">⌘K</span> for actions</span>
             </div>
