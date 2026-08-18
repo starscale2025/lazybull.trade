@@ -1,8 +1,18 @@
 // MongoDB Atlas connection singleton.
 //
-// Reuses one MongoClient across hot reloads in development. In production
-// each Next.js server instance gets its own client. Pulls credentials from
-// MONGODB_URI in .env.local — that file is gitignored.
+// ONE MongoClient per Node process, in EVERY environment. Serverless keeps a
+// warmed instance alive across invocations, so a client built per call opens a
+// pool that is never closed — sustained traffic walks the Atlas connection
+// limit up until the instance is recycled. The memo lives on globalThis rather
+// than in a module-scope variable because module scope is not stable enough:
+// dev HMR re-evaluates this file on every edit, and a bundler can instantiate
+// the same module twice in one process. Either would hand out a second client.
+//
+// Nothing here dials at import time. MONGODB_URI is read on the first call, so
+// a missing var throws on the request that needs the database instead of during
+// `next build`, which loads every route module to collect page data.
+//
+// Credentials come from MONGODB_URI in .env.local — that file is gitignored.
 
 import { MongoClient, type Db } from "mongodb";
 
@@ -19,24 +29,58 @@ declare global {
   var _lbMongo: Promise<MongoClient> | undefined;
 }
 
-// Lazy: don't read env / open a connection at import time. Vercel collects
-// page data during `next build`, which loads every route module. A throw
-// here would kill the build instead of just the request.
 function getClient(): Promise<MongoClient> {
-  if (globalThis._lbMongo) return globalThis._lbMongo;
+  const cached = globalThis._lbMongo;
+  if (cached) return cached;
+
   const uri = process.env.MONGODB_URI;
   if (!uri) {
     throw new Error(
       "MONGODB_URI is not set. Add it to .env.local locally and to your hosting provider's env vars in production.",
     );
   }
-  const p = new MongoClient(uri, options).connect();
-  if (process.env.NODE_ENV === "development") globalThis._lbMongo = p;
-  return p;
+
+  const pending = new MongoClient(uri, options).connect();
+  globalThis._lbMongo = pending;
+  // Memoizing a REJECTED promise would poison the process until the next
+  // deploy: every later request would await the same dead dial. So drop the
+  // memo when this one fails and let the next caller redial. The identity
+  // check matters — by the time this settles the memo may already hold a
+  // newer, healthy promise, and clearing that would discard a live client.
+  //
+  // Eviction only rescues callers that come back through getClient(), which
+  // db() and pingMongo() do on every request. lib/auth.ts is EXEMPT: it builds
+  // MongoDBAdapter(mongo()) at module scope, so the adapter captures ONE
+  // promise object for the life of the process and re-awaits that same object
+  // on every query — it only re-enters this file when handed a function. So if
+  // the first dial rejects, that instance keeps serving data routes but can
+  // never authenticate again until it is recycled. Closing that gap means
+  // switching auth.ts to the adapter's documented function form,
+  // MongoDBAdapter(() => mongo(), ...) — nothing in this file can do it.
+  pending.catch(() => {
+    if (globalThis._lbMongo === pending) globalThis._lbMongo = undefined;
+  });
+  return pending;
 }
 
-export async function mongo(): Promise<MongoClient> {
-  return getClient();
+// Hands back the memo ITSELF, never a fresh wrapper around it. Only the memo
+// carries the rejection handler attached above; an `async` wrapper would return
+// a new promise with no handler of its own, and the auth adapter stores what it
+// is handed without awaiting until its first query — so a failed first dial
+// would go unhandled and, under Node's default --unhandled-rejections=throw,
+// take the process down.
+//
+// A missing MONGODB_URI must still arrive as a rejected promise, never a
+// synchronous throw: lib/auth.ts calls this at module scope, where a throw would
+// take down every route that imports auth, including during the build.
+export function mongo(): Promise<MongoClient> {
+  try {
+    return getClient();
+  } catch (err) {
+    const rejected: Promise<MongoClient> = Promise.reject(err);
+    rejected.catch(() => {}); // marked handled; awaiting it still throws
+    return rejected;
+  }
 }
 
 export async function db(): Promise<Db> {
@@ -55,4 +99,9 @@ export async function pingMongo() {
     storageMB: stats?.storageSize ? Math.round(stats.storageSize) : null,
     collections: stats?.collections ?? null,
   };
+}
+
+/** Test-only: drop the cached client promise without closing it. */
+export function __resetMongo(): void {
+  globalThis._lbMongo = undefined;
 }
