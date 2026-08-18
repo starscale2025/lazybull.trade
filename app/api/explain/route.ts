@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { clientIp, underLimit } from "@/lib/rate-limit";
 
 // The body used to be cast straight from req.json() with no checks: a missing
 // `breakevens` threw on `.length` (raw 500), and unbounded strings flowed into
@@ -24,6 +25,12 @@ const num = (n: number | null) =>
 
 /** Largest body we'll accept (chars) — keeps junk out of the LLM bill. */
 const MAX_BODY_BYTES = 4_000;
+
+// Per-minute caps (per-IP + global) — each request can bill paid gpt-4o-mini.
+// KV-backed when configured, per-instance in-memory otherwise; see
+// lib/rate-limit.ts for the degradation policy.
+const MAX_PER_IP = 10;
+const MAX_GLOBAL = 60;
 
 function mockExplanation(b: Body) {
   const fmt = (n: number | null) =>
@@ -60,6 +67,11 @@ function mockExplanation(b: Body) {
 }
 
 export async function POST(req: Request) {
+  const ip = clientIp(req.headers);
+  if (!(await underLimit("explain", ip, MAX_PER_IP, MAX_GLOBAL))) {
+    return NextResponse.json({ error: "too many explain requests — slow down a moment" }, { status: 429 });
+  }
+
   const declared = Number(req.headers.get("content-length") ?? 0);
   if (declared > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "payload too large" }, { status: 413 });

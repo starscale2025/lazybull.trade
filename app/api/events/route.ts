@@ -5,11 +5,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { EventsBody, insertEvents, MAX_EVENTS_BODY_BYTES } from "@/lib/db/events";
+import { clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-// Light per-IP limiter — the same in-memory pattern the voice routes use.
-// Serverless instances each get their own map; that's fine for a nuisance cap.
+// Light per-IP limiter, in-memory. Serverless instances each get their own
+// map; that's fine for a nuisance cap.
 const WINDOW_MS = 60_000;
 const MAX_BATCHES_PER_WINDOW = 30;
 const hits = new Map<string, { n: number; at: number }>();
@@ -26,7 +27,7 @@ function limited(ip: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const ip = clientIp(req.headers);
   if (limited(ip)) {
     return NextResponse.json({ ok: false, error: "rate limited" }, { status: 429 });
   }

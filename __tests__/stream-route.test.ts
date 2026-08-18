@@ -94,4 +94,31 @@ describe("SSE route resilience (P0-1, P0-2)", () => {
       }
     }
   });
+
+  it("keys the cap on the platform-set IP — a rotating spoofed XFF can't dodge it (R-06)", async () => {
+    const held: Response[] = [];
+    for (let i = 0; i < GUARD_LIMITS.MAX_ACTIVE_PER_IP; i++) {
+      held.push(
+        await GET(
+          new Request("http://x/api/stream/quotes?symbols=AAPL", {
+            headers: { "x-real-ip": "1.2.3.4", "x-forwarded-for": `10.0.0.${i}` },
+          })
+        )
+      );
+    }
+    // Same real IP, yet another forged XFF: still the same guard key → 429.
+    const blocked = await GET(
+      new Request("http://x/api/stream/quotes?symbols=AAPL", {
+        headers: { "x-real-ip": "1.2.3.4", "x-forwarded-for": "10.0.0.99" },
+      })
+    );
+    expect(blocked.status).toBe(429);
+    for (const r of held) {
+      try {
+        await r.body?.cancel();
+      } catch {
+        /* */
+      }
+    }
+  });
 });

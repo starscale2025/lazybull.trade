@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { clientIp, underLimit } from "@/lib/rate-limit";
+import { requireVoiceAuth } from "@/lib/voice-auth";
 
 // Mints a short-lived OpenAI Realtime client token (an `ek_...` ephemeral key)
 // so the browser can open a WebRTC session WITHOUT ever seeing OPENAI_API_KEY.
@@ -15,29 +16,14 @@ const ALLOWED_VOICES = new Set([
   "alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse", "marin", "cedar",
 ]);
 
-// ── Best-effort in-memory rate limit (per-IP + global) ─────────────────────
+// ── Rate limit (per-IP + global, per minute) ───────────────────────────────
 // Each minted token can open a *billed* Realtime session, so throttle to blunt
-// budget-drain abuse of this unauthenticated endpoint. Note: module state is
-// per-instance and resets on cold start — for hard limits across a fleet, back
-// this with a shared store (Redis/Upstash). Good enough to stop a naive loop.
-const WINDOW_MS = 60_000;
+// budget-drain abuse — the second tier behind the auth gate, and the only tier
+// when the operator opens the endpoint with VOICE_ALLOW_ANON=1. Counters live
+// in KV when configured (fleet-wide, survives cold starts) with a per-instance
+// in-memory fallback — see lib/rate-limit.ts for the degradation policy.
 const MAX_PER_IP = 6;
 const MAX_GLOBAL = 60;
-const ipHits = new Map<string, number[]>();
-let globalHits: number[] = [];
-
-function underLimit(ip: string, now: number): boolean {
-  globalHits = globalHits.filter((t) => now - t < WINDOW_MS);
-  if (globalHits.length >= MAX_GLOBAL) return false;
-  const arr = (ipHits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
-  if (arr.length >= MAX_PER_IP) return false;
-  arr.push(now);
-  ipHits.set(ip, arr);
-  globalHits.push(now);
-  // opportunistic cleanup so the map doesn't grow unbounded
-  if (ipHits.size > 5000) for (const [k, v] of ipHits) if (!v.some((t) => now - t < WINDOW_MS)) ipHits.delete(k);
-  return true;
-}
 
 export async function POST(req: Request) {
   const key = process.env.OPENAI_API_KEY;
@@ -48,18 +34,14 @@ export async function POST(req: Request) {
     );
   }
 
-  // Optional: require a signed-in user (flip on to make voice a members-only,
-  // billed feature). Off by default so anonymous /pro visitors can try it.
-  if (process.env.VOICE_REQUIRE_AUTH === "1") {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "sign in to use the voice co-pilot" }, { status: 401 });
-    }
-  }
+  // Members-only by default — each token is 600s of billed Realtime whose
+  // instructions/tools the client chooses (R-02). VOICE_ALLOW_ANON=1 opts a
+  // deployment into anonymous access; see lib/voice-auth.ts for the semantics.
+  const denied = await requireVoiceAuth();
+  if (denied) return denied;
 
-  const now = Date.now();
-  const ip = (req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip") || "unknown").trim();
-  if (!underLimit(ip, now)) {
+  const ip = clientIp(req.headers);
+  if (!(await underLimit("realtime", ip, MAX_PER_IP, MAX_GLOBAL))) {
     return NextResponse.json({ error: "too many voice sessions — slow down a moment" }, { status: 429 });
   }
 

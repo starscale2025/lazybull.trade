@@ -1,5 +1,6 @@
 import { getProvider } from "@/lib/market-data";
 import type { Quote } from "@/lib/market-data/provider";
+import { clientIp } from "@/lib/rate-limit";
 import { tryAcquire, release } from "@/lib/streaming/guard";
 
 // Server-Sent Events transport for live quotes. The browser opens ONE
@@ -47,10 +48,10 @@ export async function GET(req: Request) {
     ),
   ].slice(0, 50); // P0-5: symbol count capped
 
-  // P0-5: per-IP connection + rate cap (lightweight, per-instance).
-  const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown")
-    .split(",")[0]
-    .trim();
+  // P0-5: per-IP connection + rate cap — KV-backed and fleet-wide when KV is
+  // configured, per-instance otherwise (see lib/streaming/guard.ts). Keyed by
+  // the shared clientIp() so platform-set headers win over spoofable XFF.
+  const ip = clientIp(req.headers);
   const gate = await tryAcquire(ip);
   if (!gate.ok) {
     return new Response(JSON.stringify({ ok: false, error: gate.reason }), {

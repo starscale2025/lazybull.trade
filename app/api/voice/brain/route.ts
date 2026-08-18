@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { clientIp, underLimit } from "@/lib/rate-limit";
+import { requireVoiceAuth } from "@/lib/voice-auth";
 
 // Server-side proxy to OpenRouter for the FREE voice engine's "brain".
 // Keeps OPENROUTER_API_KEY off the client. Takes an OpenAI-style `messages`
 // array, asks a free model for our strict-JSON reply, returns the raw content
 // string for the client to parse (see brainProtocol.parseBrainReply).
+//
+// WHAT LEAVES THIS SERVER (R-10; the user-facing disclosure is clause 05 of
+// app/privacy/page.tsx — keep the two in sync). Only the relayed `messages`:
+// the persona system prompt, the live market snapshot, the workspace state
+// (symbol, indicators, alerts including the user's own notes, paper blotter,
+// watchlist) and the last <=12 conversation turns, which on the voice path are
+// the user's transcribed utterances. Nothing identifies the account: the
+// session is checked here and never forwarded, the two attribution headers
+// below are app-level constants, and `relay` (further down) strips every field
+// except role/content. Free (`:free`) models are only served to accounts that
+// allow prompt logging — see the data-policy branch below — so treat every
+// byte above as retained by the provider and usable for training.
 
 export const runtime = "nodejs";
 
@@ -70,21 +83,10 @@ function usableReply(content: string): boolean {
   }
 }
 
-// ── best-effort in-memory rate limit (per-IP + global) ─────────────────────
-const WINDOW_MS = 60_000;
+// ── rate limit (per-IP + global, per minute) — see lib/rate-limit.ts ───────
+// KV-backed (fleet-wide) when configured, per-instance in-memory otherwise.
 const MAX_PER_IP = 20;   // OpenRouter free tier is ~20 req/min anyway
 const MAX_GLOBAL = 120;
-const ipHits = new Map<string, number[]>();
-let globalHits: number[] = [];
-function underLimit(ip: string, now: number): boolean {
-  globalHits = globalHits.filter((t) => now - t < WINDOW_MS);
-  if (globalHits.length >= MAX_GLOBAL) return false;
-  const arr = (ipHits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
-  if (arr.length >= MAX_PER_IP) return false;
-  arr.push(now); ipHits.set(ip, arr); globalHits.push(now);
-  if (ipHits.size > 5000) for (const [k, v] of ipHits) if (!v.some((t) => now - t < WINDOW_MS)) ipHits.delete(k);
-  return true;
-}
 
 export async function POST(req: Request) {
   const key = process.env.OPENROUTER_API_KEY;
@@ -95,14 +97,14 @@ export async function POST(req: Request) {
     );
   }
 
-  if (process.env.VOICE_REQUIRE_AUTH === "1") {
-    const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: "sign in to use the voice co-pilot" }, { status: 401 });
-  }
+  // Members-only by default — this relay accepts client-supplied system-role
+  // messages under the app's OpenRouter identity (R-02). VOICE_ALLOW_ANON=1
+  // opts a deployment into anonymous access; see lib/voice-auth.ts.
+  const denied = await requireVoiceAuth();
+  if (denied) return denied;
 
-  const now = Date.now();
-  const ip = (req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip") || "unknown").trim();
-  if (!underLimit(ip, now)) {
+  const ip = clientIp(req.headers);
+  if (!(await underLimit("brain", ip, MAX_PER_IP, MAX_GLOBAL))) {
     return NextResponse.json({ error: "slow down a moment — too many voice turns" }, { status: 429 });
   }
 
@@ -126,6 +128,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "payload too large" }, { status: 413 });
   }
 
+  // Relay ONLY role+content (R-10). The check above proves those two fields but
+  // says nothing about the rest of the object: an OpenAI-style `name`, or any
+  // identifier a future — or tampered — client bolts on, would otherwise be
+  // forwarded verbatim to a provider that retains prompts. Rebuilding each
+  // message makes that structurally impossible rather than a client-side
+  // promise. Our own client already sends exactly these two fields
+  // (lib/pro/voice/useFreeVoiceAgent.ts:259-266), so nothing is lost.
+  const relay = (messages as { role: string; content: string }[]).map(({ role, content }) => ({ role, content }));
+
+  // Operator switch — also the privacy lever. Free variants are the reason R-10
+  // exists; pinning OPENROUTER_MODEL to a PAID model (no `:free` suffix), or to
+  // a provider endpoint with zero data retention, is the actual fix, not a
+  // wording change. Anything set here must match what clause 05 of
+  // app/privacy/page.tsx tells users.
   const models = process.env.OPENROUTER_MODEL ? [process.env.OPENROUTER_MODEL] : DEFAULT_MODELS;
 
   const ask = (modelList: string[]) =>
@@ -134,12 +150,17 @@ export async function POST(req: Request) {
       headers: {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
+        // App-level attribution only — these show up on OpenRouter's public app
+        // rankings, so they must stay constants. Never put a user id, email or
+        // session value here, and don't add OpenRouter's optional `user` field
+        // to the body either: it would key the provider's retained prompts to a
+        // person (R-10).
         "HTTP-Referer": "https://lazybull.trade",
         "X-Title": "LazyBull Voice Co-pilot",
       },
       body: JSON.stringify({
         models: modelList.slice(0, MAX_FALLBACKS), // hard cap — OpenRouter 400s above 3
-        messages,
+        messages: relay,
         temperature: 0.4,
         // Generous budget: reasoning models spend hundreds of tokens thinking
         // before they emit the JSON, and a truncated reply is a silent agent.
