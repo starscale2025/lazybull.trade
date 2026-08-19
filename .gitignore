@@ -54,3 +54,12 @@ scripts/cinema/bull.mp4
 
 # local tooling
 .claude/
+
+# Security working documents — deliberately NOT published.
+# This repo is public. The threat model enumerates the app's trust boundaries
+# and, more to the point, the risks still OPEN against a live deployment; that
+# is a prioritised target list for anyone who reads it. Fixed code is safe to
+# publish (a closed hole helps nobody); the list of open ones is not.
+# Keep it local, or move it somewhere private. See scripts/verify-prod.mjs for
+# the parts that are safe to share.
+docs/THREAT_MODEL.md
