@@ -169,7 +169,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
     >
       <div ref={dialogRef} className="w-[820px] max-w-full border border-border bg-surface shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-          <h2 id="honesty-ledger-title" className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-fg">
+          <h2 id="honesty-ledger-title" className="t-eyebrow font-semibold text-fg">
             <span className="text-bull">✓</span> the honesty ledger
           </h2>
           <button
@@ -184,7 +184,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
         <div className="grid gap-px bg-border sm:grid-cols-3">
           {COLUMNS.map((col) => (
             <div key={col.key} className="bg-surface p-4">
-              <div className={`border-b ${col.border} pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.25em] ${col.accent}`}>
+              <div className={`border-b ${col.border} pb-2 t-eyebrow font-semibold ${col.accent}`}>
                 {col.title}
               </div>
               <ul className="mt-3 space-y-3">
@@ -199,7 +199,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2.5 t-chrome text-fg-faint">
           <span>the glitch you just watched resolve is the only one on this site</span>
           <span className="flex gap-3 normal-case tracking-normal">
             <Link href="/learn/broken-vwap" className="text-[11px] text-fg-dim underline decoration-border underline-offset-2 hover:text-fg">

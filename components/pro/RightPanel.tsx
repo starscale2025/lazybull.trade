@@ -213,7 +213,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   return (
     <aside className="flex w-full flex-col border-t border-border bg-surface lg:w-[300px] lg:shrink-0 lg:border-l lg:border-t-0">
       {/* Watchlist header */}
-      <div className="flex items-center justify-between border-b border-border px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2 t-chrome text-fg-dim">
         <span className="text-fg">Watchlist</span>
         <div className="flex items-center gap-1">
           <button title="Reset to default" onClick={() => setList(DEFAULT_LIST.map((d) => d.sym))} className="size-5 border border-border text-fg-dim hover:border-fg-dim hover:text-fg">⟳</button>
@@ -258,7 +258,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       </div>
 
       {/* column header */}
-      <div className="grid grid-cols-12 gap-2 border-b border-border-soft px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="grid grid-cols-12 gap-2 border-b border-border-soft px-3 py-1 t-chrome text-fg-faint">
         <span className="col-span-5">Symbol</span>
         <span className="col-span-3 text-right">Last</span>
         <span className="col-span-2 text-right">Chg</span>
@@ -271,7 +271,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           const q = quotes[sym];
           const active = sym === symbol.sym;
           return (
-            <div key={sym} className={`group grid grid-cols-12 items-center gap-2 px-3 py-1.5 font-mono text-[11px] tabular-nums transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
+            <div key={sym} className={`group grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[11px] transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
               <button
                 className="col-span-5 flex items-center gap-1.5 text-left text-fg"
                 onClick={() => onPickSymbol({ sym, name: q?.name || sym, exch: q?.exch || "" })}
@@ -295,7 +295,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
 
       {/* Symbol details */}
       <div className="border-t border-border bg-bg p-3">
-        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center justify-between t-chrome text-fg-dim">
           <div className="flex items-center gap-2">
             <SymBadge sym={symMeta.sym} />
             <span className="text-fg">{symMeta.sym}</span>
@@ -333,7 +333,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
 
       {/* Performance grid */}
       <div className="border-t border-border bg-bg p-3">
-        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center justify-between t-chrome text-fg-dim">
           <span className="text-fg">Performance</span>
           <span className="text-fg-faint">vs prev close</span>
         </div>
@@ -346,7 +346,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
                 <div className="font-display text-base tabular-nums" style={{ color: colour }}>
                   {v != null ? `${v >= 0 ? "+" : ""}${fmt(v, 2)}%` : "—"}
                 </div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{k}</div>
+                <div className="t-chrome text-fg-faint">{k}</div>
               </div>
             );
           })}

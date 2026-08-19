@@ -171,7 +171,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                 <span className="text-[10px] font-semibold uppercase tracking-wider">Sell</span>
                 <span className="text-[13px] tabular-nums">{bid ? fmt(bid, 2) : "—"}</span>
               </button>
-              <div className="flex w-12 items-center justify-center border-x border-border font-mono text-[10px] tabular-nums text-fg-faint">
+              <div className="flex w-12 items-center justify-center border-x border-border t-data text-[10px] text-fg-faint">
                 {price ? SPREAD.toFixed(2) : "—"}
               </div>
               <button
@@ -392,7 +392,7 @@ function Field({
         </button>
       )}
       {suffix && (
-        <span className="shrink-0 border-l border-border px-2 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <span className="shrink-0 border-l border-border px-2 py-2 t-chrome text-fg-faint">
           {suffix}
         </span>
       )}
@@ -484,7 +484,7 @@ function ExitRow({
         />
         {/* Whichever unit you are NOT typing in, shown live — so the tick
             distance and the absolute price are never out of sync in your head. */}
-        <span className="shrink-0 border-l border-border px-2 py-1.5 font-mono text-[10px] tabular-nums text-fg-faint">
+        <span className="shrink-0 border-l border-border px-2 py-1.5 t-data text-[10px] text-fg-faint">
           {unit === "price"
             ? ticks != null
               ? `${ticks} ticks`
@@ -541,7 +541,7 @@ function DomLadder({ symbol, price, onPick }: { symbol: string; price: number | 
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="px-3 py-2 t-chrome text-fg-faint">
         {symbol} · click a price to use it
       </div>
       {rows.map((r) => (

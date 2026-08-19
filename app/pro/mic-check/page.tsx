@@ -161,7 +161,7 @@ export default function MicCheckPage() {
       </p>
 
       <section className="mb-5 border border-border bg-bg-soft p-3">
-        <h2 className="mb-2 text-[10px] uppercase tracking-[0.2em] text-fg-faint">1 · environment</h2>
+        <h2 className="mb-2 t-eyebrow text-fg-faint">1 · environment</h2>
         <div className="grid gap-1 text-[11px]">
           {Object.entries(env).map(([k, v]) => (
             <div key={k} className="flex gap-2"><span className="w-44 shrink-0 text-fg-faint">{k}</span><span className="break-all">{v}</span></div>
@@ -171,7 +171,7 @@ export default function MicCheckPage() {
       </section>
 
       <section className="mb-5 border border-border bg-bg-soft p-3">
-        <h2 className="mb-2 text-[10px] uppercase tracking-[0.2em] text-fg-faint">2 · microphone + input level</h2>
+        <h2 className="mb-2 t-eyebrow text-fg-faint">2 · microphone + input level</h2>
         <button onClick={testMic} className="mb-3 bg-bull px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim">
           request mic &amp; show level
         </button>
@@ -185,7 +185,7 @@ export default function MicCheckPage() {
       </section>
 
       <section className="mb-5 border border-border bg-bg-soft p-3">
-        <h2 className="mb-2 text-[10px] uppercase tracking-[0.2em] text-fg-faint">3 · speech recognition</h2>
+        <h2 className="mb-2 t-eyebrow text-fg-faint">3 · speech recognition</h2>
         <div className="mb-3 flex gap-2">
           <button onClick={startRecognition} className="bg-cyan px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-bg hover:opacity-80">
             {running ? "restart listening" : "start listening"}
@@ -202,7 +202,7 @@ export default function MicCheckPage() {
       </section>
 
       <section className="border border-border bg-bg-soft p-3">
-        <h2 className="mb-2 text-[10px] uppercase tracking-[0.2em] text-fg-faint">4 · event log (copy this to Claude)</h2>
+        <h2 className="mb-2 t-eyebrow text-fg-faint">4 · event log (copy this to Claude)</h2>
         <div className="max-h-72 overflow-y-auto bg-bg p-2 text-[11px] leading-relaxed">
           {lines.length === 0 && <div className="text-fg-faint">(no events yet — press the buttons above)</div>}
           {lines.map((l, i) => (

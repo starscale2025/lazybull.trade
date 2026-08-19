@@ -202,7 +202,7 @@ export function LeftToolbar({
       <div className="my-auto" />
 
       {/* drawings count */}
-      <div className="flex flex-col items-center gap-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="flex flex-col items-center gap-0.5 t-chrome text-fg-faint">
         <span>{count}</span>
         <span>drws</span>
       </div>
@@ -234,7 +234,7 @@ function ToolBtn({ t, active, onClick }: { t: Tool; active: boolean; onClick: ()
       >
         {t.icon}
       </motion.button>
-      <div className="pointer-events-none absolute left-10 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap border border-border bg-surface px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fg shadow-xl group-hover:block">
+      <div className="pointer-events-none absolute left-10 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap border border-border bg-surface px-2 py-1 t-chrome text-fg shadow-xl group-hover:block">
         <div>{t.label}</div>
         {t.hint && <div className="text-fg-faint normal-case tracking-normal">{t.hint}</div>}
       </div>

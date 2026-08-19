@@ -36,7 +36,7 @@ export function BottomBar({
   // clock (and the panel's reset button above). The Dock now owns that corner
   // (components/Dock.tsx).
   return (
-    <div className="flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 pr-16 font-mono text-[10px] uppercase tracking-wider">
+    <div className="flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 pr-16 t-chrome">
       <div className="flex items-center gap-1">
         {PRESETS.map((p) => (
           <button

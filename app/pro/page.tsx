@@ -819,7 +819,7 @@ export default function ProPage() {
       <Nav />
       {/* App bar — brand lives in the Nav now; this strip is workspace status. */}
       <header className="flex h-12 items-center gap-2 border-b border-border bg-bg-soft px-3">
-        <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-bull">
+        <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 t-chrome font-semibold text-bull">
           pro
         </span>
         <div className="ml-1 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
@@ -960,10 +960,10 @@ export default function ProPage() {
               >
                 <div className="flex flex-col items-center gap-3">
                   <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }} className="font-display text-5xl tracking-tightest">
-                    lazybull<span className="text-bull italic">.pro</span>
+                    lazybull<span className="t-accent">.pro</span>
                   </motion.div>
                   <motion.div initial={{ width: 0 }} animate={{ width: "200px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="h-px bg-bull" />
-                  <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">connecting to the market feed</div>
+                  <div className="t-eyebrow text-fg-faint">connecting to the market feed</div>
                 </div>
               </motion.div>
             )}

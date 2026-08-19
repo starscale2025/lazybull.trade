@@ -1281,7 +1281,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           onMouseDown={(e) => e.stopPropagation()}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-fg-faint">
+          <div className="px-3 py-1.5 t-chrome text-fg-faint">
             @ {fmt(ctxMenu.price, 2)}
           </div>
           {onTradeAt && (

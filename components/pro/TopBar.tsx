@@ -144,7 +144,7 @@ export function TopBar({
                   </li>
                 ))}
                 {!list.length && !searching && (
-                  <li className="px-3 py-4 text-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">no matches</li>
+                  <li className="px-3 py-4 text-center t-chrome text-fg-faint">no matches</li>
                 )}
               </ul>
               <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] text-fg-faint">

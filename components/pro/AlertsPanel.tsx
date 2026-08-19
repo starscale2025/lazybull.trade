@@ -54,7 +54,7 @@ export function AlertsPanel({ open, onClose, symbol, spot, alerts, setAlerts }: 
             </div>
 
             <div className="border-b border-border-soft p-3 space-y-2">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+              <div className="flex items-center gap-2 t-chrome text-fg-dim">
                 <span className="text-fg-faint">spot</span>
                 <span className="text-fg tabular-nums">{fmt(spot, 2)}</span>
               </div>
@@ -90,11 +90,11 @@ export function AlertsPanel({ open, onClose, symbol, spot, alerts, setAlerts }: 
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              <div className="border-b border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+              <div className="border-b border-border-soft px-3 py-1.5 t-chrome text-fg-faint">
                 {alerts.length} active
               </div>
               {alerts.map((a) => (
-                <div key={a.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-2 font-mono text-[11px] tabular-nums">
+                <div key={a.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-2 t-data text-[11px]">
                   <span className={`col-span-2 ${a.cond === "above" ? "text-bull" : "text-bear"}`}>{a.cond === "above" ? "▲" : "▼"}</span>
                   <span className="col-span-4 text-fg">{fmt(a.price, 2)}</span>
                   <span className="col-span-4 text-fg-dim text-[10px]">{a.note || "—"}</span>

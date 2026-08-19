@@ -294,7 +294,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             money ROLLS between values (beat 3 of the fill ritual) — a fill
             should read as movement, not a silent mutation. */}
         {!open && (
-          <span className="flex flex-wrap items-center gap-x-4 font-mono text-[10px] uppercase tracking-wider">
+          <span className="flex flex-wrap items-center gap-x-4 t-chrome">
             <Metric k="Equity" node={<RollingNumber value={metrics.equity} format={money} />} />
             <Metric
               k="P&L"
@@ -365,13 +365,13 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               lazybull paper <span className="text-fg-faint">USD</span>
               <span className="text-fg-faint">⌄</span>
             </button>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <span className="t-chrome text-fg-faint">
               started {money(startingCash)}
             </span>
           </div>
 
           {capitalOpen && (
-            <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 border border-border bg-surface px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+            <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 border border-border bg-surface px-3 py-2 t-chrome">
               <label className="flex items-center gap-1.5 text-fg-faint">
                 starting capital
                 <span className="text-fg-dim">$</span>
@@ -461,9 +461,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (rows.length === 0 ? (
                 <Empty>No open positions — buy or sell from the order panel.</Empty>
               ) : (
-                <table className="w-full font-mono text-[11px] tabular-nums">
+                <table className="w-full t-data text-[11px]">
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
+                    <tr className="t-chrome text-fg-faint">
                       <th className={th}>Symbol</th>
                       <th className={th}>Side</th>
                       <th className={`${th} text-right`}>Quantity</th>
@@ -578,9 +578,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (working.length === 0 ? (
                 <Empty>Nothing resting — a limit or stop order will wait here until price reaches it.</Empty>
               ) : (
-                <table className="w-full font-mono text-[11px] tabular-nums">
+                <table className="w-full t-data text-[11px]">
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
+                    <tr className="t-chrome text-fg-faint">
                       <th className={th}>Symbol</th>
                       <th className={th}>Side</th>
                       <th className={th}>Type</th>
@@ -622,9 +622,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (orderHistory.length === 0 ? (
                 <Empty>No completed orders yet.</Empty>
               ) : (
-                <table className="w-full font-mono text-[11px] tabular-nums">
+                <table className="w-full t-data text-[11px]">
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
+                    <tr className="t-chrome text-fg-faint">
                       <th className={th}>Time</th>
                       <th className={th}>Symbol</th>
                       <th className={th}>Side</th>
@@ -663,9 +663,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (balanceLog.length === 0 ? (
                 <Empty>No cash movements yet.</Empty>
               ) : (
-                <table className="w-full font-mono text-[11px] tabular-nums">
+                <table className="w-full t-data text-[11px]">
                   <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
+                    <tr className="t-chrome text-fg-faint">
                       <th className={th}>Time</th>
                       <th className={th}>Type</th>
                       <th className={th}>Detail</th>
@@ -701,14 +701,14 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                       { k: "Worst", v: stats.n ? `−$${fmt(Math.abs(stats.worst), 2)}` : "—", c: "text-bear" },
                     ].map((x) => (
                       <div key={x.k} className="bg-bg p-1.5">
-                        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{x.k}</div>
-                        <div className={`font-mono text-[11px] tabular-nums ${x.c}`}>{x.v}</div>
+                        <div className="t-chrome text-fg-faint">{x.k}</div>
+                        <div className={`t-data text-[11px] ${x.c}`}>{x.v}</div>
                       </div>
                     ))}
                   </div>
-                  <table className="w-full font-mono text-[11px] tabular-nums">
+                  <table className="w-full t-data text-[11px]">
                     <thead>
-                      <tr className="text-[10px] uppercase tracking-wider text-fg-faint">
+                      <tr className="t-chrome text-fg-faint">
                         <th className={th}>Closed</th>
                         <th className={th}>Symbol</th>
                         <th className={th}>Side</th>
@@ -783,7 +783,7 @@ function Stat({ k, v, node, tone }: { k: string; v?: string; node?: React.ReactN
   return (
     <div>
       <div className="font-mono text-[10px] text-fg-faint">{k}</div>
-      <div className={`font-mono text-[13px] tabular-nums ${tone ?? "text-fg"}`}>{node ?? v}</div>
+      <div className={`t-data text-[13px] ${tone ?? "text-fg"}`}>{node ?? v}</div>
     </div>
   );
 }
@@ -839,7 +839,7 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
         <path d={`M${d}`} fill="none" stroke={c} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="shrink-0 font-mono">
-        <div className="text-[10px] uppercase tracking-wider text-fg-faint">realized equity</div>
+        <div className="t-chrome text-fg-faint">realized equity</div>
         <div className={`text-sm tabular-nums ${up ? "text-bull" : "text-bear"}`}>${fmt(last, 2)}</div>
         <div className={`text-[10px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
           {up ? "+" : "−"}
