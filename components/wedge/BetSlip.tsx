@@ -50,7 +50,7 @@ function OddsRing({ prob }: { prob: number }) {
         <div className="font-display text-2xl tracking-tightest tabular-nums" style={{ color: tone }}>
           {(prob * 100).toFixed(0)}%
         </div>
-        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">odds in band · BS</div>
+        <div className="t-chrome text-fg-faint">odds in band · BS</div>
       </div>
     </div>
   );
@@ -60,8 +60,8 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
   return (
     <div className="border border-border bg-surface/80 backdrop-blur-sm shadow-[0_24px_90px_-40px_rgba(0,255,135,0.35)]">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2.5">
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bull">⟢ your bet</span>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <span className="t-eyebrow text-bull">⟢ your bet</span>
+        <span className="flex items-center gap-1.5 t-chrome text-fg-dim">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" /> live ${spot.toFixed(2)}
         </span>
       </div>
@@ -69,7 +69,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
       <div className="flex flex-col gap-4 p-4">
         {/* the thesis, compact — mirrors the sentence up top */}
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">thesis</div>
+          <div className="t-chrome text-fg-faint">thesis</div>
           <div className="mt-1 font-display text-lg leading-snug tracking-tightest text-fg">
             {sym} closes <span className="text-bull">${low.toFixed(2)}–${high.toFixed(2)}</span>
             <span className="text-fg-dim"> by </span>
@@ -85,7 +85,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
         {selected ? (
           <div>
             <div className="flex items-baseline justify-between">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">strategy</div>
+              <div className="t-chrome text-fg-faint">strategy</div>
               <button
                 onClick={() => onJump("pick")}
                 className="font-mono text-[10px] uppercase tracking-wider text-fg-dim underline-offset-2 hover:text-bull hover:underline"
@@ -118,8 +118,8 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
                 },
               ].map((s) => (
                 <div key={s.k} className="bg-bg p-2.5">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
-                  <div className={`mt-0.5 font-mono text-sm tabular-nums ${s.c}`}>{s.v}</div>
+                  <div className="t-chrome text-fg-faint">{s.k}</div>
+                  <div className={`mt-0.5 t-data text-sm ${s.c}`}>{s.v}</div>
                 </div>
               ))}
             </div>
@@ -161,8 +161,8 @@ export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "select
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-border bg-bg/95 px-4 py-3 pr-20 backdrop-blur-md lg:hidden">
       <div className="min-w-0">
-        <div className={`font-mono text-sm font-semibold tabular-nums ${tone}`}>{(prob * 100).toFixed(0)}% in band</div>
-        <div className="truncate font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className={`t-data text-sm font-semibold ${tone}`}>{(prob * 100).toFixed(0)}% in band</div>
+        <div className="truncate t-chrome text-fg-dim">
           {selected ? selected.kind : "pick a strategy"}
         </div>
       </div>

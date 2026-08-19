@@ -71,7 +71,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
       aria-label={`${symbol} options chain`}
     >
       {/* header — CALLS | expiry stepper | PUTS */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] lg:shrink-0">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-bg-soft px-3 py-2 t-eyebrow lg:shrink-0">
         <span className="text-bull">calls</span>
         <div className="flex items-center gap-2 text-fg">
           <button
@@ -101,7 +101,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
       <div className="overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <div className="min-w-[840px]">
           {/* column headers — stick to the top of the internal scrollport */}
-          <div className={`${cellGrid} border-b border-border-soft bg-bg px-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint lg:sticky lg:top-0 lg:z-20 [&>span]:py-1.5`}>
+          <div className={`${cellGrid} border-b border-border-soft bg-bg px-3 t-chrome text-fg-faint lg:sticky lg:top-0 lg:z-20 [&>span]:py-1.5`}>
             <span>delta</span>
             <span className="text-right">bid</span>
             <span className="text-right">ask</span>
@@ -122,7 +122,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
             return (
               <div
                 key={K}
-                className={`${cellGrid} relative items-stretch border-b border-border-soft px-3 font-mono text-[11px] tabular-nums transition-colors last:border-b-0 hover:bg-bg-soft/60 [&>span]:flex [&>span]:items-center [&>span]:py-2`}
+                className={`${cellGrid} relative items-stretch border-b border-border-soft px-3 t-data text-[11px] transition-colors last:border-b-0 hover:bg-bg-soft/60 [&>span]:flex [&>span]:items-center [&>span]:py-2`}
               >
                 {/* nearest-the-money row ring, ref-style */}
                 {atm && (
@@ -158,14 +158,14 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
       </div>
 
       {/* footer — provenance + link to the full builder; pinned to the column bottom on lg */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider lg:shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-bg-soft px-3 py-2 t-chrome lg:shrink-0">
         <div className="flex items-center gap-2 text-fg-dim">
           <span>mark mid · black-scholes · in-process</span>
           <span className="text-fg-faint">·</span>
           <span className="text-fg-faint">{strikes.length} strikes</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 text-[10px] tracking-[0.2em] text-amber">
+          <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 t-eyebrow text-amber">
             <span className="size-1 rounded-full bg-amber" />
             synthetic chain · illustrative
           </span>

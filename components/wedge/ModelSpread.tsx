@@ -42,10 +42,10 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
     <div className="bg-bg">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-3 py-2">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">Model spread</span>
-          <span className="border border-border bg-surface px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg">consensus {(consensus * 100).toFixed(0)}%</span>
+          <span className="t-chrome text-fg-dim">Model spread</span>
+          <span className="border border-border bg-surface px-2 py-0.5 t-chrome text-fg">consensus {(consensus * 100).toFixed(0)}%</span>
           <span
-            className={`border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+            className={`border px-2 py-0.5 t-chrome ${
               spread > 0.12 ? "border-amber/50 bg-amber/10 text-amber" : "border-bull/50 bg-bull/10 text-bull"
             }`}
           >
@@ -94,7 +94,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                 </div>
                 <div className="mt-0.5 font-mono text-[10px] tracking-normal text-fg-faint">{meta.explain}</div>
               </div>
-              <div className="col-span-2 flex items-center justify-end gap-1.5 font-mono tabular-nums">
+              <div className="col-span-2 flex items-center justify-end gap-1.5 t-data">
                 <span className="text-base text-fg">{v != null ? `${(v * 100).toFixed(0)}%` : "—"}</span>
                 {winner && <span className="text-bull text-[10px]">↑</span>}
                 {loser && <span className="text-bear text-[10px]">↓</span>}
@@ -114,7 +114,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
           >
             <div className="p-3">
               <div className="mb-2 flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                <div className="t-chrome text-fg-dim">
                   Your model · runs in a sandboxed Function constructor
                 </div>
                 {running && <span className="font-mono text-[10px] text-cyan animate-pulse">re-evaluating…</span>}

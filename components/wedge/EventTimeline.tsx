@@ -16,11 +16,11 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
   return (
     <div className="bg-bg p-3">
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center gap-2 t-chrome text-fg-dim">
           <span className="size-1.5 rounded-full bg-amber" />
           event horizon · next {daysToExpiry}d
         </div>
-        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="flex items-center gap-3 t-chrome text-fg-faint">
           <Legend tone="var(--bear)" label="earnings" />
           <Legend tone="var(--amber)" label="fed" />
           <Legend tone="var(--cyan)" label="cpi" />
@@ -33,8 +33,8 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
         <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
         <div className="absolute left-0 top-1/2 -translate-y-1/2 size-2 rounded-full bg-cyan" title="now" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 size-2 rounded-full bg-amber" title="expiry" />
-        <div className="absolute -top-1 left-2 font-mono text-[10px] uppercase tracking-wider text-cyan">now</div>
-        <div className="absolute -top-1 right-2 font-mono text-[10px] uppercase tracking-wider text-amber">exp</div>
+        <div className="absolute -top-1 left-2 t-chrome text-cyan">now</div>
+        <div className="absolute -top-1 right-2 t-chrome text-amber">exp</div>
 
         {within.map((e, i) => {
           const day = (new Date(e.date).getTime() - baseDate.getTime()) / 86_400_000;
@@ -60,7 +60,7 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
       </div>
 
       {within.length === 0 && (
-        <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="mt-2 text-center t-chrome text-fg-faint">
           no scheduled events in your window
         </div>
       )}

@@ -183,7 +183,7 @@ export function OptionsChain({ underlying, spot }: Props) {
   return (
     <div className="border border-border bg-bg">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-chrome">
         <div className="flex items-center gap-3">
           <span className="text-bull">●</span>
           <span className="text-fg">{underlying}</span>
@@ -218,7 +218,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center gap-2 t-chrome text-fg-dim">
           {/* the ARMED side for taps/keyboard — the drag-down-to-short gesture
               is a shortcut, never the only path (WCAG 2.5.1) */}
           <span className="text-fg-faint">tap =</span>
@@ -246,7 +246,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             · drag ↓ = short
           </span>
         </div>
-        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center gap-3 t-chrome text-fg-dim">
           <span>IV heatmap</span>
           <span className="flex items-center gap-1">
             low
@@ -264,12 +264,12 @@ export function OptionsChain({ underlying, spot }: Props) {
 
       {/* Chain grid */}
       <div className="overflow-x-auto" onMouseLeave={() => setHover(null)}>
-        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
           <span className="col-span-5 text-center text-bull">— calls —</span>
           <span className="text-center text-fg">strike</span>
           <span className="col-span-5 text-center text-bear">— puts —</span>
         </div>
-        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
           <span>iv</span>
           <span className="text-right">vol</span>
           <span className="text-right">oi</span>
@@ -297,7 +297,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             return (
               <div
                 key={K}
-                className={`grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft px-3 py-2 font-mono text-[11px] tabular-nums transition-colors ${
+                className={`grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[11px] transition-colors ${
                   atm ? "bg-bull/[0.04]" : ""
                 }`}
               >
@@ -421,7 +421,7 @@ export function OptionsChain({ underlying, spot }: Props) {
       </div>
 
       {/* Hover-greek hint row (with hover triggers for the AI teacher) */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex flex-wrap items-center gap-2 border-t border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <span className="text-fg-faint">hover any greek →</span>
         <GreekTrigger greek="delta">delta</GreekTrigger>
         <GreekTrigger greek="gamma">gamma</GreekTrigger>

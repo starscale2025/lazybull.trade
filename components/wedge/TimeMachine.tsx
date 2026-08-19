@@ -38,7 +38,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
   return (
     <div className="bg-bg p-3">
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center gap-2 t-chrome text-fg-dim">
           <span className="size-1.5 rounded-full bg-cyan" />
           time machine · what-if simulator
         </div>
@@ -52,14 +52,14 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">scenario value</div>
+          <div className="t-chrome text-fg-faint">scenario value</div>
           <div className={`font-display text-3xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
             {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
           </div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">vs entry</div>
-          <div className={`font-mono text-base tabular-nums ${change >= 0 ? "text-bull" : "text-bear"}`}>
+          <div className="t-chrome text-fg-faint">vs entry</div>
+          <div className={`t-data text-base ${change >= 0 ? "text-bull" : "text-bear"}`}>
             {change >= 0 ? "+" : "−"}${Math.abs(change).toFixed(0)}
           </div>
         </div>
@@ -67,9 +67,9 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
       <div className="space-y-4">
         <div>
-          <div className="mb-1 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="mb-1 flex items-center justify-between t-chrome text-fg-dim">
             <span>stock price</span>
-            <span className="text-fg tabular-nums">${spotAt.toFixed(2)}</span>
+            <span className="t-data text-fg">${spotAt.toFixed(2)}</span>
           </div>
           <input
             type="range"
@@ -88,9 +88,9 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
         </div>
 
         <div>
-          <div className="mb-1 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="mb-1 flex items-center justify-between t-chrome text-fg-dim">
             <span>days from now</span>
-            <span className="text-fg tabular-nums">{daysGone}d / {daysToExpiry}d</span>
+            <span className="t-data text-fg">{daysGone}d / {daysToExpiry}d</span>
           </div>
           <input
             type="range"

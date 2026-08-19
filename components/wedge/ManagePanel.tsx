@@ -46,7 +46,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
 
   return (
     <div className="bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 t-chrome text-fg-dim">
         <span>open bets · {open.length}</span>
         <span className="text-fg-faint">live priced from /api/quote</span>
       </div>
@@ -78,12 +78,12 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
                   <div className="font-display text-xl tracking-tightest">{b.strategy.kind}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="t-chrome text-fg-faint">
                     {b.symbol} · expiry {b.expiry} · {daysLeft}d left
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">live P&L</div>
+                  <div className="t-chrome text-fg-faint">live P&L</div>
                   <div className={`font-display text-2xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
                     {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
                   </div>
@@ -119,10 +119,10 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
       {/* Closed history */}
       {bets.some((b) => b.status === "closed") && (
         <div className="border-t border-border bg-bg-soft p-3">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">recent · closed</div>
+          <div className="mb-2 t-chrome text-fg-faint">recent · closed</div>
           <ul className="space-y-1">
             {bets.filter((b) => b.status === "closed").slice(0, 4).map((b) => (
-              <li key={b.id} className="flex items-center justify-between border-b border-border-soft py-1 font-mono text-[11px] tabular-nums">
+              <li key={b.id} className="flex items-center justify-between border-b border-border-soft py-1 t-data text-[11px]">
                 <span className="text-fg-dim">{b.symbol} · {b.strategy.kind}</span>
                 <span className={(b.closedPnl ?? 0) >= 0 ? "text-bull" : "text-bear"}>
                   {(b.closedPnl ?? 0) >= 0 ? "+" : "−"}${Math.abs(b.closedPnl ?? 0).toFixed(0)}

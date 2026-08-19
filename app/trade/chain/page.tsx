@@ -62,18 +62,18 @@ export default function TradePage() {
       {/* page header */}
       <section className="relative border-b border-border bg-bg">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
-        <div className="relative mx-auto flex max-w-[1400px] flex-wrap items-end justify-between gap-4 px-5 py-8">
+        <div className="relative shell flex flex-wrap items-end justify-between gap-4 py-8">
           <div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint flex items-center gap-3">
+            <div className="t-eyebrow text-fg-faint flex items-center gap-3">
               ⟢ advanced view · raw chain
               <a href="/trade" className="text-bull hover:underline">← back to bet builder</a>
             </div>
-            <h1 className="mt-2 font-display text-[clamp(2rem,4vw,3.6rem)] tracking-tightest leading-[0.95]">
+            <h1 className="mt-2 t-title">
               Drag across strikes.
               <br />
-              <span className="italic font-light text-bull">Build</span> a strategy.
+              <span className="t-accent">Build</span> a strategy.
             </h1>
-            <p className="mt-2 max-w-[58ch] text-sm text-fg-dim leading-relaxed">
+            <p className="mt-2 max-w-[58ch] t-body-sm text-fg-dim">
               Hover any{" "}
               <GreekTrigger greek="delta">greek</GreekTrigger> for an instant explanation. Drag across cells to compose
               spreads, condors, and straddles. The card to the right detects the strategy, computes the P&L, and lets
@@ -101,7 +101,7 @@ export default function TradePage() {
 
       {/* Symbol switcher */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-3 overflow-x-auto px-5 py-3 font-mono text-[11px] uppercase tracking-wider">
+        <div className="shell flex items-center gap-3 overflow-x-auto py-3 font-mono text-[11px] uppercase tracking-wider">
           <span className="text-fg-faint shrink-0">underlying</span>
           {SYMBOLS.map((s, i) => (
             <button
@@ -119,13 +119,13 @@ export default function TradePage() {
           ))}
           <span className="ml-auto shrink-0 text-fg-dim flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" /> live spot{" "}
-            <span className="text-fg tabular-nums">${spot.toFixed(2)}</span>
+            <span className="t-data text-fg">${spot.toFixed(2)}</span>
           </span>
         </div>
       </section>
 
       {/* Main grid */}
-      <section className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-5 px-5 py-6">
+      <section className="shell grid grid-cols-12 gap-5 py-6">
         <div className="col-span-12 lg:col-span-7 xl:col-span-8">
           <OptionsChain underlying={sym.sym} spot={spot} />
         </div>

@@ -47,17 +47,17 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
                 <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5" style={{ background: tone.color }} aria-hidden />
               )}
               <span
-                className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 text-[10px] uppercase tracking-wider"
+                className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 t-chrome"
                 style={{ color: tone.color, background: tone.pillBg }}
               >
                 <span className="size-1 rounded-full" style={{ background: tone.color }} />
                 {tone.label}
               </span>
               <span className="min-w-0 flex-1 truncate text-[11px] text-fg">{s.kind}</span>
-              <span className="shrink-0 text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+              <span className="shrink-0 t-chrome text-fg-faint tabular-nums">
                 {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
               </span>
-              <span className="w-9 shrink-0 text-right text-[11px] tabular-nums text-bull">{(s.prob * 100).toFixed(0)}%</span>
+              <span className="w-9 shrink-0 text-right t-data text-[11px] text-bull">{(s.prob * 100).toFixed(0)}%</span>
             </button>
           );
         })}
@@ -130,11 +130,11 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
 
       {/* header */}
       <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 px-2 py-1 font-mono text-[10px] uppercase tracking-wider" style={{ color: tone.color, background: tone.pillBg }}>
+        <div className="inline-flex items-center gap-2 px-2 py-1 t-chrome" style={{ color: tone.color, background: tone.pillBg }}>
           <span className="size-1.5 rounded-full" style={{ background: tone.color }} />
           {tone.label}
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+        <span className="t-chrome text-fg-faint tabular-nums">
           {s.cost > 0 ? "you pay" : "you collect"} ${Math.abs(s.cost).toFixed(0)}
         </span>
       </div>
@@ -146,7 +146,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
           {chips.map((c, i) => (
             <span
               key={c}
-              className={`border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+              className={`border px-1.5 py-0.5 t-chrome ${
                 i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
               }`}
             >
@@ -164,14 +164,14 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
       <div className="flex flex-col gap-1.5">
         {rail.map((it) => (
           <div key={it.k} className="flex items-baseline justify-between gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{it.k}</span>
-            <span className={`text-right font-mono text-sm tabular-nums ${it.c ?? "text-fg"}`}>{it.v}</span>
+            <span className="t-chrome text-fg-faint">{it.k}</span>
+            <span className={`text-right t-data text-sm ${it.c ?? "text-fg"}`}>{it.v}</span>
           </div>
         ))}
       </div>
 
       {/* blurb */}
-      <p className="text-sm leading-relaxed text-fg">{s.blurb}</p>
+      <p className="t-body-sm text-fg">{s.blurb}</p>
 
       {/* place button */}
       <div className="mt-auto pt-2">

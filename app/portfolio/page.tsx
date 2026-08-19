@@ -211,16 +211,16 @@ export default function PortfolioPage() {
     <div className="pro-theme min-h-screen bg-bg text-fg">
       <Nav />
 
-      <main className="mx-auto max-w-[1200px] px-5 pb-24 pt-8">
+      <main className="shell pb-24 pt-8">
         {/* ── header ── */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+            <div className="flex items-center gap-2 t-eyebrow text-fg-faint">
               <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">paper</span>
               <span>one account · /pro · /trade · /quant</span>
             </div>
-            <h1 className="mt-2 font-display text-3xl tracking-tightest">Portfolio</h1>
-            <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+            <h1 className="mt-2 t-subtitle">Portfolio</h1>
+            <div className="mt-1.5 t-eyebrow text-fg-faint">
               {startedAt ? (
                 <>
                   started{" "}
@@ -255,11 +255,11 @@ export default function PortfolioPage() {
         <section className="mt-6 border border-border bg-surface p-5">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">Account value</div>
+              <div className="t-eyebrow text-fg-faint">Account value</div>
               <div className="mt-1 font-display text-5xl tabular-nums tracking-tightest">
                 ${fmt(metrics.equity, 2)}
               </div>
-              <div className={`mt-2 font-mono text-[13px] tabular-nums ${netPnl >= 0 ? "text-bull" : "text-bear"}`}>
+              <div className={`mt-2 t-data text-[13px] ${netPnl >= 0 ? "text-bull" : "text-bear"}`}>
                 {signedMoney(netPnl)} · {netPnl >= 0 ? "+" : "−"}
                 {fmt(Math.abs(netPct), 2)}% <span className="text-fg-faint">since start</span>
               </div>
@@ -278,7 +278,7 @@ export default function PortfolioPage() {
             <Stat label="Starting capital" value={money(startingCash)} />
           </div>
           {metrics.unmarkedCount > 0 && (
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-amber">
+            <div className="mt-2 t-chrome text-amber">
               {metrics.unmarkedCount} position{metrics.unmarkedCount > 1 ? "s" : ""} carried at cost — no live
               price yet
             </div>
@@ -330,7 +330,7 @@ export default function PortfolioPage() {
               direction on <Link className="text-bull underline" href="/quant">/quant</Link>.
             </Empty>
           ) : (
-            <table className="w-full font-mono text-[11px] tabular-nums">
+            <table className="w-full t-data text-[11px]">
               <thead>
                 <Tr head>
                   <Th left>Symbol</Th>
@@ -399,7 +399,7 @@ export default function PortfolioPage() {
               <Link className="text-bull underline" href="/trade/chain">the chain</Link> books here.
             </Empty>
           ) : (
-            <table className="w-full font-mono text-[11px] tabular-nums">
+            <table className="w-full t-data text-[11px]">
               <thead>
                 <Tr head>
                   <Th left>Opened</Th>
@@ -441,7 +441,7 @@ export default function PortfolioPage() {
             </table>
           )}
           {bets.length > 0 && (
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-2 t-chrome text-fg-faint">
               settle or manage bets on <Link className="text-bull underline" href="/trade">/trade</Link>
             </div>
           )}
@@ -452,7 +452,7 @@ export default function PortfolioPage() {
           {working.length === 0 ? (
             <Empty>No resting orders. Limits and stops placed anywhere on the site rest here until they fill.</Empty>
           ) : (
-            <table className="w-full font-mono text-[11px] tabular-nums">
+            <table className="w-full t-data text-[11px]">
               <thead>
                 <Tr head>
                   <Th left>Placed</Th>
@@ -548,7 +548,7 @@ export default function PortfolioPage() {
           {trades.length === 0 ? (
             <Empty>Every close lands here with its realized P&L — reduce or flatten a position to start the tape.</Empty>
           ) : (
-            <table className="w-full font-mono text-[11px] tabular-nums">
+            <table className="w-full t-data text-[11px]">
               <thead>
                 <Tr head>
                   <Th left>Closed</Th>
@@ -588,7 +588,7 @@ export default function PortfolioPage() {
             </table>
           )}
           {trades.length >= 100 && (
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-2 t-chrome text-fg-faint">
               showing 100 — export for the full record (history caps at 200 round-trips)
             </div>
           )}
@@ -620,7 +620,7 @@ export default function PortfolioPage() {
           {balanceLog.length === 0 ? (
             <Empty>Every cash movement — fills, credits, resets — reconciles here.</Empty>
           ) : (
-            <table className="w-full font-mono text-[11px] tabular-nums">
+            <table className="w-full t-data text-[11px]">
               <thead>
                 <Tr head>
                   <Th left>Time</Th>
@@ -649,7 +649,7 @@ export default function PortfolioPage() {
           )}
         </Section>
 
-        <div className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+        <div className="mt-10 text-center t-eyebrow text-fg-faint">
           paper only · not advice · history and ledger keep the last 200 entries
         </div>
       </main>
@@ -684,9 +684,9 @@ function Stat({
     tone == null || tone === 0 ? "text-fg" : tone > 0 ? "text-bull" : "text-bear";
   return (
     <div className="bg-surface p-3">
-      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">{label}</div>
-      <div className={`mt-1 font-mono ${big ? "text-[16px]" : "text-[13px]"} tabular-nums ${color}`}>{value}</div>
-      {sub && <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">{sub}</div>}
+      <div className="t-chrome text-fg-faint">{label}</div>
+      <div className={`mt-1 t-data ${big ? "text-[16px]" : "text-[13px]"} ${color}`}>{value}</div>
+      {sub && <div className="mt-0.5 t-chrome text-fg-faint">{sub}</div>}
     </div>
   );
 }
@@ -703,7 +703,7 @@ function Section({
   return (
     <section className="mt-4 border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border-soft px-4 py-2.5">
-        <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-dim">{title}</h2>
+        <h2 className="t-eyebrow text-fg-dim">{title}</h2>
         {onExport && (
           <button
             onClick={onExport}
@@ -768,7 +768,7 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
 
   if (pts.length < 2) {
     return (
-      <div className="hidden h-[96px] w-[360px] items-center justify-center border border-border-soft font-mono text-[10px] uppercase tracking-wider text-fg-faint sm:flex">
+      <div className="hidden h-[96px] w-[360px] items-center justify-center border border-border-soft t-chrome text-fg-faint sm:flex">
         equity curve appears after your first close
       </div>
     );

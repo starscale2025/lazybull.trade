@@ -220,7 +220,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
       {/* Typed fallback for the band (WCAG 2.5.1 — the drag is never the only
           path): on touch the drag was a mouse-only corpse and the whole page
           priced off a default band the user never chose. */}
-      <div className="absolute left-2 top-2 z-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="absolute left-2 top-2 z-10 flex items-center gap-2 t-chrome text-fg-faint">
         <label className="flex items-center gap-1">
           hi
           <input
@@ -394,7 +394,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
       </svg>
 
       {/* Drag tip overlay */}
-      <div className="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-1 t-chrome text-fg-faint">
         <span><span className="text-bull">drag bands</span> to move your zone</span>
         <span><span className="text-amber">drag the exp line</span> →← to change date</span>
       </div>

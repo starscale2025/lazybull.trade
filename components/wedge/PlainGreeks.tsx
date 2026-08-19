@@ -85,7 +85,7 @@ export function PlainGreeks({
   return (
     <section className="border border-border bg-surface lg:shrink-0">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">
+        <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           plain english greeks
         </span>
@@ -119,11 +119,11 @@ export function PlainGreeks({
                   >
                     <Icon size={16} color={meta.color} />
                   </span>
-                  <span className="w-12 shrink-0 font-mono text-[10px] uppercase tracking-wider text-fg">
+                  <span className="w-12 shrink-0 t-chrome text-fg">
                     {r.name}
                   </span>
                   <span
-                    className="w-14 shrink-0 text-right font-mono text-sm tabular-nums"
+                    className="w-14 shrink-0 text-right t-data text-sm"
                     style={{ color: meta.color }}
                   >
                     {perShare(r.value)}
@@ -135,7 +135,7 @@ export function PlainGreeks({
               );
             })}
           </ul>
-          <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+          <div className="border-t border-border-soft px-3 py-1.5 t-eyebrow text-fg-faint">
             net across {s.legs.length} leg{s.legs.length > 1 ? "s" : ""} · black-scholes · live
           </div>
         </>

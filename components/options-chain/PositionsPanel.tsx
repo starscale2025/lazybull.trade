@@ -34,7 +34,7 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
 
   return (
     <div className="border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome">
         <span className="text-bull">● paper portfolio</span>
         <span className="text-fg-dim">
           equity <span className="text-fg">${equity.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
@@ -42,7 +42,7 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
       </div>
       {unmarkedSyms > 0 && (
         // Say so rather than let the number quietly disagree with /pro.
-        <div className="border-b border-border-soft px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="border-b border-border-soft px-3 py-1 t-chrome text-fg-faint">
           {unmarkedSyms} stock position{unmarkedSyms > 1 ? "s" : ""} valued at cost — live marks on pro charts
         </div>
       )}
@@ -53,13 +53,13 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
           { k: "Total P&L", v: `${totalPnl >= 0 ? "+" : "−"}$${Math.abs(totalPnl).toFixed(0)}`, c: totalPnl >= 0 ? "text-bull" : "text-bear" },
         ].map((s) => (
           <div key={s.k} className="bg-bg p-2.5">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
-            <div className={`mt-0.5 font-mono text-sm tabular-nums ${s.c}`}>{s.v}</div>
+            <div className="t-chrome text-fg-faint">{s.k}</div>
+            <div className={`mt-0.5 t-data text-sm ${s.c}`}>{s.v}</div>
           </div>
         ))}
       </div>
 
-      <div className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint border-b border-border-soft">
+      <div className="px-3 py-2 t-chrome text-fg-faint border-b border-border-soft">
         open · {open.length}
       </div>
       {open.length === 0 ? (
@@ -69,7 +69,7 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
           {open.map((p) => {
             const live = payoff(p.legs, spot);
             return (
-              <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-2 font-mono text-[11px] tabular-nums">
+              <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-2 t-data text-[11px]">
                 <div className="col-span-4">
                   <div className="text-fg">{p.strategy}</div>
                   <div className="font-mono text-[10px] text-fg-faint">{p.underlying} · {p.legs.length} leg</div>
@@ -96,11 +96,11 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
 
       {closed.length > 0 && (
         <>
-          <div className="px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint border-b border-border-soft">
+          <div className="px-3 py-2 t-chrome text-fg-faint border-b border-border-soft">
             recent closed
           </div>
           {closed.map((p) => (
-            <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 font-mono text-[10px] tabular-nums text-fg-dim">
+            <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[10px] text-fg-dim">
               <div className="col-span-7">{p.strategy} · {p.underlying}</div>
               <div className={`col-span-5 text-right ${p.pnl >= 0 ? "text-bull" : "text-bear"}`}>
                 {p.pnl >= 0 ? "+" : "−"}${Math.abs(p.pnl).toFixed(0)}

@@ -80,7 +80,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
 
   return (
     <div className="border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome">
         <div className="flex items-center gap-2">
           <span className="text-bull">●</span>
           <span className="text-fg">strategy builder</span>
@@ -98,12 +98,12 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
       {/* Detected strategy banner */}
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">detected</div>
+          <div className="t-chrome text-fg-faint">detected</div>
           <div className="font-display text-3xl tracking-tightest text-fg">
             {legs.length === 0 ? "Empty" : detection.kind}
           </div>
           {legs.length > 0 && (
-            <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+            <div className="mt-1 flex flex-wrap items-center gap-2 t-chrome text-fg-dim">
               <span
                 className="inline-flex items-center gap-1.5 border px-2 py-0.5"
                 style={{
@@ -152,7 +152,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
       </div>
 
       {legs.length > 0 && (
-        <p className="px-4 pt-2 text-sm leading-relaxed text-fg-dim">{detection.blurb}</p>
+        <p className="px-4 pt-2 t-body-sm text-fg-dim">{detection.blurb}</p>
       )}
 
       {/* P&L diagram */}
@@ -170,8 +170,8 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             { k: "Net cost", v: `${cost >= 0 ? "" : "+"}$${Math.abs(cost / 100).toFixed(2)}`, c: cost >= 0 ? "text-fg-dim" : "text-bull" },
           ].map((s) => (
             <div key={s.k} className="bg-bg p-3">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
-              <div className={`mt-1 font-mono text-base tabular-nums ${s.c}`}>{s.v}</div>
+              <div className="t-chrome text-fg-faint">{s.k}</div>
+              <div className={`mt-1 t-data text-base ${s.c}`}>{s.v}</div>
             </div>
           ))}
         </div>
@@ -180,7 +180,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
       {/* Legs */}
       {legs.length > 0 && (
         <div className="border-t border-border-soft">
-          <div className="grid grid-cols-12 gap-2 border-b border-border-soft bg-bg-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <div className="grid grid-cols-12 gap-2 border-b border-border-soft bg-bg-soft px-3 py-1.5 t-chrome text-fg-faint">
             <span className="col-span-2">side</span>
             <span className="col-span-2">type</span>
             <span className="col-span-2">strike</span>
@@ -189,7 +189,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             <span className="col-span-2 text-right">net</span>
           </div>
           {legs.map((l) => (
-            <div key={l.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 font-mono text-[11px] tabular-nums">
+            <div key={l.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[11px]">
               <button
                 onClick={() => flipSide(l.id)}
                 className={`col-span-2 border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
@@ -221,7 +221,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
       {/* Trade button */}
       {legs.length > 0 && (
         <div className="flex items-center justify-between gap-3 border-t border-border-soft bg-bg-soft px-4 py-3">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="t-chrome text-fg-dim">
             cash <span className="text-fg">${cash.toLocaleString()}</span>
             <span className="text-fg-faint mx-2">·</span>
             cost <span className={cost > 0 ? "text-bear" : "text-bull"}>${Math.abs(cost).toFixed(0)}</span>
@@ -252,7 +252,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-xl w-full border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.4)]"
             >
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 font-mono text-[10px] uppercase tracking-wider">
+              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
                 <span className="text-bull">● teacher · {explanation?.source ?? "..."}</span>
                 <button onClick={() => setExplainOpen(false)} className="text-fg-faint hover:text-fg">
                   ✕
@@ -265,7 +265,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
                 <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
                   on {underlying} · spot ${spot.toFixed(2)}
                 </div>
-                <div className="mt-4 min-h-[120px] whitespace-pre-line text-[14px] leading-relaxed text-fg">
+                <div className="mt-4 min-h-[120px] whitespace-pre-line t-body-sm text-fg">
                   {explainLoading ? (
                     <span className="text-fg-faint">teacher is thinking…</span>
                   ) : (

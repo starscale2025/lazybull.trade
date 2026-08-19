@@ -187,7 +187,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <div className="font-mono text-[11px] uppercase tracking-wider text-fg">
                 Bet on <span className="text-bull">{symbol}</span>
-                <span className="ml-2 tabular-nums text-fg-dim">{mark ? `$${mark.toFixed(2)}` : "…"}</span>
+                <span className="ml-2 t-data text-fg-dim">{mark ? `$${mark.toFixed(2)}` : "…"}</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -203,7 +203,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                 <div className="border border-amber/40 bg-amber/10 px-3 py-2 font-mono text-[11px] leading-relaxed text-amber">
                   ⚠ betting locked — {lockReason}
                 </div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                <div className="t-chrome text-fg-faint">
                   bets book on your real paper account, so they only fill at real prices
                 </div>
                 {onUnlock && (
@@ -220,7 +220,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                 <div className="border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] text-bull">
                   ✓ Paper bet placed — {placed}
                 </div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                <div className="t-chrome text-fg-faint">
                   cash ${Math.round(cash).toLocaleString()} · manage it on the PRO chart
                 </div>
                 <button

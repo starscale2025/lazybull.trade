@@ -315,19 +315,19 @@ export default function TradePage() {
           style={{ maskImage: "linear-gradient(to left, black 30%, transparent 78%)" }}
         />
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
-        <div className="relative mx-auto w-full max-w-[1600px] px-5 py-4 lg:py-2">
+        <div className="relative mx-auto w-full max-w-[1600px] px-5 py-4 lg:py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-2">
-            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint" data-gsap="fade-up">
+            <div className="flex items-center gap-3 t-eyebrow text-fg-faint" data-gsap="fade-up">
               ⟢ bet builder · v2
               <Link href="/trade/chain" className="text-bull hover:underline">advanced view: see the chain →</Link>
             </div>
-            <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-bull">
+            <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-2.5 py-1 t-eyebrow text-bull">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />
               paper only · $5k practice account
             </span>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:mt-1.5 lg:items-center">
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:mt-3 lg:items-center">
             {/* symbol block — one dense baseline row on lg */}
             <div className="lg:flex lg:flex-wrap lg:items-baseline lg:gap-x-4" data-gsap="fade-up">
               <div className="flex flex-wrap items-baseline gap-3">
@@ -336,13 +336,13 @@ export default function TradePage() {
                 </h1>
                 <span className="font-mono text-[11px] uppercase tracking-wider text-fg-dim">{quote?.name ?? sym.name}</span>
               </div>
-              <div className="mt-1.5 flex flex-wrap items-baseline gap-3 font-mono tabular-nums lg:mt-0">
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-3 t-data lg:mt-0">
                 <span className="text-2xl text-fg lg:text-xl">${spot.toFixed(2)}</span>
                 <span className={`text-sm ${chg >= 0 ? "text-bull" : "text-bear"}`}>
                   {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
                 </span>
               </div>
-              <div className="mt-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint lg:mt-0">
+              <div className="mt-1 flex items-center gap-2 t-eyebrow text-fg-faint lg:mt-0">
                 <span className={`size-1.5 rounded-full ${quote ? "bg-bull pulse-dot" : "bg-amber"}`} />
                 {quote ? `live price · ${quote.exch ?? "us market"}` : "seed price · connecting"}
               </div>
@@ -350,30 +350,30 @@ export default function TradePage() {
 
             {/* IV / earnings cluster — synthetic, tagged illustrative */}
             <div className="flex flex-col items-start gap-2 sm:items-end lg:flex-row lg:items-center lg:gap-3" data-gsap="fade-up" data-gsap-delay="0.08">
-              <div className="flex divide-x divide-border font-mono">
+              <div className="flex divide-x divide-border t-data">
                 {[
                   { k: "iv rank", v: String(ivRank) },
                   { k: "iv percentile", v: `${ivPctile}%` },
                   { k: "iv", v: `${(sym.iv * 100).toFixed(1)}%` },
                 ].map((s) => (
                   <div key={s.k} className="px-4 text-right first:pl-0">
-                    <div className="text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
+                    <div className="t-chrome text-fg-faint">{s.k}</div>
                     <div className="mt-1 text-lg tabular-nums text-fg lg:mt-0.5 lg:text-base">{s.v}</div>
                   </div>
                 ))}
                 <div className="px-4 pr-0 text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-fg-faint">earnings</div>
+                  <div className="t-chrome text-fg-faint">earnings</div>
                   <div className="mt-1 flex items-baseline justify-end gap-1.5 lg:mt-0.5">
                     <span className="text-lg tabular-nums text-fg lg:text-base">{earnLabel}</span>
                     {earnDays != null && (
-                      <span className="border border-bull/40 bg-bull/10 px-1 py-px text-[10px] uppercase tracking-wider text-bull">
+                      <span className="border border-bull/40 bg-bull/10 px-1 py-px t-chrome text-bull">
                         {earnDays}d
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-amber">
+              <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 t-eyebrow text-amber">
                 <span className="size-1 rounded-full bg-amber" />
                 illustrative · synthetic iv
               </span>
@@ -387,7 +387,7 @@ export default function TradePage() {
         {/* ---- left column: toolbar → cone chart → chain (internal scroll) ---- */}
         <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-hidden">
           {/* toolbar strip — live controls only */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-border bg-surface px-3 py-2 font-mono text-[10px] uppercase tracking-wider lg:shrink-0 lg:flex-nowrap lg:gap-x-3 lg:overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-border bg-surface px-3 py-2 t-chrome lg:shrink-0 lg:flex-nowrap lg:gap-x-3 lg:overflow-x-auto">
             <span className="text-fg-faint">underlying</span>
             <div className="flex items-center gap-1">
               {SYMBOLS.map((s, i) => (
@@ -444,7 +444,7 @@ export default function TradePage() {
           {/* chart + draggable probability cone — ≈55% of the column on lg */}
           <section id="thesis" className="scroll-mt-16 border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bull">⟢ forecast cone · {sym.sym}</span>
+              <span className="t-eyebrow text-bull">⟢ forecast cone · {sym.sym}</span>
               <span className="hidden max-w-[62%] truncate font-mono text-[10px] text-fg-dim md:block">
                 <ThesisLine sentence={thesisSentence} />
               </span>
@@ -491,7 +491,7 @@ export default function TradePage() {
           {/* strategy panel — picker + legs + payoff/stat rail + place CTA, all inside */}
           <section id="pick" className="scroll-mt-16 border border-border bg-surface lg:shrink-0">
             <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">strategy · pick one of three</span>
+              <span className="t-eyebrow text-fg-dim">strategy · pick one of three</span>
               <Link
                 href="/trade/chain"
                 className="border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
@@ -593,7 +593,7 @@ export default function TradePage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-xl border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(0,255,135,0.5)]"
             >
-              <div className="border-b border-border bg-bg-soft px-4 py-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bull">
+              <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-bull">
                 ⚡ confirm bet · {sym.sym}
               </div>
               <div className="p-6">
@@ -606,8 +606,8 @@ export default function TradePage() {
                     { k: "win odds", v: `${(confirm.strategy.prob * 100).toFixed(0)}%`, c: "text-fg" },
                   ].map((s) => (
                     <div key={s.k} className="bg-bg p-3">
-                      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.k}</div>
-                      <div className={`mt-1 font-mono text-base tabular-nums ${s.c}`}>{s.v}</div>
+                      <div className="t-chrome text-fg-faint">{s.k}</div>
+                      <div className={`mt-1 t-data text-base ${s.c}`}>{s.v}</div>
                     </div>
                   ))}
                 </div>
@@ -686,10 +686,10 @@ function InBandRing({ prob }: { prob: number }) {
           <span className="font-display text-2xl leading-none tracking-tightest tabular-nums" style={{ color: tone }}>
             {Math.round(prob * 100)}%
           </span>
-          <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-dim">in band</span>
+          <span className="mt-1 t-eyebrow text-fg-dim">in band</span>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="flex items-center gap-1.5 t-eyebrow text-fg-faint">
         <span className="size-2 shrink-0 border border-bull/60 bg-bull/20" aria-hidden />
         <span className="leading-tight">probability<br />@ expiration</span>
       </div>
@@ -701,13 +701,13 @@ function InBandRing({ prob }: { prob: number }) {
 function LegsList({ s }: { s: Strategy }) {
   return (
     <div className="border-t border-border">
-      <div className="flex items-center justify-between bg-bg-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="flex items-center justify-between bg-bg-soft px-3 py-1.5 t-eyebrow text-fg-faint">
         <span>legs · selected</span>
         <span>mid px</span>
       </div>
       <ul className="divide-y divide-border-soft">
         {s.legs.map((l, i) => (
-          <li key={i} className="flex items-center justify-between px-3 py-2 font-mono text-[12px] tabular-nums">
+          <li key={i} className="flex items-center justify-between px-3 py-2 t-data text-[12px]">
             <span className={l.side === "long" ? "text-bull" : "text-bear"}>
               {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
             </span>
@@ -716,7 +716,7 @@ function LegsList({ s }: { s: Strategy }) {
             </span>
           </li>
         ))}
-        <li className="flex items-center justify-between bg-bg px-3 py-2 font-mono text-[12px] tabular-nums">
+        <li className="flex items-center justify-between bg-bg px-3 py-2 t-data text-[12px]">
           <span className="text-fg">{s.cost > 0 ? "Net Debit" : "Net Credit"}</span>
           <span className="text-bull">{Math.abs(s.cost / 100).toFixed(2)}</span>
         </li>
@@ -777,14 +777,14 @@ function StrategyDetail({
         {chips.map((c, i) => (
           <span
             key={c}
-            className={`border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+            className={`border px-1.5 py-0.5 t-chrome ${
               i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
             }`}
           >
             {c}
           </span>
         ))}
-        <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+        <span className="ml-auto t-chrome text-fg-faint tabular-nums">
           {s.cost > 0 ? "you pay" : "you collect"} ${Math.abs(s.cost).toFixed(0)}
         </span>
       </div>
@@ -793,15 +793,15 @@ function StrategyDetail({
       <div className="mt-3 flex items-stretch gap-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <PnlSparkline s={s} spot={spot} className="w-full min-h-16 flex-1" />
-          <div className="mt-1 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+          <div className="mt-1 text-center t-eyebrow text-fg-faint">
             p/l @ expiration
           </div>
         </div>
         <div className="grid w-[200px] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
           {rail.map((it) => (
             <div key={it.k} className="contents">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{it.k}</span>
-              <span className={`text-right font-mono text-[12px] tabular-nums ${it.c}`}>{it.v}</span>
+              <span className="t-chrome text-fg-faint">{it.k}</span>
+              <span className={`text-right t-data text-[12px] ${it.c}`}>{it.v}</span>
             </div>
           ))}
         </div>
@@ -820,7 +820,7 @@ function StrategyDetail({
         </span>
         <span>→</span>
       </button>
-      <div className="mt-1.5 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="mt-1.5 text-right t-eyebrow text-fg-faint">
         {Math.round(prob * 100)}% in band · black-scholes · paper only
       </div>
     </div>
@@ -860,9 +860,9 @@ function TeacherPanel({
   return (
     <section className="flex flex-col border border-border bg-surface lg:shrink-0">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">
+        <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
           ai teacher
-          <span className="border border-bull/40 bg-bull/10 px-1 py-px font-mono text-[10px] uppercase tracking-[0.2em] text-bull">beta</span>
+          <span className="border border-bull/40 bg-bull/10 px-1 py-px t-eyebrow text-bull">beta</span>
         </span>
         <button
           type="button"
@@ -911,7 +911,7 @@ function TeacherPanel({
           </svg>
         </button>
       </form>
-      <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="border-t border-border-soft px-3 py-1.5 t-eyebrow text-fg-faint">
         describes the position you built · education, not advice
       </div>
     </section>
