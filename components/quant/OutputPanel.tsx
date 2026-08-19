@@ -49,11 +49,11 @@ export function OutputPanel({
       <div className="border-b border-border bg-bg-soft px-3 py-2">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-base tracking-tightest text-fg">Output</span>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <span className="t-chrome text-fg-faint">
             {completed.length}/{runs.length} ran
           </span>
         </div>
-        <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="mt-1 t-chrome text-fg-faint">
           aggregate verdict for {symbol}
           {ranAt != null && completed.length > 0 && (
             <>
@@ -78,12 +78,12 @@ export function OutputPanel({
 
         {/* Per-bot verdicts */}
         <div className="border-b border-border p-3">
-          <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <div className="mb-2 flex items-center justify-between t-chrome text-fg-faint">
             <span>per bot</span>
             <span>{completed.length} verdicts</span>
           </div>
           {completed.length === 0 && (
-            <div className="grid h-16 place-items-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="grid h-16 place-items-center t-chrome text-fg-faint">
               run bots to see verdicts
             </div>
           )}
@@ -98,7 +98,7 @@ export function OutputPanel({
                   <div className="min-w-0">
                     <div className="truncate font-mono text-[11px] text-fg">{r.def.name}</div>
                   </div>
-                  <span className={`font-mono text-[10px] uppercase tracking-wider ${tone}`}>{v.side}</span>
+                  <span className={`t-chrome ${tone}`}>{v.side}</span>
                 </div>
               );
             })}
@@ -107,15 +107,15 @@ export function OutputPanel({
 
         {/* Combined signal stream */}
         <div className="border-b border-border p-3">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <div className="mb-2 t-chrome text-fg-faint">
             recent signals
           </div>
           {recent.length === 0 ? (
-            <div className="grid h-16 place-items-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="grid h-16 place-items-center t-chrome text-fg-faint">
               no signals yet
             </div>
           ) : (
-            <div className="space-y-1 font-mono text-[10px] tabular-nums">
+            <div className="space-y-1 t-data text-[10px]">
               {recent.map((s, i) => (
                 <div key={i} className="grid grid-cols-[24px_50px_1fr_auto] items-center gap-2 border-l-2 border-border-soft pl-2"
                   style={{ borderLeftColor: s.sig.kind === "long" ? "var(--bull)" : s.sig.kind === "short" ? "var(--bear)" : "var(--amber)" }}>
@@ -134,7 +134,7 @@ export function OutputPanel({
         {/* Equity leaderboard */}
         {equityRuns.length > 0 && (
           <div className="border-b border-border p-3">
-            <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mb-2 t-chrome text-fg-faint">
               backtest leaderboard
             </div>
             <div className="space-y-2">
@@ -148,10 +148,10 @@ export function OutputPanel({
                 .map((row) => (
                   <div key={row.def.id} className="border border-border-soft bg-bg p-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                      <span className="t-chrome text-fg-dim">
                         {row.def.name}
                       </span>
-                      <span className={`font-mono text-[11px] tabular-nums ${row.ret >= 0 ? "text-bull" : "text-bear"}`}>
+                      <span className={`t-data text-[11px] ${row.ret >= 0 ? "text-bull" : "text-bear"}`}>
                         {row.ret >= 0 ? "+" : ""}
                         {(row.ret * 100).toFixed(1)}%
                       </span>
@@ -168,7 +168,7 @@ export function OutputPanel({
         {/* Teacher card */}
         {beginner && completed.length > 0 && (
           <div className="border-b border-border bg-bull/5 p-3">
-            <div className="mb-1 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-bull">
+            <div className="mb-1 flex items-center gap-1.5 t-chrome text-bull">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />
               teacher note
             </div>
@@ -219,7 +219,7 @@ function AggregateVerdict({
 
   return (
     <div className={`border ${bg} p-3`}>
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="flex items-center justify-between t-chrome text-fg-faint">
         <span>consensus meter</span>
         <span>spot ${spot.toFixed(2)}</span>
       </div>
@@ -258,7 +258,7 @@ function AggregateVerdict({
             <div className="font-display text-2xl tracking-tightest text-fg">
               {agreeing} <span className="text-fg-faint">of</span> {total}
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+            <div className="t-eyebrow text-fg-faint">
               models agree
             </div>
           </div>
@@ -280,13 +280,13 @@ function AggregateVerdict({
           { l: "warn", v: counts.warn, c: "text-amber" },
         ].map((row) => (
           <div key={row.l} className="bg-bg p-2 text-center">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{row.l}</div>
-            <div className={`font-mono text-base tabular-nums ${row.c}`}>{row.v}</div>
+            <div className="t-chrome text-fg-faint">{row.l}</div>
+            <div className={`t-data text-base ${row.c}`}>{row.v}</div>
           </div>
         ))}
       </div>
       <div className="mt-2">
-        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="flex items-center justify-between t-chrome text-fg-faint">
           <span>conviction</span>
           <span>{Math.min(100, Math.max(0, confidence * 100)).toFixed(0)}%</span>
         </div>

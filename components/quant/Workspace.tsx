@@ -81,11 +81,11 @@ export function Workspace({
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
         <div>
           <span className="font-display text-base tracking-tightest text-fg">Workspace</span>
-          <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <span className="ml-2 t-chrome text-fg-faint">
             {rows.length} cell{rows.length === 1 ? "" : "s"}
           </span>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <span className="t-chrome text-fg-faint">
           jupyter-style notebook
         </span>
       </div>
@@ -155,12 +155,12 @@ function EmptyState({ onClick }: { onClick: () => void }) {
           ⌗
         </div>
         <div className="mt-4 font-display text-2xl tracking-tightest text-fg">Empty workspace</div>
-        <p className="mt-2 text-balance text-[13px] leading-relaxed text-fg-dim">
+        <p className="mt-2 text-balance t-body-sm text-fg-dim">
           Pick a bot from the library on the left, or import your own. Then press
-          <span className="mx-1 inline-flex items-center border border-bull bg-bull/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull">▶ run all</span>
+          <span className="mx-1 inline-flex items-center border border-bull bg-bull/10 px-1.5 py-0.5 t-chrome text-bull">▶ run all</span>
           to fire them all on the dataset above.
         </p>
-        <div className="mt-6 grid grid-cols-2 gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="mt-6 grid grid-cols-2 gap-2 t-chrome text-fg-dim">
           {["sma crossover", "z-score reversion", "kelly sizer", "monte carlo var"].map((b) => (
             <div key={b} className="border border-border bg-bg px-2 py-2">
               {b}

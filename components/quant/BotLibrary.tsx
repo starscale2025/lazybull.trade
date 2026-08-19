@@ -46,11 +46,11 @@ export function BotLibrary({
       <div className="border-b border-border bg-bg-soft px-3 py-2">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-base tracking-tightest text-fg">Bot library</span>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <span className="t-chrome text-fg-faint">
             {bots.length + customBots.length} loaded
           </span>
         </div>
-        <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="mt-1 t-chrome text-fg-faint">
           click → add to workspace
         </div>
       </div>
@@ -88,7 +88,7 @@ export function BotLibrary({
       {/* list */}
       <div className="flex-1 overflow-y-auto">
         {visible.length === 0 && (
-          <div className="grid h-32 place-items-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <div className="grid h-32 place-items-center t-chrome text-fg-faint">
             no bots match
           </div>
         )}
@@ -122,7 +122,7 @@ export function BotLibrary({
                         {b.name}
                       </span>
                       {b.category === "ai" && (
-                        <span className="border border-bear/50 bg-bear/10 px-1 font-mono text-[10px] uppercase tracking-wider text-bear" title={b.endpoint ?? "ai quants"}>
+                        <span className="border border-bear/50 bg-bear/10 px-1 t-chrome text-bear" title={b.endpoint ?? "ai quants"}>
                           AI
                         </span>
                       )}
@@ -130,7 +130,7 @@ export function BotLibrary({
                         <span className="size-1.5 rounded-full bg-bull pulse-dot" title="in workspace" />
                       )}
                     </div>
-                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider" style={{ color: cat.color }}>
+                    <div className="mt-0.5 t-chrome" style={{ color: cat.color }}>
                       {cat.label}
                     </div>
                     <div className="mt-1 line-clamp-2 text-[11px] text-fg-dim">{b.tagline}</div>

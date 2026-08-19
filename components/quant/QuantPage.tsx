@@ -559,10 +559,10 @@ export function QuantPage() {
         <section className="mx-auto w-full max-w-[1500px] px-5 pt-4">
           <div className="border border-border bg-surface">
             <div className="flex flex-wrap items-center gap-2 border-b border-border-soft px-3 py-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bull">
+              <span className="t-eyebrow text-bull">
                 ★ recommended for {symbol}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+              <span className="t-chrome text-fg-faint">
                 {symbolPreset.character}
               </span>
               {presetSignature(active) !== presetSignature(symbolPreset.bots) && (
@@ -641,7 +641,7 @@ export function QuantPage() {
       </section>
 
       {/* Bottom tape */}
-      <section className="mt-8 overflow-hidden border-y border-border bg-bg-soft py-3 font-mono text-[11px] uppercase tracking-wider">
+      <section className="mt-8 overflow-hidden border-y border-border bg-bg-soft py-3 t-chrome">
         <div className="flex marquee-slow gap-10 whitespace-nowrap text-fg-faint">
           {Array.from({ length: 2 }).map((_, k) => (
             <div key={k} className="flex shrink-0 gap-10">

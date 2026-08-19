@@ -145,11 +145,11 @@ export function BotCell({
           <div className="min-w-0">
             <div className="flex items-center gap-2 font-display text-base tracking-tightest">
               {def.name}
-              <span className="hidden font-mono text-[10px] uppercase tracking-wider text-fg-faint sm:inline">
+              <span className="hidden t-chrome text-fg-faint sm:inline">
                 / {def.category}
               </span>
             </div>
-            <div className="hidden truncate font-mono text-[10px] uppercase tracking-wider text-fg-dim sm:block">
+            <div className="hidden truncate t-chrome text-fg-dim sm:block">
               {def.tagline}
             </div>
           </div>
@@ -226,13 +226,13 @@ export function BotCell({
             <div className="col-span-full grid grid-cols-1 gap-2 border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] sm:grid-cols-2">
               {def.endpoint && (
                 <div className="text-fg-dim">
-                  <span className="text-fg-faint uppercase tracking-wider mr-2">api</span>
+                  <span className="t-chrome text-fg-faint mr-2">api</span>
                   <span className="text-cyan">{def.endpoint}</span>
                 </div>
               )}
               {def.module && (
                 <div className="text-fg-dim truncate">
-                  <span className="text-fg-faint uppercase tracking-wider mr-2">src</span>
+                  <span className="t-chrome text-fg-faint mr-2">src</span>
                   <span className="text-fg">{def.module}</span>
                 </div>
               )}
@@ -258,7 +258,7 @@ export function BotCell({
       {!active.collapsed && (
         <div className="p-3">
           {!result || phase === "idle" ? (
-            <div className="grid h-32 place-items-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+            <div className="grid h-32 place-items-center t-chrome text-fg-faint">
               press ▶ run
             </div>
           ) : phase === "streaming" ? (
@@ -275,7 +275,7 @@ export function BotCell({
               {/* Verdict + provenance */}
               <div className="flex flex-wrap items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-2 border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${verdictCls}`}
+                  className={`inline-flex items-center gap-2 border px-2 py-1 t-chrome ${verdictCls}`}
                 >
                   <span className="size-1.5 rounded-full bg-current" />
                   <DecimatedNumber
@@ -291,7 +291,7 @@ export function BotCell({
                   {srcMeta && (
                     <span
                       title={`${srcMeta.tip}${result.sourceNote ? `\n\n(${result.sourceNote})` : ""}`}
-                      className={`inline-flex cursor-help items-center gap-1.5 border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${BADGE_CLS[srcMeta.tone]}`}
+                      className={`inline-flex cursor-help items-center gap-1.5 border px-1.5 py-0.5 t-chrome ${BADGE_CLS[srcMeta.tone]}`}
                     >
                       <span className="size-1.5 rounded-full bg-current" />
                       {srcMeta.label}
@@ -300,7 +300,7 @@ export function BotCell({
                   {result.horizon && (
                     <span
                       title="Prediction horizon"
-                      className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint"
+                      className="border border-border px-1.5 py-0.5 t-chrome text-fg-faint"
                     >
                       {result.horizon}
                     </span>
@@ -308,7 +308,7 @@ export function BotCell({
                   {typeof result.verdict.confidence === "number" && (
                     <span
                       title="Model confidence in this verdict"
-                      className="font-mono text-[10px] uppercase tracking-wider text-fg-faint"
+                      className="t-chrome text-fg-faint"
                     >
                       conf{" "}
                       <DecimatedNumber
@@ -330,10 +330,10 @@ export function BotCell({
                     title={m.hint || undefined}
                     className={`bg-bg p-2.5 ${m.hint ? "cursor-help" : ""}`}
                   >
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                    <div className="t-chrome text-fg-faint">
                       {m.label}
                     </div>
-                    <div className={`mt-1 font-mono text-base tabular-nums ${TONE_TEXT[m.tone ?? "neutral"]}`}>
+                    <div className={`mt-1 t-data text-base ${TONE_TEXT[m.tone ?? "neutral"]}`}>
                       <DecimatedNumber
                         value={String(m.value)}
                         duration={DECIMATE_MS}
@@ -354,7 +354,7 @@ export function BotCell({
                     height={160}
                     width={720}
                   />
-                  <div className="absolute left-2 top-1.5 flex gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="absolute left-2 top-1.5 flex gap-3 t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       <span className="size-1.5 bg-fg" /> close
                     </span>
@@ -378,7 +378,7 @@ export function BotCell({
                     width={720}
                     histogram={result.pane.kind === "histogram"}
                   />
-                  <div className="absolute left-2 top-1.5 flex gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="absolute left-2 top-1.5 flex gap-3 t-chrome text-fg-faint">
                     {result.pane.series.map((s) => (
                       <span key={s.label} className="flex items-center gap-1.5">
                         <span className="size-1.5" style={{ background: s.color }} />
@@ -392,11 +392,11 @@ export function BotCell({
               {/* Equity curve from backtest */}
               {result.equity && result.equity.length > 5 && (
                 <div className="flex items-center gap-3 border border-border-soft bg-bg p-2">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">equity</span>
+                  <span className="t-chrome text-fg-faint">equity</span>
                   <div className="h-8 flex-1">
                     <EquitySpark equity={result.equity} width={400} height={32} />
                   </div>
-                  <span className={`font-mono text-[11px] tabular-nums ${result.equity[result.equity.length - 1] >= result.equity[0] ? "text-bull" : "text-bear"}`}>
+                  <span className={`t-data text-[11px] ${result.equity[result.equity.length - 1] >= result.equity[0] ? "text-bull" : "text-bear"}`}>
                     <DecimatedNumber
                       value={`${((result.equity[result.equity.length - 1] / result.equity[0] - 1) * 100).toFixed(1)}%`}
                       duration={DECIMATE_MS}
@@ -409,7 +409,7 @@ export function BotCell({
               {/* Beginner blurb */}
               {beginner && result.beginner && (
                 <div className="border-l-2 border-bull bg-bull/5 px-3 py-2 text-[12px] leading-relaxed text-fg">
-                  <span className="mr-2 font-mono text-[10px] uppercase tracking-wider text-bull">teacher</span>
+                  <span className="mr-2 t-chrome text-bull">teacher</span>
                   {result.beginner}
                 </div>
               )}
@@ -440,7 +440,7 @@ function ParamControl({
     const v = (value as string) ?? spec.default;
     return (
       <label className="flex flex-col gap-1">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{spec.label}</span>
+        <span className="t-chrome text-fg-faint">{spec.label}</span>
         <select
           value={v}
           onChange={(e) => onChange(e.target.value)}
@@ -460,7 +460,7 @@ function ParamControl({
     return (
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={v} onChange={(e) => onChange(e.target.checked)} className="accent-bull" />
-        <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">{spec.label}</span>
+        <span className="t-chrome text-fg-dim">{spec.label}</span>
       </label>
     );
   }
@@ -471,7 +471,7 @@ function ParamControl({
   const step = spec.step ?? 1;
   return (
     <label className="flex flex-col gap-1">
-      <span className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <span className="flex items-center justify-between t-chrome text-fg-faint">
         <span>{spec.label}</span>
         <span className="text-fg">
           {typeof v === "number" ? v : Number(v)}

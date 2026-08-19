@@ -147,7 +147,7 @@ export function QuantHero({
       />
 
       {/* tape */}
-      <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+      <div className="relative mx-auto flex w-full max-w-[1500px] items-center justify-between px-5 py-2 t-eyebrow text-fg-faint">
         <div className="flex items-center gap-3">
           <span>QUANT WORKBENCH · v0.1</span>
           <span className="hidden sm:inline">·</span>
@@ -162,12 +162,12 @@ export function QuantHero({
         </div>
       </div>
 
-      <div className="relative mx-auto max-w-[1500px] px-5 pb-6 pt-10 lg:pt-14">
+      <div className="relative mx-auto max-w-[1500px] px-5 pb-6 pt-8 lg:pt-12">
         <div className="grid grid-cols-12 items-end gap-5">
           {/* Title block — on mobile it drops BELOW the workbench panel so a
               phone user lands on the actual tool, not a full screen of copy. */}
           <div className="order-2 col-span-12 flex flex-col gap-5 lg:order-1 lg:col-span-7">
-            <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
+            <div className="flex flex-wrap items-center gap-2 t-chrome">
               <span className="inline-flex items-center gap-2 border border-cyan/40 bg-cyan/5 px-2 py-1 text-cyan">
                 <span className="size-1.5 rounded-full bg-cyan pulse-dot" /> quant · for everyone
               </span>
@@ -182,7 +182,7 @@ export function QuantHero({
             <h1 className="wonk-type font-display tracking-tightest text-[clamp(2.6rem,7.5vw,6.4rem)] leading-[0.88] text-fg">
               run math
               <br />
-              <span className="italic font-light text-cyan phosphor" style={{ textShadow: "0 0 20px rgba(0,229,255,0.4), 0 0 4px rgba(0,229,255,0.7)" }}>at the market</span>
+              <span className="t-accent text-cyan phosphor" style={{ textShadow: "0 0 20px rgba(0,229,255,0.4), 0 0 4px rgba(0,229,255,0.7)" }}>at the market</span>
               <span className="text-cyan">.</span>
             </h1>
 
@@ -197,7 +197,7 @@ export function QuantHero({
           {/* Symbol & seed controls — first on mobile (the tool), right column on desktop */}
           <div className="order-1 col-span-12 lg:order-2 lg:col-span-5">
             <div className="border border-border bg-surface">
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
                 <span className="flex items-center gap-2">
                   dataset
                   {/* the mode is a choice; the badge is the truth of what's running */}
@@ -280,7 +280,7 @@ export function QuantHero({
               <div className="grid grid-cols-2 gap-px bg-border">
                 {/* symbol */}
                 <div className="bg-bg p-3">
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center gap-1.5 t-chrome text-fg-faint">
                     symbol
                     <InfoTip text="The instrument every bot studies. LIVE mode fetches its real daily candles from Yahoo; SEED mode deals a synthetic tape instead." />
                   </div>
@@ -298,7 +298,7 @@ export function QuantHero({
                 </div>
                 {/* bars */}
                 <div className="bg-bg p-3">
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       bars
                       <InfoTip text="How many daily candles the bots see — the lookback window. 180 ≈ 9 months of trading days. More bars: steadier statistics, slower signals. Fewer: twitchier, reacts faster." />
@@ -316,7 +316,7 @@ export function QuantHero({
                 </div>
                 {/* seed — synthetic only */}
                 <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       seed
                       <InfoTip text="The random seed of the synthetic tape. Same seed = exactly the same candles, every run — that's what makes seed-mode experiments repeatable. Change it to deal a different market. (Seed mode only.)" />
@@ -335,7 +335,7 @@ export function QuantHero({
                 </div>
                 {/* drift — synthetic only */}
                 <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       drift μ
                       <InfoTip text="The synthetic tape's average daily push. Positive grinds the market up, negative bleeds it down, zero drifts sideways. Test a strategy in a bull tape, then flip the sign and see if it survives. (Seed mode only.)" />
@@ -355,7 +355,7 @@ export function QuantHero({
                 </div>
                 {/* vol — synthetic only */}
                 <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       vol σ
                       <InfoTip text="How violently the synthetic tape swings bar to bar. Low = calm index-like candles; high = crypto-like whipsaw with fat tails. Reversion bots love low σ, breakout bots need high. (Seed mode only.)" />
@@ -375,7 +375,7 @@ export function QuantHero({
                 </div>
                 {/* beginner */}
                 <div className="bg-bg p-3">
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center gap-1.5 t-chrome text-fg-faint">
                     teacher
                     <InfoTip text="Plain-English mode: every bot adds a sentence explaining its verdict like a human would, instead of only formulas and numbers." />
                   </div>

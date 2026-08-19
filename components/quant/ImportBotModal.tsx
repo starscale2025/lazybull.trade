@@ -83,7 +83,7 @@ export function ImportBotModal({
         <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-3">
           <div>
             <div className="font-display text-2xl tracking-tightest text-fg">Import a bot</div>
-            <div className="font-mono text-[11px] uppercase tracking-wider text-fg-dim">
+            <div className="t-chrome text-fg-dim">
               paste code · upload .json · drop a file
             </div>
           </div>
@@ -104,7 +104,7 @@ export function ImportBotModal({
         <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[1fr_320px]">
           {/* code editor */}
           <div className="flex min-h-0 flex-col border-r border-border">
-            <div className="flex items-center justify-between border-b border-border-soft bg-bg px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+            <div className="flex items-center justify-between border-b border-border-soft bg-bg px-3 py-2 t-chrome">
               <span className="text-fg-dim">bot.body — JS / TS</span>
               <span className="text-fg-faint">return result;</span>
             </div>
@@ -151,7 +151,7 @@ export function ImportBotModal({
             </Field>
 
             <div className="mt-2 border border-border-soft bg-bg-soft p-3">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-bull">api</div>
+              <div className="t-chrome text-bull">api</div>
               <ul className="mt-1.5 space-y-1 font-mono text-[10px] leading-relaxed text-fg-dim">
                 <li>
                   <span className="text-fg">ctx.candles</span> — {`{o,h,l,c}[]`}
@@ -196,7 +196,7 @@ export function ImportBotModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="mb-3 block">
-      <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-fg-faint">{label}</span>
+      <span className="mb-1 block t-chrome text-fg-faint">{label}</span>
       {children}
     </label>
   );

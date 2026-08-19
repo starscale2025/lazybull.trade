@@ -61,7 +61,7 @@ export function RunStream({
     <div className="relative overflow-hidden border border-border-soft bg-bg p-3 font-mono text-[11px] leading-[1.55]">
       <div className="cell-running-rail" aria-hidden />
 
-      <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+      <div className="mb-2 flex items-center justify-between t-eyebrow text-fg-faint">
         <span className="flex items-center gap-2 text-bull">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           running
