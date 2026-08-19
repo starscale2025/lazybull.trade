@@ -81,9 +81,13 @@ const ALLOWED = {
     "intensityColor() returns a CSS colour from a JS helper, so tokenising rgba(46,232,165) -> color-mix(var(--bull)) reads as content to this check; verified styling-only by hand",
 };
 
-const target = process.argv[2];
-const files = target
-  ? [target]
+// Accept any number of paths. Reading only argv[2] meant a batched call like
+// `check-copy a.tsx b.tsx c.tsx` silently checked ONE file and reported success
+// for the rest — the worst possible failure in a tool whose whole job is to
+// refuse to be fooled.
+const targets = process.argv.slice(2);
+const files = targets.length
+  ? targets
   : execSync("git diff --name-only HEAD -- '*.tsx'", { encoding: "utf8" })
       .split("\n").filter(Boolean);
 
