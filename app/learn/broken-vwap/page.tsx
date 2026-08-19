@@ -23,12 +23,12 @@ export default function BrokenVwapLesson() {
       <main className="mx-auto w-full max-w-[860px] flex-1 px-5 py-14">
         {/* ── the confession ─────────────────────────────────────────── */}
         <header data-gsap="fade-up">
-          <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+          <div className="flex items-center gap-3 t-eyebrow text-fg-faint">
             <span className="border border-bear/40 bg-bear/10 px-1.5 py-0.5 font-semibold text-bear">chapter zero</span>
             <span>the confession</span>
           </div>
-          <h1 className="mt-4 font-display text-[clamp(2.2rem,6vw,4.2rem)] leading-[0.95] tracking-tightest">
-            Anatomy of a <em className="text-bear">Broken</em> VWAP
+          <h1 className="mt-4 t-title">
+            Anatomy of a <em className="t-accent text-bear">Broken</em> VWAP
           </h1>
           <p className="mt-5 max-w-[60ch] font-mono text-[13px] leading-relaxed text-fg-dim">
             We shipped this bug. For weeks, the default workspace on{" "}
@@ -43,7 +43,7 @@ export default function BrokenVwapLesson() {
 
         {/* ── what VWAP claims to be ─────────────────────────────────── */}
         <section className="mt-14" data-gsap="fade-up">
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-fg-faint">
+          <h2 className="t-eyebrow font-semibold text-fg-faint">
             01 · what VWAP claims to be
           </h2>
           <p className="mt-3 max-w-[62ch] font-mono text-[12px] leading-relaxed text-fg-dim">
@@ -58,7 +58,7 @@ export default function BrokenVwapLesson() {
 
         {/* ── the live cell ──────────────────────────────────────────── */}
         <section className="mt-12" data-gsap="fade-up">
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-fg-faint">
+          <h2 className="t-eyebrow font-semibold text-fg-faint">
             02 · the same tape, both lines — toggle it
           </h2>
           <div className="mt-4">
@@ -68,7 +68,7 @@ export default function BrokenVwapLesson() {
 
         {/* ── the autopsy ────────────────────────────────────────────── */}
         <section className="mt-14" data-gsap="fade-up">
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-fg-faint">
+          <h2 className="t-eyebrow font-semibold text-fg-faint">
             03 · the autopsy — the code we actually shipped
           </h2>
           <pre className="mt-4 overflow-x-auto border border-bear/30 bg-surface/60 p-4 font-mono text-[11px] leading-relaxed text-fg-dim">
@@ -117,7 +117,7 @@ export default function BrokenVwapLesson() {
 
         {/* ── how you catch it ───────────────────────────────────────── */}
         <section className="mt-14" data-gsap="fade-up">
-          <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-fg-faint">
+          <h2 className="t-eyebrow font-semibold text-fg-faint">
             04 · how you catch it — assert the MATH, not the render
           </h2>
           <p className="mt-3 max-w-[62ch] font-mono text-[12px] leading-relaxed text-fg-dim">
@@ -149,7 +149,7 @@ export default function BrokenVwapLesson() {
           </p>
 
           <div className="mt-6 border border-cyan/30 bg-cyan/5 p-4">
-            <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan">
+            <div className="t-eyebrow font-semibold text-cyan">
               postscript · the test ambushed us a second time
             </div>
             <p className="mt-2 max-w-[60ch] font-mono text-[12px] leading-relaxed text-fg-dim">
@@ -167,7 +167,7 @@ export default function BrokenVwapLesson() {
 
         {/* ── the receipt ────────────────────────────────────────────── */}
         <section className="mt-14 border border-border bg-surface/60 p-5" data-gsap="fade-up">
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">the receipt</div>
+          <div className="t-eyebrow text-fg-faint">the receipt</div>
           <p className="mt-3 max-w-[60ch] font-mono text-[12px] leading-relaxed text-fg-dim">
             Every indicator on the live chart now carries a{" "}
             <span className="font-semibold text-bull">✓</span> in its legend — hover it and it states the

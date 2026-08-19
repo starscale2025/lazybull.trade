@@ -26,17 +26,17 @@ export default function BotsIndex() {
 
       {/* Header */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto max-w-[1200px] px-5 py-12">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="shell py-12">
+          <div className="flex items-center gap-2 t-chrome text-fg-faint">
             <Link href="/learn" className="hover:text-fg">Learn</Link>
             <span>/</span>
             <span className="text-fg">Bots</span>
           </div>
-          <h1 className="mt-3 font-display text-[clamp(2.4rem,5vw,4rem)] tracking-tightest leading-[0.95]">
+          <h1 className="mt-3 t-title">
             Every bot,
-            <span className="italic font-light text-bull"> explained.</span>
+            <span className="t-accent"> explained.</span>
           </h1>
-          <p className="mt-3 max-w-[60ch] text-base leading-relaxed text-fg-dim">
+          <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
             {BOT_REGISTRY.length} bots, grouped into 5 families. Click any to see the
             math, when it shines, when it fails, and a live demo.
           </p>
@@ -49,23 +49,23 @@ export default function BotsIndex() {
           id={g.cat}
           className="border-b border-border scroll-mt-20"
         >
-          <div className="mx-auto max-w-[1200px] px-5 py-12">
+          <div className="shell py-12">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <div
-                  className="font-mono text-[11px] uppercase tracking-[0.25em]"
+                  className="t-eyebrow"
                   style={{ color: g.meta.color }}
                 >
                   ⟢ {g.meta.label}
                 </div>
-                <h2 className="mt-2 font-display text-[clamp(1.8rem,3vw,2.6rem)] tracking-tightest leading-[1.05]">
+                <h2 className="mt-2 t-subtitle">
                   {g.meta.label}
                 </h2>
-                <p className="mt-2 max-w-[60ch] text-[14px] leading-relaxed text-fg-dim">
+                <p className="mt-2 max-w-[60ch] t-body-sm text-fg-dim">
                   {g.meta.hint}
                 </p>
               </div>
-              <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+              <span className="t-chrome text-fg-faint">
                 {g.bots.length} bots
               </span>
             </div>

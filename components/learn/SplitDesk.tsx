@@ -121,7 +121,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
             key={ch.id}
             id={ch.id}
             data-regime={ch.regime}
-            className="relative overflow-hidden border-t border-border first:border-t-0 px-5 py-16"
+            className="relative overflow-hidden border-t border-border first:border-t-0 py-16 pl-5 pr-5 lg:pl-[13rem]"
           >
             <ChapterCopy ch={ch} />
             <DeskFrame label={`TERMINAL §${ch.num}`} hint={ch.hint} className="mt-10">
@@ -157,7 +157,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
               sectionRefs.current[i] = el;
             }}
             data-regime={ch.regime}
-            className="relative flex min-h-screen flex-col justify-center border-t border-border first:border-t-0 px-5 py-24 xl:px-10"
+            className="relative flex min-h-screen flex-col justify-center border-t border-border first:border-t-0 py-24 pl-5 pr-5 lg:pl-[13rem] xl:pr-10"
           >
             <ChapterCopy ch={ch} active={i === active} />
             {ch.takeaway}
@@ -177,7 +177,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
             </div>
           </DeskFrame>
           {/* status — announced to AT, and the human-visible chapter marker */}
-          <div className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint" aria-live="polite">
+          <div className="mt-3 flex items-center justify-between t-eyebrow text-fg-faint" aria-live="polite">
             <span>
               ch {current.num} · <span className="text-bull">{current.label}</span>
             </span>
@@ -196,7 +196,7 @@ function ChapterCopy({ ch, active }: { ch: DeskChapter; active?: boolean }) {
   return (
     <>
       <div
-        className={`flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.4em] text-fg-faint ${
+        className={`flex items-center gap-3 t-eyebrow text-fg-faint ${
           active === false ? "opacity-45" : ""
         } transition-opacity duration-500`}
       >
@@ -241,13 +241,13 @@ function DeskFrame({
   return (
     <div className={`relative ${className}`}>
       <div className="absolute -top-3 left-0 right-0 z-10 flex items-center justify-between bg-bg px-2">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]">
+        <div className="flex items-center gap-2 t-eyebrow">
           <span className="size-1 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">{label}</span>
           <span className="text-fg-faint">·</span>
           <span className="text-fg-faint">{live ? "LIVE · INTERACTIVE" : "INTERACTIVE"}</span>
         </div>
-        {hint && <div className="hidden font-mono text-[10px] uppercase tracking-[0.3em] text-amber sm:block">{hint}</div>}
+        {hint && <div className="hidden t-eyebrow text-amber sm:block">{hint}</div>}
       </div>
       <div className="relative border border-border bg-bg p-4 sm:p-6 ambient-glow">
         <span className="pointer-events-none absolute -left-px -top-px size-3 border-l border-t border-bull" />
@@ -264,7 +264,7 @@ function DeskFrame({
 // mounting heavy demos during that one indeterminate frame).
 function DeskPoster({ label }: { label: string }) {
   return (
-    <div className="flex h-[320px] items-center justify-center font-mono text-[11px] uppercase tracking-[0.3em] text-fg-faint">
+    <div className="flex h-[320px] items-center justify-center t-eyebrow text-fg-faint">
       <span className="size-1 rounded-full bg-bull pulse-dot mr-2" /> loading {label}…
     </div>
   );

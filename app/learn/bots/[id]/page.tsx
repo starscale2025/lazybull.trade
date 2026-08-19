@@ -48,8 +48,8 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       <Nav />
 
       {/* Breadcrumb */}
-      <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto flex max-w-[1100px] items-center gap-2 px-5 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <section className="bg-bg">
+        <div className="shell flex items-center gap-2 py-2 t-chrome text-fg-faint">
           <Link href="/learn" className="hover:text-fg">Learn</Link>
           <span>/</span>
           <Link href="/learn/bots" className="hover:text-fg">Bots</Link>
@@ -65,9 +65,9 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
           className="pointer-events-none absolute -left-40 top-0 h-[420px] w-[420px] rounded-full blur-[160px]"
           style={{ background: `${cat.color}33` }}
         />
-        <div className="relative mx-auto max-w-[1100px] px-5 py-14">
+        <div className="relative shell py-14">
           <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
+            <div className="flex items-center gap-3 t-chrome">
               <span
                 className="inline-flex items-center gap-2 border px-2 py-1"
                 style={{ borderColor: `${cat.color}66`, color: cat.color, background: `${cat.color}10` }}
@@ -89,10 +89,10 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 {bot.glyph}
               </span>
               <div>
-                <h1 className="font-display text-[clamp(2.4rem,5.5vw,4.4rem)] tracking-tightest leading-[0.95] text-fg">
+                <h1 className="t-title text-fg">
                   {bot.name}
                 </h1>
-                <p className="mt-2 max-w-[58ch] text-base leading-relaxed text-fg-dim">
+                <p className="mt-2 max-w-[58ch] t-body text-fg-dim">
                   {bot.tagline}
                 </p>
               </div>
@@ -131,8 +131,8 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* In plain English — the simple version. Always shown when available. */}
       {simple && (
         <section className="border-b border-border bg-bull/[0.04]">
-          <div className="mx-auto max-w-[1100px] px-5 py-12">
-            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-bull">
+          <div className="shell py-12">
+            <div className="flex items-center gap-3 t-eyebrow text-bull">
               <span>⟢</span>
               <span className="h-px w-12 bg-bull/40" />
               <span>In plain English</span>
@@ -140,7 +140,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             <p className="mt-4 max-w-[68ch] text-balance text-[1.35rem] leading-relaxed text-fg md:text-2xl">
               {simple}
             </p>
-            <div className="mt-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-3 t-chrome text-fg-faint">
               No jargon. Just what this bot does.
             </div>
           </div>
@@ -149,7 +149,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* TL;DR — slightly more technical pitch */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto max-w-[1100px] px-5 py-14">
+        <div className="shell py-14">
           <SectionLabel>The longer version</SectionLabel>
           <p className="mt-4 max-w-[68ch] text-balance text-lg leading-relaxed text-fg">
             {content.intro ?? defaultIntro(bot.name, bot.tagline)}
@@ -160,15 +160,15 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* The math */}
       {bot.formula && (
         <section className="border-b border-border">
-          <div className="mx-auto max-w-[1100px] px-5 py-14">
+          <div className="shell py-14">
             <SectionLabel>The math</SectionLabel>
             <div className="mt-4 border border-border bg-bg p-6">
-              <div className="font-mono text-[11px] uppercase tracking-wider text-fg-faint mb-3">formula</div>
+              <div className="t-chrome text-fg-faint mb-3">formula</div>
               <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-base leading-relaxed text-fg">{bot.formula}</pre>
             </div>
             {bot.params.length > 0 && (
               <div className="mt-6 border border-border bg-surface">
-                <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
                   parameters
                 </div>
                 <div className="divide-y divide-border-soft">
@@ -195,9 +195,9 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Live demo */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto max-w-[1100px] px-5 py-14">
+        <div className="shell py-14">
           <SectionLabel>Live demo</SectionLabel>
-          <p className="mt-3 max-w-[60ch] text-base leading-relaxed text-fg-dim">
+          <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
             Real {bot.name} bot, running on real Yahoo data when the symbol is
             available. Drag the params — the bot re-runs instantly.
           </p>
@@ -211,9 +211,9 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
           build time from lib/quant/bots.ts or lib/quant/ai-bots.ts. */}
       {source && (
         <section className="border-b border-border">
-          <div className="mx-auto max-w-[1100px] px-5 py-14">
+          <div className="shell py-14">
             <SectionLabel>Source code · public</SectionLabel>
-            <p className="mt-3 max-w-[68ch] text-base leading-relaxed text-fg-dim">
+            <p className="mt-3 max-w-[68ch] t-body text-fg-dim">
               This is the actual code the bot runs — not a re-explanation, not a
               simplified version. Whatever ships here is what executes when you
               press Run All in the workbench. Read it, copy it, fork it, build a
@@ -221,7 +221,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             </p>
 
             <div className="mt-6 border border-border bg-bg">
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome">
                 <div className="flex items-center gap-3 text-fg-dim">
                   <span className="text-bull">●</span>
                   <span>{source.filename}</span>
@@ -239,7 +239,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
             <div className="mt-4 grid grid-cols-1 gap-3 text-[12px] text-fg-dim md:grid-cols-2">
               <div className="border border-border bg-surface p-3">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint mb-1">
+                <div className="t-chrome text-fg-faint mb-1">
                   what each piece means
                 </div>
                 <ul className="space-y-1.5 text-[12px] leading-relaxed">
@@ -251,7 +251,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 </ul>
               </div>
               <div className="border border-border bg-surface p-3">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint mb-1">
+                <div className="t-chrome text-fg-faint mb-1">
                   use this code yourself
                 </div>
                 <ol className="space-y-1.5 text-[12px] leading-relaxed list-decimal pl-4">
@@ -268,14 +268,14 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Specialty */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-[1100px] px-5 py-14">
+        <div className="shell py-14">
           <SectionLabel>Specialty · when it shines, when it fails</SectionLabel>
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="border-l-2 border-bull bg-bull/5 p-5">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-bull mb-3">
+              <div className="t-chrome text-bull mb-3">
                 ✓ Shines when
               </div>
-              <ul className="space-y-3 text-[14px] leading-relaxed text-fg">
+              <ul className="space-y-3 t-body-sm text-fg">
                 {(content.shines ?? defaultShines(bot.category)).map((s, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="text-bull">·</span>
@@ -285,10 +285,10 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               </ul>
             </div>
             <div className="border-l-2 border-bear bg-bear/5 p-5">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-bear mb-3">
+              <div className="t-chrome text-bear mb-3">
                 ✗ Fails when
               </div>
-              <ul className="space-y-3 text-[14px] leading-relaxed text-fg">
+              <ul className="space-y-3 t-body-sm text-fg">
                 {(content.fails ?? defaultFails(bot.category)).map((s, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="text-bear">·</span>
@@ -303,7 +303,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* How to read the verdict */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto max-w-[1100px] px-5 py-14">
+        <div className="shell py-14">
           <SectionLabel>How to read its verdict</SectionLabel>
           <p className="mt-4 max-w-[68ch] text-[15px] leading-relaxed text-fg">
             {content.verdict ?? defaultVerdict(bot.name)}
@@ -314,9 +314,9 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* AI-only: service status + flow diagram */}
       {isAi && (
         <section className="border-b border-border">
-          <div className="mx-auto max-w-[1100px] px-5 py-14">
+          <div className="shell py-14">
             <SectionLabel>Python service</SectionLabel>
-            <p className="mt-3 max-w-[60ch] text-base leading-relaxed text-fg-dim">
+            <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
               This bot tries to call the FastAPI service first. When it's up,
               you get real model output. When it's down, the bot transparently
               falls back to a deterministic TS surrogate.
@@ -327,7 +327,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             </div>
 
             <div className="mt-6 border border-border bg-surface">
-              <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+              <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
                 data flow
               </div>
               <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-5">
@@ -339,7 +339,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                   { step: "05", title: "BotResult", body: "JSON returned, card flips green Source: Python NN" },
                 ].map((s) => (
                   <div key={s.step} className="bg-bg p-4">
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{s.step}</div>
+                    <div className="t-chrome text-fg-faint">{s.step}</div>
                     <div className="mt-2 font-mono text-[12px] tracking-wide text-fg">{s.title}</div>
                     <div className="mt-1 text-[11px] leading-relaxed text-fg-dim">{s.body}</div>
                   </div>
@@ -358,7 +358,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* FAQ */}
       {(content.faq && content.faq.length > 0) && (
         <section className="border-b border-border bg-bg-soft">
-          <div className="mx-auto max-w-[1100px] px-5 py-14">
+          <div className="shell py-14">
             <SectionLabel>FAQ</SectionLabel>
             <div className="mt-6 divide-y divide-border-soft border border-border bg-surface">
               {content.faq.map((q, i) => (
@@ -368,7 +368,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                     <span className="font-mono text-fg-faint group-open:hidden">+</span>
                     <span className="font-mono text-fg-faint hidden group-open:inline">−</span>
                   </summary>
-                  <div className="border-t border-border-soft bg-bg px-5 py-4 text-[14px] leading-relaxed text-fg-dim">
+                  <div className="border-t border-border-soft bg-bg px-5 py-4 t-body-sm text-fg-dim">
                     {q.a}
                   </div>
                 </details>
@@ -380,7 +380,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Related */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-[1100px] px-5 py-14">
+        <div className="shell py-14">
           <SectionLabel>Related bots</SectionLabel>
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
             {related.map((r) => {
@@ -415,7 +415,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Footer CTAs */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="mx-auto max-w-[1100px] px-5 py-14">
+        <div className="shell py-14">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <Link href="/learn" className="font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-bull">
@@ -447,7 +447,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+    <div className="flex items-center gap-3 t-eyebrow text-fg-faint">
       <span>⟢</span>
       <span className="h-px w-12 bg-border" />
       <span className="text-bull">{children}</span>

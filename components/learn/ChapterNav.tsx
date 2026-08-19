@@ -9,6 +9,21 @@
 // bar. Active chapter and scroll fraction come from one passive scroll read
 // (nearest-center) — no IntersectionObserver (frozen while hidden) and no
 // rAF loop.
+//
+// GEOMETRY CONTRACT — this rail is `position: fixed`, so it is NOT in flow and
+// nothing reflows around it. It occupies left 0.75rem → 0.75rem + 172px, i.e.
+// a RIGHT EDGE AT 184px, at every viewport ≥ lg (1024px). The page measure is
+// centred, so it only cleared this rail above ~1770px and the flush-left
+// SplitDesk column never cleared it at all — the rail sat on top of live copy.
+// The column is therefore RESERVED, not hoped for, by the consumers:
+//   · centred .shell containers in app/learn/page.tsx carry
+//     lg:pl-[max(1.25rem,13rem - max(0px,(100vw - 1400px)/2))] — 208px of
+//     content-left while the natural centring is short, decaying back to the
+//     plain 1.25rem gutter once the viewport is wide enough (≥1776px).
+//   · the flush-left SplitDesk sections carry a flat lg:pl-[13rem].
+//   · TickerStrip widens its left edge-fade to 15rem at lg+.
+// 13rem = 208px = 184px + a 24px gutter. If you change `left-3` or `w-[172px]`
+// here, change those three call sites in the same commit.
 
 import { useEffect, useState } from "react";
 import { LEARN_CHAPTERS, CONCEPT_IDS, useLearnProgress } from "@/lib/learn-progress";

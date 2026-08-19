@@ -393,7 +393,7 @@ export default function LearnPage() {
         <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
         {/* Top edge tape */}
-        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-2 t-eyebrow text-fg-faint">
           <div className="flex items-center gap-3">
             <span className="size-1 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">LIVE FEED</span>
@@ -411,12 +411,12 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="relative mx-auto grid max-w-[1280px] grid-cols-12 gap-6 px-5 py-20 lg:py-28">
+        <div className="relative shell grid grid-cols-12 gap-6 py-20 lg:py-28 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
           {/* LEFT — editorial */}
           <div className="col-span-12 lg:col-span-8 flex flex-col gap-10">
             {/* Eyebrow row */}
             <div
-              className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] hero-fade-up-soft"
+              className="flex flex-wrap items-center gap-2 t-eyebrow hero-fade-up-soft"
               style={{ animationDelay: "0.1s" }}
             >
               <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
@@ -498,7 +498,7 @@ export default function LearnPage() {
             style={{ animationDelay: "1.0s" }}
           >
             <div className="border border-border bg-surface p-6">
-              <div className="mb-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+              <div className="mb-4 flex items-center justify-between t-eyebrow text-fg-faint">
                 <span className="flex items-center gap-2">
                   <span className="size-1 rounded-full bg-bull pulse-dot" />
                   IN THIS PAGE
@@ -527,7 +527,7 @@ export default function LearnPage() {
         href="/learn/broken-vwap"
         className="group relative block border-b border-bear/30 bg-bear/5 transition-colors hover:bg-bear/10"
       >
-        <div className="mx-auto flex max-w-[1280px] flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4">
+        <div className="shell flex flex-wrap items-center gap-x-4 gap-y-1 py-4 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
           <span className="border border-bear/40 bg-bear/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-bear">
             ch. 0 — the confession
           </span>
@@ -737,7 +737,7 @@ export default function LearnPage() {
 
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="relative border border-border bg-surface p-6">
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+            <div className="t-eyebrow text-fg-faint">
               ◯ TEACHER · OFF
             </div>
             <div className="mt-4 space-y-2 font-mono text-[12px] text-fg">
@@ -745,13 +745,13 @@ export default function LearnPage() {
               <div className="text-fg-dim">3 reversion triggers in window.</div>
               <div className="text-fg-dim">Backtest return +4.2%.</div>
             </div>
-            <div className="mt-4 inline-flex items-center gap-2 border border-bull/30 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.3em] text-bull">
+            <div className="mt-4 inline-flex items-center gap-2 border border-bull/30 bg-bull/10 px-2 py-0.5 t-eyebrow text-bull">
               BUY · 78% CONF
             </div>
           </div>
           <div className="relative border-l-2 border-bull bg-bull/5 p-6">
             <div className="absolute right-4 top-4 size-2 rounded-full bg-bull pulse-dot" />
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-bull">
+            <div className="t-eyebrow text-bull">
               ● TEACHER · ON
             </div>
             <p className="mt-4 font-display text-lg leading-relaxed text-fg">
@@ -806,7 +806,7 @@ export default function LearnPage() {
         </ChapterBody>
 
         <div className="mt-12 relative">
-          <div className="absolute -top-3 left-0 z-10 flex items-center gap-2 bg-bg px-2 font-mono text-[10px] uppercase tracking-[0.3em]">
+          <div className="absolute -top-3 left-0 z-10 flex items-center gap-2 bg-bg px-2 t-eyebrow">
             <span className="size-1 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">SAMPLE BOT · 10 LINES</span>
             <span className="text-fg-faint">·</span>
@@ -864,13 +864,13 @@ export default {
             ai quants/serve.py
           </code>{" "}
           that runs trained neural networks. When the service is up, you see{" "}
-          <span className="ml-1 inline-flex items-center gap-1 border border-bull/30 bg-bull/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.3em] text-bull">
+          <span className="ml-1 inline-flex items-center gap-1 border border-bull/30 bg-bull/10 px-1.5 py-0.5 t-eyebrow text-bull">
             <span className="size-1 rounded-full bg-bull pulse-dot" />
             Source: Python NN
           </span>
           {" "}on every card. When it&apos;s not, the bot falls back to a deterministic TS
           surrogate marked clearly{" "}
-          <span className="ml-1 inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.3em] text-amber">
+          <span className="ml-1 inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 t-eyebrow text-amber">
             <span className="size-1 rounded-full bg-amber" />
             Source: Mock
           </span>
@@ -899,7 +899,7 @@ export default {
           <ArchCard step="03" title="Python NN" sub="13 trained models" body="serve.py loads the right surrogate, runs predict(), returns JSON. The card flips green." />
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-3 border border-border bg-surface px-4 py-3 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim">
+        <div className="mt-10 flex flex-wrap items-center gap-3 border border-border bg-surface px-4 py-3 t-eyebrow text-fg-dim">
           <span className="text-fg-faint">▮ SPIN IT UP</span>
           <code className="border border-border bg-bg px-3 py-1 text-bull">
             cd "ai quants" && uvicorn serve:app --reload --port 8000
@@ -955,7 +955,7 @@ export default {
 
         <div className="mt-20 border-t border-border pt-12">
           <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 md:col-span-3 font-mono text-[10px] uppercase tracking-[0.4em] text-fg-faint">
+            <div className="col-span-12 md:col-span-3 t-eyebrow text-fg-faint">
               END · COLOPHON
             </div>
             <div className="col-span-12 md:col-span-9 font-display italic font-light text-fg-dim leading-relaxed text-lg max-w-[60ch]">
@@ -1018,8 +1018,8 @@ function Chapter({
         </div>
       </div>
 
-      <div className="relative mx-auto max-w-[1280px] px-5 py-24 lg:py-32">
-        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.4em] text-fg-faint chapter-rise">
+      <div className="relative shell py-24 lg:py-32 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
+        <div className="flex items-center gap-3 t-eyebrow text-fg-faint chapter-rise">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           <span className="text-fg-dim">CHAPTER {num}</span>
           <span className="h-px w-12 bg-border" />
@@ -1052,7 +1052,7 @@ function ChapterBody({
   return (
     <div className="mt-12 grid grid-cols-12 gap-6">
       {para && (
-        <div className="col-span-12 md:col-span-1 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="col-span-12 md:col-span-1 t-eyebrow text-fg-faint">
           ¶ {para}
         </div>
       )}
@@ -1069,7 +1069,7 @@ function Takeaway({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-20 border-t border-border pt-14">
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 md:col-span-3 flex items-baseline gap-2 font-mono text-[10px] uppercase tracking-[0.4em] text-fg-faint">
+        <div className="col-span-12 md:col-span-3 flex items-baseline gap-2 t-eyebrow text-fg-faint">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           <span>TAKEAWAY</span>
         </div>
@@ -1091,7 +1091,7 @@ function Piece({ num, tone, title, tldr, body }: { num: string; tone: "bull" | "
   return (
     <div className="bg-bg p-8 transition-colors hover:bg-bg-soft">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">{num}</span>
+        <span className="t-eyebrow text-fg-faint">{num}</span>
         <span className="size-2" style={{ background: color }} />
       </div>
       <div
@@ -1109,14 +1109,14 @@ function Piece({ num, tone, title, tldr, body }: { num: string; tone: "bull" | "
 function ArchCard({ step, title, sub, body }: { step: string; title: string; sub: string; body: string }) {
   return (
     <div className="border border-border bg-surface p-6">
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.4em] text-fg-faint">
+      <div className="flex items-center gap-2 t-eyebrow text-fg-faint">
         <span>{step}</span>
         <span className="h-px flex-1 bg-border" />
       </div>
       <div className="mt-4 font-display italic font-light tracking-tightest text-fg" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)" }}>
         {title}
       </div>
-      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.3em] text-cyan">{sub}</div>
+      <div className="mt-1 t-eyebrow text-cyan">{sub}</div>
       <p className="mt-4 font-display text-base leading-relaxed text-fg-dim">{body}</p>
     </div>
   );
