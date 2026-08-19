@@ -1,6 +1,10 @@
-// The one canonical, numbered directory of the site — the single source of
-// truth for the editorial "NN Label" style used in both the nav rail
-// (components/Nav.tsx) and the landing front door (components/GetStarted.tsx).
+// The one canonical, numbered directory of the site. The numbers are for the
+// landing front door's INDEX (components/GetStarted.tsx), which is a listing
+// you read in order — there, a number tells you where you are in a set. The
+// nav rail (components/Nav.tsx) and the mobile sheet consume the same list
+// but NOT the numbers: a nav is a set of destinations you jump between, so
+// the numerals encoded nothing there and only crowded the busiest element on
+// every page. Keep `n` — it is load-bearing for the index.
 // Numbering it here means a destination has the SAME number everywhere: the nav
 // used to number its 7 items by index (Pricing = 06) while the landing numbered
 // 8 incl. Portfolio (Pricing = 07), so the same link showed two different

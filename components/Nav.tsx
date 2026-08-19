@@ -28,8 +28,7 @@ export function Nav() {
               href={item.href}
               className="group relative flex h-9 items-center px-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:text-fg xl:px-3"
             >
-              <span className="text-fg-faint">{item.n}</span>
-              <span className="ml-2">{item.l}</span>
+              <span>{item.l}</span>
               <span className="absolute inset-x-2 bottom-1 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100 xl:inset-x-3" />
             </Link>
           ))}
@@ -48,7 +47,7 @@ export function Nav() {
               control styled itself as active. Removed until search actually
               ships — mounting the ADMIN palette here would expose admin
               commands to every visitor. */}
-          {/* Account pages sit with the account cluster, not the numbered rail —
+          {/* Account pages sit with the account cluster, not the destination rail —
               the rail is already near its width budget at lg (see comment above). */}
           <Link
             href="/portfolio"

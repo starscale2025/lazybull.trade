@@ -74,14 +74,13 @@ export function MobileMenu() {
           className="absolute inset-x-0 top-full z-50 border-b border-border bg-bg/95 backdrop-blur-md"
         >
           <div className="flex flex-col py-2">
-            {LINKS.map((item, i) => (
+            {LINKS.map((item) => (
               <Link
                 key={item.l}
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className="flex h-11 items-center px-5 font-mono text-[12px] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
               >
-                <span className="w-8 text-fg-faint">{String(i + 1).padStart(2, "0")}</span>
                 {item.l}
               </Link>
             ))}
