@@ -51,7 +51,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">event stream</span>
@@ -99,7 +99,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
                   <span className={`size-1 rounded-full ${c.dot} ${isFresh ? "pulse-dot" : ""}`} />
                   <span className="text-fg-faint tabular-nums">{relTime(e.t)}</span>
                 </div>
-                <span className={`border px-1 py-0 text-[10px] uppercase tracking-wider ${c.bg}`}>
+                <span className={`border px-1 py-0 t-chrome ${c.bg}`}>
                   {e.level}
                 </span>
                 <div className="truncate">

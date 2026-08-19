@@ -99,18 +99,18 @@ export default async function AdminPage() {
         <header className="mx-auto w-full max-w-[1600px] px-5 pt-8 pb-4">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+              <div className="t-eyebrow text-fg-faint">
                 lazybull · platform · prod
               </div>
-              <h1 className="mt-2 font-display text-[clamp(2.4rem,5.5vw,4.6rem)] leading-[0.9] tracking-tightest text-fg">
+              <h1 className="mt-2 t-title text-fg">
                 Cockpit<span className="text-bull">.</span>
               </h1>
-              <p className="mt-2 max-w-[60ch] text-sm leading-relaxed text-fg-dim">
+              <p className="mt-2 max-w-[60ch] t-body-sm text-fg-dim">
                 Every paper trade, every teacher token, every kill switch — in one window.
                 You're the only person who sees this.
               </p>
             </div>
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="flex items-center gap-2 t-chrome text-fg-faint">
               <span className="border border-border bg-surface px-2 py-1">role <span className="text-bull">admin</span></span>
               <span className="border border-border bg-surface px-2 py-1">scope <span className="text-fg">global</span></span>
               <span className="border border-bull/40 bg-bull/5 px-2 py-1 text-bull">data · live</span>
@@ -174,7 +174,7 @@ export default async function AdminPage() {
         </section>
 
         {/* Footer rail */}
-        <footer className="mx-auto w-full max-w-[1600px] border-t border-border px-5 py-4 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <footer className="mx-auto w-full max-w-[1600px] border-t border-border px-5 py-4 t-chrome text-fg-faint">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />

@@ -11,7 +11,7 @@ export function ErrorTopList({ rows }: { rows: ErrorRow[] }) {
   const max = Math.max(...rows.map((r) => r.count));
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="text-bear">top errors</span>
           <span className="text-fg-faint">·</span>

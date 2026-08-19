@@ -4,7 +4,7 @@ export function BotRunDistribution({ rows }: { rows: BotRunRow[] }) {
   const max = Math.max(...rows.map((r) => r.runs));
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="text-bull">quant bots</span>
           <span className="text-fg-faint">·</span>
@@ -17,7 +17,7 @@ export function BotRunDistribution({ rows }: { rows: BotRunRow[] }) {
           const w = (r.runs / max) * 100;
           return (
             <div key={r.id} className="group relative grid grid-cols-[28px_1fr_72px_44px] items-center gap-2 px-3 py-1.5 transition-colors hover:bg-surface">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint tabular-nums">
+              <span className="t-chrome text-fg-faint tabular-nums">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div className="min-w-0">

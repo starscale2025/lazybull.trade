@@ -34,7 +34,7 @@ export function SystemHealthChart({ data }: { data: HealthSeries[] }) {
 
   return (
     <div className="relative h-full overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">system health</span>
@@ -94,7 +94,7 @@ export function SystemHealthChart({ data }: { data: HealthSeries[] }) {
         </svg>
 
         {/* legend */}
-        <div className="mt-2 flex flex-wrap gap-3 px-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="mt-2 flex flex-wrap gap-3 px-2 t-chrome text-fg-dim">
           {SERIES.map((s) => {
             const last = data[data.length - 1][s.key];
             return (

@@ -13,7 +13,7 @@ export function SymbolHeatmap({ rows }: { rows: SymbolRow[] }) {
   const max = Math.max(...rows.map((r) => r.trades));
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="text-bull">symbol heatmap</span>
           <span className="text-fg-faint">·</span>
@@ -39,13 +39,13 @@ export function SymbolHeatmap({ rows }: { rows: SymbolRow[] }) {
                 }}
               />
               <div className="relative">
-                <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-between t-chrome">
                   <span className="font-display text-base text-fg">{r.sym}</span>
                   <span className={up ? "text-bull" : "text-bear"}>
                     {up ? "▲" : "▼"} {Math.abs(r.pnl).toFixed(0)}
                   </span>
                 </div>
-                <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                <div className="mt-1 t-chrome text-fg-dim">
                   {r.trades.toLocaleString()} trades
                 </div>
                 <div className="mt-2 h-1 overflow-hidden bg-border-soft">

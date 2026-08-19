@@ -76,7 +76,7 @@ export function CommandPalette() {
     <div className="fixed inset-0 z-[60] flex items-start justify-center bg-bg/80 px-4 pt-24 backdrop-blur">
       <div className="w-full max-w-2xl border border-border bg-surface shadow-[0_24px_120px_-24px_rgba(0,0,0,0.8)]">
         <div className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-bull">⌘K</span>
+          <span className="t-chrome text-bull">⌘K</span>
           <input
             ref={inputRef}
             value={q}
@@ -118,7 +118,7 @@ export function CommandPalette() {
             </div>
           )}
         </div>
-        <div className="border-t border-border-soft px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="border-t border-border-soft px-4 py-2 t-chrome text-fg-faint">
           ↑↓ navigate · ↵ run · esc close
         </div>
       </div>

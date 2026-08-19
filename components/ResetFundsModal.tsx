@@ -82,7 +82,7 @@ export function ResetFundsModal({
       <div ref={dialogRef} className="w-[440px] max-w-full border border-bear/50 bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-bear/30 bg-bear/10 px-4 py-2.5">
           <span className="font-mono text-[13px] text-bear">⚠</span>
-          <h2 id="reset-funds-title" className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-bear">
+          <h2 id="reset-funds-title" className="t-eyebrow font-semibold text-bear">
             reset funds — this wipes the entire portfolio
           </h2>
         </div>

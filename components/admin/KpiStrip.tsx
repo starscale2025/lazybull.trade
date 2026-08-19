@@ -44,7 +44,7 @@ export function KpiStrip({ cells }: { cells: KpiCell[] }) {
         return (
           <div key={c.k} className="group relative bg-bg p-4 transition-colors hover:bg-surface">
             <div className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-bull/60 transition-transform duration-500 group-hover:scale-x-100" />
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="flex items-center justify-between t-chrome text-fg-faint">
               <span>{c.k}</span>
               {c.delta != null && (
                 <span className={`tabular-nums ${deltaTone}`}>

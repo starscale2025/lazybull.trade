@@ -32,7 +32,7 @@ export function KillSwitchPanel() {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="size-1.5 rounded-full bg-bear pulse-dot" />
           <span className="text-bear">kill switch</span>
@@ -73,7 +73,7 @@ export function KillSwitchPanel() {
           </div>
         </button>
 
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
+        <div className="flex items-center gap-2 t-chrome">
           <span className={`size-1.5 rounded-full ${armed ? "bg-bear pulse-dot" : "bg-fg-faint"}`} />
           <span className={armed ? "text-bear" : "text-fg-dim"}>
             {armed ? "armed · drill mode" : "standby"}
@@ -82,7 +82,7 @@ export function KillSwitchPanel() {
       </div>
 
       <div className="border-t border-border-soft">
-        <div className="border-b border-border-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="border-b border-border-soft px-3 py-1.5 t-chrome text-fg-faint">
           recent fires
         </div>
         <div className="divide-y divide-border-soft">

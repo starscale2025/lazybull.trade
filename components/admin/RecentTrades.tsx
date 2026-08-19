@@ -17,14 +17,14 @@ function rel(ms: number) {
 export function RecentTrades({ rows }: { rows: TradeRow[] }) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="text-bull">recent paper trades</span>
           <span className="text-fg-faint">·</span>
           <span>last {rows.length}</span>
         </div>
       </div>
-      <div className="grid grid-cols-[60px_100px_60px_1fr_60px_84px_84px_88px] gap-2 border-b border-border-soft bg-bg-soft px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+      <div className="grid grid-cols-[60px_100px_60px_1fr_60px_84px_84px_88px] gap-2 border-b border-border-soft bg-bg-soft px-3 py-1.5 t-chrome text-fg-faint">
         <span>when</span>
         <span>user</span>
         <span>sym</span>
@@ -54,7 +54,7 @@ export function RecentTrades({ rows }: { rows: TradeRow[] }) {
                 <span className={`text-right ${up ? "text-bull" : "text-bear"}`}>
                   {up ? "+" : "−"}${Math.abs(r.pnl)}
                 </span>
-                <span className={`border px-1.5 py-0.5 text-center text-[10px] uppercase tracking-wider ${STATUS_BADGE[r.status]}`}>
+                <span className={`border px-1.5 py-0.5 text-center t-chrome ${STATUS_BADGE[r.status]}`}>
                   {r.status === "closed-profit" ? "win" : r.status === "closed-loss" ? "loss" : r.status}
                 </span>
               </div>

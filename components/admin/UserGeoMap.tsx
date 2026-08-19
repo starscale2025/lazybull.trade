@@ -25,7 +25,7 @@ export function UserGeoMap({ dots }: { dots: GeoDot[] }) {
   const H = 360;
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">geo · live</span>

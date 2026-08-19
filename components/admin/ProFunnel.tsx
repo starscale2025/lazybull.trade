@@ -4,7 +4,7 @@ export function ProFunnel({ steps }: { steps: FunnelStep[] }) {
   const max = steps[0]?.count ?? 1;
   return (
     <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
         <div className="flex items-center gap-3">
           <span className="text-bull">pro funnel</span>
           <span className="text-fg-faint">·</span>
@@ -18,7 +18,7 @@ export function ProFunnel({ steps }: { steps: FunnelStep[] }) {
           const drop = i > 0 ? (1 - s.count / steps[i - 1].count) * 100 : 0;
           return (
             <div key={s.label} className="group flex flex-col gap-1 px-3 py-2 transition-colors hover:bg-surface">
-              <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider">
+              <div className="flex items-center justify-between t-chrome">
                 <span className="text-fg-dim">{s.label}</span>
                 <span className="flex items-center gap-2 tabular-nums">
                   <span className="text-fg">{s.count.toLocaleString()}</span>
