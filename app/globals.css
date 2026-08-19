@@ -1263,3 +1263,136 @@ html, body {
     font-size: 11px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TYPE + LAYOUT CONTRACT
+   ──────────────────────────────────────────────────────────────────────────
+   This site's type story is a deliberate CHASM: 10–11px mono chrome sitting
+   directly against display serif up to 7.5rem, with almost nothing between.
+   The gap IS the identity — it makes the few display moments and the accent
+   colours carry every bit of hierarchy. These roles ratify that gap rather
+   than filling it with a modular scale, which would flatten the whole thing.
+
+   Before this, the same eyebrow was hand-assembled 8 ways (10/11px ×
+   0.14/0.15/0.2/0.25/0.3em × fg-dim/fg-faint). A role is now ONE class.
+
+   THREE RULES THAT KEEP THIS FROM DOING HARM:
+
+   1. Roles never set colour. They own family, size, case, tracking, rhythm.
+      Colour stays a token utility, so `t-eyebrow text-bull` composes instead
+      of fighting.
+   2. Roles live in @layer components so any Tailwind utility beats them.
+      This codebase already had cascade collisions; adding more is not a fix.
+   3. Roles participate in the coarse-pointer floor below. The 10px tier is
+      lifted to 11px on touch exactly like the raw .text-[10px] it replaces —
+      without this, converting a label to a role would silently strip its
+      legibility lift on phones.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Display — Fraunces. Used sparingly; that restraint is the point. ──── */
+  .t-display {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 8vw, 7.5rem);
+    line-height: 0.87;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+  }
+
+  .t-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5.5vw, 5rem);
+    line-height: 0.92;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+  }
+
+  .t-subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+
+  /* The accent word inside a display line. One rule sitewide: it was running
+     as bull / cyan / bear / fg with no discernible logic, which is how a
+     signature device stops signifying. Colour is a plain declaration, so a
+     deliberate `text-bear` on a danger heading still overrides it. */
+  .t-accent {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--bull);
+  }
+
+  /* ── Reading — Funnel sans. ────────────────────────────────────────────── */
+  .t-body { font-size: 1rem; line-height: 1.65; }
+  .t-body-sm { font-size: 0.875rem; line-height: 1.6; }
+
+  /* ── Chrome — JetBrains Mono, uppercase. The site's texture. ───────────────
+     TWO ROLES, NAMED BY JOB, because a size-based pair (label/micro) invites
+     mechanical substitution and these are not interchangeable:
+
+     t-eyebrow ANNOUNCES A REGION. Wide tracking is the whole gesture — it is
+     what makes a three-word label read as a section marker rather than as
+     text. Replaces the 0.2/0.25/0.3em family.
+
+     t-chrome LABELS AN INSTRUMENT PART. Panel headers, table columns, status
+     chips, ticker cells. Tight tracking because these sit in dense rows where
+     0.2em would wrap them. Replaces the tracking-wider family (~466 uses).
+
+     NEITHER is for buttons or body copy. A control keeps its own size — the
+     first pass shrank primary CTAs from 12px to 10px by treating them as
+     chrome, which is exactly the failure these names exist to prevent. */
+  .t-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+
+  .t-chrome {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Numbers that sit in columns and must not dance as they tick. Owns family
+     and figures only — the caller sets the size, because a KPI and a table
+     cell are the same role at wildly different scales. */
+  .t-data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Layout ────────────────────────────────────────────────────────────── */
+  /* The ONE page measure. Replaces max-w-350 / max-w-[1400px] (the same
+     1400px spelled two ways) / max-w-5xl / [1100px] / [1200px] / [1280px]. */
+  .shell {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1400px;
+    padding-inline: 1.25rem;
+  }
+
+  /* A reading column, for the TEXT ELEMENT ITSELF — never stacked on .shell,
+     which would leave two competing max-widths on one element. Put .shell on
+     the section, .measure on the paragraph inside it. Deliberately not a
+     ch-based value on a sans wrapper: 68ch measured on 16px Funnel is a very
+     different column from 68ch on 11px mono, which is how the first pass
+     turned a card grid into a 600px strip. */
+  .measure { max-width: 34rem; }
+  .measure-wide { max-width: 46rem; }
+
+  /* Rhythm between full-bleed sections. */
+  .section-y { padding-block: clamp(4rem, 9vw, 6rem); }
+}
+
+/* The coarse-pointer legibility floor, extended to the roles. Without this,
+   converting `text-[10px]` to `t-chrome` would silently drop that label out
+   of the lift declared above — a regression invisible on every desktop. */
+@media (pointer: coarse) {
+  .t-chrome { font-size: 11px; }
+}
