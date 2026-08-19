@@ -83,11 +83,11 @@ export default async function AdminPage() {
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
           className="absolute -left-32 top-20 h-[480px] w-[480px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(46,232,165,0.10) 0%, transparent 70%)", filter: "blur(120px)" }}
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--bull) 10%, transparent) 0%, transparent 70%)", filter: "blur(120px)" }}
         />
         <div
           className="absolute right-0 top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%)", filter: "blur(140px)" }}
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--cyan) 6%, transparent) 0%, transparent 70%)", filter: "blur(140px)" }}
         />
       </div>
       <div className="pointer-events-none fixed inset-0 z-0 bg-grid opacity-30" />

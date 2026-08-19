@@ -68,7 +68,7 @@ export function SystemHealthChart({ data }: { data: HealthSeries[] }) {
               x2={w - padR}
               y1={padT + (h - padT - padB) * p}
               y2={padT + (h - padT - padB) * p}
-              stroke="rgba(245,245,240,0.06)"
+              stroke="var(--grid)"
               strokeWidth="1"
             />
           ))}
@@ -81,7 +81,7 @@ export function SystemHealthChart({ data }: { data: HealthSeries[] }) {
                 x2={padL + (i * (w - padL - padR)) / (data.length - 1)}
                 y1={h - padB}
                 y2={h - padB + 4}
-                stroke="rgba(245,245,240,0.2)"
+                stroke="var(--fg)" strokeOpacity={0.2}
               />
             ) : null
           )}

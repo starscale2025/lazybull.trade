@@ -38,16 +38,16 @@ export function UserGeoMap({ dots }: { dots: GeoDot[] }) {
         <svg viewBox={`0 0 ${W} ${H}`} className="block h-full w-full" preserveAspectRatio="xMidYMid slice">
           {/* graticule (lat / lng) */}
           {[0.2, 0.4, 0.6, 0.8].map((p) => (
-            <line key={`h${p}`} x1={0} x2={W} y1={p * H} y2={p * H} stroke="rgba(245,245,240,0.04)" />
+            <line key={`h${p}`} x1={0} x2={W} y1={p * H} y2={p * H} stroke="var(--grid)" />
           ))}
           {[0.2, 0.4, 0.6, 0.8].map((p) => (
-            <line key={`v${p}`} x1={p * W} x2={p * W} y1={0} y2={H} stroke="rgba(245,245,240,0.04)" />
+            <line key={`v${p}`} x1={p * W} x2={p * W} y1={0} y2={H} stroke="var(--grid)" />
           ))}
 
           {/* continents */}
           {CONTINENTS.map((d, i) => {
             const scaled = d.replace(/(\d*\.?\d+),(\d*\.?\d+)/g, (_m, x, y) => `${(parseFloat(x) * W).toFixed(1)},${(parseFloat(y) * H).toFixed(1)}`);
-            return <path key={i} d={scaled} fill="rgba(245,245,240,0.04)" stroke="rgba(245,245,240,0.18)" strokeWidth="0.6" />;
+            return <path key={i} d={scaled} fill="var(--grid)" stroke="var(--fg)" strokeOpacity={0.18} strokeWidth="0.6" />;
           })}
 
           {/* session dots */}
@@ -69,7 +69,7 @@ export function UserGeoMap({ dots }: { dots: GeoDot[] }) {
                 <text
                   x={x + size + 6}
                   y={y + 3}
-                  fill="rgba(245,245,240,0.65)"
+                  fill="var(--fg)" fillOpacity={0.65}
                   fontFamily="var(--font-jetbrains), ui-monospace, monospace"
                   fontSize="9"
                   letterSpacing="0.1em"

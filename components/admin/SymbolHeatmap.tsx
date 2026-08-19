@@ -1,9 +1,12 @@
 import type { SymbolRow } from "@/lib/admin-data";
 
 function intensityColor(t: number): string {
-  // bull green at high, fading to surface at low
+  // Brand bull, fading to surface at low intensity. This used a literal
+  // rgba(46,232,165) — a stale palette green that is NOT --bull (#00ff87) and
+  // appears nowhere else in the app. It washed directly behind a token-driven
+  // bg-bull bar in the same tile, so two different greens rendered 2px apart.
   const a = Math.max(0.06, t);
-  return `rgba(46, 232, 165, ${a})`;
+  return `color-mix(in srgb, var(--bull) ${(a * 100).toFixed(1)}%, transparent)`;
 }
 
 export function SymbolHeatmap({ rows }: { rows: SymbolRow[] }) {
@@ -31,7 +34,7 @@ export function SymbolHeatmap({ rows }: { rows: SymbolRow[] }) {
               <div
                 className="pointer-events-none absolute inset-0 transition-opacity group-hover:opacity-100"
                 style={{
-                  background: `linear-gradient(180deg, ${intensityColor(t)} 0%, rgba(46,232,165,0) 80%)`,
+                  background: `linear-gradient(180deg, ${intensityColor(t)} 0%, transparent 80%)`,
                   opacity: 0.6,
                 }}
               />

@@ -48,8 +48,8 @@ export function KillSwitchPanel() {
           style={{
             background:
               armed
-                ? "radial-gradient(circle at 50% 50%, rgba(255,77,106,0.18), transparent 60%)"
-                : "radial-gradient(circle at 50% 50%, rgba(46,232,165,0.06), transparent 60%)",
+                ? "radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--bear) 18%, transparent), transparent 60%)"
+                : "radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--bull) 6%, transparent), transparent 60%)",
           }}
         />
 
@@ -57,8 +57,8 @@ export function KillSwitchPanel() {
           onClick={toggle}
           className={`group relative flex size-32 items-center justify-center rounded-full border-2 transition-all ${
             armed
-              ? "border-bear bg-bear/10 shadow-[0_0_60px_-10px_rgba(255,77,106,0.6)]"
-              : "border-fg-dim bg-surface hover:border-bear hover:shadow-[0_0_40px_-12px_rgba(255,77,106,0.4)]"
+              ? "border-bear bg-bear/10 shadow-[0_0_60px_-10px_color-mix(in_srgb,var(--bear)_60%,transparent)]"
+              : "border-fg-dim bg-surface hover:border-bear hover:shadow-[0_0_40px_-12px_color-mix(in_srgb,var(--bear)_40%,transparent)]"
           }`}
           aria-pressed={armed}
         >
