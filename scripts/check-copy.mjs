@@ -5,6 +5,11 @@
 // what is left. If the residue differs, the pass changed something that is
 // not styling — wording, markup, a link — and wants a human.
 //
+// KNOWN BOUNDARY: this only sees styling that lives in attributes. A colour
+// computed in a JS helper (`return `rgba(...)``) is indistinguishable from copy
+// here, so tokenising one trips the check. That is a true positive by rule and
+// belongs in ALLOWED below with a reason, not a loosened check.
+//
 // Born from a real incident: a restyle rewrote hero copy, invented a commit
 // hash that appeared nowhere in the original, and deleted two working
 // breadcrumb links. All three were invisible in a diff full of class churn.
@@ -45,7 +50,16 @@ function stripAttr(src, name) {
 /** What the user can actually perceive: text, links, and structure. */
 function residue(src) {
   let s = src;
-  for (const attr of ["className", "class", "style"]) s = stripAttr(s, attr);
+  // className/style are the obvious styling channels. SVG paint attributes are
+  // styling too — stroke, fill and their opacities carry no words — and without
+  // them a legitimate tokenisation (stroke="rgba(...)" -> stroke="var(--grid)")
+  // reads as a content change and buries the real signal in false failures.
+  const STYLING_ATTRS = [
+    "className", "class", "style",
+    "stroke", "fill", "strokeOpacity", "fillOpacity", "strokeWidth",
+    "stopColor", "stopOpacity", "opacity",
+  ];
+  for (const attr of STYLING_ATTRS) s = stripAttr(s, attr);
   return s
     .replace(/\/\*[\s\S]*?\*\//g, "")   // block comments
     .replace(/^\s*\/\/.*$/gm, "")        // line comments
@@ -63,6 +77,8 @@ const ALLOWED = {
     "nav numerals removed — navigation is a set of destinations, not a sequence, so 01-07 encoded nothing (the landing INDEX keeps its numerals)",
   "components/MobileMenu.tsx":
     "same numeral removal as the desktop rail, kept in step with it",
+  "components/admin/SymbolHeatmap.tsx":
+    "intensityColor() returns a CSS colour from a JS helper, so tokenising rgba(46,232,165) -> color-mix(var(--bull)) reads as content to this check; verified styling-only by hand",
 };
 
 const target = process.argv[2];
