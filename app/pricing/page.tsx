@@ -95,15 +95,15 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-bg">
       <Nav />
-      <main className="mx-auto max-w-[1400px] px-5 py-16 lg:py-24">
+      <main className="shell py-16 lg:py-24">
         {/* header */}
         <div className="mx-auto max-w-3xl text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-fg-faint">
+          <div className="t-eyebrow text-fg-faint">
             Pricing
           </div>
           <h1 className="mt-4 font-display text-[clamp(2.4rem,6vw,4.5rem)] leading-[1.02] tracking-tightest text-fg">
             Start free.{" "}
-            <span className="italic font-light text-bull">Upgrade when it clicks.</span>
+            <span className="t-accent">Upgrade when it clicks.</span>
           </h1>
           <p className="mt-5 font-mono text-[12px] uppercase tracking-[0.25em] text-fg-dim">
             practice with purpose · upgrade for power

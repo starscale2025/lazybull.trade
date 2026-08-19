@@ -21,7 +21,7 @@ function Clause({ n, title, children, means }: { n: string; title: string; child
         <span className="font-mono text-[11px] text-fg-faint">{n}</span>
         {title}
       </h2>
-      <div className="mt-3 max-w-[70ch] space-y-3 text-[15px] leading-relaxed text-fg-dim">{children}</div>
+      <div className="mt-3 max-w-[70ch] space-y-3 t-body text-fg-dim">{children}</div>
       <p className="mt-4 max-w-[70ch] border-l-2 border-bull/50 bg-bull/5 px-3 py-2 font-mono text-[12px] leading-relaxed text-fg-dim">
         <span className="font-semibold uppercase tracking-wider text-bull">what this means · </span>
         {means}
@@ -35,7 +35,7 @@ export default function SafetyPage() {
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
       <main className="mx-auto w-full max-w-[900px] flex-1 px-5 pb-24 pt-12">
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+        <div className="flex flex-wrap items-center gap-2 t-eyebrow text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
           <span>safety commitments · effective 24 july 2026</span>
           <span
@@ -46,9 +46,9 @@ export default function SafetyPage() {
           </span>
         </div>
         <h1 className="mt-3 font-display text-4xl tracking-tightest">
-          Safety, in plain <span className="italic font-light text-bull">English</span>.
+          Safety, in plain <span className="t-accent">English</span>.
         </h1>
-        <p className="mt-3 max-w-[70ch] text-[15px] leading-relaxed text-fg-dim">
+        <p className="mt-3 max-w-[70ch] t-body text-fg-dim">
           Options can wipe out an account faster than almost anything in finance. So lazybull is built to let you learn
           exactly that — how they blow up — without a real dollar on the line. Here is every guardrail, and what each one
           actually does.

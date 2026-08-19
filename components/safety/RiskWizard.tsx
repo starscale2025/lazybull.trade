@@ -48,16 +48,16 @@ export function RiskWizard() {
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full max-w-2xl border border-amber/60 bg-bg shadow-[0_30px_100px_-20px_rgba(255,184,0,0.4)]"
           >
-            <div className="border-b border-border bg-bg-soft px-4 py-2 font-mono text-[10px] uppercase tracking-[0.25em] text-amber">
+            <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-amber">
               ⚠ first-visit safety briefing · 1 of 1
             </div>
             <div className="p-6">
               <h2 className="font-display text-3xl tracking-tightest text-fg leading-tight">
-                Options can lose <span className="italic text-bear">100%</span>.
+                Options can lose <span className="t-accent text-bear">100%</span>.
                 <br />
-                Some can lose <span className="italic text-bear">more than that</span>.
+                Some can lose <span className="t-accent text-bear">more than that</span>.
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-fg-dim">
+              <p className="t-body-sm mt-3 text-fg-dim">
                 Slide the stock price below. You're holding a naked short call — you collected $300, and your loss
                 grows as the stock goes up. There is no upper bound. Watch the balance.
               </p>
@@ -66,7 +66,7 @@ export function RiskWizard() {
               <div className="mt-5 border border-border bg-surface p-4">
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                    <div className="t-chrome text-fg-faint">
                       account balance
                     </div>
                     <motion.div
@@ -81,8 +81,8 @@ export function RiskWizard() {
                     </motion.div>
                   </div>
                   <div className={`text-right font-mono text-sm ${pnl >= 0 ? "text-bull" : "text-bear"}`}>
-                    <div className="text-[10px] uppercase tracking-wider text-fg-faint">P&L</div>
-                    <div className="text-2xl">
+                    <div className="t-chrome text-fg-faint">P&L</div>
+                    <div className="t-data text-2xl">
                       {pnl >= 0 ? "+" : "−"}${Math.abs(pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </div>
                   </div>
@@ -103,7 +103,7 @@ export function RiskWizard() {
                   />
                 </div>
 
-                <div className="mt-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                <div className="mt-4 flex items-center justify-between t-chrome text-fg-dim">
                   <span>$80</span>
                   <span className="text-bull">strike $100</span>
                   <span>$160</span>
@@ -118,7 +118,7 @@ export function RiskWizard() {
                   aria-label="stock price"
                   className="mt-1 w-full accent-bull"
                 />
-                <div className="mt-1 text-center font-mono text-[11px] text-fg">
+                <div className="mt-1 text-center t-data text-[11px] text-fg">
                   spot price ${spot}
                 </div>
               </div>
@@ -131,7 +131,7 @@ export function RiskWizard() {
                   checked={accepted}
                   onChange={(e) => setAccepted(e.target.checked)}
                 />
-                <div className="text-sm text-fg">
+                <div className="t-body-sm text-fg">
                   I understand options can lose more than I put in. I'll start with{" "}
                   <span className="text-bull">training wheels mode on</span> (defined-risk only, daily limit, kill
                   switch).

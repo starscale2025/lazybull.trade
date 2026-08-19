@@ -152,7 +152,7 @@ export function CommandDeck() {
             className="w-[480px] max-w-[92vw] border border-border bg-surface shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">command deck</span>
+              <span className="t-chrome text-fg-faint">command deck</span>
               <kbd className="ml-auto border border-border px-1.5 font-mono text-[10px] text-fg-faint">esc</kbd>
             </div>
             <input
@@ -194,7 +194,7 @@ export function CommandDeck() {
                     i === active ? "bg-surface-2 text-fg" : "text-fg-dim"
                   }`}
                 >
-                  <span className="w-16 shrink-0 border border-border-soft px-1 text-center text-[10px] uppercase tracking-wider text-fg-faint">
+                  <span className="w-16 shrink-0 border border-border-soft px-1 text-center t-chrome text-fg-faint">
                     {c.group}
                   </span>
                   <span className="flex-1 truncate">{c.label}</span>
@@ -204,7 +204,7 @@ export function CommandDeck() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-3 border-t border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="flex items-center gap-3 border-t border-border px-3 py-1.5 t-chrome text-fg-faint">
               <span className="flex items-center gap-1">
                 <kbd className="border border-border px-1">↑</kbd>
                 <kbd className="border border-border px-1">↓</kbd>

@@ -270,7 +270,7 @@ function FounderPhoto({
       {/* Name badge */}
       <div className="absolute inset-x-4 bottom-4">
         <div className="border border-border bg-bg/80 backdrop-blur-sm p-3">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">
+          <div className="t-chrome text-fg-faint">
             // founder
           </div>
           <div className="mt-1 font-display text-xl tracking-tightest text-fg">
@@ -312,7 +312,7 @@ function TimelineItem({
       >
         {isLeft && (
           <div className="w-full border border-border bg-surface p-4 text-right">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint mb-2">
+            <div className="t-chrome text-fg-faint mb-2">
               {item.date}
             </div>
             <div
@@ -321,7 +321,7 @@ function TimelineItem({
             >
               {item.label}
             </div>
-            <p className="text-sm leading-relaxed text-fg-dim">{item.desc}</p>
+            <p className="t-body-sm text-fg-dim">{item.desc}</p>
           </div>
         )}
       </motion.div>
@@ -346,7 +346,7 @@ function TimelineItem({
       >
         {!isLeft && (
           <div className="w-full border border-border bg-surface p-4">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint mb-2">
+            <div className="t-chrome text-fg-faint mb-2">
               {item.date}
             </div>
             <div
@@ -355,7 +355,7 @@ function TimelineItem({
             >
               {item.label}
             </div>
-            <p className="text-sm leading-relaxed text-fg-dim">{item.desc}</p>
+            <p className="t-body-sm text-fg-dim">{item.desc}</p>
           </div>
         )}
       </motion.div>
@@ -375,7 +375,7 @@ export function About() {
         <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
         {/* Tape */}
-        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-1.5 t-eyebrow text-fg-faint">
           <div className="flex items-center gap-3">
             <span>⟢ Section / About</span>
             <span className="hidden sm:inline">·</span>
@@ -387,14 +387,14 @@ export function About() {
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-350 px-5 py-20 lg:py-32">
+        <div className="relative shell py-20 lg:py-32">
           <motion.div
             className="max-w-4xl"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease }}
           >
-            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-wider mb-8">
+            <div className="flex items-center gap-3 t-chrome mb-8">
               <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" />
                 the team
@@ -404,16 +404,16 @@ export function About() {
               </span>
             </div>
 
-            <h1 className="font-display tracking-tightest text-[clamp(3.2rem,8.5vw,8rem)] leading-[0.87] text-fg">
+            <h1 className="t-display text-fg">
               The minds
               <br />
               behind the
               <br />
-              <span className="italic font-light text-bull phosphor">bull</span>
+              <span className="t-accent phosphor">bull</span>
               <span className="text-bull">.</span>
             </h1>
 
-            <p className="mt-8 max-w-[56ch] text-balance text-base leading-relaxed text-fg-dim md:text-lg">
+            <p className="mt-8 measure text-balance text-base leading-relaxed text-fg-dim md:text-lg">
               LazyBull was built by three founders who believed options trading
               was being made{" "}
               <span className="text-fg">artificially complex</span> to keep
@@ -436,7 +436,7 @@ export function About() {
               { k: "To start", v: "$0" },
             ].map((s) => (
               <div key={s.k} className="bg-bg p-4">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                <div className="t-chrome text-fg-faint">
                   {s.k}
                 </div>
                 <div className="mt-2 font-display text-2xl tracking-tightest text-fg">
@@ -451,7 +451,7 @@ export function About() {
       {/* ── MISSION TERMINAL ─────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg-soft">
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
-        <div className="relative mx-auto max-w-350 px-5 py-20">
+        <div className="relative shell py-20">
           <motion.div
             className="border border-border bg-bg"
             initial={{ opacity: 0, y: 24 }}
@@ -465,7 +465,7 @@ export function About() {
                 <span className="size-2.5 rounded-full bg-bear" />
                 <span className="size-2.5 rounded-full bg-amber" />
                 <span className="size-2.5 rounded-full bg-bull" />
-                <span className="ml-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
+                <span className="ml-3 t-chrome text-fg-dim">
                   mission.md — lazybull
                 </span>
               </div>
@@ -477,7 +477,7 @@ export function About() {
 
             <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
               <div className="border-b border-border p-8 md:border-b-0 md:border-r">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint mb-4">
+                <div className="t-chrome text-fg-faint mb-4">
                   // the problem
                 </div>
                 <p className="font-display text-2xl leading-snug tracking-tightest text-fg md:text-3xl">
@@ -490,7 +490,7 @@ export function About() {
                 </div>
               </div>
               <div className="p-8">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint mb-4">
+                <div className="t-chrome text-fg-faint mb-4">
                   // the fix
                 </div>
                 <div className="space-y-4 font-mono text-[12px] leading-relaxed text-fg-dim">
@@ -506,7 +506,7 @@ export function About() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 border-t border-border-soft pt-4 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                <div className="mt-6 border-t border-border-soft pt-4 t-chrome text-fg-faint">
                   <span className="text-bull">STATUS:</span> PRE-SOFT-LAUNCH
                 </div>
               </div>
@@ -520,19 +520,19 @@ export function About() {
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
 
         {/* Section header */}
-        <div className="relative mx-auto max-w-350 px-5 pt-24 pb-12">
+        <div className="relative shell pt-24 pb-12">
           <div className="grid grid-cols-12 items-end gap-5">
             <div className="col-span-12 md:col-span-3 flex flex-col gap-1.5">
-              <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+              <span className="t-eyebrow text-fg-faint">
                 ⟢ Section 01 / Founders
               </span>
               <span className="font-mono text-[11px] text-bull">// team.md</span>
             </div>
             <div className="col-span-12 md:col-span-9">
-              <h2 className="font-display text-[clamp(2.4rem,6vw,5.4rem)] leading-[0.92] tracking-tightest text-fg">
+              <h2 className="t-title text-fg">
                 Three builders,
                 <br />
-                <span className="italic font-light text-fg-dim">
+                <span className="t-accent text-fg-dim">
                   one{" "}
                   <span className="text-bull not-italic font-normal">obsession</span>.
                 </span>
@@ -542,7 +542,7 @@ export function About() {
         </div>
 
         {/* Founder cards */}
-        <div className="relative mx-auto max-w-350 px-5 pb-24">
+        <div className="relative shell pb-24">
           <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-2 lg:grid-cols-3">
             {FOUNDERS.map((f, fi) => (
               <motion.article
@@ -562,7 +562,7 @@ export function About() {
                 {/* Header tape */}
                 <div className="flex items-center justify-between border-b border-border-soft px-6 py-3 md:px-8">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                    <span className="t-chrome text-fg-faint">
                       FILE
                     </span>
                     <span className="font-mono text-sm text-fg">
@@ -570,7 +570,7 @@ export function About() {
                     </span>
                     <span className="text-fg-faint">·</span>
                     <span
-                      className="font-mono text-[11px] uppercase tracking-wider"
+                      className="t-chrome"
                       style={{ color: f.color }}
                     >
                       {f.code}
@@ -599,7 +599,7 @@ export function About() {
 
                   {/* Name + role */}
                   <div>
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint mb-1">
+                    <div className="t-chrome text-fg-faint mb-1">
                       {f.tag}
                     </div>
                     <h3 className="font-display text-4xl leading-[0.95] tracking-tightest text-fg">
@@ -614,7 +614,7 @@ export function About() {
                   </div>
 
                   {/* Bio */}
-                  <p className="text-sm leading-relaxed text-fg-dim max-w-[44ch]">
+                  <p className="t-body-sm text-fg-dim max-w-[44ch]">
                     {f.longBio}
                   </p>
 
@@ -628,7 +628,7 @@ export function About() {
 
                   {/* Achievements */}
                   <div>
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint mb-3">
+                    <div className="t-chrome text-fg-faint mb-3">
                       // achievements
                     </div>
                     <div className="space-y-2">
@@ -659,7 +659,7 @@ export function About() {
                   <div className="grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
                     {f.stats.map((s) => (
                       <div key={s.k} className="bg-bg p-3">
-                        <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint truncate">
+                        <div className="t-chrome text-fg-faint truncate">
                           {s.k}
                         </div>
                         <div
@@ -673,7 +673,7 @@ export function About() {
                   </div>
 
                   {/* Handle footer */}
-                  <div className="flex items-center justify-between border-t border-border-soft pt-4 font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+                  <div className="flex items-center justify-between border-t border-border-soft pt-4 t-chrome text-fg-faint">
                     <span>@{f.handle}</span>
                     <span style={{ color: f.color }}>
                       {f.code} ›
@@ -691,7 +691,7 @@ export function About() {
         <div className="pointer-events-none absolute inset-0 bg-grid-fine opacity-20" />
         <div className="pointer-events-none absolute left-1/2 top-0 h-100 w-200 -translate-x-1/2 rounded-full bg-bull/8 blur-[120px]" />
 
-        <div className="relative mx-auto max-w-350 px-5 py-24">
+        <div className="relative shell py-24">
           <motion.div
             className="flex flex-col gap-2 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -699,13 +699,13 @@ export function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease }}
           >
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+            <span className="t-eyebrow text-fg-faint">
               ⟢ Section 02 / The build
             </span>
-            <h2 className="font-display text-[clamp(2.4rem,5.5vw,5rem)] leading-[0.92] tracking-tightest text-fg">
+            <h2 className="t-title text-fg">
               The bull,
               <br />
-              <span className="italic font-light text-bull">by the numbers</span>.
+              <span className="t-accent">by the numbers</span>.
             </h2>
           </motion.div>
 
@@ -719,7 +719,7 @@ export function About() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, ease, delay: i * 0.1 }}
               >
-                <div className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+                <div className="t-chrome text-fg-faint">
                   {c.label}
                 </div>
                 <Counter
@@ -739,7 +739,7 @@ export function About() {
       <section className="relative border-b border-border bg-bg">
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-20" />
 
-        <div className="relative mx-auto max-w-350 px-5 py-24">
+        <div className="relative shell py-24">
           <motion.div
             className="flex flex-col gap-2 mb-20"
             initial={{ opacity: 0, y: 20 }}
@@ -747,13 +747,13 @@ export function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease }}
           >
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+            <span className="t-eyebrow text-fg-faint">
               ⟢ Section 03 / Story
             </span>
-            <h2 className="font-display text-[clamp(2.4rem,5.5vw,5rem)] leading-[0.92] tracking-tightest text-fg">
+            <h2 className="t-title text-fg">
               How we got
               <br />
-              <span className="italic font-light text-fg-dim">
+              <span className="t-accent text-fg-dim">
                 to{" "}
                 <span className="text-bull not-italic font-normal">here</span>.
               </span>
@@ -778,7 +778,7 @@ export function About() {
       <section className="relative border-b border-border bg-bg-soft">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
 
-        <div className="relative mx-auto max-w-350 px-5 py-24">
+        <div className="relative shell py-24">
           <motion.div
             className="grid grid-cols-12 items-end gap-5 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -787,16 +787,16 @@ export function About() {
             transition={{ duration: 0.6, ease }}
           >
             <div className="col-span-12 md:col-span-3 flex flex-col gap-1.5">
-              <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+              <span className="t-eyebrow text-fg-faint">
                 ⟢ Section 04 / Values
               </span>
               <span className="font-mono text-[11px] text-bull">// beliefs.md</span>
             </div>
             <div className="col-span-12 md:col-span-9">
-              <h2 className="font-display text-[clamp(2.4rem,5.5vw,5rem)] leading-[0.92] tracking-tightest text-fg">
+              <h2 className="t-title text-fg">
                 What we believe
                 <br />
-                <span className="italic font-light text-fg-dim">
+                <span className="t-accent text-fg-dim">
                   when the market{" "}
                   <span className="text-bear not-italic font-normal">opens</span>.
                 </span>
@@ -834,7 +834,7 @@ export function About() {
                   >
                     {v.label}
                   </h3>
-                  <p className="text-sm leading-relaxed text-fg-dim max-w-[38ch]">
+                  <p className="t-body-sm text-fg-dim max-w-[38ch]">
                     {v.desc}
                   </p>
                 </div>
@@ -854,7 +854,7 @@ export function About() {
         <div className="pointer-events-none absolute -right-20 top-1/2 h-125 w-125 -translate-y-1/2 rounded-full bg-bull/10 blur-[140px] drift" />
         <div className="pointer-events-none absolute -left-20 bottom-0 h-100 w-100 rounded-full bg-cyan/8 blur-[120px] drift" style={{ animationDelay: "-5s" }} />
 
-        <div className="relative mx-auto max-w-350 px-5 py-24">
+        <div className="relative shell py-24">
           <motion.div
             className="flex flex-col gap-8"
             initial={{ opacity: 0, y: 30 }}
@@ -862,19 +862,19 @@ export function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease }}
           >
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
+            <div className="flex items-center gap-2 t-chrome">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />
               <span className="text-bull">hiring · remote · equity</span>
             </div>
 
-            <h2 className="font-display text-[clamp(3rem,8vw,7.5rem)] leading-[0.87] tracking-tightest text-fg max-w-3xl">
+            <h2 className="t-display text-fg max-w-3xl">
               Join the
               <br />
-              <span className="italic font-light text-bull phosphor">bull</span>
+              <span className="t-accent phosphor">bull</span>
               <span className="text-bull">.</span>
             </h2>
 
-            <p className="max-w-[48ch] text-base leading-relaxed text-fg-dim">
+            <p className="measure text-base leading-relaxed text-fg-dim">
               We're a small team with an outsized mission. If you believe retail
               traders deserve better tools, we want to hear from you.
             </p>
@@ -898,7 +898,7 @@ export function About() {
             </div>
 
             {/* Bottom marquee */}
-            <div className="mt-8 overflow-hidden border-y border-border-soft py-3 font-mono text-[11px] uppercase tracking-wider">
+            <div className="mt-8 overflow-hidden border-y border-border-soft py-3 t-chrome">
               <div className="flex marquee gap-10 whitespace-nowrap text-fg-faint">
                 {Array.from({ length: 2 }).map((_, k) => (
                   <div key={k} className="flex shrink-0 gap-10">

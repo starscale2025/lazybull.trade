@@ -60,7 +60,7 @@ function HudIndexColumn() {
   }, []);
   return (
     <div
-      className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left font-mono text-[11px] tracking-wider md:block"
+      className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left t-data text-[11px] tracking-wider md:block"
       aria-hidden
     >
       {rows.map((r) => (
@@ -207,7 +207,7 @@ export function GetStarted() {
 
       {/* --- content --- */}
       <div className="relative flex flex-col items-center gap-8">
-        <span className="ambient-glow inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-bull">
+        <span className="ambient-glow inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-3 py-1 t-chrome text-bull">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" /> paper-only · $0 at risk, ever
         </span>
 
@@ -218,7 +218,7 @@ export function GetStarted() {
           style={{ fontSize: "clamp(2.75rem, 7.5vw, 6rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 0 40px rgba(0,0,0,0.6)" }}
         >
           Options you can{" "}
-          <span className="headline-sweep crt-flicker italic font-light" style={{ paddingRight: "0.14em" }}>
+          <span className="headline-sweep crt-flicker t-accent" style={{ paddingRight: "0.14em" }}>
             see
           </span>
           <span className="text-bull crt-flicker" style={{ marginLeft: "-0.04em" }}>
@@ -273,7 +273,7 @@ export function GetStarted() {
         <div className="mt-2 flex flex-wrap items-start justify-center gap-6">
           {FEATURES.map((f, i) => (
             <HungCard key={f} wire={34 + (i % 3) * 14} phase={i * 1.7}>
-              <span className="flex items-center gap-2 rounded-full border border-border bg-surface/80 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur-sm">
+              <span className="flex items-center gap-2 rounded-full border border-border bg-surface/80 px-4 py-2 t-chrome text-fg-dim backdrop-blur-sm">
                 <span className="size-1 rounded-full bg-bull/70 pulse-dot" /> {f}
               </span>
             </HungCard>
@@ -284,7 +284,7 @@ export function GetStarted() {
             site's front door. Numbered to match the rail on product pages. --- */}
         <div className="mt-14 w-full max-w-5xl">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+            <span className="t-eyebrow text-fg-faint">
               everything on the desk
             </span>
             <AuthButtons />
@@ -296,7 +296,7 @@ export function GetStarted() {
                 href={p.href}
                 className="group relative bg-bg/80 p-4 backdrop-blur-sm transition-colors hover:bg-surface"
               >
-                <span className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{p.n}</span>
+                <span className="t-chrome text-fg-faint">{p.n}</span>
                 <span className="mt-1 flex items-center gap-2 font-display text-lg tracking-tightest text-fg">
                   {p.l}
                   <span className="translate-x-0 text-bull opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" aria-hidden>
@@ -401,7 +401,7 @@ export function GetStarted() {
                 27 bots watching,{" "}
                 <br className="hidden sm:block" />so you don&apos;t have to.
               </div>
-              <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
+              <div className="mt-3 t-eyebrow text-fg-dim [text-shadow:0_1px_12px_rgba(0,0,0,0.9)]">
                 every tick · every greek · every regime
               </div>
             </div>

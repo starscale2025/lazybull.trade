@@ -79,7 +79,7 @@ export function AuthButtons() {
           className="absolute right-0 top-11 z-40 w-64 border border-border bg-bg shadow-2xl"
         >
           <div className="border-b border-border px-3 py-3">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="t-chrome text-fg-faint">
               signed in as
             </div>
             <div className="mt-1 truncate text-[13px] text-fg">{u.name || u.email}</div>

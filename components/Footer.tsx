@@ -59,21 +59,21 @@ export function Footer() {
       <div className="pointer-events-none absolute -bottom-40 left-1/2 h-96 w-[120%] -translate-x-1/2 rounded-full bg-bull/8 blur-[160px]" />
 
       {/* Top callout */}
-      <div className="relative mx-auto max-w-[1400px] border-b border-border-soft px-5 py-12">
+      <div className="relative shell border-b border-border-soft py-12">
         <div className="grid grid-cols-12 items-end gap-x-5 gap-y-8">
           <div className="col-span-12 lg:col-span-7">
-            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint mb-4">
+            <p className="t-eyebrow text-fg-faint mb-4">
               ⟢ Last call
             </p>
-            <h3 className="font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[0.92] tracking-tightest text-fg">
+            <h3 className="t-title text-fg">
               The chain is open.
               <br />
-              <span className="italic font-light text-bull">Drag something.</span>
+              <span className="t-accent">Drag something.</span>
             </h3>
           </div>
           <div className="col-span-12 lg:col-span-5">
             <form className="flex flex-col gap-2">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+              <label className="t-chrome text-fg-faint">
                 One email a week · a single new strategy explained
               </label>
               <div className="flex border border-border bg-surface focus-within:border-bull">
@@ -105,7 +105,7 @@ export function Footer() {
             • drop tracking-tightest (-0.05em letter-spacing) on the h2 — the
               negative spacing pulled the last 'l' inside its own box
             • margin-left on the period to clear the extended italic span */}
-      <div className="relative mx-auto max-w-[1400px] overflow-visible px-5 pt-12">
+      <div className="relative shell overflow-visible pt-12">
         <h2
           aria-hidden
           data-gsap="reveal-clip"
@@ -120,7 +120,7 @@ export function Footer() {
         >
           lazy
           <span
-            className="italic font-light inline-block headline-sweep"
+            className="t-accent inline-block headline-sweep"
             style={{ paddingLeft: "0.04em", paddingRight: "0.22em" }}
           >
             bull
@@ -138,10 +138,10 @@ export function Footer() {
       <div
         data-gsap="stagger-fast"
         data-gsap-duration="0.8"
-        className="relative mx-auto max-w-[1400px] grid grid-cols-2 gap-x-5 gap-y-10 px-5 py-16 md:grid-cols-6"
+        className="relative shell grid grid-cols-2 gap-x-5 gap-y-10 py-16 md:grid-cols-6"
       >
         <div className="col-span-2">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint mb-4">
+          <div className="t-chrome text-fg-faint mb-4">
             Manifesto
           </div>
           <p className="font-display text-base leading-snug text-fg-dim">
@@ -155,7 +155,7 @@ export function Footer() {
               <span
                 key={s}
                 title="Coming soon"
-                className="flex size-8 cursor-default items-center justify-center border border-border bg-bg font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-faint"
+                className="flex size-8 cursor-default items-center justify-center border border-border bg-bg t-chrome font-semibold text-fg-faint"
               >
                 {s}
               </span>
@@ -164,7 +164,7 @@ export function Footer() {
         </div>
         {COLS.map((col) => (
           <div key={col.title}>
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint mb-4">
+            <div className="t-chrome text-fg-faint mb-4">
               {col.title}
             </div>
             <ul className="space-y-2.5">
@@ -187,7 +187,7 @@ export function Footer() {
                     >
                       <span className="text-fg-faint">›</span>
                       {l.label}
-                      <span className="text-[10px] uppercase tracking-wider text-fg-faint/70">soon</span>
+                      <span className="t-chrome text-fg-faint/70">soon</span>
                     </span>
                   </li>
                 )
@@ -199,7 +199,7 @@ export function Footer() {
 
       {/* Status bar */}
       <div className="relative border-t border-border bg-bg-soft">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <div className="shell flex flex-wrap items-center justify-between gap-3 py-3 t-chrome text-fg-faint">
           <div className="flex items-center gap-3">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">paper-only · pre-soft-launch</span>

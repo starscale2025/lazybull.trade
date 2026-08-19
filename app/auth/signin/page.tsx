@@ -33,16 +33,16 @@ function SignInPanel() {
         </Link>
 
         <div className="w-full border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-5 py-3 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+          <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">
             ⟢ sign in
           </div>
           <div className="p-8">
             <h1 className="font-display text-3xl tracking-tightest leading-[1.05] text-fg">
               Welcome back.
               <br />
-              <span className="italic font-light text-bull">Pick where to leave off.</span>
+              <span className="t-accent">Pick where to leave off.</span>
             </h1>
-            <p className="mt-3 max-w-prose text-[14px] leading-relaxed text-fg-dim">
+            <p className="mt-3 max-w-prose t-body-sm text-fg-dim">
               Signing in saves your workspaces, watchlists, custom bots, and paper-trading
               positions across devices. Free, no card.
             </p>
@@ -62,13 +62,13 @@ function SignInPanel() {
               <span className="ml-2 text-fg-faint group-hover:text-bull">→</span>
             </button>
 
-            <div className="mt-6 flex items-center gap-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-6 flex items-center gap-3 t-chrome text-fg-faint">
               <span className="h-px flex-1 bg-border" />
               more soon
               <span className="h-px flex-1 bg-border" />
             </div>
 
-            <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-2 grid grid-cols-2 gap-2 t-chrome text-fg-faint">
               <div className="border border-border bg-bg/50 px-3 py-2 text-center opacity-60">GitHub</div>
               <div className="border border-border bg-bg/50 px-3 py-2 text-center opacity-60">Email link</div>
             </div>

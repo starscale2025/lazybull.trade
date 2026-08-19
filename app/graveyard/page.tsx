@@ -35,8 +35,8 @@ export default function Graveyard() {
       <Nav />
       <main className="mx-auto w-full max-w-[900px] flex-1 px-5 py-16">
         <div className="text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.35em] text-fg-faint">⚰ here lie the fallen</div>
-          <h1 className="mt-3 font-display text-[clamp(2.4rem,7vw,5rem)] leading-[0.9] tracking-tightest">
+          <div className="t-eyebrow text-fg-faint">⚰ here lie the fallen</div>
+          <h1 className="mt-3 t-title">
             The Graveyard
           </h1>
           <p className="mx-auto mt-4 max-w-[54ch] font-mono text-[12px] leading-relaxed text-fg-dim">
@@ -53,13 +53,13 @@ export default function Graveyard() {
               className="group relative border border-border bg-surface/60 px-5 pb-6 pt-8 text-center transition-colors hover:border-fg-dim"
               style={{ borderTopLeftRadius: "50% 22px", borderTopRightRadius: "50% 22px" }}
             >
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">R.I.P.</div>
+              <div className="t-eyebrow text-fg-faint">R.I.P.</div>
               <div className="mt-2 font-mono text-[13px] text-fg">{g.name}</div>
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-bear">
+              <div className="mt-1 t-chrome text-bear">
                 {g.lines} lines · deleted
               </div>
               <div className="mx-auto mt-3 h-px w-10 bg-border" />
-              <div className="mt-3 font-mono text-[10px] uppercase tracking-wider text-fg-faint">{g.born}</div>
+              <div className="mt-3 t-chrome text-fg-faint">{g.born}</div>
               <p className="mt-2 font-mono text-[11px] italic leading-relaxed text-fg-dim">“{g.epitaph}”</p>
             </div>
           ))}
@@ -77,7 +77,7 @@ export default function Graveyard() {
           named navigator.
         </p>
 
-        <div className="mt-8 border-t border-border-soft pt-6 text-center font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+        <div className="mt-8 border-t border-border-soft pt-6 text-center t-eyebrow text-fg-faint">
           scripts/guard.mjs watches the gate now · nothing dead ships again
         </div>
       </main>

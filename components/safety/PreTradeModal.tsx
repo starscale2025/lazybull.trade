@@ -56,7 +56,7 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
             className={`relative w-full max-w-lg border bg-bg shadow-2xl ${isDangerous ? "border-bear/60 shadow-[0_30px_80px_-20px_rgba(255,46,99,0.4)]" : "border-bull/40 shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"}`}
           >
             <div
-              className={`flex items-center justify-between border-b px-4 py-2 font-mono text-[10px] uppercase tracking-[0.25em] ${
+              className={`flex items-center justify-between border-b px-4 py-2 t-eyebrow ${
                 isDangerous ? "border-bear/40 bg-bear/5 text-bear" : "border-border bg-bg-soft text-bull"
               }`}
             >
@@ -68,16 +68,16 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
               {isDangerous ? (
                 <>
                   <h3 className="font-display text-3xl tracking-tightest text-fg leading-tight">
-                    This <span className="text-bear italic">{strategy}</span> can lose more than your account.
+                    This <span className="t-accent text-bear">{strategy}</span> can lose more than your account.
                   </h3>
                   <DangerSimulation />
                 </>
               ) : (
                 <>
                   <h3 className="font-display text-2xl tracking-tightest text-fg leading-tight">
-                    Confirm: <span className="text-bull italic">{strategy}</span>
+                    Confirm: <span className="t-accent">{strategy}</span>
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-fg-dim">
+                  <p className="t-body-sm mt-2 text-fg-dim">
                     Your defined risk on this trade is{" "}
                     <span className="text-bear">${Math.abs(maxLoss).toFixed(0)}</span>. Best case is{" "}
                     <span className="text-bull">${Math.abs(maxProfit).toFixed(0)}</span>.{" "}
@@ -131,7 +131,7 @@ function DangerSimulation() {
     <div className="mt-5 border border-bear/30 bg-bear/5 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">stock price</div>
+          <div className="t-chrome text-fg-faint">stock price</div>
           <motion.div
             className="font-display text-3xl tabular-nums text-fg tracking-tightest"
             animate={{ y: [-2, -8, -16, -22, -28] }}
@@ -141,7 +141,7 @@ function DangerSimulation() {
           </motion.div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">your loss</div>
+          <div className="t-chrome text-fg-faint">your loss</div>
           <motion.div
             className="font-display text-3xl tabular-nums text-bear tracking-tightest"
             animate={{ scale: [1, 1.1, 1.2, 1.3, 1.5], color: ["#ff6b8a", "#ff2e63", "#ff2e63"] }}

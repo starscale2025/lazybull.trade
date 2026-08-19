@@ -20,7 +20,7 @@ function Clause({ n, title, children, means }: { n: string; title: string; child
         <span className="font-mono text-[11px] text-fg-faint">{n}</span>
         {title}
       </h2>
-      <div className="mt-3 max-w-[70ch] space-y-3 text-[15px] leading-relaxed text-fg-dim">{children}</div>
+      <div className="mt-3 max-w-[70ch] space-y-3 t-body text-fg-dim">{children}</div>
       <p className="mt-4 max-w-[70ch] border-l-2 border-bull/50 bg-bull/5 px-3 py-2 font-mono text-[12px] leading-relaxed text-fg-dim">
         <span className="font-semibold uppercase tracking-wider text-bull">what this means · </span>
         {means}
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
       <main className="mx-auto w-full max-w-[900px] flex-1 px-5 pb-24 pt-12">
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+        <div className="flex flex-wrap items-center gap-2 t-eyebrow text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
           <span>privacy policy · effective 18 august 2026</span>
           <span className="border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-amber" title="Written plainly and in good faith; formal legal review is scheduled.">
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
           </span>
         </div>
         <h1 className="mt-3 font-display text-4xl tracking-tightest">
-          What we know, <span className="italic font-light text-bull">exactly</span>.
+          What we know, <span className="t-accent">exactly</span>.
         </h1>
 
         <Clause n="01" title="What we collect" means="a Google profile if you sign in, your paper-trading state so it can follow you across devices, and product events so we can see what's used. That's the whole list.">

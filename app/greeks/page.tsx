@@ -357,7 +357,7 @@ function GreekStatCard({
 
   return (
     <div className="border border-border bg-surface p-2 md:p-4">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim md:text-[10px]">
+      <div className="t-chrome text-fg-dim md:text-[10px]">
         {GREEK_COPY[greek].label}
       </div>
       <div className="mt-1 flex items-end justify-between gap-2 md:mt-2">
@@ -551,10 +551,10 @@ export default function GreeksLabPage() {
   return (
     <div className="min-h-screen bg-bg">
       <Nav />
-      <main className="mx-auto max-w-[1400px] px-5 pb-16 pt-10 lg:pt-14">
+      <main className="shell pb-16 pt-10 lg:pt-14">
         {/* header row: kicker · symbol selector · teacher-mode switch */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-          <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-bull">
+          <div className="t-eyebrow text-bull">
             The Greek surface · lab
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -589,7 +589,7 @@ export default function GreeksLabPage() {
                   <path d="M1 1l3 3.5L7 1" stroke="currentColor" strokeWidth="1.2" />
                 </svg>
               </div>
-              <span data-spot className="font-mono text-[12px] tabular-nums text-fg">
+              <span data-spot className="t-data text-[12px] text-fg">
                 ${spot.toFixed(2)}
               </span>
               {sourceChip}
@@ -655,13 +655,13 @@ export default function GreeksLabPage() {
 
         {/* headline + what-am-i-seeing card */}
         <div className="mt-8 flex flex-col items-start justify-between gap-8 lg:flex-row">
-          <h1 className="font-display text-[clamp(2.5rem,6.5vw,5.25rem)] leading-[1.02] tracking-tightest text-fg">
+          <h1 className="t-title text-fg">
             Drag the strike.
             <br />
             Watch all five Greeks move.
           </h1>
           <aside className="w-full max-w-sm shrink-0 border border-border bg-surface p-5 lg:w-[320px]">
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-bull">What am I seeing?</div>
+            <div className="t-eyebrow text-bull">What am I seeing?</div>
             <p className="mt-3 text-[12px] leading-relaxed text-fg-dim">
               This is an option pricing surface. Drag the glowing handle to explore how the
               price changes — and watch all five Greeks update in real time. Strike runs
@@ -734,7 +734,7 @@ export default function GreeksLabPage() {
         {/* sliders — accessible fallback for the same state */}
         <div className="mt-6 grid items-center gap-x-8 gap-y-5 border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto]">
           <div>
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+            <div className="flex items-center justify-between t-chrome text-fg-dim">
               <span>Strike</span>
               <span className="tabular-nums text-fg">${fmtStrike(strike, spot)}</span>
             </div>
@@ -753,7 +753,7 @@ export default function GreeksLabPage() {
             />
           </div>
           <div>
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+            <div className="flex items-center justify-between t-chrome text-fg-dim">
               <span>Days to expiry</span>
               <span className="tabular-nums text-fg">{days}d</span>
             </div>
@@ -770,12 +770,12 @@ export default function GreeksLabPage() {
           </div>
           <div className="flex items-center gap-5 md:border-l md:border-border-soft md:pl-4">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">Call price</div>
+              <div className="t-chrome text-fg-dim">Call price</div>
               <div className="mt-1 font-display text-2xl tracking-tightest tabular-nums text-fg">
                 ${price.toFixed(2)}
               </div>
             </div>
-            <div className="font-mono text-[10px] uppercase leading-relaxed tracking-wider text-fg-faint">
+            <div className="t-chrome leading-relaxed text-fg-faint">
               <span className="text-fg-dim">{symbol}</span> spot{" "}
               <span data-spot-strip className="tabular-nums text-fg-dim">${spot.toFixed(2)}</span>
               <br />

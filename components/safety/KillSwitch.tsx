@@ -41,7 +41,7 @@ export function SafetySettingsButton() {
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-md border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"
             >
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 font-mono text-[10px] uppercase tracking-wider">
+              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
                 <span className="text-bull">● safety panel</span>
                 <button onClick={() => setOpen(false)} className="text-fg-faint hover:text-fg">✕</button>
               </div>
@@ -53,7 +53,7 @@ export function SafetySettingsButton() {
                   onChange={safety.setTrainingWheels}
                 />
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim mb-2">
+                  <div className="t-chrome text-fg-dim mb-2">
                     Daily loss limit
                   </div>
                   <div className="flex items-center gap-3">
@@ -163,14 +163,14 @@ function KillSwitchOverlay() {
             animate={{ scale: 1, y: 0 }}
             className="w-full max-w-md border border-bear bg-bg shadow-[0_30px_80px_-20px_rgba(255,46,99,0.5)]"
           >
-            <div className="border-b border-bear/40 bg-bear/10 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bear">
+            <div className="border-b border-bear/40 bg-bear/10 px-4 py-2 t-eyebrow text-bear">
               🛑 kill switch · all positions closed
             </div>
             <div className="p-6">
               <h3 className="font-display text-3xl tracking-tightest leading-tight">
-                We <span className="italic text-bear">stopped you out</span>.
+                We <span className="t-accent text-bear">stopped you out</span>.
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-fg-dim">
+              <p className="t-body-sm mt-3 text-fg-dim">
                 You hit your daily loss limit. All open paper positions have been closed. Take a walk, then come back
                 tomorrow with a fresh head.
               </p>
