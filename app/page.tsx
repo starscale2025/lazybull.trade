@@ -2,6 +2,7 @@ import { TickerBar } from "@/components/TickerBar";
 import { GetStarted } from "@/components/GetStarted";
 import { CinemaGate } from "@/components/scrollstory/CinemaGate";
 import { Footer } from "@/components/Footer";
+import { MarketingSections } from "@/components/marketing/MarketingSections";
 import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
 import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
@@ -34,6 +35,13 @@ export default function Home() {
             Never insert a section between them. The crystal-bull showcase renders
             INSIDE GetStarted, above the eye band. */}
         <GetStarted />
+
+        {/* The marketing recomposition (design system: ui_kits/site-redesign +
+            ui_kits/site-glass) — workflow, product, safety, pricing. It mounts
+            HERE, strictly after GetStarted, because the cinema→hero hand-off
+            above depends on those two being adjacent and pixel-matched. This
+            region is additive: nothing above it changed. */}
+        <MarketingSections />
 
         <ScrollReveal as="div" speed="slow">
           <Footer />

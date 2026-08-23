@@ -57,7 +57,7 @@ export function MobileMenu() {
         aria-expanded={open}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-controls="mobile-nav"
-        className="flex h-10 w-10 items-center justify-center border border-border font-mono text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--glass-border)] font-mono text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
           {open ? (
@@ -71,7 +71,7 @@ export function MobileMenu() {
       {open && (
         <div
           id="mobile-nav"
-          className="absolute inset-x-0 top-full z-50 border-b border-border bg-bg/95 backdrop-blur-md"
+          className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--r-panel)] border border-[var(--glass-border)] bg-bg shadow-2xl"
         >
           <div className="flex flex-col py-2">
             {LINKS.map((item) => (
@@ -89,14 +89,14 @@ export function MobileMenu() {
             {status === "authenticated" ? (
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex h-10 w-full items-center justify-center border border-border font-mono text-[11px] uppercase tracking-wider text-bear transition-colors hover:bg-bear/10"
+                className="flex h-10 w-full items-center justify-center rounded-[12px] border border-border font-mono text-[11px] uppercase tracking-wider text-bear transition-colors hover:bg-bear/10"
               >
                 Sign out
               </button>
             ) : (
               <button
                 onClick={() => signIn("google", { callbackUrl: "/quant" })}
-                className="flex h-10 w-full items-center justify-center border border-border font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+                className="flex h-10 w-full items-center justify-center rounded-[12px] border border-border font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
               >
                 Sign in
               </button>

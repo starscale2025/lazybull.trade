@@ -73,7 +73,7 @@ export function LearnConsensusPlayground() {
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
       {/* Scenario picker + bot toggles */}
       <div className="lg:col-span-7 flex flex-col gap-4">
-        <div className="border border-border bg-surface">
+        <div className="surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             scenario
           </div>
@@ -100,7 +100,7 @@ export function LearnConsensusPlayground() {
           </div>
         </div>
 
-        <div className="border border-border bg-surface">
+        <div className="surface-card border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <span>active bots</span>
             <span className="text-fg-faint">click to toggle · {active.length}/{ALL_BOTS.length} on</span>
@@ -134,7 +134,7 @@ export function LearnConsensusPlayground() {
 
       {/* Output */}
       <div className="lg:col-span-5">
-        <div className="border border-border bg-surface">
+        <div className="surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             consensus tally
           </div>

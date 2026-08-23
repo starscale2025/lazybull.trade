@@ -75,7 +75,7 @@ export function LearnRegimeVisualizer() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Chart */}
-        <div className="lg:col-span-8 border border-border bg-surface">
+        <div className="lg:col-span-8 surface-card border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <span>simulated · {BARS} bars</span>
             <span style={{ color: label.color }}>● {label.kind}</span>
@@ -120,7 +120,7 @@ export function LearnRegimeVisualizer() {
 
         {/* Slider + recommendation */}
         <div className="lg:col-span-4 flex flex-col gap-3">
-          <div className="border border-border bg-surface p-4">
+          <div className="surface-card border border-border bg-surface p-4">
             <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">drag the regime knob</div>
             <div className="mt-3 font-display text-3xl tracking-tightest tabular-nums" style={{ color: label.color }}>
               H = {h.toFixed(2)}

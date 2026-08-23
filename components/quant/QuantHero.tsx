@@ -49,7 +49,7 @@ function InfoTip({ text }: { text: string }) {
       </span>
       <span
         role="tooltip"
-        className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 w-60 -translate-x-1/2 border border-border bg-surface p-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100"
+        className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100"
       >
         {text}
       </span>
@@ -82,6 +82,7 @@ export function QuantHero({
   liveSource,
   updatedAt,
   syntheticKnobsActive,
+  runLocked = false,
 }: {
   symbol: string;
   setSymbol: (s: string) => void;
@@ -114,10 +115,18 @@ export function QuantHero({
   updatedAt?: number | null;
   /** seed/drift/vol shape the tape only in seed mode. */
   syntheticKnobsActive: boolean;
+  /** The run ritual holds a workspace lock while the machine runs. Every
+      control that would change the dataset mid-run is frozen for its
+      duration — a slider moved at bot 14 of 27 silently splits a run across
+      two different tapes and the verdict then describes neither. */
+  runLocked?: boolean;
 }) {
-  const knobTitle = syntheticKnobsActive
-    ? "Shapes the deterministic seed tape."
-    : "Seed-mode only — switch the dataset to SEED to shape the tape.";
+  const knobTitle = runLocked
+    ? "Frozen while the run holds the workspace lock."
+    : syntheticKnobsActive
+      ? "Shapes the deterministic seed tape."
+      : "Seed-mode only — switch the dataset to SEED to shape the tape.";
+  const knobsLive = syntheticKnobsActive && !runLocked;
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
@@ -171,10 +180,10 @@ export function QuantHero({
               <span className="inline-flex items-center gap-2 border border-cyan/40 bg-cyan/5 px-2 py-1 text-cyan">
                 <span className="size-1.5 rounded-full bg-cyan pulse-dot" /> quant · for everyone
               </span>
-              <span className="inline-flex items-center gap-2 border border-border bg-surface px-2 py-1 text-fg-dim">
+              <span className="inline-flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim">
                 stack bots · tune · run
               </span>
-              <span className="hidden sm:inline-flex items-center gap-2 border border-border bg-surface px-2 py-1 text-fg-dim">
+              <span className="hidden sm:inline-flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim">
                 bring your own bot
               </span>
             </div>
@@ -196,7 +205,7 @@ export function QuantHero({
 
           {/* Symbol & seed controls — first on mobile (the tool), right column on desktop */}
           <div className="order-1 col-span-12 lg:order-2 lg:col-span-5">
-            <div className="border border-border bg-surface">
+            <div className="surface-instrument border border-border bg-surface">
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
                 <span className="flex items-center gap-2">
                   dataset
@@ -205,6 +214,7 @@ export function QuantHero({
                     <button
                       onClick={() => setMode("live")}
                       aria-pressed={mode === "live"}
+                      disabled={runLocked}
                       title="Real market OHLCV, ticking every ~15s (delayed feed)"
                       className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
                         mode === "live" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
@@ -215,6 +225,7 @@ export function QuantHero({
                     <button
                       onClick={() => setMode("seed")}
                       aria-pressed={mode === "seed"}
+                      disabled={runLocked}
                       title="Deterministic synthetic tape — same seed, same bars, every time"
                       className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
                         mode === "seed" ? "bg-cyan text-bg" : "bg-bg text-fg-faint hover:text-fg"
@@ -288,7 +299,8 @@ export function QuantHero({
                     <select
                       value={symbol}
                       onChange={(e) => setSymbol(e.target.value)}
-                      className="flex-1 border border-border bg-bg px-2 py-1 font-display text-xl tracking-tightest text-fg focus:border-bull focus:outline-none"
+                      disabled={runLocked}
+                      className="flex-1 border border-border bg-bg px-2 py-1 font-display text-xl tracking-tightest text-fg focus:border-bull focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {SYMBOLS.map((s) => (
                         <option key={s} value={s}>{s}</option>
@@ -311,11 +323,12 @@ export function QuantHero({
                     max={500}
                     value={bars}
                     onChange={(e) => setBars(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull"
+                    disabled={runLocked}
+                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed disabled:opacity-40"
                   />
                 </div>
                 {/* seed — synthetic only */}
-                <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
+                <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       seed
@@ -328,13 +341,13 @@ export function QuantHero({
                     min={1}
                     max={500}
                     value={seed}
-                    disabled={!syntheticKnobsActive}
+                    disabled={!knobsLive}
                     onChange={(e) => setSeed(Number(e.target.value))}
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
                 {/* drift — synthetic only */}
-                <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
+                <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       drift μ
@@ -348,13 +361,13 @@ export function QuantHero({
                     max={0.5}
                     step={0.01}
                     value={drift}
-                    disabled={!syntheticKnobsActive}
+                    disabled={!knobsLive}
                     onChange={(e) => setDrift(Number(e.target.value))}
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
                 {/* vol — synthetic only */}
-                <div className={`bg-bg p-3 ${syntheticKnobsActive ? "" : "opacity-40"}`} title={knobTitle}>
+                <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       vol σ
@@ -368,7 +381,7 @@ export function QuantHero({
                     max={5}
                     step={0.05}
                     value={vol}
-                    disabled={!syntheticKnobsActive}
+                    disabled={!knobsLive}
                     onChange={(e) => setVol(Number(e.target.value))}
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
@@ -395,15 +408,15 @@ export function QuantHero({
               <div className="grid grid-cols-2 gap-px border-t border-border bg-border">
                 <button
                   onClick={onRunAll}
-                  disabled={activeCount === 0}
+                  disabled={activeCount === 0 || runLocked}
                   className="flex items-center justify-center gap-2 bg-bg px-3 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:text-fg-faint disabled:hover:bg-bg"
                 >
                   <span className="size-1.5 rounded-full bg-current" />
-                  ▶ run all ({activeCount})
+                  {runLocked ? "running…" : `▶ run all (${activeCount})`}
                 </button>
                 <button
                   onClick={onClearAll}
-                  disabled={activeCount === 0}
+                  disabled={activeCount === 0 || runLocked}
                   className="bg-bg px-3 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg disabled:cursor-not-allowed disabled:text-fg-faint"
                 >
                   clear workspace

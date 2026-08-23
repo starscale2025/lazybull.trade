@@ -41,7 +41,7 @@ export function BotLibrary({
   const categories: (BotCategory | "all")[] = ["all", "ai", "trend", "stats", "risk", "options", "custom"];
 
   return (
-    <aside className="flex h-full flex-col border border-border bg-surface">
+    <aside className="flex h-full flex-col surface-instrument border border-border bg-surface">
       {/* header */}
       <div className="border-b border-border bg-bg-soft px-3 py-2">
         <div className="flex items-baseline justify-between">

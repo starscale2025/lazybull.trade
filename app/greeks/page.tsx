@@ -356,7 +356,7 @@ function GreekStatCard({
     .join(" ");
 
   return (
-    <div className="border border-border bg-surface p-2 md:p-4">
+    <div className="surface-card border border-border bg-surface p-2 md:p-4">
       <div className="t-chrome text-fg-dim md:text-[10px]">
         {GREEK_COPY[greek].label}
       </div>
@@ -571,7 +571,7 @@ export default function GreeksLabPage() {
                   aria-label="Symbol"
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value as (typeof SYMBOLS)[number])}
-                  className="h-10 appearance-none border border-border bg-surface pl-3 pr-8 font-mono text-[11px] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none md:h-8"
+                  className="h-10 appearance-none surface-card border border-border bg-surface pl-3 pr-8 font-mono text-[11px] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none md:h-8"
                 >
                   {SYMBOLS.map((s) => (
                     <option key={s} value={s}>
@@ -606,7 +606,7 @@ export default function GreeksLabPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">Surface</span>
-              <div className="flex border border-border bg-surface">
+              <div className="flex surface-card border border-border bg-surface">
                 {SURFACE_ORDER.map((k, i) => (
                   <button
                     key={k}
@@ -660,7 +660,7 @@ export default function GreeksLabPage() {
             <br />
             Watch all five Greeks move.
           </h1>
-          <aside className="w-full max-w-sm shrink-0 border border-border bg-surface p-5 lg:w-[320px]">
+          <aside className="w-full max-w-sm shrink-0 surface-card border border-border bg-surface p-5 lg:w-[320px]">
             <div className="t-eyebrow text-bull">What am I seeing?</div>
             <p className="mt-3 text-[12px] leading-relaxed text-fg-dim">
               This is an option pricing surface. Drag the glowing handle to explore how the
@@ -732,7 +732,7 @@ export default function GreeksLabPage() {
         </div>
 
         {/* sliders — accessible fallback for the same state */}
-        <div className="mt-6 grid items-center gap-x-8 gap-y-5 border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto]">
+        <div className="mt-6 grid items-center gap-x-8 gap-y-5 surface-card border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto]">
           <div>
             <div className="flex items-center justify-between t-chrome text-fg-dim">
               <span>Strike</span>

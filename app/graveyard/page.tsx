@@ -50,7 +50,7 @@ export default function Graveyard() {
           {FALLEN.map((g) => (
             <div
               key={g.name}
-              className="group relative border border-border bg-surface/60 px-5 pb-6 pt-8 text-center transition-colors hover:border-fg-dim"
+              className="group relative surface-card border border-border bg-surface/60 px-5 pb-6 pt-8 text-center transition-colors hover:border-fg-dim"
               style={{ borderTopLeftRadius: "50% 22px", borderTopRightRadius: "50% 22px" }}
             >
               <div className="t-eyebrow text-fg-faint">R.I.P.</div>

@@ -60,7 +60,7 @@ export function LearnVolSmile() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Smile chart */}
-        <div className="lg:col-span-8 border border-border bg-surface">
+        <div className="lg:col-span-8 surface-card border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <span>implied vol surface · spot ${SPOT}</span>
             <span className="tabular-nums">
@@ -118,7 +118,7 @@ export function LearnVolSmile() {
 
         {/* Controls */}
         <div className="lg:col-span-4 flex flex-col gap-3">
-          <div className="border border-border bg-surface p-4">
+          <div className="surface-card border border-border bg-surface p-4">
             <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">skew (ρ)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{skew.toFixed(2)}</div>
             <input type="range" min={-1} max={1} step={0.05} value={skew} onChange={(e) => setSkew(parseFloat(e.target.value))} className="mt-3 h-1 w-full accent-bull" />
@@ -130,7 +130,7 @@ export function LearnVolSmile() {
             </p>
           </div>
 
-          <div className="border border-border bg-surface p-4">
+          <div className="surface-card border border-border bg-surface p-4">
             <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">smile depth (kurtosis)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{kurt.toFixed(2)}</div>
             <input type="range" min={0} max={1.5} step={0.05} value={kurt} onChange={(e) => setKurt(parseFloat(e.target.value))} className="mt-3 h-1 w-full accent-bull" />
@@ -145,7 +145,7 @@ export function LearnVolSmile() {
       </div>
 
       {/* Comparison panel */}
-      <div className="border border-border bg-surface">
+      <div className="surface-card border border-border bg-surface">
         <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           comparison · same distance from spot
         </div>

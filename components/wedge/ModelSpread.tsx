@@ -43,7 +43,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-3 py-2">
         <div className="flex items-center gap-3">
           <span className="t-chrome text-fg-dim">Model spread</span>
-          <span className="border border-border bg-surface px-2 py-0.5 t-chrome text-fg">consensus {(consensus * 100).toFixed(0)}%</span>
+          <span className="surface-instrument border border-border bg-surface px-2 py-0.5 t-chrome text-fg">consensus {(consensus * 100).toFixed(0)}%</span>
           <span
             className={`border px-2 py-0.5 t-chrome ${
               spread > 0.12 ? "border-amber/50 bg-amber/10 text-amber" : "border-bull/50 bg-bull/10 text-bull"

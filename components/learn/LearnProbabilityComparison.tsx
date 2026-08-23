@@ -90,7 +90,7 @@ export function LearnProbabilityComparison() {
 
   return (
     <div className="space-y-4">
-      <div className="border border-border bg-surface">
+      <div className="surface-card border border-border bg-surface">
         <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           <span>price distribution at expiry · spot ${SPOT}</span>
           <span>iv {(iv * 100).toFixed(0)}% · {days}d</span>
@@ -123,7 +123,7 @@ export function LearnProbabilityComparison() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Sliders */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="border border-border bg-surface p-4">
+          <div className="surface-card border border-border bg-surface p-4">
             <Slider label="Low strike" value={low} setValue={(v) => setLow(Math.min(v, high - 1))} min={70} max={130} step={0.5} suffix="" prefix="$" />
             <Slider label="High strike" value={high} setValue={(v) => setHigh(Math.max(v, low + 1))} min={70} max={140} step={0.5} suffix="" prefix="$" />
             <Slider label="Days to expiry" value={days} setValue={setDays} min={5} max={120} step={1} suffix="d" />
@@ -171,7 +171,7 @@ export function LearnProbabilityComparison() {
 function ProbCard({ label, value, tone, subtitle, note }: { label: string; value: number; tone: "bull" | "cyan" | "amber"; subtitle: string; note: string }) {
   const color = tone === "bull" ? "var(--bull)" : tone === "cyan" ? "var(--cyan)" : "var(--amber)";
   return (
-    <div className="border border-border bg-surface p-4 flex flex-col">
+    <div className="surface-card border border-border bg-surface p-4 flex flex-col">
       <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider" style={{ color }}>
         <span>{label}</span>
         <span className="text-fg-faint">{subtitle}</span>

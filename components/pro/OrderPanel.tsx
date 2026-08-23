@@ -373,7 +373,7 @@ function Field({
   onSwap?: () => void;
 }) {
   return (
-    <div className="flex items-center border border-border bg-surface focus-within:border-fg-dim">
+    <div className="flex items-center surface-instrument border border-border bg-surface focus-within:border-fg-dim">
       <input
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ""))}
@@ -473,7 +473,7 @@ function ExitRow({
           />
         </button>
       </div>
-      <div className={`flex items-center border border-border bg-surface ${on ? "" : "opacity-40"}`}>
+      <div className={`flex items-center surface-instrument border border-border bg-surface ${on ? "" : "opacity-40"}`}>
         <input
           value={value}
           onChange={(e) => setValue(e.target.value.replace(/[^\d.]/g, ""))}

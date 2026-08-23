@@ -83,7 +83,7 @@ export function PlainGreeks({
     : [];
 
   return (
-    <section className="border border-border bg-surface lg:shrink-0">
+    <section className="surface-instrument border border-border bg-surface lg:shrink-0">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
         <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />

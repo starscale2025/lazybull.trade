@@ -15,6 +15,7 @@ import { SetupsBar, type QuantSetupState } from "./SetupsBar";
 import { BotLibrary } from "./BotLibrary";
 import { Workspace } from "./Workspace";
 import { OutputPanel } from "./OutputPanel";
+import { RunRitual, useRunRitual } from "./RunRitual";
 import { ImportBotModal } from "./ImportBotModal";
 
 type ResultsMap = Record<string, BotResult>;
@@ -186,9 +187,26 @@ export function QuantPage() {
   // deliberately never re-run on their own.
   const [ranAt, setRanAt] = useState<number | null>(null);
 
+  // The four-act run ritual (components/quant/RunRitual). It is driven by real
+  // progress, not a timer: it reaches "verdict" only once every staged bot has
+  // actually landed.
+  const completedCount = active.filter((a) => results[a.uid]).length;
+  const {
+    phase: runPhase,
+    runMs,
+    begin: beginRitual,
+    reset: resetRitual,
+  } = useRunRitual(completedCount, active.length);
+  const runLocked =
+    runPhase === "lockdown" || runPhase === "streaming" || runPhase === "decimating";
+
   useEffect(() => {
     setResults({});
     setRanAt(null);
+    resetRitual();
+    // resetRitual is a stable closure over setState only; re-running this on
+    // its identity would wipe results on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetId]);
 
   /**
@@ -258,6 +276,7 @@ export function QuantPage() {
     if (active.length === 0) return;
     track("quant_run_all", { symbol, mode, bots: active.length });
     setRanAt(Date.now());
+    beginRitual();
     const next: ResultsMap = {};
     setResults({});
     let i = 0;
@@ -552,12 +571,26 @@ export function QuantPage() {
         liveSource={liveSource}
         updatedAt={updatedAt}
         syntheticKnobsActive={syntheticKnobsActive}
+        runLocked={runLocked}
+      />
+
+      {/* The run ritual — the workspace-level beat the per-cell decimation
+          never had. Sits directly under the hero so the lockdown strip is
+          visible from the control that triggers it. */}
+      <RunRitual
+        phase={runPhase}
+        rows={rows}
+        symbol={symbol}
+        bars={bars}
+        dataSource={dataSource}
+        runMs={runMs}
+        onRunAll={runAll}
       />
 
       {/* Recommended stack — which models suit THIS tape, and why. */}
       {symbolPreset && (
         <section className="mx-auto w-full max-w-[1500px] px-5 pt-4">
-          <div className="border border-border bg-surface">
+          <div className="surface-instrument border border-border bg-surface">
             <div className="flex flex-wrap items-center gap-2 border-b border-border-soft px-3 py-2">
               <span className="t-eyebrow text-bull">
                 ★ recommended for {symbol}

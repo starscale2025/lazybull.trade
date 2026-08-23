@@ -186,7 +186,7 @@ export function LeftToolbar({
         >
           <span className="size-4" style={{ background: color }} />
         </button>
-        <div className="absolute left-10 top-0 z-30 hidden flex-col gap-1 border border-border bg-surface p-1 shadow-2xl group-hover:flex">
+        <div className="absolute left-10 top-0 z-30 hidden flex-col gap-1 surface-instrument border border-border bg-surface p-1 shadow-2xl group-hover:flex">
           {COLORS.map((c) => (
             <button
               key={c}
@@ -234,7 +234,7 @@ function ToolBtn({ t, active, onClick }: { t: Tool; active: boolean; onClick: ()
       >
         {t.icon}
       </motion.button>
-      <div className="pointer-events-none absolute left-10 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap border border-border bg-surface px-2 py-1 t-chrome text-fg shadow-xl group-hover:block">
+      <div className="pointer-events-none absolute left-10 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 t-chrome text-fg shadow-xl group-hover:block">
         <div>{t.label}</div>
         {t.hint && <div className="text-fg-faint normal-case tracking-normal">{t.hint}</div>}
       </div>

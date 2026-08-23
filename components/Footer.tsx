@@ -55,7 +55,7 @@ const COLS: { title: string; links: FooterLink[] }[] = [
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-border bg-bg">
+    <footer className="relative overflow-hidden border-t border-border bg-[color-mix(in_srgb,var(--bg)_72%,transparent)] backdrop-blur-[26px]">
       <div className="pointer-events-none absolute -bottom-40 left-1/2 h-96 w-[120%] -translate-x-1/2 rounded-full bg-bull/8 blur-[160px]" />
 
       {/* Top callout */}
@@ -76,14 +76,14 @@ export function Footer() {
               <label className="t-chrome text-fg-faint">
                 One email a week · a single new strategy explained
               </label>
-              <div className="flex border border-border bg-surface focus-within:border-bull">
+              <div className="surface-card flex overflow-hidden border border-border bg-surface focus-within:border-bull">
                 <span className="flex items-center px-3 font-mono text-sm text-bull">$</span>
                 <input
                   type="email"
                   placeholder="learner@inbox.io"
                   className="flex-1 bg-transparent py-3.5 font-mono text-sm text-fg placeholder:text-fg-faint outline-none"
                 />
-                <button className="bg-fg px-5 font-mono text-xs font-semibold uppercase tracking-wider text-bg hover:bg-bull transition-colors">
+                <button className="btn-primary-glass rounded-none px-5 font-mono text-xs font-semibold uppercase tracking-wider">
                   Subscribe →
                 </button>
               </div>
@@ -155,7 +155,7 @@ export function Footer() {
               <span
                 key={s}
                 title="Coming soon"
-                className="flex size-8 cursor-default items-center justify-center border border-border bg-bg t-chrome font-semibold text-fg-faint"
+                className="flex size-8 cursor-default items-center justify-center rounded-[10px] border border-border bg-bg t-chrome font-semibold text-fg-faint"
               >
                 {s}
               </span>

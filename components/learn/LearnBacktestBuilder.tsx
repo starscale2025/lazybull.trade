@@ -145,14 +145,14 @@ export function LearnBacktestBuilder() {
   }, [visibleEquity, visibleSignals, candles]);
 
   if (!def) {
-    return <div className="grid h-32 place-items-center border border-border bg-surface text-fg-faint font-mono text-[11px]">bot not found</div>;
+    return <div className="grid h-32 place-items-center surface-card border border-border bg-surface text-fg-faint font-mono text-[11px]">bot not found</div>;
   }
 
   return (
     <div className="space-y-4">
       {/* Top: bot picker + scenario picker */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-        <div className="lg:col-span-7 border border-border bg-surface">
+        <div className="lg:col-span-7 surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             pick a bot
           </div>
@@ -172,7 +172,7 @@ export function LearnBacktestBuilder() {
           </div>
         </div>
 
-        <div className="lg:col-span-5 border border-border bg-surface">
+        <div className="lg:col-span-5 surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             market scenario
           </div>
@@ -213,7 +213,7 @@ export function LearnBacktestBuilder() {
       </div>
 
       {/* Chart with price + equity overlaid + signals */}
-      <div className="border border-border bg-surface">
+      <div className="surface-card border border-border bg-surface">
         <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           <span>{def.name} on {scenario.label}</span>
           <span>bar {cutoff} / {candles.length}</span>

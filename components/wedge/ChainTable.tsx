@@ -67,7 +67,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
 
   return (
     <section
-      className="border border-border bg-surface lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+      className="surface-instrument border border-border bg-surface lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
       aria-label={`${symbol} options chain`}
     >
       {/* header — CALLS | expiry stepper | PUTS */}

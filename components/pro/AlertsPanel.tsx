@@ -76,13 +76,13 @@ export function AlertsPanel({ open, onClose, symbol, spot, alerts, setAlerts }: 
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder={`price · e.g. ${fmt(spot, 2)}`}
-                className="w-full border border-border bg-surface px-2 py-1.5 font-mono text-sm text-fg outline-none focus:border-cyan"
+                className="w-full surface-instrument border border-border bg-surface px-2 py-1.5 font-mono text-sm text-fg outline-none focus:border-cyan"
               />
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="note (optional)"
-                className="w-full border border-border bg-surface px-2 py-1.5 font-mono text-[11px] text-fg outline-none focus:border-cyan"
+                className="w-full surface-instrument border border-border bg-surface px-2 py-1.5 font-mono text-[11px] text-fg outline-none focus:border-cyan"
               />
               <button onClick={add} className="w-full border border-cyan bg-cyan/10 py-1.5 font-mono text-[11px] uppercase tracking-wider text-cyan hover:bg-cyan/20">
                 + create alert

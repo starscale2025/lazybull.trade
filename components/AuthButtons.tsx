@@ -35,7 +35,7 @@ export function AuthButtons() {
     return (
       <button
         onClick={() => signIn("google", { callbackUrl: "/quant" })}
-        className="hidden h-9 items-center gap-2 px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:text-fg sm:inline-flex"
+        className="hidden h-9 items-center gap-2 rounded-full px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg sm:inline-flex"
       >
         Sign in
       </button>
@@ -55,7 +55,7 @@ export function AuthButtons() {
     <div ref={wrapRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 items-center gap-2 border border-border bg-surface px-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/60 hover:text-fg"
+        className="flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/60 hover:text-fg"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -63,7 +63,7 @@ export function AuthButtons() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={u.image} alt="" className="size-6 rounded-full" />
         ) : (
-          <span className="grid size-6 place-items-center border border-border bg-bg font-mono text-[10px] font-bold text-bull">
+          <span className="grid size-6 place-items-center rounded-full border border-border bg-bg font-mono text-[10px] font-bold text-bull">
             {initials || "··"}
           </span>
         )}
@@ -76,7 +76,7 @@ export function AuthButtons() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-11 z-40 w-64 border border-border bg-bg shadow-2xl"
+          className="absolute right-0 top-11 z-40 w-64 overflow-hidden rounded-[var(--r-cell)] border border-border bg-bg shadow-2xl"
         >
           <div className="border-b border-border px-3 py-3">
             <div className="t-chrome text-fg-faint">

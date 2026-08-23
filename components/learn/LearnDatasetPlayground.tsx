@@ -32,7 +32,7 @@ export function LearnDatasetPlayground() {
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
       {/* Knobs */}
       <div className="lg:col-span-5 flex flex-col gap-3">
-        <div className="border border-border bg-surface">
+        <div className="surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             dataset · synthetic mode
           </div>
@@ -77,7 +77,7 @@ export function LearnDatasetPlayground() {
 
       {/* Chart preview */}
       <div className="lg:col-span-7">
-        <div className="border border-border bg-surface">
+        <div className="surface-card border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <span>{symbol} · {bars} bars · seed {seed}</span>
             <span className={change >= 0 ? "text-bull" : "text-bear"}>

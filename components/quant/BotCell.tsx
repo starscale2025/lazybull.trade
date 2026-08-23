@@ -131,7 +131,7 @@ export function BotCell({
   const isRunning = phase === "streaming";
 
   return (
-    <div className="relative border border-border bg-surface text-fg">
+    <div className="relative surface-instrument border border-border bg-surface text-fg">
       {isRunning && <span className="cell-running-rail" aria-hidden />}
       {/* Cell header */}
       <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2">

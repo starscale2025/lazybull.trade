@@ -238,13 +238,13 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
             <button
               onClick={() => setResetOpen(true)}
-              className="h-8 border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
+              className="h-8 surface-instrument border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
             >
               ↺ reset funds
             </button>
             <Link
               href="/pro"
-              className="flex h-8 items-center border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+              className="flex h-8 items-center surface-instrument border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
             >
               open charts →
             </Link>
@@ -252,7 +252,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* ── hero: account value ── */}
-        <section className="mt-6 border border-border bg-surface p-5">
+        <section className="mt-6 surface-instrument border border-border bg-surface p-5">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <div className="t-eyebrow text-fg-faint">Account value</div>
@@ -655,7 +655,7 @@ export default function PortfolioPage() {
       </main>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-border bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 surface-instrument border border-border bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
           {toast}
         </div>
       )}
@@ -701,7 +701,7 @@ function Section({
   onExport?: () => void;
 }) {
   return (
-    <section className="mt-4 border border-border bg-surface">
+    <section className="mt-4 surface-instrument border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border-soft px-4 py-2.5">
         <h2 className="t-eyebrow text-fg-dim">{title}</h2>
         {onExport && (

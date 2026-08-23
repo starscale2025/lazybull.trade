@@ -67,7 +67,7 @@ export function CockpitTopBar({ admin }: { admin: string }) {
         <span className="text-fg-faint">UTC</span>
         <a
           href="/api/auth/signout"
-          className="ml-2 border border-border bg-surface px-2 py-1 text-fg-dim transition-colors hover:border-bear hover:text-bear"
+          className="ml-2 surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim transition-colors hover:border-bear hover:text-bear"
         >
           sign out
         </a>

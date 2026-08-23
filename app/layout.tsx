@@ -10,6 +10,8 @@ import { DockProvider } from "@/components/Dock";
 import { CommandDeck } from "@/components/CommandDeck";
 import { Narrator } from "@/components/Narrator";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
+import { GlassAtmosphere } from "@/components/atmosphere/GlassAtmosphere";
+import { RouteLoader } from "@/components/atmosphere/RouteLoader";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -55,6 +57,9 @@ export default function RootLayout({
       className={`${fraunces.variable} ${jetbrainsMono.variable} ${funnel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-fg selection:bg-bull selection:text-bg">
+        {/* The aurora every glass surface refracts. First child, fixed and
+            behind everything — pages with their own canvas paint over it. */}
+        <GlassAtmosphere />
         <a href="#main" className="skip-link">
           skip to content
         </a>
@@ -81,6 +86,10 @@ export default function RootLayout({
             and /quant too, and the limit has to be watched everywhere. */}
         <KillSwitchSentinel />
         <GsapScroller />
+        {/* Pending-navigation feedback. Pairs with the commit-side veil in
+            app/template.tsx: that one covers the new page's first paint, this
+            one covers the wait before it. Debounced, so fast hops draw nothing. */}
+        <RouteLoader />
       </body>
     </html>
   );

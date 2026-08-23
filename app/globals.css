@@ -2,9 +2,25 @@
 
 :root, [data-theme="dark"] {
   --bg: #050505;
-  --bg-soft: #0a0a0a;
-  --surface: #0e0e0e;
-  --surface-2: #131313;
+  /* ── The surfaces are translucent now (the glass cut, applied globally) ────
+     These were #0a0a0a / #0e0e0e / #131313 — flat greys 5, 9 and 14 points
+     above the #050505 canvas. They are now the SAME lift expressed as white
+     over whatever is behind, which buys the whole codebase glass for free:
+     every one of the ~190 `bg-surface` panels already written becomes a real
+     translucent layer without being touched.
+
+     Two properties make this safe as a global swap:
+       · Over the opaque page canvas the composite is unchanged — 0.035 white
+         over #050505 IS #0e0e0e, so nothing that sat on plain background
+         shifts by a pixel.
+       · Over the aurora (GlassAtmosphere, mounted in the root layout) the same
+         panel picks up the phosphor drift behind it and reads as glass.
+     Nested surfaces now stack their alpha, which is correct: a bg-soft header
+     strip inside a bg-surface card should read as one layer above it.
+     `--bg` deliberately stays OPAQUE — it is the canvas, not a layer. */
+  --bg-soft: rgba(255, 255, 255, 0.02);
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-2: rgba(255, 255, 255, 0.055);
   --border: #1f1f1f;
   --border-soft: #161616;
   --fg: #f5f5f0;
@@ -60,9 +76,12 @@
 
 [data-theme="light"] {
   --bg: #f7f6f0;
-  --bg-soft: #efeee6;
-  --surface: #ffffff;
-  --surface-2: #f0efe6;
+  /* Same inversion as the dark ramp: on warm paper the lift is white upward
+     for cards and a warm shade downward for the strips, so the composite over
+     #f7f6f0 still lands on the old #efeee6 / #ffffff / #f0efe6. */
+  --bg-soft: rgba(120, 112, 78, 0.07);
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-2: rgba(120, 112, 78, 0.05);
   --border: #d8d6c9;
   --border-soft: #e6e4d6;
   --fg: #0c0c0c;
@@ -171,6 +190,55 @@ html, body {
 }
 @media (prefers-reduced-motion: reduce) {
   .route-veil { display: none; }
+}
+
+/* ── Route loading: the PENDING half of a navigation (RouteLoader.tsx). ──
+   The veil above covers the new page's first paint. It cannot help with the
+   window before that, where the App Router keeps the OLD page on screen while
+   the next one resolves — measured here at 126ms on a warm hop and just over
+   a second into /pro. Nothing moved on screen for that whole time, so a click
+   read as a dead click.
+
+   RouteLoader only mounts this after a debounce (see the component), so a fast
+   navigation finishes before anything is drawn and never flashes. That is why
+   the element itself is visible immediately rather than fading in on a CSS
+   delay: the delay lives in JS, so reduced-motion users get the same debounce
+   instead of an overlay that appears on every single click. */
+.route-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 160; /* over the veil (150), under the skip-link (200) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+.route-loading-rail {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bull) 12%, transparent);
+}
+.route-loading-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--bull), transparent);
+  box-shadow: var(--glow-rail);
+  animation: route-loading-sweep 1.05s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes route-loading-sweep {
+  0% { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(100%, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-loading-rail::after {
+    animation: none;
+    background: var(--bull);
+    opacity: 0.7;
+  }
 }
 
 /* ── The fill ritual: money moments get a heartbeat (Chart.tsx). ──
@@ -1395,4 +1463,377 @@ html, body {
    of the lift declared above — a regression invisible on every desktop. */
 @media (pointer: coarse) {
   .t-chrome { font-size: 11px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOTION TOKENS — the brand's one curve, finally named.
+   `cubic-bezier(0.22, 1, 0.36, 1)` (fast out, long settle — the "phosphor
+   settle") was inlined at 20+ call sites. Naming it does not change a single
+   rendered frame; it just stops the 21st site from inventing its own curve.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-boot: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Elevation is never a neutral drop shadow in this brand — it is a coloured
+     glow. These are the two that were already being hand-written. */
+  --glow-bull: 0 0 0 1px rgba(0, 255, 135, 0.3), 0 0 40px -10px rgba(0, 255, 135, 0.4);
+  --glow-rail: 0 0 12px rgba(0, 255, 135, 0.55);
+  --phosphor-bull: 0 0 30px rgba(0, 255, 135, 0.45), 0 0 80px rgba(0, 255, 135, 0.2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE GLASS CUT — frosted marketing surfaces (ui_kits/site-glass).
+   
+   SCOPE, AND WHY IT MATTERS: this is an OPT-IN class set, never a theme. The
+   shipped brand is square and opaque, and /pro, /trade and /quant depend on
+   that — a translucent panel over a candle chart is unreadable, and a 22px
+   radius on a table cell breaks the hairline grid. So glass lives only where
+   a `.glass*` class is written by hand, which today is the marketing region
+   of the landing page. Nothing here leaks into a terminal surface.
+
+   ONE RECIPE: every glass surface is the same four ingredients — frosted
+   fill, hairline light border, top specular highlight, and (for hero panels)
+   a phosphor depth glow. Radii are role-fixed. That single recipe is what
+   keeps a translucent design from turning into mush.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root, [data-theme="dark"] {
+  --glass-bg: rgba(16, 20, 18, 0.48);
+  --glass-bg-strong: rgba(14, 17, 15, 0.66);
+  --glass-border: rgba(245, 245, 240, 0.1);
+  --glass-border-hot: rgba(0, 255, 135, 0.32);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(26px) saturate(150%);
+  --glass-glow: 0 24px 80px -32px rgba(0, 255, 135, 0.28);
+  /* Role-fixed radii. The kit's rule is that nothing else rounds — a value
+     picked per-component is how a glass system stops looking machined. */
+  --r-panel: 22px;
+  --r-cell: 16px;
+  --r-btn: 13px;
+  --r-pill: 999px;
+}
+
+/* Warm-paper light theme: the same recipe inverted. A dark translucent fill
+   on #f7f6f0 reads as a smudge, so the glass goes white and the hairline
+   goes dark. Blur and radii are unchanged — the recipe survives the theme. */
+[data-theme="light"] {
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(12, 12, 12, 0.1);
+  --glass-border-hot: rgba(0, 168, 90, 0.35);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --glass-glow: 0 24px 80px -32px rgba(0, 168, 90, 0.22);
+}
+
+@layer components {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-hi);
+  }
+
+  /* Hero-weight glass: heavier fill so display type stays legible over the
+     aurora, plus the green depth glow that lifts it off the canvas. */
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-hi), var(--glass-glow);
+  }
+
+  /* The specular sheen that sells the material: a fixed diagonal highlight,
+     white at the top-left corner and phosphor at the bottom-right. Not an
+     animation — real glass does not shimmer on its own.
+
+     NO overflow:hidden here — the sheen is clipped to the corners by giving
+     the pseudo the element's own radius instead. The original overflow:hidden
+     silently clipped every absolutely-positioned descendant of a specular
+     surface, which broke both nav dropdowns (the account menu and the mobile
+     sheet render inside the specular nav pill and simply vanished). A surface
+     that needs to clip its CONTENT declares overflow-hidden itself. */
+  .specular { position: relative; }
+  .specular::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.09) 0%,
+      transparent 24%,
+      transparent 76%,
+      rgba(0, 255, 135, 0.05) 100%
+    );
+  }
+
+  .glass-hover {
+    transition:
+      transform 0.4s var(--ease-settle),
+      box-shadow 0.4s var(--ease-settle),
+      border-color 0.3s ease;
+  }
+  .glass-hover:hover {
+    transform: translateY(-3px);
+    border-color: var(--glass-border-hot);
+    box-shadow: var(--glass-hi), 0 30px 90px -30px rgba(0, 255, 135, 0.4);
+  }
+}
+
+/* The aurora the glass refracts. Deliberately ABSOLUTE, not the kit's fixed:
+   the landing already runs a fixed AmbientOrbs layer, and a second fixed
+   full-viewport background would double the orb count on every scroll frame.
+   Scoped inside the marketing region instead, it stays one texture. */
+.glass-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The site-wide instance (components/atmosphere/GlassAtmosphere), mounted once
+   in the root layout. z-index -1 puts it above <body>'s own background box but
+   below every in-flow child, so it lights the translucent surfaces without
+   ever sitting on top of content. Pages that paint an opaque canvas of their
+   own — the cinema, the /pro terminal — simply cover it. */
+.glass-aurora--fixed {
+  position: fixed;
+  z-index: -1;
+}
+.glass-aurora i {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(130px);
+  opacity: 0.5;
+}
+.glass-aurora .a1 {
+  width: 56vw; height: 56vw; left: -14vw; top: -8vw;
+  background: radial-gradient(circle, rgba(0, 255, 135, 0.2), transparent 65%);
+  animation: drift 22s ease-in-out infinite;
+}
+.glass-aurora .a2 {
+  width: 44vw; height: 44vw; right: -12vw; top: 28%;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.13), transparent 65%);
+  animation: drift 26s ease-in-out infinite reverse;
+}
+.glass-aurora .a3 {
+  width: 50vw; height: 50vw; left: 24vw; bottom: -24vw;
+  background: radial-gradient(circle, rgba(201, 255, 0, 0.07), transparent 65%);
+  animation: drift 30s ease-in-out infinite;
+}
+/* The masked 72px grid the orbs sit behind — content never sits on bare black. */
+.glass-aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(80% 60% at 50% 30%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(80% 60% at 50% 30%, #000 30%, transparent 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-aurora i { animation: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE DECIMATION — the run ritual (ui_kits/decimation).
+
+   The workspace-level counterpart to the per-cell scramble that
+   DecimatedNumber already ships. When all bots run, the whole desk performs
+   four acts: idle → lockdown → streaming → decimating → verdict. These are
+   the four textures that carry it. Restraint is the rule the kit states
+   outright: ONE background texture, no orbs, no hover theatre on an
+   instrument, and the provenance line on screen the entire time.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The phosphor rail — the machine's pulse while it holds the workspace lock.
+   It exists so "locked" is legible without reading a word. */
+@keyframes rail-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.dc-rail {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--bull) 50%, transparent);
+  background-size: 200% 100%;
+  animation: rail-shimmer 1.4s linear infinite;
+  box-shadow: var(--glow-rail);
+}
+
+/* Amber barber-pole: the brand's hazard texture, reused rather than redrawn. */
+.dc-hazard {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--amber),
+    var(--amber) 8px,
+    var(--bg) 8px,
+    var(--bg) 16px
+  );
+}
+
+/* Run-stream lines type in from the left. 18px is the brand's reveal travel;
+   a log line is small chrome, so it gets the 8px cut. */
+@keyframes dc-line-in {
+  from { opacity: 0; transform: translate3d(-8px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+.dc-line {
+  opacity: 0;
+  animation: dc-line-in 0.22s var(--ease-settle) forwards;
+}
+
+/* The one sanctioned overshoot in the whole brand: a 4px settle as a tally
+   cell drops onto the stack. Everything else in the system is bounce-free. */
+@keyframes dc-cell-arm {
+  0% { opacity: 0; transform: translate3d(0, -10px, 0); }
+  60% { opacity: 1; transform: translate3d(0, 4px, 0); }
+  100% { opacity: 1; transform: none; }
+}
+.dc-cell {
+  opacity: 0;
+  animation: dc-cell-arm 0.5s var(--ease-settle) forwards;
+}
+
+/* The verdict rises 18px and never fades from 0 — an unobserved element must
+   still be visible, so the reveal starts at 0.2, not transparent. */
+@keyframes dc-verdict-in {
+  0% { opacity: 0.2; transform: translate3d(0, 18px, 0); }
+  100% { opacity: 1; transform: none; }
+}
+.dc-verdict {
+  animation: dc-verdict-in 0.9s var(--ease-settle) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-rail, .dc-line, .dc-cell, .dc-verdict {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FROST — the blur half of the recipe, applied deliberately.
+
+   The surface TOKENS carry translucency everywhere (see the ramp at the top
+   of this file), but `backdrop-filter` is not free: it forces a new stacking
+   context and a GPU readback per element. Putting it on all ~190 surfaces
+   would cost most on exactly the screen that can least afford it — /pro,
+   compositing a live chart. So frost is opt-in, and it goes on the few big
+   structural panels a reader actually perceives as glass: the nav, the
+   footer, page-level cards. Everything else stays translucent-only, which
+   over the aurora already reads as the same material.
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* A page-level card: translucent surface + frost + the role radius. This is
+     the class to reach for when converting an existing
+     `border border-border bg-surface` panel to the glass cut. */
+  .surface-card {
+    border-radius: var(--r-cell);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-hi);
+  }
+
+  /* Instrument density. The same material read at working distance: the top
+     specular highlight and a small radius, and NOTHING else.
+
+     Deliberately no backdrop-filter and no fill override. The terminal themes
+     keep opaque surface ramps (.pro-theme below), so a blur there would cost
+     a GPU readback per panel — on the one screen compositing a live chart —
+     to filter a backdrop nothing can see through. The radius and the highlight
+     are what carry the family resemblance; the frost was never the part doing
+     that work. */
+  .surface-instrument {
+    border-radius: 8px;
+    box-shadow: var(--glass-hi);
+  }
+}
+
+/* The gradient primary, promoted out of the marketing kit so one button reads
+   the same on every page. Opt-in by class — a destructive or secondary action
+   must never pick this up by accident.
+
+   In @layer components ON PURPOSE: unlayered, this rule beat every Tailwind
+   utility (utilities live in a layer, and unlayered author CSS outranks all
+   layers), so a caller writing `btn-primary-glass rounded-none` silently kept
+   the 13px radius. Layered, the utilities win again and callers can reshape
+   the button — which the pill nav needs (`rounded-full`) and the footer's
+   flush field needs (`rounded-none`).
+
+   The specular inset sits at 0.25, not the kit's 0.4 — at 0.4 the top edge of
+   the gradient blows out to mint-white and the control reads as 2010s gloss
+   the moment it renders large (retina, zoom, the h-14 marketing size). */
+@layer components {
+  .btn-primary-glass {
+    border: 1px solid color-mix(in srgb, var(--bull) 50%, transparent);
+    background: linear-gradient(180deg, #24f596, #00d96f);
+    color: #04140b;
+    border-radius: var(--r-btn);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 8px 26px -12px rgba(0, 255, 135, 0.55);
+    transition:
+      box-shadow 0.3s var(--ease-settle),
+      transform 0.3s var(--ease-settle),
+      filter 0.3s var(--ease-settle);
+  }
+  .btn-primary-glass:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      0 12px 34px -10px rgba(0, 255, 135, 0.65);
+  }
+  .btn-primary-glass:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
+  }
+}
+
+/* ── Fluid by default ────────────────────────────────────────────────────────
+   Every interactive element eases its colour, border, background and glow
+   through the brand curve, so no hover anywhere snaps. In @layer base so any
+   explicit transition utility still wins.
+
+   `transform` and `opacity` are deliberately NOT on this list: GSAP and the
+   magnetic CTA drive those per-frame with inline styles, and a CSS transition
+   on the same properties fights the tween — every JS write would smear over
+   300ms and the cinema's chrome would feel like it lags the scroll. */
+@layer base {
+  a,
+  button,
+  [role="menuitem"],
+  input,
+  select,
+  summary {
+    transition-property: color, background-color, border-color, box-shadow;
+    transition-duration: 0.3s;
+    transition-timing-function: var(--ease-settle);
+  }
+}
+
+/* ── The role radius, applied through the surface utilities ──────────────────
+   The glass cut is square-cornered nowhere; the shipped brand was square
+   everywhere. Rather than hunt ~190 hand-written panel class strings (they
+   come in a dozen spellings — `border border-border bg-surface`,
+   `border bg-surface p-6`, conditional border colours), the radius rides the
+   one thing every panel genuinely shares: the surface utility itself.
+
+   In @layer components on purpose, so ANY Tailwind radius utility still wins.
+   A surface that must stay square says `rounded-none` and means it.
+
+   bg-bg-soft is deliberately NOT included: it is the chrome header strip
+   inside a panel, and a rounded strip nested in a rounded card reads as a
+   mistake in both directions. */
+@layer components {
+  .bg-surface,
+  .bg-surface-2 {
+    border-radius: var(--r-cell);
+  }
 }

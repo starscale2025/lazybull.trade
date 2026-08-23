@@ -110,7 +110,7 @@ export default function PricingPage() {
           </p>
 
           {/* billing toggle */}
-          <div className="mt-8 inline-flex items-center gap-3 border border-border bg-surface px-4 py-2.5">
+          <div className="mt-8 inline-flex items-center gap-3 surface-card border border-border bg-surface px-4 py-2.5">
             <button
               onClick={() => setAnnual(false)}
               aria-pressed={!annual}
@@ -230,7 +230,7 @@ export default function PricingPage() {
           <div className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
             Billing launches soon — early users lock founding pricing.
           </div>
-          <div className="inline-flex items-center gap-3 border border-border bg-surface px-5 py-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
+          <div className="inline-flex items-center gap-3 surface-card border border-border bg-surface px-5 py-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
             <span className="size-1.5 rounded-full bg-bull" />
             Paper only · Educational · Not advice
           </div>

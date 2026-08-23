@@ -75,7 +75,7 @@ export default function BotsIndex() {
                 <Link
                   key={b.id}
                   href={`/learn/bots/${b.id}`}
-                  className="group flex flex-col gap-3 border border-border bg-surface p-4 transition-colors hover:border-bull/60 hover:bg-bull/[0.03]"
+                  className="group flex flex-col gap-3 surface-card border border-border bg-surface p-4 transition-colors hover:border-bull/60 hover:bg-bull/[0.03]"
                 >
                   <div className="flex items-center justify-between">
                     <span

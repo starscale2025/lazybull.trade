@@ -49,7 +49,7 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
               style={{ left: `${pct}%` }}
             >
               <div className="flex h-8 w-2 items-center justify-center" style={{ background: eventTone(e.kind) }} title={`${e.title} · ${e.date}`} />
-              <div className="absolute left-1/2 top-9 hidden -translate-x-1/2 whitespace-nowrap border border-border bg-surface px-2 py-1 font-mono text-[10px] text-fg shadow-xl group-hover:block z-10">
+              <div className="absolute left-1/2 top-9 hidden -translate-x-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[10px] text-fg shadow-xl group-hover:block z-10">
                 <div className="text-fg">{e.title}</div>
                 <div className="text-fg-faint normal-case">{e.date} · {e.vol} vol expected</div>
                 <div className="mt-1 max-w-[220px] whitespace-normal text-[10px] text-fg-dim normal-case tracking-normal">{e.blurb}</div>

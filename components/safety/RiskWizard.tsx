@@ -63,7 +63,7 @@ export function RiskWizard() {
               </p>
 
               {/* Live demo */}
-              <div className="mt-5 border border-border bg-surface p-4">
+              <div className="mt-5 surface-card border border-border bg-surface p-4">
                 <div className="flex items-end justify-between">
                   <div>
                     <div className="t-chrome text-fg-faint">

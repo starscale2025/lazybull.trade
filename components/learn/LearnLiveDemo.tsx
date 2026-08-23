@@ -67,7 +67,7 @@ export function LearnLiveDemo() {
 
   if (loading || !candles) {
     return (
-      <div className="grid h-64 place-items-center border border-border bg-surface font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+      <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[11px] uppercase tracking-wider text-fg-faint">
         loading {SYMBOL} bars from Yahoo Finance…
       </div>
     );
@@ -76,7 +76,7 @@ export function LearnLiveDemo() {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
-        <span className="border border-border bg-surface px-2 py-1 text-fg-dim">
+        <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
           dataset · {SYMBOL}
         </span>
         <span
@@ -89,7 +89,7 @@ export function LearnLiveDemo() {
           <span className={`size-1 rounded-full ${source === "live" ? "bg-bull pulse-dot" : "bg-amber"}`} />
           {source === "live" ? "LIVE Yahoo OHLCV" : "SYNTHETIC fallback"}
         </span>
-        <span className="border border-border bg-surface px-2 py-1 text-fg-dim">
+        <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
           bot · SMA Crossover
         </span>
       </div>

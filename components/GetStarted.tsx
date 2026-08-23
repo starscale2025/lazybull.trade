@@ -273,7 +273,7 @@ export function GetStarted() {
         <div className="mt-2 flex flex-wrap items-start justify-center gap-6">
           {FEATURES.map((f, i) => (
             <HungCard key={f} wire={34 + (i % 3) * 14} phase={i * 1.7}>
-              <span className="flex items-center gap-2 rounded-full border border-border bg-surface/80 px-4 py-2 t-chrome text-fg-dim backdrop-blur-sm">
+              <span className="flex items-center gap-2 rounded-full surface-card border border-border bg-surface/80 px-4 py-2 t-chrome text-fg-dim backdrop-blur-sm">
                 <span className="size-1 rounded-full bg-bull/70 pulse-dot" /> {f}
               </span>
             </HungCard>

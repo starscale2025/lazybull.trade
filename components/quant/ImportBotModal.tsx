@@ -78,7 +78,7 @@ export function ImportBotModal({
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-bg/80 p-4 backdrop-blur-sm">
-      <div className="relative flex h-[88vh] w-[min(1100px,96vw)] flex-col border border-border bg-surface">
+      <div className="relative flex h-[88vh] w-[min(1100px,96vw)] flex-col surface-instrument border border-border bg-surface">
         {/* header */}
         <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-3">
           <div>

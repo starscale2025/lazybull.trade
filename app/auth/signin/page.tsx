@@ -32,7 +32,7 @@ function SignInPanel() {
           lazybull<span className="text-bull">.</span>
         </Link>
 
-        <div className="w-full border border-border bg-surface">
+        <div className="w-full surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">
             ⟢ sign in
           </div>

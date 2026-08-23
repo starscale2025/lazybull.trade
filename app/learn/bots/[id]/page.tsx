@@ -107,7 +107,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               </Link>
               <Link
                 href="/learn/bots"
-                className="inline-flex items-center gap-2 border border-border bg-surface px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
+                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
               >
                 ↗ Browse all 27
               </Link>
@@ -167,7 +167,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-base leading-relaxed text-fg">{bot.formula}</pre>
             </div>
             {bot.params.length > 0 && (
-              <div className="mt-6 border border-border bg-surface">
+              <div className="mt-6 surface-card border border-border bg-surface">
                 <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
                   parameters
                 </div>
@@ -238,7 +238,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-3 text-[12px] text-fg-dim md:grid-cols-2">
-              <div className="border border-border bg-surface p-3">
+              <div className="surface-card border border-border bg-surface p-3">
                 <div className="t-chrome text-fg-faint mb-1">
                   what each piece means
                 </div>
@@ -250,7 +250,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                   <li><code className="text-cyan">metrics</code> — the small stat boxes shown in the cell body.</li>
                 </ul>
               </div>
-              <div className="border border-border bg-surface p-3">
+              <div className="surface-card border border-border bg-surface p-3">
                 <div className="t-chrome text-fg-faint mb-1">
                   use this code yourself
                 </div>
@@ -326,7 +326,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               <LearnApiStatus endpoint={bot.endpoint ?? "/health"} />
             </div>
 
-            <div className="mt-6 border border-border bg-surface">
+            <div className="mt-6 surface-card border border-border bg-surface">
               <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
                 data flow
               </div>
@@ -360,7 +360,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
         <section className="border-b border-border bg-bg-soft">
           <div className="shell py-14">
             <SectionLabel>FAQ</SectionLabel>
-            <div className="mt-6 divide-y divide-border-soft border border-border bg-surface">
+            <div className="mt-6 divide-y divide-border-soft surface-card border border-border bg-surface">
               {content.faq.map((q, i) => (
                 <details key={i} className="group">
                   <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 hover:bg-bg-soft">
@@ -389,7 +389,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 <Link
                   key={r.id}
                   href={`/learn/bots/${r.id}`}
-                  className="group flex items-start gap-3 border border-border bg-surface p-4 hover:border-bull/50 hover:bg-bull/[0.03]"
+                  className="group flex items-start gap-3 surface-card border border-border bg-surface p-4 hover:border-bull/50 hover:bg-bull/[0.03]"
                 >
                   <span
                     className="grid size-8 shrink-0 place-items-center border border-border bg-bg font-mono text-[12px]"

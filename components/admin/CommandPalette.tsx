@@ -74,7 +74,7 @@ export function CommandPalette() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center bg-bg/80 px-4 pt-24 backdrop-blur">
-      <div className="w-full max-w-2xl border border-border bg-surface shadow-[0_24px_120px_-24px_rgba(0,0,0,0.8)]">
+      <div className="w-full max-w-2xl surface-instrument border border-border bg-surface shadow-[0_24px_120px_-24px_rgba(0,0,0,0.8)]">
         <div className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
           <span className="t-chrome text-bull">⌘K</span>
           <input

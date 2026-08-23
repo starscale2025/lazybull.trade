@@ -166,7 +166,7 @@ export default function BrokenVwapLesson() {
         </section>
 
         {/* ── the receipt ────────────────────────────────────────────── */}
-        <section className="mt-14 border border-border bg-surface/60 p-5" data-gsap="fade-up">
+        <section className="mt-14 surface-card border border-border bg-surface/60 p-5" data-gsap="fade-up">
           <div className="t-eyebrow text-fg-faint">the receipt</div>
           <p className="mt-3 max-w-[60ch] font-mono text-[12px] leading-relaxed text-fg-dim">
             Every indicator on the live chart now carries a{" "}

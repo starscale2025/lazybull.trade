@@ -859,11 +859,17 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   }
 
   // ---- bull (particle logo) ----------------------------------------------
-  // The real-3D bull (R3F, parent doc) owns ~0.71–0.80. Once it clears, the
-  // classic particle-bull LOGO plays IN FULL: particles assemble (converge) →
-  // hold → scatter into the Matrix rain. Absolute "logo phase" timings (not
-  // derived from the bull act) so the 3D bull and the particle logo never overlap.
-  const LOGO0 = 0.8, CONV_END = 0.855, DIS0 = 0.87, DIS1 = 0.925;
+  // The real-3D bull (R3F, parent doc) owns ~0.71–0.80. The classic particle-bull
+  // LOGO takes over as that bull STARTS clearing: particles assemble (converge) →
+  // hold → scatter into the Matrix rain. Absolute "logo phase" timings, not
+  // derived from the bull act.
+  // LOGO0 starts at the bull's out0, not its out1. Starting at 0.8 meant the
+  // converge ramp began from zero at the exact progress the 3D bull, the grid
+  // and the consensus ring had all already reached zero — a black frame at the
+  // charge. Beginning at 0.775 puts real particles on screen through the
+  // handoff, under the charge's impact flash. Keep in step with BULL3D.out0 in
+  // lib/cinema.ts and with `hideBull` in ScrollCinema.tsx.
+  const LOGO0 = 0.775, CONV_END = 0.855, DIS0 = 0.87, DIS1 = 0.925;
   const dissolve = 1 - seg(t, DIS0, DIS1);
   const bullOn = t >= LOGO0 - 0.01 && t < DIS1 + 0.02;
   // `hideBull` (per frame) keeps the particle logo hidden while the 3D bull is up.

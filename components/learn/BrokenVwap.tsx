@@ -82,7 +82,7 @@ export function BrokenVwap() {
   const sessionX = geom.x(78) - (geom.x(78) - geom.x(77)) / 2;
 
   return (
-    <figure className="border border-border bg-surface/60">
+    <figure className="surface-card border border-border bg-surface/60">
       <figcaption className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
         <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
           exhibit a · two sessions · 5-min bars · same tape

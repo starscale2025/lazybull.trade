@@ -64,7 +64,7 @@ export function SafetySettingsButton() {
                       min={0}
                       step={50}
                       onChange={(e) => safety.setDailyLossLimit(parseInt(e.target.value) || 0)}
-                      className="flex-1 border border-border bg-surface px-2 py-1.5 font-mono text-sm text-fg outline-none focus:border-bull"
+                      className="flex-1 surface-card border border-border bg-surface px-2 py-1.5 font-mono text-sm text-fg outline-none focus:border-bull"
                     />
                   </div>
                   <div className="mt-1 font-mono text-[10px] text-fg-faint">
@@ -174,7 +174,7 @@ function KillSwitchOverlay() {
                 You hit your daily loss limit. All open paper positions have been closed. Take a walk, then come back
                 tomorrow with a fresh head.
               </p>
-              <div className="mt-3 border border-border bg-surface p-3 font-mono text-[11px] text-fg-dim">
+              <div className="mt-3 surface-card border border-border bg-surface p-3 font-mono text-[11px] text-fg-dim">
                 {safety.killReason}
               </div>
               <button

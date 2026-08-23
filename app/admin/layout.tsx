@@ -40,7 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!granted) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-bg p-8 text-fg">
-        <div className="max-w-md border border-border bg-surface p-8 text-center">
+        <div className="max-w-md surface-instrument border border-border bg-surface p-8 text-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-bear">⊘ unauthorized</div>
           <h1 className="mt-3 font-display text-3xl tracking-tightest">Cockpit is admin-only.</h1>
           <p className="mt-3 text-sm text-fg-dim">

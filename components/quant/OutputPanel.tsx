@@ -45,7 +45,7 @@ export function OutputPanel({
   const equityRuns = completed.filter((r) => r.result!.equity && r.result!.equity!.length > 5);
 
   return (
-    <aside className="flex h-full flex-col border border-border bg-surface">
+    <aside className="flex h-full flex-col surface-instrument border border-border bg-surface">
       <div className="border-b border-border bg-bg-soft px-3 py-2">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-base tracking-tightest text-fg">Output</span>

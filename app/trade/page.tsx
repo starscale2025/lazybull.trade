@@ -387,7 +387,7 @@ export default function TradePage() {
         {/* ---- left column: toolbar → cone chart → chain (internal scroll) ---- */}
         <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-hidden">
           {/* toolbar strip — live controls only */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-border bg-surface px-3 py-2 t-chrome lg:shrink-0 lg:flex-nowrap lg:gap-x-3 lg:overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-chrome lg:shrink-0 lg:flex-nowrap lg:gap-x-3 lg:overflow-x-auto">
             <span className="text-fg-faint">underlying</span>
             <div className="flex items-center gap-1">
               {SYMBOLS.map((s, i) => (
@@ -442,7 +442,7 @@ export default function TradePage() {
           </div>
 
           {/* chart + draggable probability cone — ≈55% of the column on lg */}
-          <section id="thesis" className="scroll-mt-16 border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
+          <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
               <span className="t-eyebrow text-bull">⟢ forecast cone · {sym.sym}</span>
               <span className="hidden max-w-[62%] truncate font-mono text-[10px] text-fg-dim md:block">
@@ -489,7 +489,7 @@ export default function TradePage() {
         {/* ---- right rail: strategy · greeks · teacher · analytics — its own scroll ---- */}
         <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-y-auto">
           {/* strategy panel — picker + legs + payoff/stat rail + place CTA, all inside */}
-          <section id="pick" className="scroll-mt-16 border border-border bg-surface lg:shrink-0">
+          <section id="pick" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
             <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
               <span className="t-eyebrow text-fg-dim">strategy · pick one of three</span>
               <Link
@@ -534,7 +534,7 @@ export default function TradePage() {
           />
 
           {/* under the hood — one analytics panel at a time, compact rail edition */}
-          <section id="detail" className="scroll-mt-16 border border-border bg-surface lg:shrink-0">
+          <section id="detail" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
             <div className="flex items-center gap-1 overflow-x-auto border-b border-border bg-bg-soft px-2 py-1.5">
               {TABS.map((t) => (
                 <button
@@ -858,7 +858,7 @@ function TeacherPanel({
   };
 
   return (
-    <section className="flex flex-col border border-border bg-surface lg:shrink-0">
+    <section className="flex flex-col surface-instrument border border-border bg-surface lg:shrink-0">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
         <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
           ai teacher

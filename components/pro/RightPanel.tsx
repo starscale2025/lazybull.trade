@@ -239,7 +239,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           />
         </div>
         {results.length > 0 && (
-          <div className="absolute left-2 right-2 top-11 z-30 max-h-72 overflow-y-auto border border-border bg-surface shadow-2xl">
+          <div className="absolute left-2 right-2 top-11 z-30 max-h-72 overflow-y-auto surface-instrument border border-border bg-surface shadow-2xl">
             {results.map((r) => (
               <button
                 key={r.sym}

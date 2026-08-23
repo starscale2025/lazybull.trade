@@ -259,7 +259,7 @@ export default function LearnPage() {
       ),
       aside: (
         <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-5 gap-2 border border-border bg-surface p-4">
+          <div className="grid grid-cols-5 gap-2 surface-card border border-border bg-surface p-4">
             {[
               { sym: "Δ", label: "Delta", tone: "var(--bull)" },
               { sym: "Γ", label: "Gamma", tone: "var(--cyan)" },
@@ -422,7 +422,7 @@ export default function LearnPage() {
               <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" /> LEARN · 8 MIN · ALL LIVE
               </span>
-              <span className="inline-flex items-center gap-2 border border-border bg-surface px-2 py-1 text-fg-dim">
+              <span className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
                 EVERY CHART RESPONDS TO YOU
               </span>
               <span className="hidden md:inline-flex items-center gap-2 border border-cyan/30 bg-cyan/5 px-2 py-1 text-cyan">
@@ -485,7 +485,7 @@ export default function LearnPage() {
               </a>
               <Link
                 href="/quant"
-                className="inline-flex items-center gap-2 border border-border bg-surface px-4 py-4 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim hover:border-bull hover:text-bull"
+                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-4 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim hover:border-bull hover:text-bull"
               >
                 Skip — open the workbench →
               </Link>
@@ -497,7 +497,7 @@ export default function LearnPage() {
             className="col-span-12 lg:col-span-4 flex flex-col gap-8 hero-fade-up"
             style={{ animationDelay: "1.0s" }}
           >
-            <div className="border border-border bg-surface p-6">
+            <div className="surface-card border border-border bg-surface p-6">
               <div className="mb-4 flex items-center justify-between t-eyebrow text-fg-faint">
                 <span className="flex items-center gap-2">
                   <span className="size-1 rounded-full bg-bull pulse-dot" />
@@ -507,10 +507,10 @@ export default function LearnPage() {
               </div>
               <BigStat value={27} label="bots in the registry" tone="bull" size="md" />
             </div>
-            <div className="border border-border bg-surface p-6">
+            <div className="surface-card border border-border bg-surface p-6">
               <BigStat value={13} label="trained ML models" tone="cyan" size="md" />
             </div>
-            <div className="border border-border bg-surface p-6">
+            <div className="surface-card border border-border bg-surface p-6">
               <BigStat value={8} label="interactive demos" tone="amber" size="md" />
             </div>
           </div>
@@ -660,7 +660,7 @@ export default function LearnPage() {
             <Link
               key={f.cat}
               href={f.bots.length > 0 ? `/learn/bots#${f.cat}` : "/learn/bots"}
-              className="group flex flex-col gap-3 border border-border bg-surface p-6 transition-all hover:border-bull/60 hover:bg-bull/[0.03]"
+              className="group flex flex-col gap-3 surface-card border border-border bg-surface p-6 transition-all hover:border-bull/60 hover:bg-bull/[0.03]"
             >
               <div className="flex items-center justify-between">
                 <span
@@ -731,12 +731,12 @@ export default function LearnPage() {
           Every bot ships with a &quot;Teacher&quot; callout that explains its verdict at
           age-12 level. Hover any Greek on the trade page and you get a one-line explainer.
           The AI Teacher endpoint uses GPT-4o-mini when{" "}
-          <code className="mx-1 border border-border bg-surface px-1 text-fg">OPENAI_API_KEY</code>{" "}
+          <code className="mx-1 surface-card border border-border bg-surface px-1 text-fg">OPENAI_API_KEY</code>{" "}
           is set; falls back to a hand-written mock if not.
         </ChapterBody>
 
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div className="relative border border-border bg-surface p-6">
+          <div className="relative surface-card border border-border bg-surface p-6">
             <div className="t-eyebrow text-fg-faint">
               ◯ TEACHER · OFF
             </div>
@@ -795,11 +795,11 @@ export default function LearnPage() {
             + Import your bot
           </span>{" "}
           in the bot library. Paste a function that takes{" "}
-          <code className="border border-border bg-surface px-1 font-mono text-[11px] text-fg">
+          <code className="surface-card border border-border bg-surface px-1 font-mono text-[11px] text-fg">
             candles + params
           </code>{" "}
           and returns{" "}
-          <code className="border border-border bg-surface px-1 font-mono text-[11px] text-fg">
+          <code className="surface-card border border-border bg-surface px-1 font-mono text-[11px] text-fg">
             {`{ verdict, summary, metrics }`}
           </code>
           . It hot-loads into the workspace.
@@ -860,7 +860,7 @@ export default {
 
         <ChapterBody para="13.A">
           The 12 AI bots delegate to a Python service in{" "}
-          <code className="mx-1 border border-border bg-surface px-1 font-mono text-[11px] text-fg">
+          <code className="mx-1 surface-card border border-border bg-surface px-1 font-mono text-[11px] text-fg">
             ai quants/serve.py
           </code>{" "}
           that runs trained neural networks. When the service is up, you see{" "}
@@ -899,7 +899,7 @@ export default {
           <ArchCard step="03" title="Python NN" sub="13 trained models" body="serve.py loads the right surrogate, runs predict(), returns JSON. The card flips green." />
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-3 border border-border bg-surface px-4 py-3 t-eyebrow text-fg-dim">
+        <div className="mt-10 flex flex-wrap items-center gap-3 surface-card border border-border bg-surface px-4 py-3 t-eyebrow text-fg-dim">
           <span className="text-fg-faint">▮ SPIN IT UP</span>
           <code className="border border-border bg-bg px-3 py-1 text-bull">
             cd "ai quants" && uvicorn serve:app --reload --port 8000
@@ -1108,7 +1108,7 @@ function Piece({ num, tone, title, tldr, body }: { num: string; tone: "bull" | "
 
 function ArchCard({ step, title, sub, body }: { step: string; title: string; sub: string; body: string }) {
   return (
-    <div className="border border-border bg-surface p-6">
+    <div className="surface-card border border-border bg-surface p-6">
       <div className="flex items-center gap-2 t-eyebrow text-fg-faint">
         <span>{step}</span>
         <span className="h-px flex-1 bg-border" />

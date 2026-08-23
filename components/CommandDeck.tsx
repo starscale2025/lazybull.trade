@@ -149,7 +149,7 @@ export function CommandDeck() {
             role="dialog"
             aria-modal="true"
             aria-label="Command deck"
-            className="w-[480px] max-w-[92vw] border border-border bg-surface shadow-2xl"
+            className="w-[480px] max-w-[92vw] surface-card border border-border bg-surface shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
               <span className="t-chrome text-fg-faint">command deck</span>

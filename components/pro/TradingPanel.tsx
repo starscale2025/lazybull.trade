@@ -359,7 +359,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                 setCapitalOpen((v) => !v);
               }}
               aria-expanded={capitalOpen}
-              className="flex items-center gap-1.5 border border-border bg-surface px-2 py-1 font-mono text-[11px] text-fg transition-colors hover:border-fg-dim"
+              className="flex items-center gap-1.5 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[11px] text-fg transition-colors hover:border-fg-dim"
               title="Change the starting capital"
             >
               lazybull paper <span className="text-fg-faint">USD</span>
@@ -371,7 +371,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           </div>
 
           {capitalOpen && (
-            <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 border border-border bg-surface px-3 py-2 t-chrome">
+            <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 surface-instrument border border-border bg-surface px-3 py-2 t-chrome">
               <label className="flex items-center gap-1.5 text-fg-faint">
                 starting capital
                 <span className="text-fg-dim">$</span>

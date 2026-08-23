@@ -4,72 +4,99 @@ import { MobileMenu } from "./MobileMenu";
 import { TruthBadge } from "./pro/TruthBadge";
 import { NAV_DIRECTORY } from "@/lib/directory";
 
+/**
+ * The site navbar, in glass.
+ *
+ * It floats: a sticky, inset, frosted bar rather than a full-bleed border-
+ * bottom strip. Same information, same destinations, same breakpoint budget —
+ * the rail is still lg+, the Truth badge xl+, Portfolio md+, and the hamburger
+ * covers everything below. Nothing was dropped to make it fit.
+ *
+ * TWO FIXES THAT CAME FREE WITH THE REWRITE:
+ *
+ * 1. `whitespace-nowrap` on the rail links. The old bar let "Visual chain" and
+ *    "Pro charts" wrap to two lines at exactly the widths where the rail was
+ *    already visible, so the nav silently grew to ~56px of stacked text on
+ *    most desktops. Labels are two words; they were never meant to break.
+ *
+ * 2. `--nav-h` is published as a custom property. Pages that need to clear the
+ *    bar were each hard-coding their own guess at its height; now there is one
+ *    number and it lives with the component that owns it.
+ *
+ * The landing does NOT mount this (see app/page.tsx): the cinema is that
+ * page's navigation, and a fixed bar over the film is exactly what the
+ * no-navbar rule exists to prevent. It picks the nav up inside the marketing
+ * region instead, once the film has handed off.
+ */
 export function Nav() {
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-bg/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-350 items-center justify-between px-5">
-        <Link href="/" className="group flex items-center gap-2.5">
-          <div className="relative flex size-7 items-center justify-center border border-fg/40 bg-bg">
-            <div className="absolute inset-0.75 bg-bull" />
-            <span className="relative font-mono text-[10px] font-bold text-bg">LB</span>
-          </div>
+    <div
+      className="pointer-events-none sticky top-0 z-50 px-3 pt-3"
+      style={{ ["--nav-h" as string]: "68px" }}
+    >
+      {/* Concentric geometry, the rule that keeps a pill-in-pill nav from
+          looking broken: inner radius = outer radius − gap. The bar is a full
+          pill (28px on h-14) with a 10px inset on every side of a control
+          (py-2.5 / pr-2.5), so every h-9 control inside renders rounded-full
+          at 18px = 28 − 10. Change the bar height or the padding and these
+          must move together. */}
+      <nav className="glass-strong specular pointer-events-auto mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-2 rounded-full py-2.5 pl-4 pr-2.5 sm:pl-5">
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+          <span
+            aria-hidden
+            className="relative flex size-7 items-center justify-center rounded-[9px] bg-bull shadow-[0_0_16px_rgba(0,255,135,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]"
+          >
+            <span className="font-mono text-[10px] font-bold text-[#04140b]">LB</span>
+          </span>
           <span className="font-display text-lg font-medium tracking-tightest text-fg">
             lazybull
             <span className="text-bull">.</span>
           </span>
         </Link>
 
-        {/* lg (not md): at 768–1023 the full rail + ⌘K + CTA is ~970px wide and
-            forces horizontal scroll — the hamburger covers that band instead. */}
-        <div className="hidden items-center gap-1 lg:flex">
+        {/* lg (not md): at 768–1023 the full rail + badge + CTA is ~970px wide
+            and forces horizontal scroll — the hamburger covers that band. */}
+        <div className="hidden items-center gap-0.5 lg:flex">
           {NAV_DIRECTORY.map((item) => (
             <Link
               key={item.l}
               href={item.href}
-              className="group relative flex h-9 items-center px-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:text-fg xl:px-3"
+              className="group relative flex h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg xl:px-3"
             >
               <span>{item.l}</span>
-              <span className="absolute inset-x-2 bottom-1 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100 xl:inset-x-3" />
             </Link>
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {/* The Synthetic-Truth badge, promoted off /pro so the glitch→checkmark
               is site-wide furniture. xl+ only, to spare the tight lg rail band. */}
           <div className="hidden items-center xl:flex">
             <TruthBadge />
           </div>
-          {/* The ⌘K button lived here with no onClick and no global key handler:
-              the only command palette in the repo is components/admin/CommandPalette
-              and it is mounted solely by /admin, so both the click and the
-              advertised shortcut were inert on all 7 public routes while the
-              control styled itself as active. Removed until search actually
-              ships — mounting the ADMIN palette here would expose admin
-              commands to every visitor. */}
           {/* Account pages sit with the account cluster, not the destination rail —
               the rail is already near its width budget at lg (see comment above). */}
           <Link
             href="/portfolio"
-            className="hidden h-9 items-center border border-border px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg md:inline-flex"
+            className="hidden h-9 items-center whitespace-nowrap rounded-full border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--fg)_4%,transparent)] px-3.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg md:inline-flex"
           >
             Portfolio
           </Link>
           <AuthButtons />
           <Link
             href="/trade"
-            className="group relative inline-flex h-9 items-center gap-2 bg-bull px-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg sm:px-4"
+            className="btn-primary-glass group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 font-mono text-[11px] font-semibold uppercase tracking-wider sm:px-4"
           >
-            <span className="size-1.5 rounded-full bg-bg pulse-dot" />
+            <span aria-hidden className="size-1.5 rounded-full bg-[#04140b] pulse-dot" />
             <span className="sm:hidden">Chain</span>
             <span className="hidden sm:inline">Open the chain</span>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
               <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
             </svg>
           </Link>
           <MobileMenu />
         </div>
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }

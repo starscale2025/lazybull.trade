@@ -235,7 +235,7 @@ function FounderPhoto({
     .toUpperCase();
 
   return (
-    <div className="relative overflow-hidden border border-border bg-surface-2 aspect-3/4">
+    <div className="relative overflow-hidden surface-card border border-border bg-surface-2 aspect-3/4">
       {errored || !src ? (
         <div
           className="absolute inset-0 flex items-center justify-center"
@@ -311,7 +311,7 @@ function TimelineItem({
         transition={{ duration: 0.6, ease, delay: 0.1 }}
       >
         {isLeft && (
-          <div className="w-full border border-border bg-surface p-4 text-right">
+          <div className="w-full surface-card border border-border bg-surface p-4 text-right">
             <div className="t-chrome text-fg-faint mb-2">
               {item.date}
             </div>
@@ -345,7 +345,7 @@ function TimelineItem({
         transition={{ duration: 0.6, ease, delay: 0.1 }}
       >
         {!isLeft && (
-          <div className="w-full border border-border bg-surface p-4">
+          <div className="w-full surface-card border border-border bg-surface p-4">
             <div className="t-chrome text-fg-faint mb-2">
               {item.date}
             </div>
@@ -399,7 +399,7 @@ export function About() {
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" />
                 the team
               </span>
-              <span className="border border-border bg-surface px-2 py-1 text-fg-dim">
+              <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
                 3 founders · 1 mission · pre-soft-launch
               </span>
             </div>

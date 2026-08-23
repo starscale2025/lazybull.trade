@@ -27,6 +27,10 @@ if (typeof window !== "undefined") {
  *   parallax       — Y translate proportional to scroll progress (use
  *                    `data-gsap-amount="120"` to tune travel in px)
  *   reveal-clip    — clip-path inset reveal left → right
+ *   draw           — SVG stroke draws itself (element needs `pathLength={1}`)
+ *
+ * All patterns collapse to an instant snap under `prefers-reduced-motion`;
+ * `parallax` is not bound at all.
  *
  * Modifiers:
  *   data-gsap-delay="0.2"     seconds
@@ -74,6 +78,12 @@ export function GsapScroller() {
       return v != null && v !== "" ? Number(v) : fallback;
     };
 
+    // `gsap.defaults({duration: 0})` above cannot survive an explicit `duration`
+    // on the tween, and every pattern below passes one — so reduced-motion was
+    // being honoured in name only: each animation still ran its full 1s travel.
+    // Collapse the duration here instead, at the one place all patterns read it.
+    const dur = (el: HTMLElement) => (reduced ? 0 : num(el, "gsapDuration", 1.0));
+
     const wire = (root: ParentNode = document) => {
       const els = root.querySelectorAll<HTMLElement>("[data-gsap]");
       let wiredAny = false;
@@ -84,8 +94,8 @@ export function GsapScroller() {
 
         const pattern = el.dataset.gsap;
         if (!pattern) return;
-        const delay = num(el, "gsapDelay", 0);
-        const duration = num(el, "gsapDuration", 1.0);
+        const delay = reduced ? 0 : num(el, "gsapDelay", 0);
+        const duration = dur(el);
         const start = el.dataset.gsapStart ?? "top 88%";
         const once = (el.dataset.gsapOnce ?? "true") !== "false";
 
@@ -176,7 +186,28 @@ export function GsapScroller() {
             );
             break;
           }
+          case "draw": {
+            // Stroke-draw for SVG geometry. The element must carry
+            // `pathLength={1}` so one unit of dash covers the whole path
+            // regardless of its real length — same contract as `.svg-draw-in`
+            // in globals.css, but fired on scroll rather than on mount.
+            gsap.fromTo(
+              el,
+              { strokeDasharray: 1, strokeDashoffset: 1 },
+              {
+                strokeDashoffset: 0,
+                duration: duration * 1.4,
+                delay,
+                ease: "power2.inOut",
+                scrollTrigger: baseTrigger,
+              }
+            );
+            break;
+          }
           case "parallax": {
+            // Scrub-driven, so `duration` never applies — honour reduced-motion
+            // by simply not binding the scrub at all.
+            if (reduced) break;
             const amount = num(el, "gsapAmount", 80);
             gsap.fromTo(
               el,

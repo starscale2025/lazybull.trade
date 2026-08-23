@@ -111,8 +111,8 @@ export default async function AdminPage() {
               </p>
             </div>
             <div className="flex items-center gap-2 t-chrome text-fg-faint">
-              <span className="border border-border bg-surface px-2 py-1">role <span className="text-bull">admin</span></span>
-              <span className="border border-border bg-surface px-2 py-1">scope <span className="text-fg">global</span></span>
+              <span className="surface-instrument border border-border bg-surface px-2 py-1">role <span className="text-bull">admin</span></span>
+              <span className="surface-instrument border border-border bg-surface px-2 py-1">scope <span className="text-fg">global</span></span>
               <span className="border border-bull/40 bg-bull/5 px-2 py-1 text-bull">data · live</span>
             </div>
           </div>

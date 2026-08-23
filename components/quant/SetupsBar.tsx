@@ -106,7 +106,7 @@ export function SetupsBar({
       <button
         onClick={() => signIn("google", { callbackUrl: "/quant" })}
         title="Setups save to your profile — symbol, mode, knobs and the whole bot stack"
-        className="flex items-center gap-2 border border-border bg-surface px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+        className="flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
       >
         ⇪ sign in to save setups
       </button>
@@ -135,14 +135,14 @@ export function SetupsBar({
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="border border-border bg-surface px-2 py-1 text-fg-dim transition-colors hover:text-fg"
+        className="surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim transition-colors hover:text-fg"
       >
         my setups {open ? "▴" : "▾"}
       </button>
       {note && <span className="ml-1 text-fg-faint normal-case tracking-normal">{note}</span>}
 
       {open && (
-        <div className="absolute right-0 top-8 z-40 w-72 border border-border bg-surface shadow-2xl">
+        <div className="absolute right-0 top-8 z-40 w-72 surface-instrument border border-border bg-surface shadow-2xl">
           {items === null ? (
             <div className="px-3 py-3 text-fg-faint">loading…</div>
           ) : items.length === 0 ? (

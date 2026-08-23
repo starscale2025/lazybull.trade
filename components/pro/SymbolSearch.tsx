@@ -142,7 +142,7 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
         if (boxRef.current && !boxRef.current.contains(e.target as Node)) onClose();
       }}
     >
-      <div ref={boxRef} className="w-[440px] max-w-[92vw] border border-border bg-surface shadow-2xl">
+      <div ref={boxRef} className="w-[440px] max-w-[92vw] surface-instrument border border-border bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">Symbol search</span>
           <button

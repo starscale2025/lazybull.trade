@@ -376,10 +376,15 @@ export function ScrollCinema() {
 
     const renderScene = (now = 0) => {
       cinemaClock.progress = progress; // shared clock the 3D layers read
-      // Keep the 2D particle logo hidden until the 3D bull has FULLY faded out
-      // (>= out1). Then the classic logo plays in full — assemble → scatter →
-      // Matrix — with no overlap between the two differently-posed bulls.
-      const hideBull = bull3dReadyRef.current && progress < BULL3D.out1;
+      // Un-hide the 2D particle logo at out0 — where the 3D bull STARTS fading,
+      // not where it finishes. Releasing at out1 left 0.793–0.80 with nothing
+      // drawn at all (bull wrapper ~0, grid 0 since 0.796, consensus dead since
+      // 0.754, logo still gated): a measured black frame on the charge, the
+      // film's climax. The two bulls do overlap for that 0.02, but the charge's
+      // impact flash is blowing the frame out across exactly that span, so what
+      // reads is the logo condensing OUT of the burst — which is what
+      // Bull3D's ImpactFlash was written to do.
+      const hideBull = bull3dReadyRef.current && progress < BULL3D.out0;
       if (ready)
         win()?.renderAt?.(
           progress,

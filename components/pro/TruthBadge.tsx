@@ -13,6 +13,7 @@
 // this makes it furniture.
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 
 function Label({ compact = false }: { compact?: boolean }) {
@@ -50,11 +51,11 @@ export function TruthBadge() {
     <>
       <button
         ref={btnRef}
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((v) => !v)}
         aria-haspopup="dialog"
         aria-expanded={open}
         title="What's real, what's synthetic, what's yours — open the honesty ledger"
-        className="relative flex h-7 items-center gap-1.5 border border-border bg-bg px-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
+        className="relative flex h-7 items-center gap-1.5 rounded-full border border-border bg-bg px-2.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
       >
         {resolved && (
           <span className="truth-check-in font-semibold text-bull" aria-hidden>
@@ -157,7 +158,17 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  // PORTAL, not an in-place render. <Nav> carries `.glass-strong`, whose
+  // `backdrop-filter: blur(26px)` makes it a CONTAINING BLOCK for any
+  // `position: fixed` descendant — so rendered in place, this "full-screen"
+  // backdrop was sized to the nav pill itself (measured 1398×54 at y=47).
+  // The consequences were all one bug: the 820×478 panel centred inside a
+  // 54px strip landed at y=-165 with its ✕ button off-screen, the dimmer
+  // only covered the nav bar, and the click-outside target was a 54px band
+  // — so clicking anywhere on the page never closed it. Portalling to
+  // <body> restores the viewport as the containing block, and keeps this
+  // immune to any future filter/transform added to an ancestor.
+  return createPortal(
     <div
       className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       role="dialog"
@@ -167,7 +178,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div ref={dialogRef} className="w-[820px] max-w-full border border-border bg-surface shadow-2xl">
+      <div ref={dialogRef} className="w-[820px] max-w-full surface-instrument border border-border bg-surface shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <h2 id="honesty-ledger-title" className="t-eyebrow font-semibold text-fg">
             <span className="text-bull">✓</span> the honesty ledger
@@ -211,6 +222,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
