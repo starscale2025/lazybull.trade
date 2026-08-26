@@ -411,7 +411,10 @@ window.initScene = async function initScene(cfg) {
   buildPayoff();
   buildRing(W, H);
 
-  document.getElementById("homepage").src = CFG.shots.hero || CFG.shots.home;
+  // No `|| CFG.shots.home` fallback: SHOT_NAMES has carried no "home" entry
+  // since "/" became the film itself, so that branch could never fire and the
+  // file it named was an orphan 183KB in public/.
+  document.getElementById("homepage").src = CFG.shots.hero;
 
   const urls = Object.values(CFG.shots);
   if (CFG.bullFrames && CFG.bullFrames.length) {
