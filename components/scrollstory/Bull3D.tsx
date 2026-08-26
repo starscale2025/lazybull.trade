@@ -273,8 +273,13 @@ function Bull() {
     // Emergence: rise + settle over the first third, then a slow turntable.
     const rise = smooth(0, 0.34, bt);
     // Charge finale: lean back + head down (windup), then LUNGE at the camera.
-    const windup = smooth(0.66, 0.8, bt);
-    const charge = smooth(0.8, 0.97, bt);
+    // Re-keyed for the widened BULL3D window (span 0.09 → 0.115). These hold the
+    // same ABSOLUTE progress timings the act was composed at — windup from
+    // p≈0.769, lunge from p≈0.782 — but the lunge now lands at p=0.805 instead
+    // of 0.797, i.e. exactly when the wrapper starts to clear rather than a
+    // third of the way through it. Same choreography, finally at full opacity.
+    const windup = smooth(0.517, 0.626, bt);
+    const charge = smooth(0.626, 0.826, bt);
     pxs.current += (cinemaClock.px - pxs.current) * 0.045;
     const snort = Math.exp(-(performance.now() - SNORT.t) / 480); // click → snort
     g.position.y = (1 - rise) * -1.1 + Math.sin(time * 1.05) * 0.02 * rise; // breathing
@@ -417,7 +422,9 @@ function ImpactFlash() {
       0,
       1
     );
-    const flash = smooth(0.9, 1.0, bt) * 0.9;
+    // Peaks AT the impact (bt 0.826 = p 0.805), not after the wrapper has gone.
+    // Measured peak on-screen flash before this: 0.105.
+    const flash = smooth(0.76, 0.826, bt) * 0.95;
     (s.material as THREE.SpriteMaterial).opacity = flash;
     s.visible = flash > 0.001; // skip the draw call outside the burst
     // re-glue every frame: camera position + 2 along the view direction, so the
@@ -460,7 +467,7 @@ function Rig() {
       0,
       1
     );
-    const charge = smooth(0.8, 0.97, bt);
+    const charge = smooth(0.626, 0.826, bt); // keep in step with the mesh above
     // Gentle dolly-in through the beat + a slow handheld sway; the camera backs
     // off slightly during the charge — then the bull overtakes it anyway.
     const z = 5.3 - 0.7 * smooth(0, 1, bt) + charge * 0.6;

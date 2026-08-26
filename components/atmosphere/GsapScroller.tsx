@@ -28,6 +28,7 @@ if (typeof window !== "undefined") {
  *                    `data-gsap-amount="120"` to tune travel in px)
  *   reveal-clip    — clip-path inset reveal left → right
  *   draw           — SVG stroke draws itself (element needs `pathLength={1}`)
+ *   payoff         — morph a <polyline> through data-payoff-1..4 on scroll
  *
  * All patterns collapse to an instant snap under `prefers-reduced-motion`;
  * `parallax` is not bound at all.
@@ -184,6 +185,42 @@ export function GsapScroller() {
                 scrollTrigger: baseTrigger,
               }
             );
+            break;
+          }
+          case "payoff": {
+            // Morph one polyline through up to four keyed shapes as the reader
+            // scrolls the marketing region — the P&L spine.
+            //
+            // `points` on a <polyline>, deliberately, NOT `d` on a <path>: a
+            // point list is pure numbers with a guaranteed-matching count, so
+            // GSAP CORE's AttrPlugin can tween it. Morphing path data would need
+            // MorphSVGPlugin, which is a paid Club plugin this project does not
+            // and should not have. Same reason the shapes below must all carry
+            // the SAME number of points.
+            //
+            // Because this is driven by a data attribute, the section that owns
+            // the spine stays a SERVER component — the marketing region ships no
+            // extra JS, which is the whole reason it is server-only.
+            // getAttribute, NOT dataset. `data-payoff-1` does not map to
+            // dataset.payoff1: the camel-casing rule only strips a hyphen that
+            // precedes a LETTER, so the key is literally "payoff-1" and
+            // dataset.payoff1 is undefined — which silently took the break
+            // below and left the spine frozen on its first shape.
+            const keys = [1, 2, 3, 4]
+              .map((n) => el.getAttribute(`data-payoff-${n}`))
+              .filter((v): v is string => !!v);
+            if (keys.length < 2) break;
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger: el.closest("[data-payoff-track]") ?? el,
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 0.8,
+              },
+            });
+            for (let k = 1; k < keys.length; k++) {
+              tl.to(el, { attr: { points: keys[k] }, ease: "none", duration: 1 });
+            }
             break;
           }
           case "draw": {

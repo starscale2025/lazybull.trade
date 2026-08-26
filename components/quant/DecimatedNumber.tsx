@@ -23,20 +23,24 @@
 import { useEffect, useRef } from "react";
 import { subscribeFrame } from "@/lib/ambient-clock";
 
-const GLYPHS = "0123456789ΔΣΩαβγλμπφ▓▒░╱╲┃┣┫";
+// A ramp of BLOCK glyphs, never digits and never letters.
+//
+// This used to scramble digits across 0-9 and letters across A-Z "to match the
+// visual class of the target". The effect was that every frame of the reveal
+// was a perfectly legible, perfectly wrong value: verdict badges flashed
+// AGREE 8/9 and TIER NYGS, and metric tiles printed plausible ratios, for
+// ~700ms on every run. On a product whose entire premise is that retail traders
+// are misled by numbers, the signature animation was manufacturing them.
+//
+// Block glyphs keep the original width guarantee — these are all single
+// monospace cells, so nothing reflows as it settles — while being unreadable as
+// data, which is the actual job of a scramble.
+const GLYPHS = "▓▒░▚▞╱╲┃┣┫";
 
 function randomGlyph(seedChar: string): string {
-  // Match the visual class of the target so the scramble doesn't suddenly
-  // grow taller than the resolved value (digits → digits, letters → letters,
-  // exotic glyphs only when the target is alphanumeric).
-  if (/\d/.test(seedChar)) {
-    return String(Math.floor(Math.random() * 10));
-  }
-  if (/[A-Za-z]/.test(seedChar)) {
-    const i = Math.floor(Math.random() * 26);
-    return String.fromCharCode(65 + i);
-  }
-  // For mixed positions just pick from the wider pool.
+  // Preserve separators so the SHAPE of the value ("8/9", "1.24%") is stable
+  // while its content is not yet knowable.
+  if (/[^A-Za-z0-9]/.test(seedChar)) return seedChar;
   return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
 }
 

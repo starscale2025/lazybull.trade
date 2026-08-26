@@ -21,6 +21,17 @@ type Props = {
   onQuote?: (sym: string, last: number, marketTime?: number) => void;
 };
 
+// Absent data is NOT a direction. `(q?.chg ?? 0) >= 0` coalesced a missing
+// quote to 0, took the >= branch, and painted the "—" placeholder in --bull —
+// so an entire watchlist with no feed rendered as a wall of green. On a product
+// whose thesis is that retail traders get misled by numbers, that is the worst
+// possible default. Chart.tsx:1091 already had the right shape
+// (`pnl == null ? "var(--fg-dim)"`); these two put it where the quotes are.
+const dirClass = (v: number | null | undefined) =>
+  v == null ? "text-fg-faint" : v >= 0 ? "text-bull" : "text-bear";
+const dirStroke = (v: number | null | undefined) =>
+  v == null ? "var(--fg-faint)" : v >= 0 ? "var(--bull)" : "var(--bear)";
+
 export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   const [list, setList] = useState<string[]>(() => {
     if (typeof window === "undefined") return DEFAULT_LIST.map((d) => d.sym);
@@ -214,7 +225,11 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
     <aside className="flex w-full flex-col border-t border-border bg-surface lg:w-[300px] lg:shrink-0 lg:border-l lg:border-t-0">
       {/* Watchlist header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2 t-chrome text-fg-dim">
-        <span className="text-fg">Watchlist</span>
+        {/* A real heading, not a styled span: /pro shipped with ZERO headings, so a
+            screen reader got no document outline for the whole terminal. Tailwind
+            preflight zeroes heading margin/size/weight, so this renders
+            byte-identically to the span it replaces. */}
+        <h2 className="text-fg">Watchlist</h2>
         <div className="flex items-center gap-1">
           <button title="Reset to default" onClick={() => setList(DEFAULT_LIST.map((d) => d.sym))} className="size-5 border border-border text-fg-dim hover:border-fg-dim hover:text-fg">⟳</button>
         </div>
@@ -266,7 +281,9 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       </div>
 
       {/* watchlist */}
-      <div className="max-h-[45vh] flex-1 overflow-y-auto lg:max-h-none">
+      {/* dock-clear reserves the Dock's bottom-right footprint on touch, so the
+          last rows of the watchlist cannot end up underneath the orb. */}
+      <div className="dock-clear max-h-[45vh] flex-1 overflow-y-auto lg:max-h-none">
         {list.map((sym) => {
           const q = quotes[sym];
           const active = sym === symbol.sym;
@@ -280,10 +297,10 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
                 <span className="truncate">{sym}</span>
               </button>
               <span className="col-span-3 text-right text-fg">{q?.last != null ? fmt(q.last, 2) : "—"}</span>
-              <span className={`col-span-2 text-right ${(q?.chg ?? 0) >= 0 ? "text-bull" : "text-bear"}`}>
+              <span className={`col-span-2 text-right ${dirClass(q?.chg)}`}>
                 {q?.chg != null ? `${q.chg >= 0 ? "+" : ""}${fmt(q.chg, 2)}` : "—"}
               </span>
-              <span className={`col-span-2 text-right flex items-center justify-end gap-1 ${(q?.chgPct ?? 0) >= 0 ? "text-bull" : "text-bear"}`}>
+              <span className={`col-span-2 text-right flex items-center justify-end gap-1 ${dirClass(q?.chgPct)}`}>
                 <span>{q?.chgPct != null ? `${q.chgPct >= 0 ? "+" : ""}${fmt(q.chgPct, 2)}%` : "—"}</span>
                 <button onClick={() => removeSym(sym)} title="Remove" className="ml-1 hidden size-4 items-center justify-center text-fg-faint group-hover:flex hover:text-bear">×</button>
               </span>
@@ -316,12 +333,12 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           </span>
           <span className="font-mono text-[10px] text-fg-faint">{live?.currency || ""}</span>
         </div>
-        <div className={`mt-1 font-mono text-[11px] ${(live?.chg ?? 0) >= 0 ? "text-bull" : "text-bear"}`}>
+        <div className={`mt-1 font-mono text-[11px] ${dirClass(live?.chg)}`}>
           {live?.chg != null ? `${live.chg >= 0 ? "+" : ""}${fmt(live.chg, 2)}` : "—"} · {live?.chgPct != null ? `${live.chgPct >= 0 ? "+" : ""}${fmt(live.chgPct, 2)}%` : "—"}
         </div>
         {hist.length > 1 && (
           <svg viewBox="0 0 100 30" className="mt-2 h-8 w-full" preserveAspectRatio="none">
-            <path d={sparkPath} fill="none" stroke={(live?.chg ?? 0) >= 0 ? "var(--bull)" : "var(--bear)"} strokeWidth="1.4" pathLength={1} className="svg-draw-fast" />
+            <path d={sparkPath} fill="none" stroke={dirStroke(live?.chg)} strokeWidth="1.4" pathLength={1} className="svg-draw-fast" />
           </svg>
         )}
 
@@ -334,7 +351,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       {/* Performance grid */}
       <div className="border-t border-border bg-bg p-3">
         <div className="flex items-center justify-between t-chrome text-fg-dim">
-          <span className="text-fg">Performance</span>
+          <h2 className="text-fg">Performance</h2>
           <span className="text-fg-faint">vs prev close</span>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-px bg-border-soft">

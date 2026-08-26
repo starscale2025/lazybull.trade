@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { KillSwitchSentinel } from "@/components/safety/KillSwitch";
 import { Fraunces, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SessionProvider } from "@/components/SessionProvider";
 import { PaperSync } from "@/components/PaperSync";
@@ -26,12 +27,21 @@ const fraunces = Fraunces({
   // letterforms themselves carry the day's volatility. See .wonk-type.
   axes: ["SOFT", "WONK", "opsz"],
   display: "swap",
+  // An explicit fallback stack rather than the browser's default serif. NOTE:
+  // this does NOT fix the display-headline re-wrap — `adjustFontFallback` (on
+  // by default) synthesises its own size-adjusted face that sits AHEAD of this
+  // list, so these families only apply if that face is unavailable too.
+  // Measured: /learn's h1 still swaps 499px -> 368px (four wrapped lines to
+  // three) with or without this line. That shift needs a reserved box on the
+  // headline, not a different fallback family — see the CLS notes in the audit.
+  fallback: ["Georgia", "Times New Roman", "serif"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin"],
   display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
 
 const funnel = Bricolage_Grotesque({
@@ -39,11 +49,47 @@ const funnel = Bricolage_Grotesque({
   subsets: ["latin"],
   axes: ["opsz"],
   display: "swap",
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
 });
 
+const DESCRIPTION =
+  "Drag across the chain to build options strategies. An AI teacher explains every Greek and trade in plain English. Paper-only, training wheels on by default.";
+
+// viewport-fit: cover is what makes env(safe-area-inset-*) resolve to anything
+// other than 0. Without it, a full-bleed cinematic site letterboxes itself
+// inside the notch/home-indicator gutters on every modern phone — and every
+// safe-area padding written anywhere in the app silently does nothing.
+export const viewport: Viewport = {
+  themeColor: "#050505",
+  viewportFit: "cover",
+  colorScheme: "dark light",
+};
+
 export const metadata: Metadata = {
+  // metadataBase is what makes every relative OG/canonical URL below resolve to
+  // an absolute one. Without it Next warns and social crawlers get a relative
+  // image path they cannot fetch.
+  metadataBase: new URL(SITE_URL),
   title: "LAZYBULL // Options You Can See",
-  description: "Drag across the chain to build options strategies. An AI teacher explains every Greek and trade in plain English. Paper-only, training wheels on by default.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/" },
+  // There was NO openGraph and NO twitter block at all, so every share of this
+  // site — Product Hunt, Twitter, Slack, the directory submissions the strategy
+  // depends on — rendered as a bare text link with no image card.
+  openGraph: {
+    type: "website",
+    siteName: "lazybull.trade",
+    title: "LAZYBULL // Options You Can See",
+    description: DESCRIPTION,
+    url: "/",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LAZYBULL // Options You Can See",
+    description: DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

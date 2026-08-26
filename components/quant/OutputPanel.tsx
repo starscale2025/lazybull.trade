@@ -211,7 +211,13 @@ function AggregateVerdict({
       : "text-fg-dim";
 
   const total = counts.buy + counts.sell + counts.hold + counts.warn;
-  const agreeing = side === "buy" ? counts.buy : side === "sell" ? counts.sell : side === "warn" ? counts.warn : counts.hold;
+  // "N of M models agree" must count the LARGEST BLOC, not the votes for the
+  // derived aggregate verdict. Reading counts.hold on the fallback branch meant
+  // a clean 2 buy / 1 sell / 1 hold run rendered "1 of 4 MODELS AGREE" directly
+  // above a tally whose tallest column was 2 — and RunRitual printed "2/4" for
+  // the identical run. Two numbers, one truth, on the page that exists to say
+  // models disagree honestly.
+  const agreeing = Math.max(counts.buy, counts.sell, counts.hold, counts.warn);
   const arcColor =
     side === "buy" ? "var(--bull)" : side === "sell" ? "var(--bear)" : side === "warn" ? "var(--amber)" : "var(--fg-dim)";
   const mood =

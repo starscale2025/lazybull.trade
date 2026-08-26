@@ -303,11 +303,14 @@ export function TopBar({
         >
           Trade
         </button>
+        {/* "Save", not "Publish". The handler POSTs isPublic:false — nothing is
+            published, and on a 401 it falls back to copying a share link. A
+            control has to say what it does. */}
         <button
           onClick={onPublish}
           className="flex h-8 items-center gap-2 bg-bull px-3 font-semibold text-bg hover:bg-bull-dim"
         >
-          Publish
+          Save
         </button>
       </div>
     </div>

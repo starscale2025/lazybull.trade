@@ -19,11 +19,28 @@ import { useEffect, useRef, useState } from "react";
 function Label({ compact = false }: { compact?: boolean }) {
   return (
     <>
-      <span className={compact ? "hidden xl:inline" : ""}>synthetic chain</span>
-      <span className={`text-fg-faint ${compact ? "hidden xl:inline" : ""}`}>·</span>
-      <span className={compact ? "hidden lg:inline" : ""}>real quotes (delayed)</span>
-      <span className={`text-fg-faint ${compact ? "hidden lg:inline" : ""}`}>·</span>
-      <span>$0 real risk</span>
+      {/* Collapse thresholds are one step higher than the raw breakpoint maths
+          suggests because the whole UI now renders at --ui-zoom (globals.css):
+          a 1440px screen gives the nav ~1285 CSS px of room, not ~1416. The
+          nav's children are all shrink-0, so if this badge does not give way
+          the pill overflows and the primary CTA is clipped off the right edge.
+          Verified at 1440×900: full-width badge made the nav 1414px wide. */}
+      {/* COLLAPSE ORDER IS THE POINT, not just the widths.
+          This used to drop "synthetic chain" FIRST and keep "$0 real risk"
+          last — so as the viewport narrowed the disclosure disappeared and the
+          flattering half was what survived, over a synthetic tape. Inverted:
+          "synthetic chain" is now the clause that never leaves.
+
+          The widths matter too. Every child of the nav is shrink-0, so an
+          over-wide badge does not squeeze — it pushes the primary CTA off the
+          right edge. Measured at 1280px the nav needed 1301px and "OPEN THE
+          CHAIN" was a green sliver. "$0 real risk" is dropped from the bar
+          entirely: it is stated verbatim in the hero status pill and again in
+          the footer status bar, so the bar spends its pixels on the claim that
+          is NOT repeated anywhere else. */}
+      <span>synthetic chain</span>
+      <span className={`text-fg-faint ${compact ? "hidden 2xl:inline" : ""}`}>·</span>
+      <span className={compact ? "hidden 2xl:inline" : ""}>real quotes (delayed)</span>
     </>
   );
 }

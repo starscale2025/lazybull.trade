@@ -66,7 +66,7 @@ export default function TradePage() {
           <div>
             <div className="t-eyebrow text-fg-faint flex items-center gap-3">
               ⟢ advanced view · raw chain
-              <a href="/trade" className="text-bull hover:underline">← back to bet builder</a>
+              <a href="/trade" className="text-bull hover:underline">← back to strategy builder</a>
             </div>
             <h1 className="mt-2 t-title">
               Drag across strikes.

@@ -132,7 +132,7 @@ export type CategoryMeta = {
 export const CATEGORY_META: Record<BotCategory, CategoryMeta> = {
   trend: { id: "trend", label: "Trend & Momentum", hint: "follow the move", color: "var(--bull)" },
   stats: { id: "stats", label: "Statistical", hint: "the math under the move", color: "var(--cyan)" },
-  risk: { id: "risk", label: "Risk & Sizing", hint: "how much to bet", color: "var(--amber)" },
+  risk: { id: "risk", label: "Risk & Sizing", hint: "how much to risk", color: "var(--amber)" },
   options: { id: "options", label: "Options", hint: "pricing & vol games", color: "var(--plasma)" },
   ai: { id: "ai", label: "AI Quants", hint: "trained on real markets", color: "var(--bear)" },
   custom: { id: "custom", label: "Your Bots", hint: "imported by you", color: "var(--fg)" },

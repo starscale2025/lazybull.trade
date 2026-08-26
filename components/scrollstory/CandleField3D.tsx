@@ -15,9 +15,72 @@ import { Grid, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cinemaClock } from "@/lib/cinema-clock";
-import { CANDLE3D, CANDLE_BUILD_END, candleLabT } from "@/lib/cinema";
+import { CANDLE3D, CANDLE_BUILD_END, candleLabT, grade } from "@/lib/cinema";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+
+/**
+ * THE COLOURIST — lerps the act's colour script onto the live post chain.
+ *
+ * Before this, one Bloom at threshold 0.35 ran the whole 27%-of-the-film candle
+ * act, so the print, the crash and the lab were all graded identically and the
+ * act read as one green wash. grade() in lib/cinema.ts keys three rooms; this
+ * writes them per frame. Damped rather than snapped so a room CHANGE reads as a
+ * gear change rather than a cut.
+ */
+function Colourist({
+  composerRef,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  composerRef: React.MutableRefObject<any>;
+}) {
+  const cur = useRef({ i: 0.95, th: 0.35, ca: 0.0005 });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const found = useRef<{ bloom: any; ca: any } | null>(null);
+
+  useFrame((state, dt) => {
+    // Locate the effects once, by walking the composer's passes.
+    if (!found.current) {
+      const passes = composerRef.current?.passes;
+      if (!passes) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let bloom: any = null, ca: any = null;
+      for (const pass of passes) {
+        for (const e of pass.effects ?? []) {
+          const n = e.constructor?.name ?? "";
+          if (n.includes("Bloom")) bloom = e;
+          if (n.includes("ChromaticAberration")) ca = e;
+        }
+      }
+      if (!bloom && !ca) return;
+      found.current = { bloom, ca };
+    }
+
+    const g = grade(cinemaClock.progress);
+    // frame-rate independent approach, same shape as the cinema clock's follower
+    const k = 1 - Math.exp(-6 * Math.min(0.05, dt));
+    const c = cur.current;
+    c.i += (g.bloomIntensity - c.i) * k;
+    c.th += (g.bloomThreshold - c.th) * k;
+    c.ca += (g.caOffset - c.ca) * k;
+
+    const b = found.current.bloom;
+    if (b) {
+      if ("intensity" in b) b.intensity = c.i;
+      const lum = b.luminanceMaterial;
+      if (lum) lum.threshold = c.th;
+    }
+    const ca = found.current.ca;
+    if (ca?.offset?.set) ca.offset.set(c.ca, c.ca * 1.8);
+
+    const fog = state.scene.fog as THREE.Fog | null;
+    if (fog) {
+      fog.near += (g.fogNear - fog.near) * k;
+      fog.far += (g.fogFar - fog.far) * k;
+    }
+  });
+  return null;
+}
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (a: number, b: number, x: number) => {
   const t = clamp((x - a) / (b - a), 0, 1);
@@ -1118,14 +1181,28 @@ function AIForecast() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lineRef = useRef<any>(null); // drei <Line> → Line2 (has .material.opacity)
   useFrame(() => {
-    // The forecast draws in as price diverges from the AI's call (the crash) —
-    // the prediction appears just before reality falls into it. It bows out as
-    // the lab beat begins (it sits exactly where the ice candle flies to).
+    // THE FORECAST HAS TO ARRIVE BEFORE THE THING IT FORECASTS.
+    //
+    // This used to open at buildAt 0.5. Candle 26 — DIVERGE, where the crash
+    // starts — prints at buildAt 0.4875. So the cone began drawing 0.0023
+    // AFTER the crash was already on screen: the film asserted "It saw the
+    // crash coming" over a frame in which nothing had been predicted, and the
+    // reveal was still exactly 0.000 at that beat's plateau. The single
+    // most important claim in the film was contradicted by its own pixels.
+    //
+    // 0.26 is not a taste value: it is where candle 14 prints, twelve bars
+    // before DIVERGE. So "Flagged DOWN — 12 bars early" is now literally what
+    // is on screen, countable. Fully drawn by 0.47 (global ~0.4046), a beat
+    // before the crash lands at ~0.4078 — the cone is complete, and THEN
+    // reality falls into it.
+    //
+    // Opacity lifts 0.19 -> 0.34 because the cone now has to read against a
+    // still-green chart rather than against an already-red crash.
     const reveal =
-      smooth(0.5, 0.82, buildAt(cinemaClock.progress)) *
+      smooth(0.26, 0.47, buildAt(cinemaClock.progress)) *
       (1 - smooth(0, 0.3, candleLabT(cinemaClock.progress)));
     const cm = coneRef.current?.material as THREE.MeshBasicMaterial | undefined;
-    if (cm) cm.opacity = 0.19 * reveal;
+    if (cm) cm.opacity = 0.34 * reveal;
     if (lineRef.current?.material) lineRef.current.material.opacity = 0.92 * reveal;
   });
   return (
@@ -1192,7 +1269,14 @@ function Rig() {
         ? lerp(2.4, PEAK_Y, smooth(0, pk, build))
         : lerp(PEAK_Y, 1.4, smooth(pk, 0.8, build));
     // Track the printing edge, then PULL BACK at the end to reveal the whole crash.
-    const pull = smooth(0.78, 1.0, build);
+    //
+    // Starts at 0.66, not 0.78. The cone now completes at build 0.47 and the
+    // crash lands at 0.4875, so the frame that matters — the whole forecast
+    // with reality falling through it — exists from ~0.49 onward. Beginning the
+    // retreat earlier means the camera is already opening out as that happens,
+    // instead of staying tight on the printing edge and only revealing the
+    // composition once the beat naming it has passed.
+    const pull = smooth(0.66, 0.95, build);
     tmpL.current.set(lerp(edgeX - 1.5, SPAN * 0.72, pull), lerp(trendY, 3, pull), 0);
     tmpP.current.set(
       lerp(edgeX - 7, SPAN * 0.5, pull) + Math.sin(time * 0.33) * 0.18,
@@ -1231,6 +1315,9 @@ export default function CandleField3D({
   active: boolean;
   onReady?: () => void;
 }) {
+  // A handle on the live post chain so the colour script can write to it.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const composerRef = useRef<any>(null);
   return (
     <Canvas
       className="h-full w-full"
@@ -1298,11 +1385,18 @@ export default function CandleField3D({
 
       <Rig />
 
-      <EffectComposer multisampling={0}>
+      {/* NOTE: no `ref` on the individual effects. Under React 19 `ref` is an
+          ordinary prop, and @react-three/postprocessing JSON.stringify()s its
+          children to key the chain — so a ref holding a mounted effect (which
+          has a .parent) throws "Converting circular structure to JSON" and takes
+          the whole page down. Ref the composer instead and read its passes. */}
+      <EffectComposer ref={composerRef} multisampling={0}>
         <Bloom mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
         <ChromaticAberration offset={[0.0005, 0.0009]} />
         <SMAA />
       </EffectComposer>
+      {/* Drives the three rooms onto the live chain. Inside <Canvas> for useFrame. */}
+      <Colourist composerRef={composerRef} />
     </Canvas>
   );
 }

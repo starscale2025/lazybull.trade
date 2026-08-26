@@ -134,7 +134,11 @@ export function TickerBar() {
           onClick={() => setPaused((v) => !v)}
           aria-pressed={paused}
           aria-label={paused ? "Resume ticker scrolling" : "Pause ticker scrolling"}
-          className="ml-1 text-fg-faint transition-colors hover:text-fg"
+          // The glyph is ~7px wide, so this cleared the tap floor's min-height
+          // and still failed WCAG 2.2 AA 2.5.8 on WIDTH. Widened here rather
+          // than in .tap-floor, whose comment explains that a global min-width
+          // would force the dense terminal chips wider and wrap their rows.
+          className="ml-1 inline-flex min-w-[24px] items-center justify-center text-fg-faint transition-colors hover:text-fg"
         >
           {paused ? "▶" : "⏸"}
         </button>

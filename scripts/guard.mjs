@@ -117,6 +117,36 @@ const ok = (msg) => console.log("✓ " + msg);
   else ok("dock invariant: no rogue bottom-right FABs");
 }
 
+// ── 5. the z ladder (FAIL) ──────────────────────────────────────────────────
+// A modal must outrank persistent floating chrome. It did not: the Dock host
+// sits at 90 and RiskWizard sat at 90 too (losing on DOM order), PreTradeModal
+// at 85, StrategyCard and the KillSwitch arming sheet at 80 — so the floating
+// "place a bet" pill rendered on top of every safety gate and stayed clickable
+// through it. Stacking is now named in globals.css (--z-dock / --z-dialog /
+// --z-palette); this stops a raw number creeping back in under the Dock.
+{
+  const offenders = [];
+  const scan = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) { scan(p); continue; }
+      if (!e.name.endsWith(".tsx")) continue;
+      const src = readFileSync(p, "utf8");
+      for (const m of src.matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)) {
+        const v = m[1] ?? m[2] ?? "";
+        if (!/\bfixed\b/.test(v) || !/\binset-0\b/.test(v)) continue;
+        const z = /z-\[(\d+)\]/.exec(v);
+        if (z && Number(z[1]) <= 90) offenders.push(`${p} (z-[${z[1]}])`);
+      }
+    }
+  };
+  scan("components");
+  scan("app");
+  if (offenders.length)
+    fail(`full-screen overlay at or below the Dock — use z-[var(--z-dialog)]: ${offenders.join(", ")}`);
+  else ok("z ladder: every full-screen overlay outranks the Dock");
+}
+
 if (failed) {
   console.error("\nguard: FAILED");
   process.exit(1);

@@ -95,7 +95,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-bg">
       <Nav />
-      <main className="shell py-16 lg:py-24">
+      <main className="tap-floor shell py-16 lg:py-24">
         {/* header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="t-eyebrow text-fg-faint">

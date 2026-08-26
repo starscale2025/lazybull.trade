@@ -30,6 +30,15 @@
      aesthetic survives as the opt-in STEALTH mode below. */
   --fg-faint: #767670;
   --bull: #00ff87;
+  /* INK vs FILL. The vivid accents are for fills, strokes and 3D emissives; the
+     -ink pair is for TYPE. On #050505 they are the same colour, because the
+     vivid values already clear AA against it. On warm paper they are not —
+     measured, --bull is 2.87:1 and --amber 2.72:1 as text, i.e. the brand
+     colour failed AA in every role it occupied. Splitting the two lets the
+     light theme keep its glow without asking anyone to read 2.87:1. */
+  --bull-ink: #00ff87;
+  --cyan-ink: #00e5ff;
+  --amber-ink: #ffb800;
   --bull-dim: #00b85f;
   --bear: #ff2e63;
   --bear-dim: #b8204a;
@@ -88,6 +97,11 @@
   --fg-dim: #5a5a52;
   --fg-faint: #6e6e64; /* ≥4.5:1 on the light canvas (was #9a9a8e ≈ 2.6:1) */
   --bull: #00a85a;
+  /* Measured against --bg #f7f6f0: 4.66, 6.51 and 5.27 : 1. The fills above
+     stay vivid; only type reads these. */
+  --bull-ink: #00803f;
+  --cyan-ink: #00607f;
+  --amber-ink: #8a5e00;
   --bull-dim: #00803f;
   --bear: #d61f4a;
   --bear-dim: #a01838;
@@ -129,6 +143,60 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   BASE UI SCALE. The design was drawn to read at ~110% browser zoom, so that
+   is the shipped default rather than something each visitor has to dial in.
+
+   WHY THIS NEEDS A COMPENSATION LAYER, AND WHY THAT LAYER IS UNLAYERED:
+   `zoom` is NOT browser zoom. Real browser zoom shrinks the CSS-pixel
+   viewport, so `100vh` still means "one screen". Element zoom leaves the
+   viewport reporting its full size and then scales the result — so `100vh`
+   renders 10% TALLER than the screen. Measured before this was added: the
+   cinema's `h-screen` pin came out 990px against a 900px viewport, and the
+   hero's `w-screen` eye band put 133px of horizontal overflow on the page.
+   So every FULL-VIEWPORT primitive has to be divided back down. Percentages,
+   rem, px and partial units (`78vh`, `40vw`) all scale correctly on their own
+   and are deliberately left alone.
+
+   These four rules are UNLAYERED on purpose, so they outrank Tailwind's own
+   `@layer utilities` definitions no matter what order the layers land in —
+   the same reason the focus law above is unlayered.
+
+   IF YOU ADD A NEW FULL-VIEWPORT BOX, divide it here too, or it will overflow
+   by exactly `--ui-zoom`. Set `--ui-zoom: 1` to revert the whole thing.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root { --ui-zoom: 1.1; }
+/* KEPT AT 1.1 DELIBERATELY. The design audit's Wave 5 recommends deleting this
+   sitewide so every Tailwind breakpoint means what its author thought it meant,
+   and the argument is sound — but 110% is an explicit product decision by the
+   owner. Verified both ways: at 1.1 AND at 1 the nav fits all five reference
+   widths in both themes with zero overflow, so the choice is free either way.
+   The nav-overflow check is what makes it safe to revisit. */
+/* ...but NEVER on a phone. --ui-zoom shrinks the CSS viewport by its own factor,
+   so a 390px iPhone was laying out at 354.5 CSS px and a 360px Android at 327 —
+   narrower than a 2016 SE. The zoom exists because the desktop design reads
+   better slightly larger; a phone has no spare width to give away. The four
+   compensation rules below all divide by the var, so they follow automatically. */
+@media (max-width: 767px) {
+  :root { --ui-zoom: 1; }
+}
+html { zoom: var(--ui-zoom); }
+.h-screen { height: calc(100vh / var(--ui-zoom)); }
+.min-h-screen { min-height: calc(100vh / var(--ui-zoom)); }
+.w-screen { width: calc(100vw / var(--ui-zoom)); }
+.max-h-screen { max-height: calc(100vh / var(--ui-zoom)); }
+/* `position: fixed` boxes resolve against the viewport, which element zoom does
+   NOT shrink — so every fixed full-bleed layer (the aurora, the orbs, the
+   cursor spotlight, the page vignette, every modal backdrop) comes out
+   --ui-zoom too wide and put a real 133px horizontal scrollbar on the page.
+   There is no selector for "computed position: fixed", and dividing all ~30 of
+   them by hand would tax every future one. They are all either edgeless
+   decoration or a translucent modal backdrop, so 10% of overhang is invisible;
+   the scrollbar is the only part that was not. Clip it once, here.
+   `clip`, NOT `hidden`: hidden on the root establishes a scroll container and
+   breaks `position: sticky` — which is exactly how the cinema pins itself. */
+html, body { overflow-x: clip; }
+
 html, body {
   background: var(--bg);
   color: var(--fg);
@@ -169,8 +237,33 @@ html, body {
    mouse focus stays quiet via :focus-visible. */
 :focus-visible {
   outline: 2px solid var(--bull);
+  /* NO border-radius here. It used to carry `border-radius: 1px`, which does
+     not round the OUTLINE — it rounds the focused ELEMENT — so every rounded
+     control on the site (the nav's pill CTA, the footer's Subscribe, the
+     marketing cards, 135 pills in total) snapped square the instant a keyboard
+     landed on it. It was patched at exactly one call site, .gs-cta, which is
+     how the real cause stayed hidden.
+     The 2px offset below already keeps the ring clear of the border, and
+     browsers follow the element's own radius when drawing an outline. */
   outline-offset: 2px;
-  border-radius: 1px;
+}
+
+/* THE LAW'S ONE EXCEPTION, and it lives here rather than at the call site on
+   purpose. The landing's page directory (components/GetStarted.tsx) is a
+   single frosted SHEET with the eight pages ruled onto it: the radius sits on
+   the <nav> and `overflow: hidden` clips the square cells to it. That clip
+   also clips DESCENDANTS' OUTLINES, and every cell touches a perimeter at
+   some breakpoint — 1-col: both sides; 2-col: left or right; 4-col: top or
+   bottom — so the +2px ring above would be sheared off all eight of them.
+   Pulling the offset negative draws the same 2px bull ring just INSIDE the
+   cell, where the clip cannot reach it. (The nav also carries p-px, so the
+   ring never lands on the clip boundary itself.)
+
+   Unlayered, next to the law, because it has to be: a Tailwind
+   `focus-visible:-outline-offset-*` utility lives in a cascade layer and can
+   never beat an unlayered rule, whatever its specificity. */
+nav[aria-label="Site pages"] a:focus-visible {
+  outline-offset: -3px;
 }
 
 /* ── Route veil: a phosphor settle between pages (app/template.tsx). ── */
@@ -584,11 +677,32 @@ html, body {
 .hero-card-in      { opacity: 0; animation: hero-card-in 1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .hero-line-grow    { transform-origin: left; transform: scaleX(0); animation: hero-line-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 
+/* THE COLLISION THAT ATE EIGHT HEADLINES.
+   `.pull-quote-glow` (below) sets the `animation` SHORTHAND. Both it and
+   `.hero-headline-line` are single-class selectors, and it is declared later —
+   so on any element carrying both, its shorthand replaced `hero-fade-up`
+   wholesale and left `opacity: 0` with nothing to animate it back. The element
+   never appeared. /learn:782 and :924 carry both, and the words "Trending." and
+   the closing CTA "Try it." were simply not on the page.
+
+   Restated here as one rule running BOTH animations, so the line reveals once
+   and then breathes. Deliberately NOT restating `opacity: 0`: at 0,2,0 that
+   would out-specify the reduced-motion rule below and strand the line invisible
+   for exactly the audience that cannot afford it. */
+.hero-headline-line.pull-quote-glow {
+  animation:
+    hero-fade-up 0.9s var(--ease-settle) forwards,
+    pull-quote-glow 5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-fade-up, .hero-fade-up-soft, .hero-headline-line,
   .hero-reveal-clip, .hero-card-in {
     animation: none; opacity: 1; transform: none; clip-path: none;
   }
+  /* 0,2,0 so it beats the combined rule above — without this the pair would
+     re-enable both animations for reduced-motion users. */
+  .hero-headline-line.pull-quote-glow { animation: none; opacity: 1; }
   .hero-glow-in   { animation: none; opacity: 1; transform: none; filter: none;
                     text-shadow: 0 0 24px rgba(0,255,135,0.55), 0 0 60px rgba(0,255,135,0.25); }
   .hero-line-grow { animation: none; transform: scaleX(1); }
@@ -1034,6 +1148,66 @@ html, body {
 }
 .crt-flicker { animation: crt-flicker 8s ease-in-out infinite; }
 
+/* ── THE EYE BAND'S TITLE BED (components/GetStarted.tsx) ─────────────────
+   "27 bots watching" is set ON the matrix-eye footage, and that footage is
+   bull-green. So was the headline: display serif over lit phosphor strokes,
+   measured across real frames of the loop at 1.00:1 at the worst pixel behind
+   line 1. No text-shadow rescues that — the failure is HUE, not value. And
+   the hue change alone is not enough either (--fg on raw footage still
+   measures ~1.19:1 at the worst pixel), so the type went to --fg AND the
+   footage got this bed. Both levers are load-bearing.
+
+   WHY THIS IS NOT THE FULL-BAND SHADE THE COMPONENT FORBIDS: that rule is
+   about ONSET LINES, and a uniform overlay has two of them, one per band edge.
+   This has none. Measured on the real stop list: alpha is 0.0000 at the band's
+   top row and 0.9976 (= var(--bg)) at the bottom row, with a steepest vertical
+   step of 0.0091 alpha per CSS pixel. The top is reached on an EASED ramp — a
+   linear one holds a constant slope right up to the transparent end, and that
+   constant slope is itself the line the eye finds. The bottom is exactly
+   var(--bg), the value the section's own hand-off ramp lands on and the value
+   MarketingSections opens with, so that boundary has nothing to see either.
+
+   TWO LAYERS, ONE ELEMENT. A POOL — an ellipse over the title block only, so
+   the eye's corners, the lashes and both upper HUD cards keep full footage —
+   riding a shallow FLOOR that carries it down to the page. Measured veil: the
+   pupil 0.018, the P(down) card and the IV chip 0.000, the mean over the whole
+   band 0.267, and the peak under the title block ~0.87. The code still ticks
+   through its own title card. An opaque plate would turn a scene into an embed.
+
+   Painted by ::after, so it lands above the footage and the HUD but below the
+   title card, which takes z-10. The one chip that falls inside the pool (the
+   Δ −0.32 chip at top:62%) takes 0.231 of veil and recedes — correct hierarchy
+   for a title card. If it must stay at full strength, give that mapped chip
+   z-10; nothing else changes.
+   Static: no animation, so there is nothing for reduced motion to land on. */
+.eye-title-bed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 72% 24% at 50% 79%,
+      color-mix(in srgb, var(--bg) 78%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 73%, transparent) 20%,
+      color-mix(in srgb, var(--bg) 62%, transparent) 35%,
+      color-mix(in srgb, var(--bg) 39%, transparent) 50%,
+      color-mix(in srgb, var(--bg) 16%, transparent) 65%,
+      color-mix(in srgb, var(--bg) 5%, transparent) 80%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to top,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 60%, transparent) 12%,
+      color-mix(in srgb, var(--bg) 38%, transparent) 22%,
+      color-mix(in srgb, var(--bg) 26%, transparent) 30%,
+      color-mix(in srgb, var(--bg) 10%, transparent) 42%,
+      color-mix(in srgb, var(--bg) 3%, transparent) 50%,
+      transparent 60%
+    );
+}
+
 /* ── The Desk (/learn): channel-change on demo swap. One-shot flicker overlay
       + a fade/scale entrance for the incoming demo. The terminal swaps its
       live cell as you cross each chapter; this is the "changing the channel"
@@ -1309,13 +1483,33 @@ html, body {
    it never touches the desktop (pointer: fine is untouched) and never inflates
    layouts on precise pointers. min-height (not min-width) so it grows the tap
    zone without forcing inline chips wider and wrapping the rows. */
+/* Reserve the Dock's corner so a panel's own controls cannot end up underneath
+   it. Coarse pointers only: on a desktop there is room and the reservation
+   would just add dead space. */
+@media (pointer: coarse) {
+  .dock-clear { padding-bottom: calc(var(--dock-gutter) + env(safe-area-inset-bottom)); }
+}
+
 @media (pointer: coarse) {
   .tap-floor button,
   .tap-floor a[href],
   .tap-floor select,
   .tap-floor [role="button"],
   .tap-floor [role="switch"] {
-    min-height: 32px;
+    /* 44px, not 32. WCAG 2.2 AA 2.5.8 requires a 24x24 minimum and 44 is the
+       long-standing touch-target convention; measured on the homepage, 24 of 48
+       interactive elements were under 24px tall — every one of the "→" text
+       links plus the ticker's 8x18px pause control. 32 cleared the letter of
+       nothing. */
+    min-height: 44px;
+  }
+  /* Inline text links are the ones that actually failed: they are 16-17px tall
+     because they are type, not controls. Give them the hit area without
+     changing how they read — padding on an inline-flex box, not a min-height
+     that would push the line box around. */
+  .tap-floor a[href]:not([class*="btn"]) {
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -1389,7 +1583,8 @@ html, body {
   .t-accent {
     font-style: italic;
     font-weight: 300;
-    color: var(--bull);
+    /* -ink, not the vivid fill: this is TYPE. See the ink/fill note above. */
+    color: var(--bull-ink);
   }
 
   /* ── Reading — Funnel sans. ────────────────────────────────────────────── */
@@ -1471,6 +1666,100 @@ html, body {
    settle") was inlined at 20+ call sites. Naming it does not change a single
    rendered frame; it just stops the 21st site from inventing its own curve.
    ══════════════════════════════════════════════════════════════════════════ */
+/* ── THE HERO'S PAYOFF INSTRUMENT (components/HeroPayoff.tsx) ─────────────
+   Four stacked polylines, one visible at a time. CSS cannot transition a
+   <polyline>'s `points`, and a rAF loop in the hero for a hover effect would be
+   absurd — so all four are drawn and crossfaded on the brand's one curve. */
+.hero-payoff-line {
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-settle);
+}
+.hero-payoff-line[data-on="1"] { opacity: 0.95; }
+
+.hero-chip {
+  transition:
+    border-color 0.3s var(--ease-settle),
+    color 0.3s var(--ease-settle),
+    transform 0.3s var(--ease-settle);
+}
+.hero-chip[data-on="1"] {
+  border-color: var(--glass-border-hot);
+  color: var(--fg);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The STATE still changes — reduced motion is reduced motion, not reduced
+     information. Only the travel goes. */
+  .hero-payoff-line, .hero-chip { transition: none; }
+  .hero-chip[data-on="1"] { transform: none; }
+}
+
+/* ── THE CINEMA ACT RAIL (components/scrollstory/CinemaRail.tsx) ──────────
+   Nine numbered rows down the left edge of the film, plus a skip. Quiet at
+   rest — a tick, an index and a label at --fg-faint — and only the CURRENT act
+   lifts to full ink with a bull tick. The point is orientation, not decoration:
+   a 13,500px pinned film previously gave no indication of where you were in it
+   or how much was left.
+
+   All state arrives as data-on written by the film's own per-frame pass, so
+   nothing here needs React. Colour transitions ride the brand's one curve. */
+.cinema-rail .rail-row {
+  opacity: 0.55;
+  transition:
+    opacity 0.35s var(--ease-settle),
+    transform 0.35s var(--ease-settle);
+}
+.cinema-rail .rail-row:hover,
+.cinema-rail .rail-row:focus-visible { opacity: 1; }
+.cinema-rail .rail-row[data-on="1"] { opacity: 1; transform: translateX(3px); }
+.cinema-rail .rail-row .rail-tick,
+.cinema-rail .rail-row .rail-num,
+.cinema-rail .rail-row .rail-label {
+  transition: color 0.35s var(--ease-settle), background-color 0.35s var(--ease-settle), width 0.35s var(--ease-settle);
+}
+.cinema-rail .rail-row[data-on="1"] .rail-tick { background: var(--bull); width: 1.25rem; }
+.cinema-rail .rail-row[data-on="1"] .rail-num { color: var(--bull); }
+.cinema-rail .rail-row[data-on="1"] .rail-label { color: var(--fg); }
+.cinema-rail .rail-row:hover .rail-label { color: var(--fg); }
+.cinema-rail .rail-skip:hover .rail-tick { background: var(--bull); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The rail still CHANGES — reduced motion means reduced motion, not reduced
+     information — it just changes instantly. (In practice the film does not
+     mount at all under reduced motion; this is here so the rule survives if it
+     is ever reused outside the cinema.) */
+  .cinema-rail .rail-row,
+  .cinema-rail .rail-row .rail-tick,
+  .cinema-rail .rail-row .rail-num,
+  .cinema-rail .rail-row .rail-label { transition: none; }
+  .cinema-rail .rail-row[data-on="1"] { transform: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE Z LADDER — one order, named.
+   Stacking was decided per-component and it went wrong in the one place it
+   could not afford to: the Dock host sits at 90, and RiskWizard sat at 90 too
+   (losing on DOM order), PreTradeModal at 85, StrategyCard at 80, KillSwitch's
+   arming sheet at 80. So the floating "place a bet" pill and the teacher orb
+   rendered ON TOP of every safety gate on the site, and stayed clickable
+   through them — a pre-trade risk warning you can click past is not a warning.
+
+   The rule: a DIALOG always outranks persistent chrome. The command palette
+   outranks a dialog because it is how you escape one.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* The Dock's own footprint, as a token. Pages that put controls in the
+     bottom-right corner reserve THIS rather than guessing a padding — the
+     previous hand-written pr-16 reservations were 8px short and evaporated
+     under flex overflow, which is how the mic orb ended up sitting on top of
+     other people's buttons. */
+  --dock-gutter: 4.5rem;
+  --z-dock: 90;      /* persistent floating chrome */
+  --z-dialog: 150;   /* anything modal, including every safety gate */
+  --z-palette: 160;  /* the command deck, which must beat a dialog */
+}
+
 :root {
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-boot: cubic-bezier(0.65, 0, 0.35, 1);
@@ -1499,9 +1788,31 @@ html, body {
 :root, [data-theme="dark"] {
   --glass-bg: rgba(16, 20, 18, 0.48);
   --glass-bg-strong: rgba(14, 17, 15, 0.66);
+  /* THE FROST GRADIENT. The flat fills above are kept as the single-value
+     fallback, but a real sheet of frosted glass is not one density end to end:
+     it is thick where it meets its mount and thin where the light comes in.
+     The light in this design comes from the TOP RIGHT, so the fill runs dense
+     at bottom-left → thin at top-right, and the specular and the edge
+     highlights below are aimed to match. One light direction for the whole
+     material; that agreement is what stops it reading as a flat grey box with
+     blur behind it. */
+  --glass-grad: linear-gradient(
+    to top right,
+    rgba(9, 12, 10, 0.63) 0%,
+    rgba(16, 20, 18, 0.48) 46%,
+    rgba(28, 35, 31, 0.33) 100%
+  );
+  --glass-grad-strong: linear-gradient(
+    to top right,
+    rgba(7, 9, 8, 0.79) 0%,
+    rgba(14, 17, 15, 0.66) 44%,
+    rgba(25, 31, 28, 0.51) 100%
+  );
   --glass-border: rgba(245, 245, 240, 0.1);
   --glass-border-hot: rgba(0, 255, 135, 0.32);
-  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  /* Lit on the top AND right edges — the two the light actually reaches. */
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset -1px 0 0 rgba(255, 255, 255, 0.055);
   --glass-blur: blur(26px) saturate(150%);
   --glass-glow: 0 24px 80px -32px rgba(0, 255, 135, 0.28);
   /* Role-fixed radii. The kit's rule is that nothing else rounds — a value
@@ -1510,6 +1821,19 @@ html, body {
   --r-cell: 16px;
   --r-btn: 13px;
   --r-pill: 999px;
+  /* The fifth role was ALREADY in this file — hardcoded as `border-radius:
+     8px` inside .surface-instrument (below), and consumed at 48 call sites
+     across 29 files in /pro, /trade, /quant and /admin. This NAMES it; it does
+     not add a value. Provably a no-op: no radius token is redefined by
+     [data-theme="light"] or .pro-theme, so --r-instrument resolves to 8px
+     everywhere and all 48 sites render byte-identically.
+
+     The role, in .surface-instrument's own words: instrument density, the
+     material read at working distance. It is the radius for a corner that
+     should register as machined rather than soft — a ruled index, a terminal
+     panel, a chip. .surface-instrument now consumes the token, so the two can
+     never drift apart. */
+  --r-instrument: 8px;
 }
 
 /* Warm-paper light theme: the same recipe inverted. A dark translucent fill
@@ -1518,15 +1842,34 @@ html, body {
 [data-theme="light"] {
   --glass-bg: rgba(255, 255, 255, 0.55);
   --glass-bg-strong: rgba(255, 255, 255, 0.75);
+  /* Same gradient, same light direction — but on warm paper the dense end is
+     MORE white, not darker, or the panel reads as a smudge (the note above on
+     why the light theme inverts the fill rather than reusing it). */
+  --glass-grad: linear-gradient(
+    to top right,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0.55) 46%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  --glass-grad-strong: linear-gradient(
+    to top right,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.75) 44%,
+    rgba(255, 255, 255, 0.61) 100%
+  );
   --glass-border: rgba(12, 12, 12, 0.1);
   --glass-border-hot: rgba(0, 168, 90, 0.35);
-  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset -1px 0 0 rgba(255, 255, 255, 0.45);
   --glass-glow: 0 24px 80px -32px rgba(0, 168, 90, 0.22);
 }
 
 @layer components {
   .glass {
-    background: var(--glass-bg);
+    /* `background`, not `background-color` + `background-image`: the gradient
+       carries the whole tint, and layering it over the flat colour would
+       composite two alphas and double the density. */
+    background: var(--glass-grad, var(--glass-bg));
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
@@ -1536,7 +1879,7 @@ html, body {
   /* Hero-weight glass: heavier fill so display type stays legible over the
      aurora, plus the green depth glow that lifts it off the canvas. */
   .glass-strong {
-    background: var(--glass-bg-strong);
+    background: var(--glass-grad-strong, var(--glass-bg-strong));
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
@@ -1560,12 +1903,16 @@ html, body {
     inset: 0;
     pointer-events: none;
     border-radius: inherit;
+    /* Re-aimed to the frost gradient's light: 45deg runs bottom-left → top
+       right, so 0% is the dense corner (where the phosphor pools) and 100% is
+       the thin corner catching the highlight. It used to run 115deg with the
+       white at top-LEFT, which crossed the fill and flattened it. */
     background: linear-gradient(
-      115deg,
-      rgba(255, 255, 255, 0.09) 0%,
-      transparent 24%,
-      transparent 76%,
-      rgba(0, 255, 135, 0.05) 100%
+      45deg,
+      rgba(0, 255, 135, 0.055) 0%,
+      transparent 26%,
+      transparent 72%,
+      rgba(255, 255, 255, 0.11) 100%
     );
   }
 
@@ -1602,6 +1949,17 @@ html, body {
 .glass-aurora--fixed {
   position: fixed;
   z-index: -1;
+}
+/* Melt the aurora's leading edge. The marketing region begins directly under
+   the landing hero, which ramps its own background out to var(--bg); but .a1 is
+   anchored at top:-8vw and this container clips it with overflow:hidden, so the
+   orb was cut off flat and put a ~5-unit luminance step straight back onto the
+   boundary the hero ramp had just cleared. Fading the aurora in over its first
+   160px makes the two backgrounds meet at the same value. Deliberately NOT on
+   --fixed: that variant covers the whole viewport and has no seam to hide. */
+.glass-aurora--melt-top {
+  mask-image: linear-gradient(to bottom, transparent 0, black 160px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 160px);
 }
 .glass-aurora i {
   position: absolute;
@@ -1750,7 +2108,7 @@ html, body {
      are what carry the family resemblance; the frost was never the part doing
      that work. */
   .surface-instrument {
-    border-radius: 8px;
+    border-radius: var(--r-instrument);
     box-shadow: var(--glass-hi);
   }
 }

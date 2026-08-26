@@ -316,7 +316,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           <a
             href="/portfolio"
             className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
-            title="Full portfolio — positions, history, wagered, ledger"
+            title="Full portfolio — positions, history, deployed, ledger"
           >
             portfolio ↗
           </a>

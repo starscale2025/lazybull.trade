@@ -813,12 +813,18 @@ export default function ProPage() {
   }, [symbol, layout]);
 
   return (
-    <div ref={wrapperRef} className="pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
+    <div ref={wrapperRef} className="tap-floor pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
       {/* Site navigation — same bar as every other page, so /pro is not a dead
           end. The workspace strip below keeps the pro-only controls. */}
       <Nav />
       {/* App bar — brand lives in the Nav now; this strip is workspace status. */}
       <header className="flex h-12 items-center gap-2 border-b border-border bg-bg-soft px-3">
+        {/* The document's one h1. /pro shipped with no headings at all, so a
+            screen reader landed on an unnamed page and had no outline to
+            navigate. There is no visible title to promote here — the terminal
+            identifies itself with a badge and a workspace strip — so the
+            heading is screen-reader-only rather than invented chrome. */}
+        <h1 className="sr-only">Pro terminal — charting, indicators and paper trading</h1>
         <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 t-chrome font-semibold text-bull">
           pro
         </span>
@@ -835,14 +841,11 @@ export default function ProPage() {
         <div className="ml-2">
           <TruthBadge />
         </div>
-        <div className="ml-auto flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
-          <button onClick={() => setAlertsOpen(true)} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">
-            ⚡<span className="hidden sm:inline"> alerts</span> {alerts.length > 0 && <span className="ml-1 text-cyan">{alerts.length}</span>}
-          </button>
-          <button onClick={toggleFullscreen} className="size-7 border border-border bg-bg text-fg-dim hover:text-fg" title="Fullscreen">⛶</button>
-          <button onClick={onTrade} className="h-7 border border-border bg-bg px-2 text-fg-dim hover:text-fg">Trade</button>
-          <button onClick={saveWorkspace} className="h-7 bg-bull px-3 font-semibold text-bg hover:bg-bull-dim">Save<span className="hidden sm:inline"> · Share</span></button>
-        </div>
+        {/* The action cluster that used to sit here is gone. Every one of its
+            four controls — alerts, fullscreen, trade, save — is wired into
+            <TopBar/> immediately below with the SAME handlers, so the top 190px
+            of this page carried five duplicated controls and TWO solid-green
+            primaries firing the same function. One row of controls, one primary. */}
       </header>
 
       <TopBar

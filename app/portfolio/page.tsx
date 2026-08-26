@@ -287,9 +287,9 @@ export default function PortfolioPage() {
 
         {/* ── wagered strip ── */}
         <section className="mt-4 grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
-          <Stat big label="Total wagered" value={money(wagered.out)} sub="cash sent into trades & bets" />
+          <Stat big label="Total deployed" value={money(wagered.out)} sub="cash sent into trades" />
           <Stat big label="Returned from trades" value={money(wagered.back)} sub="closes, credits, premiums" />
-          <Stat big label="Bets open now" value={money(betStats.wageredOpen)} sub={`${betStats.openBets.length} option bet${betStats.openBets.length === 1 ? "" : "s"}`} />
+          <Stat big label="Options at risk" value={money(betStats.wageredOpen)} sub={`${betStats.openBets.length} option position${betStats.openBets.length === 1 ? "" : "s"}`} />
           <Stat
             big
             label="Bet record"

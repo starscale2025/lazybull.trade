@@ -191,7 +191,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
               </div>
               <button
                 onClick={() => setOpen(false)}
-                aria-label="Close bet slip"
+                aria-label="Close position slip"
                 className="font-mono text-xs text-fg-faint hover:text-fg"
               >
                 ✕
@@ -365,7 +365,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
         className="pointer-events-auto flex items-center gap-2 border border-bull/50 bg-bg/90 px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull shadow-xl backdrop-blur transition-colors hover:bg-bull hover:text-bg"
       >
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-        {open ? "Hide bet" : "Place a bet"}
+        {open ? "Hide" : "Paper trade"}
       </button>
     </div>
     </DockSlot>

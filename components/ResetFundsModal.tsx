@@ -71,7 +71,7 @@ export function ResetFundsModal({
 
   return (
     <div
-      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="reset-funds-title"
@@ -113,7 +113,7 @@ export function ResetFundsModal({
               ✕ <span className="text-fg">{trades.length}</span> round-trip{trades.length === 1 ? "" : "s"} of trade
               history + every journal note attached to them
             </li>
-            <li>✕ the cash ledger, the equity curve, wagered totals and all performance stats</li>
+            <li>✕ the cash ledger, the equity curve, deployed totals and all performance stats</li>
           </ul>
           <p>
             If you're signed in, the wipe syncs to your profile — your other devices

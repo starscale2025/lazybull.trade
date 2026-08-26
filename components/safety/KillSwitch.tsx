@@ -31,7 +31,7 @@ export function SafetySettingsButton() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             onClick={() => setOpen(false)}
           >
             <motion.div
@@ -156,7 +156,7 @@ function KillSwitchOverlay() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+          className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
         >
           <motion.div
             initial={{ scale: 0.96, y: 12 }}

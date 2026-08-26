@@ -65,13 +65,27 @@ export function Footer() {
             <p className="t-eyebrow text-fg-faint mb-4">
               ⟢ Last call
             </p>
-            <h3 className="t-title text-fg">
+            {/* h2, not h3: this is the first heading under the page h1, and every page on
+                the site rendered h1 -> h3 -> h2 because of this pair. */}
+            <h2 className="t-title text-fg">
               The chain is open.
               <br />
               <span className="t-accent">Drag something.</span>
-            </h3>
+            </h2>
           </div>
           <div className="col-span-12 lg:col-span-5">
+            {/* NOT wired to anything yet — and until it is, this must not be
+                allowed to SUBMIT. Footer is a server component, the form had no
+                action and no onSubmit, and the button defaulted to
+                type="submit", so pressing Subscribe fired a native GET at the
+                current URL. On the homepage that full-reloads the page and
+                replays the loader gate plus all 13,500px of the film from zero
+                — the single most punishing thing any control on this site could
+                do — and the address was discarded on the way.
+                `type="button"` below stops that with no client boundary and no
+                JavaScript. Whether we actually collect addresses is a product
+                and privacy decision, not a styling one: wiring the real island
+                and POST /api/subscribe is tracked as its own task. */}
             <form className="flex flex-col gap-2">
               <label className="t-chrome text-fg-faint">
                 One email a week · a single new strategy explained
@@ -83,7 +97,7 @@ export function Footer() {
                   placeholder="learner@inbox.io"
                   className="flex-1 bg-transparent py-3.5 font-mono text-sm text-fg placeholder:text-fg-faint outline-none"
                 />
-                <button className="btn-primary-glass rounded-none px-5 font-mono text-xs font-semibold uppercase tracking-wider">
+                <button type="button" className="btn-primary-glass rounded-none px-5 font-mono text-xs font-semibold uppercase tracking-wider">
                   Subscribe →
                 </button>
               </div>
@@ -106,7 +120,7 @@ export function Footer() {
               negative spacing pulled the last 'l' inside its own box
             • margin-left on the period to clear the extended italic span */}
       <div className="relative shell overflow-visible pt-12">
-        <h2
+        <div
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="1.6"
@@ -131,7 +145,7 @@ export function Footer() {
           >
             .
           </span>
-        </h2>
+        </div>
       </div>
 
       {/* Link columns */}

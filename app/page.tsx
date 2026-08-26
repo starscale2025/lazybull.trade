@@ -3,7 +3,6 @@ import { GetStarted } from "@/components/GetStarted";
 import { CinemaGate } from "@/components/scrollstory/CinemaGate";
 import { Footer } from "@/components/Footer";
 import { MarketingSections } from "@/components/marketing/MarketingSections";
-import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
 import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
@@ -15,7 +14,7 @@ import { ScrollReveal } from "@/components/atmosphere/ScrollReveal";
 // sections it replaced live on in git history if we ever want them back.
 export default function Home() {
   return (
-    <main className="relative flex min-h-screen flex-col bg-bg text-fg">
+    <main className="tap-floor relative flex min-h-screen flex-col bg-bg text-fg">
       {/* Atmosphere — fixed background layers */}
       <AmbientOrbs />
       <CursorSpotlight />
@@ -48,7 +47,11 @@ export default function Home() {
         </ScrollReveal>
       </div>
 
-      <TeacherAvatar />
+      {/* No <TeacherAvatar/> here. It was mounted with no `onAsk`, and the
+          component's onClick IS onAsk — so it was a labelled button wired to
+          nothing, parked bottom-right over every frame of the film and measured
+          2.0-4.7x brighter than the entire frame at the climax. The one place
+          it is actually wired is /trade/chain. */}
     </main>
   );
 }

@@ -358,7 +358,7 @@ export default function LearnPage() {
   ];
 
   return (
-    <main className="flex min-h-screen flex-col bg-bg text-fg">
+    <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg">
       {/* Boot intro */}
       <BootSequence />
       {/* Live VIX → --learn-vix (the page breathes with market fear) */}

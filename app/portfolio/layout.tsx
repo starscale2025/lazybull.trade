@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Portfolio — lazybull",
   description:
-    "Your paper-trading account in one place: equity, open positions, working orders, wagered totals, trade history and the cash ledger. Paper only — never advice.",
+    "Your paper-trading account in one place: equity, open positions, working orders, deployed totals, trade history and the cash ledger. Paper only — never advice.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

@@ -5,7 +5,7 @@
 <style>
   :root {
     --bg: #050505; --fg: #f5f5f0; --fg-dim: #8a8a82;
-    --bull: #00ff87; --bear: #ff5c5c; --cyan: #00e5ff; --amber: #ffb020; --border: #1f1f1f;
+    --bull: #00ff87; --bear: #ff2e63; --cyan: #00e5ff; --amber: #ffb800; --border: #1f1f1f;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; transition: none !important; animation: none !important; }
   html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
@@ -142,7 +142,16 @@ function mixHex(a, b, t) {
   const c = pa.map((x, i) => Math.round(lerp(x, pb[i], clamp(t, 0, 1))));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
-const GREEN = "#00ff87", RED = "#ff5c5c", CYAN = "#00e5ff", AMBER = "#ffb020", INK = "#f5f5f0", GRAY = "#8a8a82";
+// PALETTE + TYPEFACE — both RECEIVED from the parent via initScene, never
+// re-declared here. This copy had already drifted: RED was #ff5c5c against the
+// site's --bear #ff2e63, and AMBER #ffb020 against --ffb800, so the film's
+// crash was a different red from the product's. And every ctx.font asked for
+// `ui-monospace`, i.e. whatever the operating system happens to supply — the
+// nine-act showpiece was typeset in Menlo on a Mac, Consolas on Windows and
+// DejaVu on Linux. MONO is the parent's own JetBrains Mono face, injected into
+// this document as an @font-face by ScrollCinema before initScene runs.
+let GREEN = "#00ff87", RED = "#ff2e63", CYAN = "#00e5ff", AMBER = "#ffb800", INK = "#f5f5f0", GRAY = "#8a8a82";
+let MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 // alpha wrapper that accepts either #rrggbb or rgb(...) so fills never break
 function withAlpha(c, a) {
   if (c[0] === "#") {
@@ -178,8 +187,14 @@ function bullOutline() {
   return right.concat(left);
 }
 
+// The rain speaks the product's own language. This used to be the mirrored
+// half-width katakana set from a 1997 film — the single most exhausted visual
+// in the genre, and an odd thing for a site that renders its own live cinema to
+// borrow. Greeks, strikes, calls and puts are what this instrument is actually
+// made of, and they are glyphs a reader can half-recognise rather than set
+// dressing. Count is kept in the same 40-60 band so the fall maths is untouched.
 const MATRIX_CHARS =
-  "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｸ0123456789$+=<>*ﾘﾁﾄﾉﾌｦ".split("");
+  "ΔΓΘΛΣΩνρσμβα0123456789.+-=<>/|$%CPKS∂π".split("");
 
 // 12 bots for the consensus ring — real families/verdicts from the app.
 // 10 agree (up>0.6), 2 dissent — a realistic ULTRA majority, not unanimity.
@@ -297,6 +312,30 @@ function buildRing(W, H) {
 
 window.initScene = async function initScene(cfg) {
   CFG = cfg;
+  // Adopt the parent's resolved design tokens and mono face, so this scene can
+  // never drift from the site again.
+  if (cfg.tokens) {
+    const t = cfg.tokens;
+    if (t.bull) GREEN = t.bull;
+    if (t.bear) RED = t.bear;
+    if (t.cyan) CYAN = t.cyan;
+    if (t.amber) AMBER = t.amber;
+    if (t.fg) INK = t.fg;
+    if (t.fgDim) GRAY = t.fgDim;
+    const rs = document.documentElement.style;
+    for (const [k, v] of Object.entries({
+      "--bull": t.bull, "--bear": t.bear, "--cyan": t.cyan,
+      "--amber": t.amber, "--fg": t.fg, "--fg-dim": t.fgDim, "--bg": t.bg,
+    })) if (v) rs.setProperty(k, v);
+  }
+  if (cfg.mono) {
+    MONO = cfg.mono;
+    // Canvas does NOT trigger a webfont fetch: setting ctx.font to a family that
+    // has not loaded silently falls back, and `document.fonts.ready` resolves
+    // happily because nothing in this DOM references the face. Ask for it
+    // explicitly, then let the existing fonts.ready await below settle.
+    try { await document.fonts.load(`700 24px ${MONO}`); } catch { /* fallback stands */ }
+  }
   if (cfg.phases) {
     PHASES = {};
     for (const k in cfg.phases) PHASES[k] = [cfg.phases[k].from, cfg.phases[k].to];
@@ -445,9 +484,9 @@ function drawRegime(ctx, r, env, W, H) {
   const rec = H_ex > 0.56 ? "run trend bots · SMA · MACD · Donchian"
     : H_ex < 0.44 ? "run reversion · Z-Score · Kalman" : "no edge — stand aside";
   ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillStyle = col; ctx.font = `700 ${Math.round(H * 0.024)}px ui-monospace, monospace`;
+  ctx.fillStyle = col; ctx.font = `700 ${Math.round(H * 0.024)}px ${MONO}`;
   ctx.fillText(`H ${H_ex.toFixed(2)}  ·  ${name}`, W / 2, my + 14);
-  ctx.fillStyle = GRAY; ctx.font = `${Math.round(H * 0.016)}px ui-monospace, monospace`;
+  ctx.fillStyle = GRAY; ctx.font = `${Math.round(H * 0.016)}px ${MONO}`;
   ctx.fillText(rec, W / 2, my + 14 + H * 0.032);
   ctx.textAlign = "left";
   ctx.restore();
@@ -522,7 +561,7 @@ function drawCandle(ctx, p, env, W, H) {
     ctx.arc(dv.x, dv.y, pulse, 0, TAU); ctx.fill();
     // anchor the probability figure to the forecast so the copy's "71%" is on-chart
     ctx.globalAlpha = predA; ctx.fillStyle = AMBER;
-    ctx.font = `600 ${Math.round(H * 0.019)}px ui-monospace, monospace`;
+    ctx.font = `600 ${Math.round(H * 0.019)}px ${MONO}`;
     ctx.textAlign = "left"; ctx.textBaseline = "bottom";
     ctx.fillText("P(down) 71%", dv.x + 13, dv.y - 9);
     ctx.textBaseline = "top";
@@ -631,7 +670,7 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.lineDashOffset = -((NOW * 22) % 12); // marching ants — the guard is live
     ctx.beginPath(); ctx.moveTo(ch.x, P.lossY); ctx.lineTo(ch.x + ch.w, P.lossY); ctx.stroke();
     ctx.setLineDash([]); ctx.lineDashOffset = 0;
-    ctx.fillStyle = RED; ctx.font = `600 ${Math.round(H * 0.02)}px ui-monospace, monospace`;
+    ctx.fillStyle = RED; ctx.font = `600 ${Math.round(H * 0.02)}px ${MONO}`;
     ctx.textBaseline = "bottom"; ctx.fillText("−$80  max loss", ch.x + 6, P.lossY - 6);
   }
   // red leak: risk dripping out below the floor — the guard is what holds it
@@ -662,7 +701,7 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.globalAlpha = kill; ctx.fillStyle = GREEN;
     const bx = ch.x + ch.w - 172, by = ch.y + 8;
     ctx.beginPath(); ctx.arc(bx + 8, by + 9, 4, 0, TAU); ctx.fill();
-    ctx.font = `600 ${Math.round(H * 0.019)}px ui-monospace, monospace`; ctx.textBaseline = "top";
+    ctx.font = `600 ${Math.round(H * 0.019)}px ${MONO}`; ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(0,255,135,0.9)"; ctx.fillText("KILL SWITCH ARMED", bx + 20, by + 1);
   }
   ctx.restore();
@@ -704,7 +743,7 @@ function drawConsensus(ctx, v, env, W, H) {
     if (nd.up > 0.6 && cast > 0.7) agree += 1;
     // label
     ctx.globalAlpha = alpha * cast * 0.8; ctx.fillStyle = GRAY;
-    ctx.font = `${Math.round(H * 0.014)}px ui-monospace, monospace`;
+    ctx.font = `${Math.round(H * 0.014)}px ${MONO}`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(nd.k, R.cx + Math.cos(nd.a) * (R.r + 18), R.cy + Math.sin(nd.a) * (R.r + 18));
   });
@@ -735,9 +774,9 @@ function drawConsensus(ctx, v, env, W, H) {
   const tierPct = shown / R.nodes.length;
   const tier = tierPct >= 0.83 ? "ULTRA" : tierPct >= 0.7 ? "HIGH" : tierPct >= 0.55 ? "MEDIUM" : "SPLIT";
   ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.font = `700 ${Math.round(H * 0.05)}px ui-monospace, monospace`;
+  ctx.font = `700 ${Math.round(H * 0.05)}px ${MONO}`;
   ctx.fillText(`${shown}/${R.nodes.length}`, R.cx, R.cy - H * 0.008);
-  ctx.font = `600 ${Math.round(H * 0.02)}px ui-monospace, monospace`;
+  ctx.font = `600 ${Math.round(H * 0.02)}px ${MONO}`;
   ctx.fillStyle = tier === "ULTRA" ? GREEN : GRAY;
   ctx.fillText(tier, R.cx, R.cy + H * 0.03);
   ctx.textAlign = "left";
@@ -869,7 +908,7 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   // charge. Beginning at 0.775 puts real particles on screen through the
   // handoff, under the charge's impact flash. Keep in step with BULL3D.out0 in
   // lib/cinema.ts and with `hideBull` in ScrollCinema.tsx.
-  const LOGO0 = 0.775, CONV_END = 0.855, DIS0 = 0.87, DIS1 = 0.925;
+  const LOGO0 = 0.80, CONV_END = 0.855, DIS0 = 0.87, DIS1 = 0.925;
   const dissolve = 1 - seg(t, DIS0, DIS1);
   const bullOn = t >= LOGO0 - 0.01 && t < DIS1 + 0.02;
   // `hideBull` (per frame) keeps the particle logo hidden while the 3D bull is up.
@@ -892,11 +931,18 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   bullR.style.opacity = "0";
 
   // ---- matrix rain + homepage resolve ------------------------------------
-  const rainStart = 0.9, rainPeakEnd = 0.95, rainThin = 0.96;
-  const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, 1.0));
+  // The rain used to thin out only at t=1.0 — the exact instant the canvas
+  // crossfades and collapse() fires. So it was still at ~32% opacity over the
+  // resolved homepage at 0.987 and then got CUT rather than clearing: the last
+  // thing you saw of the film was the landing page behind a green curtain,
+  // which is most of why the hand-off read as a jump. Clear it by 0.975 and the
+  // final 2.5% (~35vh of scroll) is a clean, fully resolved hero that the
+  // razor-thin canvas fade at 0.998 can swap for the live one invisibly.
+  const rainStart = 0.9, rainPeakEnd = 0.94, rainThin = 0.95, rainEnd = 0.975;
+  const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, rainEnd));
   if (rainAmt > 0.002) {
     const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
-    ctx.font = `${Math.round(cell * 0.92)}px ui-monospace, SFMono-Regular, monospace`;
+    ctx.font = `${Math.round(cell * 0.92)}px ${MONO}`;
     ctx.textBaseline = "top";
     const fall = (t - LOGO0) + NOW * 0.1; // rain keeps falling even at rest
     for (const col of MATRIX) {
@@ -914,7 +960,9 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     }
     ctx.shadowBlur = 0;
   }
-  const homeStart = 0.91, homeEnd = 0.99;
+  // Fully opaque as the rain clears, not 0.02 before the swap — the hold is
+  // what makes the cut invisible.
+  const homeStart = 0.91, homeEnd = 0.97;
   home.style.opacity = String(seg(t, homeStart, homeEnd));
 
   // ---- cursor spotlight: the pointer carries a soft torch through the 2D acts
@@ -927,6 +975,24 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     g.addColorStop(0.5, `rgba(0,255,135,${0.02 * fadeOut})`);
     g.addColorStop(1, "rgba(0,255,135,0)");
     ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // ---- outro: settle to the page ground before the swap -------------------
+  // #homepage is a raster baked at 1600x1000 and shown through object-fit:cover,
+  // so it scales uniformly with the viewport while the LIVE hero re-flows (fluid
+  // clamp() type, fixed paddings). The two therefore only pixel-match at the
+  // width the plate was captured at. Measured at 1280 wide: the CTA sits 66px
+  // higher and 10px shorter in the plate than in the live hero — 0.8x, exactly
+  // the viewport ratio. No re-bake can close that; it is geometry.
+  // So stop trying to cut invisibly between two mismatched plates. Ramp the
+  // whole frame down to the page ground over the last ~1.4% and let the wrapper
+  // crossfade (0.998-1.0) hand off from an empty frame: the film settles, and
+  // the real hero is simply already there. Reads the same at every width.
+  // The canvas sits ABOVE #homepage in the stage, so this covers the plate too.
+  const outro = seg(t, 0.984, 0.998);
+  if (outro > 0.002) {
+    ctx.fillStyle = `rgba(5, 5, 5, ${outro})`;
     ctx.fillRect(0, 0, W, H);
   }
   return true;

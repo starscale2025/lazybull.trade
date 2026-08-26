@@ -44,7 +44,12 @@ function generateRegimeSeries(hurst: number) {
 function regimeLabel(h: number) {
   if (h > 0.6) return { kind: "TRENDING", color: "var(--bull)", desc: "Moves keep going. Trend bots win." };
   if (h > 0.55) return { kind: "WEAK TREND", color: "var(--bull)", desc: "Mild momentum. Trend bots have an edge." };
-  if (h > 0.45) return { kind: "RANDOM", color: "var(--fg-faint)", desc: "Coin flip. No bot has an edge today — sit it out." };
+  // --fg-dim, not --fg-faint. H opens at 0.50, so RANDOM is the DEFAULT state of
+  // the flagship chart on a page titled "Trading, visualized." — and --fg-faint
+  // is the site's lowest ink, measured near-invisible against the panel. Three
+  // other surfaces already draw the random regime in --fg-dim; this was the
+  // outlier.
+  if (h > 0.45) return { kind: "RANDOM", color: "var(--fg-dim)", desc: "Coin flip. No bot has an edge today — sit it out." };
   if (h > 0.4) return { kind: "WEAK REVERSION", color: "var(--cyan)", desc: "Mild snap-back. Reversion bots have an edge." };
   return { kind: "MEAN-REVERTING", color: "var(--cyan)", desc: "Prices snap back. Reversion bots win." };
 }
@@ -99,12 +104,16 @@ export function LearnRegimeVisualizer() {
               className="svg-fade-in"
             />
             {/* line */}
+            {/* non-scaling-stroke at 2: the chart sits in a ~370px sticky column
+                inside a 720-wide viewBox, so the old 1.6 rendered sub-pixel and
+                washed out entirely. */}
             <path
               key={`line-${h.toFixed(2)}`}
               d={path}
               fill="none"
               stroke={label.color}
-              strokeWidth="1.6"
+              vectorEffect="non-scaling-stroke"
+              strokeWidth="2"
               pathLength={1}
               className="svg-draw-fast"
             />

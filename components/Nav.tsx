@@ -56,12 +56,16 @@ export function Nav() {
 
         {/* lg (not md): at 768–1023 the full rail + badge + CTA is ~970px wide
             and forces horizontal scroll — the hamburger covers that band. */}
+        {/* px-2.5 is held until 2xl. The roomier xl:px-3 added ~2px a side across
+            seven links — ~28px — which at 1280 was the exact margin between the
+            bar fitting and the primary CTA being clipped off the right edge.
+            Every child here is shrink-0, so there is no give anywhere else. */}
         <div className="hidden items-center gap-0.5 lg:flex">
           {NAV_DIRECTORY.map((item) => (
             <Link
               key={item.l}
               href={item.href}
-              className="group relative flex h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg xl:px-3"
+              className="group relative flex h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3"
             >
               <span>{item.l}</span>
             </Link>

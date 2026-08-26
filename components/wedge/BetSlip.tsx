@@ -60,7 +60,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
   return (
     <div className="surface-instrument border border-border bg-surface/80 backdrop-blur-sm shadow-[0_24px_90px_-40px_rgba(0,255,135,0.35)]">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2.5">
-        <span className="t-eyebrow text-bull">⟢ your bet</span>
+        <span className="t-eyebrow text-bull">⟢ your position</span>
         <span className="flex items-center gap-1.5 t-chrome text-fg-dim">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" /> live ${spot.toFixed(2)}
         </span>
@@ -147,7 +147,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
           onClick={() => onJump("manage")}
           className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:text-fg"
         >
-          <span>open bets</span>
+          <span>open positions</span>
           <span className={openCount > 0 ? "text-bull" : "text-fg-faint"}>{openCount} open ↓</span>
         </button>
       </div>

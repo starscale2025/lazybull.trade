@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
-import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
 import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
@@ -286,7 +285,7 @@ export default function TradePage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
+    <main className="tap-floor flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
       {/* the homepage's atmosphere language, carried through */}
       <AmbientOrbs />
       <CursorSpotlight />
@@ -613,7 +612,7 @@ export default function TradePage() {
                 </div>
                 <div className="mt-5 flex items-center justify-end gap-2">
                   <button onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg lg:py-2">cancel</button>
-                  <button onClick={confirmBet} className="bg-bull px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim lg:py-2">place this bet</button>
+                  <button onClick={confirmBet} className="bg-bull px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim lg:py-2">place this trade</button>
                 </div>
               </div>
             </motion.div>
@@ -635,7 +634,8 @@ export default function TradePage() {
         )}
       </AnimatePresence>
 
-      <TeacherAvatar />
+      {/* dead mount removed — no `onAsk`, so it rendered a button that did
+          nothing. /trade/chain is the wired one. */}
     </main>
   );
 }
@@ -816,7 +816,7 @@ function StrategyDetail({
       >
         <span className="inline-flex items-center gap-2">
           <span className="size-1.5 rounded-full pulse-dot" style={{ background: tone.color }} />
-          place this bet on {symbol}
+          place this trade on {symbol}
         </span>
         <span>→</span>
       </button>
@@ -845,7 +845,23 @@ function TeacherPanel({
 }) {
   const [q, setQ] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  // Follow the conversation — but ONLY once it is actually a conversation.
+  //
+  // This used to run on mount, with an empty thread, and `scrollIntoView` walks
+  // up to whatever scrolls — which here is the document. The page therefore
+  // scrolled ITSELF down 88px about half a second after load, before the reader
+  // had touched anything: the ticker and the "bet builder" eyebrow row slid out
+  // of frame and the nav snapped to the top. Measured 0.434 CLS on /trade, the
+  // worst number on the site after the homepage's film insertion.
+  //
+  // Guarding on growth keeps the intended behaviour (new teacher message pulls
+  // itself into view) and removes the unrequested jump. The first render is a
+  // baseline, never a scroll.
+  const lastThreadLen = useRef<number | null>(null);
   useEffect(() => {
+    const prev = lastThreadLen.current;
+    lastThreadLen.current = thread.length;
+    if (prev === null || thread.length <= prev) return;
     endRef.current?.scrollIntoView({ block: "nearest" });
   }, [thread.length, narrating]);
 

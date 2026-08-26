@@ -27,7 +27,7 @@ export function DockProvider({ children }: { children: React.ReactNode }) {
       <div
         ref={setHost}
         // flex-col: DOM order = visual order; DockSlot sets CSS `order`.
-        className="pointer-events-none fixed z-[90] flex flex-col items-end gap-2"
+        className="pointer-events-none fixed z-[var(--z-dock)] flex flex-col items-end gap-2"
         style={{
           right: "max(1rem, env(safe-area-inset-right))",
           bottom: "max(1rem, env(safe-area-inset-bottom))",

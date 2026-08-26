@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { PayoffSpine } from "./PayoffSpine";
 import {
   GlassButton,
   GlassChip,
@@ -371,6 +372,8 @@ type Tier = {
   feats: readonly string[];
   cta: string;
   href: string;
+  /** The condition attached to THIS price, if it has one. */
+  terms?: string;
   kind: "primary" | "glass";
   /** The recommended tier — heavier glass, hot border, "most popular" chip. */
   hot?: boolean;
@@ -404,6 +407,7 @@ const TIERS: readonly Tier[] = [
       "Pro charting suite · shareable workspaces",
     ],
     cta: "join early access",
+    terms: "billed annually · $39 monthly",
     href: "/auth/signin",
     kind: "primary",
     hot: true,
@@ -416,9 +420,7 @@ function Pricing() {
       <div className="flex flex-col items-center text-center" data-gsap="fade-up">
         <GlassEyebrow>Pricing</GlassEyebrow>
         <GlassHeading accent="Upgrade when it clicks.">Start free.</GlassHeading>
-        <p className="mt-4 t-eyebrow text-fg-faint">
-          billed annually · $39 monthly · cancel anytime
-        </p>
+        <p className="mt-4 t-eyebrow text-fg-faint">cancel anytime</p>
       </div>
 
       <div
@@ -433,9 +435,15 @@ function Pricing() {
               t.hot ? "glass-strong border-[var(--glass-border-hot)]" : "glass"
             }`}
           >
+            {/* Not "most popular". This is a pre-revenue product whose own CTA
+                says "join early access" — there is no popularity to report, and
+                inventing one on the page that asks for money is the cheapest
+                possible way to lose the trust the rest of this site works hard
+                for. "everything unlocked" is checkable against the feature list
+                directly beneath it. */}
             {t.hot && (
               <GlassChip className="absolute right-[18px] top-[18px]">
-                most popular
+                everything unlocked
               </GlassChip>
             )}
             <div
@@ -449,6 +457,11 @@ function Pricing() {
               </span>
               <span className="t-chrome text-fg-faint">{t.unit}</span>
             </div>
+            {/* The condition sits ON the number it qualifies. It used to be
+                headered over BOTH cards, which put "billed annually · $39
+                monthly" above a card that reads "$0 /forever" — a qualifier
+                attached to the one price it cannot possibly describe. */}
+            {t.terms && <div className="t-chrome text-fg-faint">{t.terms}</div>}
             <div className="font-display text-[15.5px] text-fg-dim">
               {t.blurb}
             </div>
@@ -478,15 +491,37 @@ function Pricing() {
 
 export function MarketingSections() {
   return (
-    <div className="relative isolate border-t border-border">
+    // No border-t: the hero now ramps its background into var(--bg) at its own
+    // bottom edge, and a 1px rule sitting on that ramp reinstated exactly the
+    // hard line the ramp removes.
+    <div className="relative isolate" data-payoff-track>
       {/* The one background the glass refracts: two phosphor orbs, one plasma,
           behind a masked grid. Scoped to this region rather than fixed to the
           viewport — the landing already runs a fixed orb layer above. */}
-      <div className="glass-aurora" aria-hidden>
+      {/* THE P&L SPINE. Sits above the aurora (z-0) and below every section
+          (relative z-10), so it runs behind the whole region and the four
+          sections read as four states of ONE curve rather than four unrelated
+          layouts. Server component; the morph is a data attribute the global
+          GsapScroller consumes, so this region still ships no client JS. */}
+      <PayoffSpine />
+      <div className="glass-aurora glass-aurora--melt-top" aria-hidden>
         <i className="a1" />
         <i className="a2" />
         <i className="a3" />
       </div>
+
+      {/* Meet the hero at its own value. The hero paints an opaque bg, which
+          occludes the root-level FIXED atmosphere; below the hero that
+          atmosphere shows through again, so the boundary still carried a ~4-unit
+          luminance step even after the hero ramped its own background out.
+          This starts at var(--bg) — exactly the value the hero now ends on — and
+          clears over 160px, so the two sides are continuous rather than merely
+          close. Inside `isolate`, so it covers the fixed layer behind it. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-40"
+        style={{ background: "linear-gradient(to bottom, var(--bg) 0%, transparent 100%)" }}
+      />
 
       {/* The site navbar, picked up here rather than at the top of the page.
           The landing's no-navbar rule protects the cinema, not the whole

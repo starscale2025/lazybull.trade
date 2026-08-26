@@ -134,13 +134,13 @@ export function CommandDeck() {
   return (
     <>
       {coach && (
-        <div className="fixed bottom-6 left-1/2 z-[140] -translate-x-1/2 border border-bull/50 bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-[var(--z-palette)] -translate-x-1/2 border border-bull/50 bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl">
           ⌘K — the whole desk, no mouse
         </div>
       )}
       {open && (
         <div
-          className="fixed inset-0 z-[140] flex items-start justify-center bg-black/60 pt-[14vh] backdrop-blur-sm"
+          className="fixed inset-0 z-[var(--z-palette)] flex items-start justify-center bg-black/60 pt-[14vh] backdrop-blur-sm"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
           }}

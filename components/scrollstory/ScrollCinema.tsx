@@ -4,8 +4,14 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
+import { cinemaAudioFrame, cinemaAudioEnabled, enableCinemaAudio, disableCinemaAudio } from "@/lib/cinema-audio";
+import { CinemaRail, type CinemaRailHandle } from "./CinemaRail";
+import { CinemaStill } from "./CinemaStill";
+// Shared with CinemaGate, which reserves exactly this height on the first paint
+// so mounting the film shifts nothing. See cinema-metrics.ts.
+import { SCROLL_LENGTH_VH } from "./cinema-metrics";
 
 // smoothstep — the phase ramps for the quant-lab type-on/colour narration, kept
 // identical in shape to the 3D IceCandle's so the panel and candle read as one clock.
@@ -26,11 +32,6 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const SCROLL_LENGTH_VH = 1500; // long pin: room for the expanded feature acts to read slowly
-// (1400 → 1500 when the ICE-LAB tail was widened — offsets the mild progress-
-// compression on safety/consensus so their felt pace barely changes, and gives
-// the lab's colour story its ~1.8× breathing room.)
-
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 // "/" is now the cinema itself, so no "home" shot — panels use real product routes.
 const SHOT_NAMES = ["learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
@@ -41,6 +42,10 @@ type SceneWindow = Window & {
     shots: Record<string, string>;
     phases: Record<string, { from: number; to: number }>;
     bullFrames: string[] | null;
+    /** The parent's RESOLVED design tokens — the scene keeps no palette of its own. */
+    tokens?: Record<string, string>;
+    /** The parent's own mono font-family, injected into the frame as @font-face. */
+    mono?: string;
   }) => Promise<unknown>;
   // `hideBull` / `hideCandle` / `hideDive` (per frame) drop the matching 2D draw
   // once that 3D layer is live. `now` (seconds) drives ambient, always-on motion;
@@ -56,12 +61,80 @@ type SceneWindow = Window & {
   ) => void;
 };
 
+// Cheap, cached, non-throwing WebGL support probe. Tries webgl2 then webgl, and
+// treats a thrown getContext (some privacy modes) as "no".
+let webglSupport: boolean | null = null;
+function hasWebGL(): boolean {
+  if (webglSupport !== null) return webglSupport;
+  try {
+    const c = document.createElement("canvas");
+    webglSupport = !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    webglSupport = false;
+  }
+  return webglSupport;
+}
+
+// The scene is a same-origin <iframe> with its own document, so it does not
+// inherit the page's tokens or its webfonts. It used to hardcode a copy of both,
+// and both had drifted: --bear was #ff5c5c against the site's #ff2e63, and every
+// ctx.font asked for `ui-monospace`, i.e. the OS default — so the nine-act
+// showpiece was typeset in a different face on every operating system.
+//
+// These read what the page ACTUALLY resolved and hand it over.
+function resolvedTokens(): Record<string, string> {
+  const cs = getComputedStyle(document.documentElement);
+  const get = (n: string) => cs.getPropertyValue(n).trim();
+  return {
+    bg: get("--bg"), fg: get("--fg"), fgDim: get("--fg-dim"),
+    bull: get("--bull"), bear: get("--bear"),
+    cyan: get("--cyan"), amber: get("--amber"),
+  };
+}
+
+/**
+ * Copy the page's mono @font-face rules into the frame and return the family.
+ *
+ * next/font self-hosts under /_next/static/media, so these are same-origin and
+ * the cinema CSP's `default-src 'self'` already covers them — no new origin, no
+ * network request beyond one the page has made anyway, and nothing to add to
+ * the policy. Returns null if the rules cannot be read (a cross-origin
+ * stylesheet throws on .cssRules), in which case the scene keeps its fallback.
+ */
+function injectMono(doc: Document): string | null {
+  const family = getComputedStyle(document.documentElement)
+    .getPropertyValue("--font-jetbrains")
+    .trim();
+  if (!family) return null;
+  const bare = family.replace(/['"]/g, "").split(",")[0].trim();
+  const faces: string[] = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    let rules: CSSRuleList;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      continue; // cross-origin sheet — not ours anyway
+    }
+    for (const rule of Array.from(rules)) {
+      if (rule.constructor.name !== "CSSFontFaceRule") continue;
+      const text = rule.cssText;
+      if (text.includes(bare)) faces.push(text);
+    }
+  }
+  if (!faces.length) return null;
+  const style = doc.createElement("style");
+  style.textContent = faces.join("\n");
+  doc.head.appendChild(style);
+  return `${family}, ui-monospace, SFMono-Regular, Menlo, monospace`;
+}
+
 export function ScrollCinema() {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
+  const railRef = useRef<CinemaRailHandle>(null);
   const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
   const bull3dWrapRef = useRef<HTMLDivElement>(null);
@@ -98,6 +171,8 @@ export function ScrollCinema() {
   // memory under a display:none div for the life of the page.
   const [dead, setDead] = useState(false);
   const [loadPct, setLoadPct] = useState(8);
+  // Sound is OFF until asked. See lib/cinema-audio.ts.
+  const [sound, setSound] = useState(false);
   const [reveal, setReveal] = useState(false);
   // gate held >10s → show "still loading" + a skip-to-static choice (we never
   // auto-reveal a half-loaded scene; the user decides)
@@ -142,6 +217,19 @@ export function ScrollCinema() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMode("static");
+      return;
+    }
+    // No WebGL, no film. Six of the nine acts are R3F, so without a context the
+    // reader gets thousands of pixels of black plus nine uncaught
+    // "THREE.WebGLRenderer: Error creating WebGL context" errors — measured, and
+    // strictly WORSE than the no-JavaScript experience (3,341 chars of readable
+    // page vs 5,135). The static path below already exists and is already proven
+    // by the reduced-motion audience; it simply was never reached this way.
+    //
+    // Probe on a throwaway canvas rather than waiting for R3F to fail: by the
+    // time onCreated would tell us, three canvases have already thrown.
+    if (!hasWebGL()) {
       setMode("static");
       return;
     }
@@ -252,6 +340,13 @@ export function ScrollCinema() {
         skipRef.current.style.opacity = String(o);
         skipRef.current.style.pointerEvents = o > 0.1 ? "auto" : "none";
       }
+      // The act rail rides this same pass — no second rAF, no per-frame React
+      // state next to three WebGL contexts. It writes styles directly and only
+      // announces on an act CHANGE.
+      railRef.current?.update(progress);
+      // Sound rides the SAME progress the scene draws from, so picture and
+      // sound cannot desync. No-ops entirely until the gate's SOUND ON is used.
+      if (cinemaAudioEnabled()) cinemaAudioFrame(progress, cinemaClock.vel);
       // 3D layers: crossfade each layer's DOM opacity over the 2D scene, and turn
       // its WebGL frameloop on only near its window (a rare toggle, not per frame).
       const driveLayer = (
@@ -279,8 +374,11 @@ export function ScrollCinema() {
         if (!el) return;
         const o = beatOpacity(progress, beat);
         el.style.opacity = String(o);
-        // per-character stagger plays while the beat is on-window
-        el.classList.toggle("beat-in", o > 0.1);
+        // The per-character stagger is now a NUMBER written every frame, not a
+        // class flip: the CSS below derives each glyph's own 0→1 from this and
+        // its index, so the reveal is f(progress) and scrubs backwards exactly
+        // like the lab type-on does. See beatCharT in lib/cinema.ts.
+        el.style.setProperty("--t", beatCharT(progress, beat).toFixed(4));
         // "top" beats anchor at their top edge (upper third); others center. The
         // type layer parallaxes harder than the scene → real depth.
         const baseY = beat.pos === "top" ? "0px" : "-50%";
@@ -492,7 +590,13 @@ export function ScrollCinema() {
         }
         done = true;
         try {
-          await w.initScene({ shots: SHOTS, phases: ACTS, bullFrames: null });
+          await w.initScene({
+            shots: SHOTS,
+            phases: ACTS,
+            bullFrames: null,
+            tokens: resolvedTokens(),
+            mono: injectMono(w.document) ?? undefined,
+          });
           ready = true;
           renderScene();
           applyOverlays();
@@ -594,7 +698,14 @@ export function ScrollCinema() {
       if (!ready || collapsed) return;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
-        win()?.initScene?.({ shots: SHOTS, phases: ACTS, bullFrames: null }).then(() => renderScene());
+        const w2 = win();
+        w2?.initScene?.({
+          shots: SHOTS,
+          phases: ACTS,
+          bullFrames: null,
+          tokens: resolvedTokens(),
+          mono: w2 ? injectMono(w2.document) ?? undefined : undefined,
+        }).then(() => renderScene());
       }, 160);
     };
     window.addEventListener("resize", onResize);
@@ -638,26 +749,10 @@ export function ScrollCinema() {
   };
 
   if (mode === "static") {
-    // Reduced motion or scene unavailable: calm static hero, copy laid out plainly.
+    // Reduced motion, no WebGL, or a scene that failed to load. See
+    // CinemaStill for why this is a drawn frame and not a list of headlines.
     return (
-      <section data-cinema-static className="relative overflow-hidden border-b border-border bg-bg">
-        <img
-          src="/cinema/shots/hero.webp"
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-20"
-          onError={(e) => { e.currentTarget.style.display = "none"; }}
-        />
-        <div className="relative mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center gap-10 px-6 py-24 text-center">
-          {/* Curated subset — the motion-only bookends (boot/welcome) and the second
-              candle beat would make a static vertical list too long. */}
-          {COPY_BEATS.filter((b) => !["boot", "welcome", "candle-vindication"].includes(b.id)).map((b) => (
-            <div key={b.id}>
-              <div className="font-display text-3xl tracking-tightest text-fg md:text-4xl">{b.heading}</div>
-              {b.sub && <div className="mt-2 font-mono text-sm text-fg-dim">{b.sub}</div>}
-            </div>
-          ))}
-        </div>
-      </section>
+      <CinemaStill />
     );
   }
 
@@ -694,6 +789,25 @@ export function ScrollCinema() {
             </span>
             <span className="tabular-nums text-bull/90">{Math.round(loadPct)}%</span>
           </div>
+          {/* The one place an opt-in belongs: this is already a textbook
+              entrance gate with a 0-100 counter, so asking here costs the
+              reader nothing and satisfies the browser's gesture requirement by
+              construction. Default OFF, always. */}
+          <button
+            type="button"
+            onClick={() => {
+              if (sound) {
+                disableCinemaAudio();
+                setSound(false);
+              } else {
+                setSound(enableCinemaAudio());
+              }
+            }}
+            aria-pressed={sound}
+            className="pointer-events-auto relative border border-border bg-bg/70 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-bull/50 hover:text-fg"
+          >
+            {sound ? "sound on" : "sound off"}
+          </button>
           {/* The exit is available from second 0 — for the first 10 seconds of a
               slow load this overlay used to cover the only skip button, leaving
               no way out of a locked scroll. */}
@@ -718,7 +832,14 @@ export function ScrollCinema() {
         ref={sectionRef}
         data-cinema
         className="pointer-events-none relative z-20"
-        style={{ height: `${SCROLL_LENGTH_VH}vh`, marginBottom: "-100vh" }}
+        // Divided by --ui-zoom for the same reason globals.css divides
+        // h-screen: these are inline, so the stylesheet cannot reach them, and
+        // an un-divided 1500vh would stretch the whole film by 10% and leave
+        // the -100vh hand-off overlap short by the same amount.
+        style={{
+          height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
+          marginBottom: "calc(-100vh / var(--ui-zoom))",
+        }}
       >
       {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
           the section — otherwise the section's opaque bg stays over the real Hero
@@ -864,6 +985,20 @@ export function ScrollCinema() {
           <span />
         </div>
         <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
+        {/* The film's spine. Replaces the dead-centre skip pill above md — that
+            pill sat over the dive corridor's best panel and read as the film
+            apologising for itself. Below md there is no film at all, so the
+            pill stays there as the only control. */}
+        <CinemaRail
+          ref={railRef}
+          onSkip={handleSkip}
+          onSeek={(target) => {
+            const sec = sectionRef.current;
+            if (!sec) return;
+            const range = sec.offsetHeight - window.innerHeight;
+            window.scrollTo({ top: sec.offsetTop + range * target, behavior: "smooth" });
+          }}
+        />
         {/* `absolute bottom-7` anchored this to the sticky wrapper, which at
             scrollY=0 has not yet reached its top-0 pin and therefore sits ~91px
             down the page — putting the button fully BELOW the fold on mobile
@@ -873,7 +1008,7 @@ export function ScrollCinema() {
           ref={skipRef}
           type="button"
           onClick={handleSkip}
-          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
+          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3 md:hidden"
         >
           Skip intro ↓
         </button>
@@ -882,21 +1017,32 @@ export function ScrollCinema() {
         </noscript>
         <style>{`
           .beat-word { display: inline-block; white-space: nowrap; }
+          /* THE COPY LAYER RUNS ON THE FILM'S CLOCK.
+             --t is written per frame by beatCharT(); --i is the glyph index.
+             Each character derives its own 0→1 (--c) from those two numbers, so
+             there is no transition, no transition-delay and no wall-clock
+             anywhere in the reveal: it is f(progress), it scrubs backwards, and
+             a fast scroll cannot outrun it.
+             This also removed the film's four rogue easing curves —
+             (.22,.68,.26,1), (.3,1.42,.42,1), (.3,1.3,.45,1) and plain 'ease' — against
+             the contract's one. The shape now comes from beatCharT's smoothstep,
+             which is the same ss01 beatOpacity and candleLabT already use. */
           .beat-char {
-            display: inline-block; opacity: 0;
-            transform: translateY(0.55em) rotate(1.5deg); filter: blur(4px);
-            transition: opacity .45s cubic-bezier(.22,.68,.26,1), transform .6s cubic-bezier(.3,1.42,.42,1), filter .4s ease;
-          }
-          .beat-in .beat-char {
-            opacity: 1; transform: none; filter: blur(0);
-            transition-delay: calc(var(--i) * 24ms);
+            display: inline-block;
+            --c: clamp(0, calc((var(--t, 0) - var(--i) * 0.016) / 0.34), 1);
+            opacity: var(--c);
+            transform:
+              translateY(calc((1 - var(--c)) * 0.55em))
+              rotate(calc((1 - var(--c)) * 1.5deg));
+            filter: blur(calc((1 - var(--c)) * 4px));
           }
           .beat-sub {
-            opacity: 0; transform: translateY(10px);
+            /* Trails the headline: starts once the glyphs are ~65% through. */
+            --c: clamp(0, calc((var(--t, 0) - 0.65) / 0.35), 1);
+            opacity: var(--c);
+            transform: translateY(calc((1 - var(--c)) * 10px));
             color: rgba(245,245,240,0.82); letter-spacing: 0.05em;
-            transition: opacity .6s ease, transform .6s cubic-bezier(.3,1.3,.45,1);
           }
-          .beat-in .beat-sub { opacity: 1; transform: none; transition-delay: 420ms; }
           /* QUANT-LAB type-on: each line clips to a ch-width set every frame from
              labT (monospace → 1ch/char), so the reveal is pure f(progress) and
              scrubs backwards. Only the frontier line carries the blinking caret
@@ -905,7 +1051,7 @@ export function ScrollCinema() {
           .lab-caret { box-shadow: inset -2px 0 0 0 rgba(191,232,255,0.85); animation: lab-blink 1.05s steps(1, end) infinite; }
           @keyframes lab-blink { 50% { box-shadow: inset -2px 0 0 0 transparent; } }
           @media (prefers-reduced-motion: reduce) {
-            .beat-char, .beat-sub { transition: none; opacity: 1; transform: none; filter: none; }
+            .beat-char, .beat-sub { --c: 1; opacity: 1; transform: none; filter: none; }
             .lab-caret { animation: none; }
           }
         `}</style>
