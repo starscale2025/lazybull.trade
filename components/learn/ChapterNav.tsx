@@ -88,7 +88,7 @@ export function ChapterNav() {
       {/* desktop: the named gutter */}
       <nav
         aria-label="Chapters"
-        className="fixed left-3 top-1/2 z-40 hidden w-[172px] -translate-y-1/2 lg:block"
+        className="glass-rail fixed left-3 top-1/2 z-40 hidden w-[188px] -translate-y-1/2 px-3 py-3.5 lg:block"
       >
         <div className="mb-2 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">
           <span className="size-1 rounded-full bg-bull pulse-dot" />
@@ -96,16 +96,20 @@ export function ChapterNav() {
           <span>· learn</span>
         </div>
 
-        {/* equity curve of concepts unlocked */}
-        <svg viewBox="0 0 100 40" className="mb-1 h-9 w-full" aria-hidden preserveAspectRatio="none">
-          <line x1="0" y1="34" x2="100" y2="34" stroke="var(--border)" strokeWidth="0.5" />
-          {earned.length > 0 && (
+        {/* Equity curve of concepts unlocked — omitted entirely until there is
+            something to plot. With nothing earned it drew one baseline rule and
+            36px of nothing, which was invisible while this rail was, but reads
+            as a hole now that the rail is a surface. The chart appears with the
+            first answer, which is also when it starts meaning anything. */}
+        {earned.length > 0 && (
+          <svg viewBox="0 0 100 40" className="mb-1 h-9 w-full" aria-hidden preserveAspectRatio="none">
+            <line x1="0" y1="34" x2="100" y2="34" stroke="var(--border)" strokeWidth="0.5" />
             <path d={curveD} fill="none" stroke="var(--bull)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-          )}
-          {earned.map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r="1.6" fill="var(--bull)" />
-          ))}
-        </svg>
+            {earned.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r="1.6" fill="var(--bull)" />
+            ))}
+          </svg>
+        )}
         <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint">
           <span className="text-fg-dim">{correctCount}</span>/{total} called right ·{" "}
           <span className="text-fg-dim">{answeredCount}</span> unlocked

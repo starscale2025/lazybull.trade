@@ -1876,6 +1876,22 @@ nav[aria-label="Site pages"] a:focus-visible {
     box-shadow: var(--glass-hi);
   }
 
+  /* A floating RAIL: the same material as .glass, deliberately without the box.
+     The /learn chapter gutter is fixed over the page's own content, and the
+     Desk's terminal scrolls past directly behind it — fully transparent, two
+     chapter names were being overprinted by whatever panel happened to be
+     underneath and became unreadable. It needs fill, but not a border: a
+     bordered rectangle floating in the left margin reads as a panel the page
+     does not actually have, and the rail's job is to be a list, not a card.
+     Same reason there is no inset highlight — that edge only makes sense on
+     something with an edge. */
+  .glass-rail {
+    background: var(--glass-grad, var(--glass-bg));
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--r-panel);
+  }
+
   /* Hero-weight glass: heavier fill so display type stays legible over the
      aurora, plus the green depth glow that lifts it off the canvas. */
   .glass-strong {
