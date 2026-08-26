@@ -1,16 +1,36 @@
 import { ImageResponse } from "next/og";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // The share card. There wasn't one — /opengraph-image 404'd and the metadata
 // carried no openGraph block, so every link to this site rendered as bare text.
 //
-// Deliberately typographic and dependency-free: no font fetch, no image fetch,
-// nothing that can fail at build time or in a preview deploy. It draws the one
-// object the whole product is about — a long-call payoff, flat at max loss,
-// hard kink at the strike, uncapped above it — in the brand's own tokens.
+// Typographic, and dependency-free in the sense that matters: no NETWORK. It
+// draws the one object the whole product is about — a long-call payoff, flat at
+// max loss, hard kink at the strike, uncapped above it — in the brand's own
+// tokens, and now in the brand's own letterforms.
+//
+// THE FONTS. This card used to render in Helvetica, because Satori falls back
+// silently when it is handed no font data. That cost the brand its single most
+// recognisable asset: the Fraunces wonky italic on the word "see" — the one
+// piece of type this site is known by — was being shown to every person who
+// ever saw a link to it as a sheared Helvetica.
+//
+// assets/og-fonts/* are cut from the very woff2 files next/font already ships,
+// so they cannot drift from the live site and nothing was downloaded to make
+// them. Each is instanced (opsz 144 / wght 600, SOFT and WONK at 0 — the calm
+// default, since a static card has no live VIX to carry) and subsetted to
+// printable ASCII plus the punctuation the copy uses: 95KB for all three, read
+// at BUILD time only. This route prerenders to a PNG, so not one of those bytes
+// reaches a browser.
 //
 // This is the INTERIM card. The intended final frame is a render of the fused
 // price ladder (cone + strikes + payoff on one axis); when that exists, this is
 // the file it replaces.
+
+const font = (f: string) => readFileSync(join(process.cwd(), "assets", "og-fonts", f));
+const DISPLAY = "Fraunces";
+const MONO = "JetBrains Mono";
 
 export const alt = "lazybull.trade — Options you can see";
 export const size = { width: 1200, height: 630 };
@@ -91,7 +111,7 @@ export default function Image() {
             display: "flex",
             alignItems: "center",
             gap: 14,
-            fontFamily: "monospace",
+            fontFamily: MONO,
             fontSize: 21,
             letterSpacing: 4,
             color: BULL,
@@ -107,6 +127,7 @@ export default function Image() {
           <div
             style={{
               display: "flex",
+              fontFamily: DISPLAY,
               fontSize: 116,
               lineHeight: 1,
               letterSpacing: -4,
@@ -116,8 +137,14 @@ export default function Image() {
           >
             Options you can&nbsp;<span style={{ color: BULL, fontStyle: "italic" }}>see.</span>
           </div>
-          <div style={{ display: "flex", fontSize: 30, color: DIM, letterSpacing: -0.4 }}>
-            27 bots · 13 models · 8 live demos — learn it, backtest it, then paper trade it.
+          {/* TWO lines on purpose. Mono is ~1.7x the width of the sans this was
+              written for, so the single sentence wrapped on its own and landed
+              a ragged second line against the figure below. Split at the
+              argument's own seam instead: what you get, then what you do with
+              it — and the second line is the site's mantra, verbatim. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: MONO, fontSize: 25, letterSpacing: -0.2 }}>
+            <div style={{ display: "flex", color: DIM }}>27 bots · 13 models · 8 live demos</div>
+            <div style={{ display: "flex", color: FG }}>Learn it. Backtest it. Only then trade it.</div>
           </div>
         </div>
 
@@ -127,7 +154,7 @@ export default function Image() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-end",
-            fontFamily: "monospace",
+            fontFamily: MONO,
             fontSize: 22,
             color: DIM,
             letterSpacing: 2,
@@ -140,6 +167,13 @@ export default function Image() {
         </div>
       </div>
     ),
-    size
+    {
+      ...size,
+      fonts: [
+        { name: DISPLAY, data: font("Fraunces-Display.ttf"), weight: 600, style: "normal" },
+        { name: DISPLAY, data: font("Fraunces-Display-Italic.ttf"), weight: 600, style: "italic" },
+        { name: MONO, data: font("JetBrainsMono.ttf"), weight: 400, style: "normal" },
+      ],
+    }
   );
 }
