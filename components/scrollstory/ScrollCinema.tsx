@@ -100,7 +100,27 @@ function resolvedTokens(): Record<string, string> {
  * network request beyond one the page has made anyway, and nothing to add to
  * the policy. Returns null if the rules cannot be read (a cross-origin
  * stylesheet throws on .cssRules), in which case the scene keeps its fallback.
+ *
+ * THE URLS MUST BE ABSOLUTISED. cssText serialises `src:` AS AUTHORED, and Next
+ * authors it relative: `url("../media/xxx.woff2")`. That is correct from the
+ * stylesheet's own home at /_next/static/chunks/, and wrong the moment the rule
+ * is copied into a document based at /cinema/scene.html, where it resolves to
+ * /media/xxx.woff2 and 404s. The failure is silent — the family string returned
+ * below carries ui-monospace as its fallback, so the scene just quietly drew in
+ * the OS default, which is the exact regression this function exists to
+ * prevent. Resolve every url() against the sheet it came from.
  */
+/** Rewrite every url() in a CSS rule to an absolute URL against `base`. */
+function absolutise(css: string, base: string): string {
+  return css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (whole, _q, raw: string) => {
+    try {
+      return `url("${new URL(raw, base).href}")`;
+    } catch {
+      return whole; // data: or something exotic — leave it exactly as it was
+    }
+  });
+}
+
 function injectMono(doc: Document): string | null {
   const family = getComputedStyle(document.documentElement)
     .getPropertyValue("--font-jetbrains")
@@ -118,7 +138,7 @@ function injectMono(doc: Document): string | null {
     for (const rule of Array.from(rules)) {
       if (rule.constructor.name !== "CSSFontFaceRule") continue;
       const text = rule.cssText;
-      if (text.includes(bare)) faces.push(text);
+      if (text.includes(bare)) faces.push(absolutise(text, sheet.href ?? document.baseURI));
     }
   }
   if (!faces.length) return null;
