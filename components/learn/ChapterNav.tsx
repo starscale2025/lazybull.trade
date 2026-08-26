@@ -88,9 +88,9 @@ export function ChapterNav() {
       {/* desktop: the named gutter */}
       <nav
         aria-label="Chapters"
-        className="glass-rail fixed left-3 top-1/2 z-40 hidden w-[188px] -translate-y-1/2 px-3 py-3.5 lg:block"
+        className="chapter-rail fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 px-[9px] py-3.5 lg:block"
       >
-        <div className="mb-2 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="rail-fade mb-2 flex items-center gap-2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">
           <span className="size-1 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">live</span>
           <span>· learn</span>
@@ -102,7 +102,7 @@ export function ChapterNav() {
             as a hole now that the rail is a surface. The chart appears with the
             first answer, which is also when it starts meaning anything. */}
         {earned.length > 0 && (
-          <svg viewBox="0 0 100 40" className="mb-1 h-9 w-full" aria-hidden preserveAspectRatio="none">
+          <svg viewBox="0 0 100 40" className="rail-fade mb-1 h-9 w-[178px]" aria-hidden preserveAspectRatio="none">
             <line x1="0" y1="34" x2="100" y2="34" stroke="var(--border)" strokeWidth="0.5" />
             <path d={curveD} fill="none" stroke="var(--bull)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             {earned.map((p, i) => (
@@ -110,9 +110,13 @@ export function ChapterNav() {
             ))}
           </svg>
         )}
-        <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.2em] text-fg-faint">
-          <span className="text-fg-dim">{correctCount}</span>/{total} called right ·{" "}
-          <span className="text-fg-dim">{answeredCount}</span> unlocked
+        <div className="rail-fade mb-3 font-mono text-[9px] uppercase leading-[1.5] tracking-[0.2em] text-fg-faint">
+          <div className="whitespace-nowrap">
+            <span className="text-fg-dim">{correctCount}</span>/{total} called right
+          </div>
+          <div className="whitespace-nowrap">
+            <span className="text-fg-dim">{answeredCount}</span> unlocked
+          </div>
         </div>
 
         <ol className="flex flex-col gap-0.5">
@@ -129,11 +133,16 @@ export function ChapterNav() {
                     isActive ? "text-bull" : "text-fg-faint hover:text-fg-dim"
                   }`}
                 >
-                  <span className={`h-px transition-all ${isActive ? "w-4 bg-bull" : "w-2 bg-border group-hover:w-3"}`} />
-                  <span className="tabular-nums">{c.num}</span>
-                  <span className="truncate">{c.short}</span>
+                  {/* The tick is the rail's resting state — never faded. */}
+                  <span
+                    className={`h-px shrink-0 transition-all ${
+                      isActive ? "w-4 bg-bull" : "w-2.5 bg-fg-faint/45 group-hover:w-3.5 group-hover:bg-fg-dim"
+                    }`}
+                  />
+                  <span className="rail-fade tabular-nums">{c.num}</span>
+                  <span className="rail-fade truncate">{c.short}</span>
                   {isConcept && (
-                    <span className={`ml-auto text-[9px] ${p ? (p.correct ? "text-bull" : "text-amber") : "text-fg-faint/40"}`}>
+                    <span className={`rail-fade ml-auto text-[9px] ${p ? (p.correct ? "text-bull" : "text-amber") : "text-fg-faint/40"}`}>
                       {p ? (p.correct ? "✓" : "•") : "◦"}
                     </span>
                   )}

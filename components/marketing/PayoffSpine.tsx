@@ -48,6 +48,15 @@ function shape(fn: (t: number) => number): string {
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
+/**
+ * The same shape, closed down to the floor so it can be FILLED.
+ *
+ * Two extra points on the end, identical across all four keyframes, so the
+ * polygon keeps the matching point count AttrPlugin needs — it tweens the
+ * number list positionally and does not care that the last two never move.
+ */
+const area = (pts: string) => `${pts} ${W},${H} 0,${H}`;
+
 // 01 · WORKFLOW — flat, three rising kinks. Three steps, no position yet.
 const WORKFLOW = shape((t) => {
   const steps = Math.floor(t * 3);
@@ -100,7 +109,38 @@ export function PayoffSpine() {
           preserveAspectRatio="none"
           className="absolute inset-x-0 top-1/2 h-[62%] w-full -translate-y-1/2"
         >
-        {/* the zero line the whole argument is measured against */}
+        <defs>
+          {/* The fade is what turns a stray diagonal into a payoff REGION. It
+              dies out well before the floor so the fill never reads as a solid
+              block behind body copy. */}
+          {/* userSpaceOnUse, NOT the default objectBoundingBox. The polygon's
+              box changes shape on every keyframe — WORKFLOW is nearly flat and
+              PRICING climbs 190 units — so a bbox-relative gradient stretches
+              and compresses as the spine morphs, and the fill visibly pulses
+              while you scroll. Anchored to the viewBox it fades out at the same
+              depth under the zero line no matter what shape is showing. */}
+          <linearGradient
+            id="spine-fill"
+            gradientUnits="userSpaceOnUse"
+            x1="0"
+            y1={ZERO - 150}
+            x2="0"
+            y2={ZERO + 120}
+          >
+            <stop offset="0" stopColor="var(--bull)" stopOpacity="0.2" />
+            <stop offset="0.5" stopColor="var(--bull)" stopOpacity="0.07" />
+            <stop offset="1" stopColor="var(--bull)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* THE ZERO LINE — one line, dashed, and the only horizontal here.
+            There used to be a second: a solid --fg-dim rule for "Free stays
+            flat at zero forever", drawn at exactly this y. Two strokes on one
+            coordinate can never read as two things, and its reveal had already
+            fired by the Product section, so what actually shipped was a solid
+            grey rule running the full width behind every section with a dashed
+            one hiding underneath it. Free's flatness is carried by the PRICING
+            keyframe of the spine itself, which is where it means something. */}
         <line
           x1="0"
           y1={ZERO}
@@ -109,24 +149,22 @@ export function PayoffSpine() {
           stroke="var(--fg-faint)"
           strokeWidth="1"
           strokeDasharray="5 9"
-          opacity="0.28"
+          opacity="0.3"
           vectorEffect="non-scaling-stroke"
         />
-        {/* FREE: flat at zero, forever. Fades in only as Pricing arrives — it is
-            the second half of that section's joke, and it would be noise
-            anywhere above it. */}
-        <line
-          x1="0"
-          y1={ZERO}
-          x2={W}
-          y2={ZERO}
-          stroke="var(--fg-dim)"
-          strokeWidth="2"
-          opacity="0.22"
-          vectorEffect="non-scaling-stroke"
-          data-gsap="fade-up-soft"
-          data-gsap-start="top 20%"
+
+        {/* THE AREA — morphs in lockstep with the spine below it. */}
+        <polygon
+          points={area(WORKFLOW)}
+          fill="url(#spine-fill)"
+          stroke="none"
+          data-gsap="payoff"
+          data-payoff-1={area(WORKFLOW)}
+          data-payoff-2={area(PRODUCT)}
+          data-payoff-3={area(SAFETY)}
+          data-payoff-4={area(PRICING)}
         />
+
         {/* THE SPINE */}
         <polyline
           points={WORKFLOW}
@@ -135,7 +173,7 @@ export function PayoffSpine() {
           strokeWidth="2"
           strokeLinejoin="round"
           strokeLinecap="round"
-          opacity="0.62"
+          opacity="0.85"
           vectorEffect="non-scaling-stroke"
           data-gsap="payoff"
           data-payoff-1={WORKFLOW}

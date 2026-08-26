@@ -1876,20 +1876,60 @@ nav[aria-label="Site pages"] a:focus-visible {
     box-shadow: var(--glass-hi);
   }
 
-  /* A floating RAIL: the same material as .glass, deliberately without the box.
-     The /learn chapter gutter is fixed over the page's own content, and the
-     Desk's terminal scrolls past directly behind it — fully transparent, two
-     chapter names were being overprinted by whatever panel happened to be
-     underneath and became unreadable. It needs fill, but not a border: a
-     bordered rectangle floating in the left margin reads as a panel the page
-     does not actually have, and the rail's job is to be a list, not a card.
-     Same reason there is no inset highlight — that edge only makes sense on
-     something with an edge. */
-  .glass-rail {
+  /* THE CHAPTER RAIL — a scrub bar at rest, a table of contents on approach.
+     Frosting it fixed one problem and created another: at any scroll position
+     where the page's own display type sits behind it, a 188px slab of glass
+     parked over the headline is a bigger interruption than the bleed-through
+     it was hiding. So it collapses to what it actually is most of the time —
+     fourteen ticks marking where you are — and becomes the full list only when
+     you go to use it.
+
+     backdrop-filter is animated from blur(0), NOT toggled from `none`: a
+     transparent element with a live blur still blurs everything behind it, so
+     the collapsed rail would smear the headline through a 34px strip for no
+     reason. Both ends of the transition are real filter values so it also
+     actually tweens instead of snapping.
+
+     Opens on :focus-within as well as :hover, so tabbing into it works. */
+  .chapter-rail {
+    width: 34px;
+    overflow: hidden;
+    border-radius: var(--r-panel);
+    background: transparent;
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+    transition:
+      width 380ms var(--ease-settle),
+      background 380ms var(--ease-settle),
+      backdrop-filter 380ms var(--ease-settle);
+  }
+  .chapter-rail:hover,
+  .chapter-rail:focus-within {
+    width: 196px;
     background: var(--glass-grad, var(--glass-bg));
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--r-panel);
+  }
+
+  /* Everything that is not a tick. Kept IN FLOW at full size in both states so
+     the rail's height never changes — it is centred with -translate-y-1/2, and
+     a height that moved on hover would slide the ticks out from under the
+     pointer that triggered it. Horizontal clipping does the hiding; opacity
+     does the fading. */
+  .rail-fade {
+    opacity: 0;
+    transition: opacity 260ms var(--ease-settle);
+  }
+  .chapter-rail:hover .rail-fade,
+  .chapter-rail:focus-within .rail-fade {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chapter-rail,
+    .rail-fade {
+      transition: none;
+    }
   }
 
   /* Hero-weight glass: heavier fill so display type stays legible over the
