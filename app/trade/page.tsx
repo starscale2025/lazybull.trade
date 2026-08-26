@@ -198,6 +198,9 @@ export default function TradePage() {
     [spot, low, high, days, sym.iv]
   );
   const [selectedId, setSelectedId] = useState<Strategy["id"] | null>("income");
+  // The chain's pointer, shared with the cone. Deliberately NOT persisted or
+  // debounced: it is a cursor, and a cursor that lags its pointer reads broken.
+  const [hoverStrike, setHoverStrike] = useState<number | null>(null);
   const selected = strategies.find((s) => s.id === selectedId) ?? null;
 
   // events
@@ -462,6 +465,10 @@ export default function TradePage() {
                   onChangeDays={setDays}
                   events={events}
                   bandProb={probInBand}
+                  // The forecast and the position now share one price ruler.
+                  legs={selected?.legs}
+                  breakevens={selected?.breakevens}
+                  hoverStrike={hoverStrike}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
@@ -482,6 +489,7 @@ export default function TradePage() {
             days={days}
             perSide={chainDepth}
             onStepDays={(d) => setDays(Math.max(1, Math.min(365, days + d)))}
+            onHoverStrike={setHoverStrike}
           />
         </div>
 

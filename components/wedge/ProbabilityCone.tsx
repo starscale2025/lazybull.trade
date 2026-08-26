@@ -18,11 +18,28 @@ export type Cone = {
   events?: MarketEvent[];
   /** When provided, labels the draggable band "N% PROBABILITY RANGE" (ref terminal look). */
   bandProb?: number;
+  /**
+   * THE POSITION, PROJECTED ONTO THE FORECAST.
+   *
+   * The cone answers "where might price go?" and the strategy panel answers
+   * "what do I own?" — and until now those two questions were asked on two
+   * unrelated vertical scales, three feet apart on the same screen. You could
+   * pick a 226.5 call and the chart that exists to tell you whether price gets
+   * there never drew 226.5.
+   *
+   * Passing the legs puts them on the cone's own price axis, so the forecast
+   * and the position are finally read against one ruler.
+   */
+  legs?: { type: "C" | "P"; side: "long" | "short"; strike: number }[];
+  /** Breakevens — the boundary the band has to clear for the position to pay. */
+  breakevens?: number[];
+  /** A strike being pointed at in the chain, drawn live against the forecast. */
+  hoverStrike?: number | null;
 };
 
 const PAD = { L: 14, R: 78, T: 18, B: 36 };
 
-export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onChangeLow, onChangeHigh, onChangeDays, events = [], bandProb }: Cone) {
+export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onChangeLow, onChangeHigh, onChangeDays, events = [], bandProb, legs = [], breakevens = [], hoverStrike = null }: Cone) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 360 });
   const dragRef = useRef<{ which: "low" | "high" | "both" | null; startY: number; startLow: number; startHigh: number; startTimeX?: number; startDays?: number } | null>(null);
@@ -46,8 +63,12 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const histN = Math.min(60, bars.length);
   const histBars = bars.slice(-histN);
   const totalBars = histN + Math.max(daysToExpiry, 5);
-  const minPrice = Math.min(spot * 0.7, ...histBars.map((b) => b.c), low);
-  const maxPrice = Math.max(spot * 1.3, ...histBars.map((b) => b.c), high);
+  // The domain has to CONTAIN the position. A 260 strike on a 226 spot sits
+  // outside the old +-30% window, and an off-domain strike does not clip — it
+  // draws at a negative y, i.e. on top of the header. Fold the levels in.
+  const levels = [...legs.map((l) => l.strike), ...breakevens, ...(hoverStrike != null ? [hoverStrike] : [])];
+  const minPrice = Math.min(spot * 0.7, ...histBars.map((b) => b.c), low, ...levels);
+  const maxPrice = Math.max(spot * 1.3, ...histBars.map((b) => b.c), high, ...levels);
 
   const inW = size.w - PAD.L - PAD.R;
   const inH = size.h - PAD.T - PAD.B;
@@ -329,6 +350,107 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           </text>
         </g>
 
+        {/* ── THE POSITION ON THE FORECAST ────────────────────────────────
+            Strikes exist only between now and expiry, so the rules span exactly
+            that and stop — running them the full width would imply the level
+            still means something after the contract is gone.
+
+            Colour is deliberately NOT the strategy tone: --bull and --bear
+            already mean "price up" and "price down" everywhere else on this
+            chart, and reusing them for long/short would make a short call read
+            as a bearish forecast. Long vs short is carried by the +/- sign and
+            the dash pattern instead.
+
+            The breakeven was tried in the strategy's tone, to tie it to the
+            card. That fails on the default strategy: "income" tones bull green,
+            which is the exact green of the probability band it is drawn on top
+            of, so the one line that matters most disappeared into the one shape
+            it has to be read against. It is --fg on a cut-out label instead:
+            neutral, always legible, and unmistakably a level rather than a
+            forecast. */}
+        {legs.length > 0 && (() => {
+          const xs = xOf(histN - 1);
+          // Dedupe: a spread's two legs can share a strike, and stacking two
+          // identical rules just renders a thicker, darker line for no reason.
+          const seen = new Map<number, { type: "C" | "P"; side: "long" | "short"; strike: number }>();
+          for (const l of legs) if (!seen.has(l.strike)) seen.set(l.strike, l);
+          return (
+            <g pointerEvents="none">
+              {[...seen.values()].map((l) => {
+                const y = yOf(l.strike);
+                const long = l.side === "long";
+                return (
+                  <g key={`${l.strike}-${l.type}-${l.side}`}>
+                    <line
+                      x1={xs}
+                      x2={xExpiry}
+                      y1={y}
+                      y2={y}
+                      stroke="var(--fg-faint)"
+                      strokeWidth="1"
+                      strokeDasharray={long ? "5 4" : "2 4"}
+                      opacity={long ? 0.85 : 0.55}
+                    />
+                    <text
+                      x={xs + 5}
+                      y={y - 4}
+                      fontFamily="var(--font-jetbrains)"
+                      fontSize="9"
+                      letterSpacing="0.5"
+                      fill={long ? "var(--fg-dim)" : "var(--fg-faint)"}
+                    >
+                      {long ? "+" : "\u2212"}{l.strike}{l.type}
+                    </text>
+                  </g>
+                );
+              })}
+              {breakevens.map((b) => {
+                const y = yOf(b);
+                const label = `B/E ${b.toFixed(2)}`;
+                const w = label.length * 5.6 + 8;
+                return (
+                  <g key={`be-${b}`}>
+                    <line x1={xs} x2={xExpiry} y1={y} y2={y} stroke="var(--fg)" strokeWidth="1.1" opacity="0.75" />
+                    {/* cut-out so the label survives the band behind it */}
+                    <rect x={xExpiry - w - 4} y={y - 14} width={w} height="12" fill="var(--bg)" opacity="0.82" />
+                    <text
+                      x={xExpiry - 8}
+                      y={y - 5}
+                      textAnchor="end"
+                      fontFamily="var(--font-jetbrains)"
+                      fontSize="9"
+                      fontWeight="600"
+                      letterSpacing="0.5"
+                      fill="var(--fg)"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })()}
+
+        {/* The strike under the pointer in the chain. Cyan because it is a
+            CURSOR, not a commitment — the same role spot's marker plays — and
+            it must not be mistaken for a leg you actually hold. */}
+        {hoverStrike != null && (() => {
+          const y = yOf(hoverStrike);
+          const xs = xOf(histN - 1);
+          const label = hoverStrike.toFixed(2);
+          const w = label.length * 6 + 10;
+          return (
+            <g pointerEvents="none">
+              <line x1={xs} x2={xExpiry} y1={y} y2={y} stroke="var(--cyan)" strokeWidth="1" strokeDasharray="4 3" opacity="0.9" />
+              <rect x={xs + 4} y={y - 14} width={w} height="12" fill="var(--cyan)" />
+              <text x={xs + 9} y={y - 5} fontFamily="var(--font-jetbrains)" fontSize="9" fontWeight="600" fill="var(--bg)">
+                {label}
+              </text>
+            </g>
+          );
+        })()}
+
         {/* Band label + handle squares — "N% PROBABILITY RANGE" (ref terminal look) */}
         {bandProb != null && (() => {
           const xs = xOf(histN - 1);
@@ -356,10 +478,21 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         {/* Expiry handle (drag along x) */}
         <g onPointerDown={(e) => startDrag("expiry", e)} style={{ cursor: "ew-resize", touchAction: "none" }}>
           <line x1={xExpiry} x2={xExpiry} y1={PAD.T} y2={size.h - PAD.B} stroke="var(--amber)" strokeWidth="1.4" strokeDasharray="2 4" />
-          <rect x={xExpiry - 36} y={PAD.T} width="72" height="16" fill="var(--amber)" />
-          <text x={xExpiry} y={PAD.T + 11} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fontWeight="600" fill="var(--bg)">
-            {daysToExpiry}d → exp
-          </text>
+          {/* CLAMPED to the plot. At long expiries the line sits hard against
+              the right edge, and an un-clamped chip centred on it overhung the
+              price gutter and painted out the topmost price label. The chip
+              slides; the line it labels does not move. */}
+          {(() => {
+            const cx = Math.min(xExpiry, size.w - PAD.R - 36);
+            return (
+              <>
+                <rect x={cx - 36} y={PAD.T} width="72" height="16" fill="var(--amber)" />
+                <text x={cx} y={PAD.T + 11} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fontWeight="600" fill="var(--bg)">
+                  {daysToExpiry}d → exp
+                </text>
+              </>
+            );
+          })()}
         </g>
 
         {/* Spot marker */}
@@ -393,8 +526,15 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         <line x1={PAD.L} x2={size.w - PAD.R} y1={size.h - PAD.B} y2={size.h - PAD.B} stroke="var(--border)" />
       </svg>
 
-      {/* Drag tip overlay */}
-      <div className="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-1 t-chrome text-fg-faint">
+      {/* Drag tip overlay.
+          BOTTOM-LEFT, not top-right. Top-right is where this chart puts its
+          DATA — the expiry chip, the confidence legend and the top price label
+          all land in that corner, and the tip was painted straight through the
+          "35d -> exp" chip. An instruction that is read once should not hold the
+          corner that carries numbers read continuously. Bottom-left is the one
+          region of the plot nothing else occupies: history runs along the
+          middle-left and the x baseline is below this. */}
+      <div className="pointer-events-none absolute bottom-9 left-4 flex flex-col items-start gap-1 t-chrome text-fg-faint">
         <span><span className="text-bull">drag bands</span> to move your zone</span>
         <span><span className="text-amber">drag the exp line</span> →← to change date</span>
       </div>

@@ -17,11 +17,19 @@ type Props = {
   days: number; // days to expiry — shared with the probability cone
   perSide: number; // strikes each side of ATM
   onStepDays?: (delta: number) => void;
+  /**
+   * Raised as a strike row is pointed at, and with null as the pointer leaves
+   * the table. The page hands it to the forecast cone, which draws that price
+   * as a live rule — so the chain and the chart stop being two lists of numbers
+   * that happen to share a page and become one instrument: point at a strike,
+   * see whether the forecast ever gets there.
+   */
+  onHoverStrike?: (strike: number | null) => void;
 };
 
 const kFmt = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : `${v}`);
 
-export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Props) {
+export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHoverStrike }: Props) {
   const expiry = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + days);
@@ -122,6 +130,12 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays }: Prop
             return (
               <div
                 key={K}
+                onPointerEnter={() => onHoverStrike?.(K)}
+                onPointerLeave={() => onHoverStrike?.(null)}
+                // Focus counts as hover. The row carries no tab stop of its own,
+                // but the bid/ask controls inside it do, so a keyboard walking
+                // the chain drives the cone exactly as a mouse does.
+                onFocusCapture={() => onHoverStrike?.(K)}
                 className={`${cellGrid} relative items-stretch border-b border-border-soft px-3 t-data text-[11px] transition-colors last:border-b-0 hover:bg-bg-soft/60 [&>span]:flex [&>span]:items-center [&>span]:py-2`}
               >
                 {/* nearest-the-money row ring, ref-style */}
