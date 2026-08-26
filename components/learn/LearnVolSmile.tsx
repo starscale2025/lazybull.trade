@@ -58,9 +58,9 @@ export function LearnVolSmile() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-12">
         {/* Smile chart */}
-        <div className="lg:col-span-8 surface-card border border-border bg-surface">
+        <div className="@2xl:col-span-8 surface-card border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <span>implied vol surface · spot ${SPOT}</span>
             <span className="tabular-nums">
@@ -117,7 +117,11 @@ export function LearnVolSmile() {
         </div>
 
         {/* Controls */}
-        <div className="lg:col-span-4 flex flex-col gap-3">
+        {/* Three states, which is the whole point of asking the container: stacked
+            when there is no room, SIDE BY SIDE once there is a little (this keeps
+            the demo inside the sticky terminal's height), and stacked again in the
+            narrow rail beside a wide chart. */}
+        <div className="@2xl:col-span-4 flex flex-col gap-3 @md:flex-row @2xl:flex-col">
           <div className="surface-card border border-border bg-surface p-4">
             <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">skew (ρ)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{skew.toFixed(2)}</div>

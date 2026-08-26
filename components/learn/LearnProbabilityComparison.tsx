@@ -120,9 +120,9 @@ export function LearnProbabilityComparison() {
         </svg>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-12">
         {/* Sliders */}
-        <div className="lg:col-span-5 space-y-3">
+        <div className="@2xl:col-span-5 space-y-3">
           <div className="surface-card border border-border bg-surface p-4">
             <Slider label="Low strike" value={low} setValue={(v) => setLow(Math.min(v, high - 1))} min={70} max={130} step={0.5} suffix="" prefix="$" />
             <Slider label="High strike" value={high} setValue={(v) => setHigh(Math.max(v, low + 1))} min={70} max={140} step={0.5} suffix="" prefix="$" />
@@ -132,7 +132,7 @@ export function LearnProbabilityComparison() {
         </div>
 
         {/* Three probability cards */}
-        <div className="lg:col-span-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="@2xl:col-span-7 grid grid-cols-1 gap-3 @sm:grid-cols-3">
           <ProbCard
             label="Black-Scholes"
             value={bs}

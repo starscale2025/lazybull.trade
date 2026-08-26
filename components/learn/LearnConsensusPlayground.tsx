@@ -70,14 +70,17 @@ export function LearnConsensusPlayground() {
   const toggle = (id: string) => setActive((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+    <div className="grid grid-cols-1 gap-5 @md:grid-cols-12">
       {/* Scenario picker + bot toggles */}
-      <div className="lg:col-span-7 flex flex-col gap-4">
+      <div className="@md:col-span-7 flex flex-col gap-4">
         <div className="surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             scenario
           </div>
-          <div className="grid grid-cols-3 gap-px bg-border">
+          {/* Three fixed columns hyphenated "RANGE-BOUND" mid-word once this
+              half narrowed to ~290px. Stack until the frame can actually carry
+              three. */}
+          <div className="grid grid-cols-1 gap-px bg-border @2xl:grid-cols-3">
             {(Object.keys(SCENARIOS) as Array<keyof typeof SCENARIOS>).map((k) => (
               <button
                 key={k}
@@ -105,7 +108,7 @@ export function LearnConsensusPlayground() {
             <span>active bots</span>
             <span className="text-fg-faint">click to toggle · {active.length}/{ALL_BOTS.length} on</span>
           </div>
-          <div className="grid grid-cols-2 gap-px bg-border md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-px bg-border @2xl:grid-cols-3">
             {ALL_BOTS.map((b) => {
               const isActive = active.includes(b.id);
               const v = scn.votes[b.id];
@@ -133,7 +136,7 @@ export function LearnConsensusPlayground() {
       </div>
 
       {/* Output */}
-      <div className="lg:col-span-5">
+      <div className="@md:col-span-5">
         <div className="surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             consensus tally

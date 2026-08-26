@@ -151,12 +151,12 @@ export function LearnBacktestBuilder() {
   return (
     <div className="space-y-4">
       {/* Top: bot picker + scenario picker */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-        <div className="lg:col-span-7 surface-card border border-border bg-surface">
+      <div className="grid grid-cols-1 gap-3 @2xl:grid-cols-12">
+        <div className="@2xl:col-span-7 surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             pick a bot
           </div>
-          <div className="grid grid-cols-2 gap-px bg-border md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-px bg-border @md:grid-cols-3">
             {PRESET_BOTS.map((b) => (
               <button
                 key={b.id}
@@ -172,7 +172,7 @@ export function LearnBacktestBuilder() {
           </div>
         </div>
 
-        <div className="lg:col-span-5 surface-card border border-border bg-surface">
+        <div className="@2xl:col-span-5 surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             market scenario
           </div>
@@ -228,7 +228,7 @@ export function LearnBacktestBuilder() {
       </div>
 
       {/* Live stats */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border @md:grid-cols-5">
         <Stat label="Total return" value={`${stats.ret >= 0 ? "+" : ""}${(stats.ret * 100).toFixed(1)}%`} tone={stats.ret >= 0 ? "var(--bull)" : "var(--bear)"} />
         <Stat label="Sharpe" value={stats.sharpe.toFixed(2)} tone={stats.sharpe > 1 ? "var(--bull)" : stats.sharpe > 0 ? "var(--cyan)" : "var(--bear)"} />
         <Stat label="Max DD" value={`${(stats.maxDD * 100).toFixed(1)}%`} tone="var(--bear)" />

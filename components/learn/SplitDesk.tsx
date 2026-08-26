@@ -249,7 +249,15 @@ function DeskFrame({
         </div>
         {hint && <div className="hidden t-eyebrow text-amber sm:block">{hint}</div>}
       </div>
-      <div className="relative border border-border bg-bg p-4 sm:p-6 ambient-glow">
+      {/* @container: the demos inside size themselves off THIS box, not the
+          viewport. They sit in a sticky column that is 46% of the page — about
+          560px on a 1440 screen, and narrower still because --ui-zoom scales
+          the whole document — yet they were splitting into 12-column layouts on
+          `lg:`, which fires at a 1024px VIEWPORT. The result was a chart squashed
+          into ~370px beside a ~185px sidebar, inside a container wide enough for
+          neither. A container query asks the only question that was ever
+          relevant: how much room do I actually have? */}
+      <div className="@container relative border border-border bg-bg p-4 @2xl:p-6 ambient-glow">
         <span className="pointer-events-none absolute -left-px -top-px size-3 border-l border-t border-bull" />
         <span className="pointer-events-none absolute -right-px -top-px size-3 border-r border-t border-bull" />
         <span className="pointer-events-none absolute -left-px -bottom-px size-3 border-l border-b border-bull" />

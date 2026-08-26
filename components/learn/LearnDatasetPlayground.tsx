@@ -29,9 +29,9 @@ export function LearnDatasetPlayground() {
   const change = last && first ? ((last.c - first.o) / first.o) * 100 : 0;
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+    <div className="grid grid-cols-1 gap-5 @2xl:grid-cols-12">
       {/* Knobs */}
-      <div className="lg:col-span-5 flex flex-col gap-3">
+      <div className="@2xl:col-span-5 flex flex-col gap-3">
         <div className="surface-card border border-border bg-surface">
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             dataset · synthetic mode
@@ -76,7 +76,7 @@ export function LearnDatasetPlayground() {
       </div>
 
       {/* Chart preview */}
-      <div className="lg:col-span-7">
+      <div className="@2xl:col-span-7">
         <div className="surface-card border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             <span>{symbol} · {bars} bars · seed {seed}</span>
