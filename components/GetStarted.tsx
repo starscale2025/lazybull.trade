@@ -23,9 +23,10 @@ const HUD_DISPLAY: Record<string, string> = { "^VIX": "VIX" };
 type HudQuote = { sym: string; last?: number; chgPct?: number };
 
 function HudIndexColumn() {
-  const [rows, setRows] = useState(() =>
-    HUD_SYMBOLS.map((s) => ({ s: HUD_DISPLAY[s] ?? s, v: "—", c: "", up: true }))
-  );
+  // null until the FIRST quote lands: five permanent "SPY —" dash rows were a
+  // whole HUD voice saying nothing whenever the feed is absent (which locally
+  // is always — no .env). No skeleton for a decorative layer.
+  const [rows, setRows] = useState<{ s: string; v: string; c: string; up: boolean }[] | null>(null);
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -58,6 +59,7 @@ function HudIndexColumn() {
       clearInterval(id);
     };
   }, []);
+  if (!rows) return null;
   return (
     <div
       className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left t-data text-[11px] tracking-wider md:block"
@@ -127,6 +129,9 @@ const FEATURES = [
 ];
 
 // Deterministic ghost candle series — a climb into a dip, echoing the cinema.
+// STATIC on purpose: at 20% opacity a breathing scaleY read as noise, not
+// life, under a headline that already flickers. The smoke loop is the one
+// moving thing in the background now.
 const CANDLES = Array.from({ length: 32 }, (_, i) => {
   const t = i / 31;
   const trend = t < 0.75 ? t / 0.75 : 1 - ((t - 0.75) / 0.25) * 0.5;
@@ -134,16 +139,8 @@ const CANDLES = Array.from({ length: 32 }, (_, i) => {
   return {
     h: Math.max(10, Math.min(96, h)),
     up: Math.sin(i * 0.8) > -0.2 && t < 0.78,
-    delay: (i % 8) * 0.25,
   };
 });
-
-const EMBERS = Array.from({ length: 9 }, (_, i) => ({
-  left: 7 + ((i * 97) % 86),
-  delay: (i * 0.8) % 6,
-  dur: 6 + (i % 4),
-  size: i % 3 === 0 ? 3 : 2,
-}));
 
 export function GetStarted() {
   const { status: authStatus } = useSession();
@@ -191,11 +188,10 @@ export function GetStarted() {
         }}
       />
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
-      <div className="pointer-events-none absolute -left-32 top-1/4 h-[520px] w-[520px] rounded-full bg-bull/12 blur-[150px] drift" />
-      <div
-        className="pointer-events-none absolute -right-24 bottom-1/4 h-[440px] w-[440px] rounded-full bg-cyan/10 blur-[150px] drift"
-        style={{ animationDelay: "-7s" }}
-      />
+      {/* Static glow pools — the drift animation is gone. The smoke loop is the
+          background's one mover; two more slow drifters under it read as churn. */}
+      <div className="pointer-events-none absolute -left-32 top-1/4 h-[520px] w-[520px] rounded-full bg-bull/12 blur-[150px]" />
+      <div className="pointer-events-none absolute -right-24 bottom-1/4 h-[440px] w-[440px] rounded-full bg-cyan/10 blur-[150px]" />
 
       {/* ghost candle chart along the bottom */}
       <div
@@ -214,8 +210,8 @@ export function GetStarted() {
           return (
             <div
               key={i}
-              className="gs-candle relative flex w-[1.4%] max-w-[13px] items-end justify-center"
-              style={{ height: `${c.h}%`, animationDelay: `${c.delay}s` }}
+              className="relative flex w-[1.4%] max-w-[13px] items-end justify-center"
+              style={{ height: `${c.h}%` }}
             >
               <span className="absolute -top-2.5 left-1/2 h-2.5 w-px -translate-x-1/2" style={{ background: color, opacity: 0.5 }} />
               <span className="w-full" style={{ height: "100%", background: color, boxShadow: `0 0 8px ${c.up ? "rgba(0,255,135,0.4)" : "rgba(255,46,99,0.4)"}` }} />
@@ -223,15 +219,6 @@ export function GetStarted() {
           );
         })}
       </div>
-
-      {/* floating embers */}
-      {EMBERS.map((e, i) => (
-        <span
-          key={i}
-          className="gs-ember pointer-events-none absolute bottom-0 rounded-full bg-bull"
-          style={{ left: `${e.left}%`, width: e.size, height: e.size, animationDelay: `${e.delay}s`, animationDuration: `${e.dur}s` }}
-        />
-      ))}
 
       <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
       <div
@@ -462,7 +449,12 @@ export function GetStarted() {
                     →
                   </span>
                 </span>
-                <span className="mt-1 block font-mono text-[11px] leading-relaxed text-fg-dim">{p.d}</span>
+                {/* The description is DISCLOSURE, not furniture: 8 cells × 11px
+                    blurb was ~40% of the hero's text mass repeated by the
+                    footer's 24 links. Opacity (not height) so the sheet never
+                    reflows; still in the DOM for crawlers and readers. Coarse
+                    pointers have no hover, so they keep the line. */}
+                <span className="mt-1 block font-mono text-[11px] leading-relaxed text-fg-dim opacity-0 transition-opacity duration-300 [transition-timing-function:var(--ease-settle)] group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100">{p.d}</span>
                 <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100" />
               </Link>
             ))}
@@ -472,7 +464,12 @@ export function GetStarted() {
         {/* the AI that watches — FULL-BLEED live eye, type set ON the footage,
             edges melted into the void (no box, no border: this is a scene,
             not an embed) */}
-        <div className="relative left-1/2 mt-16 w-screen -translate-x-1/2">
+        {/* NO left-1/2 -translate-x-1/2 here: the parent is a flex column with
+            items-center, which already centers this band. The classic full-bleed
+            double-shift assumes the item starts at the parent's LEFT edge, so on
+            a centered flex item it lands 50%·parent − 50%·self off — measured
+            30.6px left, cropping the band's left edge and leaving a right gap. */}
+        <div className="relative mt-16 w-screen">
           <div className="eye-title-bed relative h-[78vh] min-h-[420px] w-full overflow-hidden">
             {/* the matrix eye: an eye built from phosphor code on a CRT —
                 monochrome emerald so it belongs to the terminal world. The
@@ -544,21 +541,16 @@ export function GetStarted() {
                   ))}
                 </span>
               </div>
+              {/* IV and Δ used to float free over the footage — two more bobbing
+                  voices, the Δ badge sitting inside the title's own line box.
+                  Pinned here as one data row: the band keeps its two voices,
+                  P(down) and the title. */}
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-bull/90">
+                IV 0.41 · Δ −0.32
+              </div>
             </div>
             {/* left index column — live, cache-shared with the ticker (ref 06) */}
             <HudIndexColumn />
-            {[
-              { l: "78%", t: "20%", label: "IV 0.41", d: "-1.1s" },
-              { l: "76%", t: "62%", label: "Δ −0.32", d: "-2.2s" },
-            ].map((b) => (
-              <div
-                key={b.label}
-                className="pointer-events-none absolute border border-bull/70 bg-bg/70 px-2.5 py-1.5 text-left font-mono text-[11px] uppercase tracking-wider text-bull backdrop-blur-sm md:text-xs"
-                style={{ left: b.l, top: b.t, animation: "gs-hud 3.2s ease-in-out infinite", animationDelay: b.d }}
-              >
-                {b.label}
-              </div>
-            ))}
             {/* the line, set like a title card — not a caption */}
             <div className="absolute inset-x-0 bottom-[8%] z-10 px-6 text-center">
               <div className="font-display text-fg font-semibold text-[clamp(1.8rem,4.5vw,3.6rem)] leading-tight [text-shadow:0_1px_2px_var(--bg),0_0_14px_var(--bg),0_0_44px_var(--bg)]">
@@ -574,10 +566,9 @@ export function GetStarted() {
       </div>
 
       <style>{`
-        @keyframes gs-ember { 0% { transform: translateY(0); opacity: 0; } 14% { opacity: 0.7; } 100% { transform: translateY(-50vh); opacity: 0; } }
-        .gs-ember { animation-name: gs-ember; animation-timing-function: ease-out; animation-iteration-count: infinite; box-shadow: 0 0 6px var(--bull); }
-        @keyframes gs-candle-breathe { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.05); } }
-        .gs-candle { transform-origin: bottom; animation: gs-candle-breathe 4s ease-in-out infinite; }
+        /* (gs-ember and gs-candle-breathe are gone: the embers are deleted and
+           the ghost candles hold still — the smoke loop carries the ambience,
+           so the h1 flicker and the CTA sheen read as the focal motion.) */
         /* THE PRIMARY KEY'S SEAT — elevation is SHAPED here, never bloomed.
            gs-cta-glow is gone. It breathed a +7px POSITIVE spread at 0.62
            alpha, i.e. 7px of unblurred green standing outside the border box
@@ -650,16 +641,13 @@ export function GetStarted() {
         @keyframes gs-cta-shine { 0% { background-position: 180% 0; } 22%,100% { background-position: -130% 0; } }
         @keyframes gs-hud { 0%,100% { opacity: 0.55; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
         @media (prefers-reduced-motion: reduce) {
-          .gs-ember, .gs-candle, .gs-cta::after { animation: none; }
-          /* .gs-cta dropped from that list: the seat, ring, hover and press are
-             plain box-shadows now, so there is no motion left on the element to
-             disable. The sheen also gets opacity: 0 — belt and braces, since a
-             decorative specular's readable final state is that it is absent.
-             (For the record: animation:none alone would NOT smear it. A
+          /* The sheen gets animation:none AND opacity:0 — belt and braces,
+             since a decorative specular's readable final state is that it is
+             absent. (For the record: animation:none alone would NOT smear it. A
              background-position of 0% on a 260%-wide image aligns image-0% to
              area-0%, parking the streak fully off-screen right — verified in a
              browser. The declaration is intent, not a rescue.) */
-          .gs-ember, .gs-cta::after { opacity: 0; }
+          .gs-cta::after { animation: none; opacity: 0; }
           [style*="gs-hud"] { animation: none !important; }
         }
       `}</style>

@@ -53,7 +53,7 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
             exit={{ scale: 0.95, y: 12 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-lg border bg-bg shadow-2xl ${isDangerous ? "border-bear/60 shadow-[0_30px_80px_-20px_rgba(255,46,99,0.4)]" : "border-bull/40 shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"}`}
+            className={`relative max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-lg overflow-y-auto border bg-bg shadow-2xl ${isDangerous ? "border-bear/60 shadow-[0_30px_80px_-20px_rgba(255,46,99,0.4)]" : "border-bull/40 shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"}`}
           >
             <div
               className={`flex items-center justify-between border-b px-4 py-2 t-eyebrow ${

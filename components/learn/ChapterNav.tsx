@@ -11,19 +11,23 @@
 // rAF loop.
 //
 // GEOMETRY CONTRACT — this rail is `position: fixed`, so it is NOT in flow and
-// nothing reflows around it. It occupies left 0.75rem → 0.75rem + 172px, i.e.
-// a RIGHT EDGE AT 184px, at every viewport ≥ lg (1024px). The page measure is
-// centred, so it only cleared this rail above ~1770px and the flush-left
-// SplitDesk column never cleared it at all — the rail sat on top of live copy.
-// The column is therefore RESERVED, not hoped for, by the consumers:
+// nothing reflows around it. Its widths live in globals.css (.chapter-rail):
+// it RESTS COLLAPSED at 34px wide at left 0.75rem (right edge 46px), and
+// expands to 196px on :hover / :focus-within (right edge 12 + 196 = 208px).
+// The page measure is centred, so without a reserve the expanded rail would
+// sit on top of live copy at any viewport under ~1776px. The column is
+// therefore RESERVED, not hoped for, by the consumers:
 //   · centred .shell containers in app/learn/page.tsx carry
 //     lg:pl-[max(1.25rem,13rem - max(0px,(100vw - 1400px)/2))] — 208px of
 //     content-left while the natural centring is short, decaying back to the
 //     plain 1.25rem gutter once the viewport is wide enough (≥1776px).
 //   · the flush-left SplitDesk sections carry a flat lg:pl-[13rem].
 //   · TickerStrip widens its left edge-fade to 15rem at lg+.
-// 13rem = 208px = 184px + a 24px gutter. If you change `left-3` or `w-[172px]`
-// here, change those three call sites in the same commit.
+// 13rem = 208px = the expanded rail's right edge exactly — the fully open
+// rail meets the content edge with zero overlap and zero gutter (a deliberate
+// focus state; at rest the collapsed rail leaves 162px of clear air). If you
+// change `left-3` here or the .chapter-rail widths in globals.css, change
+// those three call sites in the same commit.
 
 import { useEffect, useState } from "react";
 import { LEARN_CHAPTERS, CONCEPT_IDS, useLearnProgress } from "@/lib/learn-progress";

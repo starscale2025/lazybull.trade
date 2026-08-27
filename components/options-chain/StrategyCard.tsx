@@ -85,25 +85,34 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
           <span className="text-bull">●</span>
           <span className="text-fg">strategy builder</span>
         </div>
-        <div className="flex items-center gap-2 text-fg-dim">
+        <div className="flex items-center gap-3 text-fg-dim">
           <span>{legs.length} leg{legs.length === 1 ? "" : "s"}</span>
           {legs.length > 0 && (
-            <button onClick={clear} className="text-fg-faint hover:text-bear transition-colors">
-              clear
-            </button>
+            <>
+              <button
+                onClick={explain}
+                className="inline-flex items-center gap-1.5 text-bull transition-colors hover:text-fg"
+              >
+                <span className="size-1 rounded-full bg-bull pulse-dot" />
+                explain
+              </button>
+              <button onClick={clear} className="text-fg-faint hover:text-bear transition-colors">
+                clear
+              </button>
+            </>
           )}
         </div>
       </div>
 
       {/* Detected strategy banner */}
-      <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4">
-        <div>
-          <div className="t-chrome text-fg-faint">detected</div>
-          <div className="font-display text-3xl tracking-tightest text-fg">
+      <div className="px-4 pt-4">
+        <div className="t-chrome text-fg-faint">detected</div>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="font-display text-2xl tracking-tightest text-fg">
             {legs.length === 0 ? "Empty" : detection.kind}
           </div>
           {legs.length > 0 && (
-            <div className="mt-1 flex flex-wrap items-center gap-2 t-chrome text-fg-dim">
+            <div className="flex flex-wrap items-center gap-2 t-chrome text-fg-dim">
               <span
                 className="inline-flex items-center gap-1.5 border px-2 py-0.5"
                 style={{
@@ -140,15 +149,6 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             </div>
           )}
         </div>
-        {legs.length > 0 && (
-          <button
-            onClick={explain}
-            className="group inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull/20"
-          >
-            <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            Explain this strategy
-          </button>
-        )}
       </div>
 
       {legs.length > 0 && (
@@ -160,9 +160,10 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
         <PnLDiagram legs={legs} spot={spot} />
       </div>
 
-      {/* Numerical summary */}
+      {/* Numerical summary — grid-cols-2 always: the card lives in a ~395px
+          side column, so a viewport (md:) breakpoint would overflow the cells */}
       {summary && legs.length > 0 && (
-        <div className="grid grid-cols-2 gap-px border-t border-border-soft bg-border-soft md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-px border-t border-border-soft bg-border-soft">
           {[
             { k: "Max profit", v: fmt(summary.maxProfit), c: "text-bull" },
             { k: "Max loss", v: summary.unboundedRisk ? "unbounded" : fmt(summary.maxLoss), c: summary.unboundedRisk ? "text-bear" : "text-fg" },
@@ -171,7 +172,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
           ].map((s) => (
             <div key={s.k} className="bg-bg p-3">
               <div className="t-chrome text-fg-faint">{s.k}</div>
-              <div className={`mt-1 t-data text-base ${s.c}`}>{s.v}</div>
+              <div className={`mt-1 t-data text-base whitespace-nowrap ${s.c}`}>{s.v}</div>
             </div>
           ))}
         </div>

@@ -165,25 +165,31 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
         ))}
       </div>
 
-      {/* RIGHT — the terminal (sticky) */}
+      {/* RIGHT — the terminal (sticky). Height divides by --ui-zoom: the html
+          zoom inflates dvh units, and an uncompensated frame overflows the true
+          viewport by ~10%. Tall demos scroll INSIDE the frame (my-auto centres
+          short ones without clipping tall ones the way justify-center did), so
+          the TERMINAL header and status row stay reachable at every position. */}
       <div className="relative z-[1] border-l border-border">
-        <div className="sticky top-14 flex h-[calc(100dvh-3.5rem)] flex-col justify-center px-5 py-8 xl:px-8">
-          <DeskFrame label={`TERMINAL §${current.num}`} hint={current.hint} live>
-            <div className="relative">
-              {swapping && <div className="desk-flicker pointer-events-none absolute inset-0 z-20 bg-bg" aria-hidden />}
-              <div key={current.id} className="desk-swap-in">
-                {current.demo}
+        <div className="sticky top-14 flex h-[calc(100dvh/var(--ui-zoom)-3.5rem)] flex-col overflow-y-auto px-5 py-8 xl:px-8 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]">
+          <div className="my-auto">
+            <DeskFrame label={`TERMINAL §${current.num}`} hint={current.hint} live>
+              <div className="relative">
+                {swapping && <div className="desk-flicker pointer-events-none absolute inset-0 z-20 bg-bg" aria-hidden />}
+                <div key={current.id} className="desk-swap-in">
+                  {current.demo}
+                </div>
               </div>
+            </DeskFrame>
+            {/* status — announced to AT, and the human-visible chapter marker */}
+            <div className="mt-3 flex items-center justify-between t-eyebrow text-fg-faint" aria-live="polite">
+              <span>
+                ch {current.num} · <span className="text-bull">{current.label}</span>
+              </span>
+              <span>
+                {active + 1}/{chapters.length}
+              </span>
             </div>
-          </DeskFrame>
-          {/* status — announced to AT, and the human-visible chapter marker */}
-          <div className="mt-3 flex items-center justify-between t-eyebrow text-fg-faint" aria-live="polite">
-            <span>
-              ch {current.num} · <span className="text-bull">{current.label}</span>
-            </span>
-            <span>
-              {active + 1}/{chapters.length}
-            </span>
           </div>
         </div>
       </div>

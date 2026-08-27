@@ -37,9 +37,6 @@ export default function PrivacyPage() {
         <div className="flex flex-wrap items-center gap-2 t-eyebrow text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
           <span>privacy policy · effective 18 august 2026</span>
-          <span className="border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-amber" title="Written plainly and in good faith; formal legal review is scheduled.">
-            pending counsel review
-          </span>
         </div>
         <h1 className="mt-3 font-display text-4xl tracking-tightest">
           What we know, <span className="t-accent">exactly</span>.
@@ -85,7 +82,7 @@ export default function PrivacyPage() {
           </p>
         </Clause>
 
-        <Clause n="05" title="Voice and the AI features" means="the voice co-pilot only works by sending what you say — and what's on your chart — to an AI company. Both engines ship the same workspace picture. The free one also runs your microphone through the browser's speech recognition (Google, on Chrome and Edge) and then through OpenRouter, whose free models keep prompts and may train on them. Nothing forces you to use it — the rest of the product works without it.">
+        <Clause n="05" title="Voice and the AI features" means="the co-pilot works by sending what you say — and what's on your chart — to an AI company. Nothing else on lazybull talks to a model; the engine-by-engine detail is spelled out above.">
           <p>
             The co-pilot has no brain of its own. Whichever engine you run, it is shown the same picture of your
             workspace — symbol, indicators, alerts and their notes, watchlist, paper orders — plus the computed read of
@@ -131,6 +128,11 @@ export default function PrivacyPage() {
             <Link className="text-bull underline underline-offset-4" href="/terms">terms ledger</Link>.
           </p>
         </Clause>
+
+        <p className="mt-8 max-w-[70ch] font-mono text-[11px] leading-relaxed text-fg-faint">
+          <span className="text-amber">pending counsel review</span> — this ledger is written plainly and in good
+          faith; formal legal review is scheduled.
+        </p>
       </main>
       <Footer />
     </div>

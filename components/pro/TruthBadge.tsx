@@ -187,7 +187,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
   // immune to any future filter/transform added to an ancestor.
   return createPortal(
     <div
-      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="honesty-ledger-title"

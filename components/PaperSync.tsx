@@ -161,7 +161,7 @@ export function PaperSync() {
 
   if (!toast) return null;
   return (
-    <div className="fixed bottom-5 left-5 z-[90] surface-card border border-border bg-surface px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
+    <div className="fixed bottom-5 left-5 z-[var(--z-toast)] surface-card border border-border bg-surface px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
       ⇅ {toast}
     </div>
   );

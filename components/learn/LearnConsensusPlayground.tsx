@@ -77,23 +77,22 @@ export function LearnConsensusPlayground() {
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             scenario
           </div>
-          {/* Three fixed columns hyphenated "RANGE-BOUND" mid-word once this
-              half narrowed to ~290px. Stack until the frame can actually carry
-              three. */}
-          <div className="grid grid-cols-1 gap-px bg-border @2xl:grid-cols-3">
+          {/* Labels only on the buttons — the selected scenario's description
+              lives once, in the footer row below, instead of three abridged
+              copies of it. Three fixed columns hyphenated "RANGE-BOUND"
+              mid-word once this half narrowed to ~290px, so stack until the
+              frame can actually carry three. */}
+          <div className="grid grid-cols-1 gap-px bg-border @lg:grid-cols-3">
             {(Object.keys(SCENARIOS) as Array<keyof typeof SCENARIOS>).map((k) => (
               <button
                 key={k}
                 onClick={() => setScenario(k)}
-                className={`bg-bg px-3 py-3 text-left transition-colors ${
+                className={`bg-bg px-3 py-2.5 text-left transition-colors ${
                   k === scenario ? "bg-bull/[0.06]" : "hover:bg-bg-soft"
                 }`}
               >
                 <div className={`font-mono text-[10px] uppercase tracking-wider ${k === scenario ? "text-bull" : "text-fg-dim"}`}>
                   {SCENARIOS[k].label}
-                </div>
-                <div className="mt-1 text-[11px] leading-snug text-fg-dim">
-                  {SCENARIOS[k].desc.split(".")[0]}.
                 </div>
               </button>
             ))}
@@ -108,7 +107,11 @@ export function LearnConsensusPlayground() {
             <span>active bots</span>
             <span className="text-fg-faint">click to toggle · {active.length}/{ALL_BOTS.length} on</span>
           </div>
-          <div className="grid grid-cols-2 gap-px bg-border @2xl:grid-cols-3">
+          {/* Compact pill grid — ticker-style code + vote, full name on the
+              tooltip. The 12-row labelled list was the tallest block in the
+              sticky frame; the pills carry the same interaction at a third of
+              the height. */}
+          <div className="grid grid-cols-3 gap-px bg-border @lg:grid-cols-4">
             {ALL_BOTS.map((b) => {
               const isActive = active.includes(b.id);
               const v = scn.votes[b.id];
@@ -117,15 +120,16 @@ export function LearnConsensusPlayground() {
                 <button
                   key={b.id}
                   onClick={() => toggle(b.id)}
-                  className={`flex items-center justify-between bg-bg px-3 py-2 text-left transition-opacity ${
+                  title={`${b.name} — ${v.toUpperCase()}`}
+                  className={`flex items-center justify-between gap-1.5 bg-bg px-2 py-1.5 text-left transition-opacity ${
                     isActive ? "opacity-100" : "opacity-30 hover:opacity-50"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span style={{ color: b.color }}>●</span>
-                    <span className="font-mono text-[11px] tracking-wide text-fg">{b.name}</span>
-                  </div>
-                  <span className={`font-mono text-[10px] uppercase tracking-wider ${verdictTone}`}>
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="text-[8px]" style={{ color: b.color }}>●</span>
+                    <span className="truncate font-mono text-[10px] uppercase tracking-wide text-fg">{b.id}</span>
+                  </span>
+                  <span className={`font-mono text-[9px] uppercase tracking-wider ${verdictTone}`}>
                     {v}
                   </span>
                 </button>
@@ -176,8 +180,8 @@ export function LearnConsensusPlayground() {
               {tally.tier === "SPLIT" &&
                 <>Models disagree. Historically the next move was close to a coin flip — the clearest sign the market itself was uncertain.</>}
             </p>
-            <p className="mt-2 text-[11px] italic leading-relaxed text-fg-faint">
-              Hypothetical, backtested figures shown for education only — not advice or a recommendation to trade.
+            <p className="mt-2 font-mono text-[10px] italic text-fg-faint">
+              hypothetical backtests · education only · not advice
             </p>
           </div>
         </div>

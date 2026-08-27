@@ -45,6 +45,7 @@ function fmtDate(d: Date) {
 // The "under the hood" analytics panels, one at a time (progressive disclosure).
 const TABS = [
   { id: "whatif", label: "What-if machine" },
+  { id: "greeks", label: "Greeks" },
   { id: "events", label: "Event horizon" },
   { id: "models", label: "Model spread" },
   { id: "manage", label: "Positions" },
@@ -293,18 +294,21 @@ export default function TradePage() {
       <AmbientOrbs />
       <CursorSpotlight />
       <ScrollProgress />
-      <div className="pointer-events-none fixed inset-0 z-40 scanlines opacity-[0.09]" aria-hidden />
+      {/* decoration sits below the chrome (panels at z-30) so it can never film over data */}
+      <div className="pointer-events-none fixed inset-0 z-10 scanlines opacity-[0.09]" aria-hidden />
       <div
-        className="pointer-events-none fixed inset-0 z-40"
+        className="pointer-events-none fixed inset-0 z-10"
         aria-hidden
-        style={{ background: "radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,0.45) 100%)" }}
+        style={{ background: "radial-gradient(ellipse at center, transparent 80%, rgba(0,0,0,0.2) 100%)" }}
       />
       <TickerBar />
       <Nav />
 
       {/* ── App shell: on lg+ everything below the nav fits one screen and panels
-             scroll internally. 91px = measured TickerBar (33.5px) + Nav (57px). */}
-      <div className="flex flex-col lg:h-[calc(100vh-91px)] lg:overflow-hidden">
+             scroll internally. 91px = measured TickerBar (33.5px) + Nav (57px).
+             100vh is divided by --ui-zoom because html{zoom} does not shrink
+             viewport units — same convention as globals.css's .h-screen rule. */}
+      <div className="flex flex-col lg:h-[calc(100vh/var(--ui-zoom)_-_91px)] lg:overflow-hidden">
       {/* ── Header row: symbol · price · change | IV cluster · earnings · paper badge */}
       <section className="relative overflow-hidden border-b border-border bg-bg lg:shrink-0">
         <img
@@ -350,8 +354,15 @@ export default function TradePage() {
               </div>
             </div>
 
-            {/* IV / earnings cluster — synthetic, tagged illustrative */}
-            <div className="flex flex-col items-start gap-2 sm:items-end lg:flex-row lg:items-center lg:gap-3" data-gsap="fade-up" data-gsap-delay="0.08">
+            {/* IV / earnings cluster — synthetic; the amber dot carries the
+                illustrative disclosure so the chip no longer repeats it */}
+            <div
+              className="flex items-center gap-2.5 lg:gap-3"
+              data-gsap="fade-up"
+              data-gsap-delay="0.08"
+              title="illustrative · synthetic iv (no real options-iv feed)"
+            >
+              <span className="size-1.5 shrink-0 rounded-full bg-amber" aria-hidden />
               <div className="flex divide-x divide-border t-data">
                 {[
                   { k: "iv rank", v: String(ivRank) },
@@ -375,10 +386,6 @@ export default function TradePage() {
                   </div>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 t-eyebrow text-amber">
-                <span className="size-1 rounded-full bg-amber" />
-                illustrative · synthetic iv
-              </span>
             </div>
           </div>
         </div>
@@ -389,7 +396,9 @@ export default function TradePage() {
         {/* ---- left column: toolbar → cone chart → chain (internal scroll) ---- */}
         <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-hidden">
           {/* toolbar strip — live controls only */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-chrome lg:shrink-0 lg:flex-nowrap lg:gap-x-3 lg:overflow-x-auto">
+          {/* wraps at every width — clipping "reset view" behind an invisible
+              x-scroll is worse than a second toolbar row */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-chrome lg:shrink-0 lg:gap-x-3">
             <span className="text-fg-faint">underlying</span>
             <div className="flex items-center gap-1">
               {SYMBOLS.map((s, i) => (
@@ -447,8 +456,16 @@ export default function TradePage() {
           <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
               <span className="t-eyebrow text-bull">⟢ forecast cone · {sym.sym}</span>
-              <span className="hidden max-w-[62%] truncate font-mono text-[10px] text-fg-dim md:block">
-                <ThesisLine sentence={thesisSentence} />
+              {/* the expiry date is the decision token — keep it shrink-0 so
+                  mid-width truncation eats the prose, never the date */}
+              <span
+                title={thesisSentence}
+                className="hidden min-w-0 max-w-[62%] items-baseline gap-1 font-mono text-[10px] text-fg-dim md:flex"
+              >
+                <span className="min-w-0 truncate">
+                  <ThesisLine sentence={`I think ${sym.sym} will ${direction} $${low.toFixed(2)} and $${high.toFixed(2)}`} />
+                </span>
+                <span className="shrink-0 text-amber">by {expiryStr}.</span>
               </span>
             </div>
             <div className="relative h-[420px] bg-bg lg:h-auto lg:min-h-0 lg:flex-1">
@@ -473,8 +490,10 @@ export default function TradePage() {
               ) : (
                 <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
               )}
-              {/* in-band probability ring — same number the strategy panel prices from */}
-              <div className="pointer-events-none absolute left-4 top-4 z-10 hidden sm:block">
+              {/* in-band probability ring — same number the strategy panel prices
+                  from. Owns the top-left corner: the HI/LO inputs moved into the
+                  cone's header bar, so nothing else shares this edge. */}
+              <div className="pointer-events-none absolute left-2 top-2 z-10 hidden sm:block">
                 <InBandRing prob={probInBand} />
               </div>
             </div>
@@ -528,9 +547,6 @@ export default function TradePage() {
             )}
           </section>
 
-          {/* plain-english greeks */}
-          <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} onDetails={() => { window.location.href = "/greeks"; }} />
-
           {/* AI teacher */}
           <TeacherPanel
             selected={selected}
@@ -560,6 +576,9 @@ export default function TradePage() {
             </div>
             <div id="manage" className="scroll-mt-16">
               {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
+              {tab === "greeks" && (
+                <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} onDetails={() => { window.location.href = "/greeks"; }} />
+              )}
               {tab === "events" && mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
               {tab === "models" && mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
               {tab === "manage" && (
@@ -590,7 +609,7 @@ export default function TradePage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setConfirm(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
           >
             <motion.div
               initial={{ scale: 0.96, y: 12 }}
@@ -635,7 +654,7 @@ export default function TradePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
-            className="fixed bottom-5 left-1/2 z-[110] -translate-x-1/2 border border-bull/60 bg-bull/10 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl"
+            className="fixed bottom-5 left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/60 bg-bull/10 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl"
           >
             ✓ bet placed · see the positions tab
           </motion.div>
@@ -705,30 +724,40 @@ function InBandRing({ prob }: { prob: number }) {
   );
 }
 
-/** The selected strategy's legs, broker-ticket style: Buy/Sell qty strike type · mid. */
+/** The selected strategy's legs, broker-ticket style: Buy/Sell qty strike type · mid.
+ *  Collapsed by default — the ticket rows duplicate what "edit legs" opens, so
+ *  they are disclosure; only the net debit/credit line is always-on. */
 function LegsList({ s }: { s: Strategy }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="border-t border-border">
-      <div className="flex items-center justify-between bg-bg-soft px-3 py-1.5 t-eyebrow text-fg-faint">
-        <span>legs · selected</span>
-        <span>mid px</span>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between bg-bg-soft px-3 py-1.5 t-eyebrow text-fg-faint transition-colors hover:text-fg"
+      >
+        <span>legs ({s.legs.length}) {open ? "▾" : "▸"}</span>
+        <span>{open ? "mid px" : ""}</span>
+      </button>
+      {open && (
+        <ul className="divide-y divide-border-soft border-t border-border-soft">
+          {s.legs.map((l, i) => (
+            <li key={i} className="flex items-center justify-between px-3 py-2 t-data text-[12px]">
+              <span className={l.side === "long" ? "text-bull" : "text-bear"}>
+                {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
+              </span>
+              <span className={l.side === "long" ? "text-fg" : "text-bear"}>
+                {l.side === "long" ? "" : "−"}{l.premium.toFixed(2)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex items-center justify-between border-t border-border-soft bg-bg px-3 py-2 t-data text-[12px]">
+        <span className="text-fg">{s.cost > 0 ? "Net Debit" : "Net Credit"}</span>
+        <span className="text-bull">{Math.abs(s.cost / 100).toFixed(2)}</span>
       </div>
-      <ul className="divide-y divide-border-soft">
-        {s.legs.map((l, i) => (
-          <li key={i} className="flex items-center justify-between px-3 py-2 t-data text-[12px]">
-            <span className={l.side === "long" ? "text-bull" : "text-bear"}>
-              {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
-            </span>
-            <span className={l.side === "long" ? "text-fg" : "text-bear"}>
-              {l.side === "long" ? "" : "−"}{l.premium.toFixed(2)}
-            </span>
-          </li>
-        ))}
-        <li className="flex items-center justify-between bg-bg px-3 py-2 t-data text-[12px]">
-          <span className="text-fg">{s.cost > 0 ? "Net Debit" : "Net Credit"}</span>
-          <span className="text-bull">{Math.abs(s.cost / 100).toFixed(2)}</span>
-        </li>
-      </ul>
     </div>
   );
 }
@@ -852,6 +881,9 @@ function TeacherPanel({
   onAsk: (q: string) => void;
 }) {
   const [q, setQ] = useState("");
+  // Collapsed to the header row until the reader asks for it — the empty-state
+  // paragraph and input are disclosure, not default chrome.
+  const [open, setOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   // Follow the conversation — but ONLY once it is actually a conversation.
   //
@@ -890,7 +922,10 @@ function TeacherPanel({
         </span>
         <button
           type="button"
-          onClick={onExplain}
+          onClick={() => {
+            setOpen(true);
+            onExplain();
+          }}
           disabled={!selected || narrating}
           className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -898,6 +933,8 @@ function TeacherPanel({
         </button>
       </div>
 
+      {open && (
+      <>
       <div className="flex max-h-[300px] min-h-[160px] flex-col gap-3 overflow-y-auto p-3 lg:max-h-[240px] lg:min-h-[120px]">
         {thread.length === 0 && !narrating && (
           <TeacherBubble
@@ -938,6 +975,8 @@ function TeacherPanel({
       <div className="border-t border-border-soft px-3 py-1.5 t-eyebrow text-fg-faint">
         describes the position you built · education, not advice
       </div>
+      </>
+      )}
     </section>
   );
 }

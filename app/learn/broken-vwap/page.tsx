@@ -190,7 +190,7 @@ export default function BrokenVwapLesson() {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer marketing />
     </div>
   );
 }

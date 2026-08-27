@@ -107,7 +107,7 @@ export function TickerBar() {
 
   return (
     <div
-      className={`relative overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
+      className={`flex items-stretch overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
     >
       {/* WONK legend — the headline serif warps with the VIX; this makes that
           "the type IS a volatility gauge" signal legible to screen readers and
@@ -119,16 +119,27 @@ export function TickerBar() {
             }`
           : ""}
       </span>
-      <div className="absolute inset-y-0 left-0 z-10 flex items-center gap-2 bg-bg pl-3 pr-4 border-r border-border">
+      {/* Static shrink-0 sibling (not an overlay): the tape track starts AFTER
+          this pill whatever the label width, so no quote ever hides under it. */}
+      <div className="flex shrink-0 items-center gap-2 border-r border-border pl-3 pr-4">
         {/* The lamp must never say LIVE over simulated prices — that's the one
-            lie this rail could tell. Amber SIM + a still dot when the feed is
-            down; green pulsing LIVE only over real quotes. */}
-        <span className={`size-1.5 rounded-full ${usingSim ? "bg-amber" : "bg-bull pulse-dot"}`} />
-        <span className={usingSim ? "text-amber" : "text-bull"} title={usingSim ? "No live feed — showing a deterministic simulated tape, not real quotes." : undefined}>
-          {usingSim ? "SIM" : "LIVE"}
-        </span>
-        <span className="text-fg-faint">·</span>
-        <span className="text-fg-dim hidden sm:inline">{stateLabel}</span>
+            lie this rail could tell. When the feed is down the whole claim is
+            just the amber lamp (title + sr-only carry the words) — the Nav
+            Truth badge is the canonical SYNTHETIC indicator, so the rail
+            doesn't repeat it in text. Green pulsing LIVE only over real quotes. */}
+        <span
+          className={`size-1.5 rounded-full ${usingSim ? "bg-amber" : "bg-bull pulse-dot"}`}
+          title={usingSim ? "No live feed — showing a deterministic simulated tape, not real quotes." : undefined}
+        />
+        {usingSim ? (
+          <span className="sr-only">Simulated tape — not real quotes.</span>
+        ) : (
+          <>
+            <span className="text-bull">LIVE</span>
+            <span className="hidden text-fg-faint sm:inline">·</span>
+            <span className="hidden text-fg-dim sm:inline">{stateLabel}</span>
+          </>
+        )}
         {/* WCAG 2.2.2 — an auto-moving ticker on every page must be pausable */}
         <button
           onClick={() => setPaused((v) => !v)}
@@ -143,27 +154,40 @@ export function TickerBar() {
           {paused ? "▶" : "⏸"}
         </button>
       </div>
-      <div className="flex marquee gap-8 py-2 pl-32">
-        {items.length === 0 ? (
-          <span className="flex items-center gap-2 whitespace-nowrap shrink-0 text-fg-faint">
-            connecting to the live quote stream…
-          </span>
-        ) : (
-          items.map((t, i) => {
-            const sym = DISPLAY[t.sym] ?? t.sym;
-            const up = t.chgPct >= 0;
-            return (
-              <span key={`${t.sym}-${i}`} className="flex items-center gap-2 whitespace-nowrap shrink-0">
-                <span className="text-fg-dim">{sym}</span>
-                <span className="text-fg">{fmtPrice(t.last)}</span>
-                <span className={up ? "text-bull" : "text-bear"}>{fmtPct(t.chgPct)}</span>
-                <span className="text-fg-faint">·</span>
-              </span>
-            );
-          })
-        )}
+      {/* The tape: a flex-1 track between the two pills. Fade masks at both
+          edges so quotes dissolve into the pills instead of hard-clipping
+          mid-glyph. */}
+      <div
+        className="min-w-0 flex-1 overflow-hidden"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+        }}
+      >
+        <div className="flex marquee gap-8 py-2">
+          {items.length === 0 ? (
+            <span className="flex items-center gap-2 whitespace-nowrap shrink-0 text-fg-faint">
+              connecting to the live quote stream…
+            </span>
+          ) : (
+            items.map((t, i) => {
+              const sym = DISPLAY[t.sym] ?? t.sym;
+              const up = t.chgPct >= 0;
+              return (
+                <span key={`${t.sym}-${i}`} className="flex items-center gap-2 whitespace-nowrap shrink-0">
+                  <span className="text-fg-dim">{sym}</span>
+                  <span className="text-fg">{fmtPrice(t.last)}</span>
+                  <span className={up ? "text-bull" : "text-bear"}>{fmtPct(t.chgPct)}</span>
+                  <span className="text-fg-faint">·</span>
+                </span>
+              );
+            })
+          )}
+        </div>
       </div>
-      <div className="absolute inset-y-0 right-0 z-10 flex items-center gap-2 bg-bg pl-4 pr-3 border-l border-border">
+      <div className="flex shrink-0 items-center gap-2 border-l border-border pl-4 pr-3">
         <span className="text-fg-dim tabular-nums">{clock || "--:--:--"}</span>
         <span className="text-fg-faint">UTC</span>
       </div>

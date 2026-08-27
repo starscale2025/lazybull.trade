@@ -137,6 +137,20 @@ export function RunRitual({
   const locked = phase === "lockdown" || phase === "streaming" || phase === "decimating";
   const settled = phase === "verdict";
 
+  // Q4: the OutputPanel is the standing home of the aggregate — a few seconds
+  // after the verdict lands, this band folds to a slim strip so three copies
+  // of the same numbers don't compete. Unfolding remounts the monument, which
+  // replays the settle animation. A new run always unfolds.
+  const [folded, setFolded] = useState(false);
+  useEffect(() => {
+    if (!settled) {
+      setFolded(false);
+      return;
+    }
+    const t = setTimeout(() => setFolded(true), 4000);
+    return () => clearTimeout(t);
+  }, [settled]);
+
   // The run log types out while the machine holds the lock. Lines are paced
   // by the ritual, not by the bots — but the last line only lands when the
   // lock actually releases, so the log can never claim a verdict early.
@@ -199,10 +213,55 @@ export function RunRitual({
         ? `${symbol} · D · ${bars}d fallback tape`
         : `${symbol} · D · ${bars}d seed tape`;
 
+  if (settled && folded) {
+    return (
+      <section aria-label="Run the workbench" className="shell shell-wide relative mt-4">
+        <div className="surface-card relative flex flex-wrap items-center gap-3 border border-border bg-bg px-4 py-2.5">
+          <span className="relative inline-flex size-5 shrink-0 items-center justify-center border border-fg/40">
+            <span aria-hidden className="absolute inset-0.5 bg-bull" />
+            <span className="relative font-mono text-[9px] font-bold text-bg">LB</span>
+          </span>
+          <span className="t-chrome text-fg">consensus engine</span>
+          <span
+            className="font-display text-lg leading-none tracking-tightest"
+            style={{ color: sideColor(aggregate) }}
+          >
+            {aggregate}.
+          </span>
+          <span className="t-chrome text-fg-faint">
+            <span className="text-bull">{counts.buy} buy</span> · {counts.hold} hold ·{" "}
+            <span className="text-bear">{counts.sell} sell</span>
+            {counts.warn > 0 && (
+              <>
+                {" · "}
+                <span className="text-amber">{counts.warn} warn</span>
+              </>
+            )}
+          </span>
+          <span className="hidden t-chrome text-fg-faint sm:inline">{tapeLabel}</span>
+          <div className="flex-1" />
+          <button
+            onClick={() => setFolded(false)}
+            className="t-chrome text-fg-faint transition-colors hover:text-fg"
+          >
+            ↻ replay ritual
+          </button>
+          <button
+            onClick={onRunAll}
+            disabled={total === 0}
+            className="inline-flex h-7 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-fg-faint"
+          >
+            ↻ run again
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       aria-label="Run the workbench"
-      className="relative mx-auto mt-4 w-full max-w-[1500px] px-5"
+      className="shell shell-wide relative mt-4"
     >
       <div className="surface-card relative overflow-hidden border border-border bg-bg">
         {/* one background texture — the fine grid, masked. No orbs, no noise. */}
@@ -220,7 +279,7 @@ export function RunRitual({
         <div className="relative flex flex-wrap items-center gap-3 border-b border-border bg-bg-soft px-4 py-2.5">
           <span className="relative inline-flex size-5 shrink-0 items-center justify-center border border-fg/40">
             <span aria-hidden className="absolute inset-0.5 bg-bull" />
-            <span className="relative font-mono text-[7px] font-bold text-bg">LB</span>
+            <span className="relative font-mono text-[9px] font-bold text-bg">LB</span>
           </span>
           <span className="t-chrome text-fg">consensus engine</span>
           <span className="t-chrome text-fg-faint">{tapeLabel}</span>

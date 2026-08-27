@@ -32,11 +32,10 @@ export function BottomBar({
     return () => clearInterval(id);
   }, []);
 
-  // pr-16 reserves the docked-mic corner — the mic used to sit ON the status
-  // clock (and the panel's reset button above). The Dock now owns that corner
-  // (components/Dock.tsx).
+  // .dock-clear-x reserves the Dock's bottom-right footprint via --dock-gutter
+  // — the hand-rolled pr-16 was 8px short, so the mic orb sat ON the clock.
   return (
-    <div className="flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 pr-16 t-chrome">
+    <div className="dock-clear-x flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 t-chrome">
       <div className="flex items-center gap-1">
         {PRESETS.map((p) => (
           <button

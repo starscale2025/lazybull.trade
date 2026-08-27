@@ -105,7 +105,7 @@ export function BotLibrary({
               <button
                 onClick={() => (isActive ? onRemove(b.id) : onAdd(b))}
                 title={isActive ? "click to remove from workspace" : "click to add to workspace"}
-                className={`block w-full px-3 py-2.5 pr-9 text-left transition-colors ${
+                className={`block w-full px-3 py-2.5 pb-7 pr-9 text-left transition-colors ${
                   isActive ? "hover:bg-bear/10" : "hover:bg-bg"
                 }`}
               >
@@ -118,7 +118,7 @@ export function BotLibrary({
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate font-display text-[14px] tracking-tightest text-fg">
+                      <span className="line-clamp-2 font-display text-[14px] leading-tight tracking-tightest text-fg">
                         {b.name}
                       </span>
                       {b.category === "ai" && (
@@ -148,7 +148,11 @@ export function BotLibrary({
                         <span className="hidden group-hover:inline">− remove</span>
                       </>
                     ) : (
-                      "+"
+                      /* only surfaces on hover/focus — an always-on label in
+                         every row stole ~50px from the bot name (Q5) */
+                      <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                        + add
+                      </span>
                     )}
                   </span>
                 </div>

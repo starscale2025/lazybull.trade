@@ -38,12 +38,6 @@ export default function SafetyPage() {
         <div className="flex flex-wrap items-center gap-2 t-eyebrow text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
           <span>safety commitments · effective 24 july 2026</span>
-          <span
-            className="border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-amber"
-            title="Written plainly and in good faith; formal legal review is scheduled."
-          >
-            pending counsel review
-          </span>
         </div>
         <h1 className="mt-3 font-display text-4xl tracking-tightest">
           Safety, in plain <span className="t-accent">English</span>.
@@ -158,6 +152,11 @@ export default function SafetyPage() {
             <a className="text-bull underline underline-offset-4" href="mailto:hello@lazybull.us">hello@lazybull.us</a>.
           </p>
         </Clause>
+
+        <p className="mt-8 max-w-[70ch] font-mono text-[11px] leading-relaxed text-fg-faint">
+          <span className="text-amber">pending counsel review</span> — this ledger is written plainly and in good
+          faith; formal legal review is scheduled.
+        </p>
       </main>
       <Footer />
     </div>

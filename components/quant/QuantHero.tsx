@@ -36,8 +36,10 @@ const SOURCE_LABEL: Record<string, string> = {
 const sourceLabel = (s?: string | null) => (s && SOURCE_LABEL[s]) || "the live feed";
 
 /** A "?" that explains a knob on hover/focus — beginners shouldn't have to
-    guess what a seed or a drift is before they dare to touch one. */
-function InfoTip({ text }: { text: string }) {
+    guess what a seed or a drift is before they dare to touch one.
+    `up` opens the tooltip above the trigger — the hero section clips overflow,
+    so bottom-row knobs would otherwise lose the tail of their tip. */
+function InfoTip({ text, up = false }: { text: string; up?: boolean }) {
   return (
     <span className="group/tip relative inline-flex">
       <span
@@ -49,7 +51,9 @@ function InfoTip({ text }: { text: string }) {
       </span>
       <span
         role="tooltip"
-        className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100"
+        className={`pointer-events-none absolute left-1/2 z-50 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
+          up ? "bottom-full mb-1.5" : "top-full mt-1.5"
+        }`}
       >
         {text}
       </span>
@@ -73,7 +77,6 @@ export function QuantHero({
   onRunAll,
   onClearAll,
   activeCount,
-  totalBots,
   spot,
   mode,
   setMode,
@@ -99,7 +102,6 @@ export function QuantHero({
   onRunAll: () => void;
   onClearAll: () => void;
   activeCount: number;
-  totalBots: number;
   spot: number;
   /** The user's chosen data mode. */
   mode: "live" | "seed";
@@ -127,6 +129,10 @@ export function QuantHero({
       ? "Shapes the deterministic seed tape."
       : "Seed-mode only — switch the dataset to SEED to shape the tape.";
   const knobsLive = syntheticKnobsActive && !runLocked;
+  // In LIVE mode the three synthetic knobs are dead weight — collapsed behind
+  // a single "tune the seed tape →" cell until asked for (Q3).
+  const [seedKnobsOpen, setSeedKnobsOpen] = useState(false);
+  const showSeedKnobs = syntheticKnobsActive || seedKnobsOpen;
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
@@ -155,23 +161,14 @@ export function QuantHero({
         style={{ maskImage: "radial-gradient(95% 130% at 30% 70%, black 28%, transparent 74%)" }}
       />
 
-      {/* tape */}
-      <div className="relative mx-auto flex w-full max-w-[1500px] items-center justify-between px-5 py-2 t-eyebrow text-fg-faint">
-        <div className="flex items-center gap-3">
-          <span>QUANT WORKBENCH · v0.1</span>
-          <span className="hidden sm:inline">·</span>
-          <span className="hidden sm:inline">{totalBots} BOTS LOADED</span>
-          <span className="hidden md:inline">·</span>
-          <span className="hidden md:inline">DETERMINISTIC SEED</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden md:inline">CLIENT-SIDE MATH</span>
-          <span className="hidden md:inline">·</span>
-          <span>{activeCount} CELLS ACTIVE</span>
-        </div>
+      {/* tape — two items max: the totals live in the library header and the
+          Run All button already, repeating them here was noise (Q3) */}
+      <div className="shell shell-wide relative flex items-center justify-between py-2 t-eyebrow text-fg-faint">
+        <span>QUANT WORKBENCH · v0.1</span>
+        <span className="hidden md:inline">CLIENT-SIDE MATH</span>
       </div>
 
-      <div className="relative mx-auto max-w-[1500px] px-5 pb-6 pt-8 lg:pt-12">
+      <div className="shell shell-wide relative pb-6 pt-8 lg:pt-12">
         <div className="grid grid-cols-12 items-end gap-5">
           {/* Title block — on mobile it drops BELOW the workbench panel so a
               phone user lands on the actual tool, not a full screen of copy. */}
@@ -206,8 +203,8 @@ export function QuantHero({
           {/* Symbol & seed controls — first on mobile (the tool), right column on desktop */}
           <div className="order-1 col-span-12 lg:order-2 lg:col-span-5">
             <div className="surface-instrument border border-border bg-surface">
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-                <span className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
+                <span className="flex min-w-0 items-center gap-2">
                   dataset
                   {/* the mode is a choice; the badge is the truth of what's running */}
                   <span className="inline-flex border border-border" role="group" aria-label="Data mode">
@@ -236,19 +233,12 @@ export function QuantHero({
                   </span>
                   {dataSource === "fallback" ? (
                     <span
-                      className="inline-flex items-center gap-1 border border-amber/50 bg-amber/10 px-1.5 py-px text-[10px] text-amber"
+                      className="inline-flex items-center gap-1 whitespace-nowrap border border-amber/50 bg-amber/10 px-1.5 py-px text-[10px] text-amber"
                       title="The free data feed got rate-limited by the provider, so the bots are on a deterministic stand-in tape. It retries automatically — the live tape returns on its own."
                     >
                       <span className="size-1 rounded-full bg-amber" />
                       OFFLINE
                       <RetryCountdown retryAt={retryAt} />
-                      <a
-                        href="/pricing"
-                        className="ml-1 border-l border-amber/30 pl-1.5 normal-case text-amber/90 underline-offset-2 hover:text-amber hover:underline"
-                        title="Real-time, un-throttled market data — coming to Power. See the plans."
-                      >
-                        real-time →
-                      </a>
                     </span>
                   ) : (
                     <span
@@ -276,7 +266,14 @@ export function QuantHero({
                 ) : dataSource === "fallback" ? (
                   <>
                     <span className="uppercase tracking-wider text-fg-dim">Source</span>
-                    <span> · practice tape while we reconnect to the live feed.</span>
+                    <span> · practice tape while we reconnect to the live feed. </span>
+                    <a
+                      href="/pricing"
+                      className="text-amber/90 underline-offset-2 hover:text-amber hover:underline"
+                      title="Real-time, un-throttled market data — coming to Power. See the plans."
+                    >
+                      real-time →
+                    </a>
                   </>
                 ) : (
                   <>
@@ -327,7 +324,21 @@ export function QuantHero({
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed disabled:opacity-40"
                   />
                 </div>
-                {/* seed — synthetic only */}
+                {/* seed/drift/vol — synthetic only. In LIVE mode they'd all be
+                    greyed "—" cells, so they fold behind one disclosure cell. */}
+                {!showSeedKnobs && (
+                  <button
+                    onClick={() => setSeedKnobsOpen(true)}
+                    title={knobTitle}
+                    className="group bg-bg p-3 text-left transition-colors hover:bg-surface-2"
+                  >
+                    <div className="t-chrome text-fg-faint">seed tape</div>
+                    <div className="mt-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim group-hover:text-fg">
+                      tune the seed tape →
+                    </div>
+                  </button>
+                )}
+                {showSeedKnobs && (
                 <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
@@ -346,7 +357,9 @@ export function QuantHero({
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
+                )}
                 {/* drift — synthetic only */}
+                {showSeedKnobs && (
                 <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
@@ -366,12 +379,14 @@ export function QuantHero({
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
+                )}
                 {/* vol — synthetic only */}
+                {showSeedKnobs && (
                 <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
                   <div className="flex items-center justify-between t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       vol σ
-                      <InfoTip text="How violently the synthetic tape swings bar to bar. Low = calm index-like candles; high = crypto-like whipsaw with fat tails. Reversion bots love low σ, breakout bots need high. (Seed mode only.)" />
+                      <InfoTip up text="How violently the synthetic tape swings bar to bar. Low = calm index-like candles; high = crypto-like whipsaw with fat tails. Reversion bots love low σ, breakout bots need high. (Seed mode only.)" />
                     </span>
                     <span className="text-fg">{syntheticKnobsActive ? vol.toFixed(2) : "—"}</span>
                   </div>
@@ -386,11 +401,12 @@ export function QuantHero({
                     className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
                   />
                 </div>
+                )}
                 {/* beginner */}
                 <div className="bg-bg p-3">
                   <div className="flex items-center gap-1.5 t-chrome text-fg-faint">
                     teacher
-                    <InfoTip text="Plain-English mode: every bot adds a sentence explaining its verdict like a human would, instead of only formulas and numbers." />
+                    <InfoTip up text="Plain-English mode: every bot adds a sentence explaining its verdict like a human would, instead of only formulas and numbers." />
                   </div>
                   <button
                     onClick={() => setBeginner(!beginner)}

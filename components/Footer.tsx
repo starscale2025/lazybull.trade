@@ -3,10 +3,11 @@ import pkg from "../package.json";
 import { ContrastToggle } from "./ContrastToggle";
 
 // Every entry here used to be href="#" — 32 links plus the three legal ones,
-// all of which looked clickable and went nowhere. A link with no destination is
-// now rendered as plain muted text instead of pretending to navigate.
-type FooterLink = { label: string; href?: string };
-const COLS: { title: string; links: FooterLink[] }[] = [
+// all of which looked clickable and went nowhere. Unshipped items now collapse
+// to a single muted `roadmap` line per column instead of padding the grid with
+// dead "soon" rows.
+type FooterLink = { label: string; href: string };
+const COLS: { title: string; links: FooterLink[]; roadmap?: string }[] = [
   {
     title: "Product",
     links: [
@@ -35,30 +36,30 @@ const COLS: { title: string; links: FooterLink[] }[] = [
       { label: "Bring your own bot", href: "/learn#byob" },
       { label: "The AI quants", href: "/learn#ai-quants" },
       { label: "Teacher mode", href: "/learn#teacher" },
-      { label: "Public API" },
-      { label: "Docs" },
-      { label: "Changelog" },
     ],
+    roadmap: "roadmap · api / docs / changelog — soon",
   },
   {
     title: "About",
     links: [
       { label: "Manifesto", href: "/about" },
       { label: "Now go", href: "/learn#now-go" },
-      { label: "Press" },
-      { label: "Brand kit" },
-      { label: "Contact" },
-      { label: "Status" },
+      { label: "⚰ The graveyard", href: "/graveyard" },
     ],
+    roadmap: "roadmap · press / brand kit / contact / status — soon",
   },
 ];
 
-export function Footer() {
+// The subscribe callout belongs to the marketing story; app routes start the
+// footer at the wordmark. The caller passes this rather than the footer reading
+// usePathname, which would make every page's footer a client component.
+export function Footer({ marketing = false }: { marketing?: boolean }) {
   return (
     <footer className="relative overflow-hidden border-t border-border bg-[color-mix(in_srgb,var(--bg)_72%,transparent)] backdrop-blur-[26px]">
       <div className="pointer-events-none absolute -bottom-40 left-1/2 h-96 w-[120%] -translate-x-1/2 rounded-full bg-bull/8 blur-[160px]" />
 
-      {/* Top callout */}
+      {/* Top callout — marketing routes only; app routes start at the wordmark. */}
+      {marketing && (
       <div className="relative shell border-b border-border-soft py-12">
         <div className="grid grid-cols-12 items-end gap-x-5 gap-y-8">
           <div className="col-span-12 lg:col-span-7">
@@ -75,8 +76,8 @@ export function Footer() {
           </div>
           <div className="col-span-12 lg:col-span-5">
             {/* NOT wired to anything yet — and until it is, this must not be
-                allowed to SUBMIT. Footer is a server component, the form had no
-                action and no onSubmit, and the button defaulted to
+                allowed to SUBMIT. The form had no action and no onSubmit, and
+                the button defaulted to
                 type="submit", so pressing Subscribe fired a native GET at the
                 current URL. On the homepage that full-reloads the page and
                 replays the loader gate plus all 13,500px of the film from zero
@@ -108,6 +109,7 @@ export function Footer() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Massive wordmark — the italic-light "bull" with a gradient applied
           via background-clip: text WILL clip its rightward italic overhang
@@ -119,14 +121,14 @@ export function Footer() {
             • drop tracking-tightest (-0.05em letter-spacing) on the h2 — the
               negative spacing pulled the last 'l' inside its own box
             • margin-left on the period to clear the extended italic span */}
-      <div className="relative shell overflow-visible pt-12">
+      <div className="relative shell overflow-visible pt-8">
         <div
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="1.6"
           className="wonk-type select-none font-display leading-[0.82] text-fg"
           style={{
-            fontSize: "clamp(4rem, 13vw, 13rem)",
+            fontSize: "clamp(3.5rem, 9vw, 7.5rem)",
             letterSpacing: "-0.02em",
             paddingRight: "0.3em",
             paddingBottom: "0.06em",
@@ -152,7 +154,7 @@ export function Footer() {
       <div
         data-gsap="stagger-fast"
         data-gsap-duration="0.8"
-        className="relative shell grid grid-cols-2 gap-x-5 gap-y-10 py-16 md:grid-cols-6"
+        className="relative shell grid grid-cols-2 gap-x-5 gap-y-10 py-10 md:grid-cols-6"
       >
         <div className="col-span-2">
           <div className="t-chrome text-fg-faint mb-4">
@@ -182,31 +184,23 @@ export function Footer() {
               {col.title}
             </div>
             <ul className="space-y-2.5">
-              {col.links.map((l) =>
-                l.href ? (
-                  <li key={l.label}>
-                    <Link
-                      href={l.href}
-                      className="group inline-flex items-center gap-2 font-mono text-sm text-fg-dim transition-colors hover:text-fg"
-                    >
-                      <span className="text-fg-faint group-hover:text-bull">›</span>
-                      {l.label}
-                    </Link>
-                  </li>
-                ) : (
-                  <li key={l.label}>
-                    <span
-                      className="inline-flex cursor-default items-center gap-2 font-mono text-sm text-fg-faint"
-                      title="Coming soon"
-                    >
-                      <span className="text-fg-faint">›</span>
-                      {l.label}
-                      <span className="t-chrome text-fg-faint/70">soon</span>
-                    </span>
-                  </li>
-                )
-              )}
+              {col.links.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.href}
+                    className="group inline-flex items-center gap-2 font-mono text-sm text-fg-dim transition-colors hover:text-fg"
+                  >
+                    <span className="text-fg-faint group-hover:text-bull">›</span>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
+            {col.roadmap && (
+              <p className="mt-4 cursor-default font-mono text-[11px] leading-relaxed text-fg-faint/70" title="Coming soon">
+                {col.roadmap}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -219,12 +213,10 @@ export function Footer() {
             <span className="text-bull">paper-only · pre-soft-launch</span>
             <span className="text-fg-faint">·</span>
             <span>v{pkg.version}</span>
-            <span className="text-fg-faint hidden md:inline">·</span>
-            <span className="hidden md:inline">region · iad-1</span>
-            <span className="text-fg-faint hidden md:inline">·</span>
+            <span className="text-fg-faint">·</span>
             <ContrastToggle />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span>© 2026 lazybull labs</span>
             <span className="text-fg-faint">·</span>
             {/* Real pages now — the Honesty Ledger (plain-English clauses, each
@@ -234,9 +226,8 @@ export function Footer() {
             <Link href="/terms" className="hover:text-fg">terms</Link>
             <span className="text-fg-faint">·</span>
             <Link href="/safety" className="hover:text-fg">safety</Link>
-            <span className="text-fg-faint">·</span>
-            {/* the easter egg: our deleted components, buried honestly */}
-            <Link href="/graveyard" className="text-fg-faint hover:text-bear" title="Components that didn't make it">⚰ the graveyard</Link>
+            {/* the graveyard easter egg moved into the About column — this row
+                was clipping at 375px under the footer's overflow-hidden */}
           </div>
         </div>
       </div>

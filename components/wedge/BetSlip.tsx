@@ -159,7 +159,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
 export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "selected" | "onPlace">) {
   const tone = prob > 0.6 ? "text-bull" : prob > 0.35 ? "text-cyan" : "text-bear";
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-border bg-bg/95 px-4 py-3 pr-20 backdrop-blur-md lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-border bg-bg/95 px-4 py-3 pr-[calc(var(--dock-gutter)+1rem)] backdrop-blur-md lg:hidden">
       <div className="min-w-0">
         <div className={`t-data text-sm font-semibold ${tone}`}>{(prob * 100).toFixed(0)}% in band</div>
         <div className="truncate t-chrome text-fg-dim">

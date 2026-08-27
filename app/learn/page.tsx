@@ -47,11 +47,6 @@ const TICKER_JARGON_A = [
   "ALPHA", "BETA", "SHARPE", "SORTINO", "CALMAR", "MAX DRAWDOWN",
   "WALK-FORWARD", "EMBARGO", "OUT-OF-SAMPLE", "INFORMATION COEFFICIENT",
 ];
-const TICKER_JARGON_C = [
-  "BOOTSTRAP", "QUANTILE", "PINBALL LOSS", "GBM", "MULBERRY32",
-  "TRIPLE-BARRIER", "DE PRADO", "META-LABELING", "FRACTIONAL DIFF",
-  "CV PURGED", "REGIME-AWARE", "BACKTEST", "PAPER TRADE", "KILL SWITCH",
-];
 const TICKER_JARGON_D = [
   "27 BOTS", "13 MODELS", "8 LIVE DEMOS", "0.4MS PRICING", "$5K PAPER",
   "GPT-4o-mini", "FASTAPI · :8000", "YAHOO FEED", "BLACK-SCHOLES · 1973",
@@ -392,23 +387,13 @@ export default function LearnPage() {
         />
         <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
-        {/* Top edge tape */}
-        <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-2 t-eyebrow text-fg-faint">
-          <div className="flex items-center gap-3">
-            <span className="size-1 rounded-full bg-bull pulse-dot" />
-            <span className="text-bull">LIVE FEED</span>
-            <span>·</span>
-            <span className="hidden sm:inline">EDITION 2026.05</span>
-            <span className="hidden md:inline">·</span>
-            <span className="hidden md:inline">14 CHAPTERS</span>
-            <span className="hidden md:inline">·</span>
-            <span className="hidden md:inline">8 INTERACTIVE</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden md:inline">PAPER MODE</span>
-            <span className="hidden md:inline">·</span>
-            <span>NO CARD</span>
-          </div>
+        {/* Top edge tape — status only; the counts live in the badge chip and
+            stat card below instead of being restated here. */}
+        <div className="relative flex items-center gap-3 border-b border-border-soft px-5 py-2 t-eyebrow text-fg-faint">
+          <span className="size-1 rounded-full bg-bull pulse-dot" />
+          <span className="text-bull">LIVE FEED</span>
+          <span>·</span>
+          <span>PAPER MODE</span>
         </div>
 
         <div className="relative shell grid grid-cols-12 gap-6 py-20 lg:py-28 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
@@ -419,14 +404,9 @@ export default function LearnPage() {
               className="flex flex-wrap items-center gap-2 t-eyebrow hero-fade-up-soft"
               style={{ animationDelay: "0.1s" }}
             >
+              {/* One chip — the subtitle and body already say the rest. */}
               <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" /> LEARN · 8 MIN · ALL LIVE
-              </span>
-              <span className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
-                EVERY CHART RESPONDS TO YOU
-              </span>
-              <span className="hidden md:inline-flex items-center gap-2 border border-cyan/30 bg-cyan/5 px-2 py-1 text-cyan">
-                ↳ DRAG · TUNE · RUN
               </span>
             </div>
 
@@ -492,26 +472,24 @@ export default function LearnPage() {
             </div>
           </div>
 
-          {/* RIGHT — Big Stats column */}
+          {/* RIGHT — one stat card, three columns (the Diploma pattern) */}
           <div
-            className="col-span-12 lg:col-span-4 flex flex-col gap-8 hero-fade-up"
+            className="col-span-12 lg:col-span-4 hero-fade-up"
             style={{ animationDelay: "1.0s" }}
           >
             <div className="surface-card border border-border bg-surface p-6">
-              <div className="mb-4 flex items-center justify-between t-eyebrow text-fg-faint">
+              <div className="mb-5 flex items-center justify-between t-eyebrow text-fg-faint">
                 <span className="flex items-center gap-2">
                   <span className="size-1 rounded-full bg-bull pulse-dot" />
                   IN THIS PAGE
                 </span>
                 <span>v0.1</span>
               </div>
-              <BigStat value={27} label="bots in the registry" tone="bull" size="md" />
-            </div>
-            <div className="surface-card border border-border bg-surface p-6">
-              <BigStat value={13} label="trained ML models" tone="cyan" size="md" />
-            </div>
-            <div className="surface-card border border-border bg-surface p-6">
-              <BigStat value={8} label="interactive demos" tone="amber" size="md" />
+              <div className="grid grid-cols-3 gap-4">
+                <BigStat value={27} label="bots" tone="bull" size="sm" />
+                <BigStat value={13} label="ml models" tone="cyan" size="sm" />
+                <BigStat value={8} label="live demos" tone="amber" size="sm" />
+              </div>
             </div>
           </div>
         </div>
@@ -550,7 +528,6 @@ export default function LearnPage() {
           ═════════════════════════════════════════════════════════════════ */}
       <SplitDesk chapters={RUN_1} />
 
-      <TickerStrip items={TICKER_JARGON_A} reverse />
       <AnimatedDivider num="01→02" label="THE PRIMITIVES" />
 
       {/* ═════════════════════════════════════════════════════════════════
@@ -674,8 +651,10 @@ export default function LearnPage() {
                 </span>
               </div>
               <p className="font-display text-base leading-relaxed text-fg-dim">{f.blurb}</p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {f.bots.slice(0, 6).map((b) => (
+              {/* Three representative bots — the full roster lives on the
+                  destination page this card already links to. */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                {f.bots.slice(0, 3).map((b) => (
                   <span
                     key={b.id}
                     className="inline-flex items-center gap-1.5 border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-fg-dim"
@@ -684,18 +663,24 @@ export default function LearnPage() {
                     {b.name}
                   </span>
                 ))}
-                {f.bots.length > 6 && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
-                    +{f.bots.length - 6} more
+                {f.bots.length > 3 && (
+                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint group-hover:text-bull">
+                    +{f.bots.length - 3} more →
                   </span>
                 )}
               </div>
             </Link>
           ))}
         </div>
+
+        {/* The one mid-page marquee — the catalog's own tape. It lives INSIDE
+            the chapter so it never stacks its horizontal scroll on top of an
+            AnimatedDivider's at a seam (the L6 double-animation problem). */}
+        <div className="mt-12">
+          <TickerStrip items={TICKER_JARGON_A} />
+        </div>
       </Chapter>
 
-      <TickerStrip items={TICKER_JARGON_A} />
       <AnimatedDivider num="09→10" label="STRESS TEST" />
 
       {/* ═════════════════════════════════════════════════════════════════
@@ -765,7 +750,6 @@ export default function LearnPage() {
         </div>
       </Chapter>
 
-      <TickerStrip items={TICKER_JARGON_C} reverse />
       <AnimatedDivider num="11→12" label="HACKER FRIENDLY" />
 
       {/* ═════════════════════════════════════════════════════════════════
@@ -907,7 +891,6 @@ export default {
         </div>
       </Chapter>
 
-      <TickerStrip items={TICKER_JARGON_D} />
       <AnimatedDivider num="13→14" label="GO" />
 
       {/* ═════════════════════════════════════════════════════════════════
@@ -969,7 +952,7 @@ export default {
         </div>
       </Chapter>
 
-      <Footer />
+      <Footer marketing />
     </main>
   );
 }

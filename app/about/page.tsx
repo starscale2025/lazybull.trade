@@ -13,7 +13,7 @@ export default function AboutPage() {
     <main className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
       <About />
-      <Footer />
+      <Footer marketing />
     </main>
   );
 }

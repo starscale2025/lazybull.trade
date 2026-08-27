@@ -277,9 +277,10 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
       )}
 
       {/* title bar — always visible, like a docked window's chrome */}
-      {/* pr-16: keep RESET FUNDS and the window controls clear of the docked
-          mic pinned at bottom-right by the Dock (components/Dock.tsx). */}
-      <div className="flex items-center gap-2 border-b border-border-soft bg-surface px-3 pr-16 py-1.5">
+      {/* .dock-clear-x: keep RESET FUNDS and the window controls clear of the
+          Dock's bottom-right footprint (components/Dock.tsx) via --dock-gutter
+          — the hand-rolled pr-16 was 8px short. */}
+      <div className="dock-clear-x flex items-center gap-2 border-b border-border-soft bg-surface px-3 py-1.5">
         <button
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}

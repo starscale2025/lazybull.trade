@@ -76,6 +76,9 @@ export function BotCell({
   onRerun: () => void;
 }) {
   const [paramsOpen, setParamsOpen] = useState(false);
+  // Q6: '?', 'params' and '✕' live behind one '⋯' — five always-on controls
+  // per header made 4+ stacked cells read as a wall of touching buttons.
+  const [menuOpen, setMenuOpen] = useState(false);
   const cls = closes(candles);
 
   /**
@@ -149,27 +152,12 @@ export function BotCell({
                 / {def.category}
               </span>
             </div>
-            <div className="hidden truncate t-chrome text-fg-dim sm:block">
+            <div className="hidden t-chrome leading-tight text-fg-dim sm:line-clamp-2">
               {def.tagline}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <a
-            href={`/learn/bots/${def.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={`How does ${def.name} work?`}
-            className="grid h-7 w-7 place-items-center border border-border bg-bg font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-cyan hover:text-cyan"
-          >
-            ?
-          </a>
-          <button
-            onClick={() => setParamsOpen((v) => !v)}
-            className="h-7 border border-border bg-bg px-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
-          >
-            params
-          </button>
           <button
             onClick={onRerun}
             disabled={isRunning}
@@ -195,13 +183,65 @@ export function BotCell({
           >
             {active.collapsed ? "▾" : "▴"}
           </button>
-          <button
-            onClick={onRemove}
-            className="h-7 w-7 grid place-items-center border border-border bg-bg font-mono text-[10px] text-fg-dim hover:bg-bear hover:text-bg hover:border-bear"
-            title="remove"
-          >
-            ✕
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              title="more"
+              className={`h-7 w-7 grid place-items-center border bg-bg font-mono text-[10px] ${
+                menuOpen ? "border-fg-dim text-fg" : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
+              }`}
+            >
+              ⋯
+            </button>
+            {menuOpen && (
+              <>
+                {/* click-away scrim — closes the menu without stealing the click */}
+                <button
+                  aria-hidden
+                  tabIndex={-1}
+                  onClick={() => setMenuOpen(false)}
+                  className="fixed inset-0 z-10 cursor-default"
+                />
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-20 mt-1 w-40 surface-instrument border border-border bg-surface shadow-2xl"
+                >
+                  <a
+                    href={`/learn/bots/${def.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-2.5 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:bg-bg hover:text-cyan"
+                  >
+                    ? how it works
+                  </a>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setParamsOpen((v) => !v);
+                      setMenuOpen(false);
+                    }}
+                    className="block w-full border-t border-border-soft px-2.5 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:bg-bg hover:text-fg"
+                  >
+                    {paramsOpen ? "hide params" : "params"}
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onRemove();
+                    }}
+                    className="block w-full border-t border-border-soft px-2.5 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:bg-bear hover:text-bg"
+                  >
+                    ✕ remove
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -354,7 +394,7 @@ export function BotCell({
                     height={160}
                     width={720}
                   />
-                  <div className="absolute left-2 top-1.5 flex gap-3 t-chrome text-fg-faint">
+                  <div className="absolute left-2 top-1.5 flex gap-3 bg-bg/70 px-1 t-chrome text-fg-faint">
                     <span className="flex items-center gap-1.5">
                       <span className="size-1.5 bg-fg" /> close
                     </span>
@@ -378,7 +418,7 @@ export function BotCell({
                     width={720}
                     histogram={result.pane.kind === "histogram"}
                   />
-                  <div className="absolute left-2 top-1.5 flex gap-3 t-chrome text-fg-faint">
+                  <div className="absolute left-2 top-1.5 flex gap-3 bg-bg/70 px-1 t-chrome text-fg-faint">
                     {result.pane.series.map((s) => (
                       <span key={s.label} className="flex items-center gap-1.5">
                         <span className="size-1.5" style={{ background: s.color }} />

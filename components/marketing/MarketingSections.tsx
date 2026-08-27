@@ -70,16 +70,28 @@ function Workflow() {
       <div className="relative mt-14">
         {/* The rule that threads the three step badges together. Decorative,
             and only drawn once the steps actually sit in a row. It wipes in
-            left → right on scroll, so the spine of the argument is literally
-            drawn before the three steps land on it — the section's one piece
-            of choreography, and the reason the steps stagger in reading order.
+            left → right on scroll (two segments, staggered in reading order),
+            so the spine of the argument is literally drawn before the three
+            steps land on it — the section's one piece of choreography.
             Sibling of the grid rather than a child of it, so the stagger below
-            cannot also grab it. */}
+            cannot also grab it.
+            TWO SEGMENTS, clipped to the inter-card gutters: the cards' glass
+            fill is translucent, so one continuous rule stayed faintly visible
+            crossing the card interiors and the 01/02/03 badges. The offsets
+            derive from the grid: col = (100% - 2×1.125rem)/3, gap = 1.125rem
+            (gap-4.5). */}
         <span
           aria-hidden
           data-gsap="reveal-clip"
-          data-gsap-duration="1.1"
-          className="absolute left-[12%] right-[12%] top-[53px] hidden h-px bg-[linear-gradient(90deg,transparent,rgba(0,255,135,0.35),rgba(0,255,135,0.35),transparent)] md:block"
+          data-gsap-duration="0.55"
+          className="absolute left-[calc(33.333%-0.75rem)] top-[53px] hidden h-px w-[1.125rem] bg-bull/35 md:block"
+        />
+        <span
+          aria-hidden
+          data-gsap="reveal-clip"
+          data-gsap-duration="0.55"
+          data-gsap-delay="0.55"
+          className="absolute left-[calc(66.667%-0.375rem)] top-[53px] hidden h-px w-[1.125rem] bg-bull/35 md:block"
         />
         <div
           className="grid grid-cols-1 gap-4.5 md:grid-cols-3"
@@ -97,7 +109,7 @@ function Workflow() {
               <span className="font-display text-[25px] tracking-[-0.03em] text-fg">
                 {s.title}
               </span>
-              <p className="m-0 flex-1 text-[13.5px] leading-[1.65] text-fg-dim">
+              <p className="m-0 flex-1 text-[13px] leading-[1.65] text-fg-dim">
                 {s.copy}
               </p>
               <Link
@@ -275,7 +287,7 @@ function Safety() {
         <div data-gsap="fade-up">
           <GlassEyebrow>Safety is the product</GlassEyebrow>
           <GlassHeading accent="by design.">Boring,</GlassHeading>
-          <p className="measure mt-[18px] mb-6 text-[14.5px] leading-[1.7] text-fg-dim">
+          <p className="measure mt-[18px] mb-6 t-body-sm text-fg-dim">
             LAZYBULL is an educational platform. Not a broker, not advice — a
             place to get fluent before a single real dollar moves.
           </p>
@@ -344,10 +356,10 @@ function Safety() {
               key={t}
               className="glass glass-hover rounded-[var(--r-cell)] p-[22px_20px]"
             >
-              <div className="font-display text-[17.5px] tracking-[-0.02em] text-fg">
+              <div className="font-display text-[18px] tracking-[-0.02em] text-fg">
                 {t}
               </div>
-              <p className="m-0 mt-2 text-[12.5px] leading-[1.6] text-fg-dim">
+              <p className="m-0 mt-2 text-[13px] leading-[1.6] text-fg-dim">
                 {d}
               </p>
             </div>
@@ -462,7 +474,7 @@ function Pricing() {
                 monthly" above a card that reads "$0 /forever" — a qualifier
                 attached to the one price it cannot possibly describe. */}
             {t.terms && <div className="t-chrome text-fg-faint">{t.terms}</div>}
-            <div className="font-display text-[15.5px] text-fg-dim">
+            <div className="font-display text-[16px] text-fg-dim">
               {t.blurb}
             </div>
             <div className="flex-1">

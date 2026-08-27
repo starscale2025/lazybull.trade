@@ -46,7 +46,7 @@ export function RiskWizard() {
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, y: 12 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-2xl border border-amber/60 bg-bg shadow-[0_30px_100px_-20px_rgba(255,184,0,0.4)]"
+            className="relative max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-2xl overflow-y-auto border border-amber/60 bg-bg shadow-[0_30px_100px_-20px_rgba(255,184,0,0.4)]"
           >
             <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-amber">
               ⚠ first-visit safety briefing · 1 of 1

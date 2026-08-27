@@ -42,6 +42,8 @@ const PAD = { L: 14, R: 78, T: 18, B: 36 };
 export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onChangeLow, onChangeHigh, onChangeDays, events = [], bandProb, legs = [], breakevens = [], hoverStrike = null }: Cone) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 360 });
+  // First interaction retires the drag tip — see the tip overlay below.
+  const [touched, setTouched] = useState(false);
   const dragRef = useRef<{ which: "low" | "high" | "both" | null; startY: number; startLow: number; startHigh: number; startTimeX?: number; startDays?: number } | null>(null);
   // Drag listeners live on `window` and were only ever removed by their own
   // mouseup. Unmounting mid-drag (route change, tab switch) leaked both of them
@@ -130,6 +132,31 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const yLow = yOf(low);
   const yHigh = yOf(high);
   const xExpiry = xOf(totalBars - 1);
+  const ySpot = yOf(spot);
+
+  // ── right-gutter pill de-confliction (18px min separation) ─────────────
+  // Spot's pill holds its true y; the band pills give way when the band edges
+  // come within a pill-height of spot. A nudged pill keeps its handle line at
+  // the TRUE price and points back to it with a short leader across the gutter.
+  const pillAway = (y: number) => (Math.abs(y - ySpot) >= 18 ? y : y <= ySpot ? ySpot - 18 : ySpot + 18);
+  let yHighPill = pillAway(yHigh);
+  let yLowPill = pillAway(yLow);
+  // yHigh < yLow always (high price sits higher on screen) — if the two band
+  // pills still crowd each other after dodging spot, the upper one climbs.
+  if (yLowPill - yHighPill < 18) yHighPill = yLowPill - 18;
+  const pillYs = [yHighPill, yLowPill, ySpot];
+
+  // ── left-edge label slots ──────────────────────────────────────────────
+  // Every left-anchored label (legs, band caption) claims a 10px y-slot;
+  // colliders drop +10px and nothing may climb into the NOW band. Plain
+  // render-scope state: rebuilt from scratch each render, claimed in JSX order.
+  const labelSlots: number[] = [];
+  const claimLabelY = (want: number) => {
+    let y = Math.max(PAD.T + 22, want);
+    while (labelSlots.some((u) => Math.abs(u - y) < 10)) y += 10;
+    labelSlots.push(y);
+    return y;
+  };
 
   // ── interactions
   const screenY = (e: { clientY: number }) => {
@@ -156,6 +183,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const startDrag = (which: "low" | "high" | "both" | "expiry", e: React.PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    setTouched(true);
     if (which === "expiry") {
       dragRef.current = { which: null, startY: 0, startLow: low, startHigh: high, startTimeX: screenX(e), startDays: daysToExpiry };
       const onMove = (ev: PointerEvent) => {
@@ -237,11 +265,13 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   }, [events, histBars, totalBars, size.w, size.h]);
 
   return (
-    <div ref={wrapRef} className="relative h-full w-full select-none overflow-hidden bg-bg">
+    <div className="flex h-full w-full select-none flex-col overflow-hidden bg-bg">
       {/* Typed fallback for the band (WCAG 2.5.1 — the drag is never the only
           path): on touch the drag was a mouse-only corpse and the whole page
-          priced off a default band the user never chose. */}
-      <div className="absolute left-2 top-2 z-10 flex items-center gap-2 t-chrome text-fg-faint">
+          priced off a default band the user never chose.
+          IN THE HEADER STRIP, not floating over the plot — the top-left corner
+          belongs to the in-band ring, and the inputs were flush against it. */}
+      <div className="flex shrink-0 items-center justify-end gap-3 px-2 pb-1 pt-2 t-chrome text-fg-faint">
         <label className="flex items-center gap-1">
           hi
           <input
@@ -253,7 +283,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeHigh(clampPrice(Math.max(low + 0.5, v)));
             }}
             aria-label="Band high price"
-            className="w-16 border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bull outline-none focus:border-bull"
+            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bull outline-none [appearance:textfield] focus:border-bull [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
         <label className="flex items-center gap-1">
@@ -267,10 +297,11 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeLow(clampPrice(Math.min(high - 0.5, v)));
             }}
             aria-label="Band low price"
-            className="w-16 border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bear outline-none focus:border-bear"
+            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bear outline-none [appearance:textfield] focus:border-bear [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
       </div>
+      <div ref={wrapRef} className="relative min-h-0 w-full flex-1">
       <svg width="100%" height="100%" viewBox={`0 0 ${size.w} ${size.h}`}>
         <defs>
           <linearGradient id="cone-grad" x1="0" x2="1" y1="0" y2="0">
@@ -287,12 +318,17 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         {/* y grid */}
         {yTicks.map((p, i) => {
           const y = yOf(p);
+          // The grid line always draws; the label yields to any price pill
+          // sitting on top of it — a covered tick number is just half-digits.
+          const covered = pillYs.some((py) => Math.abs(y - py) < 12);
           return (
             <g key={i}>
               <line x1={PAD.L} x2={size.w - PAD.R} y1={y} y2={y} stroke="rgba(245,245,240,0.05)" />
-              <text x={size.w - PAD.R + 8} y={y + 3} fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
-                {p.toFixed(2)}
-              </text>
+              {!covered && (
+                <text x={size.w - PAD.R + 8} y={y + 3} fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
+                  {p.toFixed(2)}
+                </text>
+              )}
             </g>
           );
         })}
@@ -336,16 +372,22 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         {/* High handle */}
         <g onPointerDown={(e) => startDrag("high", e)} style={{ cursor: "ns-resize", touchAction: "none" }}>
           <line x1={xOf(histN - 1)} x2={xExpiry} y1={yHigh} y2={yHigh} stroke="var(--bull)" strokeWidth="1.4" />
-          <rect x={size.w - PAD.R + 2} y={yHigh - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
-          <text x={size.w - PAD.R / 2} y={yHigh + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
+          {yHighPill !== yHigh && (
+            <line x1={xExpiry} x2={size.w - PAD.R + 3} y1={yHigh} y2={yHighPill} stroke="var(--bull)" strokeWidth="1" />
+          )}
+          <rect x={size.w - PAD.R + 2} y={yHighPill - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
+          <text x={size.w - PAD.R / 2} y={yHighPill + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
             {high.toFixed(2)}
           </text>
         </g>
         {/* Low handle */}
         <g onPointerDown={(e) => startDrag("low", e)} style={{ cursor: "ns-resize", touchAction: "none" }}>
           <line x1={xOf(histN - 1)} x2={xExpiry} y1={yLow} y2={yLow} stroke="var(--bull)" strokeWidth="1.4" />
-          <rect x={size.w - PAD.R + 2} y={yLow - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
-          <text x={size.w - PAD.R / 2} y={yLow + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
+          {yLowPill !== yLow && (
+            <line x1={xExpiry} x2={size.w - PAD.R + 3} y1={yLow} y2={yLowPill} stroke="var(--bull)" strokeWidth="1" />
+          )}
+          <rect x={size.w - PAD.R + 2} y={yLowPill - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
+          <text x={size.w - PAD.R / 2} y={yLowPill + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
             {low.toFixed(2)}
           </text>
         </g>
@@ -374,10 +416,14 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           // identical rules just renders a thicker, darker line for no reason.
           const seen = new Map<number, { type: "C" | "P"; side: "long" | "short"; strike: number }>();
           for (const l of legs) if (!seen.has(l.strike)) seen.set(l.strike, l);
+          // Slot claims cascade downward, so claim top-down: close strikes
+          // (9px apart at condor wings) stack instead of overprinting.
+          const ordered = [...seen.values()].sort((a, b) => yOf(a.strike) - yOf(b.strike));
           return (
             <g pointerEvents="none">
-              {[...seen.values()].map((l) => {
+              {ordered.map((l) => {
                 const y = yOf(l.strike);
+                const labelY = claimLabelY(y - 4);
                 const long = l.side === "long";
                 return (
                   <g key={`${l.strike}-${l.type}-${l.side}`}>
@@ -393,7 +439,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
                     />
                     <text
                       x={xs + 5}
-                      y={y - 4}
+                      y={labelY}
                       fontFamily="var(--font-jetbrains)"
                       fontSize="9"
                       letterSpacing="0.5"
@@ -443,8 +489,11 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           return (
             <g pointerEvents="none">
               <line x1={xs} x2={xExpiry} y1={y} y2={y} stroke="var(--cyan)" strokeWidth="1" strokeDasharray="4 3" opacity="0.9" />
-              <rect x={xs + 4} y={y - 14} width={w} height="12" fill="var(--cyan)" />
-              <text x={xs + 9} y={y - 5} fontFamily="var(--font-jetbrains)" fontSize="9" fontWeight="600" fill="var(--bg)">
+              {/* Offset right of the leg labels' x=xs+5 column — the chip
+                  tracks the pointer through the chain and was landing in the
+                  exact anchor slot the leg labels live in. */}
+              <rect x={xs + 56} y={y - 14} width={w} height="12" fill="var(--cyan)" />
+              <text x={xs + 61} y={y - 5} fontFamily="var(--font-jetbrains)" fontSize="9" fontWeight="600" fill="var(--bg)">
                 {label}
               </text>
             </g>
@@ -455,13 +504,20 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         {bandProb != null && (() => {
           const xs = xOf(histN - 1);
           const bandTop = Math.min(yLow, yHigh);
-          const labelY = Math.max(PAD.T + 10, bandTop - 8);
+          // Same NOW-band floor as the leg labels — left-anchored it now shares
+          // a column with the NOW caption.
+          let labelY = Math.max(PAD.T + 22, bandTop - 8);
+          // Left-anchored at the band's edge (centered, it sat on the
+          // right-anchored B/E label's row). When a breakeven or a leg label
+          // already owns that row, the caption tucks just inside the band.
+          if (breakevens.some((b) => Math.abs(labelY - yOf(b)) < 12) || labelSlots.some((u) => Math.abs(labelY - u) < 10)) {
+            labelY = bandTop + 12;
+          }
           return (
             <g pointerEvents="none">
               <text
-                x={(xs + xExpiry) / 2}
+                x={xs + 8}
                 y={labelY}
-                textAnchor="middle"
                 fontFamily="var(--font-jetbrains)"
                 fontSize="9"
                 letterSpacing="1.5"
@@ -533,10 +589,14 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           "35d -> exp" chip. An instruction that is read once should not hold the
           corner that carries numbers read continuously. Bottom-left is the one
           region of the plot nothing else occupies: history runs along the
-          middle-left and the x baseline is below this. */}
-      <div className="pointer-events-none absolute bottom-9 left-4 flex flex-col items-start gap-1 t-chrome text-fg-faint">
-        <span><span className="text-bull">drag bands</span> to move your zone</span>
-        <span><span className="text-amber">drag the exp line</span> →← to change date</span>
+          middle-left and the x baseline is below this. One line, and it fades
+          for good after the first drag — an instruction already followed is
+          just noise on the plot. */}
+      <div
+        className={`pointer-events-none absolute bottom-9 left-4 t-chrome text-fg-faint transition-opacity duration-700 ${touched ? "opacity-0" : "opacity-100"}`}
+      >
+        <span className="text-bull">drag bands</span> · <span className="text-amber">drag exp line</span> ⟷
+      </div>
       </div>
     </div>
   );

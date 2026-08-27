@@ -61,6 +61,9 @@ export function QuantPage() {
   const [customBots, setCustomBots] = useState<BotDef[]>([]);
   const [importOpen, setImportOpen] = useState(false);
   const [librarySpotlight, setLibrarySpotlight] = useState(false);
+  // Q8: when the recommended preset IS the active stack, the four why-cards are
+  // a screenful of meta-UI — collapse the band to its header until asked for.
+  const [presetExpanded, setPresetExpanded] = useState(false);
   const libraryRef = useRef<HTMLDivElement>(null);
   const [showLearnBanner, setShowLearnBanner] = useState(false);
 
@@ -500,8 +503,8 @@ export function QuantPage() {
       {/* Never stack two banners: the reconnect notice takes precedence over the
           first-time tip so the workbench is never pushed down by both at once. */}
       {showLearnBanner && !(mode === "live" && status === "synthetic") && (
-        <div className="border-b border-bull/30 bg-bull/5 px-5 py-2.5">
-          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
+        <div className="border-b border-bull/30 bg-bull/5 py-2.5">
+          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">First time here?</span>
             <span className="text-fg-dim normal-case tracking-normal">
@@ -524,8 +527,8 @@ export function QuantPage() {
         </div>
       )}
       {mode === "live" && status === "synthetic" && (
-        <div className="border-b border-border-soft bg-bg-soft px-5 py-2">
-          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 font-mono text-[11px]">
+        <div className="border-b border-border-soft bg-bg-soft py-2">
+          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[11px]">
             <span className="inline-flex items-center gap-1.5 uppercase tracking-wider text-cyan/90">
               <span className="size-1.5 rounded-full bg-cyan/80" />
               Live data temporarily unavailable
@@ -562,7 +565,6 @@ export function QuantPage() {
         onRunAll={runAll}
         onClearAll={clearAll}
         activeCount={active.length}
-        totalBots={BOT_REGISTRY.length + customBots.length}
         spot={lastSpot}
         mode={mode}
         setMode={setMode}
@@ -587,18 +589,33 @@ export function QuantPage() {
         onRunAll={runAll}
       />
 
-      {/* Recommended stack — which models suit THIS tape, and why. */}
-      {symbolPreset && (
-        <section className="mx-auto w-full max-w-[1500px] px-5 pt-4">
+      {/* Recommended stack — which models suit THIS tape, and why. When the
+          preset is already the active stack the cards collapse to the header
+          row; they return automatically the moment the stack diverges (Q8). */}
+      {symbolPreset && (() => {
+        const presetApplied = presetSignature(active) === presetSignature(symbolPreset.bots);
+        const showPresetCards = !presetApplied || presetExpanded;
+        return (
+        <section className="shell shell-wide pt-4">
           <div className="surface-instrument border border-border bg-surface">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border-soft px-3 py-2">
+            <div className={`flex flex-wrap items-center gap-2 px-3 py-2 ${showPresetCards ? "border-b border-border-soft" : ""}`}>
               <span className="t-eyebrow text-bull">
                 ★ recommended for {symbol}
               </span>
               <span className="t-chrome text-fg-faint">
                 {symbolPreset.character}
               </span>
-              {presetSignature(active) !== presetSignature(symbolPreset.bots) && (
+              {presetApplied ? (
+                <>
+                  <span className="t-chrome text-bull/80">applied ✓</span>
+                  <button
+                    onClick={() => setPresetExpanded((v) => !v)}
+                    className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
+                  >
+                    {presetExpanded ? "hide ▴" : "view ▾"}
+                  </button>
+                </>
+              ) : (
                 <button
                   onClick={() => applyPreset(symbol)}
                   className="ml-auto border border-bull/50 bg-bull/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
@@ -607,6 +624,7 @@ export function QuantPage() {
                 </button>
               )}
             </div>
+            {showPresetCards && (
             <div className="grid grid-cols-1 gap-px bg-border-soft sm:grid-cols-2 lg:grid-cols-4">
               {symbolPreset.bots.map((b) => {
                 const def = getBot(b.defId);
@@ -631,17 +649,21 @@ export function QuantPage() {
                 );
               })}
             </div>
+            )}
           </div>
         </section>
-      )}
+        );
+      })()}
 
-      <div className="mx-auto flex w-full max-w-[1500px] items-center justify-end px-5 pt-3">
+      <div className="shell shell-wide flex items-center justify-end pt-3">
         <SetupsBar getState={setupState} onApply={applySetup} />
       </div>
 
-      <section className="mx-auto w-full max-w-[1500px] px-5 pt-2">
-        <div className="grid grid-cols-12 gap-4" style={{ minHeight: "calc(100vh - 80px)" }}>
-          <div ref={libraryRef} className={`col-span-12 lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] transition-shadow duration-700 ${librarySpotlight ? "shadow-[0_0_0_2px_var(--bull),0_0_60px_-10px_var(--bull)]" : ""}`} style={{ height: "calc(100vh - 2rem)" }}>
+      {/* Viewport-height boxes divide by --ui-zoom: html{zoom} does not shrink
+          vh units, so the raw value renders ~10% too tall and clips (S1). */}
+      <section className="shell shell-wide pt-2">
+        <div className="grid min-h-[calc(100vh/var(--ui-zoom)-80px)] grid-cols-12 gap-4">
+          <div ref={libraryRef} className={`col-span-12 h-[calc(100vh/var(--ui-zoom)-2rem)] lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh/var(--ui-zoom)-2rem)] transition-shadow duration-700 ${librarySpotlight ? "shadow-[0_0_0_2px_var(--bull),0_0_60px_-10px_var(--bull)]" : ""}`}>
             <BotLibrary
               bots={BOT_REGISTRY}
               customBots={customBots}
@@ -652,7 +674,7 @@ export function QuantPage() {
             />
           </div>
 
-          <div className="col-span-12 lg:col-span-6" style={{ minHeight: "70vh" }}>
+          <div className="col-span-12 min-h-[calc(70vh/var(--ui-zoom))] lg:col-span-6">
             <Workspace
               rows={rows}
               candles={candles}
@@ -667,7 +689,7 @@ export function QuantPage() {
             />
           </div>
 
-          <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)]" style={{ height: "calc(100vh - 2rem)" }}>
+          <div className="col-span-12 h-[calc(100vh/var(--ui-zoom)-2rem)] lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh/var(--ui-zoom)-2rem)]">
             <OutputPanel runs={rows} symbol={symbol} spot={lastSpot} beginner={beginner} ranAt={ranAt} dataSource={dataSource} />
           </div>
         </div>

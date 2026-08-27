@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
-import { TruthBadge } from "@/components/pro/TruthBadge";
 import { Chart, type ChartHandle, type Alert } from "@/components/pro/Chart";
 import { LeftToolbar } from "@/components/pro/LeftToolbar";
 import { TopBar, SEED_SYMBOLS, type SymbolDef } from "@/components/pro/TopBar";
@@ -838,9 +837,8 @@ export default function ProPage() {
           )}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
         </div>
-        <div className="ml-2">
-          <TruthBadge />
-        </div>
+        {/* The TruthBadge that sat here duplicated the canonical one in <Nav/>
+            directly above — one provenance chip per surface. */}
         {/* The action cluster that used to sit here is gone. Every one of its
             four controls — alerts, fullscreen, trade, save — is wired into
             <TopBar/> immediately below with the SAME handlers, so the top 190px
@@ -874,7 +872,8 @@ export default function ProPage() {
       {/* <lg: toolbar+chart become a fixed-height band and the right panel stacks
           below (page scrolls); lg+: the original single-screen three-pane row. */}
       <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
-        <div className="flex h-[62vh] min-h-[420px] shrink-0 overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
+        {/* /var(--ui-zoom): html renders zoomed, so raw vh over-measures. */}
+        <div className="flex h-[calc(62vh/var(--ui-zoom))] min-h-[420px] shrink-0 overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
         <LeftToolbar
           tool={tool}
           setTool={setTool}
@@ -885,15 +884,19 @@ export default function ProPage() {
         />
 
         <div className="relative flex flex-1 overflow-hidden">
-          {/* On-chart order ticket — TradingView's SELL | qty | BUY, top-left */}
-          <div className="pointer-events-none absolute left-2 top-8 z-20">
-            <OrderTicket
-              symbol={symbol.sym}
-              price={lastPrice}
-              disabled={replayActive}
-              onResult={showToast}
-            />
-          </div>
+          {/* On-chart order ticket — TradingView's SELL | qty | BUY, top-left.
+              Only in trade mode: rendered unconditionally it sat exactly on the
+              indicator legend, and clicks aimed at "remove EMA" landed on SELL. */}
+          {tradeOpen && (
+            <div className="pointer-events-none absolute left-2 top-8 z-20">
+              <OrderTicket
+                symbol={symbol.sym}
+                price={lastPrice}
+                disabled={replayActive}
+                onResult={showToast}
+              />
+            </div>
+          )}
           {/* Multi-pane chart layout */}
           <div className={`grid w-full h-full gap-px bg-border ${
             layout === 1 ? "grid-cols-1 grid-rows-1"
@@ -928,6 +931,7 @@ export default function ProPage() {
                 onMoveOrder={i === 0 && !replayActive ? moveOrder : undefined}
                 scale={logScale ? "log" : "linear"}
                 onRemoveIndicator={i === 0 ? (id) => setIndicators((cur) => cur.filter((x) => x !== id)) : undefined}
+                legendOffset={i === 0 && tradeOpen}
                 onTradeAt={i === 0 && !replayActive ? tradeAtPrice : undefined}
                 onAlertAt={i === 0 ? alertAtPrice : undefined}
               />
@@ -1093,6 +1097,7 @@ function PaneChart({
   onRemoveIndicator,
   onTradeAt,
   onAlertAt,
+  legendOffset,
 }: {
   primary: boolean;
   symbol: SymbolDef;
@@ -1112,6 +1117,7 @@ function PaneChart({
   onRemoveIndicator?: (id: string) => void;
   onTradeAt?: (side: "buy" | "sell", price: number) => void;
   onAlertAt?: (price: number) => void;
+  legendOffset?: boolean;
   replayCursor: number | null;
   alerts: Alert[];
   onAlertFire?: (a: Alert) => void;
@@ -1172,6 +1178,7 @@ function PaneChart({
         onRemoveIndicator={onRemoveIndicator}
         onTradeAt={onTradeAt}
         onAlertAt={onAlertAt}
+        legendOffset={legendOffset}
         replayBar={replayCursor}
         alerts={alerts}
         onAlertFire={onAlertFire}

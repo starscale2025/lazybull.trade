@@ -46,7 +46,7 @@ export default function Graveyard() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-4 sm:grid-cols-2">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2">
           {FALLEN.map((g) => (
             <div
               key={g.name}
@@ -65,17 +65,22 @@ export default function Graveyard() {
           ))}
         </div>
 
-        <p className="mt-10 text-center font-mono text-[11px] leading-relaxed text-fg-faint">
-          Plus six more swept in the durability pass — ProCta, IntroSequence, MaterialHero,
-          ParticleCurtain, SectionDivider, TerminalTilt (523 lines) — atmosphere that never
-          made the cut.
-        </p>
-
-        <p className="mt-4 text-center font-mono text-[11px] leading-relaxed text-fg-faint">
-          And four rails retired when /learn became the Desk — SectionIndex, ScrollProgressBar,
-          LiveBadge, DataStreamRail (237 lines) — seven decorative systems folded into one
-          named navigator.
-        </p>
+        <details className="group mx-auto mt-10 max-w-[54ch]">
+          <summary className="cursor-pointer list-none text-center t-eyebrow text-fg-faint transition-colors hover:text-fg-dim [&::-webkit-details-marker]:hidden">
+            +10 more buried in later passes · 760 lines{" "}
+            <span className="inline-block transition-transform group-open:rotate-90">›</span>
+          </summary>
+          <div className="mt-4 space-y-3 border border-border-soft px-4 py-3 text-center font-mono text-[11px] leading-relaxed text-fg-faint">
+            <p>
+              Six swept in the durability pass — ProCta, IntroSequence, MaterialHero, ParticleCurtain,
+              SectionDivider, TerminalTilt (523 lines) — atmosphere that never made the cut.
+            </p>
+            <p>
+              Four rails retired when /learn became the Desk — SectionIndex, ScrollProgressBar, LiveBadge,
+              DataStreamRail (237 lines) — seven decorative systems folded into one named navigator.
+            </p>
+          </div>
+        </details>
 
         <div className="mt-8 border-t border-border-soft pt-6 text-center t-eyebrow text-fg-faint">
           scripts/guard.mjs watches the gate now · nothing dead ships again

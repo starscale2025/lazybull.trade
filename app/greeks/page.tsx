@@ -150,12 +150,12 @@ const fmtStrike = (k: number, spot: number) => (spot < 50 ? k.toFixed(1) : Math.
 // ── Greek copy (exact house one-liners, same as the learn-page cards) ────────
 type GreekKey = "delta" | "gamma" | "theta" | "vega" | "rho";
 const GREEK_ORDER: GreekKey[] = ["delta", "gamma", "theta", "vega", "rho"];
-const GREEK_COPY: Record<GreekKey, { label: string; line: string }> = {
-  delta: { label: "Delta", line: "How much the option price changes for a $1 move in the underlying." },
-  gamma: { label: "Gamma", line: "How much Delta changes for a $1 move in the underlying." },
-  theta: { label: "Theta", line: "How much time decay reduces the option price each day." },
-  vega: { label: "Vega", line: "How much the option price changes for a 1% move in implied volatility." },
-  rho: { label: "Rho", line: "How much the option price changes for a 1% move in interest rates." },
+const GREEK_COPY: Record<GreekKey, { label: string; letter: string; line: string }> = {
+  delta: { label: "Delta", letter: "Δ", line: "How much the option price changes for a $1 move in the underlying." },
+  gamma: { label: "Gamma", letter: "Γ", line: "How much Delta changes for a $1 move in the underlying." },
+  theta: { label: "Theta", letter: "Θ", line: "How much time decay reduces the option price each day." },
+  vega: { label: "Vega", letter: "V", line: "How much the option price changes for a 1% move in implied volatility." },
+  rho: { label: "Rho", letter: "ρ", line: "How much the option price changes for a 1% move in interest rates." },
 };
 
 // ── Static-per-spot wireframe + axes: never re-renders while dragging ────────
@@ -236,6 +236,7 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
             <line x1={p.x} y1={p.y} x2={p.x - 1.3} y2={p.y + 7} stroke="var(--fg-faint)" strokeWidth="0.8" />
             <text
               data-axis="strike"
+              className="hidden md:[display:unset]"
               x={p.x - 3}
               y={p.y + 22}
               textAnchor="middle"
@@ -269,6 +270,7 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
           <g key={`dt${d}`}>
             <line x1={p.x} y1={p.y} x2={p.x + 1.1} y2={p.y + 7} stroke="var(--fg-faint)" strokeWidth="0.8" />
             <text
+              className="hidden md:[display:unset]"
               x={p.x + 2}
               y={p.y + 22}
               textAnchor="middle"
@@ -304,6 +306,7 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
             <line x1={O.x - 5} y1={y} x2={O.x} y2={y} stroke="var(--fg-faint)" strokeWidth="0.8" />
             <text
               data-axis="price"
+              className="hidden md:[display:unset]"
               x={O.x - 10}
               y={y + 3.5}
               textAnchor="end"
@@ -318,7 +321,7 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
       })}
       <text
         data-ycaption
-        x={O.x - 58}
+        x={O.x - 70}
         y={O.y - H_PX / 2}
         textAnchor="middle"
         fontFamily="var(--font-jetbrains)"
@@ -326,7 +329,7 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
         letterSpacing="4"
         fill="var(--bull)"
         opacity="0.85"
-        transform={`rotate(-90 ${O.x - 58} ${O.y - H_PX / 2})`}
+        transform={`rotate(-90 ${O.x - 70} ${O.y - H_PX / 2})`}
       >
         {def.caption}
       </text>
@@ -339,12 +342,12 @@ function GreekStatCard({
   greek,
   value,
   series,
-  teacher,
+  showLine,
 }: {
   greek: GreekKey;
   value: string;
   series: number[];
-  teacher: boolean;
+  showLine: boolean;
 }) {
   const step = Math.max(1, Math.floor(series.length / 15));
   const pts = series.filter((_, i) => i % step === 0);
@@ -358,7 +361,9 @@ function GreekStatCard({
   return (
     <div className="surface-card border border-border bg-surface p-2 md:p-4">
       <div className="t-chrome text-fg-dim md:text-[10px]">
-        {GREEK_COPY[greek].label}
+        {/* full words don't fit five-across at 375px — the letter is the label there */}
+        <span className="md:hidden">{GREEK_COPY[greek].letter}</span>
+        <span className="hidden md:inline">{GREEK_COPY[greek].label}</span>
       </div>
       <div className="mt-1 flex items-end justify-between gap-2 md:mt-2">
         <div
@@ -373,7 +378,7 @@ function GreekStatCard({
           <polyline points={points} stroke="currentColor" strokeWidth="1.2" />
         </svg>
       </div>
-      {teacher && (
+      {showLine && (
         <div
           data-teacher-line
           className="mt-3 hidden border-t border-border-soft pt-2 text-[11px] leading-relaxed text-fg-dim md:block"
@@ -522,32 +527,6 @@ export default function GreeksLabPage() {
     }
   }
 
-  const sourceChip =
-    source === "live" ? (
-      <span
-        data-source="live"
-        className="inline-flex items-center gap-1.5 border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-bull"
-      >
-        <span className="size-1 rounded-full bg-bull" />
-        Live
-      </span>
-    ) : source === "synthetic" ? (
-      <span
-        data-source="synthetic"
-        className="inline-flex items-center gap-1.5 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint"
-      >
-        <span className="size-1 rounded-full bg-fg-faint" />
-        Synthetic
-      </span>
-    ) : (
-      <span
-        data-source="loading"
-        className="inline-flex items-center gap-1.5 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint"
-      >
-        ···
-      </span>
-    );
-
   return (
     <div className="min-h-screen bg-bg">
       <Nav />
@@ -557,8 +536,8 @@ export default function GreeksLabPage() {
           <div className="t-eyebrow text-bull">
             The Greek surface · lab
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <label
                 htmlFor="symbol-select"
                 className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint"
@@ -589,20 +568,6 @@ export default function GreeksLabPage() {
                   <path d="M1 1l3 3.5L7 1" stroke="currentColor" strokeWidth="1.2" />
                 </svg>
               </div>
-              <span data-spot className="t-data text-[12px] text-fg">
-                ${spot.toFixed(2)}
-              </span>
-              {sourceChip}
-              <span
-                data-vol
-                className={`inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${
-                  volSource === "realized"
-                    ? "border-border bg-surface text-fg-dim"
-                    : "border-border bg-bg text-fg-faint"
-                }`}
-              >
-                IV {(vol * 100).toFixed(1)}% · {volSource === "realized" ? "Realized 60d" : "Synthetic"}
-              </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">Surface</span>
@@ -627,7 +592,7 @@ export default function GreeksLabPage() {
               aria-checked={teacher}
               aria-label="Teacher mode"
               onClick={() => setTeacher((t) => !t)}
-              className={`inline-flex items-center gap-3 rounded-full border px-4 py-3 transition-colors md:py-2 ${
+              className={`inline-flex h-10 items-center gap-3 rounded-full border px-4 transition-colors md:h-8 ${
                 teacher
                   ? "border-bull/60 bg-bull/10 shadow-[0_0_28px_-10px_var(--bull)]"
                   : "border-border bg-surface hover:border-fg-faint"
@@ -660,15 +625,17 @@ export default function GreeksLabPage() {
             <br />
             Watch all five Greeks move.
           </h1>
-          <aside className="w-full max-w-sm shrink-0 surface-card border border-border bg-surface p-5 lg:w-[320px]">
-            <div className="t-eyebrow text-bull">What am I seeing?</div>
-            <p className="mt-3 text-[12px] leading-relaxed text-fg-dim">
-              This is an option pricing surface. Drag the glowing handle to explore how the
-              price changes — and watch all five Greeks update in real time. Strike runs
-              along one edge, days to expiry along the other; height is whichever surface
-              you select — Gamma&apos;s wave crests at the money.
-            </p>
-          </aside>
+          {teacher && (
+            <aside className="w-full max-w-sm shrink-0 surface-card border border-border bg-surface p-5 lg:w-[320px]">
+              <div className="t-eyebrow text-bull">What am I seeing?</div>
+              <p className="mt-3 text-[12px] leading-relaxed text-fg-dim">
+                This is an option pricing surface. Drag the glowing handle to explore how the
+                price changes — and watch all five Greeks update in real time. Strike runs
+                along one edge, days to expiry along the other; height is whichever surface
+                you select — Gamma&apos;s wave crests at the money.
+              </p>
+            </aside>
+          )}
         </div>
 
         {/* the surface */}
@@ -789,14 +756,15 @@ export default function GreeksLabPage() {
             so the drag surface and the readouts could never be on screen
             together at 375x812 — the exact thing the headline asks you to do.
             One compact row on mobile, full cards from md up. */}
-        <div className="mt-4 grid grid-cols-5 gap-1.5 md:grid-cols-5 md:gap-3">
+        <div className="mt-6 grid grid-cols-5 gap-1.5 md:grid-cols-5 md:gap-3">
           {GREEK_ORDER.map((g) => (
             <GreekStatCard
               key={g}
               greek={g}
               value={greeks[g].toFixed(g === "gamma" ? 4 : 3)}
               series={sparks[g]}
-              teacher={teacher}
+              // one sentence at a time: only the Greek matching the selected surface teaches
+              showLine={teacher && g === surfaceKey}
             />
           ))}
         </div>

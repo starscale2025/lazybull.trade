@@ -34,6 +34,7 @@ export function LearnBacktestBuilder() {
   const [scenarioKey, setScenarioKey] = useState("bull");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1
+  const [hasRun, setHasRun] = useState(false); // a run has completed on this bot+scenario
   const [token, setToken] = useState(0);
   const tickRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -67,6 +68,7 @@ export function LearnBacktestBuilder() {
   useEffect(() => {
     setProgress(0);
     setRunning(false);
+    setHasRun(false);
     setToken((n) => n + 1);
     if (tickRef.current) clearInterval(tickRef.current);
   }, [botId, scenarioKey]);
@@ -86,6 +88,7 @@ export function LearnBacktestBuilder() {
         clearInterval(tickRef.current!);
         tickRef.current = null;
         setRunning(false);
+        setHasRun(true);
       }
       setProgress(i / total);
     }, 25);
@@ -156,19 +159,26 @@ export function LearnBacktestBuilder() {
           <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
             pick a bot
           </div>
-          <div className="grid grid-cols-2 gap-px bg-border @md:grid-cols-3">
+          {/* Segmented radio strip — glyph + name per bot; the tagline shows
+              once, for the selected bot, instead of six card blurbs. */}
+          <div className="flex flex-wrap gap-px bg-border">
             {PRESET_BOTS.map((b) => (
               <button
                 key={b.id}
                 onClick={() => setBotId(b.id)}
-                className={`bg-bg p-3 text-left transition-colors ${b.id === botId ? "bg-bull/[0.06]" : "hover:bg-bg-soft"}`}
+                title={b.blurb}
+                className={`flex grow items-center justify-center gap-1.5 bg-bg px-2.5 py-2 font-mono text-[10px] tracking-wide transition-colors ${
+                  b.id === botId ? "bg-bull/[0.06] text-bull" : "text-fg-dim hover:bg-bg-soft hover:text-fg"
+                }`}
               >
-                <div className={`font-mono text-[11px] tracking-wide ${b.id === botId ? "text-bull" : "text-fg"}`}>
-                  {b.label}
-                </div>
-                <div className="mt-1 text-[10px] leading-snug text-fg-dim normal-case tracking-normal">{b.blurb}</div>
+                <span className={b.id === botId ? "text-bull" : "text-fg-faint"}>{getBot(b.id)?.glyph ?? "·"}</span>
+                {b.label}
               </button>
             ))}
+          </div>
+          <div className="border-t border-border-soft px-3 py-2 font-mono text-[10px] text-fg-dim">
+            <span className="text-fg-faint">{def.name} → </span>
+            {PRESET_BOTS.find((b) => b.id === botId)?.blurb}
           </div>
         </div>
 
@@ -240,6 +250,9 @@ export function LearnBacktestBuilder() {
         />
       </div>
 
+      {/* Only worth reading once there are numbers to read — before a run its
+          Sharpe/MaxDD references point at 0.00 tiles. */}
+      {hasRun && (
       <div className="border border-dashed border-border bg-bg p-3 font-mono text-[11px] tracking-wide text-fg-dim leading-relaxed">
         <span className="text-fg-faint">read this →</span> a high return doesn&apos;t mean a good bot.
         Look at <span className="text-fg">Sharpe</span> (return per unit of bumpy ride — &gt;1 is good)
@@ -247,6 +260,7 @@ export function LearnBacktestBuilder() {
         through). The same bot wins big in one regime and loses in another. That&apos;s why stacking
         multiple bots matters.
       </div>
+      )}
     </div>
   );
 }

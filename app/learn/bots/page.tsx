@@ -56,21 +56,18 @@ export default function BotsIndex() {
                   className="t-eyebrow"
                   style={{ color: g.meta.color }}
                 >
-                  ⟢ {g.meta.label}
+                  ⟢ {g.meta.hint}
                 </div>
                 <h2 className="mt-2 t-subtitle">
                   {g.meta.label}
                 </h2>
-                <p className="mt-2 max-w-[60ch] t-body-sm text-fg-dim">
-                  {g.meta.hint}
-                </p>
               </div>
               <span className="t-chrome text-fg-faint">
                 {g.bots.length} bots
               </span>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {g.bots.map((b) => (
                 <Link
                   key={b.id}
@@ -84,7 +81,8 @@ export default function BotsIndex() {
                     >
                       {b.glyph}
                     </span>
-                    {b.endpoint && (
+                    {/* Section header already says AI Quants — the per-card badge would repeat 12× */}
+                    {b.endpoint && g.cat !== "ai" && (
                       <span className="border border-bear/40 bg-bear/10 px-1 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bear">
                         AI
                       </span>
@@ -109,7 +107,7 @@ export default function BotsIndex() {
         </section>
       ))}
 
-      <Footer />
+      <Footer marketing />
     </main>
   );
 }

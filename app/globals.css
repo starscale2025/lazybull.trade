@@ -158,12 +158,16 @@
    rem, px and partial units (`78vh`, `40vw`) all scale correctly on their own
    and are deliberately left alone.
 
-   These four rules are UNLAYERED on purpose, so they outrank Tailwind's own
+   These rules are UNLAYERED on purpose, so they outrank Tailwind's own
    `@layer utilities` definitions no matter what order the layers land in —
-   the same reason the focus law above is unlayered.
+   the same reason the focus law above is unlayered. The responsive variants
+   (`md:h-screen` etc.) are compensated too, each inside its own breakpoint's
+   `@media (min-width: …)` — the media query is what makes `md:`/`lg:` mean
+   anything, so an unqueried override would apply the height at every width.
 
-   IF YOU ADD A NEW FULL-VIEWPORT BOX, divide it here too, or it will overflow
-   by exactly `--ui-zoom`. Set `--ui-zoom: 1` to revert the whole thing.
+   IF YOU ADD A NEW FULL-VIEWPORT BOX (including a new responsive variant),
+   divide it here too, or it will overflow by exactly `--ui-zoom`. Set
+   `--ui-zoom: 1` to revert the whole thing.
    ══════════════════════════════════════════════════════════════════════════ */
 :root { --ui-zoom: 1.1; }
 /* KEPT AT 1.1 DELIBERATELY. The design audit's Wave 5 recommends deleting this
@@ -185,6 +189,27 @@ html { zoom: var(--ui-zoom); }
 .min-h-screen { min-height: calc(100vh / var(--ui-zoom)); }
 .w-screen { width: calc(100vw / var(--ui-zoom)); }
 .max-h-screen { max-height: calc(100vh / var(--ui-zoom)); }
+/* The responsive variants of the same four primitives. Breakpoints mirror
+   Tailwind v4's defaults (md 48rem, lg 64rem, xl 80rem) so the gating is
+   identical to the utilities these override. */
+@media (min-width: 48rem) {
+  .md\:h-screen { height: calc(100vh / var(--ui-zoom)); }
+  .md\:min-h-screen { min-height: calc(100vh / var(--ui-zoom)); }
+  .md\:max-h-screen { max-height: calc(100vh / var(--ui-zoom)); }
+  .md\:w-screen { width: calc(100vw / var(--ui-zoom)); }
+}
+@media (min-width: 64rem) {
+  .lg\:h-screen { height: calc(100vh / var(--ui-zoom)); }
+  .lg\:min-h-screen { min-height: calc(100vh / var(--ui-zoom)); }
+  .lg\:max-h-screen { max-height: calc(100vh / var(--ui-zoom)); }
+  .lg\:w-screen { width: calc(100vw / var(--ui-zoom)); }
+}
+@media (min-width: 80rem) {
+  .xl\:h-screen { height: calc(100vh / var(--ui-zoom)); }
+  .xl\:min-h-screen { min-height: calc(100vh / var(--ui-zoom)); }
+  .xl\:max-h-screen { max-height: calc(100vh / var(--ui-zoom)); }
+  .xl\:w-screen { width: calc(100vw / var(--ui-zoom)); }
+}
 /* `position: fixed` boxes resolve against the viewport, which element zoom does
    NOT shrink — so every fixed full-bleed layer (the aurora, the orbs, the
    cursor spotlight, the page vignette, every modal backdrop) comes out
@@ -274,7 +299,7 @@ nav[aria-label="Site pages"] a:focus-visible {
 .route-veil {
   position: fixed;
   inset: 0;
-  z-index: 150;
+  z-index: var(--z-dialog);
   pointer-events: none;
   background:
     linear-gradient(to bottom, transparent 0%, rgba(0, 255, 135, 0.03) 50%, transparent 100%),
@@ -300,7 +325,7 @@ nav[aria-label="Site pages"] a:focus-visible {
 .route-loading {
   position: fixed;
   inset: 0;
-  z-index: 160; /* over the veil (150), under the skip-link (200) */
+  z-index: var(--z-palette); /* over the veil (--z-dialog), under the skip-link (200) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1489,6 +1514,13 @@ nav[aria-label="Site pages"] a:focus-visible {
 @media (pointer: coarse) {
   .dock-clear { padding-bottom: calc(var(--dock-gutter) + env(safe-area-inset-bottom)); }
 }
+/* The horizontal companion. NOT coarse-gated like .dock-clear above: this one
+   replaces the hand-rolled pr-16/pr-20 reservations that applied on every
+   pointer, because the Dock floats over the bottom-right corner on desktop
+   too — gating it would hand the desktop overlap right back. */
+.dock-clear-x {
+  padding-right: calc(var(--dock-gutter) + max(1rem, env(safe-area-inset-right)));
+}
 
 @media (pointer: coarse) {
   .tap-floor button,
@@ -1514,12 +1546,16 @@ nav[aria-label="Site pages"] a:focus-visible {
 }
 
 /* Legibility floor — on coarse (touch) pointers ONLY, lift the very smallest
-   mono labels (9–10px) up to 11px so the densest chrome stays readable on a
-   phone, WITHOUT disturbing the deliberate desktop (pointer: fine) density. A
-   deliberately tiny 1–2px lift so it can't reflow tight rows. The RADAR contrast
-   floor already made these labels AA-legible; this makes the tiniest ones big
-   enough to read on glass. (Coarse-only, so it's inert on precise pointers.) */
+   mono labels (7–10px) up to 11px so the densest chrome stays readable on a
+   phone, WITHOUT disturbing the deliberate desktop (pointer: fine) density.
+   The RADAR contrast floor already made these labels AA-legible; this makes
+   the tiniest ones big enough to read on glass. (Coarse-only, so it's inert
+   on precise pointers.) The 7–8px sizes had escaped the floor entirely —
+   below the lift's own minimum, which made them the labels that needed it
+   most, not least. */
 @media (pointer: coarse) {
+  .text-\[7px\],
+  .text-\[8px\],
   .text-\[9px\],
   .text-\[10px\] {
     font-size: 11px;
@@ -1632,13 +1668,18 @@ nav[aria-label="Site pages"] a:focus-visible {
 
   /* ── Layout ────────────────────────────────────────────────────────────── */
   /* The ONE page measure. Replaces max-w-350 / max-w-[1400px] (the same
-     1400px spelled two ways) / max-w-5xl / [1100px] / [1200px] / [1280px]. */
+     1400px spelled two ways) / max-w-5xl / [1100px] / [1200px] / [1280px].
+     The width is a var so a dense terminal route can widen the measure while
+     keeping the shell's gutter and centring — put .shell-wide on the SAME
+     elements as .shell for the whole route (nav included), never on one
+     section alone, or the rails stop lining up again. */
   .shell {
     margin-inline: auto;
     width: 100%;
-    max-width: 1400px;
+    max-width: var(--shell-max, 1400px);
     padding-inline: 1.25rem;
   }
+  .shell-wide { --shell-max: 1600px; }
 
   /* A reading column, for the TEXT ELEMENT ITSELF — never stacked on .shell,
      which would leave two competing max-widths on one element. Put .shell on
@@ -1649,8 +1690,11 @@ nav[aria-label="Site pages"] a:focus-visible {
   .measure { max-width: 34rem; }
   .measure-wide { max-width: 46rem; }
 
-  /* Rhythm between full-bleed sections. */
+  /* Rhythm between full-bleed sections. The -sm half-step is for sub-sections
+     that sit inside a larger beat — two sizes, so every section stops picking
+     its own py value. */
   .section-y { padding-block: clamp(4rem, 9vw, 6rem); }
+  .section-y-sm { padding-block: clamp(2.5rem, 6vw, 3.5rem); }
 }
 
 /* The coarse-pointer legibility floor, extended to the roles. Without this,
@@ -1756,8 +1800,14 @@ nav[aria-label="Site pages"] a:focus-visible {
      other people's buttons. */
   --dock-gutter: 4.5rem;
   --z-dock: 90;      /* persistent floating chrome */
-  --z-dialog: 150;   /* anything modal, including every safety gate */
-  --z-palette: 160;  /* the command deck, which must beat a dialog */
+  --z-toast: 140;    /* transient notices — over the dock, under every dialog:
+                        a toast must never cover a modal it is reporting on */
+  --z-dialog: 150;   /* anything modal, including every safety gate;
+                        the route veil rides here too — it covers a page
+                        transition, so it must not paint under chrome */
+  --z-palette: 160;  /* the command deck, which must beat a dialog;
+                        the route-loading layer shares this rung so the
+                        pending state covers the veil below it */
 }
 
 :root {
@@ -1916,13 +1966,19 @@ nav[aria-label="Site pages"] a:focus-visible {
      a height that moved on hover would slide the ticks out from under the
      pointer that triggered it. Horizontal clipping does the hiding; opacity
      does the fading. */
+  /* Asymmetric on purpose. The base rule times the COLLAPSE: 140ms, much
+     faster than the 380ms width tween, so the labels are already gone before
+     the shrinking clip edge can shear them mid-glyph. The open-state rule
+     times the EXPAND: the 120ms delay lets the width lead, and 120+260 lands
+     the fade's end exactly on the width tween's 380ms settle. */
   .rail-fade {
     opacity: 0;
-    transition: opacity 260ms var(--ease-settle);
+    transition: opacity 140ms var(--ease-settle);
   }
   .chapter-rail:hover .rail-fade,
   .chapter-rail:focus-within .rail-fade {
     opacity: 1;
+    transition: opacity 260ms var(--ease-settle) 120ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -2244,10 +2300,15 @@ nav[aria-label="Site pages"] a:focus-visible {
 
    bg-bg-soft is deliberately NOT included: it is the chrome header strip
    inside a panel, and a rounded strip nested in a rounded card reads as a
-   mistake in both directions. */
+   mistake in both directions.
+
+   :not(.surface-instrument), because this rule is declared AFTER
+   .surface-instrument in the same layer at the same specificity — without the
+   guard, source order handed every `bg-surface surface-instrument` combo the
+   16px card radius instead of its documented 8px. */
 @layer components {
-  .bg-surface,
-  .bg-surface-2 {
+  .bg-surface:not(.surface-instrument),
+  .bg-surface-2:not(.surface-instrument) {
     border-radius: var(--r-cell);
   }
 }

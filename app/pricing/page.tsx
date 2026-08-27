@@ -14,7 +14,8 @@ type Tier = {
   monthly: number;
   annualMo: number; // effective per-month when billed annually
   blurb: string;
-  features: string[];
+  features: string[]; // the 2-3 lines that actually differentiate the tier
+  extras?: string[]; // commodity lines, rendered demoted
   cta: { label: string; href: string };
   popular?: boolean;
   soon?: boolean;
@@ -30,9 +31,8 @@ const TIERS: Tier[] = [
       "Full 14-chapter interactive primer",
       "Unlimited paper trades · $5k account",
       "AI teacher · 5 explains per day",
-      "3 bots in the quant workbench",
-      "1 saved workspace",
     ],
+    extras: ["3 bots in the quant workbench", "1 saved workspace"],
     cta: { label: "Start for free", href: "/learn" },
   },
   {
@@ -44,9 +44,8 @@ const TIERS: Tier[] = [
       "Unlimited AI-teacher explains",
       "15+ bots · trend, stats & risk tribes",
       "Advanced charting · alerts · replay",
-      "Unlimited saved workspaces",
-      "Priority support",
     ],
+    extras: ["Unlimited saved workspaces", "Priority support"],
     cta: { label: "Join early access", href: "/auth/signin" },
   },
   {
@@ -55,12 +54,11 @@ const TIERS: Tier[] = [
     annualMo: 29,
     blurb: "The full workbench, nothing held back.",
     features: [
-      "Everything in Plus",
       "All 27 bots + consensus engine",
       "Bring-your-own-bot · hot-load & backtest",
       "Pro charting suite · shareable workspaces",
-      "Early access to new features",
     ],
+    extras: ["Everything in Plus", "Early access to new features"],
     cta: { label: "Join early access", href: "/auth/signin" },
     popular: true,
   },
@@ -70,12 +68,11 @@ const TIERS: Tier[] = [
     annualMo: 45,
     blurb: "For graduating quants. Ships with real IV.",
     features: [
-      "Everything in Pro",
       "13 trained ML models exposed",
       "Real IV & Greeks data feed",
       "API access",
-      "Dedicated support",
     ],
+    extras: ["Everything in Pro", "Dedicated support"],
     cta: { label: "Join the waitlist", href: "/auth/signin" },
     soon: true,
   },
@@ -101,7 +98,7 @@ export default function PricingPage() {
           <div className="t-eyebrow text-fg-faint">
             Pricing
           </div>
-          <h1 className="mt-4 font-display text-[clamp(2.4rem,6vw,4.5rem)] leading-[1.02] tracking-tightest text-fg">
+          <h1 className="mt-4 font-display text-[clamp(2.4rem,6vw,4.5rem)] leading-[1.02] tracking-tightest text-fg [text-wrap:balance]">
             Start free.{" "}
             <span className="t-accent">Upgrade when it clicks.</span>
           </h1>
@@ -110,11 +107,11 @@ export default function PricingPage() {
           </p>
 
           {/* billing toggle */}
-          <div className="mt-8 inline-flex items-center gap-3 surface-card border border-border bg-surface px-4 py-2.5">
+          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-3 surface-card border border-border bg-surface px-4 py-2.5">
             <button
               onClick={() => setAnnual(false)}
               aria-pressed={!annual}
-              className={`font-mono text-[11px] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
+              className={`whitespace-nowrap font-mono text-[11px] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
             >
               Billed monthly
             </button>
@@ -135,18 +132,21 @@ export default function PricingPage() {
             <button
               onClick={() => setAnnual(true)}
               aria-pressed={annual}
-              className={`font-mono text-[11px] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
+              className={`whitespace-nowrap font-mono text-[11px] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
             >
               Billed annually
             </button>
-            <span className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull">
-              save up to {MAX_MONTHS_SAVED} months
-            </span>
+            {annual && (
+              <span className="whitespace-nowrap border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull max-sm:basis-full max-sm:text-center">
+                save up to {MAX_MONTHS_SAVED} months
+              </span>
+            )}
           </div>
         </div>
 
         {/* tier cards */}
-        <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {/* gap-8 while stacked: the Pro card's -top-3 badge needs the extra air */}
+        <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
           {TIERS.map((t) => {
             const price = annual ? t.annualMo : t.monthly;
             return (
@@ -161,14 +161,15 @@ export default function PricingPage() {
                     Most popular
                   </span>
                 )}
-                {t.soon && (
-                  <span className="absolute right-4 top-4 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
-                    Coming soon
-                  </span>
-                )}
-
-                <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
-                  {t.name}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
+                    {t.name}
+                  </div>
+                  {t.soon && (
+                    <span className="shrink-0 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                      Coming soon
+                    </span>
+                  )}
                 </div>
                 <div className="mt-3 flex items-baseline gap-1.5">
                   <span className="font-display text-5xl tracking-tightest text-fg">
@@ -203,6 +204,15 @@ export default function PricingPage() {
                       </span>
                     </li>
                   ))}
+                  {t.extras?.map((f) => (
+                    // pl matches the 14px icon + 10px gap above so the rows align
+                    <li
+                      key={f}
+                      className="pl-6 font-mono text-[11px] tracking-wide text-fg-dim"
+                    >
+                      {f}
+                    </li>
+                  ))}
                 </ul>
 
                 <Link
@@ -227,12 +237,12 @@ export default function PricingPage() {
 
         {/* honesty + compliance strip */}
         <div className="mt-12 flex flex-col items-center gap-4">
-          <div className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
-            Billing launches soon — early users lock founding pricing.
-          </div>
           <div className="inline-flex items-center gap-3 surface-card border border-border bg-surface px-5 py-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
             <span className="size-1.5 rounded-full bg-bull" />
             Paper only · Educational · Not advice
+          </div>
+          <div className="text-center font-mono text-[11px] text-fg-dim">
+            Billing launches soon — early users lock founding pricing.
           </div>
           <p className="max-w-xl text-center font-mono text-[10px] leading-relaxed text-fg-faint">
             lazybull is an educational simulation. No real money moves, no orders are routed,

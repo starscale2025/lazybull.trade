@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ScrollCinema } from "./ScrollCinema";
 import { MobileCinema } from "./MobileCinema";
+import { CinemaStill } from "./CinemaStill";
 import { SCROLL_LENGTH_VH } from "./cinema-metrics";
 
 // The intro film AUTO-PLAYS on EVERY load, for everyone — logged in or not. It's
@@ -34,11 +35,20 @@ export function CinemaGate() {
   // Phones get their OWN film — a 2D canvas cut for portrait, zero three.js.
   // See MobileCinema for why it is a different film rather than a smaller one.
   const [phone, setPhone] = useState(false);
+  // RESIZE-AWARE, not latched: the phone branch used to evaluate the media
+  // query once at mount, so a window narrow at load then widened kept
+  // MobileCinema mounted — whose md:hidden collapses to height 0 at desktop
+  // width, and the whole intro vanished. Widening now swaps in the desktop
+  // STILL (never the full film mid-session); narrowing back restores mobile.
+  const [wide, setWide] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(max-width: 767px)").matches) {
+    const mql = window.matchMedia("(max-width: 767px)");
+    if (mql.matches) {
       setPhone(true);
-      return;
+      const onChange = (e: MediaQueryListEvent) => setWide(!e.matches);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
     }
     // ⌘K / "watch the film" set this to force a replay; we now auto-play on every
     // load anyway, so just clear it so it can't linger.
@@ -51,7 +61,7 @@ export function CinemaGate() {
   }, []);
 
   if (play) return <ScrollCinema />;
-  if (phone) return <MobileCinema />;
+  if (phone) return wide ? <CinemaStill /> : <MobileCinema />;
 
   // The reservation. Same height and same negative hand-off overlap as the real
   // section in ScrollCinema — both divided by --ui-zoom for the reason

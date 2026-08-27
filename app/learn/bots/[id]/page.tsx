@@ -78,7 +78,6 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               {isAi && (
                 <span className="border border-bear/50 bg-bear/10 px-2 py-1 text-bear">AI</span>
               )}
-              <span className="text-fg-faint">id · {bot.id}</span>
             </div>
 
             <div className="flex items-end gap-5">
@@ -111,47 +110,25 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               >
                 ↗ Browse all 27
               </Link>
-              {bot.module && (
-                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2.5 font-mono text-[11px] tracking-wider text-fg-dim">
-                  <span className="text-fg-faint uppercase mr-1">src</span>
-                  <span className="text-fg">{bot.module}</span>
-                </span>
-              )}
-              {bot.endpoint && (
-                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2.5 font-mono text-[11px] tracking-wider text-fg-dim">
-                  <span className="text-fg-faint uppercase mr-1">api</span>
-                  <span className="text-cyan">{bot.endpoint}</span>
-                </span>
-              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* In plain English — the simple version. Always shown when available. */}
-      {simple && (
-        <section className="border-b border-border bg-bull/[0.04]">
-          <div className="shell py-12">
-            <div className="flex items-center gap-3 t-eyebrow text-bull">
-              <span>⟢</span>
-              <span className="h-px w-12 bg-bull/40" />
-              <span>In plain English</span>
-            </div>
+      {/* In plain English — simple lead, technical follow-on, one band. */}
+      <section className="border-b border-border bg-bull/[0.04]">
+        <div className="shell py-12">
+          <div className="flex items-center gap-3 t-eyebrow text-bull">
+            <span>⟢</span>
+            <span className="h-px w-12 bg-bull/40" />
+            <span>In plain English</span>
+          </div>
+          {simple && (
             <p className="mt-4 max-w-[68ch] text-balance text-[1.35rem] leading-relaxed text-fg md:text-2xl">
               {simple}
             </p>
-            <div className="mt-3 t-chrome text-fg-faint">
-              No jargon. Just what this bot does.
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* TL;DR — slightly more technical pitch */}
-      <section className="border-b border-border bg-bg-soft">
-        <div className="shell py-14">
-          <SectionLabel>The longer version</SectionLabel>
-          <p className="mt-4 max-w-[68ch] text-balance text-lg leading-relaxed text-fg">
+          )}
+          <p className="mt-4 max-w-[68ch] t-body-sm leading-relaxed text-fg-dim">
             {content.intro ?? defaultIntro(bot.name, bot.tagline)}
           </p>
         </div>
@@ -173,15 +150,15 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 </div>
                 <div className="divide-y divide-border-soft">
                   {bot.params.map((p) => (
-                    <div key={p.key} className="grid grid-cols-12 gap-3 px-3 py-3 text-[12px]">
-                      <span className="col-span-3 font-mono text-fg">{p.key}</span>
-                      <span className="col-span-3 text-fg-dim">{p.label}</span>
-                      <span className="col-span-3 font-mono text-fg-faint">
+                    <div key={p.key} className="grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-3 text-[12px] md:grid-cols-12 md:gap-3">
+                      <span className="font-mono text-fg md:col-span-3">{p.key}</span>
+                      <span className="text-fg-dim md:col-span-3">{p.label}</span>
+                      <span className="font-mono text-fg-faint md:col-span-3">
                         {p.kind === "number" && `range ${p.min ?? "—"} → ${p.max ?? "—"}`}
                         {p.kind === "select" && `choices: ${p.options.map((o) => o.value).join(", ")}`}
                         {p.kind === "boolean" && "on / off"}
                       </span>
-                      <span className="col-span-3 font-mono text-fg-dim">
+                      <span className="font-mono text-fg-dim md:col-span-3">
                         default · <span className="text-fg">{String(p.default)}</span>
                       </span>
                     </div>
@@ -221,7 +198,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             </p>
 
             <div className="mt-6 border border-border bg-bg">
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 t-chrome">
                 <div className="flex items-center gap-3 text-fg-dim">
                   <span className="text-bull">●</span>
                   <span>{source.filename}</span>
@@ -230,7 +207,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                     lines {source.startLine}–{source.endLine}
                   </span>
                 </div>
-                <span className="text-fg-faint">TypeScript · MIT-licensed</span>
+                <span className="shrink-0 text-fg-faint">TypeScript · MIT-licensed</span>
               </div>
               <pre className="overflow-x-auto p-5 font-mono text-[12px] leading-relaxed text-fg">
                 <code>{source.code}</code>
@@ -322,15 +299,33 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               falls back to a deterministic TS surrogate.
             </p>
 
+            {/* Dev-metadata chips, demoted here from the hero */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {bot.module && (
+                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[11px] tracking-wider text-fg-dim">
+                  <span className="text-fg-faint uppercase mr-1">src</span>
+                  <span className="text-fg">{bot.module}</span>
+                </span>
+              )}
+              {bot.endpoint && (
+                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[11px] tracking-wider text-fg-dim">
+                  <span className="text-fg-faint uppercase mr-1">api</span>
+                  <span className="text-cyan">{bot.endpoint}</span>
+                </span>
+              )}
+            </div>
+
             <div className="mt-6">
               <LearnApiStatus endpoint={bot.endpoint ?? "/health"} />
             </div>
 
-            <div className="mt-6 surface-card border border-border bg-surface">
-              <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-                data flow
-              </div>
-              <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-5">
+            <details className="group mt-6 surface-card border border-border bg-surface">
+              <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 hover:bg-bg-soft">
+                <span className="font-display text-base tracking-tightest text-fg">How the request flows</span>
+                <span className="font-mono text-fg-faint group-open:hidden">+</span>
+                <span className="font-mono text-fg-faint hidden group-open:inline">−</span>
+              </summary>
+              <div className="grid grid-cols-1 gap-px border-t border-border bg-border md:grid-cols-5">
                 {[
                   { step: "01", title: "BotCell.run()", body: "User clicks Run on this bot in /quant" },
                   { step: "02", title: "callApi()", body: "POST to " + (process.env.NEXT_PUBLIC_QUANTAI_URL || "localhost:8000") + (bot.endpoint ?? "") },
@@ -345,12 +340,11 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-4 border border-border bg-bg p-3 font-mono text-[11px] tracking-wider text-fg-dim">
-              <span className="text-fg-faint uppercase mr-2">spin it up</span>
-              <code className="text-fg">cd "ai quants" && uvicorn serve:app --reload --port 8000</code>
-            </div>
+              <div className="border-t border-border bg-bg p-3 font-mono text-[11px] tracking-wider text-fg-dim">
+                <span className="text-fg-faint uppercase mr-2">spin it up</span>
+                <code className="text-fg">cd "ai quants" && uvicorn serve:app --reload --port 8000</code>
+              </div>
+            </details>
           </div>
         </section>
       )}
@@ -440,7 +434,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
         </div>
       </section>
 
-      <Footer />
+      <Footer marketing />
     </main>
   );
 }

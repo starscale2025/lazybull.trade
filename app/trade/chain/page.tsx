@@ -10,7 +10,6 @@ import { TeacherAvatar } from "@/components/ai-teacher/Avatar";
 import { RiskWizard } from "@/components/safety/RiskWizard";
 import { SafetySettingsButton } from "@/components/safety/KillSwitch";
 import { useTeacher } from "@/lib/stores";
-import { GreekTrigger } from "@/components/ai-teacher/SpeechBubble";
 import { QuickBet } from "@/components/bet/QuickBet";
 
 const SYMBOLS = [
@@ -59,26 +58,16 @@ export default function TradePage() {
       <TickerBar />
       <Nav />
 
-      {/* page header */}
+      {/* page header — one compact row; the tool is the hero here */}
       <section className="relative border-b border-border bg-bg">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
-        <div className="relative shell flex flex-wrap items-end justify-between gap-4 py-8">
-          <div>
-            <div className="t-eyebrow text-fg-faint flex items-center gap-3">
-              ⟢ advanced view · raw chain
-              <a href="/trade" className="text-bull hover:underline">← back to strategy builder</a>
-            </div>
-            <h1 className="mt-2 t-title">
-              Drag across strikes.
-              <br />
-              <span className="t-accent">Build</span> a strategy.
+        <div className="relative shell flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+          <div className="t-eyebrow flex flex-wrap items-center gap-3">
+            <span className="text-fg-faint">⟢ advanced view · raw chain</span>
+            <h1 className="t-eyebrow text-fg">
+              Drag across strikes. <span className="t-accent">Build</span> a strategy.
             </h1>
-            <p className="mt-2 max-w-[58ch] t-body-sm text-fg-dim">
-              Hover any{" "}
-              <GreekTrigger greek="delta">greek</GreekTrigger> for an instant explanation. Drag across cells to compose
-              spreads, condors, and straddles. The card to the right detects the strategy, computes the P&L, and lets
-              you paper-trade it.
-            </p>
+            <a href="/trade" className="text-bull hover:underline">← back to strategy builder</a>
           </div>
           <div className="flex items-center gap-2">
             <SafetySettingsButton />
@@ -129,7 +118,9 @@ export default function TradePage() {
         <div className="col-span-12 lg:col-span-7 xl:col-span-8">
           <OptionsChain underlying={sym.sym} spot={spot} />
         </div>
-        <div className="col-span-12 lg:col-span-5 xl:col-span-4 flex flex-col gap-5">
+        {/* pb-32 clears the fixed QuickBet dock so PositionsPanel close
+            buttons stay reachable at the end of the scroll */}
+        <div className="col-span-12 lg:col-span-5 xl:col-span-4 flex flex-col gap-5 pb-32">
           <StrategyCard underlying={sym.sym} spot={spot} />
           <PositionsPanel spot={spot} symbol={sym.sym} />
         </div>

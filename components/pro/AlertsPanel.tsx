@@ -38,7 +38,7 @@ export function AlertsPanel({ open, onClose, symbol, spot, alerts, setAlerts }: 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-[110] flex items-center justify-end bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-end bg-black/50 backdrop-blur-sm"
         >
           <motion.aside
             initial={{ x: 320 }}

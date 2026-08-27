@@ -29,7 +29,8 @@ export function PnLDiagram({ legs, spot, height = 220 }: Props) {
   return (
     <div className="h-[220px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={dataSplit} margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
+        {/* top: 22 keeps the "spot" reference-line label clear of the SVG edge */}
+        <ComposedChart data={dataSplit} margin={{ top: 22, right: 12, bottom: 8, left: 12 }}>
           <defs>
             <linearGradient id="pnl-bull" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="var(--bull)" stopOpacity={0.5} />
@@ -45,6 +46,7 @@ export function PnLDiagram({ legs, spot, height = 220 }: Props) {
             tick={{ fontFamily: "var(--font-jetbrains)", fontSize: 10, fill: "var(--fg-faint)" }}
             tickFormatter={(v) => `$${Math.round(v)}`}
             stroke="var(--border)"
+            minTickGap={24}
           />
           <YAxis
             tick={{ fontFamily: "var(--font-jetbrains)", fontSize: 10, fill: "var(--fg-faint)" }}

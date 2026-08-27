@@ -91,8 +91,12 @@ export function TopBar({
 
   const list = query.trim() ? searchResults : SEED_SYMBOLS;
 
+  // min-[1350px], not lg, for the one-line bar: a single line needs ~1203 CSS
+  // px, which under --ui-zoom (1.1) is ~1324 viewport px — so at lg (and even
+  // at exactly xl/1280) Save, the only way to persist the workspace, was
+  // clipped off the right edge. Below the threshold the bar wraps instead.
   return (
-    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 font-mono text-[11px] uppercase tracking-wider lg:h-11 lg:flex-nowrap lg:py-0">
+    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 font-mono text-[11px] uppercase tracking-wider min-[1350px]:h-11 min-[1350px]:flex-nowrap min-[1350px]:py-0">
       <div className="relative">
         <button
           onClick={() => setSymOpen((o) => !o)}
@@ -109,7 +113,7 @@ export function TopBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 top-9 z-40 w-[360px] surface-instrument border border-border bg-surface shadow-2xl"
+              className="absolute left-0 top-9 z-40 w-[360px] max-w-[calc(100vw/var(--ui-zoom)-1rem)] surface-instrument border border-border bg-surface shadow-2xl"
             >
               <div className="flex items-center gap-2 border-b border-border-soft p-2">
                 <span className="text-fg-faint">⌕</span>
@@ -181,7 +185,7 @@ export function TopBar({
         </button>
         <AnimatePresence>
           {chartOpen && (
-            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute left-0 top-9 z-40 w-44 border border-border bg-bg shadow-2xl">
+            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute left-0 top-9 z-40 w-44 max-w-[calc(100vw/var(--ui-zoom)-1rem)] border border-border bg-bg shadow-2xl">
               {(["candles", "line", "area", "bars"] as Chart[]).map((c) => (
                 <button
                   key={c}
@@ -217,7 +221,7 @@ export function TopBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 top-9 z-40 w-72 border border-border bg-bg shadow-2xl"
+              className="absolute left-0 top-9 z-40 w-72 max-w-[calc(100vw/var(--ui-zoom)-1rem)] border border-border bg-bg shadow-2xl"
             >
               <div className="border-b border-border-soft px-3 py-2 text-[10px] text-fg-dim normal-case tracking-normal">
                 Built-in studies — toggle to layer on the chart
@@ -275,7 +279,7 @@ export function TopBar({
           </button>
           <AnimatePresence>
             {layoutOpen && (
-              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute right-0 top-9 z-40 grid w-48 grid-cols-2 gap-1 border border-border bg-bg p-2 shadow-2xl">
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute right-0 top-9 z-40 grid w-48 max-w-[calc(100vw/var(--ui-zoom)-1rem)] grid-cols-2 gap-1 border border-border bg-bg p-2 shadow-2xl">
                 {[1, 2, 3, 4].map((n) => (
                   <button
                     key={n}

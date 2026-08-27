@@ -28,7 +28,7 @@ const FOUNDERS = [
     ],
     stats: [
       { k: "Idea started", v: "2026" },
-      { k: "Whiteboards filled", v: "27" },
+      { k: "Boards filled", v: "27" },
       { k: "Cold brews / wk", v: "12" },
     ],
     tag: "Idea · Math · Engine",
@@ -210,8 +210,9 @@ function Counter({
     ? `${(count / 1000).toFixed(count < 1000 ? 0 : 0)}k${suffix}`
     : `${count}${suffix}`;
 
+  // 4vw divides by --ui-zoom so the numeral stays sized to its column, not the zoomed viewport.
   return (
-    <div ref={ref} className="font-display text-[clamp(3rem,7vw,6rem)] leading-none tracking-tightest text-fg">
+    <div ref={ref} className="font-display text-[clamp(2.5rem,calc(4vw/var(--ui-zoom)),4.5rem)] leading-none tracking-tightest text-fg">
       {formatted}
     </div>
   );
@@ -267,8 +268,8 @@ function FounderPhoto({
       />
       <div className="pointer-events-none absolute inset-0 scanlines opacity-15" />
 
-      {/* Name badge */}
-      <div className="absolute inset-x-4 bottom-4">
+      {/* Name badge — inset-6 keeps it clear of the corner brackets */}
+      <div className="absolute inset-x-6 bottom-6">
         <div className="border border-border bg-bg/80 backdrop-blur-sm p-3">
           <div className="t-chrome text-fg-faint">
             // founder
@@ -290,6 +291,62 @@ function FounderPhoto({
   );
 }
 
+function FounderFile({ f }: { f: (typeof FOUNDERS)[number] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border-t border-border-soft pt-4">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between t-chrome text-fg-faint transition-colors hover:text-fg"
+      >
+        <span>// {open ? "close" : "open"} file</span>
+        <span style={{ color: f.color }}>{open ? "×" : "›"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-5 flex flex-col gap-6">
+          {/* Achievements */}
+          <div className="space-y-2">
+            {f.achievements.map((a, i) => (
+              <div key={i} className="flex items-start gap-3 group/item">
+                <span
+                  className="font-mono text-sm shrink-0 mt-0.5"
+                  style={{ color: f.color }}
+                >
+                  {a.icon}
+                </span>
+                <span className="text-sm text-fg-dim group-hover/item:text-fg transition-colors">
+                  {a.text}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
+            {f.stats.map((s) => (
+              <div key={s.k} className="min-w-0 bg-bg p-4">
+                <div className="t-chrome text-fg-faint leading-tight">
+                  {s.k}
+                </div>
+                <div
+                  className="mt-2 font-display text-2xl tracking-tightest"
+                  style={{ color: f.color }}
+                >
+                  {s.v}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TimelineItem({
   item,
   i,
@@ -302,32 +359,10 @@ function TimelineItem({
   const isLeft = item.side === "left";
 
   return (
-    <div ref={ref} className="relative grid grid-cols-[1fr_auto_1fr] items-start gap-6">
-      {/* Left content */}
-      <motion.div
-        className="flex flex-col items-end"
-        initial={{ opacity: 0, x: -40 }}
-        animate={inView ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.6, ease, delay: 0.1 }}
-      >
-        {isLeft && (
-          <div className="w-full surface-card border border-border bg-surface p-4 text-right">
-            <div className="t-chrome text-fg-faint mb-2">
-              {item.date}
-            </div>
-            <div
-              className="font-display text-xl tracking-tightest text-fg mb-2"
-              style={{ color: item.color }}
-            >
-              {item.label}
-            </div>
-            <p className="t-body-sm text-fg-dim">{item.desc}</p>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Center dot */}
-      <div className="flex flex-col items-center pt-4">
+    // Single left rail below md; the alternating zigzag only exists from md up.
+    <div ref={ref} className="relative grid grid-cols-[auto_1fr] items-start gap-6 md:grid-cols-[1fr_auto_1fr]">
+      {/* Rail dot */}
+      <div className="col-start-1 row-start-1 flex flex-col items-center pt-4 md:col-start-2">
         <motion.div
           className="size-3 rounded-full border-2 bg-bg z-10"
           style={{ borderColor: item.color }}
@@ -337,27 +372,25 @@ function TimelineItem({
         />
       </div>
 
-      {/* Right content */}
+      {/* Card */}
       <motion.div
-        className="flex flex-col items-start"
-        initial={{ opacity: 0, x: 40 }}
+        className={`col-start-2 row-start-1 ${isLeft ? "md:col-start-1" : "md:col-start-3"}`}
+        initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
         animate={inView ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.6, ease, delay: 0.1 }}
       >
-        {!isLeft && (
-          <div className="w-full surface-card border border-border bg-surface p-4">
-            <div className="t-chrome text-fg-faint mb-2">
-              {item.date}
-            </div>
-            <div
-              className="font-display text-xl tracking-tightest mb-2"
-              style={{ color: item.color }}
-            >
-              {item.label}
-            </div>
-            <p className="t-body-sm text-fg-dim">{item.desc}</p>
+        <div className={`w-full surface-card border border-border bg-surface p-4 ${isLeft ? "md:text-right" : ""}`}>
+          <div className="t-chrome text-fg-faint mb-2">
+            {item.date}
           </div>
-        )}
+          <div
+            className="font-display text-xl tracking-tightest mb-2"
+            style={{ color: item.color }}
+          >
+            {item.label}
+          </div>
+          <p className="t-body-sm text-fg-dim">{item.desc}</p>
+        </div>
       </motion.div>
     </div>
   );
@@ -369,10 +402,8 @@ export function About() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border bg-bg">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
+        <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
         <div className="pointer-events-none absolute -left-60 top-0 h-150 w-150 rounded-full bg-bull/12 blur-[160px] drift" />
-        <div className="pointer-events-none absolute -right-40 bottom-0 h-125 w-125 rounded-full bg-cyan/10 blur-[140px] drift" style={{ animationDelay: "-9s" }} />
-        <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
         {/* Tape */}
         <div className="relative flex items-center justify-between border-b border-border-soft px-5 py-1.5 t-eyebrow text-fg-faint">
@@ -383,7 +414,7 @@ export function About() {
           </div>
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            <span>Founded 2026 · Pre-soft-launch</span>
+            <span>Founded 2026</span>
           </div>
         </div>
 
@@ -398,9 +429,6 @@ export function About() {
               <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" />
                 the team
-              </span>
-              <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
-                3 founders · 1 mission · pre-soft-launch
               </span>
             </div>
 
@@ -421,36 +449,11 @@ export function About() {
               that.
             </p>
           </motion.div>
-
-          {/* Quick stats */}
-          <motion.div
-            className="mt-16 grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4 max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease, delay: 0.2 }}
-          >
-            {[
-              { k: "Founded", v: "2026" },
-              { k: "Stage", v: "Pre-launch" },
-              { k: "Model", v: "B2C SaaS" },
-              { k: "To start", v: "$0" },
-            ].map((s) => (
-              <div key={s.k} className="bg-bg p-4">
-                <div className="t-chrome text-fg-faint">
-                  {s.k}
-                </div>
-                <div className="mt-2 font-display text-2xl tracking-tightest text-fg">
-                  {s.v}
-                </div>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
       {/* ── MISSION TERMINAL ─────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg-soft">
-        <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
         <div className="relative shell py-20">
           <motion.div
             className="border border-border bg-bg"
@@ -517,8 +520,6 @@ export function About() {
 
       {/* ── FOUNDERS ─────────────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
-
         {/* Section header */}
         <div className="relative shell pt-24 pb-12">
           <div className="grid grid-cols-12 items-end gap-5">
@@ -568,13 +569,6 @@ export function About() {
                     <span className="font-mono text-sm text-fg">
                       {f.no} / 03
                     </span>
-                    <span className="text-fg-faint">·</span>
-                    <span
-                      className="t-chrome"
-                      style={{ color: f.color }}
-                    >
-                      {f.code}
-                    </span>
                   </div>
                   <div
                     className="flex size-8 items-center justify-center border border-border bg-bg font-mono text-xs"
@@ -615,7 +609,7 @@ export function About() {
 
                   {/* Bio */}
                   <p className="t-body-sm text-fg-dim max-w-[44ch]">
-                    {f.longBio}
+                    {f.bio}
                   </p>
 
                   {/* Quote */}
@@ -626,51 +620,8 @@ export function About() {
                     "{f.quote}"
                   </blockquote>
 
-                  {/* Achievements */}
-                  <div>
-                    <div className="t-chrome text-fg-faint mb-3">
-                      // achievements
-                    </div>
-                    <div className="space-y-2">
-                      {f.achievements.map((a, i) => (
-                        <motion.div
-                          key={i}
-                          className="flex items-start gap-3 group/item"
-                          initial={{ opacity: 0, x: -12 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.4, ease, delay: 0.1 + i * 0.07 }}
-                        >
-                          <span
-                            className="font-mono text-sm shrink-0 mt-0.5"
-                            style={{ color: f.color }}
-                          >
-                            {a.icon}
-                          </span>
-                          <span className="text-sm text-fg-dim group-hover/item:text-fg transition-colors">
-                            {a.text}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stats grid */}
-                  <div className="grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
-                    {f.stats.map((s) => (
-                      <div key={s.k} className="bg-bg p-3">
-                        <div className="t-chrome text-fg-faint truncate">
-                          {s.k}
-                        </div>
-                        <div
-                          className="mt-1.5 font-display text-2xl tracking-tightest"
-                          style={{ color: f.color }}
-                        >
-                          {s.v}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {/* Achievements + joke stats, behind the file disclosure */}
+                  <FounderFile f={f} />
 
                   {/* Handle footer */}
                   <div className="flex items-center justify-between border-t border-border-soft pt-4 t-chrome text-fg-faint">
@@ -688,7 +639,6 @@ export function About() {
 
       {/* ── BY THE NUMBERS ───────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg-soft">
-        <div className="pointer-events-none absolute inset-0 bg-grid-fine opacity-20" />
         <div className="pointer-events-none absolute left-1/2 top-0 h-100 w-200 -translate-x-1/2 rounded-full bg-bull/8 blur-[120px]" />
 
         <div className="relative shell py-24">
@@ -713,7 +663,7 @@ export function About() {
             {COUNTERS.map((c, i) => (
               <motion.div
                 key={c.label}
-                className="bg-bg p-8 flex flex-col gap-3"
+                className="min-w-0 overflow-hidden bg-bg p-8 flex flex-col gap-3"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -737,8 +687,6 @@ export function About() {
 
       {/* ── TIMELINE ─────────────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg">
-        <div className="pointer-events-none absolute inset-0 bg-dots opacity-20" />
-
         <div className="relative shell py-24">
           <motion.div
             className="flex flex-col gap-2 mb-20"
@@ -762,8 +710,8 @@ export function About() {
 
           {/* Timeline */}
           <div className="relative">
-            {/* Center line */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border-soft -translate-x-1/2" />
+            {/* Rail line — hugs the left dot column below md, centered from md up */}
+            <div className="absolute left-1.5 top-0 bottom-0 w-px -translate-x-1/2 bg-border-soft md:left-1/2" />
 
             <div className="flex flex-col gap-10">
               {TIMELINE.map((item, i) => (
@@ -776,8 +724,6 @@ export function About() {
 
       {/* ── VALUES ───────────────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg-soft">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
-
         <div className="relative shell py-24">
           <motion.div
             className="grid grid-cols-12 items-end gap-5 mb-16"
@@ -814,12 +760,6 @@ export function About() {
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.6, ease, delay: i * 0.1 }}
               >
-                {/* Corner brackets */}
-                <span className="absolute left-2 top-2 size-2 border-l border-t border-fg-faint opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="absolute right-2 top-2 size-2 border-r border-t border-fg-faint opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="absolute left-2 bottom-2 size-2 border-l border-b border-fg-faint opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="absolute right-2 bottom-2 size-2 border-r border-b border-fg-faint opacity-0 group-hover:opacity-100 transition-opacity" />
-
                 <div
                   className="flex size-12 items-center justify-center border border-border bg-bg font-mono text-2xl"
                   style={{ color: v.color }}
@@ -852,7 +792,6 @@ export function About() {
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-border bg-bg">
         <div className="pointer-events-none absolute -right-20 top-1/2 h-125 w-125 -translate-y-1/2 rounded-full bg-bull/10 blur-[140px] drift" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-100 w-100 rounded-full bg-cyan/8 blur-[120px] drift" style={{ animationDelay: "-5s" }} />
 
         <div className="relative shell py-24">
           <motion.div
@@ -895,31 +834,6 @@ export function About() {
               >
                 Work with us →
               </a>
-            </div>
-
-            {/* Bottom marquee */}
-            <div className="mt-8 overflow-hidden border-y border-border-soft py-3 t-chrome">
-              <div className="flex marquee gap-10 whitespace-nowrap text-fg-faint">
-                {Array.from({ length: 2 }).map((_, k) => (
-                  <div key={k} className="flex shrink-0 gap-10">
-                    {[
-                      "pre-soft-launch",
-                      "3 founders",
-                      "0.4ms pricing",
-                      "AI teacher on",
-                      "kill switch built-in",
-                      "paper trade by default",
-                      "$0 to start",
-                      "no Wall Street, no jargon",
-                    ].map((t, i) => (
-                      <span key={i} className="flex items-center gap-10">
-                        <span className="text-bull">⌖</span>
-                        <span>{t}</span>
-                      </span>
-                    ))}
-                  </div>
-                ))}
-              </div>
             </div>
           </motion.div>
         </div>

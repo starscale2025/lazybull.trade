@@ -65,7 +65,8 @@ export function OutputPanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* pb-16 keeps the last rows clear of the fixed QuickBet FAB (C7) */}
+      <div className="flex-1 overflow-y-auto pb-16">
         {/* Aggregate verdict block */}
         <div className="border-b border-border p-3">
           <AggregateVerdict
@@ -105,11 +106,17 @@ export function OutputPanel({
           </div>
         </div>
 
-        {/* Combined signal stream */}
-        <div className="border-b border-border p-3">
-          <div className="mb-2 t-chrome text-fg-faint">
-            recent signals
-          </div>
+        {/* Combined signal stream — behind a disclosure: the verdicts above are
+            the payload, the raw stream is reference material (Q7) */}
+        <details className="group/sec border-b border-border">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 t-chrome text-fg-faint transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
+            <span>recent signals</span>
+            <span className="flex items-center gap-2">
+              <span>{recent.length}</span>
+              <span className="transition-transform group-open/sec:rotate-180">▾</span>
+            </span>
+          </summary>
+          <div className="px-3 pb-3">
           {recent.length === 0 ? (
             <div className="grid h-16 place-items-center t-chrome text-fg-faint">
               no signals yet
@@ -129,15 +136,20 @@ export function OutputPanel({
               ))}
             </div>
           )}
-        </div>
+          </div>
+        </details>
 
         {/* Equity leaderboard */}
         {equityRuns.length > 0 && (
-          <div className="border-b border-border p-3">
-            <div className="mb-2 t-chrome text-fg-faint">
-              backtest leaderboard
-            </div>
-            <div className="space-y-2">
+          <details className="group/sec border-b border-border">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 t-chrome text-fg-faint transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
+              <span>backtest leaderboard</span>
+              <span className="flex items-center gap-2">
+                <span>{equityRuns.length}</span>
+                <span className="transition-transform group-open/sec:rotate-180">▾</span>
+              </span>
+            </summary>
+            <div className="space-y-2 px-3 pb-3">
               {equityRuns
                 .map((r) => {
                   const eq = r.result!.equity!;
@@ -162,7 +174,7 @@ export function OutputPanel({
                   </div>
                 ))}
             </div>
-          </div>
+          </details>
         )}
 
         {/* Teacher card */}

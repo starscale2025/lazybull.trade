@@ -196,7 +196,7 @@ export function GlassPoints({ points }: { points: readonly string[] }) {
       {points.map((p) => (
         <li
           key={p}
-          className="flex gap-2.5 font-mono text-[11.5px] leading-[1.5] text-fg-dim"
+          className="flex gap-2.5 font-mono text-[11px] leading-[1.5] text-fg-dim"
         >
           <span aria-hidden className="text-bull">
             ›

@@ -133,8 +133,15 @@ export function CommandDeck() {
 
   return (
     <>
+      {/* Coach mark anchors top-center under the nav — Dock.tsx's rule bans
+          fixed bottom-* outside the Dock, and CommandDeck mounts outside the
+          DockProvider so a DockSlot can't host it. --nav-h lives on <nav>
+          itself, hence the 68px fallback here. */}
       {coach && (
-        <div className="fixed bottom-6 left-1/2 z-[var(--z-palette)] -translate-x-1/2 border border-bull/50 bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl">
+        <div
+          className="fixed left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/50 bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl"
+          style={{ top: "calc(var(--nav-h, 68px) + 0.75rem)" }}
+        >
           ⌘K — the whole desk, no mouse
         </div>
       )}

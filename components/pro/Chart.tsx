@@ -60,6 +60,9 @@ type Props = {
   onTradeAt?: (side: "buy" | "sell", price: number) => void;
   /** Right-click → create an alert at the clicked price. */
   onAlertAt?: (price: number) => void;
+  /** Drop the indicator legend below the on-chart OrderTicket (trade mode),
+      so the two can never share the top-left corner. */
+  legendOffset?: boolean;
   /** Open share position in this symbol, drawn as an average-entry line. */
   position?: { qty: number; avgPrice: number } | null;
   /** Close-at-market for the position badge's ✕ (TradingView-style). */
@@ -101,6 +104,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     onRemoveIndicator,
     onTradeAt,
     onAlertAt,
+    legendOffset = false,
     position = null,
     onClosePosition,
     workingOrders = [],
@@ -1215,9 +1219,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         <CrosshairOverlay hover={hoverApi} vp={vp} geom={geom} sizeW={size.w} padB={PAD.B} bars={bars} />
       </svg>
 
-      {/* OHLC legend top-left — wraps inside the pane on phones instead of
-          running under the price axis; single line as before on lg+ */}
-      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-70px)] flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[11px] lg:max-w-none lg:flex-nowrap">
+      {/* OHLC legend top-left — the width cap + wrap hold at EVERY breakpoint:
+          the old lg:max-w-none line ran 86px under the price axis whenever the
+          docked OrderPanel or a multi-pane layout narrowed the pane. */}
+      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-70px)] flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[11px]">
         <span className="text-fg">{symbol}</span>
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim">{exchange}</span>
@@ -1236,7 +1241,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       {/* indicator legend — one row per active indicator, value follows the
           crosshair, per-row ✕ removes it without opening the dropdown. */}
       {indicators.length > 0 && (
-        <div className="pointer-events-none absolute left-3 top-8 space-y-0.5 font-mono text-[10px]">
+        <div className={`pointer-events-none absolute left-3 space-y-0.5 font-mono text-[10px] ${legendOffset ? "top-[5.5rem]" : "top-8"}`}>
           {indicators.map((id) => {
             const meta = IND_META[id];
             if (!meta) return null;

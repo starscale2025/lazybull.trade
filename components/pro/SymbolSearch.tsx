@@ -136,13 +136,13 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-start justify-center bg-black/60 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-[var(--z-dialog)] flex items-start justify-center bg-black/60 pt-[calc(12vh/var(--ui-zoom))] backdrop-blur-sm"
       onMouseDown={(e) => {
         // Click on the veil closes; clicks inside the box do not.
         if (boxRef.current && !boxRef.current.contains(e.target as Node)) onClose();
       }}
     >
-      <div ref={boxRef} className="w-[440px] max-w-[92vw] surface-instrument border border-border bg-surface shadow-2xl">
+      <div ref={boxRef} className="w-[440px] max-w-[calc(92vw/var(--ui-zoom))] surface-instrument border border-border bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">Symbol search</span>
           <button

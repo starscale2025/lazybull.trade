@@ -4,13 +4,23 @@ import { MobileMenu } from "./MobileMenu";
 import { TruthBadge } from "./pro/TruthBadge";
 import { NAV_DIRECTORY } from "@/lib/directory";
 
+// Rail links folded into the MORE menu until 2xl frees enough width for the
+// full seven-link rail. Learn / Visual chain / Pro charts / Pricing stay
+// top-level — they are the funnel; these three are reference pages.
+const FOLDED = new Set<string>(["/quant", "/greeks", "/about"]);
+
+const railLink =
+  "group relative h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3";
+
 /**
  * The site navbar, in glass.
  *
  * It floats: a sticky, inset, frosted bar rather than a full-bleed border-
- * bottom strip. Same information, same destinations, same breakpoint budget —
- * the rail is still lg+, the Truth badge xl+, Portfolio md+, and the hamburger
- * covers everything below. Nothing was dropped to make it fit.
+ * bottom strip. Same information, same destinations. Breakpoint budget: the
+ * rail is xl+ (with Quant/Greeks/About folded into a MORE menu until 2xl),
+ * the Truth badge min-[1360px]+, Portfolio xl+, and the hamburger covers
+ * everything below xl. Nothing was dropped to make it fit — below xl every
+ * destination lives in the sheet.
  *
  * TWO FIXES THAT CAME FREE WITH THE REWRITE:
  *
@@ -54,35 +64,59 @@ export function Nav() {
           </span>
         </Link>
 
-        {/* lg (not md): at 768–1023 the full rail + badge + CTA is ~970px wide
-            and forces horizontal scroll — the hamburger covers that band. */}
-        {/* px-2.5 is held until 2xl. The roomier xl:px-3 added ~2px a side across
-            seven links — ~28px — which at 1280 was the exact margin between the
-            bar fitting and the primary CTA being clipped off the right edge.
-            Every child here is shrink-0, so there is no give anywhere else. */}
-        <div className="hidden items-center gap-0.5 lg:flex">
+        {/* xl (not lg): at 1024–1279 even the slimmed rail + account cluster
+            overflowed the pill and clipped the CTA — the hamburger covers that
+            band. At xl the rail runs four links + MORE; the full seven return
+            at 2xl. Every child here is shrink-0, so there is no give elsewhere. */}
+        <div className="hidden items-center gap-1.5 xl:flex">
           {NAV_DIRECTORY.map((item) => (
             <Link
               key={item.l}
               href={item.href}
-              className="group relative flex h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3"
+              className={`${FOLDED.has(item.href) ? "hidden 2xl:flex" : "flex"} ${railLink}`}
             >
               <span>{item.l}</span>
             </Link>
           ))}
+          {/* MORE ▾ — CSS-only disclosure (details/summary: no client JS in this
+              server component). Panel matches the mobile sheet's idiom. */}
+          <details className="relative 2xl:hidden">
+            <summary
+              className={`flex cursor-pointer select-none list-none gap-1.5 [&::-webkit-details-marker]:hidden ${railLink}`}
+            >
+              <span>More</span>
+              <span aria-hidden className="text-[9px] text-fg-faint">
+                ▾
+              </span>
+            </summary>
+            <div className="absolute right-0 top-full z-50 mt-3 flex min-w-36 flex-col overflow-hidden rounded-[var(--r-panel)] border border-[var(--glass-border)] bg-bg py-1.5 shadow-2xl">
+              {NAV_DIRECTORY.filter((item) => FOLDED.has(item.href)).map((item) => (
+                <Link
+                  key={item.l}
+                  href={item.href}
+                  className="flex h-9 items-center px-4 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
+                >
+                  {item.l}
+                </Link>
+              ))}
+            </div>
+          </details>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
           {/* The Synthetic-Truth badge, promoted off /pro so the glitch→checkmark
-              is site-wide furniture. xl+ only, to spare the tight lg rail band. */}
-          <div className="hidden items-center xl:flex">
+              is site-wide furniture. min-[1360px]: at exactly 1280 the badge's
+              145px was the difference between the CTA fitting and it poking
+              past the pill's rounded border. */}
+          <div className="hidden items-center min-[1360px]:flex">
             <TruthBadge />
           </div>
-          {/* Account pages sit with the account cluster, not the destination rail —
-              the rail is already near its width budget at lg (see comment above). */}
+          {/* Account pages sit with the account cluster, not the destination
+              rail. xl+ only — below xl it duplicated the sheet's entry while
+              the bar was already over budget. */}
           <Link
             href="/portfolio"
-            className="hidden h-9 items-center whitespace-nowrap rounded-full border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--fg)_4%,transparent)] px-3.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg md:inline-flex"
+            className="hidden h-9 items-center whitespace-nowrap rounded-full border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--fg)_4%,transparent)] px-3.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg xl:inline-flex"
           >
             Portfolio
           </Link>
@@ -92,13 +126,21 @@ export function Nav() {
             className="btn-primary-glass group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 font-mono text-[11px] font-semibold uppercase tracking-wider sm:px-4"
           >
             <span aria-hidden className="size-1.5 rounded-full bg-[#04140b] pulse-dot" />
-            <span className="sm:hidden">Chain</span>
-            <span className="hidden sm:inline">Open the chain</span>
+            {/* Short label below sm AND in the 1024–1279 hamburger band, where
+                the audit measured the full CTA clipping off the pill's edge. */}
+            <span className="sm:hidden lg:inline xl:hidden">Chain</span>
+            <span className="hidden sm:inline lg:hidden xl:inline">Open the chain</span>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
               <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
             </svg>
           </Link>
-          <MobileMenu />
+          {/* MobileMenu gates itself lg:hidden, but the rail now starts at xl —
+              re-show the hamburger through 1024–1279 from here (it's shared
+              chrome owned by the below-lg band), or that band would have no
+              route to the folded destinations. */}
+          <div className="contents lg:max-xl:[&>div]:block!">
+            <MobileMenu />
+          </div>
         </div>
       </nav>
     </div>

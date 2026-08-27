@@ -39,25 +39,29 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
               key={s.id}
               type="button"
               onClick={() => onSelect(s)}
-              className={`relative flex items-center gap-2 px-3 py-2 text-left font-mono transition-colors ${
+              className={`relative flex flex-col gap-1 px-3 py-2 text-left font-mono transition-colors ${
                 selected ? "bg-surface" : "bg-bg hover:bg-surface"
               }`}
             >
               {selected && (
                 <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5" style={{ background: tone.color }} aria-hidden />
               )}
-              <span
-                className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 t-chrome"
-                style={{ color: tone.color, background: tone.pillBg }}
-              >
-                <span className="size-1 rounded-full" style={{ background: tone.color }} />
-                {tone.label}
+              {/* line 1: the fixed-width chrome */}
+              <span className="flex items-center gap-2">
+                <span
+                  className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 t-chrome"
+                  style={{ color: tone.color, background: tone.pillBg }}
+                >
+                  <span className="size-1 rounded-full" style={{ background: tone.color }} />
+                  {tone.label}
+                </span>
+                <span className="ml-auto shrink-0 t-chrome text-fg-faint tabular-nums">
+                  {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
+                </span>
+                <span className="w-9 shrink-0 text-right t-data text-[11px] text-bull">{(s.prob * 100).toFixed(0)}%</span>
               </span>
-              <span className="min-w-0 flex-1 truncate text-[11px] text-fg">{s.kind}</span>
-              <span className="shrink-0 t-chrome text-fg-faint tabular-nums">
-                {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
-              </span>
-              <span className="w-9 shrink-0 text-right t-data text-[11px] text-bull">{(s.prob * 100).toFixed(0)}%</span>
+              {/* line 2: the payload — name + strikes, never truncated */}
+              <span className="text-[11px] leading-snug text-fg">{s.kind}</span>
             </button>
           );
         })}

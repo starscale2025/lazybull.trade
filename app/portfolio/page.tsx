@@ -267,35 +267,29 @@ export default function PortfolioPage() {
             <EquityCurve startingCash={startingCash} trades={trades} />
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-px border border-border-soft bg-border-soft sm:grid-cols-4 lg:grid-cols-8">
+          <div className="mt-5 grid grid-cols-2 gap-px border border-border-soft bg-border-soft sm:grid-cols-4">
             <Stat label="Balance" value={money(metrics.balance)} />
             <Stat label="Unrealized P&L" value={signedMoney(metrics.unrealizedPnl)} tone={metrics.unrealizedPnl} />
             <Stat label="Realized today" value={signedMoney(metrics.realizedPnl)} tone={metrics.realizedPnl} />
             <Stat label="Available funds" value={money(metrics.availableFunds)} />
-            <Stat label="Positions margin" value={money(metrics.accountMargin)} />
-            <Stat label="Orders reserved" value={money(metrics.ordersMargin)} />
-            <Stat label="Margin buffer" value={`${fmt(metrics.marginBuffer * 100, 1)}%`} />
-            <Stat label="Starting capital" value={money(startingCash)} />
           </div>
+          <details className="mt-2 group">
+            <summary className="cursor-pointer list-none t-chrome text-fg-faint transition-colors hover:text-fg-dim [&::-webkit-details-marker]:hidden">
+              <span className="inline-block transition-transform group-open:rotate-90">▸</span> margin detail
+            </summary>
+            <div className="mt-2 grid grid-cols-2 gap-px border border-border-soft bg-border-soft sm:grid-cols-4">
+              <Stat label="Positions margin" value={money(metrics.accountMargin)} />
+              <Stat label="Orders reserved" value={money(metrics.ordersMargin)} />
+              <Stat label="Margin buffer" value={`${fmt(metrics.marginBuffer * 100, 1)}%`} />
+              <Stat label="Starting capital" value={money(startingCash)} />
+            </div>
+          </details>
           {metrics.unmarkedCount > 0 && (
             <div className="mt-2 t-chrome text-amber">
               {metrics.unmarkedCount} position{metrics.unmarkedCount > 1 ? "s" : ""} carried at cost — no live
               price yet
             </div>
           )}
-        </section>
-
-        {/* ── wagered strip ── */}
-        <section className="mt-4 grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
-          <Stat big label="Total deployed" value={money(wagered.out)} sub="cash sent into trades" />
-          <Stat big label="Returned from trades" value={money(wagered.back)} sub="closes, credits, premiums" />
-          <Stat big label="Options at risk" value={money(betStats.wageredOpen)} sub={`${betStats.openBets.length} option position${betStats.openBets.length === 1 ? "" : "s"}`} />
-          <Stat
-            big
-            label="Bet record"
-            value={betStats.closedBets.length ? `${betStats.wins}W · ${betStats.closedBets.length - betStats.wins}L` : "—"}
-            sub={betStats.closedBets.length ? `${signedMoney(betStats.betPnl)} settled` : "no settled bets yet"}
-          />
         </section>
 
         {/* ── open positions ── */}
@@ -392,7 +386,18 @@ export default function PortfolioPage() {
         </Section>
 
         {/* ── option bets ── */}
-        <Section title={`Option bets · ${betStats.openBets.length} open`}>
+        <Section
+          title={`Option bets · ${betStats.openBets.length} open`}
+          headerExtra={
+            <span className="hidden t-chrome text-fg-faint sm:inline">
+              {money(betStats.wageredOpen)} at risk
+              {" · "}
+              {betStats.closedBets.length
+                ? `${betStats.wins}W · ${betStats.closedBets.length - betStats.wins}L · ${signedMoney(betStats.betPnl)} settled`
+                : "no settled bets"}
+            </span>
+          }
+        >
           {bets.length === 0 ? (
             <Empty>
               No bets yet. The UP/DOWN slip on <Link className="text-bull underline" href="/quant">/quant</Link> and{" "}
@@ -421,7 +426,7 @@ export default function PortfolioPage() {
                       <span className="text-fg-dim">
                         {p.legs
                           .map((l) => `${l.side === "long" ? "+" : "−"}${l.qty} ${l.type}${l.strike}`)
-                          .join("  ")}
+                          .join(" · ")}
                       </span>
                     </Td>
                     <Td>{money(Math.abs(p.cost))}</Td>
@@ -499,8 +504,9 @@ export default function PortfolioPage() {
           )}
         </Section>
 
-        {/* ── performance ── */}
-        <Section title="Performance · realized round-trips">
+        {/* ── record: the archival group — settled, reconciled, collapsed ── */}
+        <div className="mt-10 t-eyebrow text-fg-faint">record</div>
+        <Section className="mt-2" title="Performance · realized round-trips">
           {!perf ? (
             <Empty>Close a trade and the win rate, profit factor and expectancy appear here.</Empty>
           ) : (
@@ -511,7 +517,15 @@ export default function PortfolioPage() {
                 label="Profit factor"
                 value={perf.profitFactor != null ? fmt(perf.profitFactor, 2) : "∞"}
               />
-              <Stat label="Expectancy / trade" value={signedMoney(perf.expectancy)} tone={perf.expectancy} />
+              <Stat
+                label="Expectancy"
+                value={
+                  <>
+                    {signedMoney(perf.expectancy)} <span className="t-chrome text-fg-faint">/ trade</span>
+                  </>
+                }
+                tone={perf.expectancy}
+              />
               <Stat label="Avg win" value={signedMoney(perf.avgWin)} tone={1} />
               <Stat label="Avg loss" value={signedMoney(perf.avgLoss)} tone={-1} />
               <Stat label="Best trade" value={signedMoney(perf.best)} tone={perf.best} />
@@ -522,6 +536,7 @@ export default function PortfolioPage() {
 
         {/* ── trade history ── */}
         <Section
+          collapsible
           title={`Trade history · ${trades.length}`}
           onExport={
             trades.length
@@ -579,7 +594,8 @@ export default function PortfolioPage() {
                         onBlur={(e) => setJournalNote(t.id, e.target.value)}
                         placeholder="why did you take it?"
                         aria-label={`Journal note for ${t.sym} trade`}
-                        className="w-full max-w-[220px] border-b border-transparent bg-transparent text-fg-dim outline-none placeholder:text-fg-faint focus:border-border"
+                        title={journal[t.id] ?? undefined}
+                        className="w-full min-w-[28ch] border-b border-transparent bg-transparent text-fg-dim outline-none placeholder:text-fg-faint focus:border-border"
                       />
                     </Td>
                   </Tr>
@@ -596,7 +612,13 @@ export default function PortfolioPage() {
 
         {/* ── cash ledger ── */}
         <Section
+          collapsible
           title={`Cash ledger · ${balanceLog.length}`}
+          headerExtra={
+            <span className="hidden t-chrome text-fg-faint sm:inline">
+              {money(wagered.out)} deployed · {money(wagered.back)} returned
+            </span>
+          }
           onExport={
             balanceLog.length
               ? () =>
@@ -655,7 +677,7 @@ export default function PortfolioPage() {
       </main>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 surface-instrument border border-border bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-[var(--z-toast)] -translate-x-1/2 surface-instrument border border-border bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
           {toast}
         </div>
       )}
@@ -675,7 +697,7 @@ function Stat({
   big,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   sub?: string;
   tone?: number;
   big?: boolean;
@@ -695,24 +717,54 @@ function Section({
   title,
   children,
   onExport,
+  headerExtra,
+  collapsible,
+  className = "mt-4",
 }: {
   title: string;
   children: React.ReactNode;
   onExport?: () => void;
+  headerExtra?: React.ReactNode;
+  collapsible?: boolean;
+  className?: string;
 }) {
-  return (
-    <section className="mt-4 surface-instrument border border-border bg-surface">
-      <div className="flex items-center justify-between border-b border-border-soft px-4 py-2.5">
-        <h2 className="t-eyebrow text-fg-dim">{title}</h2>
+  const header = (
+    <>
+      <h2 className="t-eyebrow text-fg-dim">{title}</h2>
+      <div className="flex items-center gap-4">
+        {headerExtra}
         {onExport && (
           <button
-            onClick={onExport}
+            onClick={(e) => {
+              // inside a <summary> a plain click would also toggle the disclosure
+              e.preventDefault();
+              e.stopPropagation();
+              onExport();
+            }}
             className="font-mono text-[10px] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
           >
             ⤓ csv
           </button>
         )}
+        {collapsible && (
+          <span className="t-chrome text-fg-faint transition-transform group-open:rotate-90">▸</span>
+        )}
       </div>
+    </>
+  );
+  if (collapsible) {
+    return (
+      <details className={`${className} group surface-instrument border border-border bg-surface`}>
+        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 group-open:border-b group-open:border-border-soft [&::-webkit-details-marker]:hidden">
+          {header}
+        </summary>
+        <div className="overflow-x-auto p-4">{children}</div>
+      </details>
+    );
+  }
+  return (
+    <section className={`${className} surface-instrument border border-border bg-surface`}>
+      <div className="flex items-center justify-between border-b border-border-soft px-4 py-2.5">{header}</div>
       <div className="overflow-x-auto p-4">{children}</div>
     </section>
   );

@@ -43,7 +43,7 @@ export default function Home() {
         <MarketingSections />
 
         <ScrollReveal as="div" speed="slow">
-          <Footer />
+          <Footer marketing />
         </ScrollReveal>
       </div>
 

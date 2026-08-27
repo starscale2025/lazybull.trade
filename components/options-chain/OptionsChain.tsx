@@ -185,19 +185,17 @@ export function OptionsChain({ underlying, spot }: Props) {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-chrome">
         <div className="flex items-center gap-3">
-          <span className="text-bull">●</span>
+          {/* perf/engine telemetry lives in the dot's tooltip — spot is already
+              read out in the symbol-switcher row above */}
+          <span
+            className={perfMs < 100 ? "text-bull" : "text-amber"}
+            title={`chain priced in ${perfMs.toFixed(1)}ms · black-scholes · in-process`}
+          >
+            ●
+          </span>
           <span className="text-fg">{underlying}</span>
           <span className="text-fg-faint">·</span>
-          <span className="text-fg-dim">spot ${spot.toFixed(2)}</span>
-          <span className="text-fg-faint">·</span>
           <span className="text-fg-dim">23 strikes · 5 expiries</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className={`${perfMs < 100 ? "text-bull" : "text-amber"}`}>
-            chain priced in {perfMs.toFixed(1)}ms
-          </span>
-          <span className="text-fg-faint">·</span>
-          <span className="text-fg-dim">black-scholes · in-process</span>
         </div>
       </div>
 
@@ -242,36 +240,26 @@ export function OptionsChain({ underlying, spot }: Props) {
               SHORT
             </button>
           </span>
-          <span className="hidden text-fg-faint lg:inline" title="On mouse/pen: press a cell and pull it downward past ~26px to short it directly">
+          {/* xl: below that the expiry tabs + toggle already fill the row */}
+          <span className="hidden text-fg-faint xl:inline" title="On mouse/pen: press a cell and pull it downward past ~26px to short it directly">
             · drag ↓ = short
           </span>
         </div>
-        <div className="flex items-center gap-3 t-chrome text-fg-dim">
-          <span>IV heatmap</span>
-          <span className="flex items-center gap-1">
-            low
-            <span
-              className="h-3 w-24"
-              style={{
-                background: "linear-gradient(to right, rgba(0,255,100,0.25), rgba(255,184,30,0.4), rgba(255,46,99,0.55))",
-              }}
-            />
-            high
-          </span>
-          <span className="text-fg-faint">{(ivRange.min * 100).toFixed(0)}–{(ivRange.max * 100).toFixed(0)}%</span>
-        </div>
       </div>
 
-      {/* Chain grid */}
-      <div className="overflow-x-auto" onMouseLeave={() => setHover(null)}>
-        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
-          <span className="col-span-5 text-center text-bull">— calls —</span>
+      {/* Chain grid — relative so the hover-greeks strip can overlay out of
+          flow instead of growing the card on every hover */}
+      <div className="relative" onMouseLeave={() => setHover(null)}>
+      <div className="overflow-x-auto">
+        <div className="grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
+          <span className="col-span-4 text-center text-bull">— calls —</span>
           <span className="text-center text-fg">strike</span>
-          <span className="col-span-5 text-center text-bear">— puts —</span>
+          <span className="col-span-4 text-center text-bear">— puts —</span>
         </div>
-        <div className="grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
-          <span>iv</span>
-          <span className="text-right">vol</span>
+        <div className="grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
+          {/* iv text columns dropped — the value paints the cell heat and the
+              exact figure lives in the hover greeks strip */}
+          <span>vol</span>
           <span className="text-right">oi</span>
           <span className="text-right">bid</span>
           <span className="text-right">ask</span>
@@ -280,7 +268,6 @@ export function OptionsChain({ underlying, spot }: Props) {
           <span className="text-right">ask</span>
           <span className="text-right">oi</span>
           <span className="text-right">vol</span>
-          <span className="text-right">iv</span>
         </div>
 
         <div aria-label="options chain" className="select-none">
@@ -297,7 +284,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             return (
               <div
                 key={K}
-                className={`grid min-w-[780px] grid-cols-[repeat(11,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[11px] transition-colors ${
+                className={`grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[11px] transition-colors ${
                   atm ? "bg-bull/[0.04]" : ""
                 }`}
               >
@@ -327,14 +314,13 @@ export function OptionsChain({ underlying, spot }: Props) {
                     e.preventDefault();
                     toggle(row.call, "short");
                   }}
-                  className={`col-span-5 grid grid-cols-5 items-center gap-1 border px-2 py-1 text-left transition-all ${
+                  className={`col-span-4 grid grid-cols-4 items-center gap-1 border px-2 py-1 text-left transition-all ${
                     callSelected
                       ? "border-bull bg-bull/15 text-fg"
                       : "border-transparent text-fg-dim hover:border-bull/40 hover:text-fg"
                   }`}
                 >
-                  <span className="text-fg-faint">{(row.call.iv * 100).toFixed(0)}%</span>
-                  <span className="text-right">{row.call.vol}</span>
+                  <span>{row.call.vol}</span>
                   <span className="text-right">{row.call.oi}</span>
                   <span className="text-right text-bull">{row.call.bid.toFixed(2)}</span>
                   <span className="text-right text-bull">{row.call.ask.toFixed(2)}</span>
@@ -372,7 +358,7 @@ export function OptionsChain({ underlying, spot }: Props) {
                     e.preventDefault();
                     toggle(row.put, "short");
                   }}
-                  className={`col-span-5 grid grid-cols-5 items-center gap-1 border px-2 py-1 text-left transition-all ${
+                  className={`col-span-4 grid grid-cols-4 items-center gap-1 border px-2 py-1 text-left transition-all ${
                     putSelected
                       ? "border-bear bg-bear/15 text-fg"
                       : "border-transparent text-fg-dim hover:border-bear/40 hover:text-fg"
@@ -382,14 +368,15 @@ export function OptionsChain({ underlying, spot }: Props) {
                   <span className="text-right text-bear">{row.put.ask.toFixed(2)}</span>
                   <span className="text-right">{row.put.oi}</span>
                   <span className="text-right">{row.put.vol}</span>
-                  <span className="text-right text-fg-faint">{(row.put.iv * 100).toFixed(0)}%</span>
                 </button>
               </div>
             );
           })}
         </div>
 
-        {/* Hover tooltip with greek chips */}
+      </div>
+
+        {/* Hover greeks strip — absolute overlay, one line */}
         <AnimatePresence>
           {hover && (
             <motion.div
@@ -397,7 +384,7 @@ export function OptionsChain({ underlying, spot }: Props) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.12 }}
-              className="pointer-events-none sticky bottom-0 left-0 right-0 z-10 border-t border-bull/30 bg-surface/95 px-3 py-2 backdrop-blur"
+              className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 border-t border-bull/30 bg-surface/95 px-3 py-2 backdrop-blur"
             >
               <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-fg-dim">
                 <span className="text-fg">
@@ -411,9 +398,6 @@ export function OptionsChain({ underlying, spot }: Props) {
                 <GreekChip greek="theta" value={hover.cell.greeks.theta.toFixed(3)} />
                 <GreekChip greek="vega" value={hover.cell.greeks.vega.toFixed(3)} />
                 <GreekChip greek="iv" value={`${(hover.cell.iv * 100).toFixed(1)}%`} />
-                <span className="ml-auto text-fg-faint hidden md:inline">
-                  ⌘ click to add long · right-click to add short · drag for spreads
-                </span>
               </div>
             </motion.div>
           )}
@@ -429,6 +413,20 @@ export function OptionsChain({ underlying, spot }: Props) {
         <GreekTrigger greek="vega">vega</GreekTrigger>
         <GreekTrigger greek="rho">rho</GreekTrigger>
         <GreekTrigger greek="iv">iv</GreekTrigger>
+        <span className="ml-auto flex items-center gap-2">
+          <span>iv heat</span>
+          <span className="flex items-center gap-1">
+            low
+            <span
+              className="h-2.5 w-16"
+              style={{
+                background: "linear-gradient(to right, rgba(0,255,100,0.25), rgba(255,184,30,0.4), rgba(255,46,99,0.55))",
+              }}
+            />
+            high
+          </span>
+          <span className="text-fg-faint">{(ivRange.min * 100).toFixed(0)}–{(ivRange.max * 100).toFixed(0)}%</span>
+        </span>
       </div>
     </div>
   );

@@ -450,12 +450,13 @@ export function ScrollCinema() {
             const done = typed >= len - 0.5;
             ln.style.opacity = started ? "1" : "0";
             ln.classList.toggle("lab-caret", started && !done); // blink only at the frontier
-            // phase accents narrate the colour story on the key lines:
+            // phase accents narrate the colour story on the key lines
+            // (indices match the SIX-line panel: 2 candidate, 3-4 stress, 5 verdict):
             let glow = 0.28; // base cyan-ish scan glow once a line is in
             let rgb = "125,255,201";
-            if (i === 7) { rgb = "0,255,135"; glow = 0.2 + 0.6 * B; }          // candidate → green in phase B
-            else if (i === 8 || i === 9) { rgb = "255,46,99"; glow = 0.15 + 0.6 * C; } // stress → red in phase C
-            else if (i === 10) { rgb = "0,255,135"; glow = 0.2 + 0.7 * Math.max(RS, lt > 0.9 ? 1 : 0); } // verdict → green at settle
+            if (i === 2) { rgb = "0,255,135"; glow = 0.2 + 0.6 * B; }          // candidate → green in phase B
+            else if (i === 3 || i === 4) { rgb = "255,46,99"; glow = 0.15 + 0.6 * C; } // stress → red in phase C
+            else if (i === 5) { rgb = "0,255,135"; glow = 0.2 + 0.7 * Math.max(RS, lt > 0.9 ? 1 : 0); } // verdict → green at settle
             ln.style.textShadow = started ? `0 0 ${(8 + 14 * glow).toFixed(0)}px rgba(${rgb},${glow.toFixed(2)})` : "none";
           });
           // live values interpolate on the SAME clock; all fixed-width so the ch
@@ -551,7 +552,16 @@ export function ScrollCinema() {
         const el = tooltipRef.current;
         if (hov) {
           el.style.opacity = "1";
-          el.style.transform = `translate(${(hov.sx + 14).toFixed(0)}px, ${(hov.sy - 40).toFixed(0)}px)`;
+          // Clamp to the frame: the sticky wrapper is overflow-hidden, so an
+          // unclamped tag clips off the top/right edges (hovering the top 40px
+          // or right ~120px). Flip to the cursor's LEFT when the right edge
+          // would cut it; never let the top edge shear it.
+          const host = stickyRef.current;
+          const maxX = (host ? host.clientWidth : window.innerWidth) - el.offsetWidth - 8;
+          let tx = hov.sx + 14;
+          if (tx > maxX) tx = Math.max(8, hov.sx - el.offsetWidth - 14);
+          const ty = Math.max(8, hov.sy - 40);
+          el.style.transform = `translate(${tx.toFixed(0)}px, ${ty.toFixed(0)}px)`;
           el.style.borderColor = hov.up ? "rgba(0,255,135,0.55)" : "rgba(255,46,99,0.55)";
           const [l, p] = [el.children[0] as HTMLElement, el.children[1] as HTMLElement];
           if (l) l.textContent = hov.label;
@@ -864,7 +874,14 @@ export function ScrollCinema() {
       {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
           the section — otherwise the section's opaque bg stays over the real Hero
           in the -100vh overlap and the handoff reveals black instead of the page. */}
-      <div ref={stickyRef} className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg">
+      {/* --rail-w reserves the act rail's column (rail at left-[2.5vw] + its
+          rows) as ONE shared number: the lab panel offsets past it and the
+          caption widths subtract it per side, so nothing prints over the rail. */}
+      <div
+        ref={stickyRef}
+        className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg"
+        style={{ "--rail-w": "200px" } as React.CSSProperties}
+      >
         {!dead && (<>
         <iframe
           ref={frameRef}
@@ -920,7 +937,18 @@ export function ScrollCinema() {
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
             className="absolute left-1/2 text-center"
-            style={{ top: b.pos === "top" ? "14%" : "50%", opacity: 0, width: "min(92vw, 680px)" }}
+            style={{
+              // "top" beats: viewport-aware — 14% of a 720px viewport bottomed
+              // the heading out into the rail's top rows, so the anchor stops
+              // at calc(50% - 260px) (and never above 64px on short screens).
+              top: b.pos === "top" ? "clamp(64px, 14%, calc(50% - 260px))" : "50%",
+              opacity: 0,
+              // Reserve the rail gutter on BOTH sides (centered text, one rail):
+              // at 768-1000px the old min(92vw, 680px) printed captions over the
+              // rail's box. 100vw divided by --ui-zoom (see the section note);
+              // 2.5vw stays raw because the rail's own left-[2.5vw] is raw.
+              width: "min(680px, calc(100vw / var(--ui-zoom) - 2 * (2.5vw + var(--rail-w) + 10px)))",
+            }}
           >
             <div
               className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl"
@@ -941,7 +969,7 @@ export function ScrollCinema() {
         <div
           ref={labRef}
           data-lab-panel
-          className="absolute z-20 border border-border bg-black/85 font-mono backdrop-blur-sm max-md:bottom-[13vh] max-md:left-1/2 max-md:w-[min(92vw,420px)] max-md:-translate-x-1/2 md:left-[5vw] md:top-1/2 md:w-[min(40vw,440px)] md:-translate-y-1/2"
+          className="absolute z-20 border border-border bg-black/85 font-mono backdrop-blur-sm max-md:bottom-[13vh] max-md:left-1/2 max-md:w-[min(92vw,420px)] max-md:-translate-x-1/2 md:left-[calc(2.5vw+var(--rail-w))] md:top-1/2 md:w-[min(36vw,440px)] md:-translate-y-1/2"
           style={{
             opacity: 0,
             visibility: "hidden",
@@ -956,38 +984,28 @@ export function ScrollCinema() {
               light through the colour story: cyan scan → green candidate (B) →
               red downside stress (C) → green verdict. Content is descriptive /
               paper-only — never an imperative. */}
+          {/* Six lines, not eleven: the four model-parameter rows (hurst, ewma,
+              garch, kelly_cap …) collapsed into ONE summary row — they were
+              noise competing with the three story lines. Full parameter detail
+              lives on /trade/quant. Live values keep interpolating on the same
+              clock via labValRefs. */}
           <div className="px-3.5 py-3 text-[11px] leading-[1.7] text-fg md:text-[12px] md:leading-[1.8]">
             <div ref={(el) => { labLineRefs.current[0] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --scan NVDA --paper
             </div>
             <div ref={(el) => { labLineRefs.current[1] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-bull">regime</span> = hurst(64) <span className="text-fg-dim">→</span> <span style={{ color: "#28d7ff" }}>0.63</span> TREND
+              <span className="text-bull">regime</span> TREND · μ +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span> · σ <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span> · agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#28d7ff" }}>1</span>/6
             </div>
             <div ref={(el) => { labLineRefs.current[2] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              μ drift = ewma(24h) <span className="text-fg-dim">→</span> +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span>%/d
-            </div>
-            <div ref={(el) => { labLineRefs.current[3] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              σ vol = garch(1,1) <span className="text-fg-dim">→</span> <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span>%
-            </div>
-            <div ref={(el) => { labLineRefs.current[4] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-bull">ensemble</span> = vote(6 models) <span className="text-fg-dim">→</span> agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#28d7ff" }}>1</span>/6
-            </div>
-            <div ref={(el) => { labLineRefs.current[5] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              regime.ok <span className="text-fg-dim">&&</span> conviction ≥ <span className="text-bull">ULTRA</span> <span className="text-fg-dim">→</span> true
-            </div>
-            <div ref={(el) => { labLineRefs.current[6] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-bull">size</span> = kelly_cap(0.25) <span className="text-fg-dim">→</span> <span style={{ color: "#28d7ff" }}>2.1%</span> NAV
-            </div>
-            <div ref={(el) => { labLineRefs.current[7] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-fg-dim">→</span> candidate = <span className="text-bull">CALL <span ref={(el) => { labValRefs.current[3] = el; }}>240</span></span> · agree <span ref={(el) => { labValRefs.current[4] = el; }}>1</span>/6
             </div>
-            <div ref={(el) => { labLineRefs.current[8] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
+            <div ref={(el) => { labLineRefs.current[3] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
               <span style={{ color: "#ff6b8a" }}>stress</span>(-2σ shock) <span className="text-fg-dim">→</span> max loss capped
             </div>
-            <div ref={(el) => { labLineRefs.current[9] = el; }} className="lab-line" style={{ opacity: 0 }}>
+            <div ref={(el) => { labLineRefs.current[4] = el; }} className="lab-line" style={{ opacity: 0 }}>
               VaR(95%) = -1.0R <span className="text-fg-dim">·</span> daily kill-switch armed
             </div>
-            <div ref={(el) => { labLineRefs.current[10] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
+            <div ref={(el) => { labLineRefs.current[5] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
               <span className="text-fg-dim">→</span> historical agreement <span className="text-bull">6/6 models</span> · paper pick staged
             </div>
           </div>

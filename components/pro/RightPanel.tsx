@@ -48,6 +48,26 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   const [hist, setHist] = useState<{ ts: number; price: number }[]>([]);
   const [perf, setPerf] = useState<Record<string, number>>({});
 
+  // Collapsible fixed sections — the pair permanently ate ~250px of the 300px
+  // column, squeezing the watchlist to a handful of rows. Persisted the same
+  // way as lb-pro-watchlist. Read lazily (not in an effect) so there is no
+  // open→closed flicker on mount; SSR falls back to open.
+  const [detailsOpen, setDetailsOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try { return localStorage.getItem("lb-pro-details-open") !== "0"; } catch { return true; }
+  });
+  const [perfOpen, setPerfOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try { return localStorage.getItem("lb-pro-perf-open") !== "0"; } catch { return true; }
+  });
+  // Persist OUTSIDE the updater — StrictMode double-invokes updaters (see the
+  // undo-history comment in app/pro/page.tsx), so side effects don't belong there.
+  const toggleSection = (key: "details" | "perf") => {
+    const next = key === "details" ? !detailsOpen : !perfOpen;
+    try { localStorage.setItem(`lb-pro-${key}-open`, next ? "1" : "0"); } catch {}
+    (key === "details" ? setDetailsOpen : setPerfOpen)(next);
+  };
+
   // persist
   useEffect(() => {
     try { localStorage.setItem("lb-pro-watchlist", JSON.stringify(list)); } catch {}
@@ -283,12 +303,14 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       {/* watchlist */}
       {/* dock-clear reserves the Dock's bottom-right footprint on touch, so the
           last rows of the watchlist cannot end up underneath the orb. */}
-      <div className="dock-clear max-h-[45vh] flex-1 overflow-y-auto lg:max-h-none">
+      {/* /var(--ui-zoom): html renders zoomed, so raw vh over-measures.
+          lg:min-h keeps ~8 rows visible however tall the sections below get. */}
+      <div className="dock-clear max-h-[calc(45vh/var(--ui-zoom))] flex-1 overflow-y-auto lg:max-h-none lg:min-h-[224px]">
         {list.map((sym) => {
           const q = quotes[sym];
           const active = sym === symbol.sym;
           return (
-            <div key={sym} className={`group grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[11px] transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
+            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[11px] transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
               <button
                 className="col-span-5 flex items-center gap-1.5 text-left text-fg"
                 onClick={() => onPickSymbol({ sym, name: q?.name || sym, exch: q?.exch || "" })}
@@ -300,29 +322,38 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
               <span className={`col-span-2 text-right ${dirClass(q?.chg)}`}>
                 {q?.chg != null ? `${q.chg >= 0 ? "+" : ""}${fmt(q.chg, 2)}` : "—"}
               </span>
-              <span className={`col-span-2 text-right flex items-center justify-end gap-1 ${dirClass(q?.chgPct)}`}>
-                <span>{q?.chgPct != null ? `${q.chgPct >= 0 ? "+" : ""}${fmt(q.chgPct, 2)}%` : "—"}</span>
-                <button onClick={() => removeSym(sym)} title="Remove" className="ml-1 hidden size-4 items-center justify-center text-fg-faint group-hover:flex hover:text-bear">×</button>
+              <span className={`col-span-2 text-right ${dirClass(q?.chgPct)}`}>
+                {q?.chgPct != null ? `${q.chgPct >= 0 ? "+" : ""}${fmt(q.chgPct, 2)}%` : "—"}
               </span>
+              {/* Hover ✕ floats over the row's right padding rather than inside
+                  the ~39px Chg% cell, where it crowded the number with no gap. */}
+              <button onClick={() => removeSym(sym)} title="Remove" className="absolute right-1 top-1/2 hidden size-4 -translate-y-1/2 items-center justify-center bg-surface text-fg-faint group-hover:flex hover:text-bear">×</button>
             </div>
           );
         })}
         {!list.length && <div className="px-3 py-4 text-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">empty list — add a symbol above</div>}
       </div>
 
-      {/* Symbol details */}
-      <div className="border-t border-border bg-bg p-3">
+      {/* Symbol details — collapsible: with Performance below it, the pair ate
+          ~250px of the 300px column and left the watchlist a few cut rows. */}
+      <div className={`border-t border-border bg-bg px-3 py-2 ${detailsOpen ? "pb-3" : ""}`}>
         <div className="flex items-center justify-between t-chrome text-fg-dim">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => toggleSection("details")}
+            aria-expanded={detailsOpen}
+            className="flex items-center gap-2 text-left transition-colors hover:text-fg"
+          >
             <SymBadge sym={symMeta.sym} />
             <span className="text-fg">{symMeta.sym}</span>
-          </div>
+            <span className={`text-fg-faint transition-transform ${detailsOpen ? "" : "rotate-180"}`}>⌄</span>
+          </button>
           <div className="flex items-center gap-1">
             <span className={`px-1.5 py-0.5 text-[10px] ${live?.marketState === "REGULAR" ? "border border-bull/40 text-bull" : "border border-border text-fg-faint"}`}>
               {live?.marketState || "—"}
             </span>
           </div>
         </div>
+        {detailsOpen && (<>
         <div className="mt-1 text-[10px] tracking-wider text-fg-faint">
           {symMeta.name} <span className="text-fg-faint">·</span> {symMeta.exch}
         </div>
@@ -346,14 +377,23 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           live · refreshing every 15s
         </div>
+        </>)}
       </div>
 
-      {/* Performance grid */}
-      <div className="border-t border-border bg-bg p-3">
+      {/* Performance grid — collapsible, same reason as Symbol details. */}
+      <div className={`border-t border-border bg-bg px-3 py-2 ${perfOpen ? "pb-3" : ""}`}>
         <div className="flex items-center justify-between t-chrome text-fg-dim">
-          <h2 className="text-fg">Performance</h2>
-          <span className="text-fg-faint">vs prev close</span>
+          <button
+            onClick={() => toggleSection("perf")}
+            aria-expanded={perfOpen}
+            className="flex items-center gap-2 text-left transition-colors hover:text-fg"
+          >
+            <h2 className="text-fg">Performance</h2>
+            <span className={`text-fg-faint transition-transform ${perfOpen ? "" : "rotate-180"}`}>⌄</span>
+          </button>
+          {perfOpen && <span className="text-fg-faint">vs prev close</span>}
         </div>
+        {perfOpen && (
         <div className="mt-2 grid grid-cols-3 gap-px bg-border-soft">
           {(["1D", "1M", "3M", "6M", "YTD", "1Y"] as const).map((k) => {
             const v = perf[k];
@@ -368,6 +408,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             );
           })}
         </div>
+        )}
       </div>
     </aside>
   );
