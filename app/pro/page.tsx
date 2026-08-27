@@ -830,15 +830,21 @@ export default function ProPage() {
         <div className="ml-1 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
           <span>workspace · "godmode"</span>
           {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
-          {synthetic && !loading && (
-            <span className="text-amber" title="Live feed unavailable — showing a deterministic synthetic tape, not real quotes. Add a data key to go live.">
-              · synthetic tape
-            </span>
-          )}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
         </div>
-        {/* The TruthBadge that sat here duplicated the canonical one in <Nav/>
-            directly above — one provenance chip per surface. */}
+        {/* Provenance is NOT gated by width. The Nav's TruthBadge only appears
+            at min-[1360px] and the workspace cluster above starts at md, which
+            between them left a phone showing synthetic prices with nothing
+            saying so. Disclosure is not a thing that should respond to a
+            breakpoint. */}
+        {synthetic && !loading && (
+          <span
+            className="ml-1 font-mono text-[11px] uppercase tracking-wider text-amber"
+            title="Live feed unavailable — showing a deterministic synthetic tape, not real quotes. Add a data key to go live."
+          >
+            · synthetic tape
+          </span>
+        )}
         {/* The action cluster that used to sit here is gone. Every one of its
             four controls — alerts, fullscreen, trade, save — is wired into
             <TopBar/> immediately below with the SAME handlers, so the top 190px

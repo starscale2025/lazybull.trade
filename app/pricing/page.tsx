@@ -92,7 +92,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-bg">
       <Nav />
-      <main className="tap-floor shell py-16 lg:py-24">
+      <main className="tap-floor shell section-y">
         {/* header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="t-eyebrow text-fg-faint">
@@ -241,13 +241,12 @@ export default function PricingPage() {
             <span className="size-1.5 rounded-full bg-bull" />
             Paper only · Educational · Not advice
           </div>
+          {/* The full disclaimer lives in the Footer, which renders on this very
+              page — repeating it here stacked the same sentence twice within a
+              few hundred pixels. The pill above carries the short version. */}
           <div className="text-center font-mono text-[11px] text-fg-dim">
             Billing launches soon — early users lock founding pricing.
           </div>
-          <p className="max-w-xl text-center font-mono text-[10px] leading-relaxed text-fg-faint">
-            lazybull is an educational simulation. No real money moves, no orders are routed,
-            and nothing here is a recommendation to buy or sell any security.
-          </p>
         </div>
       </main>
       <Footer />

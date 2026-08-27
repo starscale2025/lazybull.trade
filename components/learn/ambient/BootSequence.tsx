@@ -31,7 +31,7 @@ export function BootSequence() {
 
   return (
     <div
-      className={`fixed inset-0 z-[200] flex items-center justify-center bg-bg ${
+      className={`fixed inset-0 z-[var(--z-boot)] flex items-center justify-center bg-bg ${
         phase === "fading" ? "boot-fade-out" : ""
       }`}
       style={{ pointerEvents: phase === "fading" ? "none" : "auto" }}

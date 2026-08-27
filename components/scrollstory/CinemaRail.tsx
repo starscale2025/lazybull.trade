@@ -122,7 +122,7 @@ export const CinemaRail = forwardRef<
       className="cinema-rail pointer-events-auto absolute left-[2.5vw] top-1/2 z-30 hidden -translate-y-1/2 md:block"
     >
       <p ref={liveRef} aria-live="polite" className="sr-only" />
-      <nav aria-label="Film acts" className="relative flex flex-col gap-[7px] pl-3">
+      <nav aria-label="Film acts" className="relative flex flex-col gap-2 pl-3">
         {/* the spine: a hairline the progress fills top-down */}
         <span aria-hidden className="absolute left-0 top-1 bottom-1 w-px bg-[var(--border)]" />
         <span

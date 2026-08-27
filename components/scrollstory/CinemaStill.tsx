@@ -116,7 +116,7 @@ export function CinemaStill() {
       data-cinema-static
       className="relative border-b border-border bg-bg"
     >
-      <div className="shell grid gap-14 py-20 md:py-28 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-16">
+      <div className="shell grid gap-14 section-y lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-16">
         {/* ── THE FRAME ─────────────────────────────────────────────────── */}
         <div className="flex flex-col justify-center">
           <div className="t-eyebrow text-fg-faint">The film, in one frame</div>

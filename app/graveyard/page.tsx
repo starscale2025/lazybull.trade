@@ -33,7 +33,7 @@ export default function Graveyard() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
-      <main className="mx-auto w-full max-w-[900px] flex-1 px-5 py-16">
+      <main className="mx-auto w-full max-w-[900px] flex-1 px-5 section-y-sm">
         <div className="text-center">
           <div className="t-eyebrow text-fg-faint">⚰ here lie the fallen</div>
           <h1 className="mt-3 t-title">

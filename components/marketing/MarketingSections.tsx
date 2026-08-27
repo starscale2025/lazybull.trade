@@ -79,7 +79,7 @@ function Workflow() {
             fill is translucent, so one continuous rule stayed faintly visible
             crossing the card interiors and the 01/02/03 badges. The offsets
             derive from the grid: col = (100% - 2×1.125rem)/3, gap = 1.125rem
-            (gap-4.5). */}
+            (gap-4). */}
         <span
           aria-hidden
           data-gsap="reveal-clip"
@@ -94,7 +94,7 @@ function Workflow() {
           className="absolute left-[calc(66.667%-0.375rem)] top-[53px] hidden h-px w-[1.125rem] bg-bull/35 md:block"
         />
         <div
-          className="grid grid-cols-1 gap-4.5 md:grid-cols-3"
+          className="grid grid-cols-1 gap-4 md:grid-cols-3"
           data-gsap="stagger"
           data-gsap-delay="0.25"
         >
@@ -195,14 +195,14 @@ function Features() {
         <GlassHeading accent="one terminal.">Three rooms,</GlassHeading>
       </div>
 
-      <div className="mt-14 flex flex-col gap-6.5">
+      <div className="mt-14 flex flex-col gap-6">
         {FEATURES.map((f) => (
           // Each row enters from the side its screenshot sits on, so the shot
           // leads and the copy follows it in.
           <div
             key={f.tag}
             data-gsap={f.flip ? "slide-left" : "slide-right"}
-            className={`glass glass-hover specular grid items-center gap-8 rounded-[var(--r-panel)] p-6.5 lg:gap-[34px] ${
+            className={`glass glass-hover specular grid items-center gap-8 rounded-[var(--r-panel)] p-6 lg:gap-8 ${
               f.flip ? "lg:grid-cols-[1fr_1.25fr]" : "lg:grid-cols-[1.25fr_1fr]"
             }`}
           >

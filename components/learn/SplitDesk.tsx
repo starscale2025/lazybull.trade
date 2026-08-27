@@ -121,7 +121,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
             key={ch.id}
             id={ch.id}
             data-regime={ch.regime}
-            className="relative overflow-hidden border-t border-border first:border-t-0 py-16 pl-5 pr-5 lg:pl-[13rem]"
+            className="relative overflow-hidden border-t border-border first:border-t-0 section-y-sm pl-5 pr-5 lg:pl-[13rem]"
           >
             <ChapterCopy ch={ch} />
             <DeskFrame label={`TERMINAL §${ch.num}`} hint={ch.hint} className="mt-10">
@@ -157,7 +157,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
               sectionRefs.current[i] = el;
             }}
             data-regime={ch.regime}
-            className="relative flex min-h-screen flex-col justify-center border-t border-border first:border-t-0 py-24 pl-5 pr-5 lg:pl-[13rem] xl:pr-10"
+            className="relative flex min-h-screen flex-col justify-center border-t border-border first:border-t-0 section-y pl-5 pr-5 lg:pl-[13rem] xl:pr-10"
           >
             <ChapterCopy ch={ch} active={i === active} />
             {ch.takeaway}

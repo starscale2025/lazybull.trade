@@ -418,7 +418,7 @@ export function About() {
           </div>
         </div>
 
-        <div className="relative shell py-20 lg:py-32">
+        <div className="relative shell section-y">
           <motion.div
             className="max-w-4xl"
             initial={{ opacity: 0, y: 30 }}
@@ -454,7 +454,7 @@ export function About() {
 
       {/* ── MISSION TERMINAL ─────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg-soft">
-        <div className="relative shell py-20">
+        <div className="relative shell section-y">
           <motion.div
             className="border border-border bg-bg"
             initial={{ opacity: 0, y: 24 }}
@@ -641,7 +641,7 @@ export function About() {
       <section className="relative border-b border-border bg-bg-soft">
         <div className="pointer-events-none absolute left-1/2 top-0 h-100 w-200 -translate-x-1/2 rounded-full bg-bull/8 blur-[120px]" />
 
-        <div className="relative shell py-24">
+        <div className="relative shell section-y">
           <motion.div
             className="flex flex-col gap-2 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -687,7 +687,7 @@ export function About() {
 
       {/* ── TIMELINE ─────────────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg">
-        <div className="relative shell py-24">
+        <div className="relative shell section-y">
           <motion.div
             className="flex flex-col gap-2 mb-20"
             initial={{ opacity: 0, y: 20 }}
@@ -724,7 +724,7 @@ export function About() {
 
       {/* ── VALUES ───────────────────────────────────────────────────────── */}
       <section className="relative border-b border-border bg-bg-soft">
-        <div className="relative shell py-24">
+        <div className="relative shell section-y">
           <motion.div
             className="grid grid-cols-12 items-end gap-5 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -793,7 +793,7 @@ export function About() {
       <section className="relative overflow-hidden border-b border-border bg-bg">
         <div className="pointer-events-none absolute -right-20 top-1/2 h-125 w-125 -translate-y-1/2 rounded-full bg-bull/10 blur-[140px] drift" />
 
-        <div className="relative shell py-24">
+        <div className="relative shell section-y">
           <motion.div
             className="flex flex-col gap-8"
             initial={{ opacity: 0, y: 30 }}

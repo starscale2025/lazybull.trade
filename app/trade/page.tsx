@@ -5,8 +5,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
-import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
-import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
 import { StrategyCards, PnlSparkline, STRATEGY_TONE } from "@/components/wedge/StrategyCards";
@@ -290,9 +288,9 @@ export default function TradePage() {
 
   return (
     <main className="tap-floor flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
-      {/* the homepage's atmosphere language, carried through */}
-      <AmbientOrbs />
-      <CursorSpotlight />
+      {/* No AmbientOrbs / CursorSpotlight here: the homepage's drifting
+          atmosphere is marketing language, and on a route that is nothing but
+          live numbers it reads as movement the data did not ask for. */}
       <ScrollProgress />
       {/* decoration sits below the chrome (panels at z-30) so it can never film over data */}
       <div className="pointer-events-none fixed inset-0 z-10 scanlines opacity-[0.09]" aria-hidden />
@@ -302,7 +300,7 @@ export default function TradePage() {
         style={{ background: "radial-gradient(ellipse at center, transparent 80%, rgba(0,0,0,0.2) 100%)" }}
       />
       <TickerBar />
-      <Nav />
+      <Nav wide />
 
       {/* ── App shell: on lg+ everything below the nav fits one screen and panels
              scroll internally. 91px = measured TickerBar (33.5px) + Nav (57px).
@@ -321,7 +319,7 @@ export default function TradePage() {
           style={{ maskImage: "linear-gradient(to left, black 30%, transparent 78%)" }}
         />
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
-        <div className="relative mx-auto w-full max-w-[1600px] px-5 py-4 lg:py-2.5">
+        <div className="relative shell shell-wide py-4 lg:py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-2">
             <div className="flex items-center gap-3 t-eyebrow text-fg-faint" data-gsap="fade-up">
               ⟢ bet builder · v2
@@ -392,7 +390,7 @@ export default function TradePage() {
       </section>
 
       {/* ── Terminal grid: chart + chain (≈60%) | strategy · greeks · teacher (≈40%) */}
-      <div className="relative mx-auto grid w-full max-w-[1600px] grid-cols-1 items-start gap-4 px-5 py-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch lg:gap-3 lg:overflow-hidden lg:py-3">
+      <div className="relative grid shell shell-wide grid-cols-1 items-start gap-4 py-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch lg:gap-3 lg:overflow-hidden lg:py-3">
         {/* ---- left column: toolbar → cone chart → chain (internal scroll) ---- */}
         <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-hidden">
           {/* toolbar strip — live controls only */}

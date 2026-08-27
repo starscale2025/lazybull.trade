@@ -65,7 +65,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
           className="pointer-events-none absolute -left-40 top-0 h-[420px] w-[420px] rounded-full blur-[160px]"
           style={{ background: `${cat.color}33` }}
         />
-        <div className="relative shell py-14">
+        <div className="relative shell section-y-sm">
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-3 t-chrome">
               <span
@@ -117,7 +117,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* In plain English — simple lead, technical follow-on, one band. */}
       <section className="border-b border-border bg-bull/[0.04]">
-        <div className="shell py-12">
+        <div className="shell section-y-sm">
           <div className="flex items-center gap-3 t-eyebrow text-bull">
             <span>⟢</span>
             <span className="h-px w-12 bg-bull/40" />
@@ -137,7 +137,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* The math */}
       {bot.formula && (
         <section className="border-b border-border">
-          <div className="shell py-14">
+          <div className="shell section-y-sm">
             <SectionLabel>The math</SectionLabel>
             <div className="mt-4 border border-border bg-bg p-6">
               <div className="t-chrome text-fg-faint mb-3">formula</div>
@@ -172,7 +172,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Live demo */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="shell py-14">
+        <div className="shell section-y-sm">
           <SectionLabel>Live demo</SectionLabel>
           <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
             Real {bot.name} bot, running on real Yahoo data when the symbol is
@@ -188,7 +188,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
           build time from lib/quant/bots.ts or lib/quant/ai-bots.ts. */}
       {source && (
         <section className="border-b border-border">
-          <div className="shell py-14">
+          <div className="shell section-y-sm">
             <SectionLabel>Source code · public</SectionLabel>
             <p className="mt-3 max-w-[68ch] t-body text-fg-dim">
               This is the actual code the bot runs — not a re-explanation, not a
@@ -245,7 +245,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Specialty */}
       <section className="border-b border-border">
-        <div className="shell py-14">
+        <div className="shell section-y-sm">
           <SectionLabel>Specialty · when it shines, when it fails</SectionLabel>
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="border-l-2 border-bull bg-bull/5 p-5">
@@ -280,7 +280,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* How to read the verdict */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="shell py-14">
+        <div className="shell section-y-sm">
           <SectionLabel>How to read its verdict</SectionLabel>
           <p className="mt-4 max-w-[68ch] text-[15px] leading-relaxed text-fg">
             {content.verdict ?? defaultVerdict(bot.name)}
@@ -291,7 +291,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* AI-only: service status + flow diagram */}
       {isAi && (
         <section className="border-b border-border">
-          <div className="shell py-14">
+          <div className="shell section-y-sm">
             <SectionLabel>Python service</SectionLabel>
             <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
               This bot tries to call the FastAPI service first. When it's up,
@@ -352,7 +352,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* FAQ */}
       {(content.faq && content.faq.length > 0) && (
         <section className="border-b border-border bg-bg-soft">
-          <div className="shell py-14">
+          <div className="shell section-y-sm">
             <SectionLabel>FAQ</SectionLabel>
             <div className="mt-6 divide-y divide-border-soft surface-card border border-border bg-surface">
               {content.faq.map((q, i) => (
@@ -374,7 +374,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Related */}
       <section className="border-b border-border">
-        <div className="shell py-14">
+        <div className="shell section-y-sm">
           <SectionLabel>Related bots</SectionLabel>
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
             {related.map((r) => {
@@ -409,7 +409,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* Footer CTAs */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="shell py-14">
+        <div className="shell section-y-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <Link href="/learn" className="font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-bull">

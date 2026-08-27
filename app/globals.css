@@ -1808,6 +1808,9 @@ nav[aria-label="Site pages"] a:focus-visible {
   --z-palette: 160;  /* the command deck, which must beat a dialog;
                         the route-loading layer shares this rung so the
                         pending state covers the veil below it */
+  --z-boot: 145;     /* the /learn boot curtain. It sat at a raw 200, which TIED
+                        .skip-link below and won on DOM order — the one control
+                        that must escape a curtain was the one it covered. */
 }
 
 :root {
@@ -1955,7 +1958,11 @@ nav[aria-label="Site pages"] a:focus-visible {
   }
   .chapter-rail:hover,
   .chapter-rail:focus-within {
-    width: 196px;
+    /* 176px puts the right edge at 12 + 176 = 188px, leaving a 20px gutter to
+       the 208px content edge the consumers reserve. At 196px the open rail met
+       live copy flush. The longest label ("Probability") needs ~130px with its
+       number and progress mark, so the trim costs no text. */
+    width: 176px;
     background: var(--glass-grad, var(--glass-bg));
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);

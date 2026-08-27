@@ -96,7 +96,7 @@ export default async function AdminPage() {
         <CockpitTopBar admin={email} />
 
         {/* Page hero — mission-control headline */}
-        <header className="mx-auto w-full max-w-[1600px] px-5 pt-8 pb-4">
+        <header className="shell shell-wide pt-8 pb-4">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <div className="t-eyebrow text-fg-faint">
@@ -119,12 +119,12 @@ export default async function AdminPage() {
         </header>
 
         {/* KPI strip */}
-        <section className="mx-auto w-full max-w-[1600px] px-5">
+        <section className="shell shell-wide">
           <KpiStrip cells={data.kpis} />
         </section>
 
         {/* Row: system health (8/12) + kill switch (4/12) */}
-        <section className="mx-auto mt-5 grid w-full max-w-[1600px] grid-cols-12 gap-4 px-5">
+        <section className="mt-5 grid shell shell-wide grid-cols-12 gap-4">
           <div className="col-span-12 lg:col-span-8" style={{ minHeight: 320 }}>
             <SystemHealthChart data={data.health} />
           </div>
@@ -134,7 +134,7 @@ export default async function AdminPage() {
         </section>
 
         {/* Row: live event stream (7/12) + top errors (5/12) */}
-        <section className="mx-auto mt-5 grid w-full max-w-[1600px] grid-cols-12 gap-4 px-5">
+        <section className="mt-5 grid shell shell-wide grid-cols-12 gap-4">
           <div className="col-span-12 lg:col-span-7" style={{ height: 460 }}>
             <LiveEventStream initial={data.events} />
           </div>
@@ -144,7 +144,7 @@ export default async function AdminPage() {
         </section>
 
         {/* Row: geo map (8/12) + bot distribution (4/12) */}
-        <section className="mx-auto mt-5 grid w-full max-w-[1600px] grid-cols-12 gap-4 px-5">
+        <section className="mt-5 grid shell shell-wide grid-cols-12 gap-4">
           <div className="col-span-12 lg:col-span-8" style={{ minHeight: 380 }}>
             <UserGeoMap dots={data.geo} />
           </div>
@@ -154,17 +154,17 @@ export default async function AdminPage() {
         </section>
 
         {/* Row: symbol heatmap full width */}
-        <section className="mx-auto mt-5 w-full max-w-[1600px] px-5">
+        <section className="mt-5 shell shell-wide">
           <SymbolHeatmap rows={data.symbols} />
         </section>
 
         {/* Row: recent trades full width */}
-        <section className="mx-auto mt-5 w-full max-w-[1600px] px-5" style={{ height: 380 }}>
+        <section className="mt-5 shell shell-wide" style={{ height: 380 }}>
           <RecentTrades rows={data.trades} />
         </section>
 
         {/* Row: signup timeline (8/12) + pro funnel (4/12) */}
-        <section className="mx-auto mt-5 grid w-full max-w-[1600px] grid-cols-12 gap-4 px-5 pb-16">
+        <section className="mt-5 grid shell shell-wide grid-cols-12 gap-4 pb-16">
           <div className="col-span-12 lg:col-span-8" style={{ minHeight: 280 }}>
             <SignupTimeline rows={data.signups} />
           </div>
@@ -174,7 +174,7 @@ export default async function AdminPage() {
         </section>
 
         {/* Footer rail */}
-        <footer className="mx-auto w-full max-w-[1600px] border-t border-border px-5 py-4 t-chrome text-fg-faint">
+        <footer className="shell shell-wide border-t border-border py-4 t-chrome text-fg-faint">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />

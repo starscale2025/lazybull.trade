@@ -26,7 +26,7 @@ export default function BotsIndex() {
 
       {/* Header */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="shell py-12">
+        <div className="shell section-y-sm">
           <div className="flex items-center gap-2 t-chrome text-fg-faint">
             <Link href="/learn" className="hover:text-fg">Learn</Link>
             <span>/</span>
@@ -49,7 +49,7 @@ export default function BotsIndex() {
           id={g.cat}
           className="border-b border-border scroll-mt-20"
         >
-          <div className="shell py-12">
+          <div className="shell section-y-sm">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <div

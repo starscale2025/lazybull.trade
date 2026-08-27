@@ -195,7 +195,7 @@ export function GetStarted() {
 
       {/* ghost candle chart along the bottom */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[44%] items-end justify-center gap-[5px] px-6 opacity-20 sm:gap-[7px]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[44%] items-end justify-center gap-1.5 px-6 opacity-20 sm:gap-2"
         style={{
           // The bars stand ON the section's bottom edge, so the clip cut every
           // one of them off flat. Dissolve their footing instead — atmosphere

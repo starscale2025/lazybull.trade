@@ -150,7 +150,7 @@ const BTN_KIND = {
 } as const;
 
 const BTN_BASE =
-  "group/btn inline-flex shrink-0 items-center justify-center gap-[9px] whitespace-nowrap " +
+  "group/btn inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap " +
   "rounded-[var(--r-btn)] font-mono uppercase tracking-[0.08em] " +
   "transition-[transform,box-shadow,background-color,border-color,color] duration-350 " +
   "[transition-timing-function:var(--ease-settle)] hover:-translate-y-px";

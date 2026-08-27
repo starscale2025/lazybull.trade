@@ -20,7 +20,7 @@ export default function BrokenVwapLesson() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
-      <main className="mx-auto w-full max-w-[860px] flex-1 px-5 py-14">
+      <main className="mx-auto w-full max-w-[860px] flex-1 px-5 section-y-sm">
         {/* ── the confession ─────────────────────────────────────────── */}
         <header data-gsap="fade-up">
           <div className="flex items-center gap-3 t-eyebrow text-fg-faint">

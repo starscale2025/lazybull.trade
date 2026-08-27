@@ -13,7 +13,7 @@ export default function Page() {
   return (
     <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <TickerBar />
-      <Nav />
+      <Nav wide />
       <QuantPage />
       <Footer />
     </main>

@@ -60,7 +60,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
 
       {/* Top callout — marketing routes only; app routes start at the wordmark. */}
       {marketing && (
-      <div className="relative shell border-b border-border-soft py-12">
+      <div className="relative shell border-b border-border-soft section-y-sm">
         <div className="grid grid-cols-12 items-end gap-x-5 gap-y-8">
           <div className="col-span-12 lg:col-span-7">
             <p className="t-eyebrow text-fg-faint mb-4">

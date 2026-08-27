@@ -38,7 +38,10 @@ const railLink =
  * no-navbar rule exists to prevent. It picks the nav up inside the marketing
  * region instead, once the film has handed off.
  */
-export function Nav() {
+// `wide` matches the bar to a .shell-wide page (1600px). Routes whose content
+// rail is wider than the nav's leave the bar floating 100px inside their own
+// columns, which reads as a misalignment rather than a choice.
+export function Nav({ wide = false }: { wide?: boolean }) {
   return (
     <div
       className="pointer-events-none sticky top-0 z-50 px-3 pt-3"
@@ -50,7 +53,11 @@ export function Nav() {
           (py-2.5 / pr-2.5), so every h-9 control inside renders rounded-full
           at 18px = 28 − 10. Change the bar height or the padding and these
           must move together. */}
-      <nav className="glass-strong specular pointer-events-auto mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-2 rounded-full py-2.5 pl-4 pr-2.5 sm:pl-5">
+      <nav
+        className={`glass-strong specular pointer-events-auto mx-auto flex h-14 ${
+          wide ? "max-w-[1600px]" : "max-w-[1400px]"
+        } items-center justify-between gap-2 rounded-full py-2.5 pl-4 pr-2.5 sm:pl-5`}
+      >
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <span
             aria-hidden

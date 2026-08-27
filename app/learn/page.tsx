@@ -396,7 +396,7 @@ export default function LearnPage() {
           <span>PAPER MODE</span>
         </div>
 
-        <div className="relative shell grid grid-cols-12 gap-6 py-20 lg:py-28 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
+        <div className="relative shell grid grid-cols-12 gap-6 section-y lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
           {/* LEFT — editorial */}
           <div className="col-span-12 lg:col-span-8 flex flex-col gap-10">
             {/* Eyebrow row */}
@@ -1001,7 +1001,7 @@ function Chapter({
         </div>
       </div>
 
-      <div className="relative shell py-24 lg:py-32 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
+      <div className="relative shell section-y lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
         <div className="flex items-center gap-3 t-eyebrow text-fg-faint chapter-rise">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           <span className="text-fg-dim">CHAPTER {num}</span>

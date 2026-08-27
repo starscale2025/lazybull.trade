@@ -13,7 +13,7 @@
 // GEOMETRY CONTRACT — this rail is `position: fixed`, so it is NOT in flow and
 // nothing reflows around it. Its widths live in globals.css (.chapter-rail):
 // it RESTS COLLAPSED at 34px wide at left 0.75rem (right edge 46px), and
-// expands to 196px on :hover / :focus-within (right edge 12 + 196 = 208px).
+// expands to 176px on :hover / :focus-within (right edge 12 + 176 = 188px).
 // The page measure is centred, so without a reserve the expanded rail would
 // sit on top of live copy at any viewport under ~1776px. The column is
 // therefore RESERVED, not hoped for, by the consumers:
@@ -23,9 +23,9 @@
 //     plain 1.25rem gutter once the viewport is wide enough (≥1776px).
 //   · the flush-left SplitDesk sections carry a flat lg:pl-[13rem].
 //   · TickerStrip widens its left edge-fade to 15rem at lg+.
-// 13rem = 208px = the expanded rail's right edge exactly — the fully open
-// rail meets the content edge with zero overlap and zero gutter (a deliberate
-// focus state; at rest the collapsed rail leaves 162px of clear air). If you
+// 13rem = 208px of reserved content-left against a 188px expanded right edge,
+// so the fully open rail keeps a 20px gutter and never sits flush against live
+// copy (at rest the collapsed rail leaves 162px of clear air). If you
 // change `left-3` here or the .chapter-rail widths in globals.css, change
 // those three call sites in the same commit.
 

@@ -9,7 +9,7 @@ export function AnimatedDivider({
   num?: string;
 }) {
   return (
-    <div className="relative overflow-hidden bg-bg py-14">
+    <div className="relative overflow-hidden bg-bg section-y-sm">
       {/* Background grid wash */}
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-15" />
 

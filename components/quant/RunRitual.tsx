@@ -457,7 +457,7 @@ export function RunRitual({
 
             {/* one cell per staged bot, armed in the order they land and
                 coloured by that bot's own verdict */}
-            <div className="grid grid-cols-9 gap-[3px] px-3.5 pb-3.5">
+            <div className="grid grid-cols-9 gap-1 px-3.5 pb-3.5">
               {rows.map((r) => {
                 const v = r.result?.verdict.side;
                 const c = v ? sideColor(v) : null;
