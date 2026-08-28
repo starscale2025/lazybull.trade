@@ -8,6 +8,12 @@ import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ScrollReveal } from "@/components/atmosphere/ScrollReveal";
 
+// The homepage's own canonical. It used to inherit this from the root layout,
+// which meant every OTHER route inherited it too and claimed to be this page.
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 // The homepage is now the scroll-cinema: it tells the whole product story as one
 // animated sequence, then hands off to a single Get Started. It auto-plays on
 // every load for everyone — logged in or not (see CinemaGate). The marketing

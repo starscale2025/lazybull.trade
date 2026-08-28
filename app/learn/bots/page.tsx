@@ -6,6 +6,10 @@ import { BOT_REGISTRY } from "@/lib/quant/bots";
 import { CATEGORY_META, type BotCategory } from "@/lib/quant/types";
 
 export const metadata = {
+  // Per-route canonical. The root layout must not set one: Next inherits
+  // root metadata into every route, so a single canonical there told Google
+  // that every page on the domain was a duplicate of the homepage.
+  alternates: { canonical: "/learn/bots" },
   title: "All bots · Lazybull Learn",
   description: "Encyclopedia of every bot in the Lazybull workbench — math, specialty, FAQ, live demo.",
 };

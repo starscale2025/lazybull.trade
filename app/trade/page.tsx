@@ -17,6 +17,8 @@ import { ChainTable } from "@/components/wedge/ChainTable";
 import { BetBar } from "@/components/wedge/BetSlip";
 import { storySentence, type Bet } from "@/components/wedge/PositionStory";
 import { generateStrategies, probBS, type Strategy } from "@/lib/models";
+import { usePaper } from "@/lib/stores";
+import { RiskWizard } from "@/components/safety/RiskWizard";
 import { eventsFor } from "@/lib/events";
 
 // IV is still synthetic (no free options-IV feed); spot is now live.
@@ -210,7 +212,9 @@ export default function TradePage() {
     return eventsFor(sym.sym, start, end);
   }, [sym, days]);
 
-  // bets / positions
+  // bets / positions. The paper ACCOUNT is the store's; `bets` below is only
+  // this page's richer view of the same trades (thesis band, expiry, story).
+  const openPaperPosition = usePaper((s) => s.open);
   const [bets, setBets] = useState<Bet[]>([]);
   const [confirm, setConfirm] = useState<Bet | null>(null);
   const [recentlyPlaced, setRecentlyPlaced] = useState<Bet | null>(null);
@@ -235,6 +239,30 @@ export default function TradePage() {
   };
   const confirmBet = () => {
     if (!confirm) return;
+    // WRITE THROUGH TO THE REAL PAPER ACCOUNT.
+    //
+    // This page used to keep bets in local state alone, so "✓ BET PLACED"
+    // was a lie: nothing reached the paper store, nothing showed up in
+    // /portfolio, and a reload erased the position. /trade/chain has always
+    // written to the store via the same open() below — two parallel bet
+    // systems, and the primary CTA pointed at the one that forgot.
+    //
+    // The store owns the money; local `bets` stays only as this page's own
+    // view of the position (its story/manage panels read the Bet shape).
+    openPaperPosition({
+      underlying: confirm.symbol,
+      strategy: confirm.strategy.kind,
+      openSpot: confirm.spotAtOpen,
+      cost: confirm.cost,
+      legs: confirm.strategy.legs.map((l, i) => ({
+        id: `${confirm.id}-leg-${i}`,
+        type: l.type,
+        side: l.side,
+        strike: l.strike,
+        qty: l.qty,
+        premium: l.premium,
+      })),
+    });
     setBets((cur) => [confirm, ...cur]);
     setRecentlyPlaced(confirm);
     setConfirm(null);
@@ -661,6 +689,13 @@ export default function TradePage() {
 
       {/* dead mount removed — no `onAsk`, so it rendered a button that did
           nothing. /trade/chain is the wired one. */}
+
+      {/* The first-visit risk briefing. It was mounted ONLY on /trade/chain,
+          so the page both CTAs actually point at — "get started" and "open
+          the chain" — let you place your first trade with no briefing at
+          all. It self-gates on the shared `wizardSeen` flag, so mounting it
+          here shows it once across the site, never twice. */}
+      <RiskWizard />
     </main>
   );
 }

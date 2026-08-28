@@ -27,6 +27,10 @@ import type { PredictConfig } from "@/components/learn/Predict";
 import { LivingPage } from "@/components/learn/LivingPage";
 
 export const metadata = {
+  // Per-route canonical. The root layout must not set one: Next inherits
+  // root metadata into every route, so a single canonical there told Google
+  // that every page on the domain was a duplicate of the homepage.
+  alternates: { canonical: "/learn" },
   title: "Learn · Lazybull",
   description:
     "Trading, visualized. 14 chapters, 8 live demos, every chart responds to you. The most ambitious quant primer on the internet.",

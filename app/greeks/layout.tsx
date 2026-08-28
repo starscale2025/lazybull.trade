@@ -5,6 +5,10 @@ import type { Metadata } from "next";
 // layout's generic title and description. A route layout is the supported way
 // to attach per-page metadata to a client page.
 export const metadata: Metadata = {
+  // Per-route canonical. The root layout must not set one: Next inherits
+  // root metadata into every route, so a single canonical there told Google
+  // that every page on the domain was a duplicate of the homepage.
+  alternates: { canonical: "/greeks" },
   title: "The Greek Surface · Lab — lazybull",
   description:
     "A live Black-Scholes surface over strike and days to expiry. Drag the handle and watch all five Greeks recompute in real time. Educational — not advice.",

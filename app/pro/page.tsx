@@ -812,7 +812,10 @@ export default function ProPage() {
   }, [symbol, layout]);
 
   return (
-    <div ref={wrapperRef} className="tap-floor pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
+    // <main>, not <div>: the root layout stopped claiming the main landmark
+    // (it was nesting one inside every page's own), and /pro was one of only
+    // two routes that never declared its own — leaving it with none at all.
+    <main ref={wrapperRef} className="tap-floor pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
       {/* Site navigation — same bar as every other page, so /pro is not a dead
           end. The workspace strip below keeps the pro-only controls. */}
       <Nav />
@@ -1071,7 +1074,7 @@ export default function ProPage() {
         indicators={indicators}
         actions={voiceActions}
       />
-    </div>
+    </main>
   );
 }
 

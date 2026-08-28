@@ -21,6 +21,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${bot.name} · Lazybull Learn`,
     description: bot.tagline,
+    // Without this every one of the 27 bot pages inherited the root
+    // canonical and told Google it was a copy of the homepage.
+    alternates: { canonical: `/learn/bots/${bot.id}` },
   };
 }
 

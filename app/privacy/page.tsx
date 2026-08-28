@@ -4,6 +4,10 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
+  // Per-route canonical. The root layout must not set one: Next inherits
+  // root metadata into every route, so a single canonical there told Google
+  // that every page on the domain was a duplicate of the homepage.
+  alternates: { canonical: "/privacy" },
   title: "Privacy — lazybull",
   description:
     "The privacy ledger: exactly what lazybull collects (a Google profile, a paper account, product events), where the voice co-pilot sends what you say, and what it never touches — money, cards, real trades.",

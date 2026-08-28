@@ -3,6 +3,10 @@ import type { Metadata } from "next";
 // The page is a client component, so its metadata lives here — same pattern
 // as /pro (a "use client" file cannot export `metadata`).
 export const metadata: Metadata = {
+  // Per-route canonical. The root layout must not set one: Next inherits
+  // root metadata into every route, so a single canonical there told Google
+  // that every page on the domain was a duplicate of the homepage.
+  alternates: { canonical: "/portfolio" },
   title: "Portfolio — lazybull",
   description:
     "Your paper-trading account in one place: equity, open positions, working orders, deployed totals, trade history and the cash ledger. Paper only — never advice.",

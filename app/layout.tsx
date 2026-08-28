@@ -72,7 +72,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "LAZYBULL // Options You Can See",
   description: DESCRIPTION,
-  alternates: { canonical: "/" },
+  // NO `alternates` here on purpose. Root metadata is inherited by EVERY
+  // route, so the `canonical: "/"` that used to sit on this line made
+  // /trade, /learn, /pricing and all 27 bot pages declare themselves
+  // duplicates of the homepage — the entire site deindexed by one line.
+  // Each route now sets its own; the homepage sets its own in app/page.tsx.
   // There was NO openGraph and NO twitter block at all, so every share of this
   // site — Product Hunt, Twitter, Slack, the directory submissions the strategy
   // depends on — rendered as a bare text link with no image card.
@@ -110,13 +114,16 @@ export default function RootLayout({
           skip to content
         </a>
         <SessionProvider>
-          {/* display:contents — a real <main> landmark and skip target with
-              ZERO layout effect on the flex chains inside. */}
+          {/* The skip-link target, and NOTHING else. This used to be a <main>,
+              but every page renders its own <main> as well, so every document
+              shipped two nested main landmarks and screen-reader landmark
+              navigation had to guess which one held the content.
+              display:contents keeps it free of any layout effect. */}
           <ThemeProvider>
             <DockProvider>
-              <main id="main" className="contents">
+              <div id="main" className="contents">
                 {children}
-              </main>
+              </div>
             </DockProvider>
           </ThemeProvider>
           {/* Cross-device paper-account replication — needs the session. */}

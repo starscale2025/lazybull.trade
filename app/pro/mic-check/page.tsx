@@ -152,7 +152,7 @@ export default function MicCheckPage() {
   useEffect(() => () => { try { recRef.current?.abort(); } catch {}; if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
   return (
-    <div className="min-h-screen bg-bg p-6 font-mono text-fg">
+    <main className="min-h-screen bg-bg p-6 font-mono text-fg">
       <h1 className="mb-1 font-display text-2xl tracking-tightest">
         lazybull<span className="text-bull">.mic-check</span>
       </h1>
@@ -210,6 +210,6 @@ export default function MicCheckPage() {
           ))}
         </div>
       </section>
-    </div>
+    </main>
   );
 }

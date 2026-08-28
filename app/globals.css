@@ -141,6 +141,19 @@
   * {
     border-color: var(--border);
   }
+
+  /* Tailwind v4's preflight dropped `cursor: pointer` from <button>, and
+     nothing put it back — so every control on the site rendered a default
+     arrow, including the primary trade CTA. On a product whose claim is
+     "options you can see", the cursor could not see what was clickable.
+     :disabled keeps its not-allowed cursor from the utility that sets it. */
+  button:not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]),
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]) {
+    cursor: pointer;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
