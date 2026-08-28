@@ -30,38 +30,63 @@ import { SCROLL_LENGTH_VH } from "./cinema-metrics";
 // swaps its CONTENTS. The reserved box is `hidden md:block`, which matches the
 // (max-width: 767px) check below exactly — phones reserve nothing, because
 // phones get nothing. Nothing moves on either one.
+// "pending" until a REAL viewport width exists to decide from. Phones get their
+// OWN film — a 2D canvas cut for portrait, zero three.js. See MobileCinema for
+// why it is a different film rather than a smaller one.
+type Mode = "pending" | "film" | "mobile" | "still";
+
 export function CinemaGate() {
-  const [play, setPlay] = useState(false);
-  // Phones get their OWN film — a 2D canvas cut for portrait, zero three.js.
-  // See MobileCinema for why it is a different film rather than a smaller one.
-  const [phone, setPhone] = useState(false);
-  // RESIZE-AWARE, not latched: the phone branch used to evaluate the media
-  // query once at mount, so a window narrow at load then widened kept
-  // MobileCinema mounted — whose md:hidden collapses to height 0 at desktop
-  // width, and the whole intro vanished. Widening now swaps in the desktop
-  // STILL (never the full film mid-session); narrowing back restores mobile.
-  const [wide, setWide] = useState(false);
+  const [mode, setMode] = useState<Mode>("pending");
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 767px)");
-    if (mql.matches) {
-      setPhone(true);
-      const onChange = (e: MediaQueryListEvent) => setWide(!e.matches);
-      mql.addEventListener("change", onChange);
-      return () => mql.removeEventListener("change", onChange);
-    }
-    // ⌘K / "watch the film" set this to force a replay; we now auto-play on every
-    // load anyway, so just clear it so it can't linger.
-    try {
-      sessionStorage.removeItem("lb-cinema-replay");
-    } catch {
-      /* storage blocked — irrelevant, we play regardless */
-    }
-    setPlay(true); // desktop: the cinema plays on every load
+
+    const decide = () => {
+      // A 0px viewport is NOT a phone — it is a window that has not laid out
+      // yet (a background tab, an embedded frame, a window being restored).
+      // Deciding from zero latched the intro into MobileCinema, whose own
+      // md:hidden then collapsed it to height 0 the instant a real width
+      // arrived: no film, no still, nothing at all. Wait for a width rather
+      // than guess from the absence of one.
+      if (!window.innerWidth) return;
+      const phone = mql.matches;
+
+      setMode((prev) => {
+        if (prev === "film") return "film"; // once it is playing, never yank it
+        if (prev === "pending") {
+          if (!phone) {
+            // ⌘K / "watch the film" sets this to force a replay; we auto-play on
+            // every load anyway, so just clear it so it cannot linger.
+            try {
+              sessionStorage.removeItem("lb-cinema-replay");
+            } catch {
+              /* storage blocked — irrelevant, we play regardless */
+            }
+          }
+          return phone ? "mobile" : "film";
+        }
+        // Already committed to the phone branch. MobileCinema cannot survive a
+        // widen, so hand off to the desktop STILL rather than mount 13,500px of
+        // film mid-session and shove the page down by all of it.
+        return phone ? "mobile" : "still";
+      });
+    };
+
+    decide();
+    mql.addEventListener("change", decide);
+    // resize as well as the media query: `change` alone never fires for the
+    // case that actually lost the film — first layout arriving after mount, so
+    // width goes 0 -> real without ever crossing the 767px boundary.
+    window.addEventListener("resize", decide);
+    return () => {
+      mql.removeEventListener("change", decide);
+      window.removeEventListener("resize", decide);
+    };
   }, []);
 
-  if (play) return <ScrollCinema />;
-  if (phone) return wide ? <CinemaStill /> : <MobileCinema />;
+  if (mode === "film") return <ScrollCinema />;
+  if (mode === "mobile") return <MobileCinema />;
+  if (mode === "still") return <CinemaStill />;
 
   // The reservation. Same height and same negative hand-off overlap as the real
   // section in ScrollCinema — both divided by --ui-zoom for the reason

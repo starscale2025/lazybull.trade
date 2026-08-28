@@ -113,6 +113,13 @@ export function HeroPayoff({
             strokeLinecap="round"
             className="hero-payoff-line"
             data-on={i === activeIndex ? "1" : "0"}
+            // The opacity is ALSO inline, not only in the stylesheet. All four
+            // shapes are stacked, so if the page paints before globals.css
+            // arrives the class does nothing and every curve renders at full
+            // strength — four crossing lines at once, which reads as a broken
+            // chart rather than a loading one. Inline wins that race; the class
+            // still owns the transition between states.
+            style={{ opacity: i === activeIndex ? 0.95 : 0 }}
           />
         ))}
       </svg>
