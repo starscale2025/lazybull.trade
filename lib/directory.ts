@@ -13,7 +13,13 @@
 // appears only in the landing index, so it adds no conflicting number.
 export const SITE_DIRECTORY = [
   { n: "01", l: "Learn", href: "/learn", d: "zero to your first spread, in plain English" },
-  { n: "02", l: "Visual chain", href: "/trade", d: "drag across strikes — the payoff draws itself" },
+  // Named "Visual chain" until a review pointed out that this entry opens
+  // /trade, whose own <title> is "Strategy Builder" — while the actual visual
+  // chain lives at /trade/chain and is not in this list at all. The nav was
+  // lying about its own front door. A destination is called what its page is
+  // called; /trade/chain stays reachable from inside /trade rather than adding
+  // an eighth rail link to a bar whose overflow was hard-won.
+  { n: "02", l: "Strategy builder", href: "/trade", d: "draw your forecast — the strategies that fit it draw themselves" },
   { n: "03", l: "Pro charts", href: "/pro", d: "the terminal: drawing tools, replay, paper trading" },
   { n: "04", l: "Quant", href: "/quant", d: "27 bots on live or seed tape, verdicts in English" },
   { n: "05", l: "Greeks", href: "/greeks", d: "every Greek as a picture, an AI teacher on top" },

@@ -6,7 +6,14 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
-import { cinemaAudioFrame, cinemaAudioEnabled, enableCinemaAudio, disableCinemaAudio } from "@/lib/cinema-audio";
+import {
+  cinemaAudioFrame,
+  cinemaAudioEnabled,
+  cinemaImpact,
+  enableCinemaAudio,
+  disableCinemaAudio,
+  stopCinemaAudio,
+} from "@/lib/cinema-audio";
 import { CinemaRail, type CinemaRailHandle } from "./CinemaRail";
 import { CinemaStill } from "./CinemaStill";
 // Shared with CinemaGate, which reserves exactly this height on the first paint
@@ -148,6 +155,77 @@ function injectMono(doc: Document): string | null {
   return `${family}, ui-monospace, SFMono-Regular, Menlo, monospace`;
 }
 
+// ── THE FILM'S MEMORY ────────────────────────────────────────────────────────
+//
+// Three keys, and each one now has a reader. They used to be written with a
+// comment claiming "CinemaGate reads this" next to them; it did not, and a grep
+// for either name found the two writes below and nothing else. So the film
+// re-ran in full on every single load, including the reload you did because you
+// were eight thousand pixels into it.
+//
+//   lb-cinema-seen        localStorage   played through, or skipped, at least
+//                                        once on this device → CinemaGate stops
+//                                        auto-playing and shows the still.
+//   lb-cinema-autoplayed  sessionStorage the film has already RUN in this tab →
+//                                        same, but only for this tab, so a new
+//                                        session gets the film back.
+//   lb-cinema-resume      sessionStorage where in the film you were. Read only
+//                                        below, and only after a reload.
+//   lb-cinema-replay      sessionStorage you asked for the film (⌘K, or
+//                                        GetStarted's "watch the film"). Read by
+//                                        CinemaGate; CONSUMED here, the moment
+//                                        the film actually starts.
+//
+// The consuming lives on this side on purpose. CinemaGate's decision is now a
+// pure read, which is what lets it re-run freely — on a resize, on React's
+// double-invoked effects in dev, and on a client-side navigation back to "/".
+// When the gate consumed the flag itself it needed a module-level memo to
+// survive those, and that memo then re-mounted the whole film on the trip back
+// from /learn, which is the toll booth all of this exists to remove.
+const SEEN_KEY = "lb-cinema-seen";
+const AUTOPLAYED_KEY = "lb-cinema-autoplayed";
+const RESUME_KEY = "lb-cinema-resume";
+const REPLAY_KEY = "lb-cinema-replay";
+
+/** Played through or skipped — never auto-play at them again. */
+function markCinemaSeen() {
+  try {
+    localStorage.setItem(SEEN_KEY, "1");
+    sessionStorage.setItem(AUTOPLAYED_KEY, "1");
+    sessionStorage.removeItem(RESUME_KEY); // the film is over; there is no place to return to
+    sessionStorage.removeItem(REPLAY_KEY); // and any request for it has been met
+  } catch {
+    /* storage blocked (private mode, third-party frame) — the film just replays */
+  }
+}
+
+/**
+ * Where in the film to come back to, or null to start at the top.
+ *
+ * ONLY A RELOAD RESUMES. A fresh navigation to "/" is someone arriving, and
+ * dropping an arrival into act six because they once left a tab open mid-film
+ * would be stranger than replaying it. `back_forward` counts too: that is the
+ * back button landing on a page it already had.
+ */
+export function cinemaResumeAt(): number | null {
+  try {
+    // Someone who asked for the film wants the film, not the back half of it.
+    if (sessionStorage.getItem(REPLAY_KEY) === "1") return null;
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav?.type !== "reload" && nav?.type !== "back_forward") return null;
+    const raw = sessionStorage.getItem(RESUME_KEY);
+    if (raw === null) return null;
+    const p = Number(raw);
+    // Below 0.02 there is nothing worth restoring; above 0.97 the film is
+    // already handing off, and resuming there would drop you into the seam.
+    return Number.isFinite(p) && p > 0.02 && p < 0.97 ? p : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ScrollCinema() {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -228,6 +306,10 @@ export function ScrollCinema() {
       doSkip();
       return;
     }
+    // The glass gets a sound if sound is on (it no-ops otherwise). The collapse
+    // stops the audio ~180ms later, so what you hear is a crack and then the
+    // room being gone — which is what the picture is doing.
+    cinemaImpact(0.8);
     setShatter(true);
     window.setTimeout(doSkip, 180); // glass cracks, then the page is simply there
     window.setTimeout(() => setShatter(false), 700);
@@ -257,9 +339,14 @@ export function ScrollCinema() {
     const iframe = frameRef.current;
     if (!section || !iframe) return;
 
-    // Start every load at the top so the intro plays from the beginning (and a
-    // reload while past the cinema doesn't restore into a collapsed layout).
+    // We restore the scroll ourselves (see resumeAt below), so the browser must
+    // not also try: its restore lands before the film has a ScrollTrigger and
+    // fights the preloader's lock.
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    // Where a reload left off, resolved ONCE. Read here rather than at reveal
+    // because the preloader is about to scroll to 0, which is the position we
+    // would otherwise be reading back.
+    const resumeAt = cinemaResumeAt();
 
     // Lock scroll while the cinema preloads so the scroll animation only begins
     // once everything is ready (restored on reveal / on cleanup).
@@ -309,6 +396,13 @@ export function ScrollCinema() {
     const collapse = () => {
       if (collapsed || disposed) return;
       collapsed = true;
+      // SILENCE FIRST. The next three lines slam progress to 1, and the audio
+      // pass rides progress — so a skip from act five would cross the bull's
+      // impact beat on the way out and detonate it into a black frame. Silence
+      // past the last beat is the designed ending; this is also the only place
+      // that gives the AudioContext back, because the component stays MOUNTED
+      // behind display:none and nothing else would.
+      stopCinemaAudio();
       progress = 1;
       renderScene();
       applyOverlays();
@@ -333,12 +427,7 @@ export function ScrollCinema() {
       // Played through (or skipped) once — never replay the toll booth. The
       // no-navbar IA sends every logo click back to "/", so without this flag
       // anonymous users re-entered the scroll-locked preloader every time.
-      try {
-        localStorage.setItem("lb-cinema-seen", "1");
-        // Consume the per-session auto-play so a same-session reload / nav back to
-        // "/" doesn't replay the intro (CinemaGate reads this). A new session replays.
-        sessionStorage.setItem("lb-cinema-autoplayed", "1");
-      } catch {}
+      markCinemaSeen();
       requestAnimationFrame(() => {
         keepHeroInPlace();
         rootStyle.overflowAnchor = prevAnchor;
@@ -532,6 +621,11 @@ export function ScrollCinema() {
       ((navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
     const EASE_RATE = LOW_END ? 3.0 : 5.0; // lower = slower/glidier (≈0.05 / 0.08 per 60fps frame)
     let lastNow = -1;
+    // Resume marker bookkeeping. Twice a second at most, and only when the film
+    // has actually moved — sessionStorage is synchronous, and this loop sits
+    // next to three WebGL contexts.
+    let lastSave = 0;
+    let savedP = -1;
     const tick = (ts: number) => {
       if (disposed || collapsed) return;
       const now = ts / 1000;
@@ -571,6 +665,18 @@ export function ScrollCinema() {
           }
         } else {
           el.style.opacity = "0";
+        }
+      }
+      // Remember the place. Written from the RAW scroll position, not the
+      // smoothed one, so a reload lands where the reader actually was rather
+      // than where the scrub had caught up to.
+      if (now - lastSave > 0.5 && Math.abs(targetProgress - savedP) > 0.002) {
+        lastSave = now;
+        savedP = targetProgress;
+        try {
+          sessionStorage.setItem(RESUME_KEY, targetProgress.toFixed(4));
+        } catch {
+          /* storage blocked — a reload simply starts the film again */
         }
       }
       raf = requestAnimationFrame(tick);
@@ -693,7 +799,38 @@ export function ScrollCinema() {
       window.setTimeout(() => {
         if (disposed) return;
         rootStyle.overflow = prevOverflow; // unlock scroll
+        // The film has actually started in this tab. CinemaGate reads this — it
+        // is what stops a same-session return to "/" from replaying the intro.
+        // And a replay request is met the moment the film runs, so consume it
+        // here: leaving it set would replay on every later visit in this tab.
+        try {
+          sessionStorage.setItem(AUTOPLAYED_KEY, "1");
+          sessionStorage.removeItem(REPLAY_KEY);
+        } catch {}
+        // RESUME. A reload used to snap to 0 and start again from the boot
+        // screen, i.e. charge you 13,500px to get back to where you already
+        // were. Put the scroll back BEFORE creating the trigger so the trigger
+        // is born at the right progress, then snap the smoothed value onto it —
+        // otherwise the film scrubs from act one to act six in one visible
+        // lurch while the reader watches.
+        if (resumeAt !== null) {
+          const range = section.offsetHeight - window.innerHeight;
+          if (range > 0) window.scrollTo(0, Math.round(section.offsetTop + range * resumeAt));
+        }
         createScrollTrigger(); // enable the scroll animation
+        if (resumeAt !== null) {
+          // Take the number we just scrolled TO, not ScrollTrigger's read of it.
+          // The trigger caches scroll positions and reports the pre-restore
+          // value on the frame it is created — measured 0.722 for a restore to
+          // 0.800, i.e. the film opened a whole act early. The trigger's start
+          // is "top top" and its end "bottom bottom", so resumeAt IS its
+          // progress at this scroll; update() puts its own bookkeeping straight.
+          ScrollTrigger.update();
+          targetProgress = resumeAt;
+          progress = resumeAt;
+          renderScene();
+          applyOverlays();
+        }
         setReveal(true); // fade the loading screen out
         window.setTimeout(() => { if (!disposed) setLoading(false); }, 550);
       }, 420);
@@ -706,12 +843,8 @@ export function ScrollCinema() {
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
       rootStyle.overflow = prevOverflow;
-      try {
-        localStorage.setItem("lb-cinema-seen", "1");
-        // Consume the per-session auto-play so a same-session reload / nav back to
-        // "/" doesn't replay the intro (CinemaGate reads this). A new session replays.
-        sessionStorage.setItem("lb-cinema-autoplayed", "1");
-      } catch {}
+      markCinemaSeen(); // a chosen exit counts as seen — do not re-gate them
+      stopCinemaAudio();
       setMode("static");
     };
     Promise.all([step(shotsLoaded), extras, minTime]).then(reveal).catch(() => {
@@ -754,6 +887,11 @@ export function ScrollCinema() {
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("pointerdown", onDown);
       st?.kill();
+      // The film owned an AudioContext and nothing gave it back. Unmounting the
+      // cinema left oscillators running on the audio thread and one of the
+      // browser's small per-document context slots held for the life of the
+      // page — and in dev, one more on every hot reload.
+      stopCinemaAudio();
     };
   }, []);
 

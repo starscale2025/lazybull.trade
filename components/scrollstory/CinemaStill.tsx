@@ -101,12 +101,19 @@ const END = REALITY[REALITY.length - 1];
 const EARLY_X = SPLIT + (EARLY / BARS) * SPAN;
 
 /** The acts, in order. `lede` marks the two that carry the climax. */
+// THE THIRD COPY OF THE FILM'S STORY. lib/cinema.ts drives the desktop film,
+// MobileCinema carries the phone's, and this static index is what a
+// reduced-motion visitor — the person most likely to actually READ it — gets
+// instead. It was the last place still shipping the spec sheet, including a
+// "historically 65–77% right" win rate no reader can check, on a financial
+// education product. Three surfaces, one story: change a beat and change it in
+// all three.
 const INDEX = [
-  { n: "01", h: "One terminal. Every tool.", s: "27 bots · 13 models · 8 live demos" },
-  { n: "02", h: "0.4ms pricing engine", s: "$5K paper — $0 real dollars at risk, ever" },
-  { n: "03", h: "It reads the regime first.", s: "Hurst says trend, reversion or noise — before a single trade." },
-  { n: "04", h: "Your worst case is a number you chose.", s: "Defined-risk · daily kill switch · paper-only, always." },
-  { n: "05", h: "12 bots. One verdict.", s: "ULTRA when they agree — historically 65–77% right." },
+  { n: "01", h: "A desk that shows its work.", s: "Every number here can be opened." },
+  { n: "02", h: "Nothing here costs you money.", s: "Paper only — so you can afford to be wrong on purpose." },
+  { n: "03", h: "Markets have moods.", s: "Trending, reverting, or noise — named before you commit to anything." },
+  { n: "04", h: "Your worst case is a number you chose.", s: "Not a number you find out afterwards." },
+  { n: "05", h: "They vote. They disagree.", s: "You see the split, not just the answer." },
   { n: "06", h: "Learn it. Backtest it.", s: "Only then trade it." },
 ];
 

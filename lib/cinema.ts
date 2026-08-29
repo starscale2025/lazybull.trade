@@ -28,8 +28,14 @@ export const ACTS: Record<Act, { from: number; to: number }> = {
   // by the longer scroll section (SCROLL_LENGTH_VH), so their felt pace barely
   // changes. Contiguous, still covers [0,1].
   candle: { from: 0.32, to: 0.59 },
-  safety: { from: 0.59, to: 0.665 },
-  consensus: { from: 0.665, to: 0.73 },
+  // safety widened 0.075 -> 0.10 at consensus's expense. The single line that
+  // speaks to the viewer ("your worst case is a number you chose") had less
+  // scroll than the film's exit transition. The width comes ONLY from its
+  // adjacent neighbour: bull/matrix and the fragile end handoff near 1.0 stay
+  // exactly fixed, and safety still opens after the ice-candle fade tail
+  // (CANDLE3D.out1 = 0.605), so no scene overlaps another.
+  safety: { from: 0.59, to: 0.69 },
+  consensus: { from: 0.69, to: 0.73 },
   bull: { from: 0.73, to: 0.84 },
   matrix: { from: 0.84, to: 1.0 },
 };
@@ -52,19 +58,42 @@ export type CopyBeat = {
 
 // DOM overlays synced to scroll progress (crisp text, not baked into the scene).
 export const COPY_BEATS: CopyBeat[] = [
+  // THE COPY IS THE VIEWER'S STORY, NOT THE PRODUCT'S SPEC SHEET.
+  //
+  // Eight of these ten beats used to be the product talking about itself —
+  // "27 bots · 13 models · 8 live demos", "0.4ms pricing engine", "It saw the
+  // crash coming", "historically 65–77% right". Exactly one line spoke to the
+  // person reading it, and it was the best line in the film. A design review
+  // put it plainly: the rail already names a real story (boot, the desk, the
+  // dive, regime, the crash, your worst case, the vote, conviction, welcome
+  // in) and the copy refused to tell it.
+  //
+  // Three rules now hold here:
+  //   1. No specs. Counts and latencies belong on the pages that prove them,
+  //      not in a film — and the counts contradicted each other anyway
+  //      (27 bots / 13 models / a 12-bot vote, all on one scroll).
+  //   2. No oracle. "It saw the crash coming" claims foresight about a crash
+  //      this very scene generates, on a paper-only teaching product, three
+  //      hundred pixels above a footer disclaiming exactly that. The crash is
+  //      a lesson you get to watch, not a prophecy we sell.
+  //   3. No unverifiable win rate. "65–77% right" is a number nobody reading
+  //      it can check, on a financial-education site. It is gone.
   { id: "boot", from: 0.006, to: 0.045, heading: "lazybull.trade", sub: "options — without the fog" },
-  { id: "assembly", from: 0.075, to: 0.145, heading: "One terminal. Every tool.", sub: "27 bots · 13 models · 8 live demos" },
-  { id: "dive", from: 0.165, to: 0.235, heading: "0.4ms pricing engine", sub: "$5K paper — $0 real dollars at risk, ever" },
-  { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "It reads the regime first.", sub: "Hurst says trend, reversion or noise — before a single trade." },
-  { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "It saw the crash coming.", sub: "AI Direction Ensemble · ULTRA conviction" },
+  { id: "assembly", from: 0.075, to: 0.145, heading: "A desk that shows its work.", sub: "Every number here can be opened." },
+  { id: "dive", from: 0.165, to: 0.235, heading: "Nothing here costs you money.", sub: "Paper only — so you can afford to be wrong on purpose." },
+  { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "Markets have moods.", sub: "Trending, reverting, or noise — named before you commit to anything." },
+  { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "Then the floor goes.", sub: "This is the part nobody rehearses." },
   // sits over the crash landing + pull-back, which end at CANDLE_BUILD_END —
   // it must be gone before the lab beat (CANDLE_LAB) takes the stage.
-  { id: "candle-vindication", from: 0.455, to: 0.5, pos: "top", heading: "Flagged DOWN — 12 bars early.", sub: "Reality fell into the cone it drew." },
+  { id: "candle-vindication", from: 0.455, to: 0.5, pos: "top", heading: "You get to watch it here first.", sub: "Better here than with your money inside it." },
   // safety/consensus shifted later with their acts (the lab tail widened). safety
   // opens after the ice-candle layer's fade tail (CANDLE3D.out1 = 0.605) so the
   // quant-lab panel is gone before this copy takes the stage.
-  { id: "safety", from: 0.61, to: 0.66, pos: "top", heading: "Your worst case is a number you chose.", sub: "Defined-risk · daily kill switch · paper-only, always." },
-  { id: "consensus", from: 0.675, to: 0.725, pos: "top", heading: "12 bots. One verdict.", sub: "ULTRA when they agree — historically 65–77% right." },
+  // The one line in the film that always spoke to the reader. It used to get
+  // less scroll than the exit transition; the safety act is wider now and the
+  // sub-line no longer reverts to a feature triad under it.
+  { id: "safety", from: 0.61, to: 0.685, pos: "top", heading: "Your worst case is a number you chose.", sub: "Not a number you find out afterwards." },
+  { id: "consensus", from: 0.697, to: 0.727, pos: "top", heading: "They vote. They disagree.", sub: "You see the split, not just the answer." },
   { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Only then trade it." },
   { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
 ];

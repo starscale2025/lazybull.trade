@@ -1,15 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ScrollCinema } from "./ScrollCinema";
+import { ScrollCinema, cinemaResumeAt } from "./ScrollCinema";
 import { MobileCinema } from "./MobileCinema";
 import { CinemaStill } from "./CinemaStill";
 import { SCROLL_LENGTH_VH } from "./cinema-metrics";
 
-// The intro film AUTO-PLAYS on EVERY load, for everyone — logged in or not. It's
-// the first thing you see each time you land on (or reload) the homepage, then
-// hands off to the hero. Nobody is trapped: the cinema carries an always-visible
+// The intro film auto-plays the FIRST time you land on the homepage, then hands
+// off to the hero. Nobody is trapped: the cinema carries an always-visible
 // "Skip intro" button, and scroll unlocks the moment the scene is ready.
+//
+// IT USED TO PLAY ON EVERY LOAD, FOREVER
+// ──────────────────────────────────────
+// ScrollCinema wrote `lb-cinema-seen` and `lb-cinema-autoplayed` on the way out,
+// each with a comment saying CinemaGate read them. Neither name appeared
+// anywhere else in the repo. So the flags were writes into a void and the film
+// was a toll booth: the no-navbar IA sends every logo click back to "/", which
+// meant a scroll-locked preloader and 13,500px of intro between a returning
+// reader and the product, every single time.
+//
+// Now the flags decide. A reader who has been through the film once gets
+// CinemaStill instead — the film's decisive frame plus its index, which is the
+// same artifact reduced-motion and no-WebGL readers already get, and which is
+// the point of the film compressed into one screen. GetStarted's "▶ watch the
+// film" and ⌘K's "Replay the landing film" both set `lb-cinema-replay`, and that
+// beats everything: an asked-for film always plays, from the top.
+//
+// A reload is the exception that is NOT a return visit — see cinemaResumeAt:
+// reloading at act six means going back to act six, not being told you have
+// already seen it.
 //
 // · phones (<768px) NEVER mount it: the boot act's laptop wireframe cannot
 //   compose at 390px — the audit's mobile first impression was a black void with
@@ -35,11 +54,42 @@ import { SCROLL_LENGTH_VH } from "./cinema-metrics";
 // why it is a different film rather than a smaller one.
 type Mode = "pending" | "film" | "mobile" | "still";
 
+/**
+ * Film or still, at desktop width. A PURE READ — no writes, no memo.
+ *
+ * That matters more than it looks. `lb-cinema-replay` does have to be consumed
+ * or the film would replay on every later load in the tab, but consuming it
+ * here would make this a side effect, and this function runs again on every
+ * resize, on React's double-invoked effects in dev, and on a client-side
+ * navigation back to "/". Guarding that with a memo just moved the bug: the memo
+ * outlives a route change, so returning from /learn re-mounted the film. So
+ * ScrollCinema clears the flag instead, when the film actually starts, and this
+ * stays a question rather than an action.
+ */
+function decideDesktop(): "film" | "still" {
+  let replay = false;
+  let seen = false;
+  try {
+    replay = sessionStorage.getItem("lb-cinema-replay") === "1";
+    seen =
+      localStorage.getItem("lb-cinema-seen") === "1" ||
+      sessionStorage.getItem("lb-cinema-autoplayed") === "1";
+  } catch {
+    /* storage blocked (private mode) — treat it as a first visit, play the film */
+  }
+  // A reload mid-film outranks "seen": the reader is not returning, they are
+  // still here. ScrollCinema puts the scroll back where it was.
+  return replay || !seen || cinemaResumeAt() !== null ? "film" : "still";
+}
+
 export function CinemaGate() {
   const [mode, setMode] = useState<Mode>("pending");
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 767px)");
+    // Mirrors `mode` inside the effect so the decision above can happen out
+    // here, where side effects are allowed, instead of inside the updater.
+    let committed: Mode = "pending";
 
     const decide = () => {
       // A 0px viewport is NOT a phone — it is a window that has not laid out
@@ -51,25 +101,21 @@ export function CinemaGate() {
       if (!window.innerWidth) return;
       const phone = mql.matches;
 
-      setMode((prev) => {
-        if (prev === "film") return "film"; // once it is playing, never yank it
-        if (prev === "pending") {
-          if (!phone) {
-            // ⌘K / "watch the film" sets this to force a replay; we auto-play on
-            // every load anyway, so just clear it so it cannot linger.
-            try {
-              sessionStorage.removeItem("lb-cinema-replay");
-            } catch {
-              /* storage blocked — irrelevant, we play regardless */
-            }
-          }
-          return phone ? "mobile" : "film";
-        }
+      let next: Mode;
+      if (committed === "film") {
+        next = "film"; // once it is playing, never yank it
+      } else if (committed === "pending") {
+        // Phones never reach the desktop branch, so a replay asked for at phone
+        // width survives untouched until a desktop width reads it.
+        next = phone ? "mobile" : decideDesktop();
+      } else {
         // Already committed to the phone branch. MobileCinema cannot survive a
         // widen, so hand off to the desktop STILL rather than mount 13,500px of
         // film mid-session and shove the page down by all of it.
-        return phone ? "mobile" : "still";
-      });
+        next = phone ? "mobile" : "still";
+      }
+      committed = next;
+      setMode(next);
     };
 
     decide();

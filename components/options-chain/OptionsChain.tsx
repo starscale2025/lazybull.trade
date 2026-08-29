@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { priceChain, type ChainCell } from "@/lib/pricing";
 import { useStrategy } from "@/lib/stores";
 import { GreekChip, GreekTrigger } from "@/components/ai-teacher/SpeechBubble";
@@ -97,7 +97,11 @@ export function OptionsChain({ underlying, spot }: Props) {
   //   tap                 → toggle leg with the ARMED side
   //   drag across cells   → multi-select with the armed side (elementFromPoint
   //                         hit-testing; the old mouseover wiring was a corpse
-  //                         on touch)
+  //                         on touch). On touch this holds only while the chain
+  //                         fits its column — once it overflows, the browser
+  //                         gets the horizontal drag so the puts stay reachable
+  //                         (see cellTouchAction below); tapping still builds
+  //                         every leg.
   //   drag DOWN on a cell → SHORT that leg — you literally pull the strike
   //                         under the line (fine pointers; touch scrolls, so
   //                         touch shorts via the armed control)
@@ -144,6 +148,7 @@ export function OptionsChain({ underlying, spot }: Props) {
     // drag-to-short: pull the origin cell downward past the threshold
     if (g.fine && !g.multi && dy > SHORT_DRAG_PX && Math.abs(dx) < 40) {
       g.done = true;
+      pick(g.origin);
       toggle(g.origin, "short");
       navigator.vibrate?.(12);
       return;
@@ -160,6 +165,7 @@ export function OptionsChain({ underlying, spot }: Props) {
           toggle(g.origin, armedSide);
         }
         g.touched.add(ck);
+        pick(target);
         toggle(target, armedSide);
       }
     }
@@ -170,15 +176,62 @@ export function OptionsChain({ underlying, spot }: Props) {
     gestureRef.current = null;
     if (!g || g.done || g.multi) return;
     const moved = Math.hypot(e.clientX - g.startX, e.clientY - g.startY);
-    if (moved < 10) toggle(g.origin, armedSide); // a tap
+    if (moved < 10) {
+      // a tap — pin the readout before toggling, so a phone (which has no
+      // mouseenter to fire) still gets the greeks it came for
+      pick(g.origin);
+      toggle(g.origin, armedSide);
+    }
   };
 
   const onCellPointerCancel = () => {
     gestureRef.current = null;
   };
 
-  // Tooltip state (hover)
-  const [hover, setHover] = useState<{ cell: ChainCell; x: number; y: number } | null>(null);
+  // ── the greeks readout ───────────────────────────────────────────────────
+  // Two sources, because a mouse is not the only way to point at a strike:
+  //   hover → the pointer is over a cell (desktop, unchanged)
+  //   pick  → a tap, a drag, or keyboard focus
+  // Binding it to onMouseEnter alone meant a touch device saw the chain's
+  // prices and not one greek — no mouseenter, no delta/gamma/theta/vega, ever,
+  // on the page whose whole claim is that you can see them. Newest signal wins:
+  // ranking hover above pick let a stale hover — one a finger left behind,
+  // since touch never fires mouseleave — sit on top of the cell just tapped.
+  const [readoutCell, setReadoutCell] = useState<ChainCell | null>(null);
+  const [picked, setPicked] = useState<ChainCell | null>(null);
+  const pick = (cell: ChainCell) => {
+    setPicked(cell);
+    setReadoutCell(cell);
+  };
+  // Re-resolve against the current chain. The readout now stays up after the
+  // pointer leaves, and the spot reprices every 10s, so a held cell would sit
+  // there quoting greeks from a spot that has moved on.
+  const readout = readoutCell ? cellByKey.get(cellKey(readoutCell)) ?? readoutCell : null;
+
+  // Is any of the 640px grid off-screen right now? This depends on the column
+  // width, not the viewport — at lg the chain sits in 7 of 12 columns and
+  // overflows on a 1024px laptop too — so measure the scroller itself.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [chainOverflows, setChainOverflows] = useState(false);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const measure = () => setChainOverflows(el.scrollWidth > el.clientWidth + 1);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // `pan-y` on a cell hands every horizontal touch drag to the drag-select
+  // gesture above — that is what it was for. It also meant a 375px phone could
+  // never pan the 640px grid: the scroll container existed, but the only thing
+  // a finger could land on refused to move it, so the entire put side was
+  // unreachable. Hand the browser the x-axis only while there is something
+  // off-screen to reach. Where the chain fits, touch drag-select still works;
+  // where it doesn't, panning to the puts wins and taps (with LONG/SHORT armed)
+  // build the same legs. Vertical page scroll is untouched either way.
+  const cellTouchAction = chainOverflows ? "pan-x pan-y" : "pan-y";
 
   return (
     <div className="border border-border bg-bg">
@@ -247,10 +300,11 @@ export function OptionsChain({ underlying, spot }: Props) {
         </div>
       </div>
 
-      {/* Chain grid — relative so the hover-greeks strip can overlay out of
-          flow instead of growing the card on every hover */}
-      <div className="relative" onMouseLeave={() => setHover(null)}>
-      <div className="overflow-x-auto">
+      {/* Chain grid */}
+      <div onMouseLeave={() => setReadoutCell(picked)}>
+      {/* overscroll-x-contain: panning to the puts must not hand the swipe to
+          the browser's back gesture */}
+      <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain">
         <div className="grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
           <span className="col-span-4 text-center text-bull">— calls —</span>
           <span className="text-center text-fg">strike</span>
@@ -258,7 +312,7 @@ export function OptionsChain({ underlying, spot }: Props) {
         </div>
         <div className="grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
           {/* iv text columns dropped — the value paints the cell heat and the
-              exact figure lives in the hover greeks strip */}
+              exact figure lives in the greeks readout under the grid */}
           <span>vol</span>
           <span className="text-right">oi</span>
           <span className="text-right">bid</span>
@@ -306,10 +360,9 @@ export function OptionsChain({ underlying, spot }: Props) {
                   }}
                   aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} call, bid ${row.call.bid.toFixed(2)}, ask ${row.call.ask.toFixed(2)}${callSelected ? ", selected" : ""}. Enter to go ${armedSide}, Shift+Enter for the opposite.`}
                   aria-pressed={callSelected}
-                  style={{ touchAction: "pan-y", backgroundColor: callSelected ? undefined : callBg }}
-                  onMouseEnter={(e) =>
-                    setHover({ cell: row.call, x: e.currentTarget.offsetLeft, y: e.currentTarget.offsetTop })
-                  }
+                  style={{ touchAction: cellTouchAction, backgroundColor: callSelected ? undefined : callBg }}
+                  onMouseEnter={() => setReadoutCell(row.call)}
+                  onFocus={() => pick(row.call)}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     toggle(row.call, "short");
@@ -350,10 +403,9 @@ export function OptionsChain({ underlying, spot }: Props) {
                   }}
                   aria-label={`${underlying} ${K.toFixed(K < 100 ? 2 : 0)} put, bid ${row.put.bid.toFixed(2)}, ask ${row.put.ask.toFixed(2)}${putSelected ? ", selected" : ""}. Enter to go ${armedSide}, Shift+Enter for the opposite.`}
                   aria-pressed={putSelected}
-                  style={{ touchAction: "pan-y", backgroundColor: putSelected ? undefined : putBg }}
-                  onMouseEnter={(e) =>
-                    setHover({ cell: row.put, x: e.currentTarget.offsetLeft, y: e.currentTarget.offsetTop })
-                  }
+                  style={{ touchAction: cellTouchAction, backgroundColor: putSelected ? undefined : putBg }}
+                  onMouseEnter={() => setReadoutCell(row.put)}
+                  onFocus={() => pick(row.put)}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     toggle(row.put, "short");
@@ -376,32 +428,46 @@ export function OptionsChain({ underlying, spot }: Props) {
 
       </div>
 
-        {/* Hover greeks strip — absolute overlay, one line */}
-        <AnimatePresence>
-          {hover && (
+        {/* Greeks readout — one fixed line, in flow. As an absolute overlay it
+            sat on the grid's bottom edge and hid data: 46px over the last row
+            at 1280, and 113px over the last TWO rows at 375, where it wrapped
+            to three lines. Its own row can't cover a strike; a fixed height
+            can't make the card twitch as the readout changes; and it scrolls
+            sideways so a phone reaches every chip. h-10, not h-9: the project's
+            8px scrollbar eats into the box and would clip the chips. */}
+        <div
+          className={`flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t bg-surface/95 px-3 font-mono text-[10px] text-fg-dim backdrop-blur ${
+            readout ? "border-bull/30" : "border-border-soft"
+          }`}
+        >
+          {/* no key on the readout: it must update in place. Keying it on the
+              cell remounted the chips and replayed their fade on every row the
+              mouse crossed — a strobe on a 23-row sweep. */}
+          {readout ? (
             <motion.div
-              initial={{ opacity: 0, y: -4 }}
+              initial={{ opacity: 0, y: 2 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.12 }}
-              className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 border-t border-bull/30 bg-surface/95 px-3 py-2 backdrop-blur"
+              className="flex items-center gap-2 whitespace-nowrap"
             >
-              <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-fg-dim">
-                <span className="text-fg">
-                  {hover.cell.type === "C" ? "Call" : "Put"} {hover.cell.strike.toFixed(hover.cell.strike < 100 ? 2 : 0)}
-                </span>
-                <span className="text-fg-faint">·</span>
-                <span>mid ${hover.cell.mid.toFixed(2)}</span>
-                <span className="text-fg-faint">·</span>
-                <GreekChip greek="delta" value={hover.cell.greeks.delta.toFixed(3)} />
-                <GreekChip greek="gamma" value={hover.cell.greeks.gamma.toFixed(4)} />
-                <GreekChip greek="theta" value={hover.cell.greeks.theta.toFixed(3)} />
-                <GreekChip greek="vega" value={hover.cell.greeks.vega.toFixed(3)} />
-                <GreekChip greek="iv" value={`${(hover.cell.iv * 100).toFixed(1)}%`} />
-              </div>
+              {/* strike, then the greeks, then mid. mid used to sit second and
+                  cost ~85px, which on a 375px screen pushed every chip past the
+                  right edge — the greeks have to be the part you see first. */}
+              <span className="text-fg">
+                {readout.type === "C" ? "Call" : "Put"} {readout.strike.toFixed(readout.strike < 100 ? 2 : 0)}
+              </span>
+              <GreekChip greek="delta" value={readout.greeks.delta.toFixed(3)} />
+              <GreekChip greek="gamma" value={readout.greeks.gamma.toFixed(4)} />
+              <GreekChip greek="theta" value={readout.greeks.theta.toFixed(3)} />
+              <GreekChip greek="vega" value={readout.greeks.vega.toFixed(3)} />
+              <GreekChip greek="iv" value={`${(readout.iv * 100).toFixed(1)}%`} />
+              <span className="text-fg-faint">·</span>
+              <span>mid ${readout.mid.toFixed(2)}</span>
             </motion.div>
+          ) : (
+            <span className="whitespace-nowrap text-fg-faint">hover or tap a strike → greeks</span>
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
       {/* Hover-greek hint row (with hover triggers for the AI teacher) */}

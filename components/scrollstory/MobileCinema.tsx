@@ -41,11 +41,16 @@ const ACTS = [
   { key: "bull", from: 0.82, to: 1.0, label: "conviction" },
 ] as const;
 
+// The phone film's copy is a SECOND, independent array — the desktop beats in
+// lib/cinema.ts do not reach here. When the desktop copy was rewritten off the
+// spec sheet, this file still carried the oracle framing ("it saw the crash
+// coming", "flagged 12 bars early") and shipped it to every phone. Two films,
+// one story: if you change a beat there, change its counterpart here.
 const COPY: { from: number; to: number; h: string; sub: string }[] = [
   { from: 0.03, to: 0.14, h: "Options you can see.", sub: "paper-only · $0 at risk" },
-  { from: 0.2, to: 0.4, h: "It reads the tape.", sub: "every tick · every greek" },
-  { from: 0.47, to: 0.6, h: "It saw the crash coming.", sub: "AI direction ensemble" },
-  { from: 0.65, to: 0.8, h: "Flagged 12 bars early.", sub: "reality fell into the cone" },
+  { from: 0.2, to: 0.4, h: "Markets have moods.", sub: "trending, reverting, or noise" },
+  { from: 0.47, to: 0.6, h: "Then the floor goes.", sub: "the part nobody rehearses" },
+  { from: 0.65, to: 0.8, h: "Your worst case is a number you chose.", sub: "not one you find out afterwards" },
   { from: 0.86, to: 0.99, h: "Learn it. Then trade it.", sub: "welcome in" },
 ];
 
