@@ -27,8 +27,12 @@
   --fg-dim: #8a8a82;
   /* RADAR default: ≥4.5:1 on #050505. The old #4a4a44 (~2.3:1) carried
      hundreds of 9–11px labels — text that failed to exist. The whisper
-     aesthetic survives as the opt-in STEALTH mode below. */
-  --fg-faint: #767670;
+     aesthetic survives as the opt-in STEALTH mode below.
+     #767670 was measured at 4.460:1 — it missed the very bar this comment
+     claimed for it, on the tier that carries the most 9-11px text on the
+     site. #787872 measures 4.589:1. The pro (6.45) and light (4.76)
+     variants below were already honest; only this one was not. */
+  --fg-faint: #787872;
   --bull: #00ff87;
   /* INK vs FILL. The vivid accents are for fills, strokes and 3D emissives; the
      -ink pair is for TYPE. On #050505 they are the same colour, because the
@@ -1676,6 +1680,26 @@ nav[aria-label="Site pages"] a:focus-visible {
      cell are the same role at wildly different scales. */
   .t-data {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── The decision tier ─────────────────────────────────────────────────
+     AMENDS THE CHASM RULE ABOVE, deliberately. The chasm — 10-11px chrome
+     against display serif — is the identity on marketing surfaces and it
+     stays there. But it was also applied to the WORKING surfaces, where it
+     meant the numbers a trade actually turns on (max loss, max profit, the
+     odds) were set at 12px, the same size as the chrome labelling them, and
+     hierarchy was left to colour alone. A design review put it plainly: the
+     display layer sings while the working layer squints.
+
+     This is the one rung between chrome and display: for the two or three
+     figures per view that carry the decision. Used on more than that it
+     stops meaning anything, and the chasm was right all along. */
+  .t-figure {
+    font-family: var(--font-mono);
+    font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
 

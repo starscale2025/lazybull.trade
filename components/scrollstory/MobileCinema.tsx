@@ -372,6 +372,29 @@ export function MobileCinema() {
         }}
       >
         <canvas ref={canvasRef} aria-hidden className="absolute inset-0 h-full w-full" />
+        {/* THE ONLY WAY OUT OF THE MOBILE FILM.
+            ScrollCinema ships a "Skip intro" button styled `md:hidden` — a
+            mobile-only control inside a component CinemaGate only mounts at
+            768px and up, so it could never render anywhere. Phones got 400svh
+            of scroll-driven canvas with no escape at all. Fixed to the
+            viewport (not the sticky stage, which sits below the fold before it
+            pins) so it is reachable the moment you land. */}
+        <button
+          type="button"
+          onClick={() => {
+            const el = sectionRef.current;
+            if (!el) return;
+            // INSTANT, not smooth — same as the desktop doSkip. A smooth scroll
+            // is animated by the browser over several frames, and the film's own
+            // scroll-driven frame loop cancels it mid-flight, so the page never
+            // moved. Measured: with `behavior:"smooth"` the button left scrollY
+            // at 0; instant lands at the handoff and stays.
+            window.scrollTo(0, el.offsetTop + el.offsetHeight - window.innerHeight + 4);
+          }}
+          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
+        >
+          Skip intro ↓
+        </button>
         {COPY.map((b, i) => (
           <div
             key={b.h}

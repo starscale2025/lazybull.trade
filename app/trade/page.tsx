@@ -787,9 +787,14 @@ function LegsList({ s }: { s: Strategy }) {
           ))}
         </ul>
       )}
-      <div className="flex items-center justify-between border-t border-border-soft bg-bg px-3 py-2 t-data text-[12px]">
-        <span className="text-fg">{s.cost > 0 ? "Net Debit" : "Net Credit"}</span>
-        <span className="text-bull">{Math.abs(s.cost / 100).toFixed(2)}</span>
+      {/* The net debit/credit is the price of the whole trade — the single
+          number a beginner is most likely to be looking for. It used to sit
+          at 12px, identical to the chrome around it. */}
+      <div className="flex items-baseline justify-between border-t border-border-soft bg-bg px-3 py-2.5">
+        <span className="t-chrome text-fg-dim">{s.cost > 0 ? "net debit" : "net credit"}</span>
+        <span className={`t-figure ${s.cost > 0 ? "text-fg" : "text-bull"}`}>
+          {Math.abs(s.cost / 100).toFixed(2)}
+        </span>
       </div>
     </div>
   );
@@ -830,13 +835,15 @@ function StrategyDetail({
   ];
   const rr =
     Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0 ? s.maxProfit / Math.abs(s.maxLoss) : null;
-  const rail: { k: string; v: string; c: string }[] = [
-    { k: "max profit", v: fmt(s.maxProfit), c: "text-bull" },
-    { k: "max loss", v: fmt(s.maxLoss), c: "text-bear" },
+  // `lead` marks the figures the decision actually turns on. They get the
+  // decision tier; the rest stay chrome-sized so the promotion means something.
+  const rail: { k: string; v: string; c: string; lead?: boolean }[] = [
+    { k: "max profit", v: fmt(s.maxProfit), c: "text-bull", lead: true },
+    { k: "max loss", v: fmt(s.maxLoss), c: "text-bear", lead: true },
     ...(s.breakevens.length
       ? [{ k: "breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / "), c: "text-fg" }]
       : []),
-    { k: "pop", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull" },
+    { k: "pop", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull", lead: true },
     ...(rr != null ? [{ k: "r:r", v: rr.toFixed(2), c: "text-fg" }] : []),
   ];
 
@@ -870,8 +877,8 @@ function StrategyDetail({
         <div className="grid w-[200px] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
           {rail.map((it) => (
             <div key={it.k} className="contents">
-              <span className="t-chrome text-fg-faint">{it.k}</span>
-              <span className={`text-right t-data text-[12px] ${it.c}`}>{it.v}</span>
+              <span className={`t-chrome ${it.lead ? "self-center text-fg-dim" : "text-fg-faint"}`}>{it.k}</span>
+              <span className={`text-right ${it.lead ? "t-figure" : "t-data text-[12px]"} ${it.c}`}>{it.v}</span>
             </div>
           ))}
         </div>

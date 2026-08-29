@@ -1041,12 +1041,16 @@ export function ScrollCinema() {
             scrollY=0 has not yet reached its top-0 pin and therefore sits ~91px
             down the page — putting the button fully BELOW the fold on mobile
             (measured: top=832 against an 812px viewport, not tappable). Anchor
-            it to the viewport instead so it's reachable the moment you land. */}
+            it to the viewport instead so it's reachable the moment you land.
+            It also used to carry `md:hidden` — a mobile-only gate on a control
+            inside a component that only ever mounts at md and up, so the film
+            shipped with no skip on ANY width. Phones have their own now, in
+            MobileCinema; this one is the desktop film's. */}
         <button
           ref={skipRef}
           type="button"
           onClick={handleSkip}
-          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3 md:hidden"
+          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
         >
           Skip intro ↓
         </button>

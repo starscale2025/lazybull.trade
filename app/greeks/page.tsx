@@ -360,10 +360,14 @@ function GreekStatCard({
 
   return (
     <div className="surface-card border border-border bg-surface p-2 md:p-4">
-      <div className="t-chrome text-fg-dim md:text-[10px]">
-        {/* full words don't fit five-across at 375px — the letter is the label there */}
-        <span className="md:hidden">{GREEK_COPY[greek].letter}</span>
-        <span className="hidden md:inline">{GREEK_COPY[greek].label}</span>
+      <div className="t-chrome flex items-baseline gap-1.5 text-fg-dim md:text-[10px]">
+        {/* The words used to be replaced by bare Greek letters below md, because
+            five cards across 375px left no room for them — so the page that
+            teaches the Greeks stopped naming them on the device most people
+            read it on. The grid reflows to 2-up now, so the name always fits
+            and the letter rides alongside it as the glyph, not as a substitute. */}
+        <span className="text-bull/70">{GREEK_COPY[greek].letter}</span>
+        <span>{GREEK_COPY[greek].label}</span>
       </div>
       <div className="mt-1 flex items-end justify-between gap-2 md:mt-2">
         <div
@@ -756,7 +760,7 @@ export default function GreeksLabPage() {
             so the drag surface and the readouts could never be on screen
             together at 375x812 — the exact thing the headline asks you to do.
             One compact row on mobile, full cards from md up. */}
-        <div className="mt-6 grid grid-cols-5 gap-1.5 md:grid-cols-5 md:gap-3">
+        <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-3">
           {GREEK_ORDER.map((g) => (
             <GreekStatCard
               key={g}
