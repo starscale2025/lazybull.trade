@@ -13,7 +13,7 @@ export function AnimatedDivider({
       {/* Background grid wash */}
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-15" />
 
-      <div className="relative mx-auto flex max-w-[1280px] items-center justify-center gap-6 px-5">
+      <div className="relative mx-auto flex max-w-[80rem] items-center justify-center gap-6 px-5">
         {/* Left line */}
         <div className="relative flex-1 origin-right">
           <div className="absolute inset-y-1/2 h-px w-full -translate-y-1/2 bg-fg-faint/30 divider-grow" style={{ animationDelay: "0.1s" }} />
@@ -27,7 +27,7 @@ export function AnimatedDivider({
         {/* Center diamond + label */}
         <div className="flex items-center gap-3 px-2">
           {num && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint sm:tracking-[0.4em]">
+            <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint sm:tracking-[0.4em]">
               §{num}
             </span>
           )}
@@ -38,7 +38,7 @@ export function AnimatedDivider({
             />
           </div>
           {label && (
-            <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.2em] text-bull sm:tracking-[0.4em]">
+            <span className="whitespace-nowrap font-mono text-[0.625rem] uppercase tracking-[0.2em] text-bull sm:tracking-[0.4em]">
               {label}
             </span>
           )}

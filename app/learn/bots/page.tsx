@@ -87,20 +87,20 @@ export default function BotsIndex() {
                     </span>
                     {/* Section header already says AI Quants — the per-card badge would repeat 12× */}
                     {b.endpoint && g.cat !== "ai" && (
-                      <span className="border border-bear/40 bg-bear/10 px-1 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bear">
+                      <span className="border border-bear/40 bg-bear/10 px-1 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bear">
                         AI
                       </span>
                     )}
                   </div>
                   <div>
-                    <div className="font-display text-[18px] tracking-tightest text-fg group-hover:text-bull">
+                    <div className="font-display text-[1.125rem] tracking-tightest text-fg group-hover:text-bull">
                       {b.name}
                     </div>
-                    <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-fg-dim">
+                    <p className="mt-1 line-clamp-2 text-[0.75rem] leading-relaxed text-fg-dim">
                       {b.tagline}
                     </p>
                   </div>
-                  <div className="mt-auto flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint group-hover:text-bull">
+                  <div className="mt-auto flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint group-hover:text-bull">
                     <span>{b.id}</span>
                     <span>→</span>
                   </div>

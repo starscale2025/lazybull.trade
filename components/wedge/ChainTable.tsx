@@ -107,7 +107,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHove
 
       {/* body — internal scroll inside the app shell; the footer below stays pinned */}
       <div className="overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
-        <div className="min-w-[840px]">
+        <div className="min-w-[52.5rem]">
           {/* column headers — stick to the top of the internal scrollport */}
           <div className={`${cellGrid} border-b border-border-soft bg-bg px-3 t-chrome text-fg-faint lg:sticky lg:top-0 lg:z-20 [&>span]:py-1.5`}>
             <span>delta</span>
@@ -136,7 +136,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHove
                 // but the bid/ask controls inside it do, so a keyboard walking
                 // the chain drives the cone exactly as a mouse does.
                 onFocusCapture={() => onHoverStrike?.(K)}
-                className={`${cellGrid} relative items-stretch border-b border-border-soft px-3 t-data text-[11px] transition-colors last:border-b-0 hover:bg-bg-soft/60 [&>span]:flex [&>span]:items-center [&>span]:py-2`}
+                className={`${cellGrid} relative items-stretch border-b border-border-soft px-3 t-data text-[0.6875rem] transition-colors last:border-b-0 hover:bg-bg-soft/60 [&>span]:flex [&>span]:items-center [&>span]:py-2`}
               >
                 {/* nearest-the-money row ring, ref-style */}
                 {atm && (

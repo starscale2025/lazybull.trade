@@ -105,14 +105,14 @@ export function Workspace({
                   <button
                     onClick={() => onMove(r.active.uid, -1)}
                     disabled={i === 0}
-                    className="grid size-5 place-items-center border border-border bg-bg font-mono text-[10px] text-fg-dim hover:text-bull disabled:opacity-30"
+                    className="grid size-5 place-items-center border border-border bg-bg font-mono text-[0.625rem] text-fg-dim hover:text-bull disabled:opacity-30"
                   >
                     ▲
                   </button>
                   <button
                     onClick={() => onMove(r.active.uid, 1)}
                     disabled={i === rows.length - 1}
-                    className="grid size-5 place-items-center border border-border bg-bg font-mono text-[10px] text-fg-dim hover:text-bull disabled:opacity-30"
+                    className="grid size-5 place-items-center border border-border bg-bg font-mono text-[0.625rem] text-fg-dim hover:text-bull disabled:opacity-30"
                   >
                     ▼
                   </button>
@@ -136,7 +136,7 @@ export function Workspace({
             {/* add cell hint */}
             <button
               onClick={onAddPlaceholderClick}
-              className="flex w-full items-center justify-center gap-2 border border-dashed border-border bg-bg py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
+              className="flex w-full items-center justify-center gap-2 border border-dashed border-border bg-bg py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
             >
               + add bot from library
             </button>
@@ -169,7 +169,7 @@ function EmptyState({ onClick }: { onClick: () => void }) {
         </div>
         <button
           onClick={onClick}
-          className="mt-6 inline-flex items-center gap-2 border border-bull bg-bull/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull hover:text-bg"
+          className="mt-6 inline-flex items-center gap-2 border border-bull bg-bull/10 px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bull hover:bg-bull hover:text-bg"
         >
           ↗ open library
         </button>

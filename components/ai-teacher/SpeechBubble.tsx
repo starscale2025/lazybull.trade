@@ -43,7 +43,7 @@ export function GreekChip({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18 }}
-      className="flex items-center gap-1.5 surface-card border border-border bg-surface-2 px-1.5 py-1 font-mono text-[10px] tabular-nums"
+      className="flex items-center gap-1.5 surface-card border border-border bg-surface-2 px-1.5 py-1 font-mono text-[0.625rem] tabular-nums"
     >
       <span style={{ color: meta.color }}>
         <Icon size={14} color={meta.color} />

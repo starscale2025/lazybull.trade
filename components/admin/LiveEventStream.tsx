@@ -63,7 +63,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`border px-1.5 py-0.5 text-[10px] transition-colors ${
+              className={`border px-1.5 py-0.5 text-[0.625rem] transition-colors ${
                 filter === f
                   ? "border-bull bg-bull/10 text-bull"
                   : "border-border text-fg-dim hover:text-fg"
@@ -74,7 +74,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
           ))}
           <button
             onClick={() => setPaused(!paused)}
-            className={`ml-2 border px-1.5 py-0.5 text-[10px] transition-colors ${
+            className={`ml-2 border px-1.5 py-0.5 text-[0.625rem] transition-colors ${
               paused ? "border-amber bg-amber/10 text-amber" : "border-border text-fg-dim hover:text-fg"
             }`}
           >
@@ -83,7 +83,7 @@ export function LiveEventStream({ initial }: { initial: EventRow[] }) {
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-y-auto font-mono text-[11px]">
+      <div className="relative flex-1 overflow-y-auto font-mono text-[0.6875rem]">
         <div className="divide-y divide-border-soft">
           {visible.map((e, i) => {
             const c = LEVEL_COLOR[e.level];

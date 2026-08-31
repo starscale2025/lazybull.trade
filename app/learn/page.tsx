@@ -268,12 +268,12 @@ export default function LearnPage() {
             ].map((g) => (
               <div key={g.sym} className="text-center">
                 <div className="font-display italic font-light leading-none" style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", color: g.tone }}>{g.sym}</div>
-                <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">{g.label}</div>
+                <div className="mt-1.5 font-mono text-[0.5625rem] uppercase tracking-[0.25em] text-fg-faint">{g.label}</div>
               </div>
             ))}
           </div>
           <div className="flex justify-end">
-            <Link href="/greeks" className="font-mono text-[11px] uppercase tracking-[0.2em] text-bull transition-colors hover:text-bull-dim">open the full surface lab →</Link>
+            <Link href="/greeks" className="font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-bull transition-colors hover:text-bull-dim">open the full surface lab →</Link>
           </div>
         </div>
       ),
@@ -384,9 +384,9 @@ export default function LearnPage() {
         </div>
 
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
-        <div className="pointer-events-none absolute -left-40 top-20 h-[420px] w-[420px] rounded-full bg-bull/10 blur-[160px] drift" />
+        <div className="pointer-events-none absolute -left-40 top-20 h-[26.25rem] w-[26.25rem] rounded-full bg-bull/10 blur-[160px] drift" />
         <div
-          className="pointer-events-none absolute right-0 top-40 h-[360px] w-[360px] rounded-full bg-cyan/10 blur-[160px] drift"
+          className="pointer-events-none absolute right-0 top-40 h-[22.5rem] w-[22.5rem] rounded-full bg-cyan/10 blur-[160px] drift"
           style={{ animationDelay: "-6s" }}
         />
         <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
@@ -469,7 +469,7 @@ export default function LearnPage() {
               </a>
               <Link
                 href="/quant"
-                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-4 font-mono text-[11px] uppercase tracking-[0.3em] text-fg-dim hover:border-bull hover:text-bull"
+                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-4 font-mono text-[0.6875rem] uppercase tracking-[0.3em] text-fg-dim hover:border-bull hover:text-bull"
               >
                 Skip — open the workbench →
               </Link>
@@ -510,16 +510,16 @@ export default function LearnPage() {
         className="group relative block border-b border-bear/30 bg-bear/5 transition-colors hover:bg-bear/10"
       >
         <div className="shell flex flex-wrap items-center gap-x-4 gap-y-1 py-4 lg:pl-[max(1.25rem,13rem_-_max(0px,(100vw_-_1400px)/2))]">
-          <span className="border border-bear/40 bg-bear/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-bear">
+          <span className="border border-bear/40 bg-bear/10 px-1.5 py-0.5 font-mono text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-bear">
             ch. 0 — the confession
           </span>
-          <span className="font-display text-[17px] italic tracking-tight text-fg">
+          <span className="font-display text-[1.0625rem] italic tracking-tight text-fg">
             Anatomy of a Broken VWAP
           </span>
-          <span className="hidden font-mono text-[11px] text-fg-dim md:inline">
+          <span className="hidden font-mono text-[0.6875rem] text-fg-dim md:inline">
             we shipped it wrong · the full autopsy, with the live bug · toggle broken → fixed
           </span>
-          <span className="ml-auto font-mono text-[11px] uppercase tracking-wider text-fg-faint transition-colors group-hover:text-bear">
+          <span className="ml-auto font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint transition-colors group-hover:text-bear">
             read the autopsy →
           </span>
         </div>
@@ -645,12 +645,12 @@ export default function LearnPage() {
             >
               <div className="flex items-center justify-between">
                 <span
-                  className="font-mono text-[10px] uppercase tracking-[0.4em]"
+                  className="font-mono text-[0.625rem] uppercase tracking-[0.4em]"
                   style={{ color: f.meta.color }}
                 >
                   {f.meta.label}
                 </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint group-hover:text-bull">
+                <span className="font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-faint group-hover:text-bull">
                   {f.bots.length} bots →
                 </span>
               </div>
@@ -661,14 +661,14 @@ export default function LearnPage() {
                 {f.bots.slice(0, 3).map((b) => (
                   <span
                     key={b.id}
-                    className="inline-flex items-center gap-1.5 border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-fg-dim"
+                    className="inline-flex items-center gap-1.5 border border-border bg-bg px-1.5 py-0.5 font-mono text-[0.625rem] tracking-wide text-fg-dim"
                   >
                     <span style={{ color: f.meta.color }}>{b.glyph}</span>
                     {b.name}
                   </span>
                 ))}
                 {f.bots.length > 3 && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint group-hover:text-bull">
+                  <span className="font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-faint group-hover:text-bull">
                     +{f.bots.length - 3} more →
                   </span>
                 )}
@@ -729,7 +729,7 @@ export default function LearnPage() {
             <div className="t-eyebrow text-fg-faint">
               ◯ TEACHER · OFF
             </div>
-            <div className="mt-4 space-y-2 font-mono text-[12px] text-fg">
+            <div className="mt-4 space-y-2 font-mono text-[0.75rem] text-fg">
               <div>RSI 14 = 28.4. STATE: OVERSOLD.</div>
               <div className="text-fg-dim">3 reversion triggers in window.</div>
               <div className="text-fg-dim">Backtest return +4.2%.</div>
@@ -779,15 +779,15 @@ export default function LearnPage() {
 
         <ChapterBody para="12.A">
           Click{" "}
-          <span className="border border-dashed border-border bg-bg px-1.5 py-0.5 font-mono text-[11px] text-fg">
+          <span className="border border-dashed border-border bg-bg px-1.5 py-0.5 font-mono text-[0.6875rem] text-fg">
             + Import your bot
           </span>{" "}
           in the bot library. Paste a function that takes{" "}
-          <code className="surface-card border border-border bg-surface px-1 font-mono text-[11px] text-fg">
+          <code className="surface-card border border-border bg-surface px-1 font-mono text-[0.6875rem] text-fg">
             candles + params
           </code>{" "}
           and returns{" "}
-          <code className="surface-card border border-border bg-surface px-1 font-mono text-[11px] text-fg">
+          <code className="surface-card border border-border bg-surface px-1 font-mono text-[0.6875rem] text-fg">
             {`{ verdict, summary, metrics }`}
           </code>
           . It hot-loads into the workspace.
@@ -800,7 +800,7 @@ export default function LearnPage() {
             <span className="text-fg-faint">·</span>
             <span className="text-fg-faint">COPY · PASTE · RUN</span>
           </div>
-          <pre className="overflow-x-auto border border-border bg-bg p-7 font-mono text-[12px] leading-relaxed text-fg">
+          <pre className="overflow-x-auto border border-border bg-bg p-7 font-mono text-[0.75rem] leading-relaxed text-fg">
             {`// Example: a 10-line bot that buys 52-week breakouts.
 export default {
   id: "my-breakout",
@@ -848,7 +848,7 @@ export default {
 
         <ChapterBody para="13.A">
           The 12 AI bots delegate to a Python service in{" "}
-          <code className="mx-1 surface-card border border-border bg-surface px-1 font-mono text-[11px] text-fg">
+          <code className="mx-1 surface-card border border-border bg-surface px-1 font-mono text-[0.6875rem] text-fg">
             ai quants/serve.py
           </code>{" "}
           that runs trained neural networks. When the service is up, you see{" "}
@@ -1087,7 +1087,7 @@ function Piece({ num, tone, title, tldr, body }: { num: string; tone: "bull" | "
       >
         {title}
       </div>
-      <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-dim">{tldr}</div>
+      <div className="mt-3 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-dim">{tldr}</div>
       <p className="mt-5 font-display text-base leading-relaxed text-fg-dim">{body}</p>
     </div>
   );
@@ -1127,11 +1127,11 @@ function CTACard({ label, sub, href, primary }: { label: string; sub: string; hr
         >
           {label}
         </div>
-        <div className={`mt-3 font-mono text-[10px] uppercase tracking-[0.3em] ${primary ? "text-bg/70" : "text-fg-faint"}`}>
+        <div className={`mt-3 font-mono text-[0.625rem] uppercase tracking-[0.3em] ${primary ? "text-bg/70" : "text-fg-faint"}`}>
           {sub}
         </div>
       </div>
-      <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em]">
+      <div className="flex items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-[0.3em]">
         ▶ GO
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.6" />

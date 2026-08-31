@@ -14,7 +14,7 @@ export function PnLDiagram({ legs, spot, height = 220 }: Props) {
   const data = useMemo(() => pnlCurve(legs, spot, 0.4, 121), [legs, spot]);
   if (legs.length === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center border border-dashed border-border-soft text-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+      <div className="flex h-[13.75rem] items-center justify-center border border-dashed border-border-soft text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
         Select strikes from the chain<br />to see the P&L diagram
       </div>
     );
@@ -27,7 +27,7 @@ export function PnLDiagram({ legs, spot, height = 220 }: Props) {
     pnl: d.pnl,
   }));
   return (
-    <div className="h-[220px] w-full">
+    <div className="h-[13.75rem] w-full">
       <ResponsiveContainer width="100%" height="100%">
         {/* top: 22 keeps the "spot" reference-line label clear of the SVG edge */}
         <ComposedChart data={dataSplit} margin={{ top: 22, right: 12, bottom: 8, left: 12 }}>

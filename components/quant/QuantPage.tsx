@@ -504,7 +504,7 @@ export function QuantPage() {
           first-time tip so the workbench is never pushed down by both at once. */}
       {showLearnBanner && !(mode === "live" && status === "synthetic") && (
         <div className="border-b border-bull/30 bg-bull/5 py-2.5">
-          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-wider">
+          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-wider">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
             <span className="text-bull">First time here?</span>
             <span className="text-fg-dim normal-case tracking-normal">
@@ -528,7 +528,7 @@ export function QuantPage() {
       )}
       {mode === "live" && status === "synthetic" && (
         <div className="border-b border-border-soft bg-bg-soft py-2">
-          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[11px]">
+          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[0.6875rem]">
             <span className="inline-flex items-center gap-1.5 uppercase tracking-wider text-cyan/90">
               <span className="size-1.5 rounded-full bg-cyan/80" />
               Live data temporarily unavailable
@@ -610,7 +610,7 @@ export function QuantPage() {
                   <span className="t-chrome text-bull/80">applied ✓</span>
                   <button
                     onClick={() => setPresetExpanded((v) => !v)}
-                    className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
+                    className="ml-auto font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
                   >
                     {presetExpanded ? "hide ▴" : "view ▾"}
                   </button>
@@ -618,7 +618,7 @@ export function QuantPage() {
               ) : (
                 <button
                   onClick={() => applyPreset(symbol)}
-                  className="ml-auto border border-bull/50 bg-bull/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+                  className="ml-auto border border-bull/50 bg-bull/10 px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
                 >
                   apply this stack
                 </button>
@@ -639,12 +639,12 @@ export function QuantPage() {
                     title={isActive ? "already in the workspace" : "add to workspace"}
                     className="group bg-bg p-3 text-left transition-colors hover:bg-surface-2"
                   >
-                    <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg">
+                    <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg">
                       <span className={`size-1.5 shrink-0 rounded-full ${isActive ? "bg-bull" : "bg-border"}`} />
                       <span className="truncate">{def.name}</span>
                       {!isActive && <span className="ml-auto shrink-0 text-fg-faint group-hover:text-bull">+ add</span>}
                     </div>
-                    <div className="mt-1 font-mono text-[10px] normal-case leading-relaxed text-fg-dim">{b.why}</div>
+                    <div className="mt-1 font-mono text-[0.625rem] normal-case leading-relaxed text-fg-dim">{b.why}</div>
                   </button>
                 );
               })}

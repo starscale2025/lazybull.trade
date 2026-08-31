@@ -78,7 +78,7 @@ export function HeroPayoff({
     <>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="pointer-events-none block h-auto w-full max-w-[520px]"
+        className="pointer-events-none block h-auto w-full max-w-[32.5rem]"
         aria-hidden
       >
         {/* the zero line everything is measured against */}

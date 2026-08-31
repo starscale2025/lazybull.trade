@@ -242,7 +242,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   const addSym = (s: string) => setList((l) => (l.includes(s) ? l : [...l, s]));
 
   return (
-    <aside className="flex w-full flex-col border-t border-border bg-surface lg:w-[300px] lg:shrink-0 lg:border-l lg:border-t-0">
+    <aside className="flex w-full flex-col border-t border-border bg-surface lg:w-[18.75rem] lg:shrink-0 lg:border-l lg:border-t-0">
       {/* Watchlist header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2 t-chrome text-fg-dim">
         {/* A real heading, not a styled span: /pro shipped with ZERO headings, so a
@@ -263,7 +263,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Add symbol — AAPL, NIFTY, BTC…"
-            className="h-7 flex-1 bg-transparent font-mono text-[11px] uppercase text-fg outline-none placeholder:text-fg-faint"
+            className="h-7 flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:text-fg-faint"
             onKeyDown={(e) => {
               if (e.key === "Enter" && results[0]) {
                 addSym(results[0].sym);
@@ -279,13 +279,13 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
               <button
                 key={r.sym}
                 onClick={() => { addSym(r.sym); setSearch(""); setResults([]); }}
-                className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left font-mono text-[11px] hover:bg-surface"
+                className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left font-mono text-[0.6875rem] hover:bg-surface"
               >
                 <div>
                   <div className="text-fg">{r.sym}</div>
-                  <div className="text-[10px] normal-case tracking-normal text-fg-faint">{r.name}</div>
+                  <div className="text-[0.625rem] normal-case tracking-normal text-fg-faint">{r.name}</div>
                 </div>
-                <span className="text-[10px] text-fg-faint">{r.exch}</span>
+                <span className="text-[0.625rem] text-fg-faint">{r.exch}</span>
               </button>
             ))}
           </div>
@@ -305,12 +305,12 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           last rows of the watchlist cannot end up underneath the orb. */}
       {/* /var(--ui-zoom): html renders zoomed, so raw vh over-measures.
           lg:min-h keeps ~8 rows visible however tall the sections below get. */}
-      <div className="dock-clear max-h-[calc(45vh/var(--ui-zoom))] flex-1 overflow-y-auto lg:max-h-none lg:min-h-[224px]">
+      <div className="dock-clear max-h-[calc(45vh/var(--ui-zoom))] flex-1 overflow-y-auto lg:max-h-none lg:min-h-[14rem]">
         {list.map((sym) => {
           const q = quotes[sym];
           const active = sym === symbol.sym;
           return (
-            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[11px] transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
+            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
               <button
                 className="col-span-5 flex items-center gap-1.5 text-left text-fg"
                 onClick={() => onPickSymbol({ sym, name: q?.name || sym, exch: q?.exch || "" })}
@@ -331,7 +331,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             </div>
           );
         })}
-        {!list.length && <div className="px-3 py-4 text-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">empty list — add a symbol above</div>}
+        {!list.length && <div className="px-3 py-4 text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">empty list — add a symbol above</div>}
       </div>
 
       {/* Symbol details — collapsible: with Performance below it, the pair ate
@@ -348,13 +348,13 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             <span className={`text-fg-faint transition-transform ${detailsOpen ? "" : "rotate-180"}`}>⌄</span>
           </button>
           <div className="flex items-center gap-1">
-            <span className={`px-1.5 py-0.5 text-[10px] ${live?.marketState === "REGULAR" ? "border border-bull/40 text-bull" : "border border-border text-fg-faint"}`}>
+            <span className={`px-1.5 py-0.5 text-[0.625rem] ${live?.marketState === "REGULAR" ? "border border-bull/40 text-bull" : "border border-border text-fg-faint"}`}>
               {live?.marketState || "—"}
             </span>
           </div>
         </div>
         {detailsOpen && (<>
-        <div className="mt-1 text-[10px] tracking-wider text-fg-faint">
+        <div className="mt-1 text-[0.625rem] tracking-wider text-fg-faint">
           {symMeta.name} <span className="text-fg-faint">·</span> {symMeta.exch}
         </div>
 
@@ -362,9 +362,9 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           <span className="font-display text-3xl tracking-tightest tabular-nums text-fg">
             {live?.last != null ? fmt(live.last, 2) : "—"}
           </span>
-          <span className="font-mono text-[10px] text-fg-faint">{live?.currency || ""}</span>
+          <span className="font-mono text-[0.625rem] text-fg-faint">{live?.currency || ""}</span>
         </div>
-        <div className={`mt-1 font-mono text-[11px] ${dirClass(live?.chg)}`}>
+        <div className={`mt-1 font-mono text-[0.6875rem] ${dirClass(live?.chg)}`}>
           {live?.chg != null ? `${live.chg >= 0 ? "+" : ""}${fmt(live.chg, 2)}` : "—"} · {live?.chgPct != null ? `${live.chgPct >= 0 ? "+" : ""}${fmt(live.chgPct, 2)}%` : "—"}
         </div>
         {hist.length > 1 && (
@@ -373,7 +373,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           </svg>
         )}
 
-        <div className="mt-2 flex items-center gap-2 font-mono text-[10px] text-fg-faint">
+        <div className="mt-2 flex items-center gap-2 font-mono text-[0.625rem] text-fg-faint">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
           live · refreshing every 15s
         </div>
@@ -419,7 +419,7 @@ function SymBadge({ sym }: { sym: string }) {
   const c = palette[sym.charCodeAt(0) % palette.length];
   return (
     <span className="flex size-4 items-center justify-center" style={{ borderColor: c, color: c, border: `1px solid ${c}` }}>
-      <span className="text-[10px] font-bold leading-none">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
+      <span className="text-[0.625rem] font-bold leading-none">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
     </span>
   );
 }

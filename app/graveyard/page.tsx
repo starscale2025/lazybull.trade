@@ -37,13 +37,13 @@ export default function Graveyard() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
-      <main className="mx-auto w-full max-w-[900px] flex-1 px-5 section-y-sm">
+      <main className="mx-auto w-full max-w-[56.25rem] flex-1 px-5 section-y-sm">
         <div className="text-center">
           <div className="t-eyebrow text-fg-faint">⚰ here lie the fallen</div>
           <h1 className="mt-3 t-title">
             The Graveyard
           </h1>
-          <p className="mx-auto mt-4 max-w-[54ch] font-mono text-[12px] leading-relaxed text-fg-dim">
+          <p className="mx-auto mt-4 max-w-[54ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             We delete our dead code. Most teams let it rot in the bundle — the audit found{" "}
             <span className="text-fg">{total.toLocaleString()} lines</span> of components that shipped to every
             visitor and rendered for none. We buried them. Honestly.
@@ -58,13 +58,13 @@ export default function Graveyard() {
               style={{ borderTopLeftRadius: "50% 22px", borderTopRightRadius: "50% 22px" }}
             >
               <div className="t-eyebrow text-fg-faint">R.I.P.</div>
-              <div className="mt-2 font-mono text-[13px] text-fg">{g.name}</div>
+              <div className="mt-2 font-mono text-[0.8125rem] text-fg">{g.name}</div>
               <div className="mt-1 t-chrome text-bear">
                 {g.lines} lines · deleted
               </div>
               <div className="mx-auto mt-3 h-px w-10 bg-border" />
               <div className="mt-3 t-chrome text-fg-faint">{g.born}</div>
-              <p className="mt-2 font-mono text-[11px] italic leading-relaxed text-fg-dim">“{g.epitaph}”</p>
+              <p className="mt-2 font-mono text-[0.6875rem] italic leading-relaxed text-fg-dim">“{g.epitaph}”</p>
             </div>
           ))}
         </div>
@@ -74,7 +74,7 @@ export default function Graveyard() {
             +10 more buried in later passes · 760 lines{" "}
             <span className="inline-block transition-transform group-open:rotate-90">›</span>
           </summary>
-          <div className="mt-4 space-y-3 border border-border-soft px-4 py-3 text-center font-mono text-[11px] leading-relaxed text-fg-faint">
+          <div className="mt-4 space-y-3 border border-border-soft px-4 py-3 text-center font-mono text-[0.6875rem] leading-relaxed text-fg-faint">
             <p>
               Six swept in the durability pass — ProCta, IntroSequence, MaterialHero, ParticleCurtain,
               SectionDivider, TerminalTilt (523 lines) — atmosphere that never made the cut.

@@ -44,7 +44,7 @@ export function CockpitTopBar({ admin }: { admin: string }) {
       : `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`;
 
   return (
-    <div className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-bg/95 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint backdrop-blur-md">
+    <div className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-bg/95 px-4 py-2 font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint backdrop-blur-md">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />

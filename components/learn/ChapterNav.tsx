@@ -92,9 +92,9 @@ export function ChapterNav() {
       {/* desktop: the named gutter */}
       <nav
         aria-label="Chapters"
-        className="chapter-rail fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 px-[9px] py-3.5 lg:block"
+        className="chapter-rail fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 px-[0.5625rem] py-3.5 lg:block"
       >
-        <div className="rail-fade mb-2 flex items-center gap-2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.3em] text-fg-faint">
+        <div className="rail-fade mb-2 flex items-center gap-2 whitespace-nowrap font-mono text-[0.5625rem] uppercase tracking-[0.3em] text-fg-faint">
           <span className="size-1 rounded-full bg-bull pulse-dot" />
           <span className="text-bull">live</span>
           <span>· learn</span>
@@ -106,7 +106,7 @@ export function ChapterNav() {
             as a hole now that the rail is a surface. The chart appears with the
             first answer, which is also when it starts meaning anything. */}
         {earned.length > 0 && (
-          <svg viewBox="0 0 100 40" className="rail-fade mb-1 h-9 w-[178px]" aria-hidden preserveAspectRatio="none">
+          <svg viewBox="0 0 100 40" className="rail-fade mb-1 h-9 w-[11.125rem]" aria-hidden preserveAspectRatio="none">
             <line x1="0" y1="34" x2="100" y2="34" stroke="var(--border)" strokeWidth="0.5" />
             <path d={curveD} fill="none" stroke="var(--bull)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             {earned.map((p, i) => (
@@ -114,7 +114,7 @@ export function ChapterNav() {
             ))}
           </svg>
         )}
-        <div className="rail-fade mb-3 font-mono text-[9px] uppercase leading-[1.5] tracking-[0.2em] text-fg-faint">
+        <div className="rail-fade mb-3 font-mono text-[0.5625rem] uppercase leading-[1.5] tracking-[0.2em] text-fg-faint">
           <div className="whitespace-nowrap">
             <span className="text-fg-dim">{correctCount}</span>/{total} called right
           </div>
@@ -133,7 +133,7 @@ export function ChapterNav() {
                 <button
                   onClick={() => jump(c.id)}
                   aria-current={isActive ? "true" : undefined}
-                  className={`group flex w-full items-center gap-2 py-0.5 text-left font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                  className={`group flex w-full items-center gap-2 py-0.5 text-left font-mono text-[0.625rem] uppercase tracking-wider transition-colors ${
                     isActive ? "text-bull" : "text-fg-faint hover:text-fg-dim"
                   }`}
                 >
@@ -146,7 +146,7 @@ export function ChapterNav() {
                   <span className="rail-fade tabular-nums">{c.num}</span>
                   <span className="rail-fade truncate">{c.short}</span>
                   {isConcept && (
-                    <span className={`rail-fade ml-auto text-[9px] ${p ? (p.correct ? "text-bull" : "text-amber") : "text-fg-faint/40"}`}>
+                    <span className={`rail-fade ml-auto text-[0.5625rem] ${p ? (p.correct ? "text-bull" : "text-amber") : "text-fg-faint/40"}`}>
                       {p ? (p.correct ? "✓" : "•") : "◦"}
                     </span>
                   )}

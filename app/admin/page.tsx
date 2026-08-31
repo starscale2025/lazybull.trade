@@ -86,11 +86,11 @@ export default async function AdminPage() {
       {/* Background atmosphere — matches the marketing site so context feels continuous */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
-          className="absolute -left-32 top-20 h-[480px] w-[480px] rounded-full"
+          className="absolute -left-32 top-20 h-[30rem] w-[30rem] rounded-full"
           style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--bull) 10%, transparent) 0%, transparent 70%)", filter: "blur(120px)" }}
         />
         <div
-          className="absolute right-0 top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full"
+          className="absolute right-0 top-1/2 h-[26.25rem] w-[26.25rem] -translate-y-1/2 rounded-full"
           style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--cyan) 6%, transparent) 0%, transparent 70%)", filter: "blur(140px)" }}
         />
       </div>

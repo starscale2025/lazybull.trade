@@ -65,7 +65,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       <section className="relative overflow-hidden border-b border-border">
         <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
         <div
-          className="pointer-events-none absolute -left-40 top-0 h-[420px] w-[420px] rounded-full blur-[160px]"
+          className="pointer-events-none absolute -left-40 top-0 h-[26.25rem] w-[26.25rem] rounded-full blur-[160px]"
           style={{ background: `${cat.color}33` }}
         />
         <div className="relative shell section-y-sm">
@@ -103,13 +103,13 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/quant?add=${bot.id}`}
-                className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+                className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
               >
                 ▶ Try it now
               </Link>
               <Link
                 href="/learn/bots"
-                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
+                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
               >
                 ↗ Browse all 27
               </Link>
@@ -153,7 +153,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 </div>
                 <div className="divide-y divide-border-soft">
                   {bot.params.map((p) => (
-                    <div key={p.key} className="grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-3 text-[12px] md:grid-cols-12 md:gap-3">
+                    <div key={p.key} className="grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-3 text-[0.75rem] md:grid-cols-12 md:gap-3">
                       <span className="font-mono text-fg md:col-span-3">{p.key}</span>
                       <span className="text-fg-dim md:col-span-3">{p.label}</span>
                       <span className="font-mono text-fg-faint md:col-span-3">
@@ -212,17 +212,17 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 </div>
                 <span className="shrink-0 text-fg-faint">TypeScript · MIT-licensed</span>
               </div>
-              <pre className="overflow-x-auto p-5 font-mono text-[12px] leading-relaxed text-fg">
+              <pre className="overflow-x-auto p-5 font-mono text-[0.75rem] leading-relaxed text-fg">
                 <code>{source.code}</code>
               </pre>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 text-[12px] text-fg-dim md:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-3 text-[0.75rem] text-fg-dim md:grid-cols-2">
               <div className="surface-card border border-border bg-surface p-3">
                 <div className="t-chrome text-fg-faint mb-1">
                   what each piece means
                 </div>
-                <ul className="space-y-1.5 text-[12px] leading-relaxed">
+                <ul className="space-y-1.5 text-[0.75rem] leading-relaxed">
                   <li><code className="text-cyan">id</code> — unique key the workbench uses to find the bot.</li>
                   <li><code className="text-cyan">params</code> — the sliders + inputs you see on the cell.</li>
                   <li><code className="text-cyan">run(ctx, p)</code> — the function that gets called with candles + your params and returns the verdict.</li>
@@ -234,7 +234,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 <div className="t-chrome text-fg-faint mb-1">
                   use this code yourself
                 </div>
-                <ol className="space-y-1.5 text-[12px] leading-relaxed list-decimal pl-4">
+                <ol className="space-y-1.5 text-[0.75rem] leading-relaxed list-decimal pl-4">
                   <li>Copy the whole block above.</li>
                   <li>On <a href="/quant" className="text-bull hover:underline">/quant</a>, click <span className="border border-dashed border-border px-1">+ Import your bot</span> in the bot library.</li>
                   <li>Paste, hit save. It hot-loads into your workspace.</li>
@@ -285,7 +285,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       <section className="border-b border-border bg-bg-soft">
         <div className="shell section-y-sm">
           <SectionLabel>How to read its verdict</SectionLabel>
-          <p className="mt-4 max-w-[68ch] text-[15px] leading-relaxed text-fg">
+          <p className="mt-4 max-w-[68ch] text-[0.9375rem] leading-relaxed text-fg">
             {content.verdict ?? defaultVerdict(bot.name)}
           </p>
         </div>
@@ -305,13 +305,13 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             {/* Dev-metadata chips, demoted here from the hero */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {bot.module && (
-                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[11px] tracking-wider text-fg-dim">
+                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[0.6875rem] tracking-wider text-fg-dim">
                   <span className="text-fg-faint uppercase mr-1">src</span>
                   <span className="text-fg">{bot.module}</span>
                 </span>
               )}
               {bot.endpoint && (
-                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[11px] tracking-wider text-fg-dim">
+                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[0.6875rem] tracking-wider text-fg-dim">
                   <span className="text-fg-faint uppercase mr-1">api</span>
                   <span className="text-cyan">{bot.endpoint}</span>
                 </span>
@@ -338,12 +338,12 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 ].map((s) => (
                   <div key={s.step} className="bg-bg p-4">
                     <div className="t-chrome text-fg-faint">{s.step}</div>
-                    <div className="mt-2 font-mono text-[12px] tracking-wide text-fg">{s.title}</div>
-                    <div className="mt-1 text-[11px] leading-relaxed text-fg-dim">{s.body}</div>
+                    <div className="mt-2 font-mono text-[0.75rem] tracking-wide text-fg">{s.title}</div>
+                    <div className="mt-1 text-[0.6875rem] leading-relaxed text-fg-dim">{s.body}</div>
                   </div>
                 ))}
               </div>
-              <div className="border-t border-border bg-bg p-3 font-mono text-[11px] tracking-wider text-fg-dim">
+              <div className="border-t border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wider text-fg-dim">
                 <span className="text-fg-faint uppercase mr-2">spin it up</span>
                 <code className="text-fg">cd "ai quants" && uvicorn serve:app --reload --port 8000</code>
               </div>
@@ -389,19 +389,19 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                   className="group flex items-start gap-3 surface-card border border-border bg-surface p-4 hover:border-bull/50 hover:bg-bull/[0.03]"
                 >
                   <span
-                    className="grid size-8 shrink-0 place-items-center border border-border bg-bg font-mono text-[12px]"
+                    className="grid size-8 shrink-0 place-items-center border border-border bg-bg font-mono text-[0.75rem]"
                     style={{ color: rcat.color }}
                   >
                     {r.glyph}
                   </span>
                   <div>
-                    <div className="font-display text-[15px] tracking-tightest text-fg">
+                    <div className="font-display text-[0.9375rem] tracking-tightest text-fg">
                       {r.name}
                     </div>
-                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider" style={{ color: rcat.color }}>
+                    <div className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-wider" style={{ color: rcat.color }}>
                       {rcat.label}
                     </div>
-                    <p className="mt-2 line-clamp-2 text-[12px] text-fg-dim">{r.tagline}</p>
+                    <p className="mt-2 line-clamp-2 text-[0.75rem] text-fg-dim">{r.tagline}</p>
                   </div>
                 </Link>
               );
@@ -415,20 +415,20 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
         <div className="shell section-y-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <Link href="/learn" className="font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-bull">
+              <Link href="/learn" className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-bull">
                 ← Back to Learn
               </Link>
             </div>
             <div className="flex items-center gap-2">
               <Link
                 href="/learn/bots"
-                className="inline-flex items-center gap-2 border border-border bg-bg px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
+                className="inline-flex items-center gap-2 border border-border bg-bg px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
               >
                 Browse all bots
               </Link>
               <Link
                 href={`/quant?add=${bot.id}`}
-                className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+                className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
               >
                 Try {bot.name} →
               </Link>

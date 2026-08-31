@@ -187,17 +187,17 @@ export function GreekSurface3D() {
               key={g.key}
               onClick={() => setGreek(g.key)}
               aria-pressed={greek === g.key}
-              className={`flex h-7 items-center gap-1.5 border px-2.5 font-mono text-[11px] uppercase tracking-wider transition-colors ${
+              className={`flex h-7 items-center gap-1.5 border px-2.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
                 greek === g.key ? "border-transparent text-bg" : "border-border bg-bg text-fg-dim hover:text-fg"
               }`}
               style={greek === g.key ? { background: `rgb(${g.accent})` } : undefined}
             >
-              <span className="text-[13px] not-italic">{g.sym}</span>
+              <span className="text-[0.8125rem] not-italic">{g.sym}</span>
               {g.label}
             </button>
           ))}
         </div>
-        <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint sm:block">drag to orbit</span>
+        <span className="hidden font-mono text-[0.625rem] uppercase tracking-[0.25em] text-fg-faint sm:block">drag to orbit</span>
       </div>
 
       <canvas
@@ -206,12 +206,12 @@ export function GreekSurface3D() {
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        className="block h-[340px] w-full cursor-grab touch-none select-none active:cursor-grabbing"
+        className="block h-[21.25rem] w-full cursor-grab touch-none select-none active:cursor-grabbing"
         role="img"
         aria-label={`3D surface of ${active.label} across strike and time to expiry. ${active.blurb}`}
       />
 
-      <p className="mt-3 font-mono text-[12px] leading-relaxed text-fg-dim">
+      <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
         <span className="font-semibold" style={{ color: `rgb(${accent})` }}>
           {active.sym} {active.label} —{" "}
         </span>

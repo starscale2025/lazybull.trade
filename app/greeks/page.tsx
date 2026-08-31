@@ -360,7 +360,7 @@ function GreekStatCard({
 
   return (
     <div className="surface-card border border-border bg-surface p-2 md:p-4">
-      <div className="t-chrome flex items-baseline gap-1.5 text-fg-dim md:text-[10px]">
+      <div className="t-chrome flex items-baseline gap-1.5 text-fg-dim md:text-[0.625rem]">
         {/* The words used to be replaced by bare Greek letters below md, because
             five cards across 375px left no room for them — so the page that
             teaches the Greeks stopped naming them on the device most people
@@ -378,14 +378,14 @@ function GreekStatCard({
         </div>
         {/* The sparkline and the teacher line are the two things that push a
             card past ~55px; both are detail, so they wait for the wider grid. */}
-        <svg viewBox="0 0 90 20" className="mb-1 hidden h-4 w-[72px] shrink-0 text-bull md:block" fill="none" aria-hidden>
+        <svg viewBox="0 0 90 20" className="mb-1 hidden h-4 w-[4.5rem] shrink-0 text-bull md:block" fill="none" aria-hidden>
           <polyline points={points} stroke="currentColor" strokeWidth="1.2" />
         </svg>
       </div>
       {showLine && (
         <div
           data-teacher-line
-          className="mt-3 hidden border-t border-border-soft pt-2 text-[11px] leading-relaxed text-fg-dim md:block"
+          className="mt-3 hidden border-t border-border-soft pt-2 text-[0.6875rem] leading-relaxed text-fg-dim md:block"
         >
           {GREEK_COPY[greek].line}
         </div>
@@ -544,7 +544,7 @@ export default function GreeksLabPage() {
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <label
                 htmlFor="symbol-select"
-                className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint"
+                className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint"
               >
                 Symbol
               </label>
@@ -554,7 +554,7 @@ export default function GreeksLabPage() {
                   aria-label="Symbol"
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value as (typeof SYMBOLS)[number])}
-                  className="h-10 appearance-none surface-card border border-border bg-surface pl-3 pr-8 font-mono text-[11px] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none md:h-8"
+                  className="h-10 appearance-none surface-card border border-border bg-surface pl-3 pr-8 font-mono text-[0.6875rem] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none md:h-8"
                 >
                   {SYMBOLS.map((s) => (
                     <option key={s} value={s}>
@@ -574,7 +574,7 @@ export default function GreeksLabPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">Surface</span>
+              <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint">Surface</span>
               <div className="flex surface-card border border-border bg-surface">
                 {SURFACE_ORDER.map((k, i) => (
                   <button
@@ -582,7 +582,7 @@ export default function GreeksLabPage() {
                     data-surface-btn={k}
                     aria-pressed={surfaceKey === k}
                     onClick={() => setSurfaceKey(k)}
-                    className={`h-10 px-2.5 font-mono text-[10px] uppercase tracking-wider transition-colors md:h-8 ${
+                    className={`h-10 px-2.5 font-mono text-[0.625rem] uppercase tracking-wider transition-colors md:h-8 ${
                       i > 0 ? "border-l border-border-soft" : ""
                     } ${surfaceKey === k ? "bg-bull/10 text-bull" : "text-fg-dim hover:bg-bg hover:text-fg"}`}
                   >
@@ -603,7 +603,7 @@ export default function GreeksLabPage() {
               }`}
             >
               <span
-                className={`font-mono text-[10px] uppercase tracking-[0.25em] ${teacher ? "text-bull" : "text-fg-dim"}`}
+                className={`font-mono text-[0.625rem] uppercase tracking-[0.25em] ${teacher ? "text-bull" : "text-fg-dim"}`}
               >
                 Teacher mode {teacher ? "on" : "off"}
               </span>
@@ -614,7 +614,7 @@ export default function GreeksLabPage() {
               >
                 <span
                   className={`absolute top-1/2 size-3 -translate-y-1/2 rounded-full transition-all ${
-                    teacher ? "left-[18px] bg-bull shadow-[0_0_8px_var(--bull)]" : "left-0.5 bg-fg-dim"
+                    teacher ? "left-[1.125rem] bg-bull shadow-[0_0_8px_var(--bull)]" : "left-0.5 bg-fg-dim"
                   }`}
                 />
               </span>
@@ -630,9 +630,9 @@ export default function GreeksLabPage() {
             Watch all five Greeks move.
           </h1>
           {teacher && (
-            <aside className="w-full max-w-sm shrink-0 surface-card border border-border bg-surface p-5 lg:w-[320px]">
+            <aside className="w-full max-w-sm shrink-0 surface-card border border-border bg-surface p-5 lg:w-[20rem]">
               <div className="t-eyebrow text-bull">What am I seeing?</div>
-              <p className="mt-3 text-[12px] leading-relaxed text-fg-dim">
+              <p className="mt-3 text-[0.75rem] leading-relaxed text-fg-dim">
                 This is an option pricing surface. Drag the glowing handle to explore how the
                 price changes — and watch all five Greeks update in real time. Strike runs
                 along one edge, days to expiry along the other; height is whichever surface
@@ -775,7 +775,7 @@ export default function GreeksLabPage() {
 
         {/* provenance strip */}
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border-soft pt-4">
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+          <div className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint">
             Black-Scholes · Computed live in your browser ·{" "}
             {source === "live"
               ? volSource === "realized"
@@ -786,7 +786,7 @@ export default function GreeksLabPage() {
           </div>
           <Link
             href="/learn#greeks"
-            className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim transition-colors hover:text-bull"
+            className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-dim transition-colors hover:text-bull"
           >
             part of §06 in the primer →
           </Link>

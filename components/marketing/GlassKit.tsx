@@ -37,7 +37,7 @@ export function GlassSection({
     // rather than as `html { scroll-padding-top }` because that would apply to
     // the cinema's scroll range too, and the cinema reads scrollY directly.
     <section id={id} className={`relative z-10 scroll-mt-[84px] ${className}`}>
-      <div className="mx-auto w-full max-w-[1160px] px-6 py-[clamp(4rem,9vw,5.75rem)]">
+      <div className="mx-auto w-full max-w-[72.5rem] px-6 py-[clamp(4rem,9vw,5.75rem)]">
         {children}
       </div>
     </section>
@@ -51,7 +51,7 @@ export function GlassEyebrow({ children }: { children: ReactNode }) {
     <div className="flex items-center gap-2.5 t-eyebrow text-bull">
       <span
         aria-hidden
-        className="h-px w-[22px] bg-[linear-gradient(90deg,var(--bull),transparent)]"
+        className="h-px w-[1.375rem] bg-[linear-gradient(90deg,var(--bull),transparent)]"
       />
       {children}
     </div>
@@ -111,12 +111,12 @@ export function GlassChip({
 }) {
   return (
     <span
-      className={`glass inline-flex items-center gap-2 rounded-[var(--r-pill)] px-3.5 py-[7px] t-eyebrow ${CHIP_TONE[tone]} ${className}`}
+      className={`glass inline-flex items-center gap-2 rounded-[var(--r-pill)] px-3.5 py-[0.4375rem] t-eyebrow ${CHIP_TONE[tone]} ${className}`}
     >
       {dot && (
         <span
           aria-hidden
-          className={`size-[5px] shrink-0 rounded-full ${CHIP_DOT[tone]} ${pulse ? "pulse-dot" : ""}`}
+          className={`size-[0.3125rem] shrink-0 rounded-full ${CHIP_DOT[tone]} ${pulse ? "pulse-dot" : ""}`}
           style={{ boxShadow: "0 0 10px currentColor" }}
         />
       )}
@@ -134,8 +134,8 @@ export function GlassChip({
    nothing in /pro, /trade or /quant picks it up.                            */
 
 const BTN_SIZE = {
-  lg: "h-[54px] px-[30px] text-[13px]",
-  md: "h-[42px] px-5 text-[11px]",
+  lg: "h-[3.375rem] px-[1.875rem] text-[0.8125rem]",
+  md: "h-[2.625rem] px-5 text-[0.6875rem]",
 } as const;
 
 const BTN_KIND = {
@@ -196,7 +196,7 @@ export function GlassPoints({ points }: { points: readonly string[] }) {
       {points.map((p) => (
         <li
           key={p}
-          className="flex gap-2.5 font-mono text-[11px] leading-[1.5] text-fg-dim"
+          className="flex gap-2.5 font-mono text-[0.6875rem] leading-[1.5] text-fg-dim"
         >
           <span aria-hidden className="text-bull">
             ›

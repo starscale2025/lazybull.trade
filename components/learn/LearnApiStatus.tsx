@@ -60,7 +60,7 @@ export function LearnApiStatus({ endpoint }: { endpoint: string }) {
       : "border-border bg-bg text-fg-faint";
 
   return (
-    <div className={`flex flex-wrap items-center gap-3 border px-4 py-3 font-mono text-[11px] uppercase tracking-wider ${tone}`}>
+    <div className={`flex flex-wrap items-center gap-3 border px-4 py-3 font-mono text-[0.6875rem] uppercase tracking-wider ${tone}`}>
       <span className="flex items-center gap-2">
         <span
           className={`size-2 rounded-full ${
@@ -86,7 +86,7 @@ export function LearnApiStatus({ endpoint }: { endpoint: string }) {
         </span>
       </span>
       {info && (
-        <span className="basis-full text-[10px] normal-case tracking-normal text-fg-dim">
+        <span className="basis-full text-[0.625rem] normal-case tracking-normal text-fg-dim">
           {info}
         </span>
       )}

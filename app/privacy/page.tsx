@@ -21,11 +21,11 @@ function Clause({ n, title, children, means }: { n: string; title: string; child
   return (
     <section className="border-b border-border-soft py-8">
       <h2 className="flex items-baseline gap-3 font-display text-xl tracking-tightest text-fg">
-        <span className="font-mono text-[11px] text-fg-faint">{n}</span>
+        <span className="font-mono text-[0.6875rem] text-fg-faint">{n}</span>
         {title}
       </h2>
       <div className="mt-3 max-w-[70ch] space-y-3 t-body text-fg-dim">{children}</div>
-      <p className="mt-4 max-w-[70ch] border-l-2 border-bull/50 bg-bull/5 px-3 py-2 font-mono text-[12px] leading-relaxed text-fg-dim">
+      <p className="mt-4 max-w-[70ch] border-l-2 border-bull/50 bg-bull/5 px-3 py-2 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
         <span className="font-semibold uppercase tracking-wider text-bull">what this means · </span>
         {means}
       </p>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
-      <main className="mx-auto w-full max-w-[900px] flex-1 px-5 pb-24 pt-12">
+      <main className="mx-auto w-full max-w-[56.25rem] flex-1 px-5 pb-24 pt-12">
         <div className="flex flex-wrap items-center gap-2 t-eyebrow text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
           <span>privacy policy · effective 18 august 2026</span>
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
           </p>
         </Clause>
 
-        <p className="mt-8 max-w-[70ch] font-mono text-[11px] leading-relaxed text-fg-faint">
+        <p className="mt-8 max-w-[70ch] font-mono text-[0.6875rem] leading-relaxed text-fg-faint">
           <span className="text-amber">pending counsel review</span> — this ledger is written plainly and in good
           faith; formal legal review is scheduled.
         </p>

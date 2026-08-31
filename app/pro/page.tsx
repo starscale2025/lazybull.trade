@@ -830,7 +830,7 @@ export default function ProPage() {
         <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 t-chrome font-semibold text-bull">
           pro
         </span>
-        <div className="ml-1 hidden items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim md:flex">
+        <div className="ml-1 hidden items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim md:flex">
           <span>workspace · "godmode"</span>
           {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
           {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
@@ -842,7 +842,7 @@ export default function ProPage() {
             breakpoint. */}
         {synthetic && !loading && (
           <span
-            className="ml-1 font-mono text-[11px] uppercase tracking-wider text-amber"
+            className="ml-1 font-mono text-[0.6875rem] uppercase tracking-wider text-amber"
             title="Live feed unavailable — showing a deterministic synthetic tape, not real quotes. Add a data key to go live."
           >
             · synthetic tape
@@ -882,7 +882,7 @@ export default function ProPage() {
           below (page scrolls); lg+: the original single-screen three-pane row. */}
       <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
         {/* /var(--ui-zoom): html renders zoomed, so raw vh over-measures. */}
-        <div className="flex h-[calc(62vh/var(--ui-zoom))] min-h-[420px] shrink-0 overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
+        <div className="flex h-[calc(62vh/var(--ui-zoom))] min-h-[26.25rem] shrink-0 overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
         <LeftToolbar
           tool={tool}
           setTool={setTool}
@@ -955,7 +955,7 @@ export default function ProPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 12 }}
-                className={`absolute inset-x-0 bottom-3 mx-auto w-fit border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider ${
+                className={`absolute inset-x-0 bottom-3 mx-auto w-fit border px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider ${
                   toast.tone === "warn" ? "border-amber/60 bg-amber/10 text-amber" : "border-bull/60 bg-bull/10 text-bull"
                 }`}
               >

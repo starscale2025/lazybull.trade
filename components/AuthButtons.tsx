@@ -25,7 +25,7 @@ export function AuthButtons() {
 
   if (status === "loading") {
     return (
-      <span className="hidden h-9 items-center px-3 font-mono text-[11px] uppercase tracking-wider text-fg-faint sm:inline-flex">
+      <span className="hidden h-9 items-center px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint sm:inline-flex">
         <span className="size-1.5 rounded-full bg-fg-faint animate-pulse" />
       </span>
     );
@@ -35,7 +35,7 @@ export function AuthButtons() {
     return (
       <button
         onClick={() => signIn("google", { callbackUrl: "/quant" })}
-        className="hidden h-9 items-center gap-2 rounded-full px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg sm:inline-flex"
+        className="hidden h-9 items-center gap-2 rounded-full px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg sm:inline-flex"
       >
         Sign in
       </button>
@@ -55,7 +55,7 @@ export function AuthButtons() {
     <div ref={wrapRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/60 hover:text-fg"
+        className="flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/60 hover:text-fg"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -63,7 +63,7 @@ export function AuthButtons() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={u.image} alt="" className="size-6 rounded-full" />
         ) : (
-          <span className="grid size-6 place-items-center rounded-full border border-border bg-bg font-mono text-[10px] font-bold text-bull">
+          <span className="grid size-6 place-items-center rounded-full border border-border bg-bg font-mono text-[0.625rem] font-bold text-bull">
             {initials || "··"}
           </span>
         )}
@@ -82,12 +82,12 @@ export function AuthButtons() {
             <div className="t-chrome text-fg-faint">
               signed in as
             </div>
-            <div className="mt-1 truncate text-[13px] text-fg">{u.name || u.email}</div>
+            <div className="mt-1 truncate text-[0.8125rem] text-fg">{u.name || u.email}</div>
             {u.email && u.name && (
-              <div className="mt-0.5 truncate font-mono text-[10px] text-fg-faint">{u.email}</div>
+              <div className="mt-0.5 truncate font-mono text-[0.625rem] text-fg-faint">{u.email}</div>
             )}
           </div>
-          <div className="py-1 font-mono text-[11px] uppercase tracking-wider">
+          <div className="py-1 font-mono text-[0.6875rem] uppercase tracking-wider">
             <Link
               href="/quant"
               onClick={() => setOpen(false)}
@@ -113,7 +113,7 @@ export function AuthButtons() {
           <div className="border-t border-border">
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="block w-full px-3 py-2 text-left font-mono text-[11px] uppercase tracking-wider text-bear hover:bg-bear/10"
+              className="block w-full px-3 py-2 text-left font-mono text-[0.6875rem] uppercase tracking-wider text-bear hover:bg-bear/10"
             >
               Sign out
             </button>

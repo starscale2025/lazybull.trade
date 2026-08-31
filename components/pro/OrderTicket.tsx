@@ -114,10 +114,10 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
     return (
       <div className="pointer-events-auto flex items-stretch surface-instrument border border-border bg-surface shadow-lg">
         <div className="flex flex-col justify-center px-3 py-1 font-mono">
-          <span className={`text-[10px] font-semibold uppercase tracking-wider ${up ? "text-bull" : "text-bear"}`}>
+          <span className={`text-[0.625rem] font-semibold uppercase tracking-wider ${up ? "text-bull" : "text-bear"}`}>
             Confirm {staged.side}
           </span>
-          <span className="text-[11px] tabular-nums text-fg-dim">
+          <span className="text-[0.6875rem] tabular-nums text-fg-dim">
             {staged.qty} {symbol} @ {fmt(price ?? staged.price, 2)}
             {Math.abs(drift) >= 0.01 && (
               // The price moved while the order sat staged — say so, because
@@ -133,7 +133,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         <button
           onClick={confirm}
           aria-label={`Confirm ${staged.side} ${staged.qty} ${symbol} at market`}
-          className={`border-l border-border px-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg ${
+          className={`border-l border-border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg ${
             up ? "bg-bull hover:bg-bull-dim" : "bg-bear hover:bg-bear-dim"
           }`}
         >
@@ -145,7 +145,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
             setStaged(null);
           }}
           aria-label="Cancel staged order"
-          className="border-l border-border px-3 font-mono text-[11px] text-fg-faint transition-colors hover:text-fg"
+          className="border-l border-border px-3 font-mono text-[0.6875rem] text-fg-faint transition-colors hover:text-fg"
         >
           ✕
         </button>
@@ -174,8 +174,8 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         aria-label={`Sell ${qtyLabel} ${symbol} at market`}
         className="flex flex-col items-center px-3 py-1 font-mono transition-colors enabled:hover:bg-bear enabled:hover:text-bg disabled:cursor-not-allowed text-bear"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wider">Sell</span>
-        <span className="text-[11px] tabular-nums">{price ? fmt(price, 2) : "—"}</span>
+        <span className="text-[0.625rem] font-semibold uppercase tracking-wider">Sell</span>
+        <span className="text-[0.6875rem] tabular-nums">{price ? fmt(price, 2) : "—"}</span>
       </button>
       <input
         value={qty}
@@ -185,7 +185,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         onChange={(e) => setQty(e.target.value.replace(/[^\d.]/g, ""))}
         inputMode="decimal"
         aria-label="Order quantity"
-        className="w-14 border-x border-border bg-transparent text-center font-mono text-[11px] tabular-nums text-fg outline-none"
+        className="w-14 border-x border-border bg-transparent text-center font-mono text-[0.6875rem] tabular-nums text-fg outline-none"
       />
       <button
         onClick={() => arm("buy")}
@@ -193,8 +193,8 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         aria-label={`Buy ${qtyLabel} ${symbol} at market`}
         className="flex flex-col items-center px-3 py-1 font-mono transition-colors enabled:hover:bg-bull enabled:hover:text-bg disabled:cursor-not-allowed text-bull"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wider">Buy</span>
-        <span className="text-[11px] tabular-nums">{price ? fmt(price, 2) : "—"}</span>
+        <span className="text-[0.625rem] font-semibold uppercase tracking-wider">Buy</span>
+        <span className="text-[0.6875rem] tabular-nums">{price ? fmt(price, 2) : "—"}</span>
       </button>
       <button
         onClick={toggleOneClick}
@@ -202,7 +202,7 @@ export function OrderTicket({ symbol, price, disabled = false, onResult }: Props
         aria-checked={oneClick}
         aria-label="One-click trading"
         title={oneClick ? "One-click trading ON — click to require confirmation" : "One-click trading OFF"}
-        className={`border-l border-border px-2 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+        className={`border-l border-border px-2 font-mono text-[0.625rem] uppercase tracking-wider transition-colors ${
           oneClick ? "bg-amber/20 text-amber" : "text-fg-faint hover:text-fg-dim"
         }`}
       >

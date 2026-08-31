@@ -65,7 +65,7 @@ export function CommandPalette() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 border border-border bg-bg/90 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim shadow-[0_8px_28px_-12px_rgba(0,0,0,0.6)] backdrop-blur transition-colors hover:border-bull hover:text-fg"
+        className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 border border-border bg-bg/90 px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim shadow-[0_8px_28px_-12px_rgba(0,0,0,0.6)] backdrop-blur transition-colors hover:border-bull hover:text-fg"
       >
         <span className="text-fg-faint">⌘</span>K · admin actions
       </button>
@@ -86,7 +86,7 @@ export function CommandPalette() {
           />
           <button
             onClick={() => setOpen(false)}
-            className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:text-fg"
+            className="border border-border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-fg"
           >
             esc
           </button>
@@ -97,23 +97,23 @@ export function CommandPalette() {
               key={c.id}
               onMouseEnter={() => setActive(i)}
               onClick={() => { console.log("[admin] dispatch:", c.id); setOpen(false); }}
-              className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left font-mono text-[12px] transition-colors ${
+              className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left font-mono text-[0.75rem] transition-colors ${
                 i === active ? "bg-bull/10 text-fg" : "text-fg-dim hover:bg-surface"
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-fg-faint text-[10px] uppercase tracking-wider w-14">{c.group}</span>
+                <span className="text-fg-faint text-[0.625rem] uppercase tracking-wider w-14">{c.group}</span>
                 <span>{c.label}</span>
               </div>
               {c.hint && (
-                <span className="font-mono text-[10px] uppercase tracking-wider text-bear">
+                <span className="font-mono text-[0.625rem] uppercase tracking-wider text-bear">
                   {c.hint}
                 </span>
               )}
             </button>
           ))}
           {!filtered.length && (
-            <div className="px-4 py-6 text-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+            <div className="px-4 py-6 text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
               no commands match
             </div>
           )}

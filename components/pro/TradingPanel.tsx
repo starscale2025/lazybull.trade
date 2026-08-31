@@ -284,9 +284,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
         <button
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-fg transition-colors hover:text-bull"
+          className="flex items-center gap-2 font-mono text-[0.6875rem] tracking-wider text-fg transition-colors hover:text-bull"
         >
-          <span className="grid size-4 place-items-center border border-bull/50 text-[10px] font-bold text-bull">LB</span>
+          <span className="grid size-4 place-items-center border border-bull/50 text-[0.625rem] font-bold text-bull">LB</span>
           Paper Trading
           <span className={`text-fg-faint transition-transform ${open ? "" : "rotate-180"}`}>⌄</span>
         </button>
@@ -316,14 +316,14 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
         <div className="ml-auto flex items-center gap-2">
           <a
             href="/portfolio"
-            className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+            className="border border-border px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
             title="Full portfolio — positions, history, deployed, ledger"
           >
             portfolio ↗
           </a>
           <button
             onClick={() => setResetOpen(true)}
-            className="border border-bull/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+            className="border border-bull/40 px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
             title={`Reset to ${money(startingCash)} — wipes the ENTIRE portfolio (full warning before anything happens)`}
           >
             ↺ reset funds
@@ -332,7 +332,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             onClick={() => setOpen((v) => !v)}
             aria-label="Minimize paper trading"
             title="Minimize"
-            className="px-1 font-mono text-[13px] leading-none text-fg-faint transition-colors hover:text-fg"
+            className="px-1 font-mono text-[0.8125rem] leading-none text-fg-faint transition-colors hover:text-fg"
           >
             —
           </button>
@@ -343,7 +343,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
             }}
             aria-label={maximized ? "Restore paper trading" : "Maximize paper trading"}
             title={maximized ? "Restore" : "Maximize"}
-            className="px-1 font-mono text-[11px] leading-none text-fg-faint transition-colors hover:text-fg"
+            className="px-1 font-mono text-[0.6875rem] leading-none text-fg-faint transition-colors hover:text-fg"
           >
             {maximized ? "❐" : "⛶"}
           </button>
@@ -360,7 +360,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                 setCapitalOpen((v) => !v);
               }}
               aria-expanded={capitalOpen}
-              className="flex items-center gap-1.5 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[11px] text-fg transition-colors hover:border-fg-dim"
+              className="flex items-center gap-1.5 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[0.6875rem] text-fg transition-colors hover:border-fg-dim"
               title="Change the starting capital"
             >
               lazybull paper <span className="text-fg-faint">USD</span>
@@ -435,7 +435,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                   key={t}
                   onClick={() => setTab(t)}
                   aria-pressed={tab === t}
-                  className={`rounded-full px-3 py-1 font-mono text-[10px] tracking-wider transition-colors ${
+                  className={`rounded-full px-3 py-1 font-mono text-[0.625rem] tracking-wider transition-colors ${
                     tab === t ? "bg-surface text-fg" : "text-fg-faint hover:text-fg-dim"
                   }`}
                 >
@@ -448,7 +448,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               onClick={exportCsv}
               aria-label="Export this tab as CSV"
               title="Export CSV"
-              className="ml-auto px-2 py-1 font-mono text-[13px] text-fg-faint transition-colors hover:text-fg"
+              className="ml-auto px-2 py-1 font-mono text-[0.8125rem] text-fg-faint transition-colors hover:text-fg"
             >
               ↓
             </button>
@@ -462,7 +462,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (rows.length === 0 ? (
                 <Empty>No open positions — buy or sell from the order panel.</Empty>
               ) : (
-                <table className="w-full t-data text-[11px]">
+                <table className="w-full t-data text-[0.6875rem]">
                   <thead>
                     <tr className="t-chrome text-fg-faint">
                       <th className={th}>Symbol</th>
@@ -482,7 +482,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                       return (
                         <tr key={r.sym} className="border-t border-border-soft text-fg-dim">
                           <td className={`${td} text-fg`}>
-                            <span className="mr-1.5 border border-border px-1 text-[10px] text-fg-faint">
+                            <span className="mr-1.5 border border-border px-1 text-[0.625rem] text-fg-faint">
                               {r.pos.qty > 0 ? "LONG" : "SHORT"}
                             </span>
                             {r.sym}
@@ -527,13 +527,13 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                               <>
                                 <button
                                   onClick={() => applyProtection(r.sym, editing!.tp, editing!.sl)}
-                                  className="mr-1 border border-bull/50 px-1.5 text-[10px] text-bull hover:bg-bull hover:text-bg"
+                                  className="mr-1 border border-bull/50 px-1.5 text-[0.625rem] text-bull hover:bg-bull hover:text-bg"
                                 >
                                   save
                                 </button>
                                 <button
                                   onClick={() => setEditing(null)}
-                                  className="border border-border px-1.5 text-[10px] text-fg-faint hover:text-fg"
+                                  className="border border-border px-1.5 text-[0.625rem] text-fg-faint hover:text-fg"
                                 >
                                   ✕
                                 </button>
@@ -579,7 +579,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (working.length === 0 ? (
                 <Empty>Nothing resting — a limit or stop order will wait here until price reaches it.</Empty>
               ) : (
-                <table className="w-full t-data text-[11px]">
+                <table className="w-full t-data text-[0.6875rem]">
                   <thead>
                     <tr className="t-chrome text-fg-faint">
                       <th className={th}>Symbol</th>
@@ -608,7 +608,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                               cancelOrder(o.id);
                               onResult(`Cancelled ${o.side} ${o.sym}`, "ok");
                             }}
-                            className="border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bear hover:text-bear"
+                            className="border border-border px-2 py-0.5 text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bear hover:text-bear"
                           >
                             ✕ cancel
                           </button>
@@ -623,7 +623,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (orderHistory.length === 0 ? (
                 <Empty>No completed orders yet.</Empty>
               ) : (
-                <table className="w-full t-data text-[11px]">
+                <table className="w-full t-data text-[0.6875rem]">
                   <thead>
                     <tr className="t-chrome text-fg-faint">
                       <th className={th}>Time</th>
@@ -664,7 +664,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
               (balanceLog.length === 0 ? (
                 <Empty>No cash movements yet.</Empty>
               ) : (
-                <table className="w-full t-data text-[11px]">
+                <table className="w-full t-data text-[0.6875rem]">
                   <thead>
                     <tr className="t-chrome text-fg-faint">
                       <th className={th}>Time</th>
@@ -703,11 +703,11 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                     ].map((x) => (
                       <div key={x.k} className="bg-bg p-1.5">
                         <div className="t-chrome text-fg-faint">{x.k}</div>
-                        <div className={`t-data text-[11px] ${x.c}`}>{x.v}</div>
+                        <div className={`t-data text-[0.6875rem] ${x.c}`}>{x.v}</div>
                       </div>
                     ))}
                   </div>
-                  <table className="w-full t-data text-[11px]">
+                  <table className="w-full t-data text-[0.6875rem]">
                     <thead>
                       <tr className="t-chrome text-fg-faint">
                         <th className={th}>Closed</th>
@@ -783,8 +783,8 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
 function Stat({ k, v, node, tone }: { k: string; v?: string; node?: React.ReactNode; tone?: string }) {
   return (
     <div>
-      <div className="font-mono text-[10px] text-fg-faint">{k}</div>
-      <div className={`t-data text-[13px] ${tone ?? "text-fg"}`}>{node ?? v}</div>
+      <div className="font-mono text-[0.625rem] text-fg-faint">{k}</div>
+      <div className={`t-data text-[0.8125rem] ${tone ?? "text-fg"}`}>{node ?? v}</div>
     </div>
   );
 }
@@ -799,7 +799,7 @@ function Metric({ k, v, node, tone }: { k: string; v?: string; node?: React.Reac
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="py-3 font-mono text-[11px] text-fg-faint">{children}</div>;
+  return <div className="py-3 font-mono text-[0.6875rem] text-fg-faint">{children}</div>;
 }
 
 /**
@@ -842,7 +842,7 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
       <div className="shrink-0 font-mono">
         <div className="t-chrome text-fg-faint">realized equity</div>
         <div className={`text-sm tabular-nums ${up ? "text-bull" : "text-bear"}`}>${fmt(last, 2)}</div>
-        <div className={`text-[10px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
+        <div className={`text-[0.625rem] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
           {up ? "+" : "−"}
           {(Math.abs((last - startingCash) / (startingCash || 1)) * 100).toFixed(2)}%
         </div>

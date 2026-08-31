@@ -28,7 +28,7 @@ export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative max-w-[320px] border border-bull/40 bg-surface text-fg shadow-[0_20px_60px_-20px_rgba(0,255,135,0.4)]"
+            className="relative max-w-[20rem] border border-bull/40 bg-surface text-fg shadow-[0_20px_60px_-20px_rgba(0,255,135,0.4)]"
           >
             <div className="flex items-start gap-3 p-4">
               <div className="flex size-10 shrink-0 items-center justify-center border border-border bg-bg" style={{ color: "var(--bull)" }}>
@@ -45,7 +45,7 @@ export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
                 <div className="font-display text-base leading-tight tracking-tightest">
                   {bubble.title}
                 </div>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-fg-dim">{bubble.body}</p>
+                <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-fg-dim">{bubble.body}</p>
               </div>
               <button
                 onClick={() => setBubble(undefined)}

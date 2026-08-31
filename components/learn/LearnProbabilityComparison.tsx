@@ -91,7 +91,7 @@ export function LearnProbabilityComparison() {
   return (
     <div className="space-y-4">
       <div className="surface-card border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
           <span>price distribution at expiry · spot ${SPOT}</span>
           <span>iv {(iv * 100).toFixed(0)}% · {days}d</span>
         </div>
@@ -157,7 +157,7 @@ export function LearnProbabilityComparison() {
         </div>
       </div>
 
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[11px] tracking-wide text-fg-dim leading-relaxed">
+      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim leading-relaxed">
         <span className="text-fg-faint">read this →</span> the three numbers should be close near the
         center, but as you push the band into the wings (deep OTM), <span className="text-amber">empirical</span> tends to
         give a higher probability than <span className="text-bull">BS</span> because real markets have
@@ -172,14 +172,14 @@ function ProbCard({ label, value, tone, subtitle, note }: { label: string; value
   const color = tone === "bull" ? "var(--bull)" : tone === "cyan" ? "var(--cyan)" : "var(--amber)";
   return (
     <div className="surface-card border border-border bg-surface p-4 flex flex-col">
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider" style={{ color }}>
+      <div className="flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider" style={{ color }}>
         <span>{label}</span>
         <span className="text-fg-faint">{subtitle}</span>
       </div>
       <div className="mt-3 font-display text-4xl tabular-nums" style={{ color }}>
         {(value * 100).toFixed(1)}%
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-fg-dim">{note}</p>
+      <p className="mt-2 text-[0.6875rem] leading-relaxed text-fg-dim">{note}</p>
     </div>
   );
 }
@@ -189,9 +189,9 @@ function ProbCard({ label, value, tone, subtitle, note }: { label: string; value
 function Slider({ label, value, setValue, min, max, step, suffix, prefix = "" }: { label: string; value: number; setValue: (n: number) => void; min: number; max: number; step: number; suffix: string; prefix?: string }) {
   return (
     <label className="flex flex-col gap-1 mb-3 last:mb-0">
-      <span className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+      <span className="flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
         <span>{label}</span>
-        <span className="font-mono text-[12px] tabular-nums text-fg">{prefix}{typeof value === "number" ? value.toFixed(step < 1 ? 1 : 0) : value}{suffix}</span>
+        <span className="font-mono text-[0.75rem] tabular-nums text-fg">{prefix}{typeof value === "number" ? value.toFixed(step < 1 ? 1 : 0) : value}{suffix}</span>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => setValue(parseFloat(e.target.value))} className="h-1 w-full accent-bull" />
     </label>

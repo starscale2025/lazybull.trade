@@ -45,13 +45,13 @@ function InfoTip({ text, up = false }: { text: string; up?: boolean }) {
       <span
         tabIndex={0}
         aria-label={text}
-        className="inline-flex size-3.5 cursor-help items-center justify-center border border-border font-mono text-[10px] text-fg-faint transition-colors hover:border-fg-dim hover:text-fg focus:border-fg-dim focus:text-fg"
+        className="inline-flex size-3.5 cursor-help items-center justify-center border border-border font-mono text-[0.625rem] text-fg-faint transition-colors hover:border-fg-dim hover:text-fg focus:border-fg-dim focus:text-fg"
       >
         ?
       </span>
       <span
         role="tooltip"
-        className={`pointer-events-none absolute left-1/2 z-50 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
+        className={`pointer-events-none absolute left-1/2 z-50 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2 text-left font-mono text-[0.625rem] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
           up ? "bottom-full mb-1.5" : "top-full mt-1.5"
         }`}
       >
@@ -136,8 +136,8 @@ export function QuantHero({
   return (
     <section className="relative overflow-hidden border-b border-border bg-bg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
-      <div className="pointer-events-none absolute -left-32 top-10 h-[320px] w-[320px] rounded-full bg-cyan/10 blur-[120px] drift" />
-      <div className="pointer-events-none absolute right-0 top-20 h-[280px] w-[280px] rounded-full bg-plasma/10 blur-[120px] drift" style={{ animationDelay: "-5s" }} />
+      <div className="pointer-events-none absolute -left-32 top-10 h-[20rem] w-[20rem] rounded-full bg-cyan/10 blur-[120px] drift" />
+      <div className="pointer-events-none absolute right-0 top-20 h-[17.5rem] w-[17.5rem] rounded-full bg-plasma/10 blur-[120px] drift" style={{ animationDelay: "-5s" }} />
       <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
       {/* The engine room: a brass difference-engine RUNNING — gears turn, the
           laser sweeps. muted is (re)set via ref (React omits the attribute in
@@ -192,7 +192,7 @@ export function QuantHero({
               <span className="text-cyan">.</span>
             </h1>
 
-            <p className="max-w-[60ch] text-balance text-[15px] leading-relaxed text-fg-dim md:text-base">
+            <p className="max-w-[60ch] text-balance text-[0.9375rem] leading-relaxed text-fg-dim md:text-base">
               A workbench for quant traders and a class-12 math kid alike. Stack bots like
               Jupyter cells. Tune the math. See where they agree, where they fight, and what
               the combined edge says — in plain English if you want, or in formulas if
@@ -213,7 +213,7 @@ export function QuantHero({
                       aria-pressed={mode === "live"}
                       disabled={runLocked}
                       title="Real market OHLCV, ticking every ~15s (delayed feed)"
-                      className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
+                      className={`px-1.5 py-px text-[0.625rem] font-semibold transition-colors ${
                         mode === "live" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
                       }`}
                     >
@@ -224,7 +224,7 @@ export function QuantHero({
                       aria-pressed={mode === "seed"}
                       disabled={runLocked}
                       title="Deterministic synthetic tape — same seed, same bars, every time"
-                      className={`px-1.5 py-px text-[10px] font-semibold transition-colors ${
+                      className={`px-1.5 py-px text-[0.625rem] font-semibold transition-colors ${
                         mode === "seed" ? "bg-cyan text-bg" : "bg-bg text-fg-faint hover:text-fg"
                       }`}
                     >
@@ -233,7 +233,7 @@ export function QuantHero({
                   </span>
                   {dataSource === "fallback" ? (
                     <span
-                      className="inline-flex items-center gap-1 whitespace-nowrap border border-amber/50 bg-amber/10 px-1.5 py-px text-[10px] text-amber"
+                      className="inline-flex items-center gap-1 whitespace-nowrap border border-amber/50 bg-amber/10 px-1.5 py-px text-[0.625rem] text-amber"
                       title="The free data feed got rate-limited by the provider, so the bots are on a deterministic stand-in tape. It retries automatically — the live tape returns on its own."
                     >
                       <span className="size-1 rounded-full bg-amber" />
@@ -242,7 +242,7 @@ export function QuantHero({
                     </span>
                   ) : (
                     <span
-                      className={`inline-flex items-center gap-1 border px-1 py-px text-[10px] ${
+                      className={`inline-flex items-center gap-1 border px-1 py-px text-[0.625rem] ${
                         dataSource === "live" ? "border-bull/50 bg-bull/10 text-bull" : "border-cyan/50 bg-cyan/10 text-cyan"
                       }`}
                       title={dataSource === "live" ? "Real market OHLCV from the live feed · delayed ~15s" : "deterministic seed tape"}
@@ -257,7 +257,7 @@ export function QuantHero({
               {/* Dataset provenance — one honest line. LIVE names its real feed
                   and freshness; PRACTICE reads as an intentional, reproducible
                   choice rather than "fake data". */}
-              <div className="border-b border-border-soft bg-bg px-3 py-1.5 font-mono text-[10px] leading-relaxed text-fg-faint">
+              <div className="border-b border-border-soft bg-bg px-3 py-1.5 font-mono text-[0.625rem] leading-relaxed text-fg-faint">
                 {mode === "seed" ? (
                   <>
                     <span className="uppercase tracking-wider text-cyan/80">Practice mode</span>
@@ -333,7 +333,7 @@ export function QuantHero({
                     className="group bg-bg p-3 text-left transition-colors hover:bg-surface-2"
                   >
                     <div className="t-chrome text-fg-faint">seed tape</div>
-                    <div className="mt-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim group-hover:text-fg">
+                    <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim group-hover:text-fg">
                       tune the seed tape →
                     </div>
                   </button>
@@ -410,7 +410,7 @@ export function QuantHero({
                   </div>
                   <button
                     onClick={() => setBeginner(!beginner)}
-                    className={`mt-2 flex h-7 w-full items-center justify-between border px-2 font-mono text-[11px] uppercase tracking-wider ${
+                    className={`mt-2 flex h-7 w-full items-center justify-between border px-2 font-mono text-[0.6875rem] uppercase tracking-wider ${
                       beginner ? "border-bull bg-bull/10 text-bull" : "border-border bg-bg text-fg-dim"
                     }`}
                   >
@@ -425,7 +425,7 @@ export function QuantHero({
                 <button
                   onClick={onRunAll}
                   disabled={activeCount === 0 || runLocked}
-                  className="flex items-center justify-center gap-2 bg-bg px-3 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:text-fg-faint disabled:hover:bg-bg"
+                  className="flex items-center justify-center gap-2 bg-bg px-3 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:text-fg-faint disabled:hover:bg-bg"
                 >
                   <span className="size-1.5 rounded-full bg-current" />
                   {runLocked ? "running…" : `▶ run all (${activeCount})`}
@@ -433,7 +433,7 @@ export function QuantHero({
                 <button
                   onClick={onClearAll}
                   disabled={activeCount === 0 || runLocked}
-                  className="bg-bg px-3 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg disabled:cursor-not-allowed disabled:text-fg-faint"
+                  className="bg-bg px-3 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg disabled:cursor-not-allowed disabled:text-fg-faint"
                 >
                   clear workspace
                 </button>

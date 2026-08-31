@@ -90,13 +90,13 @@ export function ImportBotModal({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <label className="cursor-pointer border border-border bg-bg px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg">
+            <label className="cursor-pointer border border-border bg-bg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg">
               <input type="file" accept=".js,.ts,.json,.txt" className="hidden" onChange={handleFile} />
               upload file
             </label>
             <button
               onClick={onClose}
-              className="grid size-8 place-items-center border border-border bg-bg font-mono text-[12px] text-fg-dim hover:bg-bear hover:text-bg hover:border-bear"
+              className="grid size-8 place-items-center border border-border bg-bg font-mono text-[0.75rem] text-fg-dim hover:bg-bear hover:text-bg hover:border-bear"
             >
               ✕
             </button>
@@ -114,7 +114,7 @@ export function ImportBotModal({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               spellCheck={false}
-              className="flex-1 resize-none bg-bg p-3 font-mono text-[12px] leading-relaxed text-fg outline-none"
+              className="flex-1 resize-none bg-bg p-3 font-mono text-[0.75rem] leading-relaxed text-fg outline-none"
             />
           </div>
 
@@ -124,14 +124,14 @@ export function ImportBotModal({
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[12px] text-fg"
+                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[0.75rem] text-fg"
               />
             </Field>
             <Field label="Tagline">
               <input
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
-                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[12px] text-fg"
+                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[0.75rem] text-fg"
               />
             </Field>
             <Field label="Glyph (1-2 chars)">
@@ -139,7 +139,7 @@ export function ImportBotModal({
                 value={glyph}
                 maxLength={2}
                 onChange={(e) => setGlyph(e.target.value)}
-                className="h-8 w-16 border border-border bg-bg px-2 text-center font-mono text-[14px] text-fg"
+                className="h-8 w-16 border border-border bg-bg px-2 text-center font-mono text-[0.875rem] text-fg"
               />
             </Field>
             <Field label="Params (JSON array)">
@@ -148,13 +148,13 @@ export function ImportBotModal({
                 onChange={(e) => setParamsJson(e.target.value)}
                 spellCheck={false}
                 rows={8}
-                className="w-full resize-none border border-border bg-bg p-2 font-mono text-[11px] leading-relaxed text-fg"
+                className="w-full resize-none border border-border bg-bg p-2 font-mono text-[0.6875rem] leading-relaxed text-fg"
               />
             </Field>
 
             <div className="mt-2 border border-border-soft bg-bg-soft p-3">
               <div className="t-chrome text-bull">api</div>
-              <ul className="mt-1.5 space-y-1 font-mono text-[10px] leading-relaxed text-fg-dim">
+              <ul className="mt-1.5 space-y-1 font-mono text-[0.625rem] leading-relaxed text-fg-dim">
                 <li>
                   <span className="text-fg">ctx.candles</span> — {`{o,h,l,c}[]`}
                 </li>
@@ -174,17 +174,17 @@ export function ImportBotModal({
 
         {/* footer */}
         <div className="flex items-center justify-between border-t border-border bg-bg-soft px-4 py-3">
-          <div className="font-mono text-[11px] text-bear">{error || " "}</div>
+          <div className="font-mono text-[0.6875rem] text-bear">{error || " "}</div>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="h-9 border border-border bg-bg px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg"
+              className="h-9 border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg"
             >
               cancel
             </button>
             <button
               onClick={handleImport}
-              className="h-9 bg-bull px-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+              className="h-9 bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
             >
               compile & import →
             </button>

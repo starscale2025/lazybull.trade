@@ -94,45 +94,45 @@ export function Diploma() {
           ✓
         </div>
         <div className="relative">
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.3em] text-bull">
+          <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.3em] text-bull">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" /> lazybull · paper diploma
           </div>
           <div className="mt-6 font-display text-[clamp(2.4rem,6vw,4.5rem)] font-light italic leading-[0.9] tracking-tightest text-fg">
             {name}
           </div>
-          <div className="mt-6 grid max-w-[560px] grid-cols-3 gap-px border border-border bg-border">
+          <div className="mt-6 grid max-w-[35rem] grid-cols-3 gap-px border border-border bg-border">
             <div className="bg-bg p-4">
               <div className="font-mono text-2xl text-bull">{answeredCount}/{total}</div>
-              <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">concepts called</div>
+              <div className="mt-1 font-mono text-[0.5625rem] uppercase tracking-[0.25em] text-fg-faint">concepts called</div>
             </div>
             <div className="bg-bg p-4">
               <div className="font-mono text-2xl text-cyan">{correctCount}</div>
-              <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">right first try</div>
+              <div className="mt-1 font-mono text-[0.5625rem] uppercase tracking-[0.25em] text-fg-faint">right first try</div>
             </div>
             <div className="bg-bg p-4">
               <div className="font-mono text-2xl text-fg">$0</div>
-              <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em] text-fg-faint">real risk</div>
+              <div className="mt-1 font-mono text-[0.5625rem] uppercase tracking-[0.25em] text-fg-faint">real risk</div>
             </div>
           </div>
-          <div className="mt-5 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-faint">
+          <div className="mt-5 font-mono text-[0.6875rem] uppercase tracking-[0.25em] text-fg-faint">
             conf #{cid} · {date || "—"}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               onClick={copy}
-              className="h-9 border border-border bg-bg px-4 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
+              className="h-9 border border-border bg-bg px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
             >
               {copied ? "✓ copied" : "copy summary"}
             </button>
             <button
               onClick={savePng}
-              className="h-9 bg-bull px-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim"
+              className="h-9 bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim"
             >
               save card ↓
             </button>
             {answeredCount < total && (
-              <span className="flex items-center font-mono text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+              <span className="flex items-center font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint">
                 {total - answeredCount} concept{total - answeredCount === 1 ? "" : "s"} left to call
               </span>
             )}

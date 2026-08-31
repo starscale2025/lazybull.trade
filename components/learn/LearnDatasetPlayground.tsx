@@ -33,7 +33,7 @@ export function LearnDatasetPlayground() {
       {/* Knobs */}
       <div className="@2xl:col-span-5 flex flex-col gap-3">
         <div className="surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             dataset · synthetic mode
           </div>
           <div className="grid grid-cols-2 gap-px bg-border">
@@ -41,7 +41,7 @@ export function LearnDatasetPlayground() {
               <select
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[12px] text-fg outline-none"
+                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[0.75rem] text-fg outline-none"
               >
                 {Object.keys(SPOT_MAP).map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -61,11 +61,11 @@ export function LearnDatasetPlayground() {
           </div>
         </div>
 
-        <div className="border border-border bg-bg p-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim min-h-[110px]">
+        <div className="border border-border bg-bg p-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim min-h-[6.875rem]">
           {focus ? (
             <>
               <div className="text-bull">⟢ {KNOBS.find((k) => k.key === focus)?.label}</div>
-              <div className="mt-2 normal-case tracking-normal text-[12px] leading-relaxed text-fg">
+              <div className="mt-2 normal-case tracking-normal text-[0.75rem] leading-relaxed text-fg">
                 {KNOBS.find((k) => k.key === focus)?.body}
               </div>
             </>
@@ -78,7 +78,7 @@ export function LearnDatasetPlayground() {
       {/* Chart preview */}
       <div className="@2xl:col-span-7">
         <div className="surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             <span>{symbol} · {bars} bars · seed {seed}</span>
             <span className={change >= 0 ? "text-bull" : "text-bear"}>
               {change >= 0 ? "+" : ""}{change.toFixed(2)}%
@@ -87,7 +87,7 @@ export function LearnDatasetPlayground() {
           <div className="p-2">
             <CandleChart candles={candles} height={320} width={720} />
           </div>
-          <div className="border-t border-border-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim flex items-center justify-between">
+          <div className="border-t border-border-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim flex items-center justify-between">
             <span>spot ${last?.c.toFixed(2)}</span>
             <span className="text-fg-faint">deterministic — same seed gives same chart, every time</span>
           </div>
@@ -103,7 +103,7 @@ function Knob({ label, children, focused, onFocus, span }: { label: string; chil
       onClick={onFocus}
       className={`bg-bg p-3 cursor-pointer transition-colors ${focused ? "bg-bull/[0.04]" : "hover:bg-bg-soft"} ${span ? "col-span-2" : ""}`}
     >
-      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{label}</div>
+      <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
       <div className="mt-2">{children}</div>
     </div>
   );
@@ -112,9 +112,9 @@ function Knob({ label, children, focused, onFocus, span }: { label: string; chil
 function Slider({ value, setValue, min, max, step, suffix }: { value: number; setValue: (n: number) => void; min: number; max: number; step: number; suffix: string }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="flex items-center justify-between font-mono text-[11px] tabular-nums text-fg">
+      <span className="flex items-center justify-between font-mono text-[0.6875rem] tabular-nums text-fg">
         <span>{value.toFixed(step < 1 ? 2 : 0)}{suffix}</span>
-        <span className="text-fg-faint text-[10px]">{min} → {max}</span>
+        <span className="text-fg-faint text-[0.625rem]">{min} → {max}</span>
       </span>
       <input
         type="range"

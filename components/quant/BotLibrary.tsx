@@ -61,7 +61,7 @@ export function BotLibrary({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="search bots…"
-          className="h-8 w-full border border-border bg-bg px-2 font-mono text-[11px] text-fg placeholder:text-fg-faint focus:border-bull focus:outline-none"
+          className="h-8 w-full border border-border bg-bg px-2 font-mono text-[0.6875rem] text-fg placeholder:text-fg-faint focus:border-bull focus:outline-none"
         />
       </div>
 
@@ -74,7 +74,7 @@ export function BotLibrary({
             <button
               key={c}
               onClick={() => setFilter(c)}
-              className={`h-7 border px-2 font-mono text-[10px] uppercase tracking-wider ${
+              className={`h-7 border px-2 font-mono text-[0.625rem] uppercase tracking-wider ${
                 isOn ? "border-bull bg-bull text-bg" : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
               }`}
               style={!isOn && meta ? { color: meta.color } : undefined}
@@ -111,14 +111,14 @@ export function BotLibrary({
               >
                 <div className="flex items-start gap-3">
                   <span
-                    className="grid size-7 shrink-0 place-items-center border border-border bg-bg font-mono text-[12px]"
+                    className="grid size-7 shrink-0 place-items-center border border-border bg-bg font-mono text-[0.75rem]"
                     style={{ color: cat.color }}
                   >
                     {b.glyph}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="line-clamp-2 font-display text-[14px] leading-tight tracking-tightest text-fg">
+                      <span className="line-clamp-2 font-display text-[0.875rem] leading-tight tracking-tightest text-fg">
                         {b.name}
                       </span>
                       {b.category === "ai" && (
@@ -133,10 +133,10 @@ export function BotLibrary({
                     <div className="mt-0.5 t-chrome" style={{ color: cat.color }}>
                       {cat.label}
                     </div>
-                    <div className="mt-1 line-clamp-2 text-[11px] text-fg-dim">{b.tagline}</div>
+                    <div className="mt-1 line-clamp-2 text-[0.6875rem] text-fg-dim">{b.tagline}</div>
                   </div>
                   <span
-                    className={`shrink-0 font-mono text-[10px] uppercase tracking-wider ${
+                    className={`shrink-0 font-mono text-[0.625rem] uppercase tracking-wider ${
                       isActive
                         ? "text-bull group-hover:text-bear"
                         : "text-fg-faint group-hover:text-bull"
@@ -163,7 +163,7 @@ export function BotLibrary({
                 rel="noopener noreferrer"
                 title={`Read about ${b.name} — math, code, when it works, when it fails`}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-1.5 right-2 z-10 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint hover:border-cyan hover:text-cyan"
+                className="absolute bottom-1.5 right-2 z-10 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint hover:border-cyan hover:text-cyan"
               >
                 ⓘ About
               </a>
@@ -180,7 +180,7 @@ export function BotLibrary({
         >
           <div>
             <div className="font-display text-sm tracking-tightest text-fg">+ Import your bot</div>
-            <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
               .ts · .js · paste code
             </div>
           </div>

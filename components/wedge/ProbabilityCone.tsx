@@ -283,7 +283,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeHigh(clampPrice(Math.max(low + 0.5, v)));
             }}
             aria-label="Band high price"
-            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bull outline-none [appearance:textfield] focus:border-bull [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[0.6875rem] normal-case text-bull outline-none [appearance:textfield] focus:border-bull [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
         <label className="flex items-center gap-1">
@@ -297,7 +297,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeLow(clampPrice(Math.min(high - 0.5, v)));
             }}
             aria-label="Band low price"
-            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[11px] normal-case text-bear outline-none [appearance:textfield] focus:border-bear [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[0.6875rem] normal-case text-bear outline-none [appearance:textfield] focus:border-bear [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
       </div>

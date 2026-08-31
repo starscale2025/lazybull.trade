@@ -35,7 +35,7 @@ export function ContrastToggle() {
           ? "STEALTH: the original low-glow terminal — sub-AA contrast, by your choice. Click for RADAR."
           : "RADAR: full-contrast reading mode (WCAG AA). Click for STEALTH, the low-glow terminal."
       }
-      className="inline-flex items-center gap-1.5 border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+      className="inline-flex items-center gap-1.5 border border-border px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
     >
       <span className={`size-1 rounded-full ${stealth ? "bg-amber" : "bg-bull"}`} />
       {stealth ? "stealth" : "radar"}

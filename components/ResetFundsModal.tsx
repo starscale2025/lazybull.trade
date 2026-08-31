@@ -79,15 +79,15 @@ export function ResetFundsModal({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div ref={dialogRef} className="w-[440px] max-w-full border border-bear/50 bg-surface shadow-2xl">
+      <div ref={dialogRef} className="w-[27.5rem] max-w-full border border-bear/50 bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-bear/30 bg-bear/10 px-4 py-2.5">
-          <span className="font-mono text-[13px] text-bear">⚠</span>
+          <span className="font-mono text-[0.8125rem] text-bear">⚠</span>
           <h2 id="reset-funds-title" className="t-eyebrow font-semibold text-bear">
             reset funds — this wipes the entire portfolio
           </h2>
         </div>
 
-        <div className="space-y-3 p-4 font-mono text-[11px] leading-relaxed text-fg-dim">
+        <div className="space-y-3 p-4 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
           <p className="text-fg">
             This is not just a balance top-up. Confirming destroys everything this
             account has ever done and starts a brand-new portfolio at{" "}
@@ -130,13 +130,13 @@ export function ResetFundsModal({
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="bg-surface px-3 py-3 font-mono text-[11px] uppercase tracking-wider text-fg transition-colors hover:bg-surface-2"
+            className="bg-surface px-3 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg transition-colors hover:bg-surface-2"
           >
             keep my portfolio
           </button>
           <button
             onClick={onConfirm}
-            className="bg-surface px-3 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bear transition-colors hover:bg-bear hover:text-bg"
+            className="bg-surface px-3 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bear transition-colors hover:bg-bear hover:text-bg"
           >
             wipe it all — restart at ${fmt(target, 0)}
           </button>

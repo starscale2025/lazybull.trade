@@ -74,7 +74,7 @@ export function LearnConsensusPlayground() {
       {/* Scenario picker + bot toggles */}
       <div className="@md:col-span-7 flex flex-col gap-4">
         <div className="surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             scenario
           </div>
           {/* Labels only on the buttons — the selected scenario's description
@@ -91,19 +91,19 @@ export function LearnConsensusPlayground() {
                   k === scenario ? "bg-bull/[0.06]" : "hover:bg-bg-soft"
                 }`}
               >
-                <div className={`font-mono text-[10px] uppercase tracking-wider ${k === scenario ? "text-bull" : "text-fg-dim"}`}>
+                <div className={`font-mono text-[0.625rem] uppercase tracking-wider ${k === scenario ? "text-bull" : "text-fg-dim"}`}>
                   {SCENARIOS[k].label}
                 </div>
               </button>
             ))}
           </div>
-          <div className="border-t border-border-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+          <div className="border-t border-border-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
             <span className="normal-case tracking-normal text-fg-dim">{scn.desc}</span>
           </div>
         </div>
 
         <div className="surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             <span>active bots</span>
             <span className="text-fg-faint">click to toggle · {active.length}/{ALL_BOTS.length} on</span>
           </div>
@@ -126,10 +126,10 @@ export function LearnConsensusPlayground() {
                   }`}
                 >
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="text-[8px]" style={{ color: b.color }}>●</span>
-                    <span className="truncate font-mono text-[10px] uppercase tracking-wide text-fg">{b.id}</span>
+                    <span className="text-[0.5rem]" style={{ color: b.color }}>●</span>
+                    <span className="truncate font-mono text-[0.625rem] uppercase tracking-wide text-fg">{b.id}</span>
                   </span>
-                  <span className={`font-mono text-[9px] uppercase tracking-wider ${verdictTone}`}>
+                  <span className={`font-mono text-[0.5625rem] uppercase tracking-wider ${verdictTone}`}>
                     {v}
                   </span>
                 </button>
@@ -142,18 +142,18 @@ export function LearnConsensusPlayground() {
       {/* Output */}
       <div className="@md:col-span-5">
         <div className="surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             consensus tally
           </div>
           <div className="p-5">
-            <div className={`inline-flex items-center gap-2 border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${TIER_BG[tierTone]}`}>
+            <div className={`inline-flex items-center gap-2 border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider ${TIER_BG[tierTone]}`}>
               <span className="size-1.5 rounded-full bg-current" />
               {tally.tier} · {tally.lean.toUpperCase()}
             </div>
             <div className="mt-4 font-display text-5xl tracking-tightest tabular-nums text-fg">
               {tally.agreeCount} / {tally.total}
             </div>
-            <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
+            <div className="mt-1 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
               models agree ({(tally.agreePct * 100).toFixed(0)}%)
             </div>
           </div>
@@ -167,10 +167,10 @@ export function LearnConsensusPlayground() {
           </div>
 
           <div className="border-t border-border-soft p-5">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint mb-2">
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint mb-2">
               what this means
             </div>
-            <p className="text-[13px] leading-relaxed text-fg-dim">
+            <p className="text-[0.8125rem] leading-relaxed text-fg-dim">
               {tally.tier === "ULTRA" &&
                 <>Strong historical agreement. When ≥85% of independent models agreed in backtests, next-bar direction matched about 63–66% of the time — the top of the observed range.</>}
               {tally.tier === "HIGH" &&
@@ -180,7 +180,7 @@ export function LearnConsensusPlayground() {
               {tally.tier === "SPLIT" &&
                 <>Models disagree. Historically the next move was close to a coin flip — the clearest sign the market itself was uncertain.</>}
             </p>
-            <p className="mt-2 font-mono text-[10px] italic text-fg-faint">
+            <p className="mt-2 font-mono text-[0.625rem] italic text-fg-faint">
               hypothetical backtests · education only · not advice
             </p>
           </div>
@@ -195,7 +195,7 @@ function Bucket({ label, value, tone }: { label: string; value: number; tone: "b
   return (
     <div className="bg-bg p-3 text-center">
       <div className={`font-display text-2xl tabular-nums ${cls}`}>{value}</div>
-      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">{label}</div>
+      <div className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
     </div>
   );
 }

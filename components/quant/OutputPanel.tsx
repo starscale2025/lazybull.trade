@@ -97,7 +97,7 @@ export function OutputPanel({
                 <div key={r.active.uid} className="grid grid-cols-[16px_1fr_auto] items-baseline gap-2">
                   <span className={`size-2 rounded-full ${dotBg(v.side)}`} />
                   <div className="min-w-0">
-                    <div className="truncate font-mono text-[11px] text-fg">{r.def.name}</div>
+                    <div className="truncate font-mono text-[0.6875rem] text-fg">{r.def.name}</div>
                   </div>
                   <span className={`t-chrome ${tone}`}>{v.side}</span>
                 </div>
@@ -122,7 +122,7 @@ export function OutputPanel({
               no signals yet
             </div>
           ) : (
-            <div className="space-y-1 t-data text-[10px]">
+            <div className="space-y-1 t-data text-[0.625rem]">
               {recent.map((s, i) => (
                 <div key={i} className="grid grid-cols-[24px_50px_1fr_auto] items-center gap-2 border-l-2 border-border-soft pl-2"
                   style={{ borderLeftColor: s.sig.kind === "long" ? "var(--bull)" : s.sig.kind === "short" ? "var(--bear)" : "var(--amber)" }}>
@@ -163,7 +163,7 @@ export function OutputPanel({
                       <span className="t-chrome text-fg-dim">
                         {row.def.name}
                       </span>
-                      <span className={`t-data text-[11px] ${row.ret >= 0 ? "text-bull" : "text-bear"}`}>
+                      <span className={`t-data text-[0.6875rem] ${row.ret >= 0 ? "text-bull" : "text-bear"}`}>
                         {row.ret >= 0 ? "+" : ""}
                         {(row.ret * 100).toFixed(1)}%
                       </span>
@@ -184,7 +184,7 @@ export function OutputPanel({
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />
               teacher note
             </div>
-            <p className="text-[12px] leading-relaxed text-fg">
+            <p className="text-[0.75rem] leading-relaxed text-fg">
               {teacherNote(aggregate, counts, equityRuns.length)}
             </p>
           </div>
@@ -245,7 +245,7 @@ function AggregateVerdict({
       {/* segmented agreement arc — one segment per completed bot, lit = the
           dominant side's votes (design ref: docs/design-refs/03-quant-workbench.png) */}
       {total > 0 && (
-        <div className="relative mx-auto mt-2 w-full max-w-[220px]">
+        <div className="relative mx-auto mt-2 w-full max-w-[13.75rem]">
           <svg viewBox="0 0 200 112" className="w-full">
             {Array.from({ length: total }, (_, i) => {
               const gapDeg = total > 1 ? 5 : 0;
@@ -284,7 +284,7 @@ function AggregateVerdict({
       )}
 
       <div className="mt-2 flex items-center justify-center gap-2">
-        <span className={`border px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] ${text} ${side === "buy" ? "border-bull/40" : side === "sell" ? "border-bear/40" : side === "warn" ? "border-amber/40" : "border-border"}`}>
+        <span className={`border px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-[0.2em] ${text} ${side === "buy" ? "border-bull/40" : side === "sell" ? "border-bear/40" : side === "warn" ? "border-amber/40" : "border-border"}`}>
           {mood}
         </span>
         <span className={`font-display text-xl tracking-tightest ${text}`}>{side.toUpperCase()}</span>

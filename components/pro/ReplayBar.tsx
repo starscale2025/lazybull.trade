@@ -29,7 +29,7 @@ export function ReplayBar({ total, cursor, onChange, playing, setPlaying, speed,
   }, [playing, speed, cursor, total, onChange, setPlaying]);
 
   return (
-    <div className="flex h-11 items-center gap-3 border-t border-amber/40 bg-amber/5 px-3 font-mono text-[11px] uppercase tracking-wider">
+    <div className="flex h-11 items-center gap-3 border-t border-amber/40 bg-amber/5 px-3 font-mono text-[0.6875rem] uppercase tracking-wider">
       <span className="text-amber">▶ replay</span>
       <button onClick={() => onChange(Math.max(0, cursor - 10))} className="size-7 border border-amber/40 text-amber hover:bg-amber/10">⏮</button>
       <button onClick={() => onChange(Math.max(0, cursor - 1))} className="size-7 border border-amber/40 text-amber hover:bg-amber/10">◀</button>

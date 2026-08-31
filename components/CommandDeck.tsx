@@ -139,7 +139,7 @@ export function CommandDeck() {
           itself, hence the 68px fallback here. */}
       {coach && (
         <div
-          className="fixed left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/50 bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl"
+          className="fixed left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/50 bg-surface px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bull shadow-2xl"
           style={{ top: "calc(var(--nav-h, 68px) + 0.75rem)" }}
         >
           ⌘K — the whole desk, no mouse
@@ -156,11 +156,11 @@ export function CommandDeck() {
             role="dialog"
             aria-modal="true"
             aria-label="Command deck"
-            className="w-[480px] max-w-[92vw] surface-card border border-border bg-surface shadow-2xl"
+            className="w-[30rem] max-w-[92vw] surface-card border border-border bg-surface shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
               <span className="t-chrome text-fg-faint">command deck</span>
-              <kbd className="ml-auto border border-border px-1.5 font-mono text-[10px] text-fg-faint">esc</kbd>
+              <kbd className="ml-auto border border-border px-1.5 font-mono text-[0.625rem] text-fg-faint">esc</kbd>
             </div>
             <input
               ref={inputRef}
@@ -184,11 +184,11 @@ export function CommandDeck() {
               }}
               placeholder="Type a command…"
               aria-label="Search commands"
-              className="w-full border-b border-border bg-surface px-3 py-3 font-mono text-[14px] text-fg outline-none placeholder:text-fg-faint"
+              className="w-full border-b border-border bg-surface px-3 py-3 font-mono text-[0.875rem] text-fg outline-none placeholder:text-fg-faint"
             />
             <div role="listbox" aria-label="Commands" className="max-h-[46vh] overflow-y-auto py-1">
               {filtered.length === 0 && (
-                <div className="px-3 py-4 font-mono text-[11px] text-fg-faint">No matching commands.</div>
+                <div className="px-3 py-4 font-mono text-[0.6875rem] text-fg-faint">No matching commands.</div>
               )}
               {filtered.map((c, i) => (
                 <button
@@ -197,7 +197,7 @@ export function CommandDeck() {
                   aria-selected={i === active}
                   onClick={() => runCmd(c)}
                   onMouseEnter={() => setActive(i)}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-[12px] ${
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-[0.75rem] ${
                     i === active ? "bg-surface-2 text-fg" : "text-fg-dim"
                   }`}
                 >
@@ -206,7 +206,7 @@ export function CommandDeck() {
                   </span>
                   <span className="flex-1 truncate">{c.label}</span>
                   {c.hotkey && (
-                    <kbd className="shrink-0 border border-border px-1.5 font-mono text-[10px] text-fg-faint">{c.hotkey}</kbd>
+                    <kbd className="shrink-0 border border-border px-1.5 font-mono text-[0.625rem] text-fg-faint">{c.hotkey}</kbd>
                   )}
                 </button>
               ))}

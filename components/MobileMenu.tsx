@@ -79,7 +79,7 @@ export function MobileMenu() {
                 key={item.l}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex h-11 items-center px-5 font-mono text-[12px] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
+                className="flex h-11 items-center px-5 font-mono text-[0.75rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
               >
                 {item.l}
               </Link>
@@ -89,14 +89,14 @@ export function MobileMenu() {
             {status === "authenticated" ? (
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex h-10 w-full items-center justify-center rounded-[12px] border border-border font-mono text-[11px] uppercase tracking-wider text-bear transition-colors hover:bg-bear/10"
+                className="flex h-10 w-full items-center justify-center rounded-[12px] border border-border font-mono text-[0.6875rem] uppercase tracking-wider text-bear transition-colors hover:bg-bear/10"
               >
                 Sign out
               </button>
             ) : (
               <button
                 onClick={() => signIn("google", { callbackUrl: "/quant" })}
-                className="flex h-10 w-full items-center justify-center rounded-[12px] border border-border font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+                className="flex h-10 w-full items-center justify-center rounded-[12px] border border-border font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
               >
                 Sign in
               </button>

@@ -287,7 +287,7 @@ export function CinemaStill() {
                 <span className="block font-display text-xl leading-tight tracking-tight text-fg md:text-2xl">
                   {a.h}
                 </span>
-                <span className="mt-1.5 block font-mono text-[13px] leading-snug text-fg-dim">
+                <span className="mt-1.5 block font-mono text-[0.8125rem] leading-snug text-fg-dim">
                   {a.s}
                 </span>
               </span>

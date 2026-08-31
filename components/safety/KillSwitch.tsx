@@ -16,7 +16,7 @@ export function SafetySettingsButton() {
       <button
         aria-label="safety settings"
         onClick={() => setOpen(true)}
-        className="group inline-flex h-9 items-center gap-2 border border-border bg-bg px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
+        className="group inline-flex h-9 items-center gap-2 border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
       >
         <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" />
@@ -67,7 +67,7 @@ export function SafetySettingsButton() {
                       className="flex-1 surface-card border border-border bg-surface px-2 py-1.5 font-mono text-sm text-fg outline-none focus:border-bull"
                     />
                   </div>
-                  <div className="mt-1 font-mono text-[10px] text-fg-faint">
+                  <div className="mt-1 font-mono text-[0.625rem] text-fg-faint">
                     realized today: <span className={paper.realizedToday < 0 ? "text-bear" : "text-bull"}>
                       {paper.realizedToday >= 0 ? "+" : "−"}${Math.abs(paper.realizedToday).toFixed(0)}
                     </span>
@@ -84,7 +84,7 @@ export function SafetySettingsButton() {
                     paper.reset();
                     safety.resetKillSwitch();
                   }}
-                  className="w-full border border-border bg-bg py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
+                  className="w-full border border-border bg-bg py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
                 >
                   reset paper account
                 </button>
@@ -103,8 +103,8 @@ function Toggle({ label, desc, checked, onChange }: { label: string; desc: strin
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <div className="font-mono text-[12px] uppercase tracking-wider text-fg">{label}</div>
-        <div className="font-mono text-[10px] text-fg-dim">{desc}</div>
+        <div className="font-mono text-[0.75rem] uppercase tracking-wider text-fg">{label}</div>
+        <div className="font-mono text-[0.625rem] text-fg-dim">{desc}</div>
       </div>
       <button
         role="switch"
@@ -174,12 +174,12 @@ function KillSwitchOverlay() {
                 You hit your daily loss limit. All open paper positions have been closed. Take a walk, then come back
                 tomorrow with a fresh head.
               </p>
-              <div className="mt-3 surface-card border border-border bg-surface p-3 font-mono text-[11px] text-fg-dim">
+              <div className="mt-3 surface-card border border-border bg-surface p-3 font-mono text-[0.6875rem] text-fg-dim">
                 {safety.killReason}
               </div>
               <button
                 onClick={safety.resetKillSwitch}
-                className="mt-5 w-full bg-bear py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bear-dim"
+                className="mt-5 w-full bg-bear py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bear-dim"
               >
                 acknowledge & reset
               </button>

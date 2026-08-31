@@ -89,7 +89,7 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
               <div className="mt-5 flex items-center justify-end gap-3">
                 <button
                   onClick={onClose}
-                  className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg transition-colors"
+                  className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg transition-colors"
                 >
                   cancel
                 </button>
@@ -97,7 +97,7 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
                   <button
                     disabled
                     title="Training wheels are on. Disable in safety settings to allow unbounded-risk trades."
-                    className="inline-flex items-center gap-2 border border-bear/40 bg-bear/10 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bear/60 cursor-not-allowed"
+                    className="inline-flex items-center gap-2 border border-bear/40 bg-bear/10 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bear/60 cursor-not-allowed"
                   >
                     blocked by training wheels
                   </button>
@@ -105,7 +105,7 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
                   <button
                     onClick={onConfirm}
                     disabled={secondsLeft > 0}
-                    className={`inline-flex items-center gap-2 px-5 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider transition-opacity ${
+                    className={`inline-flex items-center gap-2 px-5 py-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-opacity ${
                       isDangerous ? "bg-bear text-bg" : "bg-bull text-bg"
                     } disabled:opacity-30`}
                   >
@@ -159,7 +159,7 @@ function DangerSimulation() {
           transition={{ duration: 5, repeat: Infinity }}
         />
       </div>
-      <p className="mt-3 font-mono text-[10px] leading-relaxed text-fg-dim">
+      <p className="mt-3 font-mono text-[0.625rem] leading-relaxed text-fg-dim">
         as the underlying climbs, this position keeps losing. there's no automatic stop —
         you have to close it manually before the loss outpaces your account.
       </p>

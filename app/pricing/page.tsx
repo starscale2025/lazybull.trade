@@ -102,7 +102,7 @@ export default function PricingPage() {
             Start free.{" "}
             <span className="t-accent">Upgrade when it clicks.</span>
           </h1>
-          <p className="mt-5 font-mono text-[12px] uppercase tracking-[0.25em] text-fg-dim">
+          <p className="mt-5 font-mono text-[0.75rem] uppercase tracking-[0.25em] text-fg-dim">
             practice with purpose · upgrade for power
           </p>
 
@@ -111,7 +111,7 @@ export default function PricingPage() {
             <button
               onClick={() => setAnnual(false)}
               aria-pressed={!annual}
-              className={`whitespace-nowrap font-mono text-[11px] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
+              className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
             >
               Billed monthly
             </button>
@@ -126,18 +126,18 @@ export default function PricingPage() {
               className={`relative h-5 w-10 rounded-full border transition-colors ${annual ? "border-bull/60 bg-bull/20" : "border-border bg-bg"}`}
             >
               <span
-                className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-all ${annual ? "left-[22px] bg-bull" : "left-1 bg-fg-dim"}`}
+                className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-all ${annual ? "left-[1.375rem] bg-bull" : "left-1 bg-fg-dim"}`}
               />
             </button>
             <button
               onClick={() => setAnnual(true)}
               aria-pressed={annual}
-              className={`whitespace-nowrap font-mono text-[11px] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
+              className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
             >
               Billed annually
             </button>
             {annual && (
-              <span className="whitespace-nowrap border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull max-sm:basis-full max-sm:text-center">
+              <span className="whitespace-nowrap border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull max-sm:basis-full max-sm:text-center">
                 save up to {MAX_MONTHS_SAVED} months
               </span>
             )}
@@ -157,16 +157,16 @@ export default function PricingPage() {
                 } ${t.soon ? "opacity-80" : ""}`}
               >
                 {t.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 border border-bull/60 bg-bg px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-bull">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 border border-bull/60 bg-bg px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.2em] text-bull">
                     Most popular
                   </span>
                 )}
                 <div className="flex items-center justify-between gap-3">
-                  <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
+                  <div className="font-mono text-[0.6875rem] uppercase tracking-[0.25em] text-fg-dim">
                     {t.name}
                   </div>
                   {t.soon && (
-                    <span className="shrink-0 border border-border bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                    <span className="shrink-0 border border-border bg-bg px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
                       Coming soon
                     </span>
                   )}
@@ -175,16 +175,16 @@ export default function PricingPage() {
                   <span className="font-display text-5xl tracking-tightest text-fg">
                     ${price}
                   </span>
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+                  <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
                     {t.monthly === 0 ? "/forever" : "/mo"}
                   </span>
                 </div>
                 {t.monthly > 0 && (
-                  <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+                  <div className="mt-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
                     {annual ? `$${t.annualMo * 12} billed annually` : `or $${t.annualMo}/mo billed annually`}
                   </div>
                 )}
-                <p className="mt-3 text-[13px] leading-relaxed text-fg-dim">{t.blurb}</p>
+                <p className="mt-3 text-[0.8125rem] leading-relaxed text-fg-dim">{t.blurb}</p>
 
                 <ul className="mt-5 flex-1 space-y-2.5 border-t border-border-soft pt-5">
                   {t.features.map((f) => (
@@ -199,7 +199,7 @@ export default function PricingPage() {
                         <circle cx="7" cy="7" r="6" stroke="currentColor" strokeOpacity="0.4" />
                         <path d="M4.5 7l1.8 1.8L9.8 5.3" stroke="currentColor" strokeWidth="1.3" />
                       </svg>
-                      <span className="font-mono text-[11px] uppercase tracking-wide text-fg">
+                      <span className="font-mono text-[0.6875rem] uppercase tracking-wide text-fg">
                         {f}
                       </span>
                     </li>
@@ -208,7 +208,7 @@ export default function PricingPage() {
                     // pl matches the 14px icon + 10px gap above so the rows align
                     <li
                       key={f}
-                      className="pl-6 font-mono text-[11px] tracking-wide text-fg-dim"
+                      className="pl-6 font-mono text-[0.6875rem] tracking-wide text-fg-dim"
                     >
                       {f}
                     </li>
@@ -217,7 +217,7 @@ export default function PricingPage() {
 
                 <Link
                   href={t.cta.href}
-                  className={`mt-6 inline-flex h-10 items-center justify-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                  className={`mt-6 inline-flex h-10 items-center justify-center gap-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors ${
                     t.popular
                       ? "bg-bull text-bg hover:bg-bull-dim"
                       : t.soon
@@ -237,14 +237,14 @@ export default function PricingPage() {
 
         {/* honesty + compliance strip */}
         <div className="mt-12 flex flex-col items-center gap-4">
-          <div className="inline-flex items-center gap-3 surface-card border border-border bg-surface px-5 py-3 font-mono text-[11px] uppercase tracking-[0.25em] text-fg-dim">
+          <div className="inline-flex items-center gap-3 surface-card border border-border bg-surface px-5 py-3 font-mono text-[0.6875rem] uppercase tracking-[0.25em] text-fg-dim">
             <span className="size-1.5 rounded-full bg-bull" />
             Paper only · Educational · Not advice
           </div>
           {/* The full disclaimer lives in the Footer, which renders on this very
               page — repeating it here stacked the same sentence twice within a
               few hundred pixels. The pill above carries the short version. */}
-          <div className="text-center font-mono text-[11px] text-fg-dim">
+          <div className="text-center font-mono text-[0.6875rem] text-fg-dim">
             Billing launches soon — early users lock founding pricing.
           </div>
         </div>

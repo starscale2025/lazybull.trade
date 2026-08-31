@@ -84,14 +84,14 @@ function Workflow() {
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="0.55"
-          className="absolute left-[calc(33.333%-0.75rem)] top-[53px] hidden h-px w-[1.125rem] bg-bull/35 md:block"
+          className="absolute left-[calc(33.333%-0.75rem)] top-[3.3125rem] hidden h-px w-[1.125rem] bg-bull/35 md:block"
         />
         <span
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="0.55"
           data-gsap-delay="0.55"
-          className="absolute left-[calc(66.667%-0.375rem)] top-[53px] hidden h-px w-[1.125rem] bg-bull/35 md:block"
+          className="absolute left-[calc(66.667%-0.375rem)] top-[3.3125rem] hidden h-px w-[1.125rem] bg-bull/35 md:block"
         />
         <div
           className="grid grid-cols-1 gap-4 md:grid-cols-3"
@@ -103,13 +103,13 @@ function Workflow() {
               key={s.n}
               className="glass glass-hover specular relative flex flex-col gap-3.5 rounded-[var(--r-panel)] p-[30px_26px]"
             >
-              <span className="glass inline-flex size-[46px] items-center justify-center rounded-[14px] font-mono text-[13px] text-bull [text-shadow:0_0_14px_rgba(0,255,135,0.6)]">
+              <span className="glass inline-flex size-[2.875rem] items-center justify-center rounded-[14px] font-mono text-[0.8125rem] text-bull [text-shadow:0_0_14px_rgba(0,255,135,0.6)]">
                 {s.n}
               </span>
-              <span className="font-display text-[25px] tracking-[-0.03em] text-fg">
+              <span className="font-display text-[1.5625rem] tracking-[-0.03em] text-fg">
                 {s.title}
               </span>
-              <p className="m-0 flex-1 text-[13px] leading-[1.65] text-fg-dim">
+              <p className="m-0 flex-1 text-[0.8125rem] leading-[1.65] text-fg-dim">
                 {s.copy}
               </p>
               <Link
@@ -221,7 +221,7 @@ function Features() {
                 f.flip ? "lg:order-2" : "lg:order-1"
               }`}
             >
-              <div className="flex items-center gap-2 border-b border-[var(--glass-border)] bg-[rgba(255,255,255,0.03)] px-3 py-[7px]">
+              <div className="flex items-center gap-2 border-b border-[var(--glass-border)] bg-[rgba(255,255,255,0.03)] px-3 py-[0.4375rem]">
                 <span className="t-chrome text-fg-faint">{f.strip}</span>
               </div>
               <Image
@@ -287,7 +287,7 @@ function Safety() {
         <div data-gsap="fade-up">
           <GlassEyebrow>Safety is the product</GlassEyebrow>
           <GlassHeading accent="by design.">Boring,</GlassHeading>
-          <p className="measure mt-[18px] mb-6 t-body-sm text-fg-dim">
+          <p className="measure mt-[1.125rem] mb-6 t-body-sm text-fg-dim">
             LAZYBULL is an educational platform. Not a broker, not advice — a
             place to get fluent before a single real dollar moves.
           </p>
@@ -304,7 +304,7 @@ function Safety() {
           <svg
             aria-hidden
             viewBox="0 0 260 92"
-            className="mt-7 block h-auto w-full max-w-[260px] overflow-visible"
+            className="mt-7 block h-auto w-full max-w-[16.25rem] overflow-visible"
           >
             {/* zero line */}
             <line
@@ -356,10 +356,10 @@ function Safety() {
               key={t}
               className="glass glass-hover rounded-[var(--r-cell)] p-[22px_20px]"
             >
-              <div className="font-display text-[18px] tracking-[-0.02em] text-fg">
+              <div className="font-display text-[1.125rem] tracking-[-0.02em] text-fg">
                 {t}
               </div>
-              <p className="m-0 mt-2 text-[13px] leading-[1.6] text-fg-dim">
+              <p className="m-0 mt-2 text-[0.8125rem] leading-[1.6] text-fg-dim">
                 {d}
               </p>
             </div>
@@ -436,7 +436,7 @@ function Pricing() {
       </div>
 
       <div
-        className="mx-auto mt-13 grid max-w-[780px] gap-5 sm:grid-cols-2"
+        className="mx-auto mt-13 grid max-w-[48.75rem] gap-5 sm:grid-cols-2"
         data-gsap="stagger"
         data-gsap-delay="0.1"
       >
@@ -454,7 +454,7 @@ function Pricing() {
                 for. "everything unlocked" is checkable against the feature list
                 directly beneath it. */}
             {t.hot && (
-              <GlassChip className="absolute right-[18px] top-[18px]">
+              <GlassChip className="absolute right-[1.125rem] top-[1.125rem]">
                 everything unlocked
               </GlassChip>
             )}
@@ -464,7 +464,7 @@ function Pricing() {
               {t.name}
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="t-data text-[46px] leading-none tracking-[-0.03em] text-fg">
+              <span className="t-data text-[2.875rem] leading-none tracking-[-0.03em] text-fg">
                 {t.price}
               </span>
               <span className="t-chrome text-fg-faint">{t.unit}</span>
@@ -474,7 +474,7 @@ function Pricing() {
                 monthly" above a card that reads "$0 /forever" — a qualifier
                 attached to the one price it cannot possibly describe. */}
             {t.terms && <div className="t-chrome text-fg-faint">{t.terms}</div>}
-            <div className="font-display text-[16px] text-fg-dim">
+            <div className="font-display text-[1rem] text-fg-dim">
               {t.blurb}
             </div>
             <div className="flex-1">

@@ -21,13 +21,13 @@ function SignInPanel() {
   return (
     <main className="relative grid min-h-screen place-items-center overflow-x-clip bg-bg px-5 text-fg">
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
-      <div className="pointer-events-none absolute -top-20 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-bull/15 blur-[160px]" />
+      <div className="pointer-events-none absolute -top-20 left-1/2 h-[26.25rem] w-[26.25rem] -translate-x-1/2 rounded-full bg-bull/15 blur-[160px]" />
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-8">
         <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-tightest">
           <div className="relative flex size-8 items-center justify-center border border-fg/40 bg-bg">
             <div className="absolute inset-1 bg-bull" />
-            <span className="relative font-mono text-[10px] font-bold text-bg">LB</span>
+            <span className="relative font-mono text-[0.625rem] font-bold text-bg">LB</span>
           </div>
           lazybull<span className="text-bull">.</span>
         </Link>
@@ -48,14 +48,14 @@ function SignInPanel() {
             </p>
 
             {error && (
-              <div className="mt-6 border border-bear/40 bg-bear/10 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-bear">
+              <div className="mt-6 border border-bear/40 bg-bear/10 px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bear">
                 ⚠ {decodeURIComponent(error)}
               </div>
             )}
 
             <button
               onClick={() => signIn("google", { callbackUrl })}
-              className="mt-8 group flex w-full items-center justify-center gap-3 border border-border bg-bg px-4 py-3 font-mono text-[12px] uppercase tracking-wider text-fg transition-colors hover:border-bull hover:bg-bull/5"
+              className="mt-8 group flex w-full items-center justify-center gap-3 border border-border bg-bg px-4 py-3 font-mono text-[0.75rem] uppercase tracking-wider text-fg transition-colors hover:border-bull hover:bg-bull/5"
             >
               <GoogleG />
               Continue with Google
@@ -75,7 +75,7 @@ function SignInPanel() {
           </div>
         </div>
 
-        <p className="text-center font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+        <p className="text-center font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
           Don't want to sign in?{" "}
           <Link href="/quant" className="text-fg-dim hover:text-bull">
             Try the workbench anonymously →

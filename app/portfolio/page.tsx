@@ -235,7 +235,7 @@ export default function PortfolioPage() {
               <span className="text-fg-dim">{resetCount}</span> reset{resetCount === 1 ? "" : "s"}
             </div>
           </div>
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
+          <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider">
             <button
               onClick={() => setResetOpen(true)}
               className="h-8 surface-instrument border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
@@ -259,7 +259,7 @@ export default function PortfolioPage() {
               <div className="mt-1 font-display text-5xl tabular-nums tracking-tightest">
                 ${fmt(metrics.equity, 2)}
               </div>
-              <div className={`mt-2 t-data text-[13px] ${netPnl >= 0 ? "text-bull" : "text-bear"}`}>
+              <div className={`mt-2 t-data text-[0.8125rem] ${netPnl >= 0 ? "text-bull" : "text-bear"}`}>
                 {signedMoney(netPnl)} · {netPnl >= 0 ? "+" : "−"}
                 {fmt(Math.abs(netPct), 2)}% <span className="text-fg-faint">since start</span>
               </div>
@@ -324,7 +324,7 @@ export default function PortfolioPage() {
               direction on <Link className="text-bull underline" href="/quant">/quant</Link>.
             </Empty>
           ) : (
-            <table className="w-full t-data text-[11px]">
+            <table className="w-full t-data text-[0.6875rem]">
               <thead>
                 <Tr head>
                   <Th left>Symbol</Th>
@@ -404,7 +404,7 @@ export default function PortfolioPage() {
               <Link className="text-bull underline" href="/trade/chain">the chain</Link> books here.
             </Empty>
           ) : (
-            <table className="w-full t-data text-[11px]">
+            <table className="w-full t-data text-[0.6875rem]">
               <thead>
                 <Tr head>
                   <Th left>Opened</Th>
@@ -457,7 +457,7 @@ export default function PortfolioPage() {
           {working.length === 0 ? (
             <Empty>No resting orders. Limits and stops placed anywhere on the site rest here until they fill.</Empty>
           ) : (
-            <table className="w-full t-data text-[11px]">
+            <table className="w-full t-data text-[0.6875rem]">
               <thead>
                 <Tr head>
                   <Th left>Placed</Th>
@@ -563,7 +563,7 @@ export default function PortfolioPage() {
           {trades.length === 0 ? (
             <Empty>Every close lands here with its realized P&L — reduce or flatten a position to start the tape.</Empty>
           ) : (
-            <table className="w-full t-data text-[11px]">
+            <table className="w-full t-data text-[0.6875rem]">
               <thead>
                 <Tr head>
                   <Th left>Closed</Th>
@@ -642,7 +642,7 @@ export default function PortfolioPage() {
           {balanceLog.length === 0 ? (
             <Empty>Every cash movement — fills, credits, resets — reconciles here.</Empty>
           ) : (
-            <table className="w-full t-data text-[11px]">
+            <table className="w-full t-data text-[0.6875rem]">
               <thead>
                 <Tr head>
                   <Th left>Time</Th>
@@ -677,7 +677,7 @@ export default function PortfolioPage() {
       </main>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-[var(--z-toast)] -translate-x-1/2 surface-instrument border border-border bg-surface px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-[var(--z-toast)] -translate-x-1/2 surface-instrument border border-border bg-surface px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg shadow-2xl">
           {toast}
         </div>
       )}
@@ -707,7 +707,7 @@ function Stat({
   return (
     <div className="bg-surface p-3">
       <div className="t-chrome text-fg-faint">{label}</div>
-      <div className={`mt-1 t-data ${big ? "text-[16px]" : "text-[13px]"} ${color}`}>{value}</div>
+      <div className={`mt-1 t-data ${big ? "text-[1rem]" : "text-[0.8125rem]"} ${color}`}>{value}</div>
       {sub && <div className="mt-0.5 t-chrome text-fg-faint">{sub}</div>}
     </div>
   );
@@ -741,7 +741,7 @@ function Section({
               e.stopPropagation();
               onExport();
             }}
-            className="font-mono text-[10px] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
+            className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
           >
             ⤓ csv
           </button>
@@ -771,7 +771,7 @@ function Section({
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="py-6 text-center font-mono text-[11px] text-fg-faint">{children}</div>;
+  return <div className="py-6 text-center font-mono text-[0.6875rem] text-fg-faint">{children}</div>;
 }
 
 function Tr({ children, head }: { children: React.ReactNode; head?: boolean }) {
@@ -820,7 +820,7 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
 
   if (pts.length < 2) {
     return (
-      <div className="hidden h-[96px] w-[360px] items-center justify-center border border-border-soft t-chrome text-fg-faint sm:flex">
+      <div className="hidden h-[6rem] w-[22.5rem] items-center justify-center border border-border-soft t-chrome text-fg-faint sm:flex">
         equity curve appears after your first close
       </div>
     );

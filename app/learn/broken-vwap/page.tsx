@@ -24,7 +24,7 @@ export default function BrokenVwapLesson() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
-      <main className="mx-auto w-full max-w-[860px] flex-1 px-5 section-y-sm">
+      <main className="mx-auto w-full max-w-[53.75rem] flex-1 px-5 section-y-sm">
         {/* ── the confession ─────────────────────────────────────────── */}
         <header data-gsap="fade-up">
           <div className="flex items-center gap-3 t-eyebrow text-fg-faint">
@@ -34,7 +34,7 @@ export default function BrokenVwapLesson() {
           <h1 className="mt-4 t-title">
             Anatomy of a <em className="t-accent text-bear">Broken</em> VWAP
           </h1>
-          <p className="mt-5 max-w-[60ch] font-mono text-[13px] leading-relaxed text-fg-dim">
+          <p className="mt-5 max-w-[60ch] font-mono text-[0.8125rem] leading-relaxed text-fg-dim">
             We shipped this bug. For weeks, the default workspace on{" "}
             <Link href="/pro" className="text-fg underline decoration-border underline-offset-4 hover:decoration-fg">
               /pro
@@ -50,7 +50,7 @@ export default function BrokenVwapLesson() {
           <h2 className="t-eyebrow font-semibold text-fg-faint">
             01 · what VWAP claims to be
           </h2>
-          <p className="mt-3 max-w-[62ch] font-mono text-[12px] leading-relaxed text-fg-dim">
+          <p className="mt-3 max-w-[62ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             Volume-Weighted Average Price: the average price actually paid today, weighted by how much
             volume traded at each price —{" "}
             <code className="text-fg">Σ(typical&nbsp;price&nbsp;×&nbsp;volume) / Σ(volume)</code>, with the
@@ -75,7 +75,7 @@ export default function BrokenVwapLesson() {
           <h2 className="t-eyebrow font-semibold text-fg-faint">
             03 · the autopsy — the code we actually shipped
           </h2>
-          <pre className="mt-4 overflow-x-auto border border-bear/30 bg-surface/60 p-4 font-mono text-[11px] leading-relaxed text-fg-dim">
+          <pre className="mt-4 overflow-x-auto border border-bear/30 bg-surface/60 p-4 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
             <code>{`export function vwap(bars: Bar[]): Series {
   const out: Series = new Array(bars.length).fill(null);
   let cumPv = 0;
@@ -98,7 +98,7 @@ export default function BrokenVwapLesson() {
   return out;
 }`}</code>
           </pre>
-          <div className="mt-4 max-w-[62ch] space-y-3 font-mono text-[12px] leading-relaxed text-fg-dim">
+          <div className="mt-4 max-w-[62ch] space-y-3 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             <p>
               Three small sins, stacked: <span className="text-bear">①</span> the anchor variable starts
               life as a number. <span className="text-bear">②</span> it gets assigned{" "}
@@ -124,7 +124,7 @@ export default function BrokenVwapLesson() {
           <h2 className="t-eyebrow font-semibold text-fg-faint">
             04 · how you catch it — assert the MATH, not the render
           </h2>
-          <p className="mt-3 max-w-[62ch] font-mono text-[12px] leading-relaxed text-fg-dim">
+          <p className="mt-3 max-w-[62ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             Two hourly bars, same session. Bar one trades 100 shares at a typical price of 100; bar two
             trades 300 at 200. A real VWAP must answer <span className="text-fg">175</span> — the
             volume-weighted blend. The broken one answers 200, the second bar&apos;s own typical price.
@@ -132,7 +132,7 @@ export default function BrokenVwapLesson() {
             imports <code className="text-fg">vwap</code> from the module that renders on /pro,{" "}
             <span className="text-fg">not a copy</span>:
           </p>
-          <pre className="mt-4 overflow-x-auto border border-bull/30 bg-surface/60 p-4 font-mono text-[11px] leading-relaxed text-fg-dim">
+          <pre className="mt-4 overflow-x-auto border border-bull/30 bg-surface/60 p-4 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
             <code>{`describe("vwap — the one we shipped broken", () => {
   it("REGRESSION: intraday sums are CUMULATIVE within a session, not reset per bar", () => {
     const t0 = Date.UTC(2026, 6, 20, 14); // intraday spacing (1h)
@@ -145,7 +145,7 @@ export default function BrokenVwapLesson() {
     expect(out[1]).not.toBeCloseTo(tp2, 5); // the broken behavior
   });`}</code>
           </pre>
-          <p className="mt-4 max-w-[62ch] font-mono text-[12px] leading-relaxed text-fg-dim">
+          <p className="mt-4 max-w-[62ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             The general lesson: an indicator can be plausibly wrong forever, because charts don&apos;t
             have error states — a broken line still draws. The only defense is a test that knows the
             <span className="text-fg"> arithmetic answer</span> in advance and asserts against the code
@@ -156,7 +156,7 @@ export default function BrokenVwapLesson() {
             <div className="t-eyebrow font-semibold text-cyan">
               postscript · the test ambushed us a second time
             </div>
-            <p className="mt-2 max-w-[60ch] font-mono text-[12px] leading-relaxed text-fg-dim">
+            <p className="mt-2 max-w-[60ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim">
               Building this page&apos;s exhibit caught another bug — in the <em>fix</em>. The repaired
               VWAP keyed sessions by <code className="text-fg">toDateString()</code>: the viewer&apos;s{" "}
               <span className="text-fg">local</span> calendar day. A US session runs 13:30–20:00 UTC,
@@ -172,7 +172,7 @@ export default function BrokenVwapLesson() {
         {/* ── the receipt ────────────────────────────────────────────── */}
         <section className="mt-14 surface-card border border-border bg-surface/60 p-5" data-gsap="fade-up">
           <div className="t-eyebrow text-fg-faint">the receipt</div>
-          <p className="mt-3 max-w-[60ch] font-mono text-[12px] leading-relaxed text-fg-dim">
+          <p className="mt-3 max-w-[60ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             Every indicator on the live chart now carries a{" "}
             <span className="font-semibold text-bull">✓</span> in its legend — hover it and it states the
             exact formula it was verified against, backed by that suite. Go hover the VWAP. It earned
@@ -181,13 +181,13 @@ export default function BrokenVwapLesson() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/pro"
-              className="inline-flex h-9 items-center bg-bull px-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+              className="inline-flex h-9 items-center bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
             >
               open /pro — see the ✓ live
             </Link>
             <Link
               href="/learn"
-              className="inline-flex h-9 items-center border border-border bg-bg px-4 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg"
+              className="inline-flex h-9 items-center border border-border bg-bg px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg"
             >
               ← back to the syllabus
             </Link>

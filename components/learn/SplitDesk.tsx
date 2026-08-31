@@ -278,7 +278,7 @@ function DeskFrame({
 // mounting heavy demos during that one indeterminate frame).
 function DeskPoster({ label }: { label: string }) {
   return (
-    <div className="flex h-[320px] items-center justify-center t-eyebrow text-fg-faint">
+    <div className="flex h-[20rem] items-center justify-center t-eyebrow text-fg-faint">
       <span className="size-1 rounded-full bg-bull pulse-dot mr-2" /> loading {label}…
     </div>
   );

@@ -79,7 +79,7 @@ export default function TradePage() {
                   icon: "delta",
                 })
               }
-              className="inline-flex h-9 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[11px] uppercase tracking-wider text-bull hover:bg-bull/20"
+              className="inline-flex h-9 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-bull hover:bg-bull/20"
             >
               <span className="size-1.5 rounded-full bg-bull pulse-dot" />
               ask teacher
@@ -90,7 +90,7 @@ export default function TradePage() {
 
       {/* Symbol switcher */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="shell flex items-center gap-3 overflow-x-auto py-3 font-mono text-[11px] uppercase tracking-wider">
+        <div className="shell flex items-center gap-3 overflow-x-auto py-3 font-mono text-[0.6875rem] uppercase tracking-wider">
           <span className="text-fg-faint shrink-0">underlying</span>
           {SYMBOLS.map((s, i) => (
             <button

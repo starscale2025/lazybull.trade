@@ -67,7 +67,7 @@ export function LearnLiveDemo() {
 
   if (loading || !candles) {
     return (
-      <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+      <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
         loading {SYMBOL} bars from Yahoo Finance…
       </div>
     );
@@ -75,7 +75,7 @@ export function LearnLiveDemo() {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
+      <div className="flex flex-wrap items-center gap-2 font-mono text-[0.625rem] uppercase tracking-wider">
         <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
           dataset · {SYMBOL}
         </span>
@@ -106,7 +106,7 @@ export function LearnLiveDemo() {
         onToggleCollapse={() => {}}
         onRerun={() => {}}
       />
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[11px] tracking-wide text-fg-dim">
+      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim">
         <span className="text-fg-faint">try it →</span> open the cell's <span className="text-fg">PARAMS</span>{" "}
         panel and drag the fast / slow period sliders. Every change re-runs the
         backtest in your browser. The verdict pill, signals on the chart, and

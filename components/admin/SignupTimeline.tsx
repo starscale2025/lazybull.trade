@@ -39,10 +39,10 @@ export function SignupTimeline({ rows }: { rows: SignupBucket[] }) {
                   />
                 </div>
               </div>
-              <div className="mt-1 text-center font-mono text-[10px] tabular-nums text-fg-faint">
+              <div className="mt-1 text-center font-mono text-[0.625rem] tabular-nums text-fg-faint">
                 {day.getUTCDate()}
               </div>
-              <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap border border-border bg-bg px-2 py-1 font-mono text-[10px] tabular-nums opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap border border-border bg-bg px-2 py-1 font-mono text-[0.625rem] tabular-nums opacity-0 transition-opacity group-hover:opacity-100">
                 <span className="text-fg">{b.signups}</span> <span className="text-fg-faint">signups</span> · <span className="text-bull">{b.pro}</span> <span className="text-fg-faint">pro</span>
               </div>
             </div>

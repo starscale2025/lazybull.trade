@@ -695,7 +695,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   if (!bars.length) {
     return (
       <div ref={wrapRef} className="relative h-full w-full overflow-hidden bg-bg">
-        <div className="pointer-events-none absolute left-3 top-3 font-mono text-[11px]">
+        <div className="pointer-events-none absolute left-3 top-3 font-mono text-[0.6875rem]">
           <span className="text-fg">{symbol}</span>
           <span className="ml-3 text-fg-faint">·</span>
           <span className="ml-3 text-fg-dim">{exchange}</span>
@@ -704,7 +704,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           <span className="ml-3 text-cyan animate-pulse">· loading data</span>
         </div>
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="font-display text-[100px] tracking-tightest text-fg/[0.03] leading-none">lazybull<span className="italic">pro</span></div>
+          <div className="font-display text-[6.25rem] tracking-tightest text-fg/[0.03] leading-none">lazybull<span className="italic">pro</span></div>
         </div>
       </div>
     );
@@ -1222,7 +1222,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       {/* OHLC legend top-left — the width cap + wrap hold at EVERY breakpoint:
           the old lg:max-w-none line ran 86px under the price axis whenever the
           docked OrderPanel or a multi-pane layout narrowed the pane. */}
-      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-70px)] flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[11px]">
+      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-70px)] flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[0.6875rem]">
         <span className="text-fg">{symbol}</span>
         <span className="text-fg-faint">·</span>
         <span className="text-fg-dim">{exchange}</span>
@@ -1241,7 +1241,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       {/* indicator legend — one row per active indicator, value follows the
           crosshair, per-row ✕ removes it without opening the dropdown. */}
       {indicators.length > 0 && (
-        <div className={`pointer-events-none absolute left-3 space-y-0.5 font-mono text-[10px] ${legendOffset ? "top-[5.5rem]" : "top-8"}`}>
+        <div className={`pointer-events-none absolute left-3 space-y-0.5 font-mono text-[0.625rem] ${legendOffset ? "top-[5.5rem]" : "top-8"}`}>
           {indicators.map((id) => {
             const meta = IND_META[id];
             if (!meta) return null;
@@ -1278,7 +1278,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           which is the whole reason a chart context menu exists. */}
       {ctxMenu && (
         <div
-          className="absolute z-30 w-52 surface-instrument border border-border bg-surface py-1 font-mono text-[11px] shadow-2xl"
+          className="absolute z-30 w-52 surface-instrument border border-border bg-surface py-1 font-mono text-[0.6875rem] shadow-2xl"
           style={{
             left: Math.min(ctxMenu.x, size.w - 220),
             top: Math.min(ctxMenu.y, size.h - 190),
@@ -1354,7 +1354,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
       {/* watermark */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="font-display text-[100px] tracking-tightest text-fg/[0.025] leading-none">
+        <div className="font-display text-[6.25rem] tracking-tightest text-fg/[0.025] leading-none">
           lazybull<span className="italic">pro</span>
         </div>
       </div>

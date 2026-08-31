@@ -147,10 +147,10 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 340, damping: 30 }}
-            className="w-[340px] overflow-hidden border border-bull/40 bg-bg shadow-2xl"
+            className="w-[21.25rem] overflow-hidden border border-bull/40 bg-bg shadow-2xl"
           >
             {/* header */}
-            <div className="flex items-center gap-2 border-b border-border bg-bg-soft px-3 py-2 text-[10px] uppercase tracking-[0.2em]">
+            <div className="flex items-center gap-2 border-b border-border bg-bg-soft px-3 py-2 text-[0.625rem] uppercase tracking-[0.2em]">
               <span className={`size-2 rounded-full ${live ? "bg-bull animate-pulse" : connecting ? "bg-cyan animate-pulse" : "bg-bear"}`} />
               <span className="text-bull">LazyBull</span>
               <span className="text-fg-faint">· {statusLabel}</span>
@@ -162,7 +162,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
               <select
                 value={persona}
                 onChange={(e) => changePersona(e.target.value as PersonaId)}
-                className="flex-1 border border-border bg-bg px-1.5 py-1 text-[10px] uppercase tracking-wider text-fg-dim outline-none hover:text-fg"
+                className="flex-1 border border-border bg-bg px-1.5 py-1 text-[0.625rem] uppercase tracking-wider text-fg-dim outline-none hover:text-fg"
                 aria-label="Personality"
               >
                 {Object.values(PERSONAS).map((p) => (
@@ -171,14 +171,14 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
               </select>
               <button
                 onClick={voice.toggleMute}
-                className={`border px-2 py-1 text-[10px] uppercase tracking-wider ${muted ? "border-bear/60 text-bear" : "border-border text-fg-dim hover:text-fg"}`}
+                className={`border px-2 py-1 text-[0.625rem] uppercase tracking-wider ${muted ? "border-bear/60 text-bear" : "border-border text-fg-dim hover:text-fg"}`}
                 title={muted ? "Unmute mic" : "Mute mic"}
               >
                 {muted ? "mic off" : "mic on"}
               </button>
               <button
                 onClick={voice.disconnect}
-                className="border border-border px-2 py-1 text-[10px] uppercase tracking-wider text-fg-dim hover:text-bear"
+                className="border border-border px-2 py-1 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-bear"
                 title="End session"
               >
                 end
@@ -187,7 +187,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
 
             {/* mic problem — always visible, never silently swallowed */}
             {micError && (
-              <div className="border-b border-amber/40 bg-amber/10 px-3 py-1.5 text-[10px] leading-snug text-amber">
+              <div className="border-b border-amber/40 bg-amber/10 px-3 py-1.5 text-[0.625rem] leading-snug text-amber">
                 🎙 {micError}
                 <a href="/pro/mic-check" target="_blank" rel="noreferrer" className="ml-1 underline hover:text-fg">run mic check</a>
               </div>
@@ -195,14 +195,14 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
 
             {/* tap-to-hear banner (autoplay blocked) */}
             {needsTap && (
-              <button onClick={voice.tapToHear} className="w-full border-b border-amber/40 bg-amber/10 px-3 py-1.5 text-left text-[10px] uppercase tracking-wider text-amber">
+              <button onClick={voice.tapToHear} className="w-full border-b border-amber/40 bg-amber/10 px-3 py-1.5 text-left text-[0.625rem] uppercase tracking-wider text-amber">
                 🔊 tap to enable audio
               </button>
             )}
 
             {/* error */}
             {status === "error" && (
-              <div className="border-b border-bear/40 bg-bear/10 px-3 py-2 text-[10px] text-bear">
+              <div className="border-b border-bear/40 bg-bear/10 px-3 py-2 text-[0.625rem] text-bear">
                 {error}
                 <button onClick={() => connect()} className="ml-2 underline hover:text-fg">retry</button>
               </div>
@@ -211,14 +211,14 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
             {/* transcript */}
             <div ref={transcriptRef} className="max-h-64 min-h-24 space-y-2 overflow-y-auto px-3 py-3">
               {transcript.length === 0 && (
-                <div className="py-6 text-center text-[10px] lowercase tracking-wide text-fg-faint">
+                <div className="py-6 text-center text-[0.625rem] lowercase tracking-wide text-fg-faint">
                   {connecting ? "waking up…" : "say something — “what’s the market doing?”"}
                 </div>
               )}
               {transcript.map((t) => (
                 <div key={t.id} className={`flex ${t.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[85%] px-2.5 py-1.5 text-[11px] leading-snug ${
+                    className={`max-w-[85%] px-2.5 py-1.5 text-[0.6875rem] leading-snug ${
                       t.role === "user" ? "bg-bull/15 text-fg" : "bg-surface text-fg-dim"
                     }`}
                   >
@@ -229,7 +229,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
               {/* live interim — proof the mic is picking you up as you speak */}
               {interim && (
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] border border-dashed border-bull/50 px-2.5 py-1.5 text-[11px] italic leading-snug text-fg-dim">
+                  <div className="max-w-[85%] border border-dashed border-bull/50 px-2.5 py-1.5 text-[0.6875rem] italic leading-snug text-fg-dim">
                     {interim}…
                   </div>
                 </div>
@@ -245,21 +245,21 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                   exit={{ opacity: 0, height: 0 }}
                   className="border-t border-amber/50 bg-amber/10 px-3 py-2.5"
                 >
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-amber">⚡ confirm paper order</div>
-                  <div className="mb-2.5 text-[11px] leading-snug text-fg">
+                  <div className="mb-2 text-[0.625rem] uppercase tracking-[0.2em] text-amber">⚡ confirm paper order</div>
+                  <div className="mb-2.5 text-[0.6875rem] leading-snug text-fg">
                     <span className={stagedTrade.side === "buy" ? "text-bull" : "text-bear"}>{stagedTrade.side.toUpperCase()}</span>{" "}
                     {stagedTrade.qty} {stagedTrade.sym} · {stagedTrade.orderType}
                     {stagedTrade.orderType === "limit" ? ` @ $${stagedTrade.estPrice.toFixed(2)}` : " @ market"} · ~${stagedTrade.estValue.toFixed(2)}
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={voice.confirmStagedFromUI} className="flex-1 bg-bull py-1.5 text-[10px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim">
+                    <button onClick={voice.confirmStagedFromUI} className="flex-1 bg-bull py-1.5 text-[0.625rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim">
                       confirm
                     </button>
-                    <button onClick={voice.cancelStagedFromUI} className="flex-1 border border-border py-1.5 text-[10px] uppercase tracking-wider text-fg-dim hover:text-bear">
+                    <button onClick={voice.cancelStagedFromUI} className="flex-1 border border-border py-1.5 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-bear">
                       cancel
                     </button>
                   </div>
-                  <div className="mt-1.5 text-[10px] lowercase text-fg-faint">simulated · stored locally · reversible</div>
+                  <div className="mt-1.5 text-[0.625rem] lowercase text-fg-faint">simulated · stored locally · reversible</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -275,11 +275,11 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder={live ? "type instead of talking…" : "connect to chat"}
                   disabled={!live}
-                  className="flex-1 border border-border bg-bg px-2 py-1 text-[11px] text-fg outline-none placeholder:text-fg-faint disabled:opacity-50"
+                  className="flex-1 border border-border bg-bg px-2 py-1 text-[0.6875rem] text-fg outline-none placeholder:text-fg-faint disabled:opacity-50"
                 />
-                <button type="submit" disabled={!live || !draft.trim()} className="border border-border px-2 py-1 text-[11px] text-fg-dim hover:text-fg disabled:opacity-40">↵</button>
+                <button type="submit" disabled={!live || !draft.trim()} className="border border-border px-2 py-1 text-[0.6875rem] text-fg-dim hover:text-fg disabled:opacity-40">↵</button>
               </form>
-              <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left text-[10px] uppercase tracking-wider text-fg-faint hover:text-fg-dim">
+              <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left text-[0.625rem] uppercase tracking-wider text-fg-faint hover:text-fg-dim">
                 auto-greet on open: <span className={autoGreet ? "text-bull" : "text-fg-faint"}>{autoGreet ? "on" : "off"}</span>
               </button>
             </div>

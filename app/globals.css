@@ -186,7 +186,7 @@
    divide it here too, or it will overflow by exactly `--ui-zoom`. Set
    `--ui-zoom: 1` to revert the whole thing.
    ══════════════════════════════════════════════════════════════════════════ */
-:root { --ui-zoom: 1.1; }
+:root { --ui-zoom: 1; }
 /* KEPT AT 1.1 DELIBERATELY. The design audit's Wave 5 recommends deleting this
    sitewide so every Tailwind breakpoint means what its author thought it meant,
    and the argument is sound — but 110% is an explicit product decision by the
@@ -201,7 +201,18 @@
 @media (max-width: 767px) {
   :root { --ui-zoom: 1; }
 }
-html { zoom: var(--ui-zoom); }
+/* THE 110% NOW LIVES ON THE ROOT FONT SIZE, NOT ON `zoom`.
+   `zoom: 1.1` scaled the CSS pixel itself, which meant the VIEWPORT shrank:
+   every media query saw width/1.1, so `lg:` (1024px) actually fired at 1126
+   real pixels and every breakpoint in the codebase meant something other
+   than what its author wrote. Sizing from the root instead reproduces the
+   same 110% — Tailwind's spacing scale is rem-based (--spacing: 0.25rem),
+   and the 725 arbitrary px values in the markup were converted to rem in the
+   same commit — while media queries, which ignore root font-size, finally
+   read true device pixels.
+   --ui-zoom stays defined at 1 so the compensation calc()s below remain
+   valid no-ops rather than becoming 725 more edits. */
+html { font-size: 110%; }
 .h-screen { height: calc(100vh / var(--ui-zoom)); }
 .min-h-screen { min-height: calc(100vh / var(--ui-zoom)); }
 .w-screen { width: calc(100vw / var(--ui-zoom)); }
@@ -1571,11 +1582,16 @@ nav[aria-label="Site pages"] a:focus-visible {
    below the lift's own minimum, which made them the labels that needed it
    most, not least. */
 @media (pointer: coarse) {
-  .text-\[7px\],
-  .text-\[8px\],
-  .text-\[9px\],
-  .text-\[10px\] {
-    font-size: 11px;
+  /* These selectors track the utility names in the markup. The arbitrary px
+     sizes were converted to rem when `zoom` was retired, and a stale
+     `.text-\[10px\]` here would have silently un-floored every tiny label on
+     touch — invisible on any desktop, which is precisely the regression the
+     comment above warns about. */
+  .text-\[0\.4375rem\],
+  .text-\[0\.5rem\],
+  .text-\[0\.5625rem\],
+  .text-\[0\.625rem\] {
+    font-size: 0.6875rem;
   }
 }
 
@@ -1661,7 +1677,7 @@ nav[aria-label="Site pages"] a:focus-visible {
      chrome, which is exactly the failure these names exist to prevent. */
   .t-eyebrow {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1.4;
     text-transform: uppercase;
     letter-spacing: 0.2em;
@@ -1669,7 +1685,7 @@ nav[aria-label="Site pages"] a:focus-visible {
 
   .t-chrome {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 0.625rem;
     line-height: 1.4;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1738,7 +1754,7 @@ nav[aria-label="Site pages"] a:focus-visible {
    converting `text-[10px]` to `t-chrome` would silently drop that label out
    of the lift declared above — a regression invisible on every desktop. */
 @media (pointer: coarse) {
-  .t-chrome { font-size: 11px; }
+  .t-chrome { font-size: 0.6875rem; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

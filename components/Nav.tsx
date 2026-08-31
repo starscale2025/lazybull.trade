@@ -10,7 +10,7 @@ import { NAV_DIRECTORY } from "@/lib/directory";
 const FOLDED = new Set<string>(["/quant", "/greeks", "/about"]);
 
 const railLink =
-  "group relative h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3";
+  "group relative h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3";
 
 /**
  * The site navbar, in glass.
@@ -55,7 +55,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
           must move together. */}
       <nav
         className={`glass-strong specular pointer-events-auto mx-auto flex h-14 ${
-          wide ? "max-w-[1600px]" : "max-w-[1400px]"
+          wide ? "max-w-[100rem]" : "max-w-[87.5rem]"
         } items-center justify-between gap-2 rounded-full py-2.5 pl-4 pr-2.5 sm:pl-5`}
       >
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
@@ -63,7 +63,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
             aria-hidden
             className="relative flex size-7 items-center justify-center rounded-[9px] bg-bull shadow-[0_0_16px_rgba(0,255,135,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]"
           >
-            <span className="font-mono text-[10px] font-bold text-[#04140b]">LB</span>
+            <span className="font-mono text-[0.625rem] font-bold text-[#04140b]">LB</span>
           </span>
           <span className="font-display text-lg font-medium tracking-tightest text-fg">
             lazybull
@@ -92,7 +92,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
               className={`flex cursor-pointer select-none list-none gap-1.5 [&::-webkit-details-marker]:hidden ${railLink}`}
             >
               <span>More</span>
-              <span aria-hidden className="text-[9px] text-fg-faint">
+              <span aria-hidden className="text-[0.5625rem] text-fg-faint">
                 ▾
               </span>
             </summary>
@@ -101,7 +101,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
                 <Link
                   key={item.l}
                   href={item.href}
-                  className="flex h-9 items-center px-4 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
+                  className="flex h-9 items-center px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
                 >
                   {item.l}
                 </Link>
@@ -123,14 +123,14 @@ export function Nav({ wide = false }: { wide?: boolean }) {
               the bar was already over budget. */}
           <Link
             href="/portfolio"
-            className="hidden h-9 items-center whitespace-nowrap rounded-full border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--fg)_4%,transparent)] px-3.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg xl:inline-flex"
+            className="hidden h-9 items-center whitespace-nowrap rounded-full border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--fg)_4%,transparent)] px-3.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg xl:inline-flex"
           >
             Portfolio
           </Link>
           <AuthButtons />
           <Link
             href="/trade"
-            className="btn-primary-glass group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 font-mono text-[11px] font-semibold uppercase tracking-wider sm:px-4"
+            className="btn-primary-glass group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider sm:px-4"
           >
             <span aria-hidden className="size-1.5 rounded-full bg-[#04140b] pulse-dot" />
             {/* Short label below sm AND in the 1024–1279 hamburger band, where

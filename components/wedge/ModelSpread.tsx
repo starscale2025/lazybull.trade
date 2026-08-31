@@ -54,7 +54,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
         </div>
         <button
           onClick={() => setByoOpen((v) => !v)}
-          className="border border-border bg-bg px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
+          className="border border-border bg-bg px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
         >
           + bring your own model
         </button>
@@ -79,7 +79,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
               style={{ borderColor: disabled ? "var(--border)" : meta.tone, borderLeftWidth: 3 }}
             >
               <div className="col-span-3 flex items-center gap-2">
-                <span className="font-mono text-[10px]" style={{ color: meta.tone }}>{meta.short}</span>
+                <span className="font-mono text-[0.625rem]" style={{ color: meta.tone }}>{meta.short}</span>
                 <span className="font-display text-sm tracking-tightest text-fg">{meta.label}</span>
               </div>
               <div className="col-span-7">
@@ -92,12 +92,12 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                     style={{ background: meta.tone, opacity: disabled ? 0.3 : 1 }}
                   />
                 </div>
-                <div className="mt-0.5 font-mono text-[10px] tracking-normal text-fg-faint">{meta.explain}</div>
+                <div className="mt-0.5 font-mono text-[0.625rem] tracking-normal text-fg-faint">{meta.explain}</div>
               </div>
               <div className="col-span-2 flex items-center justify-end gap-1.5 t-data">
                 <span className="text-base text-fg">{v != null ? `${(v * 100).toFixed(0)}%` : "—"}</span>
-                {winner && <span className="text-bull text-[10px]">↑</span>}
-                {loser && <span className="text-bear text-[10px]">↓</span>}
+                {winner && <span className="text-bull text-[0.625rem]">↑</span>}
+                {loser && <span className="text-bear text-[0.625rem]">↓</span>}
               </div>
             </motion.div>
           );
@@ -117,16 +117,16 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                 <div className="t-chrome text-fg-dim">
                   Your model · runs in a sandboxed Function constructor
                 </div>
-                {running && <span className="font-mono text-[10px] text-cyan animate-pulse">re-evaluating…</span>}
+                {running && <span className="font-mono text-[0.625rem] text-cyan animate-pulse">re-evaluating…</span>}
               </div>
               <textarea
                 value={userCode}
                 onChange={(e) => setUserCode(e.target.value)}
                 spellCheck={false}
                 rows={12}
-                className="w-full resize-y border border-border bg-bg p-3 font-mono text-[11px] text-fg outline-none focus:border-cyan"
+                className="w-full resize-y border border-border bg-bg p-3 font-mono text-[0.6875rem] text-fg outline-none focus:border-cyan"
               />
-              <div className="mt-2 flex items-center justify-between font-mono text-[10px] tracking-wider text-fg-faint">
+              <div className="mt-2 flex items-center justify-between font-mono text-[0.625rem] tracking-wider text-fg-faint">
                 <span>output: <span className={probs.user != null ? "text-bull" : "text-bear"}>{probs.user != null ? `${(probs.user * 100).toFixed(2)}%` : "error / not a number"}</span></span>
                 <span>roadmap: marketplace + accuracy leaderboard</span>
               </div>

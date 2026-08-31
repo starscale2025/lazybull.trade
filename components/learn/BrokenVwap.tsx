@@ -84,14 +84,14 @@ export function BrokenVwap() {
   return (
     <figure className="surface-card border border-border bg-surface/60">
       <figcaption className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-fg-faint">
+        <span className="font-mono text-[0.625rem] uppercase tracking-[0.25em] text-fg-faint">
           exhibit a · two sessions · 5-min bars · same tape
         </span>
         <div className="flex" role="group" aria-label="Choose which VWAP to draw">
           <button
             onClick={() => setMode("broken")}
             aria-pressed={mode === "broken"}
-            className={`h-7 border px-3 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+            className={`h-7 border px-3 font-mono text-[0.625rem] font-semibold uppercase tracking-wider transition-colors ${
               mode === "broken"
                 ? "border-bear/60 bg-bear/15 text-bear"
                 : "border-border bg-bg text-fg-dim hover:text-fg"
@@ -102,7 +102,7 @@ export function BrokenVwap() {
           <button
             onClick={() => setMode("fixed")}
             aria-pressed={mode === "fixed"}
-            className={`-ml-px h-7 border px-3 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+            className={`-ml-px h-7 border px-3 font-mono text-[0.625rem] font-semibold uppercase tracking-wider transition-colors ${
               mode === "fixed"
                 ? "border-bull/60 bg-bull/15 text-bull"
                 : "border-border bg-bg text-fg-dim hover:text-fg"
@@ -116,7 +116,7 @@ export function BrokenVwap() {
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="block w-full min-w-[560px]"
+          className="block w-full min-w-[35rem]"
           role="img"
           aria-label={
             mode === "broken"
@@ -176,7 +176,7 @@ export function BrokenVwap() {
         </svg>
       </div>
 
-      <div className="border-t border-border px-3 py-2.5 font-mono text-[11px] leading-relaxed text-fg-dim" aria-live="polite">
+      <div className="border-t border-border px-3 py-2.5 font-mono text-[0.6875rem] leading-relaxed text-fg-dim" aria-live="polite">
         {mode === "broken" ? (
           <>
             <span className="font-semibold text-bear">BROKEN — </span>

@@ -118,7 +118,7 @@ export function RiskWizard() {
                   aria-label="stock price"
                   className="mt-1 w-full accent-bull"
                 />
-                <div className="mt-1 text-center t-data text-[11px] text-fg">
+                <div className="mt-1 text-center t-data text-[0.6875rem] text-fg">
                   spot price ${spot}
                 </div>
               </div>
@@ -145,14 +145,14 @@ export function RiskWizard() {
                     setWizardSeen();
                     setOpen(false);
                   }}
-                  className="font-mono text-[11px] uppercase tracking-wider text-fg-faint hover:text-fg-dim"
+                  className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint hover:text-fg-dim"
                 >
                   skip · I'm a pro
                 </button>
                 <button
                   onClick={finish}
                   disabled={!accepted}
-                  className="inline-flex items-center gap-2 bg-bull px-5 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg transition-opacity disabled:opacity-30"
+                  className="inline-flex items-center gap-2 bg-bull px-5 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-opacity disabled:opacity-30"
                 >
                   enable training wheels →
                 </button>

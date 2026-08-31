@@ -109,7 +109,7 @@ export function BigStat({
           boxShadow: seen ? `0 0 12px ${color}66` : "none",
         }}
       />
-      <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">{label}</div>
+      <div className="mt-3 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-faint">{label}</div>
     </div>
   );
 }

@@ -124,13 +124,13 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
     );
   };
 
-  const label = "font-mono text-[10px] uppercase tracking-wider text-fg-faint";
+  const label = "font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint";
 
   return (
-    <aside className="flex h-full w-[300px] shrink-0 flex-col border-l border-border bg-surface">
+    <aside className="flex h-full w-[18.75rem] shrink-0 flex-col border-l border-border bg-surface">
       {/* header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <span className="font-mono text-[12px] uppercase tracking-wider text-fg">
+        <span className="font-mono text-[0.75rem] uppercase tracking-wider text-fg">
           {symbol} <span className="text-fg-faint">order</span>
         </span>
         <button onClick={onClose} aria-label="Close order panel" className="font-mono text-xs text-fg-faint hover:text-fg">
@@ -145,7 +145,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
             key={t}
             onClick={() => setTab(t)}
             aria-pressed={tab === t}
-            className={`py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors ${
+            className={`py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
               tab === t ? "bg-surface-2 text-fg" : "bg-bg text-fg-faint hover:text-fg-dim"
             }`}
           >
@@ -168,10 +168,10 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                   side === "sell" ? "bg-bear text-bg" : "bg-bg text-bear hover:bg-bear/10"
                 }`}
               >
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Sell</span>
-                <span className="text-[13px] tabular-nums">{bid ? fmt(bid, 2) : "—"}</span>
+                <span className="text-[0.625rem] font-semibold uppercase tracking-wider">Sell</span>
+                <span className="text-[0.8125rem] tabular-nums">{bid ? fmt(bid, 2) : "—"}</span>
               </button>
-              <div className="flex w-12 items-center justify-center border-x border-border t-data text-[10px] text-fg-faint">
+              <div className="flex w-12 items-center justify-center border-x border-border t-data text-[0.625rem] text-fg-faint">
                 {price ? SPREAD.toFixed(2) : "—"}
               </div>
               <button
@@ -181,8 +181,8 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                   side === "buy" ? "bg-bull text-bg" : "bg-bg text-bull hover:bg-bull/10"
                 }`}
               >
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Buy</span>
-                <span className="text-[13px] tabular-nums">{ask ? fmt(ask, 2) : "—"}</span>
+                <span className="text-[0.625rem] font-semibold uppercase tracking-wider">Buy</span>
+                <span className="text-[0.8125rem] tabular-nums">{ask ? fmt(ask, 2) : "—"}</span>
               </button>
             </div>
 
@@ -193,7 +193,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                   key={t}
                   onClick={() => setType(t)}
                   aria-pressed={type === t}
-                  className={`flex-1 border-b-2 py-2 font-mono text-[11px] capitalize transition-colors ${
+                  className={`flex-1 border-b-2 py-2 font-mono text-[0.6875rem] capitalize transition-colors ${
                     type === t ? "border-bull text-fg" : "border-transparent text-fg-faint hover:text-fg-dim"
                   }`}
                 >
@@ -238,7 +238,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                         key={m}
                         onClick={() => setQtyMode(m)}
                         aria-pressed={qtyMode === m}
-                        className={`px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+                        className={`px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider ${
                           qtyMode === m ? "bg-surface-2 text-fg" : "text-fg-faint hover:text-fg-dim"
                         }`}
                       >
@@ -294,7 +294,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                           key={t}
                           onClick={() => setTif(t)}
                           aria-pressed={tif === t}
-                          className={`flex-1 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                          className={`flex-1 py-1 font-mono text-[0.625rem] uppercase tracking-wider transition-colors ${
                             tif === t ? "bg-surface-2 text-fg" : "bg-bg text-fg-faint hover:text-fg-dim"
                           }`}
                         >
@@ -311,7 +311,7 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
               </Section>
 
               {/* order info */}
-              <div className="space-y-1 border-t border-border-soft pt-3 font-mono text-[10px]">
+              <div className="space-y-1 border-t border-border-soft pt-3 font-mono text-[0.625rem]">
                 <div className={`${label} mb-1`}>order info</div>
                 <Row k="Order value" v={`$${fmt(notional, 2)}`} tone={notional > free && side === "buy" ? "text-bear" : undefined} />
                 <Row k="Available funds" v={`$${fmt(free, 2)}`} tone={free < 0 ? "text-bear" : undefined} />
@@ -333,22 +333,22 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
                 side === "buy" ? "bg-bull text-bg hover:bg-bull-dim" : "bg-bear text-bg hover:bg-bear-dim"
               }`}
             >
-              <span className="text-[12px] font-semibold uppercase tracking-wider">
+              <span className="text-[0.75rem] font-semibold uppercase tracking-wider">
                 {killed ? "kill switch on" : disabled ? "exit replay to trade" : side}
               </span>
               {!killed && !disabled && (
-                <span className="text-[10px] tabular-nums opacity-90">
+                <span className="text-[0.625rem] tabular-nums opacity-90">
                   {qty > 0 ? fmt(qty, 2) : "—"} {symbol} @{" "}
                   {type === "market" ? "MKT" : `${fmt(limitOrStop || 0, 2)} ${type.toUpperCase()}`}
                 </span>
               )}
             </button>
             {err && (
-              <div role="alert" className="mt-2 border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[10px] text-bear">
+              <div role="alert" className="mt-2 border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[0.625rem] text-bear">
                 {err}
               </div>
             )}
-            <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-fg-faint">
+            <div className="mt-2 text-center font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">
               paper only · not advice
             </div>
           </div>
@@ -379,14 +379,14 @@ function Field({
         onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ""))}
         inputMode="decimal"
         aria-label={ariaLabel}
-        className="w-full bg-transparent px-2 py-2 text-right font-mono text-[13px] tabular-nums text-fg outline-none"
+        className="w-full bg-transparent px-2 py-2 text-right font-mono text-[0.8125rem] tabular-nums text-fg outline-none"
       />
       {onSwap && (
         <button
           onClick={onSwap}
           aria-label={`Use ${suffix}`}
           title={`Use ${suffix}`}
-          className="border-l border-border px-2 py-2 font-mono text-[11px] text-fg-faint transition-colors hover:text-fg"
+          className="border-l border-border px-2 py-2 font-mono text-[0.6875rem] text-fg-faint transition-colors hover:text-fg"
         >
           ⇄
         </button>
@@ -416,7 +416,7 @@ function Section({
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className="mb-2 flex w-full items-center justify-between font-mono text-[11px] text-fg transition-colors hover:text-fg-dim"
+        className="mb-2 flex w-full items-center justify-between font-mono text-[0.6875rem] text-fg transition-colors hover:text-fg-dim"
       >
         {title}
         <span className={`text-fg-faint transition-transform ${open ? "" : "rotate-180"}`}>⌃</span>
@@ -454,7 +454,7 @@ function ExitRow({
       <div className="mb-1 flex items-center justify-between">
         <button
           onClick={() => setUnit(unit === "price" ? "ticks" : "price")}
-          className="font-mono text-[10px] text-fg-dim transition-colors hover:text-fg"
+          className="font-mono text-[0.625rem] text-fg-dim transition-colors hover:text-fg"
           title="Switch between an absolute price and a distance in ticks"
         >
           {name}, {unit} <span className="text-fg-faint">⌄</span>
@@ -480,11 +480,11 @@ function ExitRow({
           disabled={!on}
           inputMode="decimal"
           aria-label={`${name} ${unit}`}
-          className={`w-full bg-transparent px-2 py-1.5 text-right font-mono text-[12px] tabular-nums outline-none ${tone}`}
+          className={`w-full bg-transparent px-2 py-1.5 text-right font-mono text-[0.75rem] tabular-nums outline-none ${tone}`}
         />
         {/* Whichever unit you are NOT typing in, shown live — so the tick
             distance and the absolute price are never out of sync in your head. */}
-        <span className="shrink-0 border-l border-border px-2 py-1.5 t-data text-[10px] text-fg-faint">
+        <span className="shrink-0 border-l border-border px-2 py-1.5 t-data text-[0.625rem] text-fg-faint">
           {unit === "price"
             ? ticks != null
               ? `${ticks} ticks`
@@ -500,7 +500,7 @@ function ExitRow({
 
 function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="mb-1.5 flex cursor-pointer items-center gap-2 font-mono text-[10px] text-fg-dim">
+    <label className="mb-1.5 flex cursor-pointer items-center gap-2 font-mono text-[0.625rem] text-fg-dim">
       <input
         type="checkbox"
         checked={checked}
@@ -536,7 +536,7 @@ function DomLadder({ symbol, price, onPick }: { symbol: string; price: number | 
   }, [price]);
 
   if (!price) {
-    return <div className="p-3 font-mono text-[11px] text-fg-faint">Waiting for a price…</div>;
+    return <div className="p-3 font-mono text-[0.6875rem] text-fg-faint">Waiting for a price…</div>;
   }
 
   return (
@@ -548,13 +548,13 @@ function DomLadder({ symbol, price, onPick }: { symbol: string; price: number | 
         <button
           key={r.price}
           onClick={() => onPick(r.price)}
-          className="flex w-full items-center justify-between border-b border-border-soft px-3 py-1 font-mono text-[11px] tabular-nums transition-colors hover:bg-surface"
+          className="flex w-full items-center justify-between border-b border-border-soft px-3 py-1 font-mono text-[0.6875rem] tabular-nums transition-colors hover:bg-surface"
         >
           <span className={r.side === "ask" ? "text-bear" : "text-bull"}>{r.side}</span>
           <span className="text-fg">{fmt(r.price, 2)}</span>
         </button>
       ))}
-      <div className="px-3 py-2 font-mono text-[10px] leading-relaxed text-fg-faint">
+      <div className="px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-fg-faint">
         Illustrative ladder — this paper account has no level-2 feed, so no sizes
         are shown rather than invented ones.
       </div>

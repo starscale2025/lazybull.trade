@@ -25,18 +25,18 @@ export function ErrorTopList({ rows }: { rows: ErrorRow[] }) {
           return (
             <div
               key={r.name}
-              className="grid grid-cols-[24px_1fr_60px_44px] items-center gap-2 px-3 py-2 font-mono text-[11px] transition-colors hover:bg-surface"
+              className="grid grid-cols-[24px_1fr_60px_44px] items-center gap-2 px-3 py-2 font-mono text-[0.6875rem] transition-colors hover:bg-surface"
             >
               <span className="text-fg-faint tabular-nums">{String(i + 1).padStart(2, "0")}</span>
               <div className="min-w-0">
                 <div className="truncate text-fg">{r.name}</div>
-                <div className="mt-0.5 truncate text-[10px] text-fg-faint">{r.route}</div>
+                <div className="mt-0.5 truncate text-[0.625rem] text-fg-faint">{r.route}</div>
                 <div className="mt-1 h-0.5 w-full overflow-hidden bg-border-soft">
                   <div className="h-full bg-bear" style={{ width: `${w.toFixed(1)}%` }} />
                 </div>
               </div>
               <span className="text-right tabular-nums text-bear">{r.count}</span>
-              <span className="text-right text-[10px] tabular-nums text-fg-faint">{rel(r.lastSeen)}</span>
+              <span className="text-right text-[0.625rem] tabular-nums text-fg-faint">{rel(r.lastSeen)}</span>
             </div>
           );
         })}

@@ -107,7 +107,7 @@ export function TickerBar() {
 
   return (
     <div
-      className={`flex items-stretch overflow-hidden border-b border-border bg-bg font-mono text-[11px] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
+      className={`flex items-stretch overflow-hidden border-b border-border bg-bg font-mono text-[0.6875rem] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
     >
       {/* WONK legend — the headline serif warps with the VIX; this makes that
           "the type IS a volatility gauge" signal legible to screen readers and
@@ -149,7 +149,7 @@ export function TickerBar() {
           // and still failed WCAG 2.2 AA 2.5.8 on WIDTH. Widened here rather
           // than in .tap-floor, whose comment explains that a global min-width
           // would force the dense terminal chips wider and wrap their rows.
-          className="ml-1 inline-flex min-w-[24px] items-center justify-center text-fg-faint transition-colors hover:text-fg"
+          className="ml-1 inline-flex min-w-[1.5rem] items-center justify-center text-fg-faint transition-colors hover:text-fg"
         >
           {paused ? "▶" : "⏸"}
         </button>

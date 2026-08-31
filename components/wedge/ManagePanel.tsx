@@ -57,7 +57,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="px-3 py-6 text-center font-mono text-[11px] text-fg-faint"
+            className="px-3 py-6 text-center font-mono text-[0.6875rem] text-fg-faint"
           >
             you haven't placed a bet yet — pick one of the cards above
           </motion.div>
@@ -94,19 +94,19 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
 
               <div className="mt-3 flex items-start gap-2 border-l-2 px-3 py-2" style={{ borderColor: rec.tone, background: `color-mix(in srgb, ${rec.tone} 10%, transparent)` }}>
                 <span className="mt-0.5 text-base" style={{ color: rec.tone }}>◆</span>
-                <span className="text-[13px] leading-snug text-fg">{rec.text}</span>
+                <span className="text-[0.8125rem] leading-snug text-fg">{rec.text}</span>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => onClose(b.id, value)}
-                  className="border border-border bg-bg px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear"
+                  className="border border-border bg-bg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear"
                 >
                   close · book {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
                 </button>
                 <button
                   onClick={() => onRoll(b)}
-                  className="border border-border bg-bg px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:border-cyan hover:text-cyan"
+                  className="border border-border bg-bg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-cyan hover:text-cyan"
                 >
                   roll to next month
                 </button>
@@ -122,7 +122,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
           <div className="mb-2 t-chrome text-fg-faint">recent · closed</div>
           <ul className="space-y-1">
             {bets.filter((b) => b.status === "closed").slice(0, 4).map((b) => (
-              <li key={b.id} className="flex items-center justify-between border-b border-border-soft py-1 t-data text-[11px]">
+              <li key={b.id} className="flex items-center justify-between border-b border-border-soft py-1 t-data text-[0.6875rem]">
                 <span className="text-fg-dim">{b.symbol} · {b.strategy.kind}</span>
                 <span className={(b.closedPnl ?? 0) >= 0 ? "text-bull" : "text-bear"}>
                   {(b.closedPnl ?? 0) >= 0 ? "+" : "−"}${Math.abs(b.closedPnl ?? 0).toFixed(0)}

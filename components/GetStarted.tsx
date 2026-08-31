@@ -62,7 +62,7 @@ function HudIndexColumn() {
   if (!rows) return null;
   return (
     <div
-      className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left t-data text-[11px] tracking-wider md:block"
+      className="pointer-events-none absolute left-[5%] top-[38%] hidden space-y-2.5 text-left t-data text-[0.6875rem] tracking-wider md:block"
       aria-hidden
     >
       {rows.map((r) => (
@@ -190,8 +190,8 @@ export function GetStarted() {
       <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
       {/* Static glow pools — the drift animation is gone. The smoke loop is the
           background's one mover; two more slow drifters under it read as churn. */}
-      <div className="pointer-events-none absolute -left-32 top-1/4 h-[520px] w-[520px] rounded-full bg-bull/12 blur-[150px]" />
-      <div className="pointer-events-none absolute -right-24 bottom-1/4 h-[440px] w-[440px] rounded-full bg-cyan/10 blur-[150px]" />
+      <div className="pointer-events-none absolute -left-32 top-1/4 h-[32.5rem] w-[32.5rem] rounded-full bg-bull/12 blur-[150px]" />
+      <div className="pointer-events-none absolute -right-24 bottom-1/4 h-[27.5rem] w-[27.5rem] rounded-full bg-cyan/10 blur-[150px]" />
 
       {/* ghost candle chart along the bottom */}
       <div
@@ -210,7 +210,7 @@ export function GetStarted() {
           return (
             <div
               key={i}
-              className="relative flex w-[1.4%] max-w-[13px] items-end justify-center"
+              className="relative flex w-[1.4%] max-w-[0.8125rem] items-end justify-center"
               style={{ height: `${c.h}%` }}
             >
               <span className="absolute -top-2.5 left-1/2 h-2.5 w-px -translate-x-1/2" style={{ background: color, opacity: 0.5 }} />
@@ -327,7 +327,7 @@ export function GetStarted() {
         {canReplay && (
           <button
             onClick={replay}
-            className="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-faint transition-colors hover:text-bull"
+            className="font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-fg-faint transition-colors hover:text-bull"
           >
             ▶ watch the film
           </button>
@@ -454,7 +454,7 @@ export function GetStarted() {
                     footer's 24 links. Opacity (not height) so the sheet never
                     reflows; still in the DOM for crawlers and readers. Coarse
                     pointers have no hover, so they keep the line. */}
-                <span className="mt-1 block font-mono text-[11px] leading-relaxed text-fg-dim opacity-0 transition-opacity duration-300 [transition-timing-function:var(--ease-settle)] group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100">{p.d}</span>
+                <span className="mt-1 block font-mono text-[0.6875rem] leading-relaxed text-fg-dim opacity-0 transition-opacity duration-300 [transition-timing-function:var(--ease-settle)] group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100">{p.d}</span>
                 <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100" />
               </Link>
             ))}
@@ -470,7 +470,7 @@ export function GetStarted() {
             a centered flex item it lands 50%·parent − 50%·self off — measured
             30.6px left, cropping the band's left edge and leaving a right gap. */}
         <div className="relative mt-16 w-screen">
-          <div className="eye-title-bed relative h-[78vh] min-h-[420px] w-full overflow-hidden">
+          <div className="eye-title-bed relative h-[78vh] min-h-[26.25rem] w-full overflow-hidden">
             {/* the matrix eye: an eye built from phosphor code on a CRT —
                 monochrome emerald so it belongs to the terminal world. The
                 poster covers until the loop lazily fetches near the viewport
@@ -530,11 +530,11 @@ export function GetStarted() {
                   strokeWidth="1.4"
                 />
               </svg>
-              <div className="mt-1.5 font-mono text-[13px] uppercase tracking-wider text-bull md:text-sm">
+              <div className="mt-1.5 font-mono text-[0.8125rem] uppercase tracking-wider text-bull md:text-sm">
                 P(down) <span className="font-bold">71%</span>
               </div>
               <div className="mt-1 flex items-center gap-1.5">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-dim">confidence</span>
+                <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-dim">confidence</span>
                 <span className="flex gap-px" aria-hidden>
                   {Array.from({ length: 10 }, (_, i) => (
                     <span key={i} className={`h-1.5 w-1 ${i < 7 ? "bg-bull" : "bg-fg-faint/40"}`} />
@@ -545,7 +545,7 @@ export function GetStarted() {
                   voices, the Δ badge sitting inside the title's own line box.
                   Pinned here as one data row: the band keeps its two voices,
                   P(down) and the title. */}
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-bull/90">
+              <div className="mt-1 font-mono text-[0.625rem] uppercase tracking-wider text-bull/90">
                 IV 0.41 · Δ −0.32
               </div>
             </div>

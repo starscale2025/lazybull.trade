@@ -366,7 +366,7 @@ export default function TradePage() {
                 <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]" style={{ textShadow: "0 0 32px rgba(0,255,135,0.12)" }}>
                   {sym.sym}
                 </h1>
-                <span className="font-mono text-[11px] uppercase tracking-wider text-fg-dim">{quote?.name ?? sym.name}</span>
+                <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">{quote?.name ?? sym.name}</span>
               </div>
               <div className="mt-1.5 flex flex-wrap items-baseline gap-3 t-data lg:mt-0">
                 <span className="text-2xl text-fg lg:text-xl">${spot.toFixed(2)}</span>
@@ -445,7 +445,7 @@ export default function TradePage() {
               <select
                 value={chainDepth}
                 onChange={(e) => setChainDepth(Number(e.target.value))}
-                className="border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] uppercase text-fg-dim outline-none focus:border-bull/50"
+                className="border border-border bg-bg px-1.5 py-0.5 font-mono text-[0.625rem] uppercase text-fg-dim outline-none focus:border-bull/50"
               >
                 <option value={4}>±4</option>
                 <option value={5}>±5</option>
@@ -486,7 +486,7 @@ export default function TradePage() {
                   mid-width truncation eats the prose, never the date */}
               <span
                 title={thesisSentence}
-                className="hidden min-w-0 max-w-[62%] items-baseline gap-1 font-mono text-[10px] text-fg-dim md:flex"
+                className="hidden min-w-0 max-w-[62%] items-baseline gap-1 font-mono text-[0.625rem] text-fg-dim md:flex"
               >
                 <span className="min-w-0 truncate">
                   <ThesisLine sentence={`I think ${sym.sym} will ${direction} $${low.toFixed(2)} and $${high.toFixed(2)}`} />
@@ -494,7 +494,7 @@ export default function TradePage() {
                 <span className="shrink-0 text-amber">by {expiryStr}.</span>
               </span>
             </div>
-            <div className="relative h-[420px] bg-bg lg:h-auto lg:min-h-0 lg:flex-1">
+            <div className="relative h-[26.25rem] bg-bg lg:h-auto lg:min-h-0 lg:flex-1">
               {mounted ? (
                 <ProbabilityCone
                   bars={histBars}
@@ -514,7 +514,7 @@ export default function TradePage() {
                   hoverStrike={hoverStrike}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center font-mono text-[11px] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
+                <div className="flex h-full items-center justify-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">loading forecast cone…</div>
               )}
               {/* in-band probability ring — same number the strategy panel prices
                   from. Owns the top-left corner: the HI/LO inputs moved into the
@@ -546,7 +546,7 @@ export default function TradePage() {
               <span className="t-eyebrow text-fg-dim">strategy · pick one of three</span>
               <Link
                 href="/trade/chain"
-                className="border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
+                className="border border-border px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
               >
                 edit legs ✎
               </Link>
@@ -589,7 +589,7 @@ export default function TradePage() {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`shrink-0 border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                  className={`shrink-0 border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-[0.15em] transition-colors ${
                     tab === t.id
                       ? "border-bull/60 bg-bull/10 text-bull"
                       : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
@@ -650,7 +650,7 @@ export default function TradePage() {
               </div>
               <div className="p-6">
                 <div className="font-display text-2xl tracking-tightest text-fg">{confirm.strategy.kind}</div>
-                <p className="mt-3 text-[15px] leading-relaxed text-fg">{storySentence(confirm)}</p>
+                <p className="mt-3 text-[0.9375rem] leading-relaxed text-fg">{storySentence(confirm)}</p>
                 <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
                   {[
                     { k: "max profit", v: Number.isFinite(confirm.strategy.maxProfit) ? `+$${confirm.strategy.maxProfit.toFixed(0)}` : "uncapped", c: "text-bull" },
@@ -664,8 +664,8 @@ export default function TradePage() {
                   ))}
                 </div>
                 <div className="mt-5 flex items-center justify-end gap-2">
-                  <button onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg lg:py-2">cancel</button>
-                  <button onClick={confirmBet} className="bg-bull px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim lg:py-2">place this trade</button>
+                  <button onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg lg:py-2">cancel</button>
+                  <button onClick={confirmBet} className="bg-bull px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim lg:py-2">place this trade</button>
                 </div>
               </div>
             </motion.div>
@@ -680,7 +680,7 @@ export default function TradePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
-            className="fixed bottom-5 left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/60 bg-bull/10 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bull shadow-2xl"
+            className="fixed bottom-5 left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/60 bg-bull/10 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bull shadow-2xl"
           >
             ✓ bet placed · see the positions tab
           </motion.div>
@@ -776,7 +776,7 @@ function LegsList({ s }: { s: Strategy }) {
       {open && (
         <ul className="divide-y divide-border-soft border-t border-border-soft">
           {s.legs.map((l, i) => (
-            <li key={i} className="flex items-center justify-between px-3 py-2 t-data text-[12px]">
+            <li key={i} className="flex items-center justify-between px-3 py-2 t-data text-[0.75rem]">
               <span className={l.side === "long" ? "text-bull" : "text-bear"}>
                 {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
               </span>
@@ -874,11 +874,11 @@ function StrategyDetail({
             p/l @ expiration
           </div>
         </div>
-        <div className="grid w-[200px] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
+        <div className="grid w-[12.5rem] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
           {rail.map((it) => (
             <div key={it.k} className="contents">
               <span className={`t-chrome ${it.lead ? "self-center text-fg-dim" : "text-fg-faint"}`}>{it.k}</span>
-              <span className={`text-right ${it.lead ? "t-figure" : "t-data text-[12px]"} ${it.c}`}>{it.v}</span>
+              <span className={`text-right ${it.lead ? "t-figure" : "t-data text-[0.75rem]"} ${it.c}`}>{it.v}</span>
             </div>
           ))}
         </div>
@@ -888,7 +888,7 @@ function StrategyDetail({
       <button
         type="button"
         onClick={onPlace}
-        className="mt-3 flex w-full items-center justify-between border px-3 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider transition-opacity hover:opacity-85 lg:py-2.5"
+        className="mt-3 flex w-full items-center justify-between border px-3 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-opacity hover:opacity-85 lg:py-2.5"
         style={{ borderColor: tone.color, color: tone.color, background: tone.pillBg }}
       >
         <span className="inline-flex items-center gap-2">
@@ -967,7 +967,7 @@ function TeacherPanel({
             onExplain();
           }}
           disabled={!selected || narrating}
-          className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
+          className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
           explain this position
         </button>
@@ -975,7 +975,7 @@ function TeacherPanel({
 
       {open && (
       <>
-      <div className="flex max-h-[300px] min-h-[160px] flex-col gap-3 overflow-y-auto p-3 lg:max-h-[240px] lg:min-h-[120px]">
+      <div className="flex max-h-[18.75rem] min-h-[10rem] flex-col gap-3 overflow-y-auto p-3 lg:max-h-[15rem] lg:min-h-[7.5rem]">
         {thread.length === 0 && !narrating && (
           <TeacherBubble
             speaker="teacher"
@@ -999,7 +999,7 @@ function TeacherPanel({
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask anything about this trade..."
           disabled={!selected}
-          className="min-w-0 flex-1 border border-border bg-bg px-3 py-2 font-mono text-[12px] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-bull/50 disabled:opacity-50"
+          className="min-w-0 flex-1 border border-border bg-bg px-3 py-2 font-mono text-[0.75rem] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-bull/50 disabled:opacity-50"
         />
         <button
           type="submit"
@@ -1027,18 +1027,18 @@ function TeacherBubble({ speaker, text, thinking }: { speaker: "user" | "teacher
   if (speaker === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] border border-border bg-bg-soft px-3 py-2 text-[12px] leading-relaxed text-fg">{text}</div>
+        <div className="max-w-[85%] border border-border bg-bg-soft px-3 py-2 text-[0.75rem] leading-relaxed text-fg">{text}</div>
       </div>
     );
   }
   return (
     <div className="flex items-end gap-2">
-      <span className="flex size-8 shrink-0 select-none items-center justify-center border border-bull/40 bg-bg font-mono text-[12px] text-bull" aria-hidden>
+      <span className="flex size-8 shrink-0 select-none items-center justify-center border border-bull/40 bg-bg font-mono text-[0.75rem] text-bull" aria-hidden>
         :]
       </span>
       <div
         className={`relative max-w-[85%] whitespace-pre-line border border-bull/40 bg-surface px-3 py-2 leading-relaxed ${
-          thinking ? "font-mono text-[11px] text-fg-faint" : "text-[12px] text-fg"
+          thinking ? "font-mono text-[0.6875rem] text-fg-faint" : "text-[0.75rem] text-fg"
         }`}
       >
         {text}

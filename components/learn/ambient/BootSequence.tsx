@@ -41,12 +41,12 @@ export function BootSequence() {
       <div className="pointer-events-none absolute inset-0 scanlines opacity-50" />
 
       {/* Centered terminal card */}
-      <div className="relative w-full max-w-[520px] px-6">
+      <div className="relative w-full max-w-[32.5rem] px-6">
         {/* Logo */}
         <div className="hero-fade-up-soft mb-8 flex items-center gap-3" style={{ animationDelay: "0s" }}>
           <div className="relative flex size-7 items-center justify-center border border-fg/40 bg-bg">
             <div className="absolute inset-0.75 bg-bull" />
-            <span className="relative font-mono text-[10px] font-bold text-bg">LB</span>
+            <span className="relative font-mono text-[0.625rem] font-bold text-bg">LB</span>
           </div>
           <span className="font-display text-base tracking-tightest text-fg">
             lazybull<span className="text-bull">.</span>learn
@@ -54,7 +54,7 @@ export function BootSequence() {
         </div>
 
         {/* Lines */}
-        <div className="space-y-1.5 font-mono text-[11px] uppercase tracking-[0.2em]">
+        <div className="space-y-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.2em]">
           {LINES.map((line, i) => (
             <div
               key={i}
@@ -78,24 +78,24 @@ export function BootSequence() {
         </div>
 
         {/* Cursor */}
-        <div className="mt-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-bull">
+        <div className="mt-3 flex items-center gap-2 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-bull">
           <span className="boot-cursor">▊</span>
           <span className="text-fg-faint">awaiting input</span>
         </div>
       </div>
 
       {/* Corners */}
-      <div className="pointer-events-none absolute left-4 top-4 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+      <div className="pointer-events-none absolute left-4 top-4 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-faint">
         TERMINAL · 80×24
       </div>
-      <div className="pointer-events-none absolute right-4 top-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-bull">
+      <div className="pointer-events-none absolute right-4 top-4 flex items-center gap-2 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-bull">
         <span className="size-1 rounded-full bg-bull pulse-dot" />
         LIVE
       </div>
-      <div className="pointer-events-none absolute left-4 bottom-4 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+      <div className="pointer-events-none absolute left-4 bottom-4 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-faint">
         v0.1 · 2026 edition
       </div>
-      <div className="pointer-events-none absolute right-4 bottom-4 font-mono text-[10px] uppercase tracking-[0.3em] text-fg-faint">
+      <div className="pointer-events-none absolute right-4 bottom-4 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-fg-faint">
         ▰▰▰▰▰▰▰▱▱▱
       </div>
     </div>

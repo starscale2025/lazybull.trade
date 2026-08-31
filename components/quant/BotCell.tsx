@@ -139,10 +139,10 @@ export function BotCell({
       {/* Cell header */}
       <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="font-mono text-[10px] text-fg-faint">
+          <span className="font-mono text-[0.625rem] text-fg-faint">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="grid size-6 place-items-center border border-border bg-bg font-mono text-[12px] text-bull">
+          <span className="grid size-6 place-items-center border border-border bg-bg font-mono text-[0.75rem] text-bull">
             {def.glyph}
           </span>
           <div className="min-w-0">
@@ -161,7 +161,7 @@ export function BotCell({
           <button
             onClick={onRerun}
             disabled={isRunning}
-            className={`h-7 border px-2 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+            className={`h-7 border px-2 font-mono text-[0.625rem] uppercase tracking-wider transition-colors ${
               isRunning
                 ? "border-bull/40 bg-bull/10 text-bull cursor-wait"
                 : "border-border bg-bg text-bull hover:bg-bull hover:text-bg"
@@ -178,7 +178,7 @@ export function BotCell({
           </button>
           <button
             onClick={onToggleCollapse}
-            className="h-7 w-7 grid place-items-center border border-border bg-bg font-mono text-[10px] text-fg-dim hover:text-fg"
+            className="h-7 w-7 grid place-items-center border border-border bg-bg font-mono text-[0.625rem] text-fg-dim hover:text-fg"
             title={active.collapsed ? "expand" : "collapse"}
           >
             {active.collapsed ? "▾" : "▴"}
@@ -189,7 +189,7 @@ export function BotCell({
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               title="more"
-              className={`h-7 w-7 grid place-items-center border bg-bg font-mono text-[10px] ${
+              className={`h-7 w-7 grid place-items-center border bg-bg font-mono text-[0.625rem] ${
                 menuOpen ? "border-fg-dim text-fg" : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
               }`}
             >
@@ -214,7 +214,7 @@ export function BotCell({
                     rel="noopener noreferrer"
                     role="menuitem"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-2.5 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:bg-bg hover:text-cyan"
+                    className="block px-2.5 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:bg-bg hover:text-cyan"
                   >
                     ? how it works
                   </a>
@@ -224,7 +224,7 @@ export function BotCell({
                       setParamsOpen((v) => !v);
                       setMenuOpen(false);
                     }}
-                    className="block w-full border-t border-border-soft px-2.5 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:bg-bg hover:text-fg"
+                    className="block w-full border-t border-border-soft px-2.5 py-2 text-left font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:bg-bg hover:text-fg"
                   >
                     {paramsOpen ? "hide params" : "params"}
                   </button>
@@ -234,7 +234,7 @@ export function BotCell({
                       setMenuOpen(false);
                       onRemove();
                     }}
-                    className="block w-full border-t border-border-soft px-2.5 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:bg-bear hover:text-bg"
+                    className="block w-full border-t border-border-soft px-2.5 py-2 text-left font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:bg-bear hover:text-bg"
                   >
                     ✕ remove
                   </button>
@@ -257,13 +257,13 @@ export function BotCell({
             />
           ))}
           {def.formula && (
-            <div className="col-span-full border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[11px] text-fg-dim">
+            <div className="col-span-full border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[0.6875rem] text-fg-dim">
               <span className="text-fg-faint">f(x) = </span>
               {def.formula}
             </div>
           )}
           {(def.endpoint || def.module) && (
-            <div className="col-span-full grid grid-cols-1 gap-2 border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[10px] sm:grid-cols-2">
+            <div className="col-span-full grid grid-cols-1 gap-2 border border-border-soft bg-bg-soft px-3 py-2 font-mono text-[0.625rem] sm:grid-cols-2">
               {def.endpoint && (
                 <div className="text-fg-dim">
                   <span className="t-chrome text-fg-faint mr-2">api</span>
@@ -276,7 +276,7 @@ export function BotCell({
                   <span className="text-fg">{def.module}</span>
                 </div>
               )}
-              <div className="col-span-full text-fg-faint text-[10px] flex items-center justify-between gap-3">
+              <div className="col-span-full text-fg-faint text-[0.625rem] flex items-center justify-between gap-3">
                 <span>
                   this bot&apos;s output source is shown on its card — on-device NN (WASM), hosted API, exact math, or snapshot. hover the badge for what it means.
                 </span>
@@ -324,7 +324,7 @@ export function BotCell({
                     active={decimating}
                   />
                 </span>
-                <span className="text-[12px] text-fg">{result.verdict.text}</span>
+                <span className="text-[0.75rem] text-fg">{result.verdict.text}</span>
 
                 <div className="ml-auto flex items-center gap-2">
                   {/* honest source badge — hover for what it is */}
@@ -386,7 +386,7 @@ export function BotCell({
 
               {/* Chart with overlay */}
               {(result.overlay && result.overlay.length > 0) || result.signals.length > 0 ? (
-                <div className="relative h-[160px] overflow-hidden border border-border-soft bg-bg">
+                <div className="relative h-[10rem] overflow-hidden border border-border-soft bg-bg">
                   <PriceWithOverlay
                     closes={cls}
                     overlay={result.overlay ?? []}
@@ -436,7 +436,7 @@ export function BotCell({
                   <div className="h-8 flex-1">
                     <EquitySpark equity={result.equity} width={400} height={32} />
                   </div>
-                  <span className={`t-data text-[11px] ${result.equity[result.equity.length - 1] >= result.equity[0] ? "text-bull" : "text-bear"}`}>
+                  <span className={`t-data text-[0.6875rem] ${result.equity[result.equity.length - 1] >= result.equity[0] ? "text-bull" : "text-bear"}`}>
                     <DecimatedNumber
                       value={`${((result.equity[result.equity.length - 1] / result.equity[0] - 1) * 100).toFixed(1)}%`}
                       duration={DECIMATE_MS}
@@ -448,14 +448,14 @@ export function BotCell({
 
               {/* Beginner blurb */}
               {beginner && result.beginner && (
-                <div className="border-l-2 border-bull bg-bull/5 px-3 py-2 text-[12px] leading-relaxed text-fg">
+                <div className="border-l-2 border-bull bg-bull/5 px-3 py-2 text-[0.75rem] leading-relaxed text-fg">
                   <span className="mr-2 t-chrome text-bull">teacher</span>
                   {result.beginner}
                 </div>
               )}
 
               {/* Summary */}
-              <div className="font-mono text-[11px] tracking-wide text-fg-dim">
+              <div className="font-mono text-[0.6875rem] tracking-wide text-fg-dim">
                 <span className="text-fg-faint">→ </span>
                 {result.summary}
               </div>
@@ -484,7 +484,7 @@ function ParamControl({
         <select
           value={v}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 border border-border bg-bg px-2 font-mono text-[12px] text-fg"
+          className="h-8 border border-border bg-bg px-2 font-mono text-[0.75rem] text-fg"
         >
           {spec.options.map((o) => (
             <option key={o.value} value={o.value}>
@@ -528,7 +528,7 @@ function ParamControl({
         className="h-1 w-full accent-bull"
       />
       {spec.hint && (
-        <span className="font-mono text-[10px] text-fg-faint">{spec.hint}</span>
+        <span className="font-mono text-[0.625rem] text-fg-faint">{spec.hint}</span>
       )}
     </label>
   );

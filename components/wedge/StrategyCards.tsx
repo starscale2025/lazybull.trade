@@ -58,10 +58,10 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
                 <span className="ml-auto shrink-0 t-chrome text-fg-faint tabular-nums">
                   {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
                 </span>
-                <span className="w-9 shrink-0 text-right t-data text-[11px] text-bull">{(s.prob * 100).toFixed(0)}%</span>
+                <span className="w-9 shrink-0 text-right t-data text-[0.6875rem] text-bull">{(s.prob * 100).toFixed(0)}%</span>
               </span>
               {/* line 2: the payload — name + strikes, never truncated */}
-              <span className="text-[11px] leading-snug text-fg">{s.kind}</span>
+              <span className="text-[0.6875rem] leading-snug text-fg">{s.kind}</span>
             </button>
           );
         })}
@@ -182,7 +182,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onPlace(); }}
-          className="inline-flex w-full items-center justify-between border px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors lg:py-2.5"
+          className="inline-flex w-full items-center justify-between border px-4 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors lg:py-2.5"
           style={{ borderColor: tone.color, color: tone.color, background: selected ? tone.pillBg : "transparent" }}
         >
           <span className="inline-flex items-center gap-2">

@@ -29,7 +29,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
   if (!s) {
     return (
-      <div className="bg-bg p-3 font-mono text-[11px] text-fg-faint">
+      <div className="bg-bg p-3 font-mono text-[0.6875rem] text-fg-faint">
         Pick a strategy to time-machine its P&L.
       </div>
     );
@@ -44,7 +44,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
         </div>
         <button
           onClick={() => { setSpotAt(spot); setDaysGone(0); }}
-          className="font-mono text-[10px] uppercase tracking-wider text-fg-faint hover:text-fg"
+          className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint hover:text-fg"
         >
           ↺ reset
         </button>
@@ -80,7 +80,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             onChange={(e) => setSpotAt(parseFloat(e.target.value))}
             className="w-full accent-bull"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[10px] text-fg-faint">
+          <div className="mt-1 flex items-center justify-between font-mono text-[0.625rem] text-fg-faint">
             <span>${range.lo.toFixed(0)}</span>
             <span>spot ${spot.toFixed(2)}</span>
             <span>${range.hi.toFixed(0)}</span>
@@ -101,7 +101,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             onChange={(e) => setDaysGone(parseInt(e.target.value))}
             className="w-full accent-amber"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[10px] text-fg-faint">
+          <div className="mt-1 flex items-center justify-between font-mono text-[0.625rem] text-fg-faint">
             <span>now</span>
             <span>{remaining}d to expiry</span>
             <span>expiry</span>

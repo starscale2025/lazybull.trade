@@ -938,20 +938,20 @@ export function ScrollCinema() {
             style={{ background: "radial-gradient(ellipse at center, rgba(0,255,135,0.06), transparent 62%)" }}
           />
           <div className="relative flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center bg-bull font-mono text-[13px] font-bold tracking-tight text-bg">
+            <span className="flex size-8 items-center justify-center bg-bull font-mono text-[0.8125rem] font-bold tracking-tight text-bg">
               LB
             </span>
             <span className="font-display text-3xl tracking-tight text-fg">
               lazybull<span className="text-bull">.</span>
             </span>
           </div>
-          <div className="relative h-px w-[260px] overflow-hidden bg-border">
+          <div className="relative h-px w-[16.25rem] overflow-hidden bg-border">
             <div
               className="h-full bg-bull transition-[width] duration-300 ease-out"
               style={{ width: `${loadPct}%`, boxShadow: "0 0 12px rgba(0,255,135,0.7)" }}
             />
           </div>
-          <div className="relative flex w-[260px] items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+          <div className="relative flex w-[16.25rem] items-center justify-between font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint">
             <span className="flex items-center gap-1.5">
               <span className="size-1 rounded-full bg-bull pulse-dot" /> Initializing terminal
             </span>
@@ -972,7 +972,7 @@ export function ScrollCinema() {
               }
             }}
             aria-pressed={sound}
-            className="pointer-events-auto relative border border-border bg-bg/70 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-bull/50 hover:text-fg"
+            className="pointer-events-auto relative border border-border bg-bg/70 px-3 py-1.5 font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-bull/50 hover:text-fg"
           >
             {sound ? "sound on" : "sound off"}
           </button>
@@ -981,7 +981,7 @@ export function ScrollCinema() {
               no way out of a locked scroll. */}
           <div className="relative flex flex-col items-center gap-3">
             <div
-              className="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-faint transition-opacity duration-500"
+              className="font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint transition-opacity duration-500"
               style={{ opacity: slowLoad ? 1 : 0 }}
             >
               still loading the heavy bits…
@@ -989,7 +989,7 @@ export function ScrollCinema() {
             <button
               type="button"
               onClick={() => bailToStaticRef.current?.()}
-              className="pointer-events-auto border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
+              className="pointer-events-auto border border-border bg-bg/70 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
             >
               Skip intro →
             </button>
@@ -1114,7 +1114,7 @@ export function ScrollCinema() {
             boxShadow: "0 0 70px rgba(0,0,0,0.65), 0 0 28px rgba(191,232,255,0.07)",
           }}
         >
-          <div className="flex items-center justify-between border-b border-border px-3.5 py-2 text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="flex items-center justify-between border-b border-border px-3.5 py-2 text-[0.625rem] uppercase tracking-wider text-fg-dim">
             <span>quant-bot · candidate lab</span>
             <span ref={labPhaseRef} style={{ color: "#bfe8ff" }}>scan</span>
           </div>
@@ -1127,7 +1127,7 @@ export function ScrollCinema() {
               noise competing with the three story lines. Full parameter detail
               lives on /trade/quant. Live values keep interpolating on the same
               clock via labValRefs. */}
-          <div className="px-3.5 py-3 text-[11px] leading-[1.7] text-fg md:text-[12px] md:leading-[1.8]">
+          <div className="px-3.5 py-3 text-[0.6875rem] leading-[1.7] text-fg md:text-[0.75rem] md:leading-[1.8]">
             <div ref={(el) => { labLineRefs.current[0] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --scan NVDA --paper
             </div>
@@ -1147,14 +1147,14 @@ export function ScrollCinema() {
               <span className="text-fg-dim">→</span> historical agreement <span className="text-bull">6/6 models</span> · paper pick staged
             </div>
           </div>
-          <div className="border-t border-border px-3.5 py-1.5 text-[10px] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
+          <div className="border-t border-border px-3.5 py-1.5 text-[0.625rem] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
             simulated · educational — not advice
           </div>
         </div>
         {/* live price tag — follows the hovered 3D candle */}
         <div
           ref={tooltipRef}
-          className="pointer-events-none absolute left-0 top-0 z-30 flex items-center gap-2 border bg-black/85 px-2.5 py-1.5 font-mono text-[11px] backdrop-blur-sm transition-opacity duration-150"
+          className="pointer-events-none absolute left-0 top-0 z-30 flex items-center gap-2 border bg-black/85 px-2.5 py-1.5 font-mono text-[0.6875rem] backdrop-blur-sm transition-opacity duration-150"
           style={{ opacity: 0, borderColor: "rgba(0,255,135,0.5)" }}
         >
           <span className="text-fg" />
@@ -1188,7 +1188,7 @@ export function ScrollCinema() {
           ref={skipRef}
           type="button"
           onClick={handleSkip}
-          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
+          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
         >
           Skip intro ↓
         </button>

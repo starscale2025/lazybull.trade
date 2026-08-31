@@ -472,7 +472,7 @@ export function About() {
                   mission.md — lazybull
                 </span>
               </div>
-              <div className="flex items-center gap-2 font-mono text-[10px] text-fg-faint">
+              <div className="flex items-center gap-2 font-mono text-[0.625rem] text-fg-faint">
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" />
                 live
               </div>
@@ -488,7 +488,7 @@ export function About() {
                   <span className="italic text-bear">afterthought</span> — or worse, the{" "}
                   <span className="italic text-bear">product</span>."
                 </p>
-                <div className="mt-6 font-mono text-[11px] text-fg-faint">
+                <div className="mt-6 font-mono text-[0.6875rem] text-fg-faint">
                   — Shaurya Negi, Co-Founder · Originator
                 </div>
               </div>
@@ -496,7 +496,7 @@ export function About() {
                 <div className="t-chrome text-fg-faint mb-4">
                   // the fix
                 </div>
-                <div className="space-y-4 font-mono text-[12px] leading-relaxed text-fg-dim">
+                <div className="space-y-4 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
                   {[
                     { icon: "→", text: "Visualise the options chain as a heatmap you drag to build strategies" },
                     { icon: "→", text: "An AI teacher explains every Greek, every risk, in plain English" },
@@ -527,7 +527,7 @@ export function About() {
               <span className="t-eyebrow text-fg-faint">
                 ⟢ Section 01 / Founders
               </span>
-              <span className="font-mono text-[11px] text-bull">// team.md</span>
+              <span className="font-mono text-[0.6875rem] text-bull">// team.md</span>
             </div>
             <div className="col-span-12 md:col-span-9">
               <h2 className="t-title text-fg">
@@ -736,7 +736,7 @@ export function About() {
               <span className="t-eyebrow text-fg-faint">
                 ⟢ Section 04 / Values
               </span>
-              <span className="font-mono text-[11px] text-bull">// beliefs.md</span>
+              <span className="font-mono text-[0.6875rem] text-bull">// beliefs.md</span>
             </div>
             <div className="col-span-12 md:col-span-9">
               <h2 className="t-title text-fg">

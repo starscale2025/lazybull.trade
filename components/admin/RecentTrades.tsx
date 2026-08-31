@@ -41,7 +41,7 @@ export function RecentTrades({ rows }: { rows: TradeRow[] }) {
             return (
               <div
                 key={r.id}
-                className="group grid grid-cols-[60px_100px_60px_1fr_60px_84px_84px_88px] items-center gap-2 px-3 py-1.5 font-mono text-[11px] tabular-nums transition-colors hover:bg-surface"
+                className="group grid grid-cols-[60px_100px_60px_1fr_60px_84px_84px_88px] items-center gap-2 px-3 py-1.5 font-mono text-[0.6875rem] tabular-nums transition-colors hover:bg-surface"
               >
                 <span className="text-fg-faint">{rel(r.t)}</span>
                 <span className="truncate text-fg-dim">{r.user}</span>

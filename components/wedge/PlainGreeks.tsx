@@ -93,7 +93,7 @@ export function PlainGreeks({
           <button
             type="button"
             onClick={onDetails}
-            className="font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:text-bull"
+            className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:text-bull"
           >
             details →
           </button>
@@ -101,7 +101,7 @@ export function PlainGreeks({
       </div>
 
       {!s ? (
-        <div className="p-4 font-mono text-[11px] text-fg-faint">
+        <div className="p-4 font-mono text-[0.6875rem] text-fg-faint">
           Pick a strategy to see plain-English greeks.
         </div>
       ) : (
@@ -128,7 +128,7 @@ export function PlainGreeks({
                   >
                     {perShare(r.value)}
                   </span>
-                  <span className="flex-1 text-right text-[12px] leading-snug text-fg-dim">
+                  <span className="flex-1 text-right text-[0.75rem] leading-snug text-fg-dim">
                     {r.meaning}
                   </span>
                 </li>

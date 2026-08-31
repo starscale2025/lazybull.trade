@@ -148,7 +148,7 @@ export function LearnBacktestBuilder() {
   }, [visibleEquity, visibleSignals, candles]);
 
   if (!def) {
-    return <div className="grid h-32 place-items-center surface-card border border-border bg-surface text-fg-faint font-mono text-[11px]">bot not found</div>;
+    return <div className="grid h-32 place-items-center surface-card border border-border bg-surface text-fg-faint font-mono text-[0.6875rem]">bot not found</div>;
   }
 
   return (
@@ -156,7 +156,7 @@ export function LearnBacktestBuilder() {
       {/* Top: bot picker + scenario picker */}
       <div className="grid grid-cols-1 gap-3 @2xl:grid-cols-12">
         <div className="@2xl:col-span-7 surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             pick a bot
           </div>
           {/* Segmented radio strip — glyph + name per bot; the tagline shows
@@ -167,7 +167,7 @@ export function LearnBacktestBuilder() {
                 key={b.id}
                 onClick={() => setBotId(b.id)}
                 title={b.blurb}
-                className={`flex grow items-center justify-center gap-1.5 bg-bg px-2.5 py-2 font-mono text-[10px] tracking-wide transition-colors ${
+                className={`flex grow items-center justify-center gap-1.5 bg-bg px-2.5 py-2 font-mono text-[0.625rem] tracking-wide transition-colors ${
                   b.id === botId ? "bg-bull/[0.06] text-bull" : "text-fg-dim hover:bg-bg-soft hover:text-fg"
                 }`}
               >
@@ -176,14 +176,14 @@ export function LearnBacktestBuilder() {
               </button>
             ))}
           </div>
-          <div className="border-t border-border-soft px-3 py-2 font-mono text-[10px] text-fg-dim">
+          <div className="border-t border-border-soft px-3 py-2 font-mono text-[0.625rem] text-fg-dim">
             <span className="text-fg-faint">{def.name} → </span>
             {PRESET_BOTS.find((b) => b.id === botId)?.blurb}
           </div>
         </div>
 
         <div className="@2xl:col-span-5 surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             market scenario
           </div>
           <div className="grid grid-cols-3 gap-px bg-border">
@@ -193,10 +193,10 @@ export function LearnBacktestBuilder() {
                 onClick={() => setScenarioKey(s.key)}
                 className={`bg-bg p-3 text-center transition-colors ${s.key === scenarioKey ? "bg-bull/[0.06]" : "hover:bg-bg-soft"}`}
               >
-                <div className={`font-mono text-[11px] uppercase tracking-wider ${s.key === scenarioKey ? "text-bull" : "text-fg-dim"}`}>
+                <div className={`font-mono text-[0.6875rem] uppercase tracking-wider ${s.key === scenarioKey ? "text-bull" : "text-fg-dim"}`}>
                   {s.label}
                 </div>
-                <div className="mt-1 font-mono text-[10px] text-fg-faint">
+                <div className="mt-1 font-mono text-[0.625rem] text-fg-faint">
                   μ={s.drift.toFixed(2)} · σ={s.vol.toFixed(1)}
                 </div>
               </button>
@@ -206,14 +206,14 @@ export function LearnBacktestBuilder() {
             <button
               onClick={start}
               disabled={running || !result}
-              className="flex-1 h-8 border border-bull bg-bull text-bg font-mono text-[11px] uppercase tracking-wider hover:bg-bull-dim disabled:opacity-50 disabled:bg-bg disabled:text-fg-faint disabled:border-border"
+              className="flex-1 h-8 border border-bull bg-bull text-bg font-mono text-[0.6875rem] uppercase tracking-wider hover:bg-bull-dim disabled:opacity-50 disabled:bg-bg disabled:text-fg-faint disabled:border-border"
             >
               {running ? "▶ running…" : progress >= 1 ? "↻ replay" : "▶ run backtest"}
             </button>
             {progress > 0 && (
               <button
                 onClick={reset}
-                className="h-8 border border-border bg-bg px-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg"
+                className="h-8 border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg"
               >
                 reset
               </button>
@@ -224,7 +224,7 @@ export function LearnBacktestBuilder() {
 
       {/* Chart with price + equity overlaid + signals */}
       <div className="surface-card border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
           <span>{def.name} on {scenario.label}</span>
           <span>bar {cutoff} / {candles.length}</span>
         </div>
@@ -253,7 +253,7 @@ export function LearnBacktestBuilder() {
       {/* Only worth reading once there are numbers to read — before a run its
           Sharpe/MaxDD references point at 0.00 tiles. */}
       {hasRun && (
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[11px] tracking-wide text-fg-dim leading-relaxed">
+      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim leading-relaxed">
         <span className="text-fg-faint">read this →</span> a high return doesn&apos;t mean a good bot.
         Look at <span className="text-fg">Sharpe</span> (return per unit of bumpy ride — &gt;1 is good)
         and <span className="text-fg">Max DD</span> (the worst peak-to-trough drop the bot put you
@@ -268,8 +268,8 @@ export function LearnBacktestBuilder() {
 function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
     <div className="bg-bg p-3">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{label}</div>
-      <div className="mt-1 font-mono text-[14px] tabular-nums" style={{ color: tone }}>{value}</div>
+      <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
+      <div className="mt-1 font-mono text-[0.875rem] tabular-nums" style={{ color: tone }}>{value}</div>
     </div>
   );
 }

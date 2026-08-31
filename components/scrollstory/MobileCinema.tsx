@@ -396,7 +396,7 @@ export function MobileCinema() {
             // at 0; instant lands at the handoff and stays.
             window.scrollTo(0, el.offsetTop + el.offsetHeight - window.innerHeight + 4);
           }}
-          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
+          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-5 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
         >
           Skip intro ↓
         </button>

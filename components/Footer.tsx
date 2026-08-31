@@ -102,7 +102,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
                   Subscribe →
                 </button>
               </div>
-              <p className="font-mono text-[10px] text-fg-faint">
+              <p className="font-mono text-[0.625rem] text-fg-faint">
                 no upsells. one strategy per email. unsubscribe with <span className="text-bull">/quit</span>.
               </p>
             </form>
@@ -197,7 +197,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
               ))}
             </ul>
             {col.roadmap && (
-              <p className="mt-4 cursor-default font-mono text-[11px] leading-relaxed text-fg-faint/70" title="Coming soon">
+              <p className="mt-4 cursor-default font-mono text-[0.6875rem] leading-relaxed text-fg-faint/70" title="Coming soon">
                 {col.roadmap}
               </p>
             )}
@@ -236,7 +236,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
           Capped at a readable measure (was a 150-char full-width line) and given
           right-side clearance so no floating control ever sits on legal text. */}
       <div className="relative border-t border-border bg-bg">
-        <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 font-mono text-[11px] leading-relaxed text-fg-dim sm:pr-5">
+        <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 font-mono text-[0.6875rem] leading-relaxed text-fg-dim sm:pr-5">
           LAZYBULL is an educational platform for learning about options. We do
           not accept real funds, are not a registered broker-dealer, and do not
           provide investment advice. Paper-trading results are simulated using

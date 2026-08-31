@@ -96,7 +96,7 @@ export function TopBar({
   // at exactly xl/1280) Save, the only way to persist the workspace, was
   // clipped off the right edge. Below the threshold the bar wraps instead.
   return (
-    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 font-mono text-[11px] uppercase tracking-wider min-[1350px]:h-11 min-[1350px]:flex-nowrap min-[1350px]:py-0">
+    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 font-mono text-[0.6875rem] uppercase tracking-wider min-[1350px]:h-11 min-[1350px]:flex-nowrap min-[1350px]:py-0">
       <div className="relative">
         <button
           onClick={() => setSymOpen((o) => !o)}
@@ -113,7 +113,7 @@ export function TopBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 top-9 z-40 w-[360px] max-w-[calc(100vw/var(--ui-zoom)-1rem)] surface-instrument border border-border bg-surface shadow-2xl"
+              className="absolute left-0 top-9 z-40 w-[22.5rem] max-w-[calc(100vw/var(--ui-zoom)-1rem)] surface-instrument border border-border bg-surface shadow-2xl"
             >
               <div className="flex items-center gap-2 border-b border-border-soft p-2">
                 <span className="text-fg-faint">⌕</span>
@@ -122,12 +122,12 @@ export function TopBar({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search Yahoo Finance — AAPL, NIFTY, BTC, RELIANCE.NS…"
-                  className="flex-1 bg-transparent font-mono text-[11px] uppercase text-fg outline-none placeholder:text-fg-faint"
+                  className="flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:text-fg-faint"
                   onKeyDown={(e) => e.key === "Escape" && setSymOpen(false)}
                 />
                 {searching && <span className="text-cyan">…</span>}
               </div>
-              <ul className="max-h-[360px] overflow-y-auto">
+              <ul className="max-h-[22.5rem] overflow-y-auto">
                 {list.map((s) => (
                   <li key={s.sym}>
                     <button
@@ -140,10 +140,10 @@ export function TopBar({
                         <SymGlyph sym={s.sym} />
                         <div className="flex flex-col">
                           <span className="text-fg leading-tight">{s.sym}</span>
-                          <span className="text-[10px] text-fg-faint normal-case tracking-normal">{s.name}</span>
+                          <span className="text-[0.625rem] text-fg-faint normal-case tracking-normal">{s.name}</span>
                         </div>
                       </div>
-                      <span className="text-[10px] text-fg-faint">{s.exch}</span>
+                      <span className="text-[0.625rem] text-fg-faint">{s.exch}</span>
                     </button>
                   </li>
                 ))}
@@ -151,7 +151,7 @@ export function TopBar({
                   <li className="px-3 py-4 text-center t-chrome text-fg-faint">no matches</li>
                 )}
               </ul>
-              <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[10px] text-fg-faint">
+              <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[0.625rem] text-fg-faint">
                 live data via Yahoo Finance
               </div>
             </motion.div>
@@ -223,7 +223,7 @@ export function TopBar({
               transition={{ duration: 0.15 }}
               className="absolute left-0 top-9 z-40 w-72 max-w-[calc(100vw/var(--ui-zoom)-1rem)] border border-border bg-bg shadow-2xl"
             >
-              <div className="border-b border-border-soft px-3 py-2 text-[10px] text-fg-dim normal-case tracking-normal">
+              <div className="border-b border-border-soft px-3 py-2 text-[0.625rem] text-fg-dim normal-case tracking-normal">
                 Built-in studies — toggle to layer on the chart
               </div>
               <ul>
@@ -241,7 +241,7 @@ export function TopBar({
                           <span className="size-2.5" style={{ background: i.color }} />
                           <div className="flex flex-col">
                             <span className="text-fg leading-tight">{i.label}</span>
-                            <span className="text-[10px] text-fg-faint normal-case tracking-normal">{i.desc}</span>
+                            <span className="text-[0.625rem] text-fg-faint normal-case tracking-normal">{i.desc}</span>
                           </div>
                         </div>
                         <span className={`size-3 border ${on ? "border-bull bg-bull" : "border-fg-faint"}`} aria-hidden />
@@ -352,7 +352,7 @@ function SymGlyph({ sym }: { sym: string }) {
   const c = palette[sym.charCodeAt(0) % palette.length];
   return (
     <span className="flex size-5 items-center justify-center border" style={{ borderColor: c, color: c }}>
-      <span className="text-[10px] font-bold">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
+      <span className="text-[0.625rem] font-bold">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
     </span>
   );
 }

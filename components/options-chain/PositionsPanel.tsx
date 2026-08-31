@@ -63,16 +63,16 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
         open · {open.length}
       </div>
       {open.length === 0 ? (
-        <div className="px-3 py-4 text-center font-mono text-[11px] text-fg-faint">no open positions</div>
+        <div className="px-3 py-4 text-center font-mono text-[0.6875rem] text-fg-faint">no open positions</div>
       ) : (
         <div>
           {open.map((p) => {
             const live = payoff(p.legs, spot);
             return (
-              <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-2 t-data text-[11px]">
+              <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-2 t-data text-[0.6875rem]">
                 <div className="col-span-4">
                   <div className="text-fg">{p.strategy}</div>
-                  <div className="font-mono text-[10px] text-fg-faint">{p.underlying} · {p.legs.length} leg</div>
+                  <div className="font-mono text-[0.625rem] text-fg-faint">{p.underlying} · {p.legs.length} leg</div>
                 </div>
                 <div className="col-span-3 text-right">
                   <div className="text-fg-dim">cost</div>
@@ -84,7 +84,7 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
                 </div>
                 <button
                   onClick={() => close(p.id, live)}
-                  className="col-span-2 border border-border bg-bg px-2 py-1 text-[10px] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear"
+                  className="col-span-2 border border-border bg-bg px-2 py-1 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear"
                 >
                   close
                 </button>
@@ -100,7 +100,7 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
             recent closed
           </div>
           {closed.map((p) => (
-            <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[10px] text-fg-dim">
+            <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[0.625rem] text-fg-dim">
               <div className="col-span-7">{p.strategy} · {p.underlying}</div>
               <div className={`col-span-5 text-right ${p.pnl >= 0 ? "text-bull" : "text-bear"}`}>
                 {p.pnl >= 0 ? "+" : "−"}${Math.abs(p.pnl).toFixed(0)}

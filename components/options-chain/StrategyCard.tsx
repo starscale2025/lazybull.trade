@@ -190,10 +190,10 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             <span className="col-span-2 text-right">net</span>
           </div>
           {legs.map((l) => (
-            <div key={l.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[11px]">
+            <div key={l.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[0.6875rem]">
               <button
                 onClick={() => flipSide(l.id)}
-                className={`col-span-2 border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                className={`col-span-2 border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider transition-colors ${
                   l.side === "long" ? "border-bull text-bull hover:bg-bull/10" : "border-bear text-bear hover:bg-bear/10"
                 }`}
               >
@@ -229,7 +229,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
           </div>
           <button
             onClick={() => setTradeModal(true)}
-            className="inline-flex items-center gap-2 bg-bull px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim transition-colors"
+            className="inline-flex items-center gap-2 bg-bull px-4 py-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim transition-colors"
           >
             paper trade →
           </button>
@@ -263,10 +263,10 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
                 <div className="font-display text-2xl tracking-tightest text-fg">
                   {detection.kind}
                 </div>
-                <div className="mt-1 font-mono text-[11px] uppercase tracking-wider text-fg-dim">
+                <div className="mt-1 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
                   on {underlying} · spot ${spot.toFixed(2)}
                 </div>
-                <div className="mt-4 min-h-[120px] whitespace-pre-line t-body-sm text-fg">
+                <div className="mt-4 min-h-[7.5rem] whitespace-pre-line t-body-sm text-fg">
                   {explainLoading ? (
                     <span className="text-fg-faint">teacher is thinking…</span>
                   ) : (

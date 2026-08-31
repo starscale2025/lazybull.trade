@@ -142,9 +142,9 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
         if (boxRef.current && !boxRef.current.contains(e.target as Node)) onClose();
       }}
     >
-      <div ref={boxRef} className="w-[440px] max-w-[calc(92vw/var(--ui-zoom))] surface-instrument border border-border bg-surface shadow-2xl">
+      <div ref={boxRef} className="w-[27.5rem] max-w-[calc(92vw/var(--ui-zoom))] surface-instrument border border-border bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-          <span className="font-mono text-[11px] uppercase tracking-wider text-fg-faint">Symbol search</span>
+          <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">Symbol search</span>
           <button
             onClick={onClose}
             aria-label="Close symbol search"
@@ -160,7 +160,7 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
           onKeyDown={onKeyDown}
           placeholder="Symbol… or an interval like 5, 1h, D"
           aria-label="Search symbols or type an interval"
-          className="w-full border-b border-border bg-surface px-3 py-3 font-mono text-[15px] uppercase tracking-wider text-fg outline-none placeholder:normal-case placeholder:text-fg-faint"
+          className="w-full border-b border-border bg-surface px-3 py-3 font-mono text-[0.9375rem] uppercase tracking-wider text-fg outline-none placeholder:normal-case placeholder:text-fg-faint"
         />
         <div className="max-h-[46vh] overflow-y-auto py-1" role="listbox" aria-label="Search results">
           {interval && (
@@ -169,14 +169,14 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
               aria-selected={highlight === 0}
               onClick={() => pick(0)}
               onMouseEnter={() => setHighlight(0)}
-              className={`flex w-full items-center justify-between px-3 py-2 font-mono text-[12px] ${
+              className={`flex w-full items-center justify-between px-3 py-2 font-mono text-[0.75rem] ${
                 highlight === 0 ? "bg-surface-2 text-fg" : "text-fg-dim"
               }`}
             >
               <span>
                 Change interval → <span className="text-bull">{interval.label}</span>
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-fg-faint">↵</span>
+              <span className="text-[0.625rem] uppercase tracking-wider text-fg-faint">↵</span>
             </button>
           )}
           {symbols.map((s, i) => {
@@ -188,18 +188,18 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
                 aria-selected={highlight === idx}
                 onClick={() => pick(idx)}
                 onMouseEnter={() => setHighlight(idx)}
-                className={`flex w-full items-center gap-3 px-3 py-2 font-mono text-[12px] ${
+                className={`flex w-full items-center gap-3 px-3 py-2 font-mono text-[0.75rem] ${
                   highlight === idx ? "bg-surface-2 text-fg" : "text-fg-dim"
                 }`}
               >
                 <span className="w-16 shrink-0 text-left text-fg">{s.sym}</span>
-                <span className="flex-1 truncate text-left text-[11px]">{s.name}</span>
-                <span className="shrink-0 text-[10px] uppercase tracking-wider text-fg-faint">{s.exch}</span>
+                <span className="flex-1 truncate text-left text-[0.6875rem]">{s.name}</span>
+                <span className="shrink-0 text-[0.625rem] uppercase tracking-wider text-fg-faint">{s.exch}</span>
               </button>
             );
           })}
           {!symbols.length && !interval && (
-            <div className="px-3 py-4 font-mono text-[11px] text-fg-faint">No matches.</div>
+            <div className="px-3 py-4 font-mono text-[0.6875rem] text-fg-faint">No matches.</div>
           )}
         </div>
       </div>

@@ -58,7 +58,7 @@ export function RunStream({
   const perLineDelay = Math.max(60, (durationMs - 180) / Math.max(lines.length, 1));
 
   return (
-    <div className="relative overflow-hidden border border-border-soft bg-bg p-3 font-mono text-[11px] leading-[1.55]">
+    <div className="relative overflow-hidden border border-border-soft bg-bg p-3 font-mono text-[0.6875rem] leading-[1.55]">
       <div className="cell-running-rail" aria-hidden />
 
       <div className="mb-2 flex items-center justify-between t-eyebrow text-fg-faint">

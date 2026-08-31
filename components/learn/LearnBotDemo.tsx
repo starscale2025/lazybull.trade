@@ -73,7 +73,7 @@ export function LearnBotDemo({ botId }: { botId: string }) {
 
   if (!def) {
     return (
-      <div className="grid h-32 place-items-center surface-card border border-border bg-surface font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+      <div className="grid h-32 place-items-center surface-card border border-border bg-surface font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
         bot not found
       </div>
     );
@@ -81,7 +81,7 @@ export function LearnBotDemo({ botId }: { botId: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
+      <div className="flex flex-wrap items-center gap-2 font-mono text-[0.625rem] uppercase tracking-wider">
         <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-faint">symbol</span>
         {SYMBOLS.map((s) => (
           <button
@@ -115,7 +115,7 @@ export function LearnBotDemo({ botId }: { botId: string }) {
       </div>
 
       {loading || !candles || !active ? (
-        <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[11px] uppercase tracking-wider text-fg-faint">
+        <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
           loading {symbol} bars…
         </div>
       ) : (

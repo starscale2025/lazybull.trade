@@ -88,7 +88,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
               <div className="t-chrome text-fg-faint">strategy</div>
               <button
                 onClick={() => onJump("pick")}
-                className="font-mono text-[10px] uppercase tracking-wider text-fg-dim underline-offset-2 hover:text-bull hover:underline"
+                className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim underline-offset-2 hover:text-bull hover:underline"
               >
                 change
               </button>
@@ -127,7 +127,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
         ) : (
           <button
             onClick={() => onJump("pick")}
-            className="border border-dashed border-border px-3 py-4 text-center font-mono text-[11px] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
+            className="border border-dashed border-border px-3 py-4 text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
           >
             pick a strategy in step 02 →
           </button>
@@ -137,7 +137,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
           <button
             onClick={onPlace}
             disabled={!selected}
-            className="w-full bg-bull px-4 py-3 font-mono text-[12px] font-semibold uppercase tracking-wider text-bg transition-opacity hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-30"
+            className="w-full bg-bull px-4 py-3 font-mono text-[0.75rem] font-semibold uppercase tracking-wider text-bg transition-opacity hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-30"
           >
             place this bet →
           </button>
@@ -145,7 +145,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
 
         <button
           onClick={() => onJump("manage")}
-          className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:text-fg"
+          className="flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-fg"
         >
           <span>open positions</span>
           <span className={openCount > 0 ? "text-bull" : "text-fg-faint"}>{openCount} open ↓</span>
@@ -169,7 +169,7 @@ export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "select
       <button
         onClick={onPlace}
         disabled={!selected}
-        className="shrink-0 bg-bull px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bg disabled:opacity-30"
+        className="shrink-0 bg-bull px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg disabled:opacity-30"
       >
         place →
       </button>

@@ -61,7 +61,7 @@ export function LearnVolSmile() {
       <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-12">
         {/* Smile chart */}
         <div className="@2xl:col-span-8 surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             <span>implied vol surface · spot ${SPOT}</span>
             <span className="tabular-nums">
               skew {skew.toFixed(2)} · kurt {kurt.toFixed(2)}
@@ -123,25 +123,25 @@ export function LearnVolSmile() {
             narrow rail beside a wide chart. */}
         <div className="@2xl:col-span-4 flex flex-col gap-3 @md:flex-row @2xl:flex-col">
           <div className="surface-card border border-border bg-surface p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">skew (ρ)</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">skew (ρ)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{skew.toFixed(2)}</div>
             <input type="range" min={-1} max={1} step={0.05} value={skew} onChange={(e) => setSkew(parseFloat(e.target.value))} className="mt-3 h-1 w-full accent-bull" />
-            <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
               <span>− call-rich</span><span>flat</span><span>+ put-rich</span>
             </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-fg-dim">
+            <p className="mt-3 text-[0.6875rem] leading-relaxed text-fg-dim">
               In real equity markets, ρ is almost always positive — when the stock drops, vol jumps. So OTM puts get bid up, OTM calls get bid down. The Heston model parameter has the opposite sign convention; same idea.
             </p>
           </div>
 
           <div className="surface-card border border-border bg-surface p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">smile depth (kurtosis)</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">smile depth (kurtosis)</div>
             <div className="mt-2 font-display text-2xl tabular-nums text-fg">{kurt.toFixed(2)}</div>
             <input type="range" min={0} max={1.5} step={0.05} value={kurt} onChange={(e) => setKurt(parseFloat(e.target.value))} className="mt-3 h-1 w-full accent-bull" />
-            <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
               <span>flat</span><span>deep smile</span>
             </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-fg-dim">
+            <p className="mt-3 text-[0.6875rem] leading-relaxed text-fg-dim">
               The "wings" — far OTM strikes — sell for richer IV than the textbook flat-vol BS model predicts. The market is pricing in fat tails.
             </p>
           </div>
@@ -150,27 +150,27 @@ export function LearnVolSmile() {
 
       {/* Comparison panel */}
       <div className="surface-card border border-border bg-surface">
-        <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+        <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
           comparison · same distance from spot
         </div>
         <div className="grid grid-cols-3 gap-px bg-border">
           <div className="bg-bg p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-bear">$85 put (15% OTM)</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-bear">$85 put (15% OTM)</div>
             <div className="mt-2 font-display text-3xl tabular-nums text-bear">{formatIv(ivOTMPut)}</div>
-            <div className="mt-1 font-mono text-[10px] text-fg-faint">implied vol the market is asking</div>
+            <div className="mt-1 font-mono text-[0.625rem] text-fg-faint">implied vol the market is asking</div>
           </div>
           <div className="bg-bg p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">ATM</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">ATM</div>
             <div className="mt-2 font-display text-3xl tabular-nums text-fg">{formatIv(smileIV(SPOT, skew, kurt))}</div>
-            <div className="mt-1 font-mono text-[10px] text-fg-faint">reference</div>
+            <div className="mt-1 font-mono text-[0.625rem] text-fg-faint">reference</div>
           </div>
           <div className="bg-bg p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-bull">$115 call (15% OTM)</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-bull">$115 call (15% OTM)</div>
             <div className="mt-2 font-display text-3xl tabular-nums text-bull">{formatIv(ivOTMCall)}</div>
-            <div className="mt-1 font-mono text-[10px] text-fg-faint">implied vol the market is asking</div>
+            <div className="mt-1 font-mono text-[0.625rem] text-fg-faint">implied vol the market is asking</div>
           </div>
         </div>
-        <div className="border-t border-border-soft p-3 font-mono text-[11px] tracking-wide text-fg-dim leading-relaxed">
+        <div className="border-t border-border-soft p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim leading-relaxed">
           <span className="text-fg-faint">read this →</span>{" "}
           <span className="text-fg">{Math.abs(skewPercent).toFixed(1)}%</span> {" "}
           {skewPercent > 0 ? "richer IV on the put side" : skewPercent < 0 ? "richer IV on the call side" : "no skew"}.

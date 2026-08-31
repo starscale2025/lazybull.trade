@@ -181,11 +181,11 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="pointer-events-auto w-[320px] border border-border bg-bg shadow-2xl"
+            className="pointer-events-auto w-[20rem] border border-border bg-bg shadow-2xl"
           >
             {/* header */}
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
-              <div className="font-mono text-[11px] uppercase tracking-wider text-fg">
+              <div className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg">
                 Bet on <span className="text-bull">{symbol}</span>
                 <span className="ml-2 t-data text-fg-dim">{mark ? `$${mark.toFixed(2)}` : "…"}</span>
               </div>
@@ -200,7 +200,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
 
             {lockReason ? (
               <div className="space-y-3 p-4">
-                <div className="border border-amber/40 bg-amber/10 px-3 py-2 font-mono text-[11px] leading-relaxed text-amber">
+                <div className="border border-amber/40 bg-amber/10 px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-amber">
                   ⚠ betting locked — {lockReason}
                 </div>
                 <div className="t-chrome text-fg-faint">
@@ -209,7 +209,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                 {onUnlock && (
                   <button
                     onClick={onUnlock}
-                    className="w-full border border-bull bg-bull/10 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+                    className="w-full border border-bull bg-bull/10 py-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
                   >
                     switch to live data
                   </button>
@@ -217,7 +217,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
               </div>
             ) : placed ? (
               <div className="space-y-3 p-4">
-                <div className="border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[11px] text-bull">
+                <div className="border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[0.6875rem] text-bull">
                   ✓ Paper bet placed — {placed}
                 </div>
                 <div className="t-chrome text-fg-faint">
@@ -225,7 +225,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                 </div>
                 <button
                   onClick={() => setPlaced(null)}
-                  className="w-full border border-border py-2 font-mono text-[11px] uppercase tracking-wider text-fg-dim hover:text-fg"
+                  className="w-full border border-border py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg"
                 >
                   Place another
                 </button>
@@ -261,7 +261,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                       key={s}
                       onClick={() => setStake(s)}
                       aria-pressed={stake === s}
-                      className={`flex-1 border py-1.5 font-mono text-[11px] tabular-nums transition-colors ${
+                      className={`flex-1 border py-1.5 font-mono text-[0.6875rem] tabular-nums transition-colors ${
                         stake === s ? "border-bull/60 bg-bull/10 text-bull" : "border-border text-fg-dim hover:text-fg"
                       }`}
                     >
@@ -269,7 +269,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                     </button>
                   ))}
                   <div className="flex items-center border border-border px-2 py-1.5">
-                    <span className="mr-1 font-mono text-[11px] text-fg-faint">$</span>
+                    <span className="mr-1 font-mono text-[0.6875rem] text-fg-faint">$</span>
                     <input
                       value={stake}
                       // Math.round() on every keystroke deleted the decimal
@@ -277,7 +277,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                       // the raw string while editing and parse on use.
                       onChange={(e) => setStakeText(e.target.value.replace(/[^\d.]/g, ""))}
                       aria-label="Custom stake in dollars"
-                      className="w-14 bg-transparent text-right font-mono text-[11px] tabular-nums text-fg outline-none"
+                      className="w-14 bg-transparent text-right font-mono text-[0.6875rem] tabular-nums text-fg outline-none"
                     />
                   </div>
                 </div>
@@ -285,9 +285,9 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                 {/* the two reads */}
                 <div className="space-y-2 px-3 py-3">
                   <div className="border border-border-soft bg-surface px-2.5 py-2">
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">what the quants say</div>
+                    <div className="font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">what the quants say</div>
                     {reads ? (
-                      <div className="mt-1 font-mono text-[11px] leading-relaxed text-fg-dim">
+                      <div className="mt-1 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
                         <span className={reads.quant.lean === "UP" ? "text-bull" : reads.quant.lean === "DOWN" ? "text-bear" : "text-fg"}>
                           {reads.quant.lean === "NEUTRAL"
                             ? "jury is split"
@@ -298,13 +298,13 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                         {reads.quant.regime.toLowerCase()} regime · H {reads.quant.h.toFixed(2)}
                       </div>
                     ) : (
-                      <div className="mt-1 font-mono text-[11px] text-fg-faint">reading the tape…</div>
+                      <div className="mt-1 font-mono text-[0.6875rem] text-fg-faint">reading the tape…</div>
                     )}
                   </div>
                   <div className="border border-border-soft bg-surface px-2.5 py-2">
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">what the models say</div>
+                    <div className="font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">what the models say</div>
                     {reads ? (
-                      <div className="mt-1 font-mono text-[11px] leading-relaxed text-fg-dim">
+                      <div className="mt-1 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
                         <span className={reads.model.pUp >= 0.5 ? "text-bull" : "text-bear"}>
                           {pct(reads.model.pUp)} chance above ${(mark as number).toFixed(0)}
                         </span>{" "}
@@ -313,17 +313,17 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                         vol {pct(reads.model.vol)} · 1σ ${reads.model.lo.toFixed(0)}–${reads.model.hi.toFixed(0)}
                       </div>
                     ) : (
-                      <div className="mt-1 font-mono text-[11px] text-fg-faint">pricing the range…</div>
+                      <div className="mt-1 font-mono text-[0.6875rem] text-fg-faint">pricing the range…</div>
                     )}
                   </div>
                   {chainNote && (
                     <div className="border border-border-soft bg-surface px-2.5 py-2">
-                      <div className="font-mono text-[10px] uppercase tracking-widest text-fg-faint">on your chain</div>
-                      <div className="mt-1 font-mono text-[11px] text-fg-dim">{chainNote}</div>
+                      <div className="font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">on your chain</div>
+                      <div className="mt-1 font-mono text-[0.6875rem] text-fg-dim">{chainNote}</div>
                     </div>
                   )}
                   {position && position.qty !== 0 && (
-                    <div className="font-mono text-[10px] text-fg-faint">
+                    <div className="font-mono text-[0.625rem] text-fg-faint">
                       already {position.qty > 0 ? "long" : "short"} {Math.abs(position.qty)} @ {position.avgPrice.toFixed(2)} (
                       <span className={livePnl >= 0 ? "text-bull" : "text-bear"}>
                         {livePnl >= 0 ? "+" : "−"}${Math.abs(livePnl).toFixed(0)}
@@ -345,11 +345,11 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                     {killed ? "kill switch on" : `Place $${stake.toLocaleString()} ${dir === "up" ? "▲ up" : "▼ down"} bet`}
                   </button>
                   {error && (
-                    <div role="alert" className="mt-2 border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[10px] text-bear">
+                    <div role="alert" className="mt-2 border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[0.625rem] text-bear">
                       {error}
                     </div>
                   )}
-                  <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-fg-faint">
+                  <div className="mt-2 text-center font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">
                     paper only · ${Math.round(cash).toLocaleString()} cash · not advice
                   </div>
                 </div>
@@ -362,7 +362,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="pointer-events-auto flex items-center gap-2 border border-bull/50 bg-bg/90 px-4 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull shadow-xl backdrop-blur transition-colors hover:bg-bull hover:text-bg"
+        className="pointer-events-auto flex items-center gap-2 border border-bull/50 bg-bg/90 px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull shadow-xl backdrop-blur transition-colors hover:bg-bull hover:text-bg"
       >
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
         {open ? "Hide" : "Paper trade"}

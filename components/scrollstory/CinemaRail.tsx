@@ -144,7 +144,7 @@ export const CinemaRail = forwardRef<
             className="rail-row group flex items-center gap-2 text-left"
           >
             <span className="rail-tick block h-px w-3 bg-fg-faint" aria-hidden />
-            <span className="rail-num t-data text-[10px] text-fg-faint" aria-hidden>
+            <span className="rail-num t-data text-[0.625rem] text-fg-faint" aria-hidden>
               {String(i + 1).padStart(2, "0")}
             </span>
             <span className="rail-label t-chrome text-fg-faint" aria-hidden>

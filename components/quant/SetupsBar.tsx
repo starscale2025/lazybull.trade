@@ -106,7 +106,7 @@ export function SetupsBar({
       <button
         onClick={() => signIn("google", { callbackUrl: "/quant" })}
         title="Setups save to your profile — symbol, mode, knobs and the whole bot stack"
-        className="flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+        className="flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
       >
         ⇪ sign in to save setups
       </button>
@@ -114,7 +114,7 @@ export function SetupsBar({
   }
 
   return (
-    <div ref={boxRef} className="relative flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider">
+    <div ref={boxRef} className="relative flex items-center gap-1 font-mono text-[0.625rem] uppercase tracking-wider">
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -177,7 +177,7 @@ export function SetupsBar({
               </div>
             ))
           )}
-          <div className="border-t border-border-soft px-3 py-1.5 text-[10px] normal-case tracking-normal text-fg-faint">
+          <div className="border-t border-border-soft px-3 py-1.5 text-[0.625rem] normal-case tracking-normal text-fg-faint">
             custom imported bots aren't saved — they're code, not config
           </div>
         </div>

@@ -49,10 +49,10 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
               style={{ left: `${pct}%` }}
             >
               <div className="flex h-8 w-2 items-center justify-center" style={{ background: eventTone(e.kind) }} title={`${e.title} · ${e.date}`} />
-              <div className="absolute left-1/2 top-9 hidden -translate-x-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[10px] text-fg shadow-xl group-hover:block z-10">
+              <div className="absolute left-1/2 top-9 hidden -translate-x-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[0.625rem] text-fg shadow-xl group-hover:block z-10">
                 <div className="text-fg">{e.title}</div>
                 <div className="text-fg-faint normal-case">{e.date} · {e.vol} vol expected</div>
-                <div className="mt-1 max-w-[220px] whitespace-normal text-[10px] text-fg-dim normal-case tracking-normal">{e.blurb}</div>
+                <div className="mt-1 max-w-[13.75rem] whitespace-normal text-[0.625rem] text-fg-dim normal-case tracking-normal">{e.blurb}</div>
               </div>
             </motion.div>
           );
@@ -71,7 +71,7 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
           {within.slice(0, 4).map((e) => (
             <li key={e.id} className="flex items-start gap-2 border border-border-soft bg-surface px-2 py-1.5">
               <span className="mt-1 inline-block size-2 shrink-0" style={{ background: eventTone(e.kind) }} />
-              <div className="flex-1 text-[11px] leading-snug">
+              <div className="flex-1 text-[0.6875rem] leading-snug">
                 <div className="font-mono text-fg">{e.title}</div>
                 <div className="text-fg-faint">{e.date} · {e.vol} vol</div>
               </div>

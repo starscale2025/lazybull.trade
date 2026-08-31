@@ -72,7 +72,7 @@ export function TruthBadge() {
         aria-haspopup="dialog"
         aria-expanded={open}
         title="What's real, what's synthetic, what's yours — open the honesty ledger"
-        className="relative flex h-7 items-center gap-1.5 rounded-full border border-border bg-bg px-2.5 font-mono text-[10px] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
+        className="relative flex h-7 items-center gap-1.5 rounded-full border border-border bg-bg px-2.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
       >
         {resolved && (
           <span className="truth-check-in font-semibold text-bull" aria-hidden>
@@ -195,7 +195,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div ref={dialogRef} className="w-[820px] max-w-full surface-instrument border border-border bg-surface shadow-2xl">
+      <div ref={dialogRef} className="w-[51.25rem] max-w-full surface-instrument border border-border bg-surface shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <h2 id="honesty-ledger-title" className="t-eyebrow font-semibold text-fg">
             <span className="text-bull">✓</span> the honesty ledger
@@ -203,7 +203,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
           <button
             onClick={onClose}
             aria-label="Close the honesty ledger"
-            className="size-7 border border-border bg-bg font-mono text-[11px] text-fg-dim hover:text-fg"
+            className="size-7 border border-border bg-bg font-mono text-[0.6875rem] text-fg-dim hover:text-fg"
           >
             ✕
           </button>
@@ -217,7 +217,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
               </div>
               <ul className="mt-3 space-y-3">
                 {col.items.map((it) => (
-                  <li key={it.lead} className="font-mono text-[11px] leading-relaxed text-fg-dim">
+                  <li key={it.lead} className="font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
                     <span className="font-semibold text-fg">{it.lead} — </span>
                     {it.detail}
                   </li>
@@ -230,10 +230,10 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2.5 t-chrome text-fg-faint">
           <span>the glitch you just watched resolve is the only one on this site</span>
           <span className="flex gap-3 normal-case tracking-normal">
-            <Link href="/learn/broken-vwap" className="text-[11px] text-fg-dim underline decoration-border underline-offset-2 hover:text-fg">
+            <Link href="/learn/broken-vwap" className="text-[0.6875rem] text-fg-dim underline decoration-border underline-offset-2 hover:text-fg">
               the autopsy of our own bug
             </Link>
-            <Link href="/graveyard" className="text-[11px] text-fg-dim underline decoration-border underline-offset-2 hover:text-fg">
+            <Link href="/graveyard" className="text-[0.6875rem] text-fg-dim underline decoration-border underline-offset-2 hover:text-fg">
               the graveyard
             </Link>
           </span>

@@ -21,7 +21,7 @@ export function BotRunDistribution({ rows }: { rows: BotRunRow[] }) {
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div className="min-w-0">
-                <div className="truncate font-mono text-[12px] text-fg">{r.label}</div>
+                <div className="truncate font-mono text-[0.75rem] text-fg">{r.label}</div>
                 <div className="mt-1 h-1 w-full overflow-hidden bg-border-soft">
                   <div
                     className="h-full bg-bull transition-all duration-700 ease-out"
@@ -29,10 +29,10 @@ export function BotRunDistribution({ rows }: { rows: BotRunRow[] }) {
                   />
                 </div>
               </div>
-              <span className="text-right font-mono text-[11px] tabular-nums text-fg">
+              <span className="text-right font-mono text-[0.6875rem] tabular-nums text-fg">
                 {r.runs.toLocaleString()}
               </span>
-              <span className="text-right font-mono text-[10px] tabular-nums text-fg-faint">
+              <span className="text-right font-mono text-[0.625rem] tabular-nums text-fg-faint">
                 {(r.pct * 100).toFixed(1)}%
               </span>
             </div>

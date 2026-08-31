@@ -81,7 +81,7 @@ export function LearnRegimeVisualizer() {
       <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-12">
         {/* Chart */}
         <div className="@2xl:col-span-8 surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
             <span>simulated · {BARS} bars</span>
             <span style={{ color: label.color }}>● {label.kind}</span>
           </div>
@@ -130,11 +130,11 @@ export function LearnRegimeVisualizer() {
         {/* Slider + recommendation */}
         <div className="@2xl:col-span-4 flex flex-col gap-3">
           <div className="surface-card border border-border bg-surface p-4">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">drag the regime knob</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">drag the regime knob</div>
             <div className="mt-3 font-display text-3xl tracking-tightest tabular-nums" style={{ color: label.color }}>
               H = {h.toFixed(2)}
             </div>
-            <div className="mt-1 text-[12px] text-fg-dim leading-relaxed">{label.desc}</div>
+            <div className="mt-1 text-[0.75rem] text-fg-dim leading-relaxed">{label.desc}</div>
             <input
               type="range"
               min={0.3}
@@ -144,7 +144,7 @@ export function LearnRegimeVisualizer() {
               onChange={(e) => setH(parseFloat(e.target.value))}
               className="mt-4 h-1 w-full accent-bull"
             />
-            <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
               <span>0.3 reverting</span>
               <span>0.5 random</span>
               <span>0.7 trending</span>
@@ -155,19 +155,19 @@ export function LearnRegimeVisualizer() {
             href={`/learn/bots/${bot.id}`}
             className="group block border border-border bg-bg p-4 hover:border-bull hover:bg-bull/[0.04]"
           >
-            <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">recommended bot</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">recommended bot</div>
             <div className="mt-2 font-display text-xl tracking-tightest text-fg group-hover:text-bull">
               {bot.name}
             </div>
-            <p className="mt-2 text-[12px] leading-relaxed text-fg-dim">{bot.reason}</p>
-            <div className="mt-3 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-fg-faint group-hover:text-bull">
+            <p className="mt-2 text-[0.75rem] leading-relaxed text-fg-dim">{bot.reason}</p>
+            <div className="mt-3 inline-flex items-center gap-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint group-hover:text-bull">
               learn this bot →
             </div>
           </a>
         </div>
       </div>
 
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[11px] tracking-wide text-fg-dim">
+      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim">
         <span className="text-fg-faint">how it works →</span> we synthesize a price path with controllable
         autocorrelation. Hurst &gt; 0.5 means today&apos;s up-move makes tomorrow&apos;s up-move more likely
         (trending). Hurst &lt; 0.5 means it makes tomorrow&apos;s down-move more likely (mean-reverting).
@@ -180,7 +180,7 @@ export function LearnRegimeVisualizer() {
 function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
     <div className="bg-bg p-2.5">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-fg-faint">{label}</div>
+      <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
       <div className="mt-1 font-mono text-base tabular-nums" style={{ color: tone }}>{value}</div>
     </div>
   );

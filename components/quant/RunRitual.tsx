@@ -219,7 +219,7 @@ export function RunRitual({
         <div className="surface-card relative flex flex-wrap items-center gap-3 border border-border bg-bg px-4 py-2.5">
           <span className="relative inline-flex size-5 shrink-0 items-center justify-center border border-fg/40">
             <span aria-hidden className="absolute inset-0.5 bg-bull" />
-            <span className="relative font-mono text-[9px] font-bold text-bg">LB</span>
+            <span className="relative font-mono text-[0.5625rem] font-bold text-bg">LB</span>
           </span>
           <span className="t-chrome text-fg">consensus engine</span>
           <span
@@ -249,7 +249,7 @@ export function RunRitual({
           <button
             onClick={onRunAll}
             disabled={total === 0}
-            className="inline-flex h-7 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-fg-faint"
+            className="inline-flex h-7 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-fg-faint"
           >
             ↻ run again
           </button>
@@ -279,7 +279,7 @@ export function RunRitual({
         <div className="relative flex flex-wrap items-center gap-3 border-b border-border bg-bg-soft px-4 py-2.5">
           <span className="relative inline-flex size-5 shrink-0 items-center justify-center border border-fg/40">
             <span aria-hidden className="absolute inset-0.5 bg-bull" />
-            <span className="relative font-mono text-[9px] font-bold text-bg">LB</span>
+            <span className="relative font-mono text-[0.5625rem] font-bold text-bg">LB</span>
           </span>
           <span className="t-chrome text-fg">consensus engine</span>
           <span className="t-chrome text-fg-faint">{tapeLabel}</span>
@@ -289,13 +289,13 @@ export function RunRitual({
             </span>
           )}
           <div className="flex-1" />
-          <span className={`t-data text-[10px] ${locked ? "text-bull" : "text-fg-faint"}`}>
+          <span className={`t-data text-[0.625rem] ${locked ? "text-bull" : "text-fg-faint"}`}>
             {armed}/{total}
           </span>
           <button
             onClick={onRunAll}
             disabled={locked || total === 0}
-            className={`inline-flex h-7 items-center gap-2 border px-3 font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+            className={`inline-flex h-7 items-center gap-2 border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors ${
               locked || total === 0
                 ? "cursor-not-allowed border-border text-fg-faint"
                 : "border-bull bg-bull/10 text-bull hover:bg-bull hover:text-bg"
@@ -389,7 +389,7 @@ export function RunRitual({
                 <div key={m.label}>
                   <div className="t-chrome text-fg-faint">{m.label}</div>
                   <div
-                    className={`t-data mt-1 text-[30px] tracking-[-0.02em] ${
+                    className={`t-data mt-1 text-[1.875rem] tracking-[-0.02em] ${
                       m.tone === "bull"
                         ? "text-bull"
                         : m.tone === "bear"
@@ -426,7 +426,7 @@ export function RunRitual({
               </span>
             </div>
 
-            <div className="min-h-[138px] px-3.5 py-3 font-mono text-[11px] leading-[1.7] text-fg-dim">
+            <div className="min-h-[8.625rem] px-3.5 py-3 font-mono text-[0.6875rem] leading-[1.7] text-fg-dim">
               {phase === "idle" ? (
                 <span className="text-fg-faint">
                   ▸ {total} bots staged · the workspace locks while the machine runs

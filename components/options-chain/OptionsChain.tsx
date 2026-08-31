@@ -259,7 +259,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             <button
               key={e.iso}
               onClick={() => setExpiryIdx(i)}
-              className={`border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors ${
+              className={`border px-2.5 py-1 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
                 i === expiryIdx
                   ? "border-bull bg-bull/10 text-bull"
                   : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
@@ -305,12 +305,12 @@ export function OptionsChain({ underlying, spot }: Props) {
       {/* overscroll-x-contain: panning to the puts must not hand the swipe to
           the browser's back gesture */}
       <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain">
-        <div className="grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
+        <div className="grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
           <span className="col-span-4 text-center text-bull">— calls —</span>
           <span className="text-center text-fg">strike</span>
           <span className="col-span-4 text-center text-bear">— puts —</span>
         </div>
-        <div className="grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
+        <div className="grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
           {/* iv text columns dropped — the value paints the cell heat and the
               exact figure lives in the greeks readout under the grid */}
           <span>vol</span>
@@ -338,7 +338,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             return (
               <div
                 key={K}
-                className={`grid min-w-[640px] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[11px] transition-colors ${
+                className={`grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[0.6875rem] transition-colors ${
                   atm ? "bg-bull/[0.04]" : ""
                 }`}
               >
@@ -436,7 +436,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             sideways so a phone reaches every chip. h-10, not h-9: the project's
             8px scrollbar eats into the box and would clip the chips. */}
         <div
-          className={`flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t bg-surface/95 px-3 font-mono text-[10px] text-fg-dim backdrop-blur ${
+          className={`flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t bg-surface/95 px-3 font-mono text-[0.625rem] text-fg-dim backdrop-blur ${
             readout ? "border-bull/30" : "border-border-soft"
           }`}
         >
