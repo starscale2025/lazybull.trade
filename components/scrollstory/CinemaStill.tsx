@@ -127,13 +127,21 @@ export function CinemaStill() {
         {/* ── THE FRAME ─────────────────────────────────────────────────── */}
         <div className="flex flex-col justify-center">
           <div className="t-eyebrow text-fg-faint">The film, in one frame</div>
+          {/* The oracle claim was rewritten out of all nine film beats and then
+              left standing HERE, in the largest type on the page, where the
+              reduced-motion reader — the one most likely to actually read it —
+              meets it first. The picture below is unchanged and still shows a
+              forecast cone that contained what happened; the difference is that
+              it is now offered as something you can watch, not as a prediction
+              being sold. */}
           <h2 className="mt-4 font-display text-[clamp(2rem,4.4vw,3.25rem)] leading-[0.98] tracking-tightest text-fg [text-wrap:balance]">
-            It flagged <span className="text-bear">DOWN</span> twelve bars early.
+            It drew the <span className="text-bear">range</span>. Then the floor went.
           </h2>
           <p className="measure-wide mt-4 text-fg-dim">
-            Then reality fell into the cone it drew. Everything below is what the
-            terminal does around that one call — read in order, because the order
-            is the argument.
+            Price fell inside the cone the terminal had already drawn — and you
+            got to watch it happen with nothing at stake. Everything below is
+            what the desk does around that one call; read it in order, because
+            the order is the argument.
           </p>
 
           <figure className="mt-9">

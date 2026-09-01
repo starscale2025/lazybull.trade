@@ -71,9 +71,16 @@ function decideDesktop(): "film" | "still" {
   let seen = false;
   try {
     replay = sessionStorage.getItem("lb-cinema-replay") === "1";
-    seen =
-      localStorage.getItem("lb-cinema-seen") === "1" ||
-      sessionStorage.getItem("lb-cinema-autoplayed") === "1";
+    // SESSION-SCOPED, NOT FOREVER.
+    //
+    // This first read localStorage too, which meant the film played exactly
+    // once per browser, ever — open the site tomorrow and the intro simply
+    // did not exist any more. That overshot: the complaint was that a
+    // scroll-locked film sat between a RETURNING reader and the product on
+    // every logo click, not that the film should be a one-time event. Session
+    // scope answers the first without the second — a fresh visit gets the
+    // film, a hop to /learn and back does not.
+    seen = sessionStorage.getItem("lb-cinema-autoplayed") === "1";
   } catch {
     /* storage blocked (private mode) — treat it as a first visit, play the film */
   }

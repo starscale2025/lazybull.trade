@@ -164,8 +164,15 @@ function injectMono(doc: Document): string | null {
 // were eight thousand pixels into it.
 //
 //   lb-cinema-seen        localStorage   played through, or skipped, at least
-//                                        once on this device → CinemaGate stops
-//                                        auto-playing and shows the still.
+//                                        once on this device. STILL WRITTEN,
+//                                        NO LONGER GATES: keying the intro on
+//                                        it made the film a once-per-browser
+//                                        event, so the site quietly lost its
+//                                        opening for good. The gate reads the
+//                                        session key below instead. Kept
+//                                        because it is the honest record of
+//                                        "has this person ever seen it", which
+//                                        a future first-run tour would want.
 //   lb-cinema-autoplayed  sessionStorage the film has already RUN in this tab →
 //                                        same, but only for this tab, so a new
 //                                        session gets the film back.
