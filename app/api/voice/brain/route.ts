@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { clientIp, underLimit } from "@/lib/rate-limit";
 import { requireVoiceAuth } from "@/lib/voice-auth";
+import { SITE_URL } from "@/lib/site";
 
 // Server-side proxy to OpenRouter for the FREE voice engine's "brain".
 // Keeps OPENROUTER_API_KEY off the client. Takes an OpenAI-style `messages`
@@ -155,7 +156,11 @@ export async function POST(req: Request) {
         // session value here, and don't add OpenRouter's optional `user` field
         // to the body either: it would key the provider's retained prompts to a
         // person (R-10).
-        "HTTP-Referer": "https://lazybull.trade",
+        // SITE_URL, not a literal: the hardcoded host here was
+        // https://lazybull.trade, which resolves NXDOMAIN, so the attribution
+        // pointed at nothing. Still a build-time constant, so the rule above
+        // (never a user id, email or session value) holds.
+        "HTTP-Referer": SITE_URL,
         "X-Title": "LazyBull Voice Co-pilot",
       },
       body: JSON.stringify({

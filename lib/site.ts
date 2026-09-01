@@ -3,10 +3,21 @@
 // Needed by three things that all have to agree or they quietly disagree in
 // production: metadataBase (which resolves every relative OG/canonical URL),
 // robots.ts, and sitemap.ts. Reads NEXT_PUBLIC_SITE_URL so preview deploys
-// advertise themselves rather than the production host, and falls back to the
-// real origin so a missing env var can never emit "localhost" into a sitemap.
+// advertise themselves rather than the production host.
+//
+// THE FALLBACK WAS A DOMAIN THAT DOES NOT EXIST. It read
+// "https://lazybull.trade", which resolves NXDOMAIN — the comment here called
+// it "the real origin" and it never was. The site is served from lazybull.us
+// (bare 307s to www), so with NEXT_PUBLIC_SITE_URL unset in production every
+// page advertised a canonical, an og:url, a robots Host: and fifteen sitemap
+// <loc> entries on a hostname no resolver can answer for. Verified against
+// the live deploy, not assumed.
+//
+// www, not the bare host: https://lazybull.us 307s to https://www.lazybull.us,
+// and a canonical must name the URL that actually serves the page rather than
+// one that redirects to it.
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://lazybull.trade"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.lazybull.us"
 ).replace(/\/$/, "");
 
 /**
