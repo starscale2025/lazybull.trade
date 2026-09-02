@@ -761,12 +761,25 @@ export function ScrollCinema() {
       sceneTimeout = window.setTimeout(fail, 20_000);
       void run(); // in case the iframe is already loaded
     });
-    // three.js chunks + BOTH GLBs — all inside the reveal gate. Revealing early
-    // (the old 15s auto-bailout) handed slow machines a half-loaded act, so the
-    // loader now holds until everything the cinema plays is actually here.
-    // Failures stay non-fatal (allSettled): a dead chunk/GLB reveals with its
-    // 2D fallback — slow is not broken, and broken still degrades gracefully.
-    const GATE_STEPS = 4; // scene+shots · the ONE three-stage chunk · 2 GLBs → the REAL progress bar
+    // THE DOOR WAITS ONLY ON WHAT ACT ONE NEEDS.
+    //
+    // This gate used to also await both GLBs, via two fetch() calls whose
+    // ArrayBuffers were thrown away — they existed to warm the HTTP cache. Two
+    // things were wrong with that. The models are not needed until CANDLE3D
+    // (progress 0.32) and BULL3D (0.71), a third and three-quarters of the way
+    // in, so the entrance was blocked on assets nobody sees for thousands of
+    // pixels. And drei already downloads them itself: Bull3D calls
+    // useGLTF.preload and CandleField3D loads its own, so bull-crystal.glb was
+    // fetched TWICE on every visit — confirmed in the production network log.
+    //
+    // Dropping the warmers costs nothing: drei still starts its own load as
+    // soon as the three-stage chunk evaluates, which is inside the gate, so the
+    // models are already in flight while the loader finishes — they simply no
+    // longer hold the door shut.
+    //
+    // Failures stay non-fatal (allSettled): a dead chunk reveals with its 2D
+    // fallback — slow is not broken, and broken still degrades gracefully.
+    const GATE_STEPS = 2; // scene+shots · the ONE three-stage chunk → the REAL progress bar
     let gateDone = 0;
     const step = <T,>(p: Promise<T>): Promise<T> => {
       const bump = () => {
@@ -777,11 +790,7 @@ export function ScrollCinema() {
       p.then(bump, bump);
       return p;
     };
-    const extras = Promise.allSettled([
-      step(import("./three-stage")),
-      step(fetch("/models/bull-crystal.glb").then((r) => r.arrayBuffer())),
-      step(fetch("/models/candle-crystal.glb").then((r) => r.arrayBuffer())),
-    ]);
+    const extras = Promise.allSettled([step(import("./three-stage"))]);
     const minTime = new Promise((r) => window.setTimeout(r, 650)); // don't flash the loader
 
     // the bar is anchored to REAL gate steps; the creep only eases it toward

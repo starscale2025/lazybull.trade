@@ -29,34 +29,49 @@ const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi 
  * gear change rather than a cut.
  */
 function Colourist({
-  bloomRef,
-  caRef,
+  composerRef,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  bloomRef: React.MutableRefObject<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  caRef: React.MutableRefObject<any>;
+  composerRef: React.MutableRefObject<any>;
 }) {
   const cur = useRef({ i: 0.95, th: 0.35, ca: 0.0005 });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const found = useRef<{ bloom: any; ca: any } | null>(null);
 
   useFrame((state, dt) => {
-    // THE GRADE IS HELD BY REF, NOT FOUND BY CLASS NAME.
+    // FOUND BY WHAT THEY *ARE*, NOT BY WHAT THEY ARE CALLED.
     //
-    // This used to walk the composer's passes and match
-    // `e.constructor.name.includes("Bloom")`. Class names are exactly what a
-    // minifier renames, and the failure mode is silent: no error, the effects
-    // are simply never located and the per-act colour grade — the film's best
-    // idea — quietly stops applying. It happens to survive the current build
-    // (both names are still in the shipped chunk, verified), but it survives
-    // by luck of vendor-chunk handling, not by design; one Terser setting
-    // would end it with nothing in the console to say so.
+    // Three versions of this, and the middle one was the worst:
     //
-    // The effects are rendered as JSX right here in this file, so they can
-    // simply hand us their instances.
-    const bloom = bloomRef.current;
-    const ca0 = caRef.current;
-    if (!bloom && !ca0) return;
-    const found = { current: { bloom, ca: ca0 } };
+    //  1. `e.constructor.name.includes("Bloom")` — class names are exactly
+    //     what a minifier renames, and the failure is silent: the effects are
+    //     never located and the per-act grade just stops applying, with
+    //     nothing in the console to say so.
+    //  2. React refs on <Bloom>/<ChromaticAberration>. Minifier-proof, and it
+    //     CRASHED the film in dev: holding an effect instance in a ref hands
+    //     it to React's dev tooling, which serialises props and dies on the
+    //     effect's parent/child cycle — "Converting circular structure to
+    //     JSON", thrown from the scheduler, homepage dead. Production builds
+    //     survived it, which is precisely what made it dangerous.
+    //  3. This. Duck-typing on the library's own API surface: only the bloom
+    //     effect carries `luminanceMaterial`, and only chromatic aberration
+    //     carries a settable `offset` vector. Those are property names the
+    //     library itself reads, so a minifier cannot rename them without
+    //     breaking itself — and nothing holds a reference React can walk.
+    if (!found.current) {
+      const passes = composerRef.current?.passes;
+      if (!passes) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let bloom: any = null, ca: any = null;
+      for (const pass of passes) {
+        for (const e of pass.effects ?? []) {
+          if (!bloom && e?.luminanceMaterial) bloom = e;
+          if (!ca && typeof e?.offset?.set === "function") ca = e;
+        }
+      }
+      if (!bloom && !ca) return;
+      found.current = { bloom, ca };
+    }
 
     const g = grade(cinemaClock.progress);
     // frame-rate independent approach, same shape as the cinema clock's follower
@@ -1320,12 +1335,6 @@ export default function CandleField3D({
   // A handle on the live post chain so the colour script can write to it.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const composerRef = useRef<any>(null);
-  // Handed straight to the Colourist so the grade never has to identify an
-  // effect by its (minifiable) class name.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bloomRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const caRef = useRef<any>(null);
   return (
     <Canvas
       className="h-full w-full"
@@ -1399,12 +1408,12 @@ export default function CandleField3D({
           has a .parent) throws "Converting circular structure to JSON" and takes
           the whole page down. Ref the composer instead and read its passes. */}
       <EffectComposer ref={composerRef} multisampling={0}>
-        <Bloom ref={bloomRef} mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
-        <ChromaticAberration ref={caRef} offset={[0.0005, 0.0009]} />
+        <Bloom mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
+        <ChromaticAberration offset={[0.0005, 0.0009]} />
         <SMAA />
       </EffectComposer>
       {/* Drives the three rooms onto the live chain. Inside <Canvas> for useFrame. */}
-      <Colourist bloomRef={bloomRef} caRef={caRef} />
+      <Colourist composerRef={composerRef} />
     </Canvas>
   );
 }
