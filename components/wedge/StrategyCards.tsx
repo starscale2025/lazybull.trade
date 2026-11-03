@@ -213,12 +213,17 @@ function Sparkline({ curve, spot, color, className = "h-20 w-full" }: { curve: {
   const xMin = Math.min(...xs), xMax = Math.max(...xs);
   const yMin = Math.min(...ys), yMax = Math.max(...ys);
   const range = yMax - yMin || 1;
-  const xOf = (x: number) => ((x - xMin) / (xMax - xMin)) * w;
-  const yOf = (y: number) => h - ((y - yMin) / range) * h;
+  // Both projections round here rather than at each call site. The payoff curve
+  // comes out of Black-Scholes, and Math.exp/Math.log aren't specified to the
+  // last ULP — Node and the browser disagree in the final digits. An unrounded
+  // coordinate carries that disagreement into the DOM, where React reads it as
+  // a hydration mismatch. One decimal is all the viewBox can resolve anyway.
+  const xOf = (x: number) => (((x - xMin) / (xMax - xMin)) * w).toFixed(1);
+  const yOf = (y: number) => (h - ((y - yMin) / range) * h).toFixed(1);
   const yZero = yOf(0);
-  const path = curve.map((p, i) => `${i === 0 ? "M" : "L"}${xOf(p.s).toFixed(1)},${yOf(p.pnl).toFixed(1)}`).join(" ");
-  const filledTop = curve.map((p) => `L${xOf(p.s).toFixed(1)},${yOf(Math.max(0, p.pnl)).toFixed(1)}`).join(" ");
-  const filledBot = curve.map((p) => `L${xOf(p.s).toFixed(1)},${yOf(Math.min(0, p.pnl)).toFixed(1)}`).join(" ");
+  const path = curve.map((p, i) => `${i === 0 ? "M" : "L"}${xOf(p.s)},${yOf(p.pnl)}`).join(" ");
+  const filledTop = curve.map((p) => `L${xOf(p.s)},${yOf(Math.max(0, p.pnl))}`).join(" ");
+  const filledBot = curve.map((p) => `L${xOf(p.s)},${yOf(Math.min(0, p.pnl))}`).join(" ");
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={className}>
       <defs>
