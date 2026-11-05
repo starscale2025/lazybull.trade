@@ -44,6 +44,15 @@ export const ACT_ORDER: Act[] = [
   "boot", "assembly", "dive", "regime", "candle", "safety", "consensus", "bull", "matrix",
 ];
 
+/**
+ * THE LINE. One sentence, in one place, and it always says paper: the film,
+ * the phone film, the still and the landing all read it. There used to be
+ * three ("Then paper-trade it.", "Learn it. Then trade it.", "Prove it — then
+ * trade it."), and two of them dropped "paper" on a paper-only product
+ * (re-tribunal #10).
+ */
+export const TAGLINE = "Then paper-trade it.";
+
 export type CopyBeat = {
   id: string;
   /** Scroll-progress window in which this beat is visible. */
@@ -97,7 +106,7 @@ export const COPY_BEATS: CopyBeat[] = [
   // sub-line no longer reverts to a feature triad under it.
   { id: "safety", from: 0.61, to: 0.685, pos: "top", heading: "Your worst case is a number you chose.", sub: "Not a number you find out afterwards." },
   { id: "consensus", from: 0.697, to: 0.727, pos: "top", heading: "They vote. They disagree.", sub: "You see the split, not just the answer." },
-  { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Then paper-trade it." },
+  { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: TAGLINE },
   { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
 ];
 
@@ -158,9 +167,10 @@ export function beatCharT(
 }
 
 /**
- * Faint green-bloom overlay: a subtle triangle over the first third of the
- * matrix act (the bull → code transition). The scene's Matrix rain is the real
- * green; this just warms the DOM layer. The component scales it down further.
+ * A triangle over the first third of the matrix act (the bull → code
+ * transition). It drives the frame's glitch-shake. It used to also drive a flat
+ * `bg-bull` wash over the whole stage, which the 2026-11 re-tribunal graded as
+ * the green fog it was (d13); the scene's own rain is the green now.
  */
 export function flashOpacity(progress: number): number {
   const from = ACTS.matrix.from; // 0.84
@@ -171,12 +181,13 @@ export function flashOpacity(progress: number): number {
   return p < mid ? (p - from) / (mid - from) : (to - p) / (to - mid);
 }
 
-// The canvas holds opaque almost to the very end: the scene's final frames
-// settle to the page ground (the rain clears by 0.955, the outro dips to black),
-// so the gap above the rising real <Hero> stays hidden until the pin releases
-// with the Hero at top:0. Only a 2% crossfade at the very end hands off, from
-// an empty frame — there is no baked hero plate to line up any more.
-const HANDOFF_FADE = { from: 0.998, to: 1.0 };
+// THE LAST FRAME IS RAIN, NOT BLACK. The rain used to clear by 0.955 and an
+// outro then dipped the frame to black, so the film ended on ~400-570px of
+// empty screen and a 0.2% crossfade, a hard cut to the eye band (re-tribunal
+// regression 6, d14 → d15). Now the rain thins all the way to the end while the
+// whole stage dissolves over the last 2.5%, and the landing's first section,
+// which sits under the stage's last viewport, rises through it.
+const HANDOFF_FADE = { from: 0.975, to: 1.0 };
 
 /** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end. */
 export function canvasOpacity(progress: number): number {
@@ -305,8 +316,17 @@ export function grade(progress: number): Grade {
   };
 }
 
-/** Opacity for the 3D dive-tunnel DOM layer. */
-export const dive3dOpacity = (progress: number) => windowOpacity(progress, DIVE3D);
+/**
+ * Opacity for the 3D dive-tunnel DOM layer.
+ *
+ * Fully opaque BEFORE the film starts. DIVE3D's in-ramp (0.148 → 0.165) was
+ * written for a dive that opened on the laptop and faded the corridor over
+ * it; since frame zero, 0.15 is the frame the hero curtain lifts off, so that
+ * ramp revealed a double exposure of the retired laptop under the tunnel
+ * (re-tribunal regression 5, d03). The flight itself still runs on DIVE3D.
+ */
+export const dive3dOpacity = (progress: number) =>
+  windowOpacity(progress, { ...DIVE3D, in0: ACTS.dive.from - 0.02, in1: ACTS.dive.from });
 /** Opacity for the 3D candle-canyon DOM layer. */
 export const candle3dOpacity = (progress: number) => windowOpacity(progress, CANDLE3D);
 /** Opacity for the 3D bull DOM layer. */

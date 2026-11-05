@@ -31,10 +31,11 @@
  */
 
 import Link from "next/link";
-import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
 import { payoff, priceOption, type Leg } from "@/lib/pricing";
+import { setHeroPosition } from "@/lib/hero-position";
 
 // ── the synthetic underlying, stated in the caption ─────────────────────────
 const SPOT = 100;
@@ -101,6 +102,19 @@ export function HeroInstrument() {
   const plotRef = useRef<HTMLDivElement>(null);
   const clipId = useId().replace(/:/g, "");
   const s = useMemo(() => spread(k1, k2), [k1, k2]);
+
+  // The film's safety act draws THIS position (lib/hero-position.ts), so the
+  // worst case it calls "a number you chose" is the one chosen up here.
+  useEffect(() => {
+    setHeroPosition({
+      k1,
+      k2,
+      maxLoss: s.maxLoss,
+      maxProfit: s.maxProfit,
+      breakeven: s.breakeven,
+      chosen: touched,
+    });
+  }, [k1, k2, s, touched]);
 
   const setStrike = useCallback((h: Handle, v: number) => {
     const n = Math.round(v);

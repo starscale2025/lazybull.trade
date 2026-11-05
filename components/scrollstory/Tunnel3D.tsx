@@ -10,10 +10,11 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, ChromaticAberration, SMAA, ToneMapping } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { cinemaClock } from "@/lib/cinema-clock";
-import { DIVE3D } from "@/lib/cinema";
+import { COPY_BEATS, DIVE3D, beatOpacity } from "@/lib/cinema";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -280,6 +281,12 @@ function SpeedLines() {
 
 // The blinding destination: grows and brightens as t→1, so the layer's fade-out
 // hands off mid-whiteout to the regime act. fog:false — its ramp is authored.
+//
+// It sits dead centre, which is exactly where the dive's copy beat sits, and
+// at full strength it bloomed straight through the sub-line ("afford to" was
+// erased: re-tribunal d04). While that beat is on screen the light holds at
+// half strength; it gets its whiteout once the words have gone.
+const DIVE_BEAT = COPY_BEATS.find((b) => b.id === "dive")!;
 function EndLight() {
   const ref = useRef<THREE.Sprite>(null);
   const mat = useMemo(
@@ -301,7 +308,7 @@ function EndLight() {
     if (!s) return;
     const sc = lerp(8, 26, t);
     s.scale.set(sc, sc, 1);
-    mat.opacity = 0.5 + 0.5 * t;
+    mat.opacity = (0.5 + 0.5 * t) * (1 - 0.5 * beatOpacity(cinemaClock.progress, DIVE_BEAT));
   });
   return <sprite ref={ref} material={mat} position={[0, 0, -62]} scale={[8, 8, 1]} />;
 }
@@ -402,6 +409,15 @@ export default function Tunnel3D({
             red/blue fringes that read as purple specks over the bloom-blown
             green core. Kept low so big shapes still get a hint of lens fringe. */}
         <ChromaticAberration offset={[0.0002, 0.00028]} />
+        {/* THE GRADE. A composer renders into a float target, and three only
+            tone-maps on the way to the screen, so this layer had none: every
+            emissive over 1.0 clipped flat (the 2026-11 re-tribunal measured
+            54.7% of the cube clipped and 186px undithered green runs). Khronos
+            PBR Neutral rolls highlights off instead of cutting them and leaves
+            hues alone below that; AgX was tried first and turned the crash red
+            salmon and the bull green mint, which breaks a colour script built
+            on red arriving late and hard. SMAA after it, on display values. */}
+        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         <SMAA />
       </EffectComposer>
     </Canvas>

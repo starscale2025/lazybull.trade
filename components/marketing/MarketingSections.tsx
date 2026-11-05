@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { LAG_DAYS } from "@/lib/region";
 import { PayoffSpine } from "./PayoffSpine";
+import { TAGLINE } from "@/lib/cinema";
 import { buildTiers } from "@/components/pricing/tiers";
 import { fmtMoney, monthlyPrice } from "@/lib/billing/prices";
 import {
@@ -77,7 +78,7 @@ function Workflow() {
     <GlassSection id="workflow">
       <div className="flex flex-col items-center text-center" data-gsap="fade-up">
         <GlassEyebrow>The workflow</GlassEyebrow>
-        <GlassHeading accent="then trade it.">Learn it. Prove it —</GlassHeading>
+        <GlassHeading accent={TAGLINE.toLowerCase()}>Learn it. Prove it —</GlassHeading>
       </div>
 
       <div className="relative mt-14">

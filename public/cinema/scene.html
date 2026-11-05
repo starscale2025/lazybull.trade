@@ -212,9 +212,14 @@ let CANDLES = null;    // { bars:[{x,oy,cy,hy,ly,bw,up,crash}], diverge, spot:[]
 let PAYOFF = null;     // { pts:[{x,y}], zeroY, lossY, beX, maxLossX }
 let RING = null;       // { cx, cy, r, nodes:[{a,x,y,col,up,k}] }
 
+// The parent's act rail sits over this frame's left edge; its right edge
+// (plate included) arrives through initScene, so no chart is drawn under it.
+// Without it the safety act's $0 printed under the rail's last rows.
+let INSET_LEFT = 0;
 function computeChart(W, H) {
   // lower-center so the feature-act copy (top third) never overlaps the chart
-  CHART = { x: W * 0.11, y: H * 0.34, w: W * 0.78, h: H * 0.46 };
+  const x = Math.max(W * 0.11, INSET_LEFT + 24);
+  CHART = { x, y: H * 0.34, w: W * 0.89 - x, h: H * 0.46 };
 }
 
 // Two reference paths the regime act blends between: a mean-reverting "choppy"
@@ -266,17 +271,37 @@ function buildCandles() {
   CANDLES = { bars, diverge: DIVERGE, crash: CRASH, endCrash: END_CRASH, N, spot: raw.map((b) => b.c) };
 }
 
+// THE VISITOR'S POSITION. The hero instrument above the film publishes it
+// (lib/hero-position.ts) and the parent hands it over through initScene and
+// setPosition, so the act whose headline is "your worst case is a number you
+// chose" draws the number the visitor chose: the hero's strikes, its most it
+// can lose and its most it can make. It used to draw its own −$80 / +$420
+// spread, a second position under the first one's headline. This fallback is
+// the hero's untouched default, for a standalone open of this file.
+let POSITION = { k1: 100, k2: 108, maxLoss: 230.33, maxProfit: 569.67, breakeven: 102.3, chosen: false };
+window.setPosition = function setPosition(pos) {
+  if (!pos) return;
+  POSITION = pos;
+  if (CHART) buildPayoff();
+};
+
 // Bull Call Spread payoff: flat max-loss floor → ramp → flat max-profit ceiling.
+// Framed, not copied: the hero's own price axis puts K2 at 80% of the width,
+// which leaves the upside's label nowhere to sit but across the ramp. The film
+// keeps the strikes' spacing on a 40-point axis (wider if the spread is) and
+// parks K2 at 62%, so the ceiling has room for its number and its condition.
 function buildPayoff() {
-  const ch = CHART;
-  const maxLoss = -80, maxProfit = 420, k1 = 0.30, k2 = 0.62; // ramp between 30%-62% of width
+  const ch = CHART, pos = POSITION;
+  const maxLoss = -Math.abs(pos.maxLoss), maxProfit = Math.abs(pos.maxProfit);
+  const span = Math.max(40, (pos.k2 - pos.k1) / 0.5);
+  const k2 = 0.62, k1 = k2 - (pos.k2 - pos.k1) / span;
   const yOf = (v) => ch.y + ch.h * (1 - (v - maxLoss) / (maxProfit - maxLoss));
   const xOf = (u) => ch.x + u * ch.w;
   const pts = [
     { u: 0, v: maxLoss }, { u: k1, v: maxLoss }, { u: k2, v: maxProfit }, { u: 1, v: maxProfit },
   ].map((p) => ({ x: xOf(p.u), y: yOf(p.v) }));
   const beU = k1 + (k2 - k1) * (0 - maxLoss) / (maxProfit - maxLoss); // where payoff crosses 0
-  PAYOFF = { pts, zeroY: yOf(0), lossY: yOf(maxLoss), profY: yOf(maxProfit), beX: xOf(beU), floorX0: xOf(0), floorX1: xOf(k1), maxLoss, maxProfit };
+  PAYOFF = { pts, zeroY: yOf(0), lossY: yOf(maxLoss), profY: yOf(maxProfit), beX: xOf(beU), floorX0: xOf(0), floorX1: xOf(k1), maxLoss, maxProfit, pos };
 }
 
 function buildRing(W, H) {
@@ -314,6 +339,8 @@ window.initScene = async function initScene(cfg) {
     // explicitly, then let the existing fonts.ready await below settle.
     try { await document.fonts.load(`700 24px ${MONO}`); } catch { /* fallback stands */ }
   }
+  if (cfg.position) POSITION = cfg.position;
+  if (typeof cfg.insetLeft === "number") INSET_LEFT = cfg.insetLeft;
   if (cfg.phases) {
     PHASES = {};
     for (const k in cfg.phases) PHASES[k] = [cfg.phases[k].from, cfg.phases[k].to];
@@ -608,67 +635,83 @@ function drawSafety(ctx, q, env, W, H) {
     }
     ctx.globalAlpha = alpha;
   }
-  // max-loss guard line
+  // THE HIERARCHY IS THE HERO'S: loss first. The most it can lose is the one
+  // certain number, so it is the act's decision tier, in bear red, set right
+  // under the floor it names. The most it can make is conditional, so it is
+  // neutral, smaller, and carries its condition. This used to be the other
+  // way round: a glowing green "+$420 max profit" as the brightest thing in
+  // the frame over a grey "−$80" (re-tribunal regression 4).
+  const fs = Math.round(Math.min(21.6, Math.max(16.8, W * 0.015)));
+  const SMALL = `500 ${Math.round(fs * 0.72)}px ${MONO}`;
+  const money = (v) => "$" + Math.round(Math.abs(v)).toLocaleString("en-US");
+  const pos = P.pos || POSITION;
+  // the floor: a live guard line where the loss stops
   const guard = seg(q, 0.32, 0.6) * alpha;
   if (guard > 0.02) {
     ctx.globalAlpha = guard; ctx.strokeStyle = RED; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
     ctx.lineDashOffset = -((NOW * 22) % 12); // marching ants — the guard is live
     ctx.beginPath(); ctx.moveTo(ch.x, P.lossY); ctx.lineTo(ch.x + ch.w, P.lossY); ctx.stroke();
     ctx.setLineDash([]); ctx.lineDashOffset = 0;
-    // the act's one number, at full strength once the guard is up
     ctx.globalAlpha = alpha * Math.min(1, guard * 2.5);
-    ctx.font = FIG; ctx.textBaseline = "bottom";
-    ctx.fillStyle = INK; ctx.fillText("−$80", ch.x + 6, P.lossY - 6);
-    const lw = ctx.measureText("−$80 ").width;
-    ctx.fillStyle = RED; ctx.fillText("max loss", ch.x + 6 + lw, P.lossY - 6);
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    const big = Math.round(fs * 1.75);
+    ctx.font = `700 ${big}px ${MONO}`; ctx.fillStyle = RED;
+    const figure = "−" + money(pos.maxLoss);
+    ctx.fillText(figure, ch.x, P.lossY + 12);
+    ctx.font = SMALL; ctx.fillStyle = GRAY;
+    const why = "most it can lose · " + (pos.chosen ? "you set it before the trade" : "the example spread up top");
+    ctx.fillText(why, ch.x, P.lossY + 16 + big);
     ctx.globalAlpha = alpha;
   }
-  // red leak: risk dripping out below the floor — the guard is what holds it
-  if (guard > 0.05) {
-    ctx.fillStyle = RED;
-    for (let i = 0; i < 10; i++) {
-      const px_ = ch.x + ((i * 0.104 + 0.03) % 1) * ch.w;
-      if (px_ > ch.x + ch.w - 190) continue; // keep clear of the badge
-      const f = ((NOW * 0.25 + i * 0.13) % 1);
-      ctx.globalAlpha = guard * (1 - f) * 0.5;
-      ctx.beginPath(); ctx.arc(px_, P.lossY + f * 28, 1.6, 0, TAU); ctx.fill();
-    }
-    ctx.globalAlpha = alpha;
-  }
-  // breakeven vertical
+  // breakeven: neutral, labelled on the zero axis to the LEFT of the crossing,
+  // where the curve never goes (the hero puts its B/E in the same place). It
+  // used to sit above the chart's top edge, ~25px under the copy's sub-line.
   const be = seg(q, 0.4, 0.66) * alpha;
   if (be > 0.02) {
-    ctx.globalAlpha = be; ctx.strokeStyle = CYAN; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.4;
+    ctx.globalAlpha = be; ctx.strokeStyle = "rgba(245,245,240,0.45)"; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.2;
     ctx.lineDashOffset = -((NOW * 16) % 9);
-    ctx.beginPath(); ctx.moveTo(P.beX, ch.y); ctx.lineTo(P.beX, ch.y + ch.h); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(P.beX, P.zeroY - 18); ctx.lineTo(P.beX, P.zeroY + 18); ctx.stroke(); ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
-    ctx.font = FIG; ctx.fillStyle = CYAN; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-    ctx.fillText("B/E", P.beX, ch.y - 8);
+    ctx.font = SMALL; ctx.fillStyle = GRAY; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("B/E " + pos.breakeven.toFixed(2), P.beX - 8, P.zeroY - 6);
     ctx.textAlign = "left";
     ctx.globalAlpha = alpha;
   }
-  // strike ticks and the ceiling — the shape has names, not just a slope
+  // the strikes, in the hero's handle colour, named with their prices: each
+  // sits just above the floor, to the left of its own tick, where the curve
+  // never goes (left of K1 is the flat floor; between the ramp and K2 is
+  // empty), so neither can collide with the loss figure under the floor.
   const lbl = seg(q, 0.45, 0.7) * alpha;
   if (lbl > 0.02) {
-    ctx.globalAlpha = lbl; ctx.font = FIG; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.globalAlpha = lbl; ctx.font = SMALL; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
     ctx.strokeStyle = GRAY; ctx.lineWidth = 1;
-    for (const [x, name] of [[P.floorX1, "K1"], [pts[2].x, "K2"]]) {
-      ctx.beginPath(); ctx.moveTo(x, P.lossY + 4); ctx.lineTo(x, P.lossY + 12); ctx.stroke();
-      ctx.fillStyle = GRAY; ctx.fillText(name, x, P.lossY + 16);
+    for (const [x, name] of [[P.floorX1, "K1 " + pos.k1], [pts[2].x, "K2 " + pos.k2]]) {
+      ctx.beginPath(); ctx.moveTo(x, P.lossY - 6); ctx.lineTo(x, P.lossY + 6); ctx.stroke();
+      ctx.fillStyle = CYAN; ctx.fillText(name, x - 8, P.lossY - 8);
     }
-    ctx.fillStyle = GREEN; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
-    ctx.fillText("+$420 max profit", pts[2].x + 10, P.profY - 8);
+    // the upside: neutral, under its own ceiling, with the condition attached
+    ctx.textAlign = "right"; ctx.textBaseline = "top";
+    const rx = ch.x + ch.w, ty = P.profY + 10;
+    ctx.globalAlpha = lbl * 0.75; ctx.font = SMALL; ctx.fillStyle = GRAY;
+    ctx.fillText("most it can make", rx, ty);
+    ctx.globalAlpha = lbl; ctx.font = `500 ${fs}px ${MONO}`; ctx.fillStyle = GRAY;
+    ctx.fillText("+" + money(pos.maxProfit), rx, ty + fs);
+    ctx.globalAlpha = lbl * 0.75; ctx.font = SMALL;
+    ctx.fillText("only above " + pos.k2 + " at expiry", rx, ty + fs * 2.3);
+    ctx.textAlign = "left";
     ctx.globalAlpha = alpha;
   }
   // kill switch: armed early, while the headline is still up, and parked under
-  // the chart's right edge instead of on the profit plateau
+  // the chart's right edge. A status lamp, not a headline: the green is the
+  // dot, the words stay neutral so the loss figure keeps the top of the frame.
   const kill = seg(q, 0.30, 0.50) * alpha;
   if (kill > 0.02) {
-    ctx.globalAlpha = kill; ctx.font = FIG; ctx.textAlign = "right"; ctx.textBaseline = "top";
-    const label = "KILL SWITCH ARMED", kx = ch.x + ch.w, ky = P.lossY + 44;
-    ctx.fillStyle = GREEN; ctx.fillText(label, kx, ky);
-    const dotX = kx - ctx.measureText(label).width - 12;
-    ctx.beginPath(); ctx.arc(dotX, ky + 9, 4, 0, TAU); ctx.fill();
+    ctx.globalAlpha = kill; ctx.font = SMALL; ctx.textAlign = "right"; ctx.textBaseline = "top";
+    const label = "kill switch armed", kx = ch.x + ch.w, ky = P.lossY + 44;
+    ctx.fillStyle = GRAY; ctx.fillText(label, kx, ky);
+    const dotX = kx - ctx.measureText(label).width - 10;
+    ctx.fillStyle = GREEN;
+    ctx.beginPath(); ctx.arc(dotX, ky + fs * 0.36, 3.5, 0, TAU); ctx.fill();
     ctx.textAlign = "left";
   }
   ctx.restore();
@@ -792,7 +835,12 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   const pDive = seg(t, ...P.dive);
   const push = easeIO(seg(pDive, 0, 0.5));
   const macScale = lerp(1, 4.5, push); // gentler dive so the panel plates stay sharp
-  const macVisible = t >= P.assembly[0] && push < 1;
+  // The laptop belongs to the retired desk act. Since frame zero the film
+  // starts AT the dive, so once the 3D corridor is live the laptop is never
+  // the picture: drawing it under the curtain only leaked a double exposure
+  // through the tunnel's fade-in. It stays as the fallback entry when the
+  // tunnel has no context.
+  const macVisible = !hideDive && t >= P.assembly[0] && push < 1;
   mac.style.display = macVisible ? "block" : "none";
   mac.style.opacity = String(seg(pAsm, 0, 0.15));
   mac.style.transform = `translate(-50%, -50%) scale(${macScale}) translateY(${lerp(0, -20, push)}px)`;
@@ -902,11 +950,11 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   // ---- matrix rain --------------------------------------------------------
   // The rain used to resolve into a baked screenshot of the hero (#homepage).
   // That plate went stale silently and carried copy the film had banned, so it
-  // is gone (2026-11). Without it the frame must reach the page ground early:
-  // the rain clears by 0.955, leaving ~4.5% of black before the hand-off, so a
-  // fast scroller who outruns the follower cuts from black, never from a frame
-  // with content in it.
-  const rainStart = 0.9, rainPeakEnd = 0.925, rainThin = 0.93, rainEnd = 0.955;
+  // is gone (2026-11). The rain then cleared by 0.955 and an outro dipped the
+  // frame to black, which left the film ending on empty screen. Now it thins
+  // right up to the hand-off and the parent dissolves the whole stage over it
+  // (HANDOFF_FADE in lib/cinema.ts), so the last frame has rain in it.
+  const rainStart = 0.9, rainPeakEnd = 0.925, rainThin = 0.955, rainEnd = 1.0;
   const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, rainEnd));
   if (rainAmt > 0.002) {
     const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
@@ -942,16 +990,6 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     ctx.fillRect(0, 0, W, H);
   }
 
-  // ---- outro: settle to the page ground before the swap -------------------
-  // Ramp the whole frame down to the page ground over the last ~1.4% and let
-  // the wrapper crossfade (0.998-1.0) hand off from an empty frame: the film
-  // settles, and the real hero is simply already there. Reads the same at
-  // every width, because nothing baked has to line up with anything live.
-  const outro = seg(t, 0.984, 0.998);
-  if (outro > 0.002) {
-    ctx.fillStyle = `rgba(5, 5, 5, ${outro})`;
-    ctx.fillRect(0, 0, W, H);
-  }
   return true;
 };
 </script>

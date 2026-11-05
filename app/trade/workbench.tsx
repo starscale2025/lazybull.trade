@@ -250,7 +250,13 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
     () => generateStrategies({ spot, low, high, daysToExpiry: days, iv: sym.iv }),
     [spot, low, high, days, sym.iv]
   );
-  const [selectedId, setSelectedId] = useState<Strategy["id"] | null>("income");
+  // NOTHING IS PRESELECTED. This used to open on the "income" iron condor,
+  // so the first thing /trade put in front of a newcomer was a ready-made
+  // position on a real ticker with a "place this trade on AMZN" button under
+  // it: a proposal, from a product whose compliance line is that it never
+  // proposes one (docs/COMPLIANCE.md; re-tribunal #1). The examples are listed;
+  // a position exists once the visitor picks or builds one.
+  const [selectedId, setSelectedId] = useState<Strategy["id"] | null>(null);
   // The chain's pointer, shared with the cone. Deliberately NOT persisted or
   // debounced: it is a cursor, and a cursor that lags its pointer reads broken.
   const [hoverStrike, setHoverStrike] = useState<number | null>(null);
@@ -668,7 +674,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                   onChangeDays={(v) => { setDays(v); setTouched(true); }}
                   events={events}
                   bandProb={probInBand}
-                  // The forecast and the position now share one price ruler.
+                  // The implied range and the position share one price ruler.
                   legs={selected?.legs}
                   breakevens={selected?.breakevens}
                   hoverStrike={hoverStrike}

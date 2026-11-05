@@ -32,6 +32,8 @@
  * is a few hundred bytes of geometry rather than a second scene.
  */
 
+import { TAGLINE } from "@/lib/cinema";
+
 const W = 640;
 const H = 300;
 const SPLIT = 292; // x where the drop begins — the tape left, the crash right
@@ -90,7 +92,7 @@ const INDEX = [
   { n: "03", h: "Markets have moods.", s: "Trending, reverting, or noise — named before you commit to anything." },
   { n: "04", h: "Your worst case is a number you chose.", s: "Not a number you find out afterwards." },
   { n: "05", h: "They vote. They disagree.", s: "You see the split, not just the answer." },
-  { n: "06", h: "Learn it. Backtest it.", s: "Then paper-trade it." },
+  { n: "06", h: "Learn it. Backtest it.", s: TAGLINE },
 ];
 
 export function CinemaStill() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { ACTS } from "@/lib/cinema";
 
 /**
@@ -11,9 +11,16 @@ import { ACTS } from "@/lib/cinema";
  * pill parked dead centre over the dive corridor's best panel — which both
  * defaced the signature shot and read as the film apologising for itself.
  *
- * This replaces it: nine numbered rows down the left edge, a hairline filled to
- * progress, the current act marked, and the skip demoted to the rail's last row
- * where it reads as one option among ten rather than an escape hatch.
+ * This replaces it: the acts as numbered rows down the left edge, a hairline
+ * filled to progress, the current act marked, then two controls: sound, and the
+ * skip, demoted to the last row where it reads as one option among several
+ * rather than an escape hatch.
+ *
+ * SOUND LIVES HERE. Its only switch used to be a chip on the loader, which sits
+ * under the hero curtain now and unmounts half a second after the film
+ * reveals, so the score was unreachable for almost everyone (re-tribunal
+ * regression 1). PLAN.md decision 3 puts it in the chapter bar, not in frame
+ * zero, and the chapter bar is this.
  *
  * TWO THINGS IT DELIBERATELY IS NOT:
  *
@@ -60,13 +67,35 @@ export type CinemaRailHandle = {
 
 export const CinemaRail = forwardRef<
   CinemaRailHandle,
-  { onSkip: () => void; onSeek: (progress: number) => void }
->(function CinemaRail({ onSkip, onSeek }, ref) {
+  {
+    onSkip: () => void;
+    onSeek: (progress: number) => void;
+    sound: boolean;
+    onSound: () => void;
+  }
+>(function CinemaRail({ onSkip, onSeek, sound, onSound }, ref) {
   const hostRef = useRef<HTMLDivElement>(null);
   const fillRef = useRef<HTMLSpanElement>(null);
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const liveRef = useRef<HTMLParagraphElement>(null);
   const lastAct = useRef<number>(-1);
+  // Where each act row's tick sits along the fill, measured once and again on
+  // resize: a layout read, so never per frame.
+  const geo = useRef<{ h: number; ticks: number[] } | null>(null);
+  useEffect(() => {
+    const drop = () => {
+      geo.current = null;
+    };
+    window.addEventListener("resize", drop);
+    return () => window.removeEventListener("resize", drop);
+  }, []);
+  const measure = () => {
+    const fill = fillRef.current;
+    if (!fill?.offsetHeight) return null;
+    const top = fill.offsetTop;
+    const ticks = rowRefs.current.map((el) => (el ? el.offsetTop + el.offsetHeight / 2 - top : 0));
+    return { h: fill.offsetHeight, ticks };
+  };
 
   useImperativeHandle(ref, () => ({
     update(progress: number) {
@@ -76,9 +105,6 @@ export const CinemaRail = forwardRef<
         const o = progress < 0.86 ? 1 : Math.max(0, 1 - (progress - 0.86) / 0.07);
         host.style.opacity = String(o);
         host.style.pointerEvents = o > 0.1 ? "auto" : "none";
-      }
-      if (fillRef.current) {
-        fillRef.current.style.transform = `scaleY(${Math.max(0, Math.min(1, progress)).toFixed(4)})`;
       }
       // Which act is the viewer actually LOOKING at?
       //
@@ -91,13 +117,34 @@ export const CinemaRail = forwardRef<
       const CROSSFADE = 0.02;
       const seen = progress - CROSSFADE;
       let act = 0;
+      let frac = 0; // how far through that act
       for (let i = 0; i < ACT_ORDER.length; i++) {
         const a = ACTS[ACT_ORDER[i]];
         if (seen >= a.from && seen < a.to) {
           act = i;
+          frac = (seen - a.from) / (a.to - a.from);
           break;
         }
-        if (seen >= a.to) act = i;
+        if (seen >= a.to) {
+          act = i;
+          frac = 1;
+        }
+      }
+      // THE FILL TELLS THE TRUTH ABOUT THE ROWS. It used to be raw film
+      // progress, which is already 0.15 when the film starts (boot and the
+      // desk are retired) and is linear in progress while the rows are evenly
+      // spaced and the acts are not, so it sat 15% down before act one and
+      // drifted off the current row act by act. Now it reaches a row's tick
+      // as that act begins and the next row's as it ends.
+      const fill = fillRef.current;
+      if (fill) {
+        const g = geo.current ?? (geo.current = measure());
+        if (g) {
+          const from = g.ticks[act];
+          const to = act + 1 < g.ticks.length ? g.ticks[act + 1] : g.h;
+          const y = from + (to - from) * Math.max(0, Math.min(1, frac));
+          fill.style.transform = `scaleY(${Math.max(0, Math.min(1, y / g.h)).toFixed(4)})`;
+        }
       }
       if (act === lastAct.current) return;
       lastAct.current = act;
@@ -151,12 +198,23 @@ export const CinemaRail = forwardRef<
             </span>
           </button>
         ))}
-        {/* Skip demoted to the rail's last row: one option among ten, on the
-            left edge, instead of a pill parked over the dive corridor. */}
+        {/* Sound: OFF until asked, always. Turning it on is the browser's
+            required gesture by construction. */}
+        <button
+          type="button"
+          onClick={onSound}
+          aria-pressed={sound}
+          className="rail-row rail-skip mt-1 flex items-center gap-2 text-left"
+        >
+          <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
+          <span className="t-chrome text-fg-dim">{sound ? "sound on" : "sound off"}</span>
+        </button>
+        {/* Skip demoted to the rail's last row: one option among several, on
+            the left edge, instead of a pill parked over the dive corridor. */}
         <button
           type="button"
           onClick={onSkip}
-          className="rail-row rail-skip mt-1 flex items-center gap-2 text-left"
+          className="rail-row rail-skip flex items-center gap-2 text-left"
         >
           <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
           <span className="t-chrome text-fg-dim">skip film ↓</span>

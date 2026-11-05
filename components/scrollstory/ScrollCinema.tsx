@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
+import { getHeroPosition, onHeroPosition, type HeroPosition } from "@/lib/hero-position";
 import {
   cinemaAudioFrame,
   cinemaAudioEnabled,
@@ -18,7 +19,7 @@ import { CinemaRail, type CinemaRailHandle } from "./CinemaRail";
 import { CinemaStill } from "./CinemaStill";
 // Shared with CinemaGate, which reserves exactly this height on the first paint
 // so mounting the film shifts nothing. See cinema-metrics.ts.
-import { SCROLL_LENGTH_VH, CURTAIN_VH, FILM_START, scrollToFilm, filmToScroll } from "./cinema-metrics";
+import { SCROLL_LENGTH_VH, CURTAIN_VH, FILM_START, FILM_LIFT_END, scrollToFilm, filmToScroll } from "./cinema-metrics";
 
 // smoothstep — the phase ramps for the quant-lab type-on/colour narration, kept
 // identical in shape to the 3D IceCandle's so the panel and candle read as one clock.
@@ -54,7 +55,13 @@ type SceneWindow = Window & {
     tokens?: Record<string, string>;
     /** The parent's own mono font-family, injected into the frame as @font-face. */
     mono?: string;
+    /** The hero's position, which the safety act draws (lib/hero-position.ts). */
+    position?: HeroPosition;
+    /** The act rail's right edge on the stage, in px, plate included. */
+    insetLeft?: number;
   }) => Promise<unknown>;
+  /** A new hero position after the scene is up: the visitor moved a strike. */
+  setPosition?: (pos: HeroPosition) => void;
   // `hideBull` / `hideCandle` / `hideDive` (per frame) drop the matching 2D draw
   // once that 3D layer is live. `now` (seconds) drives ambient, always-on motion;
   // `cx`/`cy` (-1..1) drive the cursor spotlight.
@@ -226,9 +233,12 @@ export function cinemaResumeAt(): number | null {
     const raw = sessionStorage.getItem(RESUME_KEY);
     if (raw === null) return null;
     const p = Number(raw);
-    // Below 0.02 there is nothing worth restoring; above 0.97 the film is
-    // already handing off, and resuming there would drop you into the seam.
-    return Number.isFinite(p) && p > 0.02 && p < 0.97 ? p : null;
+    // Up to the end of the curtain's lift there is nothing worth restoring:
+    // the loop records FILM_START at rest under the hero, and the old 0.02
+    // floor let that through, so a reload on frame zero scrolled the page
+    // into the film. Above 0.97 the film is already handing off, and resuming
+    // there would drop you into the seam.
+    return Number.isFinite(p) && p > FILM_LIFT_END && p < 0.97 ? p : null;
   } catch {
     return null;
   }
@@ -238,8 +248,6 @@ export function ScrollCinema() {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const flashRef = useRef<HTMLDivElement>(null);
-  const skipRef = useRef<HTMLButtonElement>(null);
   const railRef = useRef<CinemaRailHandle>(null);
   const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -277,7 +285,7 @@ export function ScrollCinema() {
   // memory under a display:none div for the life of the page.
   const [dead, setDead] = useState(false);
   const [loadPct, setLoadPct] = useState(8);
-  // Sound is OFF until asked. See lib/cinema-audio.ts.
+  // Sound is OFF until asked, from the rail. See lib/cinema-audio.ts.
   const [sound, setSound] = useState(false);
   const [reveal, setReveal] = useState(false);
   // gate held >10s → show "still loading" + a skip-to-static choice (we never
@@ -378,6 +386,25 @@ export function ScrollCinema() {
     let sceneTimeout = 0;
     let pxS = 0; // damped pointer for layered parallax
     let pyS = 0;
+    let scrollS = 0; // raw ScrollTrigger progress; 0 means the hero still covers the stage
+
+    // OUT OF REACH UNDER THE CURTAIN. The hero is opaque and stacked above
+    // this stage, but the rail's rows, its skip and the loader's buttons were
+    // all still in the tab order behind it (re-tribunal regression 7, a WCAG
+    // 2.2 SC 2.4.11 failure). Until the curtain has finished lifting the
+    // whole section is inert. Driven by scroll rather than by the film loop,
+    // because the loader can be on screen before that loop exists.
+    let inertNow: boolean | null = null;
+    const syncInert = () => {
+      const range = section.offsetHeight - window.innerHeight;
+      const s = range > 0 ? -section.getBoundingClientRect().top / range : 0;
+      const behind = scrollToFilm(s) < FILM_LIFT_END - 1e-4;
+      if (behind === inertNow) return;
+      inertNow = behind;
+      section.inert = behind;
+    };
+    syncInert();
+    window.addEventListener("scroll", syncInert, { passive: true });
 
     // Normalized pointer (-1..1) shared with the 3D layers via the clock.
     const onPointer = (e: PointerEvent) => {
@@ -398,6 +425,14 @@ export function ScrollCinema() {
     window.addEventListener("pointerdown", onDown, { passive: true });
 
     const win = () => iframe.contentWindow as SceneWindow | null;
+    // Where the act rail ends, so the scene keeps its charts clear of it.
+    // 28px is the rail's feathered plate (.cinema-rail::before).
+    const railInset = () => {
+      const host = stickyRef.current;
+      const rail = host?.querySelector<HTMLElement>(".cinema-rail");
+      if (!host || !rail?.offsetWidth) return 0;
+      return Math.round(rail.getBoundingClientRect().right - host.getBoundingClientRect().left + 28);
+    };
 
     // Play-once: after the user scrolls all the way through onto the homepage,
     // remove the cinema from the layout (compensating scroll so nothing jumps)
@@ -412,6 +447,7 @@ export function ScrollCinema() {
       // that gives the AudioContext back, because the component stays MOUNTED
       // behind display:none and nothing else would.
       stopCinemaAudio();
+      window.removeEventListener("scroll", syncInert);
       progress = 1;
       renderScene();
       applyOverlays();
@@ -451,24 +487,26 @@ export function ScrollCinema() {
       requestAnimationFrame(() => {
         keepHeroInPlace();
         rootStyle.overflowAnchor = prevAnchor;
-        // Removing 1400vh invalidates every other ScrollTrigger's start/end
-        // (e.g. the footer's data-gsap reveals) — recompute so they still fire.
-        ScrollTrigger.refresh();
-        // Now that layout has settled, free the GPU: unmount canvases + iframe.
-        setDead(true);
+        // Both of these are heavy and neither is visible, so they wait for
+        // idle instead of landing on the hand-off frame: a full ScrollTrigger
+        // refresh, and tearing down three WebGL contexts, their composer
+        // targets and the GLBs.
+        const idle = (fn: () => void) =>
+          typeof window.requestIdleCallback === "function"
+            ? window.requestIdleCallback(fn, { timeout: 600 })
+            : setTimeout(fn, 120);
+        idle(() => {
+          // Removing ~1370vh invalidates every other ScrollTrigger's start/end
+          // (e.g. the footer's data-gsap reveals) — recompute so they still fire.
+          ScrollTrigger.refresh();
+          setDead(true);
+        });
       });
     };
     collapseRef.current = collapse; // let the Skip button trigger the same collapse
 
     const applyOverlays = (now = 0) => {
       if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
-      // faint bloom only — the scene's Matrix rain is the real green transition
-      if (flashRef.current) flashRef.current.style.opacity = String(flashOpacity(progress) * 0.18);
-      if (skipRef.current) {
-        const o = progress < 0.85 ? 1 : Math.max(0, 1 - (progress - 0.85) / 0.08);
-        skipRef.current.style.opacity = String(o);
-        skipRef.current.style.pointerEvents = o > 0.1 ? "auto" : "none";
-      }
       // The act rail rides this same pass — no second rAF, no per-frame React
       // state next to three WebGL contexts. It writes styles directly and only
       // announces on an act CHANGE.
@@ -650,11 +688,57 @@ export function ScrollCinema() {
     // next to three WebGL contexts.
     let lastSave = 0;
     let savedP = -1;
+    // PARKED UNDER THE CURTAIN. While the hero covers every pixel of the stage
+    // (the trigger has not started, so raw scroll progress is exactly 0),
+    // drawing the film is pure waste, and it was not cheap: FILM_START sits
+    // inside the dive's near window, so the tunnel's WebGL loop and the 2D
+    // scene redrew at full rate under an opaque hero while the visitor dragged
+    // strikes on it (re-tribunal regression 8). The loop draws a short warm-up
+    // first, counted from the moment the tunnel's context exists, so shaders
+    // compile and the plates upload out of sight. Then it stops drawing until
+    // the curtain moves.
+    const WARM_FRAMES = 45;
+    let warm = 0;
+    let parked = false;
+    const park = () => {
+      parked = true;
+      for (const [ref, set] of [
+        [dive3dActiveRef, setDive3dActive],
+        [candle3dActiveRef, setCandle3dActive],
+        [bull3dActiveRef, setBull3dActive],
+      ] as const) {
+        if (ref.current) {
+          ref.current = false;
+          set(false);
+        }
+      }
+    };
     const tick = (ts: number) => {
       if (disposed || collapsed) return;
       const now = ts / 1000;
       const dt = lastNow < 0 ? 1 / 60 : Math.min(0.05, now - lastNow);
       lastNow = now;
+      if (scrollS <= 0 && Math.abs(progress - FILM_START) < 1e-4) {
+        if (warm >= WARM_FRAMES) {
+          if (!parked) park();
+          raf = requestAnimationFrame(tick);
+          return;
+        }
+        // a quarter-rate count if the tunnel never comes up, so a failed
+        // context still parks within a few seconds
+        warm += dive3dReadyRef.current ? 1 : 0.25;
+      }
+      parked = false;
+      // THE END IS WHERE THE PICTURE ENDS. Collapsing on ScrollTrigger's raw
+      // onLeave cut the film off wherever the smoothed follower happened to
+      // be, up to a few percent short, so the last frames never played and
+      // the hand-off read as a hard cut (re-tribunal regression 6). Collapse
+      // here instead, once the scroll is past the end AND the picture has
+      // caught up with it.
+      if (targetProgress >= 1 && progress >= 0.999) {
+        collapse();
+        return;
+      }
       let diff = targetProgress - progress;
       // A jump (Home/End, a rail seek, a fragment link) CUTS instead of gliding:
       // easing across half the film fast-forwards every act in between, mounting
@@ -720,9 +804,15 @@ export function ScrollCinema() {
         start: "top top",
         end: "bottom bottom",
         onUpdate: (self) => {
+          scrollS = self.progress;
           targetProgress = scrollToFilm(self.progress);
         },
-        onLeave: () => collapse(), // scrolled past the end onto the homepage → lock it out
+        // Past the end: pin the target at the last frame. The tick collapses
+        // the film once the picture has played out to it.
+        onLeave: () => {
+          scrollS = 1;
+          targetProgress = 1;
+        },
       });
       raf = requestAnimationFrame(tick); // the always-on loop starts with the scroll
     };
@@ -764,6 +854,8 @@ export function ScrollCinema() {
             bullFrames: null,
             tokens: resolvedTokens(),
             mono: injectMono(w.document) ?? undefined,
+            position: getHeroPosition() ?? undefined,
+            insetLeft: railInset(),
           });
           ready = true;
           renderScene();
@@ -911,12 +1003,22 @@ export function ScrollCinema() {
           bullFrames: null,
           tokens: resolvedTokens(),
           mono: w2 ? injectMono(w2.document) ?? undefined : undefined,
+          position: getHeroPosition() ?? undefined,
+          insetLeft: railInset(),
         }).then(() => renderScene());
       }, 160);
     };
     window.addEventListener("resize", onResize);
 
+    // The visitor can still be dragging strikes on the hero after the scene is
+    // up; the safety act follows. Drawn on the next frame the film renders.
+    const offPosition = onHeroPosition(() => {
+      const pos = getHeroPosition();
+      if (ready && pos) win()?.setPosition?.(pos);
+    });
+
     return () => {
+      offPosition();
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
@@ -927,6 +1029,7 @@ export function ScrollCinema() {
       if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
       if (onSceneError) iframe.removeEventListener("error", onSceneError);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", syncInert);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("pointerdown", onDown);
       st?.kill();
@@ -1001,17 +1104,22 @@ export function ScrollCinema() {
             sits beneath the hero curtain and only shows if a reader scrolls
             into the film before its geometry is ready. */}
       {loading && (
+        // Not aria-hidden as a whole: it holds a real button, and a focusable
+        // control inside aria-hidden is announced as nothing. The decoration
+        // is hidden piece by piece instead, and the whole layer goes inert the
+        // moment it starts fading out.
         <div
-          aria-hidden
+          inert={reveal}
           className="absolute inset-0 z-[40] flex flex-col items-center justify-center gap-7 bg-bg transition-opacity duration-500 ease-out"
           style={{ opacity: reveal ? 0 : 1, pointerEvents: reveal ? "none" : "auto" }}
         >
-          <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.14]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-grid opacity-[0.14]" />
           <div
+            aria-hidden
             className="pointer-events-none absolute inset-0"
             style={{ background: "radial-gradient(ellipse at center, rgba(0,255,135,0.06), transparent 62%)" }}
           />
-          <div className="relative flex items-center gap-2.5">
+          <div aria-hidden className="relative flex items-center gap-2.5">
             <span className="flex size-8 items-center justify-center bg-bull font-mono text-[0.8125rem] font-bold tracking-tight text-bg">
               LB
             </span>
@@ -1019,42 +1127,24 @@ export function ScrollCinema() {
               lazybull<span className="text-bull">.</span>
             </span>
           </div>
-          <div className="relative h-px w-[16.25rem] overflow-hidden bg-border">
+          <div aria-hidden className="relative h-px w-[16.25rem] overflow-hidden bg-border">
             <div
               className="h-full bg-bull transition-[width] duration-300 ease-out"
               style={{ width: `${loadPct}%`, boxShadow: "0 0 12px rgba(0,255,135,0.7)" }}
             />
           </div>
-          <div className="relative flex w-[16.25rem] items-center justify-between font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint">
+          <div aria-hidden className="relative flex w-[16.25rem] items-center justify-between font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint">
             <span className="flex items-center gap-1.5">
               <span className="size-1 rounded-full bg-bull pulse-dot" /> Initializing terminal
             </span>
             <span className="tabular-nums text-bull/90">{Math.round(loadPct)}%</span>
           </div>
-          {/* The one place an opt-in belongs: this is already a textbook
-              entrance gate with a 0-100 counter, so asking here costs the
-              reader nothing and satisfies the browser's gesture requirement by
-              construction. Default OFF, always. */}
-          <button
-            type="button"
-            onClick={() => {
-              if (sound) {
-                disableCinemaAudio();
-                setSound(false);
-              } else {
-                setSound(enableCinemaAudio());
-              }
-            }}
-            aria-pressed={sound}
-            className="pointer-events-auto relative border border-border bg-bg/70 px-3 py-1.5 font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-bull/50 hover:text-fg"
-          >
-            {sound ? "sound on" : "sound off"}
-          </button>
           {/* The exit is available from second 0 — for the first 10 seconds of a
               slow load this overlay used to cover the only skip button, leaving
               no way out of a locked scroll. */}
           <div className="relative flex flex-col items-center gap-3">
             <div
+              aria-hidden={!slowLoad}
               className="font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint transition-opacity duration-500"
               style={{ opacity: slowLoad ? 1 : 0 }}
             >
@@ -1110,8 +1200,10 @@ export function ScrollCinema() {
           </Suspense>
         </div>
         </>)}
-        {/* film grain layer: scanlines + vignette unify the 2D and 3D acts */}
-        <div className="pointer-events-none absolute inset-0 scanlines opacity-[0.13]" />
+        {/* One vignette over the 2D and 3D acts. The static scanline layer
+            that used to sit here was a texture painted on the lens, not grain:
+            it did not move with anything, and the grade belongs to the
+            composers now (ToneMapping in each 3D layer). */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.62) 100%)" }}
@@ -1210,38 +1302,34 @@ export function ScrollCinema() {
           <span className="text-fg" />
           <span />
         </div>
-        <div ref={flashRef} className="absolute inset-0 bg-bull" style={{ opacity: 0 }} />
-        {/* The film's spine. Replaces the dead-centre skip pill above md — that
-            pill sat over the dive corridor's best panel and read as the film
-            apologising for itself. Below md there is no film at all, so the
-            pill stays there as the only control. */}
+        {/* The film's spine, and its only control: the acts, sound, and skip.
+            The centre "Skip intro" pill that used to sit beside it is gone; it
+            duplicated the rail's skip row, sat over the dive's best frame, and
+            was one of eleven controls the keyboard could reach under the
+            curtain (re-tribunal regression 7). Phones have their own film. */}
         <CinemaRail
           ref={railRef}
           onSkip={handleSkip}
+          sound={sound}
+          onSound={() => {
+            if (sound) {
+              disableCinemaAudio();
+              setSound(false);
+            } else {
+              setSound(enableCinemaAudio());
+            }
+          }}
           onSeek={(target) => {
             const sec = sectionRef.current;
             if (!sec) return;
             const range = sec.offsetHeight - window.innerHeight;
-            window.scrollTo({ top: sec.offsetTop + range * filmToScroll(target), behavior: "smooth" });
+            // Never seek under the curtain: act one starts at FILM_START, and
+            // filmToScroll(FILM_START) is 0, the top of the page, so row 01
+            // used to drop the hero back over the film it was opening.
+            const p = Math.max(target, FILM_LIFT_END);
+            window.scrollTo({ top: sec.offsetTop + range * filmToScroll(p), behavior: "smooth" });
           }}
         />
-        {/* `absolute bottom-7` anchored this to the sticky wrapper, which at
-            scrollY=0 has not yet reached its top-0 pin and therefore sits ~91px
-            down the page — putting the button fully BELOW the fold on mobile
-            (measured: top=832 against an 812px viewport, not tappable). Anchor
-            it to the viewport instead so it's reachable the moment you land.
-            It also used to carry `md:hidden` — a mobile-only gate on a control
-            inside a component that only ever mounts at md and up, so the film
-            shipped with no skip on ANY width. Phones have their own now, in
-            MobileCinema; this one is the desktop film's. */}
-        <button
-          ref={skipRef}
-          type="button"
-          onClick={handleSkip}
-          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
-        >
-          Skip intro ↓
-        </button>
         <style>{`
           .beat-word { display: inline-block; white-space: nowrap; }
           /* THE COPY LAYER RUNS ON THE FILM'S CLOCK.

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cinemaClock } from "@/lib/cinema-clock";
+import { getHeroPosition } from "@/lib/hero-position";
+import { TAGLINE } from "@/lib/cinema";
 
 /**
  * THE PHONE'S FILM — a different film, not a smaller one.
@@ -53,7 +55,7 @@ const COPY: { from: number; to: number; h: string; sub: string }[] = [
   { from: 0.2, to: 0.4, h: "Markets have moods.", sub: "trending, reverting, or noise" },
   { from: 0.47, to: 0.6, h: "Then the floor goes.", sub: "the part nobody rehearses" },
   { from: 0.65, to: 0.8, h: "Your worst case is a number you chose.", sub: "not one you find out afterwards" },
-  { from: 0.86, to: 0.99, h: "Learn it. Then trade it.", sub: "welcome in" },
+  { from: 0.86, to: 0.99, h: `Learn it. ${TAGLINE}`, sub: "welcome in" },
 ];
 
 const N = 34; // candles — fewer than desktop's 48; portrait has less width
@@ -294,7 +296,11 @@ export function MobileCinema() {
         ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
         ctx.textAlign = "right";
         ctx.textBaseline = "bottom";
-        ctx.fillText("below this strike, the loss stops at −$80", x1, floorY - 6);
+        // The hero's own number (lib/hero-position.ts): the worst case this act
+        // calls "a number you chose" is the one set at the top of the page.
+        const pos = getHeroPosition();
+        const loss = Math.round(pos?.maxLoss ?? 230).toLocaleString("en-US");
+        ctx.fillText(`below K1 ${pos?.k1 ?? 100}, the loss stops at −$${loss}`, x1, floorY - 6);
         ctx.restore();
       }
 

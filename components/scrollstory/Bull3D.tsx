@@ -10,7 +10,8 @@
 import { Suspense, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, ChromaticAberration, SMAA, ToneMapping } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { cinemaClock } from "@/lib/cinema-clock";
@@ -551,6 +552,15 @@ export default function Bull3D({
           intensity={0.9}
         />
         <ChromaticAberration offset={[0.0005, 0.0009]} />
+        {/* THE GRADE. A composer renders into a float target, and three only
+            tone-maps on the way to the screen, so this layer had none: every
+            emissive over 1.0 clipped flat (the 2026-11 re-tribunal measured
+            54.7% of the cube clipped and 186px undithered green runs). Khronos
+            PBR Neutral rolls highlights off instead of cutting them and leaves
+            hues alone below that; AgX was tried first and turned the crash red
+            salmon and the bull green mint, which breaks a colour script built
+            on red arriving late and hard. SMAA after it, on display values. */}
+        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         <SMAA />
       </EffectComposer>
     </Canvas>

@@ -104,10 +104,19 @@ export function PayoffSpine() {
           sits behind whatever section you are reading, and the morph is the
           thing that changes as you scroll — which is the actual idea. */}
       <div className="sticky top-0 h-screen w-full">
+        {/* OUT OF THE COPY. The curve ran at full strength straight through
+            card text and headings (re-tribunal #8: d17, d19, d20, m55). It is
+            full strength in the gutters and knocked down to a trace behind
+            the content column, so it still reads as one continuous curve
+            without crossing a line of type at full ink. */}
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
           className="absolute inset-x-0 top-1/2 h-[62%] w-full -translate-y-1/2"
+          style={{
+            maskImage:
+              "linear-gradient(90deg, #000 0%, #000 5%, rgba(0,0,0,0.16) 10%, rgba(0,0,0,0.16) 90%, #000 95%, #000 100%)",
+          }}
         >
         <defs>
           {/* The fade is what turns a stray diagonal into a payoff REGION. It
@@ -134,9 +143,16 @@ export function PayoffSpine() {
             <stop offset="0.5" stopColor="var(--bear)" stopOpacity="0.04" />
             <stop offset="1" stopColor="var(--bear)" stopOpacity="0.16" />
           </linearGradient>
+          {/* THREE BANDS, NOT TWO. With both stops at exactly ZERO / H, a
+              stroke lying ON zero took the bear stop, so the pricing keyframe,
+              the flat "$0 at risk" line, ran loss red through both pricing
+              cards (re-tribunal regression 2, d20). A hairline band around
+              zero is neutral: zero is neither a gain nor a loss. */}
           <linearGradient id="spine-stroke" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={H}>
-            <stop offset={ZERO / H} stopColor="var(--bull)" />
-            <stop offset={ZERO / H} stopColor="var(--bear)" />
+            <stop offset={(ZERO - 2) / H} stopColor="var(--bull)" />
+            <stop offset={(ZERO - 2) / H} stopColor="var(--fg-faint)" />
+            <stop offset={(ZERO + 2) / H} stopColor="var(--fg-faint)" />
+            <stop offset={(ZERO + 2) / H} stopColor="var(--bear)" />
           </linearGradient>
         </defs>
 

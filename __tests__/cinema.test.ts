@@ -84,12 +84,21 @@ describe("flashOpacity", () => {
 });
 
 describe("canvasOpacity", () => {
-  it("holds 1 almost to the end, then a short crossfade to 0", () => {
+  it("holds 1 through the welcome beat, then dissolves over the rain to 0", () => {
     expect(canvasOpacity(0)).toBe(1);
     expect(canvasOpacity(0.9)).toBe(1);
-    expect(canvasOpacity(0.998)).toBe(1);
-    expect(canvasOpacity(0.999)).toBeCloseTo(0.5, 5);
+    expect(canvasOpacity(0.975)).toBe(1);
+    expect(canvasOpacity(0.9875)).toBeCloseTo(0.5, 5);
     expect(canvasOpacity(1)).toBe(0);
+  });
+  it("is a dissolve, not a cut: the last 2.5% of the film, not 0.2%", () => {
+    // re-tribunal regression 6: a 0.2% crossfade from black read as a hard cut
+    let first = 1;
+    for (let p = 0.9; p <= 1; p += 0.0005) if (canvasOpacity(p) < 1) { first = p; break; }
+    expect(1 - first).toBeGreaterThanOrEqual(0.02);
+    // and the welcome beat has finished before the frame starts to go
+    const welcome = COPY_BEATS.find((b) => b.id === "welcome")!;
+    expect(welcome.to).toBeLessThanOrEqual(first);
   });
 });
 
@@ -122,11 +131,16 @@ describe("bull3dOpacity", () => {
 describe("dive3dOpacity", () => {
   it("is 0 outside the tunnel window and 1 through its hold", () => {
     expect(dive3dOpacity(0.1)).toBe(0);
-    expect(dive3dOpacity(DIVE3D.in0)).toBe(0);
-    expect(dive3dOpacity((DIVE3D.in0 + DIVE3D.in1) / 2)).toBeCloseTo(0.5, 5);
     expect(dive3dOpacity(0.19)).toBe(1); // mid-tunnel
     expect(dive3dOpacity(DIVE3D.out1)).toBe(0);
     expect(dive3dOpacity(0.3)).toBe(0);
+  });
+  it("is already fully opaque on the frame the hero curtain lifts off", () => {
+    // re-tribunal regression 5: a fade-in at 0.15 let the retired laptop show
+    // through the corridor under the curtain
+    expect(dive3dOpacity(ACTS.dive.from)).toBe(1);
+    expect(dive3dOpacity(ACTS.dive.from - 0.01)).toBeGreaterThan(0);
+    expect(dive3dOpacity(ACTS.dive.from - 0.01)).toBeLessThan(1);
   });
   it("spans the dive act and clears before the regime chart needs the frame", () => {
     expect(DIVE3D.in0).toBeGreaterThanOrEqual(ACTS.dive.from - 0.01);

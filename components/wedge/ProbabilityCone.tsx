@@ -27,13 +27,13 @@ export type Cone = {
    * pick a 226.5 call and the chart that exists to tell you whether price gets
    * there never drew 226.5.
    *
-   * Passing the legs puts them on the cone's own price axis, so the forecast
-   * and the position are finally read against one ruler.
+   * Passing the legs puts them on the cone's own price axis, so the implied
+   * range and the position are finally read against one ruler.
    */
   legs?: { type: "C" | "P"; side: "long" | "short"; strike: number }[];
   /** Breakevens — the boundary the band has to clear for the position to pay. */
   breakevens?: number[];
-  /** A strike being pointed at in the chain, drawn live against the forecast. */
+  /** A strike being pointed at in the chain, drawn live against the implied range. */
   hoverStrike?: number | null;
 };
 
@@ -248,7 +248,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
     return Array.from({ length: n }, (_, i) => minPrice + i * step);
   }, [minPrice, maxPrice]);
 
-  // event pin positions (within forecast)
+  // event pin positions (within the implied range)
   const pinned = useMemo(() => {
     const out: { x: number; e: MarketEvent }[] = [];
     if (!histBars.length) return out;
@@ -571,10 +571,14 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           </g>
         ))}
 
-        {/* Confidence labels */}
+        {/* Confidence labels. "Implied range", never "forecast": the bands
+            are the lognormal spread Black-Scholes implies from today's IV,
+            not a prediction of where this underlying goes. The panel header
+            already names Black-Scholes, and the longer label ran back across
+            the NOW line. */}
         <g pointerEvents="none">
           <text x={xExpiry - 6} y={PAD.T + 32} textAnchor="end" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
-            ◐ 50% / 68% / 95% forecast
+            ◐ 50% / 68% / 95% implied range
           </text>
         </g>
 
