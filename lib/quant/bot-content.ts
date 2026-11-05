@@ -1,6 +1,27 @@
 // Hand-written specialty / FAQ content layered on top of the auto-derived
 // BotDef fields. Every bot has an entry. The per-bot Learn page reads this
 // dictionary; if a bot is missing here it falls through to category defaults.
+//
+// HOW THIS COPY IS WRITTEN, and why it was rewritten in 2026-09.
+//
+// The bots emit mechanical labels — long, short, warn — and this file used to
+// narrate them as advice: it fed model probabilities into a bankroll-sizing
+// formula, told the reader that the top agreement grade meant they had found
+// something, and named the states in which to stay out. The diligence memo's
+// finding is that a regulator reads the feature, not the disclaimer, and copy
+// that tells a named reader what to do with money is investment advice
+// however the page is labelled.
+//
+// So every line here now obeys three rules:
+//   1. Describe what a rule DID, in impersonal past tense. Never what to do.
+//   2. Name the label the card prints; never address the reader as a trader.
+//   3. Every accuracy figure carries HYPOTHETICAL_NOTE in the same sentence.
+// Sizing, EV and "edge" language is gone; Kelly is described as the piece of
+// maths it is, with nobody told to bet it.
+
+import { HYPOTHETICAL_NOTE } from "./types";
+
+export { HYPOTHETICAL_NOTE };
 
 export type BotContent = {
   /** Tech/quant-fluent intro paragraph. Already written for every bot. */
@@ -19,13 +40,13 @@ export type BotContent = {
 export const BOT_SIMPLE: Record<string, string> = {
   // ─────────────── AI QUANTS ───────────────
   "ai-consensus":
-    "Six different AI judges look at the same stock and each one votes 'up' or 'down' for the next month. If 5 or 6 of them agree, that's the bot's strongest reading. If they're split 3-3, the models disagree and the bot reports no conviction. The card shows you who voted and how confident the group is.",
+    "Six different AI models look at the same stock and each one votes 'up' or 'down' for the next month. If 5 or 6 of them agree, the card calls that very strong agreement. If they're split 3-3, the models disagree and the card says so. What you are watching is six opinions failing or managing to line up — the card shows who voted and how far apart they landed.",
   "ai-direction":
-    "An AI brain made of 7 little decision-tree models, each guessing whether the price will go up or down 20 days from now. We average their guesses to get one probability. When the little models all agree (low spread), that's the bot's highest-conviction state. When they disagree, they're effectively guessing and the output carries no edge.",
+    "An AI brain made of 7 little decision-tree models, each guessing whether the price will go up or down 20 days from now. We average their guesses to get one probability. When the little models all agree (low spread), the card reports very strong agreement. When they disagree, they were effectively guessing: that state showed no measurable predictive lift historically.",
   "ai-magnitude":
-    "Direction tells you which way the price will move. This bot tells you how big the move will be. A 0.5% move is just noise. A 5% move is real. The size of the predicted move IS the conviction.",
+    "Direction models guess which way. This one estimates how big. A 0.5% estimate sits inside the noise of a normal month; a 5% estimate sits outside it. The size printed on the card is one model's estimate of a distribution — never a promise about the next month.",
   "ai-quantile":
-    "Most predictors give you one number. This one gives three: best case, worst case, and middle. If even the worst case is positive, that's a strong long signal. If even the best case is negative, that's a strong short. Anything in between, sit it out.",
+    "Most predictors give you one number. This one gives three: a low case, a high case, and the middle. When the whole range sat above zero, the model's uncertainty was one-sided; when the range straddled zero, the model was genuinely unsure. The WIDTH of the range is the lesson — it is the model admitting how little it knows.",
   "ai-transformer":
     "The same kind of AI that powers ChatGPT — but instead of reading words, this one reads a whole year of price data. It learns to focus on the important days (earnings, big drops, regime shifts) and uses them to guess the next month's move.",
   "ai-sequence":
@@ -45,31 +66,31 @@ export const BOT_SIMPLE: Record<string, string> = {
 
   // ─────────────── TREND ───────────────
   "sma-cross":
-    "Two moving averages chase each other across the chart. A fast one (recent prices) and a slow one (older prices). When the fast one cuts up through the slow one, the trend just turned bullish — buy. When it falls below, the trend rolled over — sell. Old, simple, surprisingly hard to beat in trending markets.",
+    "Two moving averages chase each other across the chart. A fast one (recent prices) and a slow one (older prices). When the fast one cut up through the slow one, the rule printed a long marker; when it fell below, a short one. Old, simple, and it held up better than most things in markets that trended.",
   "rsi-rev":
-    "RSI is a 0-to-100 thermometer. Below 30 means everyone panic-sold and the price will probably bounce. Above 70 means everyone's cheering and a pullback is overdue. The bot fires BUY when RSI exits the oversold zone and SELL when it exits overbought.",
+    "RSI is a 0-to-100 thermometer of how one-sided recent trading has been. Below 30 is where panic selling lands; above 70 is where euphoria lands. The rule printed a long marker when RSI left the oversold zone and a short marker when it left overbought. Whether the price then obliged is the backtest's business, not the thermometer's.",
   "macd":
-    "MACD asks: is momentum waking up or running out of steam? It looks at the difference between two trend-followers. When that difference flips from negative to positive, momentum just turned on — buy. When it flips negative, it's running out — sell.",
+    "MACD asks: is momentum waking up or running out of steam? It looks at the difference between two trend-followers. When that difference flipped from negative to positive, the rule printed a long marker; when it flipped negative, a short one. It is a momentum measurement with two markers hung off it.",
   "donchian":
-    "Drew lines through the highest high and lowest low of the last 20 days. When price punches above the top line, the herd just turned bullish — buy. When it falls below the bottom, bears took over — sell. The Turtle Traders made fortunes on this rule in the 1980s.",
+    "Drew lines through the highest high and lowest low of the last 20 days. When price punched above the top line the rule printed a long marker; below the bottom line, a short one. The Turtle Traders built the most-documented trend experiment in the literature on this rule in the 1980s — which is why it is here to study.",
   "boll":
     "Two rubber bands stretched a few standard deviations away from the average price. When price stretches one and snaps back, that's the trade. Wider bands mean the market is jittery; narrow bands mean a big move is coming.",
 
   // ─────────────── STATS ───────────────
   "zscore":
-    "Z-score asks: how unusual is today's price compared to recent days? A z of -2 means 'cheaper than 97% of recent prices.' Most things drift back to average — so when the price gets weirdly cheap, buy; when it gets weirdly expensive, sell.",
+    "Z-score asks: how unusual is today's price compared to recent days? A z of -2 means 'cheaper than 97% of recent prices'. The rule assumes prices drift back to average, so it printed a long marker when the price got unusually cheap and a short marker when it got unusually expensive. Whether they drift back is exactly what the backtest is for.",
   "hurst":
-    "One number that tells you what kind of market you're in. Above 0.5 = trends keep going (use trend bots). Below 0.5 = prices keep snapping back (use reversion bots). Around 0.5 = random — the bot reports no exploitable edge.",
+    "One number describing what a series has been doing. Above 0.5 = it kept trending. Below 0.5 = it kept snapping back. Around 0.5 = it behaved like a coin, and both the trend and the reversion rules showed no measurable predictive lift historically on stretches like that.",
   "kalman":
     "A Kalman filter is what guides your phone's GPS — it blends what it expects with what it sees. Here it tracks the 'true' price hiding under the noise. When today's price wanders far from that filtered fair value, it tends to come back.",
   "linreg":
-    "Draws the best-fit straight line through recent prices, then puts dotted lines a few standard deviations above and below. Touching the top line is overextended — sell. Touching the bottom is washed-out — buy.",
+    "Draws the best-fit straight line through recent prices, then puts dotted lines a few standard deviations above and below. The rule treated a touch of the top line as overextended and printed a short marker, a touch of the bottom as washed-out and printed a long one.",
 
   // ─────────────── RISK ───────────────
   "kelly":
-    "Kelly tells you how much of your money to risk per trade so it grows fastest without ever hitting zero. The math takes your win odds and your win/loss size and gives back the optimal bet fraction. Most pros use half-Kelly because full Kelly accepts giant drawdowns.",
+    "A formula from information theory. Given a win probability and a win/loss ratio, it returns the single bankroll fraction that maximises the long-run GROWTH RATE of a bet repeated forever. That is all it is: a statement about compounding under assumptions you supply. The bot computes it for the numbers you type in and shows the curve around it — it does not tell anyone what to bet.",
   "mc-var":
-    "Run thousands of simulated 'next 10 days' for the stock. The 5th-worst outcome out of 100 is your Value-at-Risk — the bad day you should plan to survive. Helps you size positions so a normal bad day doesn't blow up your account.",
+    "Run thousands of simulated 'next 10 days' for the stock. The 5th-worst outcome out of 100 is the Value-at-Risk — the size of a bad-but-ordinary run under the simulation's assumptions. It is a way of seeing that a bad day has a size, and that the size is knowable before it arrives.",
   "sharpe":
     "Sharpe is your return divided by how bumpy the ride was. Above 1 is good, above 2 is rare, above 3 is suspicious. Sortino is the same idea but only counts the bumps that hurt (downside vol). The simplest 'is this strategy any good?' number that exists.",
 
@@ -77,9 +98,9 @@ export const BOT_SIMPLE: Record<string, string> = {
   "bs-solver":
     "Plug in 5 numbers (spot, strike, days, IV, rate), get the textbook fair price of an option plus all 5 Greeks. The Greeks are the option's vital signs: how sensitive its price is to the stock moving, time passing, and vol changing. Memorise these — every options trader knows them by heart.",
   "iv-crush":
-    "Before earnings, options get expensive because nobody knows what'll happen. The instant the news drops, that uncertainty (volatility) collapses — and options lose value even if the stock moves your way. This bot tells you exactly how much you'd lose to vol crush before any directional move.",
+    "Before earnings, options get expensive because nobody knows what will happen. The instant the news drops, that uncertainty (volatility) collapses — and an option can lose value even when the stock moves the way its holder wanted. This bot isolates the vol-only part of that: what the position loses to the collapse alone, before any price move is counted.",
   "wheel":
-    "The patient income trade. Sell cash-secured puts on a stock you wouldn't mind owning. If you get assigned, flip and sell calls against the shares. Premium income drips in every cycle. Time is on your side.",
+    "A textbook cycle: cash-secured puts are sold against a stock, and if they are assigned, calls are sold against the resulting shares. Premium is collected each cycle, and assignment is the risk that pays for it — the cycle is only pleasant while the underlying behaves.",
 };
 
 export const BOT_CONTENT: Record<string, BotContent> = {
@@ -87,12 +108,12 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-consensus": {
     intro:
-      "Six AI models look at the same stock and vote on direction. The card shows you their tally, the agreement tier, and the historical accuracy band that tier earns out-of-sample. The single most useful AI bot in the workbench — when you see ULTRA tier, you've got something real.",
+      `Six AI models look at the same stock and vote on direction. The card shows their tally, how strongly they agreed, and the one out-of-sample hit-rate band this family of models has ever been measured at (${HYPOTHETICAL_NOTE}). The agreement number is the teaching object here: six models built on the same data disagreeing is the most useful thing a beginner can watch.`,
     shines: [
       "Liquid US large-caps (AAPL, NVDA, AMZN, SPY) where macro context is rich and per-asset training data is plentiful.",
       "Stable volatility regimes — the models were trained on bands, not regime shifts.",
       "Multi-week horizons (20-day default). Same-day or next-day prediction is much noisier.",
-      "When ≥5 of 6 models agree. The agreement is the signal; opinion alone is cheap.",
+      "When ≥5 of 6 models agree. Agreement across differently-built models is a stronger statement about the data than any single model's opinion.",
     ],
     fails: [
       "Regime breaks. COVID-era March 2020, the 2022 rate cycle, post-earnings gaps — the ensemble was fit on smoother periods.",
@@ -101,15 +122,15 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Split votes. When 3-3 or 4-2, the consensus number is essentially noise — the bot will say SPLIT and that's the right answer.",
     ],
     verdict:
-      "BUY/SELL only fire when ≥5 models lean the same way AND the average expected magnitude clears 4%. Otherwise it's HOLD. The confidence number is the agreement fraction × the magnitude clearing. ULTRA tier maps to ~65–77% historical accuracy, HIGH to 60–66%, MEDIUM to 55–60%, LOW to ≤55%.",
+      `The card leans long or short only when ≥5 models point the same way AND the average expected magnitude clears 4%; otherwise it stays neutral. The agreement label runs very strong agreement → strong → moderate → lean → split, and it describes the models, not your odds. Every tier is described by ONE hit-rate band, ${HYPOTHETICAL_NOTE} — the band does not climb with the tier.`,
     faq: [
       {
         q: "Why does the consensus give the same answer for AAPL and TSLA?",
         a: "If you see Source: Mock on the card, the FastAPI service is offline and you're getting a deterministic seeded fallback that depends only on the synthetic chart. Start uvicorn (cd \"ai quants\" && uvicorn serve:app --port 8000) and refresh — Source flips to Python NN and AAPL/TSLA each get their own real predictions.",
       },
       {
-        q: "What's the historical accuracy?",
-        a: "Embargoed walk-forward CV on US large caps: ULTRA tier (6/6 agree + |magnitude| > 4%) lands ~65–77%; HIGH tier (≥5 agree) lands 60–66%; MEDIUM (≥4) lands 55–60%; below that it's not tradeable. These bands are conservative — production models tend to drift down 2-4 pts when the regime shifts.",
+        q: "What's the historical hit rate?",
+        a: `Embargoed walk-forward CV on US large caps put this family of models in one band — ${HYPOTHETICAL_NOTE}. It does not climb with agreement: a 6/6 vote is a statement about the models lining up, not a better set of odds, and the published band covers all of them. Split votes showed no measurable predictive lift historically. Live models also drift 2-4 points below any cross-validated figure once the regime moves, which is the honest reason a single band is quoted rather than a ladder.`,
       },
       {
         q: "Can I use this for day trades?",
@@ -121,11 +142,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-direction": {
     intro:
-      "An ensemble of 7-14 boosted-tree models, each predicting whether the stock closes up or down 20 days from now. The probability is the mean of their votes; the conviction band reflects how much that probability deviates from the 0.5 noise floor. Lower ensemble σ = trees agree = higher trust.",
+      "An ensemble of 7-14 boosted-tree models, each predicting whether the stock closes up or down 20 days from now. The probability is the mean of their votes; the agreement band reflects how far that probability sits from the 0.5 noise floor. Lower ensemble σ means the trees agreed with each other — which is a fact about the trees, not about the stock.",
     shines: [
       "Names with strong macro coupling (SPY, QQQ, AAPL). The features include cross-asset signals — VIX, DXY, 10Y, WTI — that anchor the prediction.",
       "Mid-cycle markets. The models see lots of those in training and generalise well.",
-      "When ensemble σ is low (<0.05). That means the trees agree; you're not betting on a single fluky leaf.",
+      "When ensemble σ is low (<0.05). That means the trees agreed with each other rather than the average resting on one fluky leaf.",
     ],
     fails: [
       "Earnings windows. The model treats the 20-day horizon as homogeneous, but earnings can flip the sign in a single bar.",
@@ -133,7 +154,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Tail events. The labels were clipped at the 99th percentile — the model literally hasn't seen 2020 March.",
     ],
     verdict:
-      "BUY at p_up > 0.6, SELL at p_up < 0.4, HOLD in between. Conviction band classifies that probability into LOW / HIGH / EXTREME / ULTRA, and the historical accuracy of each band is published on the card.",
+      `The card's label turns long above p_up 0.6 and short below 0.4, and stays neutral between them. The agreement band sorts that probability into split / moderate / strong / very strong agreement, and the same single hit-rate band is published beside every one of them (${HYPOTHETICAL_NOTE}).`,
     faq: [
       {
         q: "What features does it use?",
@@ -141,7 +162,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       },
       {
         q: "Why ensemble of 7 instead of 1?",
-        a: "Variance reduction. A single GBM has noisy decisions near the threshold; the mean of 7 differently-seeded models is much more stable. The σ across the ensemble doubles as a confidence proxy — when σ is high, we know the trees are guessing.",
+        a: "Variance reduction. A single GBM has noisy decisions near the threshold; the mean of 7 differently-seeded models is much more stable. The σ across the ensemble doubles as an agreement measure — when σ is high, the trees were guessing.",
       },
     ],
     related: ["ai-consensus", "ai-magnitude", "ai-quantile"],
@@ -149,12 +170,12 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-magnitude": {
     intro:
-      "Direction's quieter sibling. Instead of asking 'up or down?', it predicts the size of the next 20-day move. A 0.5% expected return is meaningless noise; a 5% expected return clears the bot's noise floor and registers as a high-magnitude reading. The sign tells you direction, the magnitude tells you conviction.",
+      "Direction's quieter sibling. Instead of asking 'up or down?', it estimates the size of the next 20-day move. A 0.5% expected return is inside the noise; a 5% one clears the bot's noise floor and registers as a high-magnitude reading. The sign is the model's lean and the magnitude is the size it estimated — both are outputs of a fitted regression, not statements about what will happen.",
     shines: [
-      "Position sizing decisions. Direction alone tells you which way to bet; magnitude tells you how much.",
-      "Filtering Direction Ensemble's signals — when both bots agree on direction AND magnitude clears 3%, it's a stronger setup than either alone.",
-      "Names with persistent edges (sector ETFs, large-cap growth). The regression learns dampened magnitudes that match real return distributions.",
-      "When 'macro features' is on. VIX and 10Y rate alignment lifts accuracy by ~2pts.",
+      "Reading a direction call next to a size. A model that leans up on a 0.4% estimate is telling you almost nothing, and this is where that becomes visible.",
+      "Comparing two models on the same tape. When Direction Ensemble and this one lean the same way AND magnitude clears 3%, more of the workbench agreed — which is a fact about the models, not a stronger case.",
+      "Names whose historical return distribution is well behaved (sector ETFs, large-cap growth). The regression learns dampened magnitudes that match those distributions.",
+      `When 'macro features' is on. Adding VIX and 10Y alignment moved the cross-validated hit rate by about 2 points (${HYPOTHETICAL_NOTE}).`,
     ],
     fails: [
       "Turning points. Regression smooths over inflections; magnitude underestimates reversals.",
@@ -162,15 +183,15 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Out-of-distribution names. Like Direction, needs ≥250 bars and US-equity-shaped data.",
     ],
     verdict:
-      "BUY when expected return > +2%, SELL when < -2%, HOLD in between. Magnitude band classifies |expRet| into LOW (<1.5%), MEDIUM (1.5-2.7%), HIGH (2.7-4.5%), EXTREME (4.5-7%), ULTRA (>7%). Confidence scales linearly with |expRet| up to a cap of 1.0 at 8%.",
+      "The card leans long above +2% expected return, short below -2%, and stays neutral between. The magnitude band sorts |expRet| into <1.5%, 1.5-2.7%, 2.7-4.5%, 4.5-7% and >7%; the agreement figure scales linearly with |expRet| up to a cap at 8%.",
     faq: [
       {
         q: "What's the difference between this and Direction Ensemble?",
-        a: "Direction is a binary classifier — its output is P(up). This is a regression — its output is expected return. They use different loss functions, different model architectures, and different conviction bands. Stack both and use the agreement.",
+        a: "Direction is a binary classifier — its output is P(up). This is a regression — its output is expected return. Different loss functions, different architectures, different bands. Running both is how you see whether two differently-built models even agree.",
       },
       {
         q: "Why does it sometimes contradict Direction?",
-        a: "Different objective functions. Classification is forced to commit to a side; regression can output a number near zero. When they disagree, the magnitude is usually small and HOLD is the right call.",
+        a: "Different objective functions. Classification is forced to commit to a side; regression can output a number near zero. When they disagreed, the magnitude was usually small — the two models were arguing about noise.",
       },
     ],
     related: ["ai-direction", "ai-consensus", "ai-quantile"],
@@ -178,11 +199,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-quantile": {
     intro:
-      "Most predictors give you one number. This bot gives three — the 10th, 50th, and 90th percentile of the 20-day return distribution. That's a real confidence interval. If even the worst-case (p10) is positive, you've got a clean long signal. If even the best-case (p90) is negative, that's a clean short. Anything in between, sit it out.",
+      "Most predictors give you one number. This bot gives three — the 10th, 50th and 90th percentile of the 20-day return distribution. That is a real interval rather than a point guess. When the whole interval sat above zero the model's uncertainty was one-sided; when it straddled zero the model was openly unsure. The width is the output that matters.",
     shines: [
       "Risk-aware decisions. The width of the interval tells you how confident the model is — narrow CI = confident, wide CI = market is genuinely uncertain.",
       "Liquid names where the underlying return distribution is well-behaved (ETFs, large-caps).",
-      "Combined with Kelly sizing. The p10 and p90 give you natural inputs for an EV calculation.",
+      "Seeing what a model does NOT know. p10 and p90 are the two numbers a point forecast throws away, and they are usually further apart than anyone expects.",
       "Periods of expanding volatility. Quantile regression handles heteroskedastic returns better than a point estimate.",
     ],
     fails: [
@@ -191,7 +212,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Tail events. p10 still under-estimates true downside in a 6-sigma move.",
     ],
     verdict:
-      "BUY (long) only when p10 > 0 — the entire 80% interval clears zero. SELL (short) only when p90 < 0. Otherwise FLAT (HOLD). Confidence is 0.85 when the bot fires, 0.2 when flat. Width of the interval is published on the card and is the single best 'how uncertain is the market?' indicator we have.",
+      "The card leans long only when p10 > 0 — the entire 80% interval sits above zero — and short only when p90 < 0. Otherwise it stays flat. The interval WIDTH is published beside it, and is the most honest uncertainty reading anything in the workbench produces.",
     faq: [
       {
         q: "Why three quantiles instead of mean ± std?",
@@ -219,7 +240,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Latency-sensitive use cases. A forward pass on a 252-day sequence is fast on GPU, slower on CPU; the bot is ~50ms in our setup.",
     ],
     verdict:
-      "BUY when expected return > +1.5%, SELL when < -1.5%, HOLD in between. Confidence scales with |pred|. The 'vol regime' chip on the card is a useful sanity check: in high-vol regimes the model under-bets, which is the right behavior.",
+      "The card leans long above +1.5% expected return, short below -1.5%, neutral between. The reading scales with |pred|. The 'vol regime' chip is a sanity check: in high-vol regimes the model's estimates shrink, which is the behaviour you want from a model that knows it is out of its depth.",
     faq: [
       {
         q: "What makes this different from the 1D CNN?",
@@ -247,7 +268,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Names with little visual structure (treasuries, low-vol utilities). Not enough shape variation.",
     ],
     verdict:
-      "BUY when expected return > +1.5%, SELL when < -1.5%, HOLD in between. The 'detected pattern' chip (uptrend / downtrend / chop) is a sanity-check label, not a formal classifier output — it's derived from recent trend strength.",
+      "The card leans long above +1.5% expected return, short below -1.5%, neutral between. The 'detected pattern' chip (uptrend / downtrend / chop) is a sanity-check label, not a formal classifier output — it is derived from recent trend strength.",
     faq: [
       {
         q: "Why CNN instead of LSTM?",
@@ -274,7 +295,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Asymmetric setups. The current implementation uses symmetric profit/stop multipliers; real systems often want asymmetric.",
     ],
     verdict:
-      "Reports three probabilities — P(profit target hit), P(stop hit), P(time-out). Most-likely label classifies into +1 (TP), -1 (SL), or 0 (TO). BUY when P(profit) > 1.4× P(stop), SELL when reverse, HOLD otherwise.",
+      "Reports three probabilities — P(profit target hit), P(stop hit), P(time-out). The most-likely label sorts into +1 (TP), -1 (SL) or 0 (TO). The card leans long when P(profit) > 1.4× P(stop), short when the reverse, neutral otherwise.",
     faq: [
       {
         q: "Why triple-barrier labels instead of fixed-horizon?",
@@ -302,7 +323,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Anything that isn't European-style. Use the American Pricer or Heston SV bot instead.",
     ],
     verdict:
-      "Always HOLD — pricing bots don't trade, they price. The interesting comparison is surrogate price vs the live chain bid/ask. Anything more than 0.5% off is mispriced — that's the trade signal.",
+      "Always neutral — pricing bots don't trade, they price. The interesting comparison is surrogate price against the chain's bid/ask: a gap wider than 0.5% means the model and the quote disagree, and the useful question is which of the two is wrong.",
     faq: [
       {
         q: "Why use a neural net when Black-Scholes is closed-form?",
@@ -330,7 +351,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Deep ITM/OTM at near-zero time-to-expiry. Both Newton and the NN struggle; you need a different algorithm entirely.",
     ],
     verdict:
-      "HOLD always — solver, not a trade signal. The IV it returns is the trade input. Use it as the σ input to the Wheel bot, the BS Solver, or your own pricing logic.",
+      "Neutral always — this is a solver, not an opinion. The IV it returns is a model input: the same σ the BS Solver, the Wheel bot and any pricing code of your own take.",
     faq: [
       {
         q: "Why is the answer slightly different from a Newton-Raphson run?",
@@ -444,15 +465,15 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Mean-reverting assets like utilities or crude oil futures during contango. Catch a few false trends, lose a lot.",
     ],
     verdict:
-      "BUY when fast SMA > slow SMA (and was below previously). SELL when the reverse. Confidence is proportional to the gap between the two — wider gap means stronger trend. HOLD never fires for SMA Crossover; it's a binary regime signal.",
+      "The card leans long when the fast SMA crosses above the slow one, and short on the reverse cross. The reading is proportional to the gap between the two — a wider gap meant a stronger trend. There is no neutral state: this is a two-state regime rule by construction.",
     faq: [
       {
         q: "What's the best fast/slow combo?",
-        a: "There isn't one. 12/26 is the MACD default. 50/200 is the textbook 'golden cross' for daily charts. 9/21 is intraday. Lazybull's defaults (12/26) work fine; tune to fit your asset.",
+        a: "There isn't one. 12/26 is the MACD default. 50/200 is the textbook 'golden cross' for daily charts. 9/21 is intraday. lazybull ships 12/26; the backtest is there so you can see for yourself what changing it does.",
       },
       {
-        q: "Should I trust the backtest win rate?",
-        a: "Half-trust it. The backtest assumes you exit on the opposite cross, which means you ride drawdowns to zero before the system flips. In practice you'd add a stop. Use the win rate as a shape indicator — high (60%+) means the bot likes the asset; low (under 45%) means try a reversion bot.",
+        q: "How much does the backtest win rate actually say?",
+        a: "Less than it looks. The backtest exits only on the opposite cross, so every drawdown is ridden to the flip — a real system would carry a stop, and that one change moves the number a long way. Read it as a shape: above 60% the rule fitted that asset's history, under 45% it did not, and neither is a statement about next month.",
       },
     ],
     related: ["macd", "donchian", "boll", "kalman"],
@@ -460,11 +481,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "rsi-rev": {
     intro:
-      "RSI is a 0-to-100 thermometer that asks: how stretched is recent buying versus selling? Below 30 = panic-selling overshot. Above 70 = euphoria overshot. The bot fires BUY when RSI exits the oversold zone (recovery starts) and SELL when it exits overbought (cooling).",
+      "RSI is a 0-to-100 thermometer that asks: how stretched is recent buying versus selling? Below 30 is where panic selling lands; above 70, euphoria. The rule printed a long marker when RSI left the oversold zone and a short marker when it left overbought — it marks the thermometer's crossings, nothing more.",
     shines: [
       "Range-bound stocks and ETFs (REITs, utilities, sector rotators). RSI extremes mark the band edges.",
       "Single-name large caps that mean-revert intraday after a news pop.",
-      "Combined with a trend filter — only take BUYs when the longer-term trend is up. Cuts whipsaws in half.",
+      "Read next to a trend filter. Historically, the long markers that landed against a rising longer-term trend whipsawed roughly half as often as the rest.",
     ],
     fails: [
       "Strong trends. RSI can sit above 70 for weeks during a parabolic move; the bot keeps firing SELLs that lose every time.",
@@ -472,15 +493,15 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Crypto. The 14-period RSI is too slow for the volatility; bumping it to 6 helps but defeats the textbook calibration.",
     ],
     verdict:
-      "BUY when RSI just exited the oversold band (was < 30, now ≥ 30). SELL when it just exited overbought (was > 70, now ≤ 70). Confidence is the distance from 50 — the further into the extreme zone before the cross, the more conviction.",
+      "The card leans long when RSI has just left the oversold band (was < 30, now ≥ 30) and short when it has just left overbought (was > 70, now ≤ 70). The reading is the distance from 50 — the deeper the extreme before the crossing, the higher it runs.",
     faq: [
       {
         q: "Should I use 30/70 or 20/80?",
-        a: "30/70 fires more often with lower precision. 20/80 fires rarely with much higher precision per fire. For trending markets, 20/80 is safer; for choppy markets, 30/70 catches more reversions. Backtest both on your asset.",
+        a: "30/70 marks far more crossings at lower precision each; 20/80 marks few, with higher precision per marking. In trending stretches the wider band produced fewer losing markers; in choppy ones the tighter band caught more reversions. Both are one backtest away.",
       },
       {
         q: "Why does the bot say BUY when the price is still falling?",
-        a: "RSI moves on relative strength of UP days vs DOWN days, not on absolute price. Sometimes price keeps drifting down while the down-momentum slows — that's RSI exiting oversold. The bot is calling the bottom of the move, not the bottom of the bar.",
+        a: "RSI moves on the relative strength of UP days versus DOWN days, not on absolute price. Sometimes price keeps drifting down while the down-momentum slows — that is RSI leaving oversold. The marker is about momentum turning, not about the low of the bar.",
       },
     ],
     related: ["zscore", "boll", "macd", "kalman"],
@@ -491,7 +512,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "MACD looks at the difference between two EMA-based trend-followers. When that difference flips from negative to positive, momentum just woke up. When it flips negative, it's running out of steam. The histogram is the difference between the MACD line and its own signal line — that's where the actual cross signals come from.",
     shines: [
       "Pulse-checking momentum. Histogram crossing zero = momentum just turned, regardless of trend direction.",
-      "Catching divergences. Price making higher highs while MACD makes lower highs is one of the strongest reversal signals in technical analysis.",
+      "Catching divergences. Price making higher highs while MACD makes lower highs is the most-cited reversal pattern in technical analysis — and a good place to learn how often a famous pattern simply fails.",
       "Daily and 4h timeframes on liquid names. The default 12/26/9 was tuned for daily.",
     ],
     fails: [
@@ -500,7 +521,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Short-window instruments (intraday small caps). Default periods are too slow.",
     ],
     verdict:
-      "BUY when histogram crosses above zero. SELL when below. Confidence scales with the magnitude of the histogram. Above-zero histogram with rising MACD line is the strongest BUY shape; mirror for SELL.",
+      "The card leans long when the histogram crosses above zero and short when it crosses below. The reading scales with the histogram's magnitude, and runs highest when an above-zero histogram is paired with a rising MACD line; mirrored on the short side.",
     faq: [
       {
         q: "Why not just use the line/signal cross?",
@@ -518,7 +539,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     intro:
       "Drew lines through the highest high and lowest low of the last N days. Price punching above the top line = the herd just turned bullish. Below the bottom = bearish breakdown. The Turtle Traders made fortunes on this exact rule in the 1980s. Still works wherever trends persist.",
     shines: [
-      "Commodity futures. The original Turtle setup — trend-following on uncorrelated futures — still produces real risk-adjusted returns.",
+      "Commodity futures. The original Turtle experiment — trend-following across uncorrelated futures — is the most thoroughly documented study of this rule there is.",
       "Crypto. BTC's history is a series of 20-day breakouts that turn into 6-month moves.",
       "Position-trading timeframes (weeks to months). The 20-day default is the textbook Turtle window.",
     ],
@@ -528,11 +549,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Short windows. A 5-day Donchian on minute data fires constantly and means nothing.",
     ],
     verdict:
-      "BUY when close > upper channel of the prior bar. SELL when close < lower channel. The 'position' metric (where the price sits in the channel) tells you how late you are to the breakout — 100% means at the top, 0% at the bottom. Confidence is |position - 0.5| × 2.",
+      "The card leans long when the close clears the prior bar's upper channel and short when it breaks the lower one. The 'position' metric says where price sits inside the channel — 100% at the top, 0% at the bottom — which is how far a breakout has already travelled. The reading is |position - 0.5| × 2.",
     faq: [
       {
         q: "What lookback should I use?",
-        a: "20 is the System 1 Turtle setting. 55 is System 2 — slower, fewer false breaks, larger profits per trade. For crypto try 14-21; for futures 20-55; for stocks 20 is fine but consider pairing with a 20-day exit on the opposite channel for a clean two-line system.",
+        a: "20 is the System 1 Turtle setting. 55 is System 2 — slower, with fewer false breaks and longer holds. Crypto studies tend to use 14-21, futures 20-55. Pairing the entry channel with a 20-day exit on the opposite channel is the classic two-line construction.",
       },
       {
         q: "Doesn't this cause look-ahead bias?",
@@ -548,7 +569,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     shines: [
       "Range-bound markets. Touches at the bands are reversion entries.",
       "Volatility expansion plays. Bollinger 'squeezes' (very narrow bands) often precede big moves.",
-      "Combined with RSI for confirmation. Lower-band touch + oversold RSI = stronger reversal signal.",
+      "Read alongside RSI. Historically, lower-band touches that coincided with an oversold RSI reversed more often than lower-band touches alone.",
     ],
     fails: [
       "Strong trends. Price 'walks the band' for weeks during a parabolic move; every touch is a losing fade.",
@@ -556,7 +577,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Default 20/2 settings. The 2-σ assumption breaks for skewed return distributions.",
     ],
     verdict:
-      "BUY when price reclaims the lower band from below. SELL when it rejects the upper band from above. Confidence is the distance from the mid-line, scaled by half-band width. Width of the bands (as % of mid) is a separate volatility regime indicator.",
+      "The card leans long when price reclaims the lower band from below and short when it rejects the upper band from above. The reading is the distance from the mid-line scaled by half the band width. Band width as a percentage of the mid-line is a separate volatility-regime reading.",
     faq: [
       {
         q: "Why 20 periods, 2 standard deviations?",
@@ -586,11 +607,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Regime breaks. The mean and σ used for z-score are rolling estimates; in a regime shift they lag reality.",
     ],
     verdict:
-      "BUY when z just exited the lower threshold (was < -2, now ≥ -2). SELL when it exited the upper. Confidence is |z| / 3 capped at 1.0 — so z = -3 gives full conviction BUY.",
+      "The card leans long when z has just left the lower threshold (was < -2, now ≥ -2) and short when it has left the upper one. The reading is |z| / 3, capped at 1.0 — so z = -3 pins it.",
     faq: [
       {
         q: "Why ±2 thresholds and not ±1?",
-        a: "Trade-off between fire-rate and precision. ±1 fires too often (every 16% of bars under normality). ±2 fires ~5% of bars and has higher precision per fire. Use ±2.5 if you want only the strongest reversion setups.",
+        a: "A trade-off between how often the rule marks and how precise each marking is. ±1 marks about 16% of bars under normality — far too many. ±2 marks about 5% at higher precision. ±2.5 marks only the deepest stretches, and marks very rarely.",
       },
       {
         q: "Z-score of price vs z-score of returns — which?",
@@ -602,10 +623,10 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "hurst": {
     intro:
-      "Hurst is one number that tells you what kind of market you're in. >0.5 = the trend keeps going (use trend bots). <0.5 = price keeps snapping back (use reversion bots). =0.5 = random, no edge. Computed via R/S analysis over a rolling window. The single most useful regime classifier we have.",
+      "Hurst is one number describing what a series has been doing. >0.5 = it kept trending. <0.5 = it kept snapping back. =0.5 = it behaved like a coin, and rules of either family showed no measurable predictive lift historically on stretches like that. Computed via R/S analysis over a rolling window — the most useful regime description in the workbench.",
     shines: [
-      "Bot selection. Don't run an SMA Crossover when Hurst is 0.4 — you'll get killed. Run a Z-Score bot instead.",
-      "Position-sizing context. Historically, when Hurst > 0.6 the series trended and trend-following signals performed better; between 0.45-0.55 it behaved more randomly and those signals degraded.",
+      "Understanding why a bot failed. A trend rule run over a stretch with Hurst near 0.4 was fighting a series that kept snapping back, and the equity curve shows it.",
+      "Historical context. When Hurst sat above 0.6 the series trended and trend-following rules scored better over that sample; between 0.45-0.55 it behaved more randomly and those rules degraded.",
       "Asset comparison. Lay Hurst against multiple symbols and rank by trendiness.",
     ],
     fails: [
@@ -614,7 +635,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Microstructure noise. On minute data, Hurst converges to ~0.5 because of bid-ask bouncing.",
     ],
     verdict:
-      "Always HOLD — Hurst doesn't trade, it classifies. The 'regime' chip (TREND / RANDOM / REVERT) is what you act on. Use it to gate which other bots you trust on this asset.",
+      "Always neutral — Hurst doesn't trade, it describes. The 'regime' chip (TREND / RANDOM / REVERT) is the whole output: it says what kind of series the window contained, which is the context every other bot's result should be read against.",
     faq: [
       {
         q: "What's R/S analysis?",
@@ -622,7 +643,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       },
       {
         q: "Why does Hurst sometimes give crazy values like 0.8?",
-        a: "Either real strong trend (BTC 2020), or short window producing unstable estimates, or strong autocorrelation that breaks the R/S assumption. Always cross-check with at least 256 bars before trusting an extreme reading.",
+        a: "Either a genuinely strong trend (BTC 2020), or a short window producing unstable estimates, or strong autocorrelation breaking the R/S assumption. Extreme readings on fewer than 256 bars are usually the estimator, not the market.",
       },
     ],
     related: ["sma-cross", "zscore", "kalman", "linreg"],
@@ -642,7 +663,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Highly trending markets. Kalman tracks the trend, so 'deviation from fair value' mostly fluctuates around zero — no signal.",
     ],
     verdict:
-      "BUY when price just rebounded from > 2% below filtered fair value. SELL when it rejected from > 2% above. Confidence scales with the absolute deviation. The 'fair value' overlay on the chart shows where the filter thinks the true price is right now.",
+      "The card leans long when price has just rebounded from more than 2% below the filtered fair value, and short when it has been rejected from more than 2% above. The reading scales with the absolute deviation. The 'fair value' overlay draws where the filter currently places the underlying price.",
     faq: [
       {
         q: "What are Q and R?",
@@ -661,8 +682,8 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Draws the best-fit line through recent prices, then puts dotted lines a few standard deviations above and below. Touching the top is overextended; the bottom is washed out. The trend slope of the line itself is its own signal — positive slope = uptrend, negative = down.",
     shines: [
       "Visualising trend strength. Slope and channel width together summarise the regime.",
-      "Setting stops. Lower channel for long stops, upper channel for short stops.",
-      "Combining with momentum. Trade reversions inside the channel; trend-follow when price pierces the band.",
+      "Framing a stop. The channel edges are the levels most systems built on this rule place their stops against.",
+      "Reading it next to momentum. Inside the channel the rule describes reversion; once price pierces a band it is describing a trend, and the same line means two different things.",
     ],
     fails: [
       "Sharp regime changes. The regression refits; the channel snaps to the new trend, briefly leaving recent price action outside the band.",
@@ -670,7 +691,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Window too short. <30 bars gives unstable slope estimates.",
     ],
     verdict:
-      "BUY when price reclaims the lower band from below. SELL when it rejects the upper band. Confidence scales with distance from the mid-line. Slope of the regression line is published in the metrics — sustained positive slope means the trend bot interpretation is the safer one.",
+      "The card leans long when price reclaims the lower band from below and short when it rejects the upper one. The reading scales with distance from the mid-line. The regression's slope is published in the metrics: a sustained positive slope means the channel is describing a trend rather than a range, and the two read very differently.",
     faq: [
       {
         q: "How is this different from Bollinger?",
@@ -688,11 +709,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "kelly": {
     intro:
-      "Kelly tells you how much of your bankroll to risk per trade so it grows fastest without ever hitting zero. The math is rigorous: f* = (p·b − q) / b, where p is your win probability, q is loss probability, b is win/loss ratio. Half-Kelly (0.5×) gives 75% of the growth with way less stomach-turn — that's what most pros actually use.",
+      "A result from information theory, and this bot is here to show the maths rather than to size anything. f* = (p·b − q) / b, where p is the win probability, q = 1 − p, and b the win/loss ratio. f* is the constant fraction of a bankroll that maximises the LONG-RUN GROWTH RATE of a bet repeated forever under those exact assumptions. Growth is asymmetric around it: at 2·f* the expected growth rate is zero, so a positive edge staked too heavily still compounds to nothing.",
     shines: [
-      "Long-horizon compounding. Kelly's optimality is asymptotic — over many trades, full Kelly maximises geometric growth.",
-      "Sizing high-conviction setups. When the AI Consensus says ULTRA, plug those probabilities into Kelly for sizing.",
-      "Sanity checking gut sizing. Most retail traders over-size; Kelly's number tells you what's actually optimal vs what feels right.",
+      "Understanding compounding. Kelly's optimality is asymptotic: it is a statement about the geometric mean over many repetitions, not about any single bet.",
+      "Seeing how sensitive the answer is. Move p by a couple of points and watch f* move by a third — the formula's fragility is the lesson, not its output.",
+      "Seeing that the curve has a far side. Growth rises to f*, falls after it, and reaches zero at 2·f*. Almost nobody expects the right-hand half.",
     ],
     fails: [
       "Probability mis-estimation. Kelly is wildly sensitive to the win-probability input — overstating p by 10% can double your recommended size.",
@@ -700,15 +721,15 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Drawdown-averse traders. Full Kelly accepts ~50% drawdowns as optimal. Most humans don't.",
     ],
     verdict:
-      "BUY when f* > 0 (positive edge exists). WARN when f* ≤ 0 (no edge — don't bet). Confidence scales with the magnitude of the edge. The bet-size dollar value is computed against your declared bankroll. Real practitioners use ¼ to ½ Kelly to dampen the drawdowns.",
+      "The card reads positive when f* > 0 and warns when f* ≤ 0, which is the formula reporting that the inputs describe a losing bet. The dollar figure is arithmetic on the bankroll you typed in — the formula's output for your numbers, not a recommendation about yours or anyone's money.",
     faq: [
       {
-        q: "Why not use full Kelly?",
-        a: "Full Kelly assumes you know p and b exactly. You don't — you estimate them. If your estimate is off by 20%, full Kelly can lead to ruin. Half-Kelly retains 75% of growth with much smaller drawdowns; quarter-Kelly retains ~50% growth and is what most institutional traders actually use.",
+        q: "Why is the full-Kelly fraction rarely used in practice?",
+        a: "Because f* assumes p and b are known exactly, and in markets they are estimated. The error is asymmetric: overstating p pushes the stake past f*, where growth falls away, while understating it merely gives up some growth. The literature quantifies it — at half of f* the growth rate is about three-quarters of the maximum, at a quarter of f* roughly half — which is why published practice sits below f* rather than at it.",
       },
       {
-        q: "What's a realistic win probability for a daily trader?",
-        a: "55-58% on a directional setup is good. 65%+ is professional-grade or you're miscalibrated. The bot defaults to 55% precisely because that's a realistic baseline.",
+        q: "What win probability does the bot assume?",
+        a: "55%, and that default is doing deliberate work. Published studies of directional rules cluster in the mid-50s; anything self-reported above 65% is usually a calibration failure rather than a discovery. Type in 65% and watch f* nearly double — which is the fastest demonstration of why the input, not the formula, is the fragile part.",
       },
     ],
     related: ["mc-var", "sharpe", "ai-consensus"],
@@ -720,7 +741,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     shines: [
       "Risk budgeting at the portfolio level. Aggregate VaR across positions for a single 95% number.",
       "Margin sizing. Brokers margin you on rough VaR; computing your own gives you an early warning.",
-      "Sanity-check stop-losses. If your stop is tighter than 95% VaR, expect to be stopped out frequently by random drift.",
+      "Putting a stop in context. A stop set inside the 95% VaR is inside the range ordinary drift covers, and the simulation shows how often that happened.",
     ],
     fails: [
       "Tail-risk underestimation. MC under GBM (which we use) misses fat-tails — real 99% VaR is worse than this simulation suggests.",
@@ -728,7 +749,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Path-dependence. VaR ignores how the loss happened — slow drift to -10% vs gap to -10% have very different psychology.",
     ],
     verdict:
-      "Always WARN — VaR doesn't trade, it sizes risk. The headline number is 'plan for losses up to $X this 10-day window'. CVaR is shown alongside as the average of the bad-tail outcomes; that's what you actually lose when VaR breaches.",
+      "Always a warning — VaR doesn't trade, it measures. The headline number is the loss the simulation exceeded 5% of the time over a 10-day window. CVaR sits beside it as the average of that bad tail: the size of the losses that happened once VaR was breached.",
     faq: [
       {
         q: "What's the difference between VaR and CVaR?",
@@ -748,7 +769,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     shines: [
       "Comparing strategies on apples-to-apples basis. A 30% return with 60% vol (Sharpe 0.5) is worse than a 15% return with 10% vol (Sharpe 1.5).",
       "Long-horizon evaluation. Sharpe needs ≥30 monthly observations or ≥250 daily to be reliable.",
-      "Position sizing across uncorrelated edges. Equal-Sharpe weighting is provably near-optimal for portfolio construction.",
+      "Reading portfolio-construction papers. Equal-Sharpe weighting across uncorrelated return streams is a standard textbook result, and this is the number it is written in.",
     ],
     fails: [
       "Skewed distributions. Sharpe punishes upside vol; if your strategy has rare big wins, Sharpe undersells it.",
@@ -756,15 +777,15 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Comparing across asset classes. Sharpe of a bond strategy vs a crypto strategy isn't directly meaningful.",
     ],
     verdict:
-      "BUY when Sharpe > 1 (quality risk-adjusted return). HOLD between 0 and 1 (positive but mediocre). WARN when Sharpe < 0 (negative edge — paying for pain). Sortino > Sharpe means your returns are positively skewed (good); Sortino < Sharpe is rare and concerning.",
+      "The card reads positive above a Sharpe of 1, neutral between 0 and 1, and warns below 0 — a negative Sharpe means the sample took volatility and returned less than cash for it. Sortino above Sharpe means the return series was positively skewed; Sortino below Sharpe is rare and worth looking into.",
     faq: [
       {
         q: "What's a 'good' Sharpe?",
         a: "Long-only equities historically: ~0.4. A skilled discretionary trader: 0.6-1.0. Top quant funds in their flagship strategies: 1.5-2.5 net of costs. Anything above 3 sustained over years is either alpha that won't persist, or fraud.",
       },
       {
-        q: "Should I optimise for Sharpe or absolute return?",
-        a: "Sharpe — almost always. Higher Sharpe = more leverage you can apply safely = higher absolute return at any given risk. The only exception is when you can't lever (cash account), in which case absolute return and Sharpe align.",
+        q: "Why do professionals quote Sharpe rather than return?",
+        a: "Because return alone is not comparable across strategies. Sharpe is return per unit of volatility, so it ranks two strategies on the same axis regardless of how much risk each one ran. In an unlevered cash account the two orderings collapse into one, which is why the distinction is invisible to most beginners.",
       },
     ],
     related: ["kelly", "mc-var", "ai-quantile"],
@@ -806,7 +827,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     shines: [
       "Earnings setups. Calculate the IV-only loss before deciding whether long premium even makes sense.",
       "Comparing pre- vs post-event vol regimes. Plug in pre-earnings IV and a typical post-earnings IV and see the damage.",
-      "Strategy selection. If IV crush is huge, sell premium (iron condor) instead of buying it (long straddle).",
+      "Understanding why a 'right' directional call still lost. When the crush figure is large, it dominates everything the price move contributed.",
     ],
     fails: [
       "Underestimating directional moves. The bot only models vol; if the stock gaps 8%, the loss/gain from the move dwarfs the crush.",
@@ -814,7 +835,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Skew changes. Real post-event vol surfaces flatten differently for different strikes; the bot uses a single IV.",
     ],
     verdict:
-      "Always WARN — this is a risk diagnostic, not a trade signal. The headline 'crush %' tells you the IV-only loss on a long-premium position over the event. If it's >30%, the directional move needs to be commensurately huge to be worth the long-premium bet.",
+      "Always a warning — this is a diagnostic, not a directional call. The headline 'crush %' isolates the IV-only loss a long-premium position takes across the event. Above 30%, the price move has to be very large before it covers the vol collapse alone.",
     faq: [
       {
         q: "Why do options lose value if the stock moves?",
@@ -830,11 +851,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "wheel": {
     intro:
-      "The Wheel is the patient income trade. You sell cash-secured puts on a stock you wouldn't mind owning. If you get assigned, you flip and sell calls against the shares. Premium income drips in either way. Time is your edge — every cycle pulls more theta out of the chain.",
+      "A textbook cycle rather than a strategy recommendation: cash-secured puts are sold, assignment converts them into shares, and calls are sold against those shares until they are called away. Premium is collected each cycle and theta is what pays it. The cycle is only pleasant while the underlying behaves, which is the part the premium is compensating for.",
     shines: [
       "Sideways markets on stocks you'd actually own (large caps, dividend payers).",
       "High-IV environments. More premium per cycle.",
-      "Tax-advantaged accounts (IRA). The cycle generates short-term gains that get hammered by ordinary income tax in a regular account.",
+      "Seeing where the returns come from. The cycle produces many small short-dated gains, which is a very different return shape from holding the stock.",
     ],
     fails: [
       "Strong downtrends on the underlying. You get assigned at progressively worse prices and your basis erodes faster than the call premium replenishes.",
@@ -842,11 +863,11 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Low-IV environments. The premiums get too small to be worth the capital tie-up.",
     ],
     verdict:
-      "BUY when annualised return > 0%. WARN when negative or marginal. The 'premiums' metric tells you total income across cycles; 'annualised' is the rate, useful for comparing against alternatives. Win rate isn't applicable — the wheel doesn't have a win/loss event, just a cumulative P&L.",
+      "The card reads positive when the simulated annualised return is above 0% and warns when it is negative or marginal. The 'premiums' metric is total premium collected across the cycles; 'annualised' is the same figure as a rate. Win rate does not apply — the cycle has no win/loss event, only a running P&L.",
     faq: [
       {
-        q: "What delta should I sell at?",
-        a: "Standard wheel: 0.30 delta puts for entry, 0.30 delta calls for exit. Conservative: 0.20 delta puts (less assignment risk, less premium). Aggressive: 0.45 puts (more premium, much more assignment).",
+        q: "What deltas do published wheel write-ups use?",
+        a: "The conventional description uses 0.30-delta puts for entry and 0.30-delta calls on the way out. Lower deltas (0.20) were assigned less often and collected less; higher ones (0.45) collected more and were assigned far more. Delta is roughly the assignment probability, which is the whole trade-off in one number.",
       },
       {
         q: "When does the wheel break?",

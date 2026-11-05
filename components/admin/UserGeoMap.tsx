@@ -1,86 +1,45 @@
-import type { GeoDot } from "@/lib/admin-data";
+import type { GeoData } from "@/lib/admin-data";
+import { BarRow, Empty, Tile } from "./Tile";
 
-// Simplified continent silhouettes — hand-drawn coordinates that read as a
-// world map without needing a heavyweight TopoJSON dataset. Coords are in
-// 0..1 space and scaled at render time.
-const CONTINENTS = [
-  // North America
-  "M0.06,0.22 L0.13,0.18 L0.20,0.18 L0.27,0.24 L0.30,0.32 L0.27,0.42 L0.21,0.50 L0.15,0.50 L0.10,0.40 L0.07,0.32 Z",
-  // South America
-  "M0.27,0.55 L0.32,0.54 L0.35,0.62 L0.34,0.78 L0.30,0.88 L0.26,0.85 L0.24,0.74 L0.25,0.62 Z",
-  // Europe
-  "M0.46,0.24 L0.54,0.23 L0.58,0.30 L0.55,0.36 L0.50,0.36 L0.46,0.32 Z",
-  // Africa
-  "M0.48,0.38 L0.58,0.38 L0.62,0.50 L0.60,0.66 L0.54,0.74 L0.49,0.68 L0.47,0.55 Z",
-  // Asia
-  "M0.58,0.20 L0.78,0.20 L0.86,0.28 L0.88,0.40 L0.82,0.48 L0.74,0.50 L0.66,0.46 L0.60,0.36 Z",
-  // SE Asia / Indonesia
-  "M0.78,0.55 L0.84,0.54 L0.86,0.62 L0.81,0.62 Z",
-  // Australia
-  "M0.84,0.70 L0.92,0.70 L0.94,0.78 L0.88,0.82 L0.84,0.78 Z",
-];
+// Where the actives are, by the ISO-2 country the SERVER stamps on schema-v2
+// events (lib/db/events.ts) — never an IP, never a city.
+//
+// The world map that used to live here is gone, and not only because its
+// sixteen city dots were PRNG counts. Its continents were hand-drawn paths in
+// an invented 0..1 space that is not a projection: NYC sat at (0.28, 0.36),
+// which in equirectangular terms is the Bahamas. Dropping REAL country
+// centroids onto that silhouette would put half of them in the sea, so the
+// silhouette went and the ranking stayed. A country code and a count are the
+// whole of what the data supports.
 
-export function UserGeoMap({ dots }: { dots: GeoDot[] }) {
-  const W = 720;
-  const H = 360;
+export function UserGeoMap({ data }: { data: GeoData }) {
+  const max = data.rows.length ? Math.max(...data.rows.map((r) => r.users)) : 1;
   return (
-    <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-        <div className="flex items-center gap-3">
-          <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-          <span className="text-bull">geo · live</span>
-          <span className="text-fg-faint">·</span>
-          <span>{dots.reduce((a, b) => a + b.n, 0)} sessions</span>
+    <Tile
+      label="geo"
+      meta={`distinct actives · ${data.windowDays}d`}
+      live={data.rows.length > 0}
+      right={data.rows.length ? `${data.rows.length} countries · ${data.total} actives` : undefined}
+    >
+      {data.rows.length === 0 ? (
+        <Empty reason={data.note ?? "no data"} />
+      ) : (
+        <div className="flex flex-col divide-y divide-border-soft">
+          {data.rows.map((r, i) => (
+            <BarRow
+              key={r.country}
+              rank={i + 1}
+              label={r.country}
+              sub={`${((r.users / data.total) * 100).toFixed(1)}% of located actives`}
+              value={r.users.toLocaleString()}
+              pct={r.users / max}
+            />
+          ))}
+          <div className="px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-fg-faint">
+            counts only events that carry a country — schema-v1 rows and hosts that send no geo header are invisible here, so this is a floor, not a total.
+          </div>
         </div>
-        <span className="text-fg-faint">{dots.length} cities</span>
-      </div>
-      <div className="relative flex-1 overflow-hidden bg-bg">
-        <svg viewBox={`0 0 ${W} ${H}`} className="block h-full w-full" preserveAspectRatio="xMidYMid slice">
-          {/* graticule (lat / lng) */}
-          {[0.2, 0.4, 0.6, 0.8].map((p) => (
-            <line key={`h${p}`} x1={0} x2={W} y1={p * H} y2={p * H} stroke="var(--grid)" />
-          ))}
-          {[0.2, 0.4, 0.6, 0.8].map((p) => (
-            <line key={`v${p}`} x1={p * W} x2={p * W} y1={0} y2={H} stroke="var(--grid)" />
-          ))}
-
-          {/* continents */}
-          {CONTINENTS.map((d, i) => {
-            const scaled = d.replace(/(\d*\.?\d+),(\d*\.?\d+)/g, (_m, x, y) => `${(parseFloat(x) * W).toFixed(1)},${(parseFloat(y) * H).toFixed(1)}`);
-            return <path key={i} d={scaled} fill="var(--grid)" stroke="var(--fg)" strokeOpacity={0.18} strokeWidth="0.6" />;
-          })}
-
-          {/* session dots */}
-          {dots.map((d, i) => {
-            const x = d.x * W;
-            const y = d.y * H;
-            const size = 3 + d.intensity * 7;
-            return (
-              <g key={d.city + i}>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={size + 4}
-                  fill="var(--bull)"
-                  opacity={0.12}
-                />
-                <circle cx={x} cy={y} r={size} fill="var(--bull)" opacity={0.55 + d.intensity * 0.4} />
-                <circle cx={x} cy={y} r={1.5} fill="var(--bg)" />
-                <text
-                  x={x + size + 6}
-                  y={y + 3}
-                  fill="var(--fg)" fillOpacity={0.65}
-                  fontFamily="var(--font-jetbrains), ui-monospace, monospace"
-                  fontSize="9"
-                  letterSpacing="0.1em"
-                >
-                  {d.city.toUpperCase()} · {d.n}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-    </div>
+      )}
+    </Tile>
   );
 }

@@ -5,9 +5,9 @@
 // robots.ts, and sitemap.ts. Reads NEXT_PUBLIC_SITE_URL so preview deploys
 // advertise themselves rather than the production host.
 //
-// THE FALLBACK WAS A DOMAIN THAT DOES NOT EXIST. It read
-// "https://lazybull.trade", which resolves NXDOMAIN — the comment here called
-// it "the real origin" and it never was. The site is served from lazybull.us
+// THE FALLBACK WAS A DOMAIN THAT DOES NOT EXIST. It named a .trade host that
+// resolves NXDOMAIN — the comment here called it "the real origin" and it
+// never was. The site is served from lazybull.us
 // (bare 307s to www), so with NEXT_PUBLIC_SITE_URL unset in production every
 // page advertised a canonical, an og:url, a robots Host: and fifteen sitemap
 // <loc> entries on a hostname no resolver can answer for. Verified against
@@ -29,6 +29,13 @@ export const SITE_URL = (
 export const PUBLIC_ROUTES = [
   { path: "/", priority: 1.0, changeFrequency: "weekly" as const },
   { path: "/learn", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/practice", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/practice/contest", priority: 0.6, changeFrequency: "weekly" as const },
+  { path: "/practice/tracks/finance", priority: 0.6, changeFrequency: "monthly" as const },
+  { path: "/practice/tracks/quant", priority: 0.6, changeFrequency: "monthly" as const },
+  { path: "/practice/tracks/ml", priority: 0.6, changeFrequency: "monthly" as const },
+  { path: "/practice/tracks/maths", priority: 0.6, changeFrequency: "monthly" as const },
+  { path: "/practice/tracks/trading", priority: 0.6, changeFrequency: "monthly" as const },
   { path: "/trade", priority: 0.9, changeFrequency: "weekly" as const },
   { path: "/trade/chain", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/quant", priority: 0.8, changeFrequency: "weekly" as const },

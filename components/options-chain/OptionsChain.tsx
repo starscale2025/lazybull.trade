@@ -494,6 +494,27 @@ export function OptionsChain({ underlying, spot }: Props) {
           <span className="text-fg-faint">{(ivRange.min * 100).toFixed(0)}–{(ivRange.max * 100).toFixed(0)}%</span>
         </span>
       </div>
+
+      {/* WHERE EVERY NUMBER IN THIS TABLE COMES FROM.
+          The 2026-09 diligence memo, verbatim: "Open interest and volume on the
+          chain are hashed fakes presented in the same typography as prices.
+          'Source: Mock' labelling must be everywhere a fake number appears,
+          especially the chain."
+          It is exactly right. Bid, ask, mid, IV and the Greeks are real
+          Black-Scholes output over a modelled skew (lib/pricing.ts
+          skewedIv/priceOption) — arithmetic anyone can check. The oi and vol
+          columns are `hash(expiry|strike|type)` scaled into a plausible range
+          (lib/pricing.ts, buildChain): stable, plausible, and completely
+          invented. Set in the same face and weight as the prices beside them,
+          they read as market data, and a beginner learning to read a chain
+          learns to trust a number nobody measured.
+          This line is the cheapest honest fix and it stays until those two
+          columns carry a real feed. Same t-chrome/text-fg-dim voice as the
+          legend above it; the table itself is untouched. */}
+      <div className="border-t border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
+        Chain: Black-Scholes with a modelled skew · open interest and volume are
+        simulated placeholders
+      </div>
     </div>
   );
 }

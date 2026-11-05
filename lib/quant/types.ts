@@ -1,5 +1,30 @@
 import type { Candle } from "../candles";
 
+// ── the two strings every performance figure in the workbench is written
+// against. They live here, in the module both lib/quant/ai-bots.ts and
+// lib/quant/bot-content.ts already share, so a number and its hedge can never
+// drift apart across surfaces.
+
+/**
+ * Stamped beside EVERY accuracy figure this workbench prints. The 2026-09
+ * diligence memo's ask, verbatim: "One canonical accuracy band, always
+ * labelled hypothetical". One constant, so no surface can quietly drop it.
+ */
+export const HYPOTHETICAL_NOTE = "hypothetical · out-of-sample · not a forecast";
+
+/**
+ * The ONE out-of-sample hit-rate band these models are described by.
+ *
+ * There used to be a LADDER of four bands, each tier richer than the last,
+ * which reads exactly like a grade scale: the more the models agree, the
+ * better your odds are said to be. Two problems. Its top rung sat well above
+ * anything the out-of-sample runs support (see `ai quants/README.md`), and a
+ * band that rises with agreement turns a dispersion measure into a promise.
+ * So there is one band now, and the agreement label says only how much the
+ * models agreed — never how likely anything is.
+ */
+export const ACCURACY_BAND = "55–66%";
+
 export type ParamSpec =
   | {
       key: string;

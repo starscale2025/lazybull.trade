@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { LAG_DAYS } from "@/lib/region";
 import { PayoffSpine } from "./PayoffSpine";
+import { buildTiers } from "@/components/pricing/tiers";
+import { fmtMoney, monthlyPrice } from "@/lib/billing/prices";
 import {
   GlassButton,
   GlassChip,
@@ -35,6 +38,16 @@ import {
 
 /* ── 01 · The workflow ───────────────────────────────────────────────────── */
 
+// THE THREE STEPS ARE THE THREE THINGS A BEGINNER DOES, in order.
+//
+// Step 02 used to be "Backtest — stage any of 27 bots on a year of tape". The
+// 2026-09 diligence memo's objection is structural, not verbal: putting a
+// 27-bot backtest between "learn" and "paper trade" tells a beginner that
+// running models is a required step on the way to a position, which is the
+// workbench selling itself as a decision procedure. The bots are a teaching
+// room, so they belong in the product section (see FEATURES below) and the
+// middle step is what actually happens next — you build the thing and look at
+// it.
 const STEPS = [
   {
     n: "01",
@@ -45,16 +58,16 @@ const STEPS = [
   },
   {
     n: "02",
-    title: "Backtest",
-    copy: "Stage any of 27 bots on a year of tape. Walk-forward, no lookahead, verdicts written in English — not in Sharpe alone.",
-    cta: "run a bot",
-    href: "/quant",
+    title: "See & build",
+    copy: "Drag strikes on the chain and the payoff, the Greeks and the worst case draw themselves. Ask the teacher what you just built.",
+    cta: "open the chain",
+    href: "/trade/chain",
   },
   {
     n: "03",
     title: "Paper trade",
-    copy: "Drag the chain, see the payoff, place it on $5,000 of paper. Training wheels block unbounded risk until you say otherwise.",
-    cta: "open the chain",
+    copy: "Place it on $5,000 of paper. Training wheels block unbounded risk until you say otherwise, and a kill switch sits under the lot.",
+    cta: "open the strategy builder",
     href: "/trade",
   },
 ] as const;
@@ -143,9 +156,9 @@ type Feature = {
 
 const FEATURES: readonly Feature[] = [
   {
-    shot: "/cinema/shots/trade.webp",
-    strip: "02 · visual chain",
-    tag: "visual chain",
+    shot: "/cinema/plates/trade.svg",
+    strip: "02 · strategy builder",
+    tag: "strategy builder",
     href: "/trade",
     title: "Drag a strike.",
     accent: "The payoff draws itself.",
@@ -157,7 +170,7 @@ const FEATURES: readonly Feature[] = [
     ],
   },
   {
-    shot: "/cinema/shots/pro.webp",
+    shot: "/cinema/plates/pro.svg",
     strip: "03 · pro terminal",
     tag: "pro terminal",
     href: "/pro",
@@ -172,13 +185,19 @@ const FEATURES: readonly Feature[] = [
     ],
   },
   {
-    shot: "/cinema/shots/quant.webp",
+    shot: "/cinema/plates/quant.svg",
     strip: "04 · quant workbench",
     tag: "quant workbench",
     href: "/quant",
-    title: "27 bots.",
-    accent: "Verdicts in English.",
-    copy: "From SMA crossovers to a transformer on a year of bars. Every run states its tape, its folds and its confidence — teaching instruments, not track records.",
+    // "27 bots. Verdicts in English." read as a product that hands down
+    // rulings. The memo's ask, verbatim: "consensus framed as 'watch models
+    // disagree'". Disagreement is the lesson here — it is what teaches that a
+    // model output is an opinion with a sample behind it, not an answer — so
+    // the room is named for the teaching and the hit rate is labelled
+    // hypothetical in the same breath as it is mentioned.
+    title: "Twenty-seven teaching bots.",
+    accent: "Watch them disagree.",
+    copy: "From SMA crossovers to a transformer on a year of bars. Watch models agree and disagree — every run states its tape, its folds and its hit rate, hypothetical, never a forecast.",
     points: [
       "13 trained models run in your browser",
       "Walk-forward, no lookahead",
@@ -224,12 +243,16 @@ function Features() {
               <div className="flex items-center gap-2 border-b border-[var(--glass-border)] bg-[rgba(255,255,255,0.03)] px-3 py-[0.4375rem]">
                 <span className="t-chrome text-fg-faint">{f.strip}</span>
               </div>
+              {/* A plate drawn from code (scripts/cinema/plates.mjs), labelled
+                  illustrative, never a screenshot: the screenshots here kept
+                  showing a builder header and a forecast cone months after both
+                  were removed, and next/image's cache kept serving them besides. */}
               <Image
                 src={f.shot}
                 alt=""
-                width={4800}
-                height={3000}
-                sizes="(min-width: 1024px) 640px, 100vw"
+                width={1280}
+                height={800}
+                unoptimized
                 className="block h-auto w-full"
               />
             </div>
@@ -287,9 +310,17 @@ function Safety() {
         <div data-gsap="fade-up">
           <GlassEyebrow>Safety is the product</GlassEyebrow>
           <GlassHeading accent="by design.">Boring,</GlassHeading>
+          {/* The four cards say what we refuse to do with money. This adds the
+              one thing we refuse to do with DATA, which the memo asked to be
+              visible on the landing rather than buried in a policy page:
+              Indian securities are served late, on purpose. LAG_DAYS is
+              imported rather than typed out so this sentence cannot drift from
+              the rule lib/region.ts actually enforces. */}
           <p className="measure mt-[1.125rem] mb-6 t-body-sm text-fg-dim">
             LAZYBULL is an educational platform. Not a broker, not advice — a
-            place to get fluent before a single real dollar moves.
+            place to get fluent before a single real dollar moves. Indian
+            securities are shown delayed by at least {LAG_DAYS} days, as SEBI&apos;s
+            education-data norms require of an unregistered teacher.
           </p>
           <GlassChip dot pulse>
             kill switch armed · paper-only
@@ -387,40 +418,50 @@ type Tier = {
   /** The condition attached to THIS price, if it has one. */
   terms?: string;
   kind: "primary" | "glass";
-  /** The recommended tier — heavier glass, hot border, "most popular" chip. */
+  /** The paid tier on show — heavier glass and a hot border, no claim attached. */
   hot?: boolean;
 };
 
+// Built from buildTiers() and PLAN_PRICES, the same source /pricing renders,
+// so this teaser cannot sell a line the gates do not enforce. The 2026-11
+// verification found the hand-typed copy here had drifted: three of its Pro
+// bullets (all bots, bring-your-own-bot, Pro charting) were open to every
+// tier, and "everything unlocked" was false while Power-only problems exist.
+// Both currencies show statically: this is a no-JS server section, and /pricing
+// already quotes ₹ to visitors in India.
+const BUILT = buildTiers();
+const tierLines = (id: "free" | "pro") => {
+  const t = BUILT.find((x) => x.id === id)!;
+  return [...t.features, ...t.extras.filter((f) => !f.startsWith("Everything in"))].map((f) =>
+    f === "Unlimited paper trades" ? `${f} · $5k paper account` : f
+  );
+};
+const usd = (iv: "month" | "year") => fmtMoney(monthlyPrice("pro", iv, "USD"), "USD");
+const inr = (iv: "month" | "year") => fmtMoney(monthlyPrice("pro", iv, "INR"), "INR");
 const TIERS: readonly Tier[] = [
   {
     name: "Free",
     price: "$0",
     unit: "/forever",
-    blurb: "The whole primer. Real practice. Forever.",
-    feats: [
-      "Full 14-chapter interactive primer",
-      "Unlimited paper trades · $5k account",
-      "AI teacher · 5 explains per day",
-      "3 bots in the quant workbench",
-    ],
+    blurb: BUILT[0].blurb,
+    feats: tierLines("free"),
     cta: "start for free",
     href: "/learn",
     kind: "glass",
   },
   {
     name: "Pro",
-    price: "$29",
+    price: usd("year"),
     unit: "/mo",
-    blurb: "The full workbench, nothing held back.",
-    feats: [
-      "All 27 bots + consensus engine",
-      "Unlimited AI-teacher explains",
-      "Bring-your-own-bot · hot-load & backtest",
-      "Pro charting suite · shareable workspaces",
-    ],
-    cta: "join early access",
-    terms: "billed annually · $39 monthly",
-    href: "/auth/signin",
+    blurb: BUILT.find((x) => x.id === "pro")!.blurb,
+    feats: tierLines("pro"),
+    // NOT /auth/signin. A landing CTA that opens a Google consent screen asks
+    // a stranger to hand over an identity before they have been told what the
+    // tier costs or contains; the price page is where that decision belongs,
+    // and #pro scrolls to this exact card's fuller twin.
+    cta: "see what pro includes",
+    terms: `billed annually · ${usd("month")} monthly · India ${inr("year")} / ${inr("month")}`,
+    href: "/pricing#pro",
     kind: "primary",
     hot: true,
   },
@@ -432,7 +473,6 @@ function Pricing() {
       <div className="flex flex-col items-center text-center" data-gsap="fade-up">
         <GlassEyebrow>Pricing</GlassEyebrow>
         <GlassHeading accent="Upgrade when it clicks.">Start free.</GlassHeading>
-        <p className="mt-4 t-eyebrow text-fg-faint">cancel anytime</p>
       </div>
 
       <div
@@ -447,17 +487,6 @@ function Pricing() {
               t.hot ? "glass-strong border-[var(--glass-border-hot)]" : "glass"
             }`}
           >
-            {/* Not "most popular". This is a pre-revenue product whose own CTA
-                says "join early access" — there is no popularity to report, and
-                inventing one on the page that asks for money is the cheapest
-                possible way to lose the trust the rest of this site works hard
-                for. "everything unlocked" is checkable against the feature list
-                directly beneath it. */}
-            {t.hot && (
-              <GlassChip className="absolute right-[1.125rem] top-[1.125rem]">
-                everything unlocked
-              </GlassChip>
-            )}
             <div
               className={`t-eyebrow ${t.hot ? "text-bull" : "text-fg-faint"}`}
             >

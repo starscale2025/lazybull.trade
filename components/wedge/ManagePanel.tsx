@@ -47,7 +47,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
   return (
     <div className="bg-bg">
       <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 t-chrome text-fg-dim">
-        <span>open bets · {open.length}</span>
+        <span>open positions · {open.length}</span>
         <span className="text-fg-faint">live priced from /api/quote</span>
       </div>
 

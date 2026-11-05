@@ -719,6 +719,13 @@ nav[aria-label="Site pages"] a:focus-visible {
 }
 
 .hero-fade-up      { opacity: 0; animation: hero-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+/* Transform-only rise for text that may be the LCP: it paints at full opacity on
+   the first frame, so the largest-contentful-paint is not held behind a fade. */
+@keyframes hero-rise {
+  from { transform: translate3d(0, 10px, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+.hero-rise { animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .hero-fade-up-soft { opacity: 0; animation: hero-fade-up-soft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .hero-headline-line {
   display: block;
@@ -759,6 +766,7 @@ nav[aria-label="Site pages"] a:focus-visible {
   .hero-glow-in   { animation: none; opacity: 1; transform: none; filter: none;
                     text-shadow: 0 0 24px rgba(0,255,135,0.55), 0 0 60px rgba(0,255,135,0.25); }
   .hero-line-grow { animation: none; transform: scaleX(1); }
+  .hero-rise      { animation: none; transform: none; }
 }
 
 /* ───── Pro chart fast-forward entrance ─────
@@ -967,16 +975,40 @@ nav[aria-label="Site pages"] a:focus-visible {
   z-index: 60;
   background: transparent;
   pointer-events: none;
+  transition: opacity 0.4s var(--ease-settle, ease);
 }
+/* While the homepage film is pinned, the act rail is the meter. Hiding this one
+   also means the film's collapse (which removes ~12,000px and re-bases the page)
+   happens out of sight, instead of the bar visibly sweeping from 61% back to 1%. */
+/* ── Which film: phone or desktop ──
+   A phone is a narrow viewport OR a coarse pointer in a short landscape one.
+   Width alone sent a phone turned sideways (844px) to the three.js film, three
+   WebGL contexts on a phone GPU. Plain CSS rather than Tailwind variants so the
+   order is guaranteed; CinemaGate's PHONE_FILM_QUERY is the same test. */
+.film-desktop-only { display: none; }
+.film-phone-only { display: block; }
+@media (min-width: 768px) {
+  .film-desktop-only { display: block; }
+  .film-phone-only { display: none; }
+}
+@media (pointer: coarse) and (max-height: 500px) {
+  .film-desktop-only { display: none; }
+  .film-phone-only { display: block; }
+}
+
+html[data-film="pinned"] .scroll-progress-rail { opacity: 0; }
+/* A modal's scroll lock. On <html>, because `html, body { overflow-x: clip }`
+   stops a body-level overflow:hidden from ever reaching the viewport. */
+html.lb-modal-open { overflow: hidden; }
 .scroll-progress-fill {
   height: 100%;
-  width: var(--p, 0%);
+  width: 100%;
+  transform: scaleX(var(--p, 0));
   background: linear-gradient(90deg, transparent, var(--bull) 25%, var(--cyan) 60%, var(--bull) 100%);
   background-size: 200% 100%;
   animation: progress-shimmer 4s linear infinite;
   transform-origin: left center;
   box-shadow: 0 0 14px rgba(0, 255, 135, 0.55);
-  transition: width 0.12s ease-out;
 }
 
 /* Scroll reveal — content always renders; transform-only lift on first view.
@@ -1763,46 +1795,27 @@ nav[aria-label="Site pages"] a:focus-visible {
    settle") was inlined at 20+ call sites. Naming it does not change a single
    rendered frame; it just stops the 21st site from inventing its own curve.
    ══════════════════════════════════════════════════════════════════════════ */
-/* ── THE HERO'S PAYOFF INSTRUMENT (components/HeroPayoff.tsx) ─────────────
-   Four stacked polylines, one visible at a time. CSS cannot transition a
-   <polyline>'s `points`, and a rAF loop in the hero for a hover effect would be
-   absurd — so all four are drawn and crossfaded on the brand's one curve. */
-.hero-payoff-line {
-  opacity: 0;
-  transition: opacity 0.45s var(--ease-settle);
-}
-.hero-payoff-line[data-on="1"] { opacity: 0.95; }
-
-.hero-chip {
-  transition:
-    border-color 0.3s var(--ease-settle),
-    color 0.3s var(--ease-settle),
-    transform 0.3s var(--ease-settle);
-}
-.hero-chip[data-on="1"] {
-  border-color: var(--glass-border-hot);
-  color: var(--fg);
-  transform: translateY(-2px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* The STATE still changes — reduced motion is reduced motion, not reduced
-     information. Only the travel goes. */
-  .hero-payoff-line, .hero-chip { transition: none; }
-  .hero-chip[data-on="1"] { transform: none; }
-}
-
 /* ── THE CINEMA ACT RAIL (components/scrollstory/CinemaRail.tsx) ──────────
-   Nine numbered rows down the left edge of the film, plus a skip. Quiet at
-   rest — a tick, an index and a label at --fg-faint — and only the CURRENT act
-   lifts to full ink with a bull tick. The point is orientation, not decoration:
+   Seven numbered rows down the left edge of the film, plus a skip. Quiet at
+   rest — a tick, an index and a label at --fg-dim over a dark plate — and only
+   the CURRENT act lifts to full ink with a bull tick. (It used to rest at
+   --fg-faint x 0.55 opacity, about 2.1:1; the plate is what keeps --fg-dim
+   above 4.5:1 over the candle act's green floor, where it alone measures 4.4.) The point is orientation, not decoration:
    a 13,500px pinned film previously gave no indication of where you were in it
    or how much was left.
 
    All state arrives as data-on written by the film's own per-frame pass, so
    nothing here needs React. Colour transitions ride the brand's one curve. */
+.cinema-rail::before {
+  content: "";
+  position: absolute;
+  inset: -12px -16px -12px -12px;
+  background: rgba(5, 5, 5, 0.72);
+  z-index: -1;
+  pointer-events: none;
+}
 .cinema-rail .rail-row {
-  opacity: 0.55;
+  opacity: 1;
   transition:
     opacity 0.35s var(--ease-settle),
     transform 0.35s var(--ease-settle);

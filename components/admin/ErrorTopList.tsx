@@ -1,46 +1,40 @@
-import type { ErrorRow } from "@/lib/admin-data";
+import type { ErrorData } from "@/lib/admin-data";
+import { BarRow, Empty, Tile, rel } from "./Tile";
 
-function rel(ms: number) {
-  const s = Math.floor((Date.now() - ms) / 1000);
-  if (s < 60) return `${s}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
-  return `${Math.floor(s / 3600)}h`;
-}
+// This tile listed six error names — yahoo_chart_502, openai_rate_limit,
+// mongo_serverSelectionTimeout — each against a route and a count, and every
+// one of them was fabricated: nothing in this codebase writes an error
+// anywhere a dashboard could read it. The query behind it now looks for real
+// `csp_violation` events, finds none (app/api/csp-report console.warns and
+// returns 204), and says so.
 
-export function ErrorTopList({ rows }: { rows: ErrorRow[] }) {
-  const max = Math.max(...rows.map((r) => r.count));
+export function ErrorTopList({ data }: { data: ErrorData }) {
+  const max = data.rows.length ? Math.max(...data.rows.map((r) => r.count)) : 1;
+  const total = data.rows.reduce((a, b) => a + b.count, 0);
   return (
-    <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-        <div className="flex items-center gap-3">
-          <span className="text-bear">top errors</span>
-          <span className="text-fg-faint">·</span>
-          <span>last 24h</span>
-        </div>
-        <span className="text-fg-faint">{rows.reduce((a, b) => a + b.count, 0)} total</span>
-      </div>
-      <div className="divide-y divide-border-soft">
-        {rows.map((r, i) => {
-          const w = (r.count / max) * 100;
-          return (
-            <div
+    <Tile
+      label="errors"
+      tone="bear"
+      meta="last 24h"
+      right={data.rows.length ? `${total} total` : "not wired"}
+    >
+      {data.rows.length === 0 ? (
+        <Empty reason={data.note ?? "no data"} />
+      ) : (
+        <div className="flex flex-col divide-y divide-border-soft">
+          {data.rows.map((r, i) => (
+            <BarRow
               key={r.name}
-              className="grid grid-cols-[24px_1fr_60px_44px] items-center gap-2 px-3 py-2 font-mono text-[0.6875rem] transition-colors hover:bg-surface"
-            >
-              <span className="text-fg-faint tabular-nums">{String(i + 1).padStart(2, "0")}</span>
-              <div className="min-w-0">
-                <div className="truncate text-fg">{r.name}</div>
-                <div className="mt-0.5 truncate text-[0.625rem] text-fg-faint">{r.route}</div>
-                <div className="mt-1 h-0.5 w-full overflow-hidden bg-border-soft">
-                  <div className="h-full bg-bear" style={{ width: `${w.toFixed(1)}%` }} />
-                </div>
-              </div>
-              <span className="text-right tabular-nums text-bear">{r.count}</span>
-              <span className="text-right text-[0.625rem] tabular-nums text-fg-faint">{rel(r.lastSeen)}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+              rank={i + 1}
+              label={r.name}
+              sub={`${r.route} · ${rel(r.lastSeen)} ago`}
+              value={r.count.toLocaleString()}
+              pct={r.count / max}
+              tone="bear"
+            />
+          ))}
+        </div>
+      )}
+    </Tile>
   );
 }

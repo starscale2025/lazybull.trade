@@ -32,7 +32,10 @@ const font = (f: string) => readFileSync(join(process.cwd(), "assets", "og-fonts
 const DISPLAY = "Fraunces";
 const MONO = "JetBrains Mono";
 
-export const alt = "lazybull.trade — Options you can see";
+// The wordmark is the BRAND, not a hostname: the .trade host this used to
+// name does not resolve, and a share card is the one surface people read a
+// domain off and type back in.
+export const alt = "lazybull — Options you can see";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -144,7 +147,7 @@ export default function Image() {
               it — and the second line is the site's mantra, verbatim. */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: MONO, fontSize: 25, letterSpacing: -0.2 }}>
             <div style={{ display: "flex", color: DIM }}>27 bots · 13 models · 8 live demos</div>
-            <div style={{ display: "flex", color: FG }}>Learn it. Backtest it. Only then trade it.</div>
+            <div style={{ display: "flex", color: FG }}>Learn it. Backtest it. Paper-trade it.</div>
           </div>
         </div>
 
@@ -162,7 +165,7 @@ export default function Image() {
             paddingTop: 22,
           }}
         >
-          <div style={{ display: "flex", color: FG, letterSpacing: 1 }}>lazybull.trade</div>
+          <div style={{ display: "flex", color: FG, letterSpacing: 1 }}>lazybull.us</div>
           <div style={{ display: "flex" }}>max loss is a number you chose</div>
         </div>
       </div>

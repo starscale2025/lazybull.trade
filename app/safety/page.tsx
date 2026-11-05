@@ -10,13 +10,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/safety" },
   title: "Safety — lazybull",
   description:
-    "The Honesty Ledger: how lazybull keeps you safe — paper-only $0 risk, training wheels, a kill switch, and a pre-trade danger check, in plain English.",
+    "The Honesty Ledger: how lazybull keeps you safe — paper-only $0 risk, training wheels, a kill switch, a pre-trade danger check, no signals, 31-day-delayed Indian data, and consent you control.",
 };
 
 // The Honesty Ledger, safety edition — the same plain-English contract as
 // /terms and /privacy, but for the guardrails. A finance-education product's
 // safety story is brand, not fine print, so every commitment carries a mono
 // "what this means" note. Server component: crawlable text.
+//
+// Clauses 06, 07 and 09 are the regulatory guardrails, not just product ones:
+// the no-signals rule is what keeps education from becoming unregistered
+// advice, the 31-day lag is SEBI's education-data floor (lib/region.ts,
+// LAG_DAYS), and the consent clause mirrors the gate in lib/consent.ts. All
+// three are enforced in code, not by this page — see docs/COMPLIANCE.md.
 
 function Clause({ n, title, children, means }: { n: string; title: string; children: React.ReactNode; means: string }) {
   return (
@@ -41,7 +47,7 @@ export default function SafetyPage() {
       <main className="mx-auto w-full max-w-[56.25rem] flex-1 px-5 pb-24 pt-12">
         <div className="flex flex-wrap items-center gap-2 t-eyebrow text-fg-faint">
           <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">the honesty ledger</span>
-          <span>safety commitments · effective 24 july 2026</span>
+          <span>safety commitments · effective 10 september 2026</span>
         </div>
         <h1 className="mt-3 font-display text-4xl tracking-tightest">
           Safety, in plain <span className="t-accent">English</span>.
@@ -120,6 +126,48 @@ export default function SafetyPage() {
 
         <Clause
           n="06"
+          title="No signals, by design"
+          means="nothing on this site tells you what to buy. The models show you where historical rules agreed and disagreed, with hypothetical hit rates attached — that is a lesson in disagreement, not an instruction."
+        >
+          <p>
+            The 27 quant instruments are <strong className="text-fg">teaching instruments</strong>. Each one is shown as
+            what its rule did over a historical sample, in the past tense, with a hypothetical hit rate attached and the
+            sample it came from named. When several of them line up, the app shows you{" "}
+            <strong className="text-fg">agreement and disagreement</strong> — how much of the room leans one way and how
+            much leans the other — because learning why two reasonable rules disagree is the actual lesson. It is not an
+            instruction, a call, or a prediction, and a high agreement reading is not permission to do anything.
+          </p>
+          <p>
+            There is no alert that tells you to enter, no target, no stop, no live call channel, and no button anywhere
+            that means "do this now." The AI teacher runs on a locked prompt that explains only the position{" "}
+            <em>you</em> built — it never recommends one, never tells you how much to risk, and never forecasts a price.
+            This is not caution about our own confidence: an education product that hands out calls is an advice product
+            wearing a disclaimer, and we would rather build the first thing properly.
+          </p>
+        </Clause>
+
+        <Clause
+          n="07"
+          title="Indian securities are delayed by 31 days — deliberately"
+          means="Indian symbols are always at least a month old, for everyone, on every plan. That is a rule, not a limitation we would remove if we could — and it is why we do not offer real-time Indian paper trading at all."
+        >
+          <p>
+            SEBI's norms for using price data in education require anyone unregistered to work from data lagged by at
+            least 30 days. lazybull applies <strong className="text-fg">31 days</strong> — one day of margin so a clock
+            skew can never produce a 29-day-old bar — to every Indian symbol, for every user, in every country. It is
+            applied by symbol, not by where you are sitting, and there is no setting and no paid tier that removes it.
+          </p>
+          <p>
+            Which means: <strong className="text-fg">real-time paper trading on Indian securities is not something we
+            offer</strong>. SEBI has separately cautioned the public about virtual-trading platforms that run on
+            real-time data of listed securities, and we would rather be plainly outside that description than
+            argue about it. A month-old chart teaches the mechanics of a spread exactly as well as today's does — the
+            Greeks do not care what the date is. Every delayed response says so in the interface, and names the rule.
+          </p>
+        </Clause>
+
+        <Clause
+          n="08"
           title="Resets are permanent — and that is the point"
           means="the reset button erases your paper history for good, behind a red warning. Practicing the discipline of a clean slate is part of the lesson."
         >
@@ -131,20 +179,43 @@ export default function SafetyPage() {
         </Clause>
 
         <Clause
-          n="07"
-          title="Stepping away is always one click"
-          means="stop whenever you want — sign out, reset to zero, or just close the tab. Nothing bills you, nothing chases you, and no balance follows you out the door."
+          n="09"
+          title="Your data, your consent"
+          means="18 or over, and two separate switches you control: product analytics starts on, training the AI teacher starts off. Neither one gates a feature, and you can change your mind whenever you like."
         >
           <p>
-            There is no money to withdraw, no subscription trapping you, and no dark pattern keeping you in. If lazybull
-            ever stops being useful — or fun — you leave, and nothing comes with you. If you want your signed-in data
-            deleted, the <Link className="text-bull underline underline-offset-4" href="/privacy">privacy ledger</Link>{" "}
-            explains how.
+            lazybull is <strong className="text-fg">18+</strong>. India's data-protection rules ban behavioural
+            monitoring of under-18s without verifiable parental consent; we do not collect a parent's consent, so we do
+            not let minors in rather than pretend we can supervise it. An under-18 answer at the gate closes the
+            workbench, turns tracking off, and is never sent to our servers at all.
+          </p>
+          <p>
+            Adults get two independent switches. <strong className="text-fg">Product analytics</strong> — what you do in
+            the app, so we can improve it — starts on, and is never sold and never used for advertising.{" "}
+            <strong className="text-fg">Help train the teacher</strong> — your anonymised decision traces, the drags and
+            undos and re-asks — starts <em>off</em> and stays off unless you switch it on. Neither one unlocks or locks
+            any feature, both can be withdrawn at any time, and if we ever change what that dialog asks you for, it
+            reappears and asks again rather than assuming your old answer still holds. The field-by-field detail is in
+            the <Link className="text-bull underline underline-offset-4" href="/privacy">privacy ledger</Link>.
           </p>
         </Clause>
 
         <Clause
-          n="08"
+          n="10"
+          title="Stepping away is always one click"
+          means="stop whenever you want — cancel, sign out, reset to zero, or just close the tab. No balance follows you out the door, and cancelling never costs you the time you already paid for."
+        >
+          <p>
+            There is no money to withdraw and no dark pattern keeping you in. The free tier has no card attached at all;
+            a paid plan can be cancelled at any time, keeps working until the period you already paid for ends, and then
+            simply stops — no exit fee, no retention maze, no phone call. If lazybull ever stops being useful — or fun —
+            you leave, and nothing comes with you. If you want your signed-in data deleted, the{" "}
+            <Link className="text-bull underline underline-offset-4" href="/privacy">privacy ledger</Link> explains how.
+          </p>
+        </Clause>
+
+        <Clause
+          n="11"
           title="This is education — never advice"
           means="the bots, models, and teacher exist to explain how instruments work. If you trade real money elsewhere based on them, that decision and its risk are yours alone."
         >

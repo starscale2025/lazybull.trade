@@ -373,8 +373,8 @@ export function RunRitual({
               <span>·</span>
               {/* The provenance must name the SAME tape the chrome strip
                   named — a header reading "fallback tape" over a line reading
-                  "seed tape" is exactly the contradiction the SIM lamp exists
-                  to prevent. */}
+                  "seed tape" is exactly the contradiction the simulated-data
+                  lamp exists to prevent. */}
               <span className="text-amber">
                 {dataSource === "live"
                   ? "live tape · not advice"

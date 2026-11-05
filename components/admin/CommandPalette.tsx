@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 type Command = { id: string; label: string; group: string; hint?: string };
 
+// NOT WIRED. Every entry below logs its id and closes the palette — none of
+// them bans anyone, rotates a key or exports anything. That was true before
+// too, but the palette said nothing about it, which is the same failure the
+// diligence memo found in the KPI strip: a surface that looks operational
+// because it is well drawn. The rows are kept because they are the backlog of
+// admin actions worth building; they are now labelled as the backlog.
 const COMMANDS: Command[] = [
   { id: "kill",       label: "Arm platform-wide kill switch",         group: "safety", hint: "danger" },
   { id: "drill",      label: "Run kill-switch drill (5s)",            group: "safety" },
@@ -67,7 +73,7 @@ export function CommandPalette() {
         onClick={() => setOpen(true)}
         className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 border border-border bg-bg/90 px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim shadow-[0_8px_28px_-12px_rgba(0,0,0,0.6)] backdrop-blur transition-colors hover:border-bull hover:text-fg"
       >
-        <span className="text-fg-faint">⌘</span>K · admin actions
+        <span className="text-fg-faint">⌘</span>K · admin actions <span className="ml-1 text-fg-faint">(none wired yet)</span>
       </button>
     );
   }
@@ -105,11 +111,14 @@ export function CommandPalette() {
                 <span className="text-fg-faint text-[0.625rem] uppercase tracking-wider w-14">{c.group}</span>
                 <span>{c.label}</span>
               </div>
-              {c.hint && (
-                <span className="font-mono text-[0.625rem] uppercase tracking-wider text-bear">
-                  {c.hint}
+              <span className="flex shrink-0 items-center gap-2">
+                {c.hint && (
+                  <span className="font-mono text-[0.625rem] uppercase tracking-wider text-bear">{c.hint}</span>
+                )}
+                <span className="border border-border px-1 py-0 font-mono text-[0.5625rem] uppercase tracking-wider text-fg-faint">
+                  not wired
                 </span>
-              )}
+              </span>
             </button>
           ))}
           {!filtered.length && (
@@ -119,7 +128,7 @@ export function CommandPalette() {
           )}
         </div>
         <div className="border-t border-border-soft px-4 py-2 t-chrome text-fg-faint">
-          ↑↓ navigate · ↵ run · esc close
+          ↑↓ navigate · ↵ logs the dispatch (nothing executes yet) · esc close
         </div>
       </div>
     </div>

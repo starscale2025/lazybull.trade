@@ -17,9 +17,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const bot = getBot(id);
-  if (!bot) return { title: "Bot not found · Lazybull" };
+  if (!bot) return { title: "Bot not found · lazybull" };
   return {
-    title: `${bot.name} · Lazybull Learn`,
+    title: `${bot.name} · lazybull Learn`,
     description: bot.tagline,
     // Without this every one of the 27 bot pages inherited the root
     // canonical and told Google it was a copy of the homepage.

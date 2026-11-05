@@ -10,8 +10,8 @@ export const metadata = {
   // root metadata into every route, so a single canonical there told Google
   // that every page on the domain was a duplicate of the homepage.
   alternates: { canonical: "/learn/bots" },
-  title: "All bots · Lazybull Learn",
-  description: "Encyclopedia of every bot in the Lazybull workbench — math, specialty, FAQ, live demo.",
+  title: "All bots · lazybull Learn",
+  description: "Every teaching bot in the lazybull workbench — the math, where it worked, where it broke, FAQ and a live demo.",
 };
 
 const ORDER: BotCategory[] = ["ai", "trend", "stats", "risk", "options", "custom"];

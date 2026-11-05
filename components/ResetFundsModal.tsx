@@ -107,7 +107,7 @@ export function ResetFundsModal({
               including protective stops and take-profits
             </li>
             <li>
-              ✕ <span className="text-fg">{openBets}</span> open option bet{openBets === 1 ? "" : "s"} — gone
+              ✕ <span className="text-fg">{openBets}</span> open option position{openBets === 1 ? "" : "s"} — gone
             </li>
             <li>
               ✕ <span className="text-fg">{trades.length}</span> round-trip{trades.length === 1 ? "" : "s"} of trade

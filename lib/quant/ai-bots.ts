@@ -9,6 +9,7 @@
 // `ai quants/models/<dir>/train.py` or `ai quants/serve.py`.
 
 import type { BotDef, BotContext, BotResult, Signal, SourceId } from "./types";
+import { ACCURACY_BAND, HYPOTHETICAL_NOTE } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
 import { snapshotLookup } from "./snapshot";
@@ -24,6 +25,34 @@ const API_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_QUANTAI_URL) ||
   (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 const API_HINT = `${API_BASE} · uvicorn serve:app`;
+
+/**
+ * THE ONE PLACE A CONFIDENCE BAND BECOMES WORDS.
+ *
+ * The keys stay as they are — "ultra", "extreme", "high", "medium", "low" are
+ * code identifiers, they cross the wire from `ai quants/serve.py`, and the
+ * thresholds that produce them are model logic that nothing here touches.
+ * What changed in 2026-09 is what a visitor SEES. Printed raw and upper-cased,
+ * the band keys read as trade grades — a ladder where the top rung
+ * promises the best odds. The diligence memo names that directly: a
+ * confidence band named like a signal. But the underlying quantity is not
+ * odds at all. It is dispersion: how tightly a set of models landed on the
+ * same side. So the label says exactly that and nothing more, and a "split"
+ * is reported as a split rather than as the bottom of a scale.
+ *
+ * One table, so a band cannot be worded one way on a card and another way in
+ * a summary line.
+ */
+export const BAND_LABEL: Record<string, string> = {
+  ultra: "very strong agreement",
+  extreme: "strong agreement",
+  high: "moderate agreement",
+  medium: "lean",
+  low: "split",
+};
+
+/** Display label for a band key, falling back to the key for anything new. */
+const bandLabel = (band: string): string => BAND_LABEL[band] ?? band;
 
 async function callApi<T>(
   endpoint: string,
@@ -628,24 +657,28 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
       const pUp = data.p_up;
       const label = data.prediction.toUpperCase();
       const band = data.conviction_band;
-      const expAcc = data.expected_accuracy;
+      // `data.expected_accuracy` is still sent by the service and is
+      // deliberately not read: it is a per-band figure, and printing a number
+      // that rises with agreement is the grade-scale reading this rewrite
+      // removed. The card shows ACCURACY_BAND instead — the same band at
+      // every agreement level. See ./types.
       const conviction = Math.abs(pUp - 0.5);
       return {
         signals: [],
         metrics: [
           { key: "p", label: "P(up)", value: `${(pUp * 100).toFixed(1)}%`, tone: pUp > 0.5 ? "bull" : "bear" },
           { key: "label", label: "Direction", value: label, tone: pUp > 0.5 ? "bull" : "bear" },
-          { key: "band", label: "Conviction", value: band.toUpperCase(), tone: band === "ultra" || band === "extreme" ? "bull" : band === "high" ? "info" : "neutral" },
+          { key: "band", label: "Model agreement", value: bandLabel(band), tone: band === "ultra" || band === "extreme" ? "bull" : band === "high" ? "info" : "neutral" },
           { key: "std", label: "Ensemble σ", value: fmtNum(data.ensemble_std, 3), tone: data.ensemble_std < 0.05 ? "bull" : "neutral", hint: "lower σ = models agree" },
-          { key: "exp", label: "Expected acc", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info" },
+          { key: "exp", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "size", label: "Ensemble", value: `${data.ensemble_size} models`, tone: "neutral" },
         ],
-        summary: `Real ensemble of ${data.ensemble_size} GBMs on ${data.ticker} says ${label} (P=${(pUp * 100).toFixed(1)}%) for ${data.horizon_days}d — ${band} conviction. Embargoed CV accuracy ~${(expAcc * 100).toFixed(0)}%.`,
+        summary: `Real ensemble of ${data.ensemble_size} GBMs on ${data.ticker} says ${label} (P=${(pUp * 100).toFixed(1)}%) for ${data.horizon_days}d — ${bandLabel(band)}. Embargoed CV hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
         beginner:
           "Boosted-tree models each vote on whether the stock will be up or down 20 days from now. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
         verdict: {
           side: pUp > 0.6 ? "buy" : pUp < 0.4 ? "sell" : "hold",
-          text: `${(pUp * 100).toFixed(0)}% chance ${data.prediction}. ${band} conviction — historical accuracy ~${(expAcc * 100).toFixed(0)}%.`,
+          text: `${(pUp * 100).toFixed(0)}% chance ${data.prediction} — ${bandLabel(band)}. Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
           confidence: Math.min(1, conviction * 4),
         },
       };
@@ -667,23 +700,28 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
       const std = Math.sqrt(probs.reduce((a, b) => a + (b - pUp) ** 2, 0) / probs.length);
       const conviction = Math.abs(pUp - 0.5);
       const band = conviction > 0.20 ? "ultra" : conviction > 0.15 ? "extreme" : conviction > 0.07 ? "high" : "low";
-      const expAcc = band === "ultra" ? 0.77 : band === "extreme" ? 0.66 : band === "high" ? 0.61 : 0.555;
+      // Capped to the canonical out-of-sample band. These four numbers were
+      // 0.77 / 0.66 / 0.61 / 0.555 — a top figure that no walk-forward run in
+      // `ai quants/README.md` supports, printed on the HEURISTIC path, i.e.
+      // the one shown when the real service is unreachable. A stand-in must
+      // never quote a better number than the model it stands in for.
+      const expAcc = band === "ultra" ? 0.66 : band === "extreme" ? 0.63 : band === "high" ? 0.60 : 0.555;
       const label: "up" | "down" = pUp > 0.5 ? "up" : "down";
       return {
         signals: [],
         metrics: [
           { key: "p", label: "P(up)", value: `${(pUp * 100).toFixed(1)}%`, tone: pUp > 0.5 ? "bull" : "bear" },
           { key: "label", label: "Direction", value: label.toUpperCase(), tone: label === "up" ? "bull" : "bear" },
-          { key: "band", label: "Conviction", value: band.toUpperCase(), tone: band === "ultra" || band === "extreme" ? "bull" : band === "high" ? "info" : "neutral" },
+          { key: "band", label: "Model agreement", value: bandLabel(band), tone: band === "ultra" || band === "extreme" ? "bull" : band === "high" ? "info" : "neutral" },
           { key: "std", label: "Ensemble σ", value: fmtNum(std, 3), tone: std < 0.05 ? "bull" : "neutral", hint: "lower σ = models agree" },
-          { key: "exp", label: "Expected acc", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info" },
+          { key: "exp", label: "Historical hit rate (hypothetical)", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "rv", label: "Realised vol", value: `${(rv * 100).toFixed(0)}%`, tone: "neutral" },
         ],
-        summary: `Ensemble of ${probs.length} GBMs says ${label.toUpperCase()} (P=${(pUp * 100).toFixed(1)}%) for ${horizon}d — ${band} conviction.`,
+        summary: `Ensemble of ${probs.length} GBMs says ${label.toUpperCase()} (P=${(pUp * 100).toFixed(1)}%) for ${horizon}d — ${bandLabel(band)}.`,
         beginner: "Boosted-tree models each vote on direction. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
         verdict: {
           side: pUp > 0.6 ? "buy" : pUp < 0.4 ? "sell" : "hold",
-          text: `${(pUp * 100).toFixed(0)}% chance ${label}. ${band} conviction.`,
+          text: `${(pUp * 100).toFixed(0)}% chance ${label} — ${bandLabel(band)}.`,
           confidence: Math.min(1, conviction * 4),
         },
       };
@@ -726,14 +764,14 @@ const magnitudeReg: BotDef = aiBot<DirReq, MagRes>(
         signals: [],
         metrics: [
           { key: "exp", label: "Expected return", value: `${(expRet * 100).toFixed(2)}%`, tone: expRet > 0 ? "bull" : "bear" },
-          { key: "band", label: "Magnitude", value: band.toUpperCase(), tone: band === "ultra" || band === "extreme" ? "bull" : "info" },
+          { key: "band", label: "Agreement", value: BAND_LABEL[band] ?? band, tone: "info" },
           { key: "dir", label: "Direction", value: data.direction.toUpperCase(), tone: data.direction === "up" ? "bull" : "bear" },
           { key: "std", label: "Ensemble σ", value: fmtNum(data.ensemble_std, 3) },
-          { key: "exp_acc", label: "Dir accuracy", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info" },
+          { key: "exp_acc", label: "Historical hit rate (hypothetical)", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "macro", label: "Macro features", value: macro ? "ON" : "OFF", tone: macro ? "bull" : "neutral" },
         ],
-        summary: `Real model predicts ${(expRet * 100).toFixed(2)}% over ${data.horizon_days}d (${band}). ${macro ? "Macro features on" : "Pure price"}.`,
-        beginner: "Beyond direction — predicts how BIG the move will be. Sizing depends on this.",
+        summary: `Real model estimates ${(expRet * 100).toFixed(2)}% over ${data.horizon_days}d (${band}). ${macro ? "Macro features on" : "Pure price"}. Historical hit rate ${(expAcc * 100).toFixed(0)}% · ${HYPOTHETICAL_NOTE}.`,
+        beginner: "Beyond direction — this one estimates how BIG the move would be. A model that leans up on a 0.4% estimate is saying almost nothing.",
         verdict: {
           side: expRet > 0.02 ? "buy" : expRet < -0.02 ? "sell" : "hold",
           text: `Expected ${(expRet * 100).toFixed(2)}% over ${data.horizon_days}d (${band}).`,
@@ -759,14 +797,14 @@ const magnitudeReg: BotDef = aiBot<DirReq, MagRes>(
         signals: [],
         metrics: [
           { key: "exp", label: "Expected return", value: `${(expRet * 100).toFixed(2)}%`, tone: expRet > 0 ? "bull" : "bear" },
-          { key: "band", label: "Magnitude", value: band.toUpperCase(), tone: band === "ultra" || band === "extreme" ? "bull" : "info" },
+          { key: "band", label: "Agreement", value: BAND_LABEL[band] ?? band, tone: "info" },
           { key: "dir", label: "Direction", value: dir.toUpperCase(), tone: dir === "up" ? "bull" : "bear" },
           { key: "std", label: "Ensemble σ", value: fmtNum(std, 3) },
-          { key: "exp_acc", label: "Dir accuracy", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info" },
+          { key: "exp_acc", label: "Historical hit rate (hypothetical)", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "macro", label: "Macro features", value: macro ? "ON" : "OFF", tone: macro ? "bull" : "neutral" },
         ],
-        summary: `Predicts ${(expRet * 100).toFixed(2)}% over ${horizon}d (${band}).`,
-        beginner: "Beyond direction — predicts how BIG the move will be.",
+        summary: `Estimates ${(expRet * 100).toFixed(2)}% over ${horizon}d (${band}). Historical hit rate ${(expAcc * 100).toFixed(0)}% · ${HYPOTHETICAL_NOTE}.`,
+        beginner: "Beyond direction — this one estimates how BIG the move would be.",
         verdict: {
           side: expRet > 0.02 ? "buy" : expRet < -0.02 ? "sell" : "hold",
           text: `Expected ${(expRet * 100).toFixed(2)}% over ${horizon}d (${band}).`,
@@ -1070,7 +1108,7 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
     name: "6-Model Consensus",
     category: "ai",
     glyph: "⌬",
-    tagline: "All AI quants vote. Tier emerges from agreement, not opinion.",
+    tagline: "All AI quants vote. Watch where they agree — and where they don't.",
     formula: "binary + magnitude + +macro + sequence + transformer + quantile",
     endpoint: "/api/consensus",
     module: "ai quants/models/best_consensus/build.py",
@@ -1085,18 +1123,22 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
         metrics: [
           { key: "dir", label: "Consensus direction", value: c.direction.toUpperCase(), tone: c.direction === "up" ? "bull" : c.direction === "down" ? "bear" : "neutral" },
           { key: "agree", label: "Agree", value: `${c.agree_count} / ${c.n_models}`, tone: c.agree_count >= c.n_models - 1 ? "bull" : "neutral" },
-          { key: "tier", label: "Tier", value: c.tier.toUpperCase(), tone: c.tier === "ultra" ? "bull" : c.tier === "high" ? "info" : "neutral" },
-          { key: "acc", label: "Expected acc band", value: c.expected_accuracy_band, tone: "info" },
+          { key: "tier", label: "Model agreement", value: bandLabel(c.tier), tone: c.tier === "ultra" ? "bull" : c.tier === "high" ? "info" : "neutral" },
+          // The service still sends its own `expected_accuracy_band` per tier.
+          // It is deliberately NOT rendered: a band that climbs with agreement
+          // is the grade-scale reading the memo asked us to stop publishing.
+          // One canonical band, the same figure at every agreement level.
+          { key: "acc", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "mag", label: "Avg magnitude", value: `${(c.avg_magnitude * 100).toFixed(2)}%`, tone: "info" },
         ],
-        summary: `Real-model consensus on ${data.ticker}: ${c.agree_count}/${c.n_models} agree → ${c.direction.toUpperCase()} (${c.tier} tier). Accuracy band: ${c.expected_accuracy_band}.`,
+        summary: `Real-model consensus on ${data.ticker}: ${c.agree_count}/${c.n_models} agree → ${c.direction.toUpperCase()} (${bandLabel(c.tier)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
         beginner:
-          "Six different AI models look at the same stock and vote. When 5 or 6 agree, the trade is much higher quality. When they're split, the market is genuinely confused.",
+          "Six different AI models look at the same stock and vote. When 5 or 6 land on the same side, the card calls that strong agreement between the models. When they split, six models built on the same data could not agree — which is the most useful thing on this card.",
         verdict: {
           side: c.direction === "up" ? "buy" : c.direction === "down" ? "sell" : "hold",
           text: c.direction === "split"
-            ? `Models split — no edge.`
-            : `${c.tier.toUpperCase()} consensus — ${c.agree_count}/${c.n_models} say ${c.direction.toUpperCase()}.`,
+            ? `Models split ${c.agree_count}/${c.n_models} — no measurable predictive lift historically.`
+            : `${bandLabel(c.tier)} — ${c.agree_count}/${c.n_models} say ${c.direction.toUpperCase()}.`,
           confidence: c.tier === "ultra" ? 0.95 : c.tier === "high" ? 0.78 : c.tier === "medium" ? 0.55 : 0.3,
         },
       };
@@ -1121,15 +1163,19 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
       const agree = Math.max(upVotes, downVotes);
       const avgMag = Math.abs(trend) * 0.6;
       const tier = agree === 6 && avgMag > 0.04 ? "ultra" : agree >= 5 ? "high" : agree >= 4 ? "medium" : "low";
-      const accBand = tier === "ultra" ? "65–77%" : tier === "high" ? "60–66%" : tier === "medium" ? "55–60%" : "≤55%";
+      // ONE band, not a ladder. This used to hand each tier its own range,
+      // topping out well above anything the out-of-sample runs support, and a
+      // range that climbs with agreement implies the odds improve as the
+      // models line up. See ACCURACY_BAND in ./types for the full reasoning.
+      const accBand = ACCURACY_BAND;
       const signals: Signal[] = [];
       return {
         signals,
         metrics: [
           { key: "dir", label: "Consensus direction", value: dir.toUpperCase(), tone: dir === "up" ? "bull" : dir === "down" ? "bear" : "neutral" },
           { key: "agree", label: "Agree", value: `${agree} / 6`, tone: agree >= 5 ? "bull" : "neutral" },
-          { key: "tier", label: "Tier", value: tier.toUpperCase(), tone: tier === "ultra" ? "bull" : tier === "high" ? "info" : "neutral" },
-          { key: "acc", label: "Expected acc band", value: accBand, tone: "info" },
+          { key: "tier", label: "Model agreement", value: bandLabel(tier), tone: tier === "ultra" ? "bull" : tier === "high" ? "info" : "neutral" },
+          { key: "acc", label: "Historical hit rate (hypothetical)", value: accBand, tone: "info", hint: HYPOTHETICAL_NOTE },
         ],
         pane: {
           kind: "histogram",
@@ -1142,14 +1188,14 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
           height: 100,
         },
         summary:
-          `Models voting UP: ${upVotes}/6 — ${tier.toUpperCase()} consensus. ` +
+          `Models voting UP: ${upVotes}/6 — ${bandLabel(tier)}. ` +
           models.map((m) => `${m.name} ${(m.p * 100).toFixed(0)}%${m.vote === 1 ? "↑" : "↓"}`).join(" · "),
-        beginner: "Six models vote on direction. Historically, 5–6 agreeing was the highest-quality tier; a split vote carried no edge.",
+        beginner: "Six models vote on direction. Historically, 5–6 landing on the same side was the tightest agreement the ensemble produced; a split vote showed no measurable predictive lift historically.",
         verdict: {
           side: dir === "up" ? "buy" : dir === "down" ? "sell" : "hold",
           text: dir === "split"
-            ? `Models split ${upVotes}↑ / ${downVotes}↓ — no edge.`
-            : `${tier.toUpperCase()} consensus — ${agree}/6 say ${dir.toUpperCase()}. Historical acc band: ${accBand}.`,
+            ? `Models split ${upVotes}↑ / ${downVotes}↓ — no measurable predictive lift historically.`
+            : `${bandLabel(tier)} — ${agree}/6 say ${dir.toUpperCase()}. Historical hit rate ${accBand} · ${HYPOTHETICAL_NOTE}.`,
           confidence: tier === "ultra" ? 0.95 : tier === "high" ? 0.78 : tier === "medium" ? 0.55 : 0.3,
         },
       };

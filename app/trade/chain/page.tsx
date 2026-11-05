@@ -1,5 +1,6 @@
 "use client";
 
+import { RegulatoryLine } from "@/components/RegulatoryLine";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
@@ -127,6 +128,8 @@ export default function TradePage() {
       </section>
 
       <RiskWizard />
+      <RegulatoryLine className="px-5 pb-36 pt-4" />
+
       <TeacherAvatar
         onAsk={() =>
           setBubble({
@@ -137,7 +140,7 @@ export default function TradePage() {
         }
       />
 
-      {/* One-tap paper bet; the slip also reflects any legs built on the chain. */}
+      {/* One-tap paper trade; the slip also reflects any legs built on the chain. */}
       <QuickBet symbol={sym.sym} spot={spot} />
     </main>
   );

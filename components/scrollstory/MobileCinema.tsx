@@ -37,17 +37,19 @@ const ACTS = [
   { key: "boot", from: 0.0, to: 0.16, label: "boot" },
   { key: "print", from: 0.16, to: 0.44, label: "the tape" },
   { key: "crash", from: 0.44, to: 0.62, label: "the crash" },
-  { key: "cone", from: 0.62, to: 0.82, label: "the forecast" },
+  { key: "floor", from: 0.62, to: 0.82, label: "your worst case" },
   { key: "bull", from: 0.82, to: 1.0, label: "conviction" },
 ] as const;
 
 // The phone film's copy is a SECOND, independent array — the desktop beats in
 // lib/cinema.ts do not reach here. When the desktop copy was rewritten off the
-// spec sheet, this file still carried the oracle framing ("it saw the crash
-// coming", "flagged 12 bars early") and shipped it to every phone. Two films,
+// spec sheet, this file still carried the oracle framing (a forecast that
+// claimed foresight of the crash) and shipped it to every phone. Two films,
 // one story: if you change a beat there, change its counterpart here.
 const COPY: { from: number; to: number; h: string; sub: string }[] = [
-  { from: 0.03, to: 0.14, h: "Options you can see.", sub: "paper-only · $0 at risk" },
+  // Beat one used to repeat the H1. Frame zero (the hero instrument) is above
+  // this film now, so the film opens on the paper-only promise instead.
+  { from: 0.03, to: 0.14, h: "No trade here uses real money.", sub: "paper-only · $0 at risk" },
   { from: 0.2, to: 0.4, h: "Markets have moods.", sub: "trending, reverting, or noise" },
   { from: 0.47, to: 0.6, h: "Then the floor goes.", sub: "the part nobody rehearses" },
   { from: 0.65, to: 0.8, h: "Your worst case is a number you chose.", sub: "not one you find out afterwards" },
@@ -102,6 +104,7 @@ export function MobileCinema() {
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const skipRef = useRef<HTMLButtonElement>(null);
   const [dead, setDead] = useState(false);
   const buzzed = useRef(false);
 
@@ -133,12 +136,30 @@ export function MobileCinema() {
       cinemaClock.px = Math.floor(clamp01((g + 30) / 60) * 2000 - 1000) / 1000;
       cinemaClock.py = Math.floor(clamp01((b - 20) / 60) * 2000 - 1000) / 1000;
     };
-    window.addEventListener("deviceorientation", onTilt);
-
     let raf = 0;
     let progress = 0;
     let target = 0;
     let last = -1;
+    let prevNow = 0;
+    // SETTLE AND PARK. The loop used to re-arm every frame forever, reading
+    // layout each time, even parked at the footer under a 4x CPU throttle.
+    // Now it runs only while something moves (scroll, resize, tilt) and parks
+    // itself once the follower has caught up.
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    const onTiltKick = (e: DeviceOrientationEvent) => {
+      onTilt(e);
+      last = -1;
+      kick();
+    };
+    let tiltOn = false;
+    const setTilt = (on: boolean) => {
+      if (on === tiltOn) return;
+      tiltOn = on;
+      if (on) window.addEventListener("deviceorientation", onTiltKick);
+      else window.removeEventListener("deviceorientation", onTiltKick);
+    };
 
     const resize = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -148,7 +169,27 @@ export function MobileCinema() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
-    window.addEventListener("resize", resize);
+    const onResize = () => {
+      resize();
+      last = -1;
+      kick();
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", kick, { passive: true });
+    // Offscreen: no tilt listener and no backing store; back on entry.
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        setTilt(true);
+        resize();
+        last = -1;
+        kick();
+      } else {
+        setTilt(false);
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+    });
+    io.observe(section);
 
     const css = getComputedStyle(document.documentElement);
     const BULL = css.getPropertyValue("--bull").trim() || "#00ff87";
@@ -185,50 +226,6 @@ export function MobileCinema() {
       // how many candles have printed
       const printed = Math.floor(clamp01(ss(0.16, 0.58, p)) * N);
 
-      // ── act 4 · the forecast cone — drawn EARLY, before the crash ────────
-      // Same argument as the desktop film: it opens twelve bars before DIVERGE
-      // so "flagged 12 bars early" is countable rather than asserted.
-      const coneT = ss(0.3, 0.52, p) * (1 - ss(0.9, 1.0, p));
-      if (coneT > 0.001) {
-        const startI = DIVERGE - 12;
-        const x0 = padX + startI * cw;
-        const base = CANDLES[startI].c;
-        ctx.save();
-        ctx.globalAlpha = 0.3 * coneT;
-        const grad = ctx.createLinearGradient(x0, 0, padX + N * cw, 0);
-        grad.addColorStop(0, BULL);
-        grad.addColorStop(1, BEAR);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(x0, yOf(base));
-        const span = (N - startI) * cw;
-        for (let i = 0; i <= 24; i++) {
-          const t = i / 24;
-          ctx.lineTo(x0 + span * t * coneT, yOf(base - t * 9 - t * t * 12));
-        }
-        for (let i = 24; i >= 0; i--) {
-          const t = i / 24;
-          ctx.lineTo(x0 + span * t * coneT, yOf(base - t * 9 + t * t * 10 + 4));
-        }
-        ctx.closePath();
-        ctx.fill();
-        // the median the AI actually called
-        ctx.globalAlpha = 0.9 * coneT;
-        ctx.strokeStyle = "#ffb800";
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash([4, 5]);
-        ctx.beginPath();
-        for (let i = 0; i <= 24; i++) {
-          const t = i / 24;
-          const x = x0 + span * t * coneT;
-          const y = yOf(base - t * 9 - t * t * 1);
-          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-      }
-
       // ── acts 2 + 3 · the tape prints, then detonates ─────────────────────
       // The tape recedes once the bull begins to rise: two full-strength
       // subjects in a 9:16 frame just fight each other.
@@ -243,7 +240,7 @@ export function MobileCinema() {
         // a shard burst on each crash bar as it lands
         const age = clamp01((printed - i) / 6);
         ctx.save();
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.9 * tapeAlpha; // canvas alpha does not multiply across save()
         ctx.strokeStyle = col;
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -253,10 +250,10 @@ export function MobileCinema() {
         ctx.fillStyle = col;
         const bt = yOf(Math.max(c.o, c.c));
         const bb = yOf(Math.min(c.o, c.c));
-        ctx.globalAlpha = c.up ? 0.85 : 0.95;
+        ctx.globalAlpha = (c.up ? 0.85 : 0.95) * tapeAlpha;
         ctx.fillRect(x - cw * 0.32, bt, cw * 0.64, Math.max(1.5, bb - bt));
         if (crashed && age < 1) {
-          ctx.globalAlpha = (1 - age) * 0.7;
+          ctx.globalAlpha = (1 - age) * 0.7 * tapeAlpha;
           for (let s = 0; s < 4; s++) {
             const a = (s / 4) * Math.PI * 2 + i;
             const d = age * 16;
@@ -266,6 +263,40 @@ export function MobileCinema() {
         ctx.restore();
       }
       ctx.restore(); // tape alpha
+
+      // ── act 4 · your worst case — a floor you chose, under the crash ──────
+      // The line is the lower strike of a bull call spread: price keeps
+      // falling, but below this strike the spread's loss is fixed at what it
+      // cost. The bars below the line are dimmed (the part a defined-risk
+      // position never pays for) and the line carries the number. This replaced a down-biased
+      // forecast cone: nothing here is predicted, only bounded.
+      const floorT = ss(0.6, 0.68, p) * (1 - ss(0.9, 1.0, p));
+      if (floorT > 0.001) {
+        const floorY = yOf(LO + (HI - LO) * 0.42);
+        const x0 = padX + DIVERGE * cw;
+        const x1 = padX + N * cw;
+        const reach = x0 + (x1 - x0) * ss(0.6, 0.66, p);
+        ctx.save();
+        ctx.globalAlpha = 0.55 * floorT;
+        ctx.fillStyle = "#050505";
+        ctx.fillRect(x0, floorY, reach - x0, chartTop + chartH + 6 - floorY);
+        ctx.globalAlpha = floorT;
+        ctx.strokeStyle = BEAR;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = BEAR;
+        ctx.shadowBlur = 10 * floorT;
+        ctx.beginPath();
+        ctx.moveTo(x0, floorY);
+        ctx.lineTo(reach, floorY);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = INK;
+        ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "bottom";
+        ctx.fillText("below this strike, the loss stops at −$80", x1, floorY - 6);
+        ctx.restore();
+      }
 
       // ── act 5 · the bull charges ─────────────────────────────────────────
       const bt2 = ss(0.82, 0.97, p);
@@ -316,8 +347,10 @@ export function MobileCinema() {
       const rect = section.getBoundingClientRect();
       const range = rect.height - window.innerHeight;
       target = clamp01(range > 0 ? -rect.top / range : 0);
-      // the same damped follower shape the desktop film uses
-      const k = 1 - Math.exp(-5 * 0.016);
+      // the same damped follower shape the desktop film uses, on real dt
+      const dt = Math.min(0.05, prevNow ? (now - prevNow) / 1000 : 0.016);
+      prevNow = now;
+      const k = 1 - Math.exp(-5 * dt);
       progress += (target - progress) * k;
       if (Math.abs(target - progress) < 0.0002) progress = target;
       cinemaClock.progress = progress;
@@ -341,16 +374,29 @@ export function MobileCinema() {
           const o = Math.min(1, ss(b.from, b.from + 0.03, progress), 1 - ss(b.to - 0.03, b.to, progress));
           el.style.opacity = String(Math.max(0, o));
         });
+        // Skip leaves with the film: faded and inert by 0.9, so it can never
+        // sit under the landing passing taps through to its links.
+        const pill = skipRef.current;
+        if (pill) {
+          pill.style.opacity = String(1 - ss(0.86, 0.9, progress));
+          pill.inert = progress >= 0.9;
+        }
       }
-      raf = requestAnimationFrame(tick);
-      void now;
+      if (Math.abs(target - progress) > 0.0002) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        raf = 0;
+        prevNow = 0;
+      }
     };
-    raf = requestAnimationFrame(tick);
+    kick();
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("deviceorientation", onTilt);
+      io.disconnect();
+      setTilt(false);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", kick);
     };
   }, []);
 
@@ -360,7 +406,7 @@ export function MobileCinema() {
     <section
       ref={sectionRef}
       data-mobile-cinema
-      className="relative md:hidden"
+      className="film-phone-only relative"
       style={{ height: "400svh" }}
       aria-label="Intro film"
     >
@@ -381,22 +427,24 @@ export function MobileCinema() {
             ScrollCinema ships a "Skip intro" button styled `md:hidden` — a
             mobile-only control inside a component CinemaGate only mounts at
             768px and up, so it could never render anywhere. Phones got 400svh
-            of scroll-driven canvas with no escape at all. Fixed to the
-            viewport (not the sticky stage, which sits below the fold before it
-            pins) so it is reachable the moment you land. */}
+            of scroll-driven canvas with no escape at all. It used to be
+            `fixed`, which inside this sticky stage's stacking context painted
+            it UNDER every later section while it kept receiving taps (a tap
+            on it at the footer opened /quant). It is pinned with the stage
+            now and leaves with it. */}
         <button
+          ref={skipRef}
           type="button"
           onClick={() => {
             const el = sectionRef.current;
             if (!el) return;
-            // INSTANT, not smooth — same as the desktop doSkip. A smooth scroll
-            // is animated by the browser over several frames, and the film's own
-            // scroll-driven frame loop cancels it mid-flight, so the page never
-            // moved. Measured: with `behavior:"smooth"` the button left scrollY
-            // at 0; instant lands at the handoff and stays.
-            window.scrollTo(0, el.offsetTop + el.offsetHeight - window.innerHeight + 4);
+            // INSTANT, not smooth: the film's frame loop cancels a smooth
+            // scroll mid-flight. Lands on the section after the film, and only
+            // ever moves the reader DOWN.
+            const dest = el.getBoundingClientRect().bottom + window.scrollY;
+            if (dest > window.scrollY) window.scrollTo(0, dest);
           }}
-          className="pointer-events-auto fixed bottom-7 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-5 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
+          className="pointer-events-auto absolute bottom-5 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-5 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
         >
           Skip intro ↓
         </button>

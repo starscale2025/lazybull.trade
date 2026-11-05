@@ -112,7 +112,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
                   c: "text-fg",
                 },
                 {
-                  k: "win odds",
+                  k: "in-range odds · BS model",
                   v: `${(selected.prob * 100).toFixed(0)}%`,
                   c: "text-fg",
                 },
@@ -139,7 +139,7 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
             disabled={!selected}
             className="w-full bg-bull px-4 py-3 font-mono text-[0.75rem] font-semibold uppercase tracking-wider text-bg transition-opacity hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-30"
           >
-            place this bet →
+            place paper trade →
           </button>
         </MagneticCTA>
 

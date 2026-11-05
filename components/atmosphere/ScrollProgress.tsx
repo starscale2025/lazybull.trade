@@ -13,8 +13,10 @@ export function ScrollProgress() {
     const compute = () => {
       const doc = document.documentElement;
       const scrollable = doc.scrollHeight - doc.clientHeight;
-      const pct = scrollable > 0 ? Math.min(100, Math.max(0, (doc.scrollTop / scrollable) * 100)) : 0;
-      el.style.setProperty("--p", `${pct}%`);
+      // A 0..1 scale for transform: scaleX (compositor-only) instead of an
+      // animated width, which re-laid out the bar on every scroll frame.
+      const p = scrollable > 0 ? Math.min(1, Math.max(0, doc.scrollTop / scrollable)) : 0;
+      el.style.setProperty("--p", p.toFixed(4));
       raf = 0;
     };
 

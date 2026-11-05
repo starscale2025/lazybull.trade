@@ -13,14 +13,49 @@
 /**
  * Scrubbable length of the pinned cinema section, in vh.
  *
- * 1400 → 1500 when the ICE-LAB tail was widened: it offsets the mild
- * progress-compression on safety/consensus so their felt pace barely changes,
- * and gives the lab's colour story its ~1.8x breathing room.
+ * 1400 → 1500 when the ICE-LAB tail was widened. 1500 → 1370 in 2026-11 when
+ * frame zero retired the boot and desk acts: the film now starts at the dive,
+ * and the length is chosen so every act after the dive beat keeps exactly the
+ * pace it had (0.835 of the film over the same 1169vh it used to get), with the
+ * curtain's lift added in front.
  */
-export const SCROLL_LENGTH_VH = 1500;
+export const SCROLL_LENGTH_VH = 1370;
 
 /**
- * How far the section pulls the following hero UP, in vh. The film's last frame
- * resolves onto the hero, so the two overlap by exactly one viewport.
+ * How far the section pulls the following section UP, in vh. The film's last
+ * frame settles to the page ground over it, so the two overlap by one viewport.
  */
 export const HANDOFF_OVERLAP_VH = 100;
+
+/**
+ * FRAME ZERO's curtain, in vh. The hero instrument is the first frame, stacked
+ * above the film; the film's section starts this far UP under it, so scrolling
+ * lifts the hero off an already-pinned stage.
+ */
+export const CURTAIN_VH = 100;
+
+/** Film progress where the film starts (the dive; boot and desk are retired). */
+export const FILM_START = 0.15;
+/** Film progress reached as the curtain finishes lifting: the dive's beat. */
+export const FILM_LIFT_END = 0.165;
+
+/**
+ * Scroll progress (0..1 over the pinned section) → film progress (ACTS space).
+ * The curtain's lift covers only the tunnel's run-up, so the first line of the
+ * film appears as the hero clears, never under it.
+ */
+export function scrollToFilm(s: number): number {
+  const c = CURTAIN_VH / (SCROLL_LENGTH_VH - 100);
+  const x = s < 0 ? 0 : s > 1 ? 1 : s;
+  if (x <= c) return FILM_START + (FILM_LIFT_END - FILM_START) * (x / c);
+  return FILM_LIFT_END + (1 - FILM_LIFT_END) * ((x - c) / (1 - c));
+}
+
+/** The inverse, for the rail's seeks and the reload resume. */
+export function filmToScroll(p: number): number {
+  const c = CURTAIN_VH / (SCROLL_LENGTH_VH - 100);
+  if (p <= FILM_START) return 0;
+  if (p <= FILM_LIFT_END) return c * ((p - FILM_START) / (FILM_LIFT_END - FILM_START));
+  if (p >= 1) return 1;
+  return c + (1 - c) * ((p - FILM_LIFT_END) / (1 - FILM_LIFT_END));
+}

@@ -1,0 +1,21 @@
+# The compliance lint is only a gate if something runs it. `npm run build`
+# now does (package.json), and this runs the whole verify chain on every PR:
+# types, tests, the production build, the guard and the copy lint.
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verify

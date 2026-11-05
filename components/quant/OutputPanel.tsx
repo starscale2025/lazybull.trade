@@ -305,7 +305,11 @@ function AggregateVerdict({
       </div>
       <div className="mt-2">
         <div className="flex items-center justify-between t-chrome text-fg-faint">
-          <span>conviction</span>
+          {/* "conviction" is the workbench sounding sure. The bar is an
+              average of the staged bots' own readings — how much they line
+              up — so it says that instead. Same vocabulary as BAND_LABEL in
+              lib/quant/ai-bots.ts. */}
+          <span>model agreement</span>
           <span>{Math.min(100, Math.max(0, confidence * 100)).toFixed(0)}%</span>
         </div>
         <div className="mt-1 h-1.5 w-full bg-bg">
@@ -340,10 +344,12 @@ function teacherNote(side: Verdict["side"], counts: ReturnType<typeof countSides
     return `${counts.sell} bots lean bearish. Multiple methods pointing the same way was historically the strongest evidence this workbench produces — worth understanding why before dismissing it.`;
   }
   if (counts.buy > 0 && counts.sell > 0) {
-    return `Bots disagree (${counts.buy} buy / ${counts.sell} sell). That usually means trend & reversion bots are fighting — the market is in transition. Wait for confirmation.`;
+    // "Wait for confirmation" was an instruction — the one thing these notes
+    // must never give. Disagreement is a finding; describe it and stop.
+    return `Bots disagree (${counts.buy} long / ${counts.sell} short). That usually means the trend and reversion rules are reading the same bars differently — historically a sign the series was between regimes.`;
   }
   if (btCount > 0) {
-    return `Backtest leaderboard at the top of this panel ranks your bots by realised return on this seed. Past returns don't guarantee future ones, but a bot that lost money in the past rarely surprises.`;
+    return `The leaderboard at the top of this panel ranks your bots by realised return on this seed — one sample, one seed. It describes what happened on this tape and nothing beyond it.`;
   }
-  return "Stack a few more bots — one signal is a guess, three is a thesis.";
+  return "Stack a few more bots. One reading is a guess; several differently-built ones disagreeing is the part worth studying.";
 }

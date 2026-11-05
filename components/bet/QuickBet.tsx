@@ -1,6 +1,6 @@
 "use client";
 
-// The one-tap paper bet: UP or DOWN, a dollar stake, one button.
+// The one-tap paper trade: UP or DOWN, a dollar amount, one button.
 //
 // Mounted on /quant and /trade/chain. Before you commit, the slip shows the
 // read from both halves of the product — what the quant jury says and what the
@@ -30,7 +30,7 @@ type Props = {
   spot?: number;
   /** Daily bars if the page already fetched them; the slip fetches otherwise. */
   candles?: Candle[];
-  /** When set, betting is locked and this explains why (e.g. seed tape —
+  /** When set, trading is locked and this explains why (e.g. seed tape —
       synthetic prices must never book into the real shared paper account). */
   lockReason?: string | null;
   /** Offered as the way out of the lock (e.g. switch the page to live mode). */
@@ -165,7 +165,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
       jury_conf: reads?.quant.confidence ?? null,
       model_p_up: reads?.model.pUp ?? null,
     });
-    narrate(`Bet placed — ${dir} $${stake.toLocaleString()} on ${symbol} at ${mark.toFixed(2)}.`);
+    narrate(`Paper trade placed — ${dir} $${stake.toLocaleString()} on ${symbol} at ${mark.toFixed(2)}.`);
     setPlaced(`${dir === "up" ? "▲ UP" : "▼ DOWN"} $${stake.toLocaleString()} on ${symbol} @ ${mark.toFixed(2)}`);
   };
 
@@ -186,7 +186,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
             {/* header */}
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <div className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg">
-                Bet on <span className="text-bull">{symbol}</span>
+                Paper trade on <span className="text-bull">{symbol}</span>
                 <span className="ml-2 t-data text-fg-dim">{mark ? `$${mark.toFixed(2)}` : "…"}</span>
               </div>
               <button
@@ -201,10 +201,10 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
             {lockReason ? (
               <div className="space-y-3 p-4">
                 <div className="border border-amber/40 bg-amber/10 px-3 py-2 font-mono text-[0.6875rem] leading-relaxed text-amber">
-                  ⚠ betting locked — {lockReason}
+                  ⚠ trading locked — {lockReason}
                 </div>
                 <div className="t-chrome text-fg-faint">
-                  bets book on your real paper account, so they only fill at real prices
+                  paper trades book on your real paper account, so they only fill at real prices
                 </div>
                 {onUnlock && (
                   <button
@@ -218,7 +218,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
             ) : placed ? (
               <div className="space-y-3 p-4">
                 <div className="border border-bull/40 bg-bull/10 px-3 py-2 font-mono text-[0.6875rem] text-bull">
-                  ✓ Paper bet placed — {placed}
+                  ✓ Paper trade placed — {placed}
                 </div>
                 <div className="t-chrome text-fg-faint">
                   cash ${Math.round(cash).toLocaleString()} · manage it on the PRO chart
@@ -342,7 +342,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                       dir === "up" ? "bg-bull text-bg hover:bg-bull-dim" : "bg-bear text-bg hover:bg-bear-dim"
                     } disabled:cursor-not-allowed disabled:opacity-40`}
                   >
-                    {killed ? "kill switch on" : `Place $${stake.toLocaleString()} ${dir === "up" ? "▲ up" : "▼ down"} bet`}
+                    {killed ? "kill switch on" : `Place $${stake.toLocaleString()} ${dir === "up" ? "▲ up" : "▼ down"} paper trade`}
                   </button>
                   {error && (
                     <div role="alert" className="mt-2 border border-bear/40 bg-bear/10 px-2 py-1.5 font-mono text-[0.625rem] text-bear">

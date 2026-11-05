@@ -3,7 +3,7 @@ import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
 import { Footer } from "@/components/Footer";
 import { BOT_REGISTRY } from "@/lib/quant/bots";
-import { CATEGORY_META, type BotCategory } from "@/lib/quant/types";
+import { ACCURACY_BAND, CATEGORY_META, HYPOTHETICAL_NOTE, type BotCategory } from "@/lib/quant/types";
 
 // Visualizations (untouched)
 import { LearnLiveDemo } from "@/components/learn/LearnLiveDemo";
@@ -37,11 +37,15 @@ export const metadata = {
 };
 
 const CATEGORY_ORDER: BotCategory[] = ["ai", "trend", "stats", "risk", "options", "custom"];
+// TEACHING INSTRUMENTS, described as instruments. "Ensemble direction
+// forecasters" and "how much to bet" named a forecasting service and a sizing
+// service — two things lazybull is not and cannot be while unregistered. The
+// counts stay because they are checkable against BOT_REGISTRY below.
 const CATEGORY_BLURB: Record<BotCategory, string> = {
-  ai: "12 bots that delegate to a Python ML service — neural option pricers + ensemble direction forecasters trained on real Yahoo data.",
-  trend: "Follow momentum. Buy the breakout, exit the reversal. SMA Crossover, MACD, Donchian, Bollinger.",
+  ai: "12 teaching instruments that delegate to a Python ML service — neural option pricers, and direction models you can watch agree and disagree on real Yahoo data.",
+  trend: "Follow momentum. Where a breakout was marked, where the reversal ended it. SMA Crossover, MACD, Donchian, Bollinger.",
   stats: "Measure what's normal. Z-score, Hurst exponent, Kalman filter, LinReg channel.",
-  risk: "How much to bet. Kelly criterion, Monte Carlo VaR, Sharpe optimiser.",
+  risk: "The maths of risk and ruin. Kelly criterion, Monte Carlo VaR, Sharpe optimiser.",
   options: "Pure math. Black-Scholes solver, IV crush detector, the wheel back-test.",
   custom: "Bots you imported yourself. Bring your own JS function, hot-load it.",
 };
@@ -51,10 +55,16 @@ const TICKER_JARGON_A = [
   "ALPHA", "BETA", "SHARPE", "SORTINO", "CALMAR", "MAX DRAWDOWN",
   "WALK-FORWARD", "EMBARGO", "OUT-OF-SAMPLE", "INFORMATION COEFFICIENT",
 ];
+// The counts here are checkable (BOT_REGISTRY, the demo list, the paper
+// account). The vendor chatter that sat beside them — a model vendor's
+// product name, an internal service port, a data-vendor feed name — was
+// neither checkable by a reader nor any of their business, and naming a
+// third-party LLM in a ticker on an options-education page implies a
+// relationship we do not have.
 const TICKER_JARGON_D = [
-  "27 BOTS", "13 MODELS", "8 LIVE DEMOS", "0.4MS PRICING", "$5K PAPER",
-  "GPT-4o-mini", "FASTAPI · :8000", "YAHOO FEED", "BLACK-SCHOLES · 1973",
-  "HESTON · 1993", "MULBERRY32 · 2014", "ATR-BASED STOPS", "ENSEMBLE-OF-7",
+  "27 BOTS", "13 MODELS", "8 LIVE DEMOS", "$5K PAPER", "PAPER ONLY",
+  "BLACK-SCHOLES · 1973", "HESTON · 1993", "MULBERRY32 · 2014",
+  "ATR-BASED STOPS", "ENSEMBLE-OF-7", "WALK-FORWARD", "NO LOOKAHEAD",
 ];
 
 export default function LearnPage() {
@@ -206,8 +216,9 @@ export default function LearnPage() {
       ),
       takeaway: (
         <Takeaway>
-          &quot;<span className="text-bull italic">Sharpe &gt; 1</span> separates real edge from
-          lucky upside. Most retail strategies don&apos;t clear it.&quot;
+          &quot;<span className="text-bull italic">Sharpe &gt; 1</span> is the line where a
+          return starts to look paid-for rather than lucky. Most published retail
+          strategies never cleared it.&quot;
         </Takeaway>
       ),
       demo: <LearnBacktestBuilder />,
@@ -220,18 +231,23 @@ export default function LearnPage() {
         <>
           {HL("One bot is", "text-fg-dim", "0.1s")}
           {HL("a guess.", "italic font-light text-fg", "0.3s")}
-          {HL("Six agreeing", "italic font-light text-bull pull-quote-glow", "0.55s")}
-          {HL("is a signal.", "text-fg-dim", "0.78s")}
+          {HL("Six disagreeing", "italic font-light text-bull pull-quote-glow", "0.55s")}
+          {HL("is the lesson.", "text-fg-dim", "0.78s")}
         </>
       ),
-      thesis: "Toggle bots. Watch tier flip. Agreement is the alpha.",
+      // The chapter used to end on "Six agreeing is a signal" and then quote a
+      // top-tier accuracy range as if agreement bought better odds. Both had to
+      // go: the memo asks for consensus framed as watching models disagree, and
+      // for one canonical hit-rate band that never climbs with the tier.
+      thesis: "Toggle bots. Watch the agreement move. Disagreement is data.",
       body: (
         <>
-          Watch the conviction band slide as more models fall into line. Tweak the dataset —
-          drift, vol, seed — and see how robust the agreement is. That&apos;s how a workbench
-          separates real edges from chart-pattern wishful thinking. The historical accuracy band
-          of <span className="text-bull italic">ULTRA tier</span> consensus is 65–77% on embargoed
-          walk-forward CV.
+          Watch the agreement band slide as more models fall into line — and watch it break
+          apart when you tweak the dataset&apos;s drift, vol or seed. Six models built on the
+          same tape failing to agree is the most honest thing a workbench can show you.
+          Whatever the agreement, one band describes them all:{" "}
+          <span className="text-bull italic">{ACCURACY_BAND}</span> on embargoed walk-forward
+          CV — {HYPOTHETICAL_NOTE}.
         </>
       ),
       demo: <LearnConsensusPlayground />,
@@ -437,15 +453,13 @@ export default function LearnPage() {
 
             {/* Cyan italic subtitle — the 7-word recap */}
             <div
-              className="max-w-[60ch] font-display italic font-light text-cyan text-2xl md:text-3xl tracking-tight hero-fade-up"
-              style={{ animationDelay: "1.2s" }}
+              className="max-w-[60ch] font-display italic font-light text-cyan text-2xl md:text-3xl tracking-tight hero-rise"
             >
               Eight live demos. Fourteen chapters. Zero textbooks.
             </div>
 
             <p
-              className="max-w-[58ch] text-balance font-display text-lg leading-relaxed text-fg-dim md:text-xl hero-fade-up"
-              style={{ animationDelay: "1.45s" }}
+              className="max-w-[58ch] text-balance font-display text-lg leading-relaxed text-fg-dim md:text-xl hero-rise"
             >
               Most quant tutorials are walls of text with one screenshot. Ours is the opposite:
               every concept on this page comes with a chart you can drag, a slider that morphs
@@ -926,7 +940,7 @@ export default {
             primary
           />
           <CTACard
-            label="See the visual chain"
+            label="Open the strategy builder"
             sub="Drag-build options strategies"
             href="/trade"
           />

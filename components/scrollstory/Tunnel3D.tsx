@@ -41,8 +41,10 @@ const CAM_Z1 = -58;
 const camZAt = (progress: number) => lerp(CAM_Z0, CAM_Z1, smooth(0, 1, diveT(progress)));
 
 // --- corridor layout ----------------------------------------------------------
+// Plates drawn from code (scripts/cinema/plates.mjs), not screenshots: a
+// screenshot kept flying past screens the product had removed.
 const SHOTS = ["learn", "trade", "quant", "pro", "chain", "bots", "about"].map(
-  (n) => `/cinema/shots/${n}.webp`
+  (n) => `/cinema/plates/${n}.svg`
 );
 const PANEL_N = 16;
 const PANEL_Z0 = -4;

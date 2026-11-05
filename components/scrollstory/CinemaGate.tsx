@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ScrollCinema } from "./ScrollCinema";
 import { MobileCinema } from "./MobileCinema";
 import { CinemaStill } from "./CinemaStill";
-import { SCROLL_LENGTH_VH } from "./cinema-metrics";
+import { SCROLL_LENGTH_VH, CURTAIN_VH } from "./cinema-metrics";
 
 // The intro film auto-plays on EVERY load of the homepage, then hands off to
 // the hero. Nobody is trapped: the cinema carries an always-visible "Skip
@@ -51,13 +51,18 @@ import { SCROLL_LENGTH_VH } from "./cinema-metrics";
 // the same page at <768px, where this gate never mounts the film at all: 0.023.
 //
 // So the gate now always renders a box of exactly the film's size, and only
-// swaps its CONTENTS. The reserved box is `hidden md:block`, which matches the
-// (max-width: 767px) check below exactly — phones reserve nothing, because
-// phones get nothing. Nothing moves on either one.
+// swaps its CONTENTS. There are two boxes, `.film-desktop-only` and
+// `.film-phone-only` (app/globals.css), which match PHONE_FILM_QUERY below
+// exactly: the desktop box is the film's height, the phone box MobileCinema's
+// 400svh. Nothing moves on either one.
 // "pending" until a REAL viewport width exists to decide from. Phones get their
 // OWN film — a 2D canvas cut for portrait, zero three.js. See MobileCinema for
 // why it is a different film rather than a smaller one.
 type Mode = "pending" | "film" | "mobile" | "still";
+
+/** Narrow, or a short coarse-pointer landscape viewport (a phone on its side).
+    Must match .film-phone-only / .film-desktop-only in app/globals.css. */
+const PHONE_FILM_QUERY = "(max-width: 767px), (pointer: coarse) and (max-height: 500px)";
 
 /**
  * Film or still, at desktop width. A PURE READ — no writes, no memo.
@@ -101,7 +106,7 @@ export function CinemaGate() {
   const [mode, setMode] = useState<Mode>("pending");
 
   useEffect(() => {
-    const mql = window.matchMedia("(max-width: 767px)");
+    const mql = window.matchMedia(PHONE_FILM_QUERY);
     // Mirrors `mode` inside the effect so the decision above can happen out
     // here, where side effects are allowed, instead of inside the updater.
     let committed: Mode = "pending";
@@ -154,19 +159,24 @@ export function CinemaGate() {
   // globals.css divides h-screen. Keep these two in step; cinema-metrics.ts is
   // the shared source of the number.
   return (
-    <div
-      aria-hidden
-      data-cinema-reserve
-      className="pointer-events-none relative z-20 hidden md:block"
-      style={{
-        height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
-        marginBottom: "calc(-100vh / var(--ui-zoom))",
-      }}
-    >
-      {/* The stage the film will occupy, painted in the page ground so the
-          pre-mount frame reads as the film's own black rather than as a gap.
-          The loader gate takes over the moment ScrollCinema mounts. */}
-      <div className="sticky top-0 h-screen w-full bg-bg" />
-    </div>
+    <>
+      <div
+        aria-hidden
+        data-cinema-reserve
+        className="film-desktop-only pointer-events-none relative z-20"
+        style={{
+          height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
+          marginTop: `calc(-${CURTAIN_VH}vh / var(--ui-zoom))`,
+          marginBottom: "calc(-100vh / var(--ui-zoom))",
+        }}
+      >
+        {/* The stage the film will occupy, painted in the page ground so the
+            pre-mount frame reads as the film's own black rather than as a gap.
+            The loader gate takes over the moment ScrollCinema mounts. */}
+        <div className="sticky top-0 h-screen w-full bg-bg" />
+      </div>
+      {/* MobileCinema's box, so mounting it below the hero moves nothing. */}
+      <div aria-hidden data-cinema-reserve className="film-phone-only bg-bg" style={{ height: "400svh" }} />
+    </>
   );
 }

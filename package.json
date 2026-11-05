@@ -1,15 +1,16 @@
 {
-  "name": "lazybull1",
+  "name": "lazybull",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build",
+    "build": "node scripts/check-compliance.mjs && next build",
     "start": "next start",
     "test": "vitest run",
-    "cinema:capture": "node scripts/cinema/capture.mjs",
+    "cinema:plates": "node scripts/cinema/plates.mjs",
     "guard": "node scripts/guard.mjs",
-    "verify": "tsc --noEmit && vitest run && next build && node scripts/guard.mjs"
+    "verify": "tsc --noEmit && vitest run && next build && node scripts/guard.mjs && node scripts/check-compliance.mjs",
+    "compliance": "node scripts/check-compliance.mjs"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.2",

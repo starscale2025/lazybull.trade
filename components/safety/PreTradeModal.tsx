@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useModalFocus } from "./useModalFocus";
 import { AnimatePresence, motion } from "motion/react";
 
 type Props = {
@@ -36,6 +37,10 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
   }, [open, isDangerous]);
 
   const blocked = trainingWheels && isDangerous;
+  // The step that enforces the unbounded-risk block, so it gets the full dialog
+  // contract: role, focus in, Tab kept inside, Escape cancels, focus restored.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useModalFocus(panelRef, open, { onEscape: onClose });
 
   return (
     <AnimatePresence>
@@ -48,6 +53,11 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
           onClick={onClose}
         >
           <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pretrade-title"
+            tabIndex={-1}
             initial={{ scale: 0.95, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, y: 12 }}
@@ -61,20 +71,20 @@ export function PreTradeModal({ open, onClose, onConfirm, strategy, unbounded, m
               }`}
             >
               <span>{isDangerous ? "⚠ unbounded risk · review" : "● confirm paper trade"}</span>
-              <button onClick={onClose} className="text-fg-faint hover:text-fg">✕</button>
+              <button type="button" onClick={onClose} aria-label="Cancel" className="text-fg-faint hover:text-fg">✕</button>
             </div>
 
             <div className="p-6">
               {isDangerous ? (
                 <>
-                  <h3 className="font-display text-3xl tracking-tightest text-fg leading-tight">
+                  <h3 id="pretrade-title" className="font-display text-3xl tracking-tightest text-fg leading-tight">
                     This <span className="t-accent text-bear">{strategy}</span> can lose more than your account.
                   </h3>
                   <DangerSimulation />
                 </>
               ) : (
                 <>
-                  <h3 className="font-display text-2xl tracking-tightest text-fg leading-tight">
+                  <h3 id="pretrade-title" className="font-display text-2xl tracking-tightest text-fg leading-tight">
                     Confirm: <span className="t-accent">{strategy}</span>
                   </h3>
                   <p className="t-body-sm mt-2 text-fg-dim">

@@ -29,9 +29,10 @@ import { ACTS } from "@/lib/cinema";
  * in one className. This is a LEFT rail and never trips it.
  */
 
+// Boot and the desk are retired: frame zero (the hero instrument) replaced
+// them in 2026-11 and the film now starts at the dive, so they are never on
+// screen and have no business in the film's own table of contents.
 const ACT_ORDER = [
-  "boot",
-  "assembly",
   "dive",
   "regime",
   "candle",
@@ -43,8 +44,6 @@ const ACT_ORDER = [
 
 /** What each act is actually about, for the label and the announcer. */
 const ACT_LABEL: Record<(typeof ACT_ORDER)[number], string> = {
-  boot: "boot",
-  assembly: "the desk",
   dive: "the dive",
   regime: "regime",
   candle: "the crash",
@@ -143,11 +142,11 @@ export const CinemaRail = forwardRef<
             aria-label={`Act ${i + 1} of ${ACT_ORDER.length}: ${ACT_LABEL[act]}`}
             className="rail-row group flex items-center gap-2 text-left"
           >
-            <span className="rail-tick block h-px w-3 bg-fg-faint" aria-hidden />
-            <span className="rail-num t-data text-[0.625rem] text-fg-faint" aria-hidden>
+            <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
+            <span className="rail-num t-data text-[0.625rem] text-fg-dim" aria-hidden>
               {String(i + 1).padStart(2, "0")}
             </span>
-            <span className="rail-label t-chrome text-fg-faint" aria-hidden>
+            <span className="rail-label t-chrome text-fg-dim" aria-hidden>
               {ACT_LABEL[act]}
             </span>
           </button>
@@ -159,8 +158,8 @@ export const CinemaRail = forwardRef<
           onClick={onSkip}
           className="rail-row rail-skip mt-1 flex items-center gap-2 text-left"
         >
-          <span className="rail-tick block h-px w-3 bg-fg-faint" aria-hidden />
-          <span className="t-chrome text-fg-faint">skip film ↓</span>
+          <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
+          <span className="t-chrome text-fg-dim">skip film ↓</span>
         </button>
       </nav>
     </div>

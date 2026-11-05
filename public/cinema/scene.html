@@ -74,11 +74,6 @@
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     height: 92%; opacity: 0;
   }
-  #homepage {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%; object-fit: cover; object-position: top center;
-    opacity: 0;
-  }
 </style>
 </head>
 <body>
@@ -90,7 +85,6 @@
     <div id="base"></div>
   </div>
   <div id="panels"></div>
-  <img id="homepage" alt="">
   <canvas id="bull"></canvas>
   <img id="bullreal" alt="">
   <svg id="outline" width="880" height="620" viewBox="0 0 880 620">
@@ -105,7 +99,7 @@
 // ACTS in lib/cinema.ts). Fallback default kept in sync for standalone opens. --
 let PHASES = {
   boot: [0.00, 0.05], assembly: [0.05, 0.15], dive: [0.15, 0.24], regime: [0.24, 0.32],
-  candle: [0.32, 0.59], safety: [0.59, 0.665], consensus: [0.665, 0.73], bull: [0.73, 0.84],
+  candle: [0.32, 0.59], safety: [0.59, 0.69], consensus: [0.69, 0.73], bull: [0.73, 0.84],
   matrix: [0.84, 1.00],
 };
 
@@ -197,7 +191,7 @@ const MATRIX_CHARS =
   "ΔΓΘΛΣΩνρσμβα0123456789.+-=<>/|$%CPKS∂π".split("");
 
 // 12 bots for the consensus ring — real families/verdicts from the app.
-// 10 agree (up>0.6), 2 dissent — a realistic ULTRA majority, not unanimity.
+// 10 agree (up>0.6), 2 dissent — a realistic strong majority, not unanimity.
 const BOTS = [
   { k: "SMA", fam: "trend", up: 0.86 }, { k: "MACD", fam: "trend", up: 0.80 },
   { k: "RSI", fam: "trend", up: 0.43 }, { k: "BOLL", fam: "trend", up: 0.78 },
@@ -214,7 +208,7 @@ let NOW = 0; // ambient time (seconds) set by renderAt — drives always-on moti
 let DRAW_T0 = null; // when the loader revealed → the laptop draw-on starts
 let CHART = null;      // shared chart rect { x, y, w, h }
 let REGIME = null;     // { incr: number[] }
-let CANDLES = null;    // { bars:[{x,oy,cy,hy,ly,bw,up,crash}], ai:[{x,y}], cone:[{x,uy,ly}], diverge, spot:[] }
+let CANDLES = null;    // { bars:[{x,oy,cy,hy,ly,bw,up,crash}], diverge, spot:[] }
 let PAYOFF = null;     // { pts:[{x,y}], zeroY, lossY, beX, maxLossX }
 let RING = null;       // { cx, cy, r, nodes:[{a,x,y,col,up,k}] }
 
@@ -259,15 +253,6 @@ function buildCandles() {
     const wick = (0.25 + rnd() * 0.6) * Math.abs(c - o) + o * 0.0015;
     raw.push({ o, c, h: hi + wick, l: lo - wick, up: c >= o, crash: i >= CRASH && i < END_CRASH });
   }
-  // AI forecast: tracks close through DIVERGE, then bends down toward the crash low.
-  let crashLow = Infinity;
-  for (let i = CRASH; i < N; i++) crashLow = Math.min(crashLow, raw[i].l);
-  const ai = [];
-  const slope = (raw[DIVERGE].c - crashLow) / (END_CRASH - 2 - DIVERGE);
-  for (let i = 0; i < N; i++) {
-    if (i <= DIVERGE) ai.push(raw[i].c);
-    else ai.push(Math.max(crashLow, raw[DIVERGE].c - (i - DIVERGE) * slope));
-  }
   // price range for pixel mapping (pad a little)
   let pmin = Infinity, pmax = -Infinity;
   for (const b of raw) { pmin = Math.min(pmin, b.l); pmax = Math.max(pmax, b.h); }
@@ -278,14 +263,7 @@ function buildCandles() {
   const bars = raw.map((b, i) => ({
     x: xOf(i), oy: yOf(b.o), cy: yOf(b.c), hy: yOf(b.h), ly: yOf(b.l), bw, up: b.up, crash: b.crash,
   }));
-  const aiPx = ai.map((v, i) => ({ x: xOf(i), y: yOf(v) }));
-  // widening cone around the AI line, from DIVERGE onward
-  const cone = [];
-  for (let i = DIVERGE; i < N; i++) {
-    const w = (i - DIVERGE) * (pmax - pmin) * 0.010 + (pmax - pmin) * 0.008;
-    cone.push({ x: xOf(i), uy: yOf(ai[i] + w), ly: yOf(ai[i] - w) });
-  }
-  CANDLES = { bars, ai: aiPx, cone, diverge: DIVERGE, crash: CRASH, endCrash: END_CRASH, N, spot: raw.map((b) => b.c) };
+  CANDLES = { bars, diverge: DIVERGE, crash: CRASH, endCrash: END_CRASH, N, spot: raw.map((b) => b.c) };
 }
 
 // Bull Call Spread payoff: flat max-loss floor → ramp → flat max-profit ceiling.
@@ -411,11 +389,6 @@ window.initScene = async function initScene(cfg) {
   buildPayoff();
   buildRing(W, H);
 
-  // No `|| CFG.shots.home` fallback: SHOT_NAMES has carried no "home" entry
-  // since "/" became the film itself, so that branch could never fire and the
-  // file it named was an orphan 183KB in public/.
-  document.getElementById("homepage").src = CFG.shots.hero;
-
   const urls = Object.values(CFG.shots);
   if (CFG.bullFrames && CFG.bullFrames.length) {
     BULL_IMGS = CFG.bullFrames.map((u) => { const im = new Image(); im.src = u; return im; });
@@ -484,8 +457,10 @@ function drawRegime(ctx, r, env, W, H) {
   const nx = mx0 + mw * seg(H_ex, 0.34, 0.68);
   ctx.fillStyle = col; ctx.fillRect(nx - 1.5, my - 7, 3, 14);
   const name = H_ex > 0.56 ? "TRENDING" : H_ex < 0.44 ? "MEAN-REVERTING" : "RANDOM WALK";
-  const rec = H_ex > 0.56 ? "run trend bots · SMA · MACD · Donchian"
-    : H_ex < 0.44 ? "run reversion · Z-Score · Kalman" : "no edge — stand aside";
+  // Describes which rule families historically fit the regime; it never tells
+  // the viewer what to run or to stay out; the old wording here was an instruction.
+  const rec = H_ex > 0.56 ? "trend rules fit this mood · SMA · MACD · Donchian"
+    : H_ex < 0.44 ? "reversion rules fit this mood · Z-Score · Kalman" : "no rule held an edge in this mood";
   ctx.textAlign = "center"; ctx.textBaseline = "top";
   ctx.fillStyle = col; ctx.font = `700 ${Math.round(H * 0.024)}px ${MONO}`;
   ctx.fillText(`H ${H_ex.toFixed(2)}  ·  ${name}`, W / 2, my + 14);
@@ -533,43 +508,6 @@ function drawCandle(ctx, p, env, W, H) {
   const crashN = Math.round(easeOut(seg(p, 0.46, 0.72)) * (C.N - C.crash));
   const revealed = p < 0.46 ? climbN : C.crash + crashN;
 
-  // prediction cone + AI line appear DURING the climb (foresight before fear),
-  // fully drawn and held through p≈0.40-0.46 before the crash starts.
-  const predA = seg(p, 0.24, 0.40) * (1 - seg(p, 0.88, 0.97)) * chartAlpha;
-  const predReveal = easeOut(seg(p, 0.24, 0.60)); // how far the forecast has drawn
-  if (predA > 0.002) {
-    const cone = C.cone, cn = Math.max(2, Math.round(cone.length * predReveal));
-    // cone fill
-    ctx.globalAlpha = predA * 0.5;
-    ctx.beginPath(); ctx.moveTo(cone[0].x, cone[0].uy);
-    for (let i = 1; i < cn; i++) ctx.lineTo(cone[i].x, cone[i].uy);
-    for (let i = cn - 1; i >= 0; i--) ctx.lineTo(cone[i].x, cone[i].ly);
-    ctx.closePath();
-    ctx.fillStyle = "rgba(0,229,255,0.10)"; ctx.fill();
-    // dashed AI forecast line (cyan → amber toward the crash)
-    ctx.globalAlpha = predA;
-    ctx.setLineDash([6, 5]); ctx.lineWidth = 2;
-    const dEnd = Math.min(C.N - 1, C.diverge + Math.round((C.N - 1 - C.diverge) * predReveal));
-    ctx.beginPath();
-    for (let i = C.diverge; i <= dEnd; i++) {
-      const q = (i - C.diverge) / Math.max(1, C.N - 1 - C.diverge);
-      if (i === C.diverge) ctx.moveTo(C.ai[i].x, C.ai[i].y); else ctx.lineTo(C.ai[i].x, C.ai[i].y);
-    }
-    ctx.strokeStyle = mixHex(CYAN, AMBER, predReveal); ctx.shadowBlur = 8; ctx.shadowColor = CYAN;
-    ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
-    // pulsing marker at the divergence point
-    const dv = C.ai[C.diverge];
-    const pulse = 3 + 2 * (0.5 + 0.5 * Math.sin(seg(p, 0.28, 0.62) * TAU * 2));
-    ctx.globalAlpha = predA; ctx.fillStyle = AMBER; ctx.beginPath();
-    ctx.arc(dv.x, dv.y, pulse, 0, TAU); ctx.fill();
-    // anchor the probability figure to the forecast so the copy's "71%" is on-chart
-    ctx.globalAlpha = predA; ctx.fillStyle = AMBER;
-    ctx.font = `600 ${Math.round(H * 0.019)}px ${MONO}`;
-    ctx.textAlign = "left"; ctx.textBaseline = "bottom";
-    ctx.fillText("P(down) 71%", dv.x + 13, dv.y - 9);
-    ctx.textBaseline = "top";
-  }
-
   // candles
   for (let i = 0; i < revealed; i++) {
     const c = C.bars[i];
@@ -588,17 +526,6 @@ function drawCandle(ctx, p, env, W, H) {
     ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 
-  // vindication: draw a check where the crash meets the AI line
-  const vind = seg(p, 0.70, 0.88) * chartAlpha;
-  if (vind > 0.02) {
-    const meet = C.ai[Math.min(C.N - 1, C.endCrash - 2)];
-    ctx.globalAlpha = vind; ctx.strokeStyle = GREEN; ctx.lineWidth = 3;
-    ctx.shadowBlur = 10; ctx.shadowColor = GREEN;
-    ctx.beginPath();
-    ctx.arc(meet.x, meet.y, 16, 0, TAU); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(meet.x - 7, meet.y); ctx.lineTo(meet.x - 1, meet.y + 6); ctx.lineTo(meet.x + 8, meet.y - 7); ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
   ctx.globalAlpha = 1;
   ctx.restore();
 }
@@ -609,9 +536,13 @@ function drawSafety(ctx, q, env, W, H) {
   if (alpha <= 0.001) return;
   const draw = easeOut(seg(q, 0.0, 0.45)); // payoff strokes left→right
   ctx.save(); ctx.globalAlpha = alpha;
-  // zero line
-  ctx.strokeStyle = "rgba(245,245,240,0.14)"; ctx.lineWidth = 1;
+  const FIG = `500 ${Math.round(Math.min(21.6, Math.max(16.8, W * 0.015)))}px ${MONO}`;
+  // zero line — strong enough to read as the line between making and losing
+  ctx.strokeStyle = "rgba(245,245,240,0.4)"; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(ch.x, P.zeroY); ctx.lineTo(ch.x + ch.w, P.zeroY); ctx.stroke();
+  ctx.fillStyle = GRAY; ctx.font = FIG; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("$0", ch.x - 8, P.zeroY);
+  ctx.textAlign = "left";
   // reveal x
   const revealX = ch.x + ch.w * draw;
   // build clipped polyline path
@@ -629,19 +560,29 @@ function drawSafety(ctx, q, env, W, H) {
       }
     }
   }
-  // fills: below-zero red, above-zero green (clipped to reveal)
-  ctx.save();
-  ctx.beginPath(); ctx.rect(ch.x, ch.y, ch.w * draw, ch.h); ctx.clip();
-  // green fill above zero
-  ctx.beginPath(); ctx.moveTo(pts[0].x, P.zeroY);
-  for (const pt of pts) ctx.lineTo(pt.x, pt.y);
-  ctx.lineTo(pts[pts.length - 1].x, P.zeroY); ctx.closePath();
-  ctx.fillStyle = "rgba(0,255,135,0.10)"; ctx.fill();
-  ctx.restore();
-  // the payoff line
-  pathTo(revealX);
-  ctx.strokeStyle = GREEN; ctx.lineWidth = 2.6; ctx.shadowBlur = 10; ctx.shadowColor = GREEN; ctx.stroke();
-  ctx.shadowBlur = 0;
+  // fills: above zero green, below zero red, both clipped to the reveal
+  const area = new Path2D();
+  area.moveTo(pts[0].x, P.zeroY);
+  for (const pt of pts) area.lineTo(pt.x, pt.y);
+  area.lineTo(pts[pts.length - 1].x, P.zeroY); area.closePath();
+  const sides = [
+    [ch.y, P.zeroY - ch.y, GREEN, 0.10],
+    [P.zeroY, P.lossY - P.zeroY + 2, RED, 0.14],
+  ];
+  for (const [y0, h, col, a] of sides) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ch.x, y0, ch.w * draw, h); ctx.clip();
+    ctx.fillStyle = withAlpha(col, a); ctx.fill(area);
+    ctx.restore();
+  }
+  // the payoff line: green where it makes money, red where it loses
+  for (const [y0, h, col] of [[ch.y - 8, P.zeroY - ch.y + 8, GREEN], [P.zeroY, P.lossY - P.zeroY + 8, RED]]) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ch.x - 4, y0, ch.w + 8, h); ctx.clip();
+    pathTo(revealX);
+    ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.shadowBlur = 10; ctx.shadowColor = col; ctx.stroke();
+    ctx.restore();
+  }
   // laser tip riding the reveal front — the payoff is being cut, not faded in
   if (draw > 0.05 && draw < 0.99) {
     const yAt = (x) => { // same interpolation pathTo uses
@@ -654,8 +595,9 @@ function drawSafety(ctx, q, env, W, H) {
       }
       return pts[pts.length - 1].y;
     };
-    ctx.fillStyle = "rgba(220,255,238,0.95)";
-    ctx.shadowBlur = 14; ctx.shadowColor = GREEN;
+    const tipCol = yAt(revealX) > P.zeroY ? RED : GREEN;
+    ctx.fillStyle = withAlpha(tipCol, 0.95);
+    ctx.shadowBlur = 14; ctx.shadowColor = tipCol;
     ctx.beginPath(); ctx.arc(revealX, yAt(revealX), 3.5, 0, TAU); ctx.fill();
     ctx.shadowBlur = 0;
     for (const [dx, ta] of [[-8, 0.5], [-18, 0.3], [-30, 0.15]]) {
@@ -673,14 +615,20 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.lineDashOffset = -((NOW * 22) % 12); // marching ants — the guard is live
     ctx.beginPath(); ctx.moveTo(ch.x, P.lossY); ctx.lineTo(ch.x + ch.w, P.lossY); ctx.stroke();
     ctx.setLineDash([]); ctx.lineDashOffset = 0;
-    ctx.fillStyle = RED; ctx.font = `600 ${Math.round(H * 0.02)}px ${MONO}`;
-    ctx.textBaseline = "bottom"; ctx.fillText("−$80  max loss", ch.x + 6, P.lossY - 6);
+    // the act's one number, at full strength once the guard is up
+    ctx.globalAlpha = alpha * Math.min(1, guard * 2.5);
+    ctx.font = FIG; ctx.textBaseline = "bottom";
+    ctx.fillStyle = INK; ctx.fillText("−$80", ch.x + 6, P.lossY - 6);
+    const lw = ctx.measureText("−$80 ").width;
+    ctx.fillStyle = RED; ctx.fillText("max loss", ch.x + 6 + lw, P.lossY - 6);
+    ctx.globalAlpha = alpha;
   }
   // red leak: risk dripping out below the floor — the guard is what holds it
   if (guard > 0.05) {
     ctx.fillStyle = RED;
     for (let i = 0; i < 10; i++) {
       const px_ = ch.x + ((i * 0.104 + 0.03) % 1) * ch.w;
+      if (px_ > ch.x + ch.w - 190) continue; // keep clear of the badge
       const f = ((NOW * 0.25 + i * 0.13) % 1);
       ctx.globalAlpha = guard * (1 - f) * 0.5;
       ctx.beginPath(); ctx.arc(px_, P.lossY + f * 28, 1.6, 0, TAU); ctx.fill();
@@ -694,18 +642,34 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.lineDashOffset = -((NOW * 16) % 9);
     ctx.beginPath(); ctx.moveTo(P.beX, ch.y); ctx.lineTo(P.beX, ch.y + ch.h); ctx.stroke(); ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
+    ctx.font = FIG; ctx.fillStyle = CYAN; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText("B/E", P.beX, ch.y - 8);
+    ctx.textAlign = "left";
+    ctx.globalAlpha = alpha;
   }
-  // kill-switch armed glow + badge
-  const kill = seg(q, 0.55, 0.85) * alpha;
+  // strike ticks and the ceiling — the shape has names, not just a slope
+  const lbl = seg(q, 0.45, 0.7) * alpha;
+  if (lbl > 0.02) {
+    ctx.globalAlpha = lbl; ctx.font = FIG; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.strokeStyle = GRAY; ctx.lineWidth = 1;
+    for (const [x, name] of [[P.floorX1, "K1"], [pts[2].x, "K2"]]) {
+      ctx.beginPath(); ctx.moveTo(x, P.lossY + 4); ctx.lineTo(x, P.lossY + 12); ctx.stroke();
+      ctx.fillStyle = GRAY; ctx.fillText(name, x, P.lossY + 16);
+    }
+    ctx.fillStyle = GREEN; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("+$420 max profit", pts[2].x + 10, P.profY - 8);
+    ctx.globalAlpha = alpha;
+  }
+  // kill switch: armed early, while the headline is still up, and parked under
+  // the chart's right edge instead of on the profit plateau
+  const kill = seg(q, 0.30, 0.50) * alpha;
   if (kill > 0.02) {
-    const g = ctx.createRadialGradient(W / 2, P.lossY, 10, W / 2, P.lossY, W * 0.34);
-    g.addColorStop(0, `rgba(0,255,135,${0.14 * kill})`); g.addColorStop(1, "rgba(0,255,135,0)");
-    ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = kill; ctx.fillStyle = GREEN;
-    const bx = ch.x + ch.w - 172, by = ch.y + 8;
-    ctx.beginPath(); ctx.arc(bx + 8, by + 9, 4, 0, TAU); ctx.fill();
-    ctx.font = `600 ${Math.round(H * 0.019)}px ${MONO}`; ctx.textBaseline = "top";
-    ctx.fillStyle = "rgba(0,255,135,0.9)"; ctx.fillText("KILL SWITCH ARMED", bx + 20, by + 1);
+    ctx.globalAlpha = kill; ctx.font = FIG; ctx.textAlign = "right"; ctx.textBaseline = "top";
+    const label = "KILL SWITCH ARMED", kx = ch.x + ch.w, ky = P.lossY + 44;
+    ctx.fillStyle = GREEN; ctx.fillText(label, kx, ky);
+    const dotX = kx - ctx.measureText(label).width - 12;
+    ctx.beginPath(); ctx.arc(dotX, ky + 9, 4, 0, TAU); ctx.fill();
+    ctx.textAlign = "left";
   }
   ctx.restore();
 }
@@ -775,12 +739,14 @@ function drawConsensus(ctx, v, env, W, H) {
   // tier text
   const shown = Math.round(arcT * R.nodes.length);
   const tierPct = shown / R.nodes.length;
-  const tier = tierPct >= 0.83 ? "ULTRA" : tierPct >= 0.7 ? "HIGH" : tierPct >= 0.55 ? "MEDIUM" : "SPLIT";
+  // The band words from lib/quant/ai-bots.ts BAND_LABEL: what the ring measures
+  // is how tightly the models agreed, not a grade on a trade.
+  const tier = tierPct >= 0.83 ? "very strong agreement" : tierPct >= 0.7 ? "moderate agreement" : tierPct >= 0.55 ? "lean" : "split";
   ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.font = `700 ${Math.round(H * 0.05)}px ${MONO}`;
   ctx.fillText(`${shown}/${R.nodes.length}`, R.cx, R.cy - H * 0.008);
   ctx.font = `600 ${Math.round(H * 0.02)}px ${MONO}`;
-  ctx.fillStyle = tier === "ULTRA" ? GREEN : GRAY;
+  ctx.fillStyle = GRAY;
   ctx.fillText(tier, R.cx, R.cy + H * 0.03);
   ctx.textAlign = "left";
   // verdict flash: the lock-in moment — pure f(v) so it scrubs both ways
@@ -804,8 +770,8 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   const stage = document.getElementById("stage");
   const W = stage.clientWidth, H = stage.clientHeight;
   const $ = (id) => document.getElementById(id);
-  const [outline, mac, base, screen, fly, bullC, bullR, home, grid, glow] =
-    ["outline", "mac", "base", "screen", "panels", "bull", "bullreal", "homepage", "grid", "glow"].map($);
+  const [outline, mac, base, screen, fly, bullC, bullR, grid, glow] =
+    ["outline", "mac", "base", "screen", "panels", "bull", "bullreal", "grid", "glow"].map($);
   const P = PHASES;
 
   // ---- boot ---------------------------------------------------------------
@@ -825,7 +791,7 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   const pAsm = seg(t, ...P.assembly);
   const pDive = seg(t, ...P.dive);
   const push = easeIO(seg(pDive, 0, 0.5));
-  const macScale = lerp(1, 4.5, push); // gentler dive so the panel screenshots stay sharp
+  const macScale = lerp(1, 4.5, push); // gentler dive so the panel plates stay sharp
   const macVisible = t >= P.assembly[0] && push < 1;
   mac.style.display = macVisible ? "block" : "none";
   mac.style.opacity = String(seg(pAsm, 0, 0.15));
@@ -933,15 +899,14 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   }
   bullR.style.opacity = "0";
 
-  // ---- matrix rain + homepage resolve ------------------------------------
-  // The rain used to thin out only at t=1.0 — the exact instant the canvas
-  // crossfades and collapse() fires. So it was still at ~32% opacity over the
-  // resolved homepage at 0.987 and then got CUT rather than clearing: the last
-  // thing you saw of the film was the landing page behind a green curtain,
-  // which is most of why the hand-off read as a jump. Clear it by 0.975 and the
-  // final 2.5% (~35vh of scroll) is a clean, fully resolved hero that the
-  // razor-thin canvas fade at 0.998 can swap for the live one invisibly.
-  const rainStart = 0.9, rainPeakEnd = 0.94, rainThin = 0.95, rainEnd = 0.975;
+  // ---- matrix rain --------------------------------------------------------
+  // The rain used to resolve into a baked screenshot of the hero (#homepage).
+  // That plate went stale silently and carried copy the film had banned, so it
+  // is gone (2026-11). Without it the frame must reach the page ground early:
+  // the rain clears by 0.955, leaving ~4.5% of black before the hand-off, so a
+  // fast scroller who outruns the follower cuts from black, never from a frame
+  // with content in it.
+  const rainStart = 0.9, rainPeakEnd = 0.925, rainThin = 0.93, rainEnd = 0.955;
   const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, rainEnd));
   if (rainAmt > 0.002) {
     const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
@@ -963,15 +928,11 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     }
     ctx.shadowBlur = 0;
   }
-  // Fully opaque as the rain clears, not 0.02 before the swap — the hold is
-  // what makes the cut invisible.
-  const homeStart = 0.91, homeEnd = 0.97;
-  home.style.opacity = String(seg(t, homeStart, homeEnd));
 
   // ---- cursor spotlight: the pointer carries a soft torch through the 2D acts
   if (cx !== undefined && cy !== undefined) {
     const gx = (cx * 0.5 + 0.5) * W, gy = (cy * 0.5 + 0.5) * H;
-    const fadeOut = 1 - seg(t, homeStart, homeEnd); // clear of the homepage reveal
+    const fadeOut = 1 - seg(t, 0.91, 0.97); // clear before the hand-off
     const rad = Math.min(W, H) * 0.34;
     const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, rad);
     g.addColorStop(0, `rgba(0,255,135,${0.05 * fadeOut})`);
@@ -982,17 +943,10 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   }
 
   // ---- outro: settle to the page ground before the swap -------------------
-  // #homepage is a raster baked at 1600x1000 and shown through object-fit:cover,
-  // so it scales uniformly with the viewport while the LIVE hero re-flows (fluid
-  // clamp() type, fixed paddings). The two therefore only pixel-match at the
-  // width the plate was captured at. Measured at 1280 wide: the CTA sits 66px
-  // higher and 10px shorter in the plate than in the live hero — 0.8x, exactly
-  // the viewport ratio. No re-bake can close that; it is geometry.
-  // So stop trying to cut invisibly between two mismatched plates. Ramp the
-  // whole frame down to the page ground over the last ~1.4% and let the wrapper
-  // crossfade (0.998-1.0) hand off from an empty frame: the film settles, and
-  // the real hero is simply already there. Reads the same at every width.
-  // The canvas sits ABOVE #homepage in the stage, so this covers the plate too.
+  // Ramp the whole frame down to the page ground over the last ~1.4% and let
+  // the wrapper crossfade (0.998-1.0) hand off from an empty frame: the film
+  // settles, and the real hero is simply already there. Reads the same at
+  // every width, because nothing baked has to line up with anything live.
   const outro = seg(t, 0.984, 0.998);
   if (outro > 0.002) {
     ctx.fillStyle = `rgba(5, 5, 5, ${outro})`;

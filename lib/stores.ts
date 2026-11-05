@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ChainCell, Leg } from "./pricing";
+import { pnlSummary, type ChainCell, type Leg } from "./pricing";
 import { applyFill, sanitizeShares, validateFill, type Fill, type SharePosition } from "./paper-shares";
 import { track } from "./track";
 import {
@@ -177,7 +177,8 @@ type PaperState = {
   accountStartedAt: number;
   /** How many times the account has been wiped (reset or capital restart). */
   resetCount: number;
-  open: (p: Omit<Position, "id" | "openedAt" | "status" | "pnl">) => Position;
+  /** Opens an option position, or returns null when optionOpenRefusal() says no. */
+  open: (p: Omit<Position, "id" | "openedAt" | "status" | "pnl">) => Position | null;
   close: (id: string, exitPnl: number) => void;
   closeAll: (reason: string) => void;
   /** Book a share fill. Returns an error string instead of throwing. */
@@ -221,6 +222,7 @@ export const usePaper = create<PaperState>()(
       accountStartedAt: 0,
       resetCount: 0,
       open: (p) => {
+        if (optionOpenRefusal(p.legs, p.openSpot)) return null;
         const id = `pos-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const pos: Position = { ...p, id, openedAt: Date.now(), status: "open", pnl: 0 };
         set((s) => ({
@@ -228,7 +230,7 @@ export const usePaper = create<PaperState>()(
           positions: [pos, ...s.positions],
           // The ledger's contract is "every cash movement" — a bet's premium is
           // one. Without this row the balance-after chain silently jumped at
-          // every option bet, and the portfolio's wagered total missed them.
+          // every option position, and the portfolio's wagered total missed them.
           balanceLog: [
             {
               id: `bal-${id}`,
@@ -237,7 +239,7 @@ export const usePaper = create<PaperState>()(
               sym: p.underlying,
               amount: -p.cost,
               balance: s.cash - p.cost,
-              note: `bet open${p.cost < 0 ? " (credit)" : ""} · ${p.strategy}`,
+              note: `position opened${p.cost < 0 ? " (credit)" : ""} · ${p.strategy}`,
             },
             ...s.balanceLog,
           ].slice(0, MAX_TRADES),
@@ -628,6 +630,27 @@ export const usePaper = create<PaperState>()(
     }
   )
 );
+
+/**
+ * Why the paper account would refuse an option position, or null.
+ *
+ * Share orders always checked the kill switch and training wheels; option
+ * positions checked nothing, so the /trade builder and a shared-trade link
+ * could open a naked short with training wheels on, or anything at all while
+ * the kill switch was up, and the safety briefing's promise was only true on
+ * /trade/chain. open() calls this, so no path can skip it; the UIs call it
+ * first so the reason shows before the click.
+ */
+export function optionOpenRefusal(legs: Leg[], spot: number): string | null {
+  const safety = useSafety.getState();
+  if (safety.killSwitchTriggered) {
+    return "kill switch is on: only closing is allowed until you reset it in Safety";
+  }
+  if (safety.trainingWheels && legs.length > 0 && pnlSummary(legs, spot > 0 ? spot : legs[0].strike).unboundedRisk) {
+    return "training wheels: this position's loss has no floor. Turn them off in Safety to allow it";
+  }
+  return null;
+}
 
 // ─────────────── safety store ───────────────
 type SafetyState = {

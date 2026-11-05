@@ -1,268 +1,350 @@
-// Deterministic seeded mock data for the admin cockpit. Every shape mirrors
-// what the real (eventual) collectors will produce — request rate, latency
-// histograms, error counts, paper-trade rows, signup timeline, etc. — so
-// when we wire in real Mongo aggregation later, the dashboard stays unchanged.
+// The admin cockpit's data CONTRACT — types, pure helpers, and the
+// plain-English reasons a tile shows when its source does not exist yet.
 //
-// All randomness goes through `mulberry32` so a given (seed, day) returns the
-// same dataset and the dashboard never flickers across renders.
+// WHY this file was gutted. The 2026-09 diligence memo, verbatim: "The admin
+// dashboard's KPIs (active sessions, paper trades, AI tokens) are seeded
+// pseudo-random mocks. A real events pipeline into MongoDB exists with 15
+// event types, but nothing aggregates it." This module WAS those mocks — a
+// private mulberry32 PRNG, a NAMES array that invented users, a SYMBOLS array
+// that invented their trades, a p99 latency series for a latency store that
+// has never existed. All of it is deleted. Numbers on the cockpit now come
+// from lib/admin-metrics.ts, which reads Mongo, or they do not appear at all.
+//
+// Types and pure functions ONLY. components/admin/* are client components and
+// import from here, so this module must never pull in `mongodb` or `node:`.
 
-// Local copy of the mulberry32 PRNG so this module is self-contained.
-// (lib/candles.ts has its own private copy.)
-function mulberry32(seed: number) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let r = s;
-    r = Math.imul(r ^ (r >>> 15), r | 1);
-    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
+/* ── time ────────────────────────────────────────────────────────────────── */
+
+export const MIN_MS = 60_000;
+export const HOUR_MS = 3_600_000;
+export const DAY_MS = 86_400_000;
+export const WEEK_MS = 7 * DAY_MS;
+
+/** Midnight UTC of the day `ms` falls in. */
+export function startOfUtcDay(ms: number): number {
+  return Math.floor(ms / DAY_MS) * DAY_MS;
 }
 
-const HOUR_MS = 3600_000;
-const DAY_MS = 86400_000;
+/** Midnight UTC of the MONDAY of the week `ms` falls in. The epoch was a
+    Thursday, so the naive floor(ms / WEEK) lands on Thursdays; the +3 day
+    shift moves the boundary to Monday, which is what "signups by week" means
+    to a person reading the chart. */
+export function startOfUtcWeek(ms: number): number {
+  return Math.floor((ms + 3 * DAY_MS) / WEEK_MS) * WEEK_MS - 3 * DAY_MS;
+}
 
-// ─── KPI strip ────────────────────────────────────────────────────────────
+/** 0 when the denominator is 0 — a share of nothing is not NaN on screen. */
+export function share(numerator: number, denominator: number): number {
+  return denominator > 0 ? numerator / denominator : 0;
+}
+
+/* ── empty-state copy ─────────────────────────────────────────────────────
+   Each of these is a sentence a tile prints INSTEAD of a number, and each
+   names the missing pipe so the reader knows what to build rather than
+   wondering whether the product is dead. */
+
+export const NO_ERROR_TELEMETRY =
+  "no error store exists. app/api/csp-report writes violations to the server log, not to Mongo, and nothing else records failures as events — so this list would be fiction. Wire an error sink (or store csp_violation events) and it fills itself.";
+
+export const NO_BOT_IDS =
+  "quant_run_all, setup_applied and preset_applied carry a bot COUNT (props.bots), never a bot id — so which bots ran cannot be recovered from the stream. Per-bot attribution needs the workbench to emit an id (one event per bot, or a bot_ids prop).";
+
+export const NO_GEO =
+  "no event in the window carries a country. The server stamps ISO-2 from the platform geo header on schema-v2 events (lib/db/events.ts), so this fills in as v2 traffic lands — and stays empty on a host that sends no geo header.";
+
+export const NO_SYMBOLS =
+  "no order_submitted, bet_placed or bet_opened event in the window carries a symbol yet.";
+
+export const NO_TRADES = "no paper trade has been placed in the window.";
+
+export const NO_KILL_HISTORY =
+  "no close_all event in the last 30 days. This panel arms a LOCAL drill only — there is no server-side kill switch to trip.";
+
+export const HEALTH_SUBTITLE =
+  "events per minute — the only real signal. There is no latency or error store, so the p99 and error series this chart used to draw were invented and have been removed.";
+
+export const OFFLINE_NOTE =
+  "Mongo is unreachable, so every number below would be a guess. Nothing is shown rather than something wrong.";
+
+/* ── KPI strip ───────────────────────────────────────────────────────────── */
+
+export type Tone = "bull" | "bear" | "amber" | "fg";
+
 export type KpiCell = {
   k: string;
   v: number | string;
   unit?: string;
-  delta?: number; // pct change vs previous bucket
-  tone?: "bull" | "bear" | "amber" | "fg";
+  /** Percent change against the previous equivalent window. Omitted — never
+      zero-filled — when no honest prior window exists. */
+  delta?: number;
+  tone?: Tone;
+  decimals?: number;
   spark?: number[];
+  /** What the number literally counts. Printed under it. */
+  sub?: string;
 };
 
-export function kpis(seed = Math.floor(Date.now() / HOUR_MS)): KpiCell[] {
-  const r = mulberry32(seed);
-  const spark = (n = 24, base = 100, vol = 10) =>
-    Array.from({ length: n }, (_, i) => base + Math.sin(i / 3 + r() * 6) * vol + r() * vol);
-  return [
-    { k: "active sessions", v: 1280 + Math.floor(r() * 220), unit: "", delta: +6.4, tone: "bull", spark: spark(24, 1280, 60) },
-    { k: "paper trades · 24h", v: 8412 + Math.floor(r() * 600), unit: "", delta: +12.1, tone: "bull", spark: spark(24, 8000, 280) },
-    { k: "ai teacher tokens", v: 2.1 + r() * 0.4, unit: "M / 24h", delta: +18.6, tone: "bull", spark: spark(24, 2100000, 80000) },
-    { k: "errors · 1h", v: 12 + Math.floor(r() * 6), unit: "", delta: -34.2, tone: "amber", spark: spark(24, 18, 6) },
-    { k: "api p99", v: 38 + Math.floor(r() * 8), unit: "ms", delta: -2.3, tone: "fg", spark: spark(24, 40, 8) },
-    { k: "kill triggers · 7d", v: 3 + Math.floor(r() * 3), unit: "", delta: 0, tone: "amber", spark: spark(24, 4, 1.5) },
-  ];
-}
+/* ── tiles ───────────────────────────────────────────────────────────────── */
 
-// ─── System health (line chart) ──────────────────────────────────────────
-export type HealthSeries = { t: number; rps: number; p99: number; err: number };
+export type HealthPoint = { t: number; events: number };
 
-export function healthSeries(points = 90, seed = Math.floor(Date.now() / HOUR_MS)): HealthSeries[] {
-  const r = mulberry32(seed);
-  const now = Math.floor(Date.now() / 60_000) * 60_000;
-  const out: HealthSeries[] = [];
-  for (let i = points - 1; i >= 0; i--) {
-    const t = now - i * 60_000;
-    const noise = (r() - 0.5);
-    const wave = Math.sin(i / 7) * 0.4 + Math.sin(i / 13) * 0.25;
-    const rps = 220 + 40 * wave + 30 * noise;
-    const p99 = 36 + 6 * wave + 4 * noise + (r() < 0.04 ? 18 : 0);
-    const err = Math.max(0, 0.4 + 0.3 * noise + (r() < 0.06 ? 1.4 : 0));
-    out.push({ t, rps: Math.round(rps), p99: Math.round(p99 * 10) / 10, err: Math.round(err * 10) / 10 });
-  }
-  return out;
-}
+export type EventLevel = "info" | "warn" | "err" | "trade" | "auth" | "kill" | "ai";
 
-// ─── Live event stream ───────────────────────────────────────────────────
+/** One real row of the events collection, flattened for the stream tile.
+    `who` is a short hash — the cockpit never needs to name a person. */
 export type EventRow = {
   id: string;
   t: number;
-  level: "info" | "warn" | "err" | "trade" | "auth" | "kill" | "ai";
-  who: string; // user-id slug or "system"
-  msg: string;
-  meta?: string;
+  level: EventLevel;
+  who: string;
+  type: string;
+  page: string | null;
+  meta: string | null;
 };
 
-const EVENT_TEMPLATES: Array<{ level: EventRow["level"]; msg: (sym: string) => string; metaFn?: (r: () => number) => string }> = [
-  { level: "trade", msg: (s) => `paper · bull call spread on ${s}`, metaFn: (r) => `+$${(80 + r() * 600).toFixed(0)}` },
-  { level: "trade", msg: (s) => `paper · iron condor on ${s}`, metaFn: (r) => `+$${(40 + r() * 240).toFixed(0)}` },
-  { level: "trade", msg: (s) => `paper · long call ${s}`, metaFn: (r) => `−$${(20 + r() * 180).toFixed(0)}` },
-  { level: "ai", msg: (s) => `teacher explained Δ on ${s}`, metaFn: (r) => `${(80 + r() * 240).toFixed(0)} tokens` },
-  { level: "ai", msg: (s) => `teacher explained Θ decay on ${s}`, metaFn: (r) => `${(120 + r() * 280).toFixed(0)} tokens` },
-  { level: "info", msg: () => `quant bot · 6-Model Consensus run`, metaFn: (r) => `${(2.4 + r() * 1.2).toFixed(1)}s` },
-  { level: "info", msg: (s) => `chain priced for ${s}`, metaFn: () => `0.4ms` },
-  { level: "warn", msg: () => `daily loss limit hit · soft warn`, metaFn: (r) => `−$${(220 + r() * 80).toFixed(0)}` },
-  { level: "kill", msg: () => `kill switch armed`, metaFn: () => `auto · daily limit` },
-  { level: "auth", msg: () => `signup · google oauth` },
-  { level: "auth", msg: () => `signin · returning learner` },
-  { level: "err", msg: () => `yahoo finance 502 · retry succeeded`, metaFn: (r) => `${(120 + r() * 80).toFixed(0)}ms` },
-];
-
-const NAMES = ["maya", "kenji", "ana", "diego", "yuki", "cole", "priya", "joe", "lin", "rohan", "anya", "tess", "ravi", "jude", "noor"];
-const SYMBOLS = ["AMZN", "NVDA", "TSLA", "AAPL", "SPY", "QQQ", "MSFT", "META", "GOOGL", "AMD", "PLTR", "COIN"];
-
-export function recentEvents(n = 80, seed = Math.floor(Date.now() / 60_000)): EventRow[] {
-  const r = mulberry32(seed);
-  const now = Date.now();
-  const out: EventRow[] = [];
-  for (let i = 0; i < n; i++) {
-    const tmpl = EVENT_TEMPLATES[Math.floor(r() * EVENT_TEMPLATES.length)];
-    const sym = SYMBOLS[Math.floor(r() * SYMBOLS.length)];
-    const who = tmpl.level === "info" || tmpl.level === "kill" ? "system" : NAMES[Math.floor(r() * NAMES.length)] + Math.floor(r() * 99);
-    out.push({
-      id: `evt_${i}_${seed}`,
-      t: now - i * (8_000 + Math.floor(r() * 22_000)),
-      level: tmpl.level,
-      who,
-      msg: tmpl.msg(sym),
-      meta: tmpl.metaFn?.(r),
-    });
+/** The visual language of the stream, keyed off REAL event names. Anything
+    unrecognised is "info" — the tile never guesses a category. */
+export function levelForType(type: string): EventLevel {
+  switch (type) {
+    case "order_submitted":
+    case "bet_placed":
+    case "bet_opened":
+      return "trade";
+    case "close_all":
+    case "funds_reset":
+      return "kill";
+    case "explain_served":
+      return "ai";
+    case "signup":
+    case "sign_in":
+    case "sign_out":
+    case "consent_given":
+      return "auth";
+    case "hit_paywall":
+      return "warn";
+    default:
+      return "info";
   }
-  return out.sort((a, b) => b.t - a.t);
 }
 
-// ─── Symbol heatmap (top traded today) ───────────────────────────────────
-export type SymbolRow = { sym: string; trades: number; volume: number; iv: number; pnl: number };
+export type SymbolRow = { sym: string; trades: number; traders: number };
+export type SymbolData = { rows: SymbolRow[]; windowDays: number; note: string | null };
 
-export function topSymbols(seed = Math.floor(Date.now() / HOUR_MS)): SymbolRow[] {
-  const r = mulberry32(seed);
-  return SYMBOLS.map((sym, i) => ({
-    sym,
-    trades: Math.floor(120 + r() * 1400 - i * 30),
-    volume: Math.floor(420_000 + r() * 1_800_000),
-    iv: 18 + r() * 32,
-    pnl: (r() - 0.5) * 8400,
-  })).sort((a, b) => b.trades - a.trades);
-}
-
-// ─── Quant bot distribution ──────────────────────────────────────────────
 export type BotRunRow = { id: string; label: string; runs: number; pct: number };
-const BOTS = [
-  "6-Model Consensus", "Black-Scholes Solver", "Hurst Exponent", "Kalman Filter",
-  "Monte Carlo VaR", "Z-Score Reversion", "Donchian Breakout", "Bollinger Bands",
-  "American Pricer (NN)", "BS Surrogate (NN)", "Wheel Backtest", "Long-Only Backtest",
-];
+/** `rows` is empty until a bot id exists in the stream — see NO_BOT_IDS. The
+    totals beside it are real, so the tile still says something true. */
+export type BotRuns = { rows: BotRunRow[]; runs: number; botsEngaged: number; note: string | null };
 
-export function topBots(seed = Math.floor(Date.now() / HOUR_MS)): BotRunRow[] {
-  const r = mulberry32(seed);
-  const rows = BOTS.map((b, i) => ({
-    id: b.toLowerCase().replace(/\W+/g, "_"),
-    label: b,
-    runs: Math.floor(40 + r() * 600 - i * 18),
-  }));
-  const total = rows.reduce((a, b) => a + b.runs, 0);
-  return rows.map((r) => ({ ...r, pct: r.runs / total })).sort((a, b) => b.runs - a.runs);
-}
-
-// ─── Recent paper trades (table) ─────────────────────────────────────────
 export type TradeRow = {
   id: string;
   t: number;
-  user: string;
+  who: string;
   sym: string;
-  strategy: string;
-  legs: number;
-  cost: number;
-  pnl: number;
-  status: "open" | "closed-profit" | "closed-loss" | "killed";
+  kind: string;
+  detail: string;
+  country: string | null;
 };
+export type TradeFeed = { rows: TradeRow[]; note: string | null };
 
-const STRATEGIES = ["Bull Call Spread", "Iron Condor", "Long Call", "Bull Put Spread", "Bear Call Spread", "Long Straddle", "Calendar Spread", "Long Put"];
+export type SignupBucket = { day: number; signups: number; activated: number };
 
-export function recentTrades(n = 18, seed = Math.floor(Date.now() / 60_000)): TradeRow[] {
-  const r = mulberry32(seed);
-  const now = Date.now();
-  return Array.from({ length: n }, (_, i) => {
-    const status: TradeRow["status"] = r() < 0.55
-      ? "open"
-      : r() < 0.7 ? "killed" : r() < 0.6 ? "closed-loss" : "closed-profit";
-    const cost = (r() < 0.5 ? 1 : -1) * (40 + r() * 480);
-    const pnl = (r() - 0.45) * 600;
-    return {
-      id: `trd_${seed}_${i}`,
-      t: now - i * (60_000 + Math.floor(r() * 240_000)),
-      user: NAMES[Math.floor(r() * NAMES.length)] + Math.floor(r() * 99),
-      sym: SYMBOLS[Math.floor(r() * SYMBOLS.length)],
-      strategy: STRATEGIES[Math.floor(r() * STRATEGIES.length)],
-      legs: 1 + Math.floor(r() * 4),
-      cost: Math.round(cost),
-      pnl: Math.round(pnl),
-      status,
-    };
-  });
-}
+export type GeoRow = { country: string; users: number };
+export type GeoData = { rows: GeoRow[]; total: number; windowDays: number; note: string | null };
 
-// ─── Signup timeline ─────────────────────────────────────────────────────
-export type SignupBucket = { day: number; signups: number; pro: number };
-
-export function signupTimeline(days = 14, seed = Math.floor(Date.now() / DAY_MS)): SignupBucket[] {
-  const r = mulberry32(seed);
-  const today = Math.floor(Date.now() / DAY_MS) * DAY_MS;
-  return Array.from({ length: days }, (_, i) => {
-    const day = today - (days - 1 - i) * DAY_MS;
-    const base = 80 + i * 14 + Math.floor(r() * 60);
-    return { day, signups: base, pro: Math.floor(base * (0.04 + r() * 0.06)) };
-  });
-}
-
-// ─── Geo dots (active sessions by region) ────────────────────────────────
-export type GeoDot = { x: number; y: number; intensity: number; city: string; n: number };
-const CITIES: Array<[string, number, number]> = [
-  ["NYC", 0.28, 0.36],
-  ["SF", 0.13, 0.40],
-  ["LA", 0.14, 0.45],
-  ["LON", 0.50, 0.32],
-  ["BER", 0.54, 0.34],
-  ["DXB", 0.62, 0.46],
-  ["MUM", 0.70, 0.50],
-  ["BLR", 0.71, 0.55],
-  ["DEL", 0.69, 0.45],
-  ["SGP", 0.78, 0.58],
-  ["TOK", 0.86, 0.40],
-  ["SYD", 0.90, 0.78],
-  ["SAO", 0.34, 0.74],
-  ["MEX", 0.20, 0.52],
-  ["TOR", 0.25, 0.30],
-  ["JNB", 0.55, 0.72],
-];
-
-export function geoDots(seed = Math.floor(Date.now() / HOUR_MS)): GeoDot[] {
-  const r = mulberry32(seed);
-  return CITIES.map(([city, x, y]) => {
-    const n = Math.floor(20 + r() * 380);
-    return { x, y, intensity: Math.min(1, 0.2 + n / 380), city, n };
-  });
-}
-
-// ─── Top errors (last 24h) ───────────────────────────────────────────────
 export type ErrorRow = { name: string; count: number; lastSeen: number; route: string };
+export type ErrorData = { rows: ErrorRow[]; note: string | null };
 
-export function topErrors(seed = Math.floor(Date.now() / HOUR_MS)): ErrorRow[] {
-  const r = mulberry32(seed);
-  const rows = [
-    { name: "yahoo_chart_502", route: "/api/quote-batch" },
-    { name: "openai_rate_limit", route: "/api/explain" },
-    { name: "ws_disconnect_burst", route: "ws://chain" },
-    { name: "stale_session", route: "/api/auth/session" },
-    { name: "fastapi_timeout", route: "/api/quant/run" },
-    { name: "mongo_serverSelectionTimeout", route: "lib/mongo" },
-  ];
-  return rows.map((row, i) => ({
-    ...row,
-    count: Math.floor(2 + r() * 22 - i * 1.4),
-    lastSeen: Date.now() - Math.floor(r() * 5400_000),
-  })).sort((a, b) => b.count - a.count);
-}
-
-// ─── Pro funnel ──────────────────────────────────────────────────────────
 export type FunnelStep = { label: string; count: number };
 
-export function proFunnel(seed = Math.floor(Date.now() / HOUR_MS)): FunnelStep[] {
-  const r = mulberry32(seed);
-  const start = 14000 + Math.floor(r() * 1200);
-  const decay = (n: number, k: number) => Math.floor(n * (k + r() * 0.05));
-  const a = start;
-  const b = decay(a, 0.46);
-  const c = decay(b, 0.55);
-  const d = decay(c, 0.34);
-  const e = decay(d, 0.42);
-  return [
-    { label: "Visited /trade", count: a },
-    { label: "Built a strategy", count: b },
-    { label: "Opened paper trade", count: c },
-    { label: "Hit pro paywall", count: d },
-    { label: "Upgraded to Pro", count: e },
-  ];
+export type KillRow = { t: number; who: string; reason: string };
+export type KillHistory = { rows: KillRow[]; note: string | null };
+
+/* ── metric groups ───────────────────────────────────────────────────────── */
+
+export type SignupMetrics = {
+  /** 14 buckets, oldest first, midnight-UTC keyed. */
+  daily: SignupBucket[];
+  last7: number;
+  prev7: number;
+  last30: number;
+  /** All-time `signup` events. */
+  allTime: number;
+  /** Rows in the Auth.js `users` collection — the fallback, and the honest
+      cross-check: signup events only exist since the tracker shipped. */
+  usersTotal: number;
+};
+
+export type ActivationMetrics = {
+  /** Signups considered (last 30 days). */
+  signups: number;
+  /** Signups old enough for the question to be answerable. */
+  eligible24h: number;
+  within24h: number;
+  rate24h: number;
+  eligible7d: number;
+  within7d: number;
+  rate7d: number;
+};
+
+export type AudienceMetrics = { dau: number; wau: number; mau: number };
+
+export type CohortRow = {
+  weekStart: number;
+  signups: number;
+  /** Actives in weeks 1–4 after each member's own signup instant. */
+  retained: [number, number, number, number];
+  /** Cohort members active in ≥3 distinct weeks of their first 28 days. */
+  threeWeekActive: number;
+  /** Whole weeks elapsed since the cohort opened — a cell for week k is only
+      answerable once this exceeds k. */
+  weeksElapsed: number;
+};
+
+export type CohortMetrics = {
+  /** Oldest first. */
+  rows: CohortRow[];
+  /** The memo's third number, over signups that have HAD 28 days to earn it. */
+  threeWeekActive: { eligible: number; users: number; share: number };
+};
+
+export type PaperMetrics = {
+  trades24h: number;
+  prev24h: number;
+  trades7d: number;
+  traders24h: number;
+  traders7d: number;
+};
+
+export type Tally = { key: string; n: number };
+
+export type TeacherMetrics = {
+  served24h: number;
+  served7d: number;
+  bySource: Tally[];
+  byPlan: Tally[];
+  paywall24h: number;
+  paywall7d: number;
+  paywallBySurface: Tally[];
+};
+
+export type PracticeMetrics = {
+  runs: number;
+  submits: number;
+  accepted: number;
+  users: number;
+  top: Array<{ slug: string; submissions: number; accepted: number }>;
+};
+
+export type RevenueMetrics = {
+  /** Monthly recurring revenue in USD, annual plans divided by 12. */
+  mrrUsd: number;
+  /** The share of mrrUsd that came from INR rows, after conversion. */
+  mrrFromInrUsd: number;
+  /** The same INR revenue in rupees — the sub-line, so nobody has to trust
+      the conversion to read the Indian book. */
+  mrrInrNative: number;
+  inrPerUsd: number;
+  active: number;
+  byPlan: Tally[];
+  byProvider: Tally[];
+  newSubs30d: number;
+  cancelled30d: number;
+  waitlist: Array<{ tier: string; currency: string; n: number }>;
+  waitlistTotal: number;
+};
+
+/* ── the whole page ──────────────────────────────────────────────────────── */
+
+export type AdminMetrics = {
+  /** false ⇒ Mongo could not be reached at all; every number below is zero. */
+  ok: boolean;
+  /** Metric groups whose own query failed while the database was reachable. */
+  degraded: string[];
+  error: string | null;
+  generatedAt: number;
+  kpis: KpiCell[];
+  signups: SignupMetrics;
+  activation: ActivationMetrics;
+  audience: AudienceMetrics;
+  cohorts: CohortMetrics;
+  paper: PaperMetrics;
+  teacher: TeacherMetrics;
+  practice: PracticeMetrics;
+  funnel: FunnelStep[];
+  revenue: RevenueMetrics;
+  geo: GeoData;
+  stream: EventRow[];
+  health: HealthPoint[];
+  symbols: SymbolData;
+  bots: BotRuns;
+  errors: ErrorData;
+  trades: TradeFeed;
+  kill: KillHistory;
+};
+
+/* ── zero values ─────────────────────────────────────────────────────────
+   One place that knows what "nothing" looks like, so an offline page and an
+   empty database render the same honest zeros instead of two shapes. */
+
+export function emptySignups(now: number): SignupMetrics {
+  const today = startOfUtcDay(now);
+  return {
+    daily: Array.from({ length: 14 }, (_, i) => ({
+      day: today - (13 - i) * DAY_MS,
+      signups: 0,
+      activated: 0,
+    })),
+    last7: 0,
+    prev7: 0,
+    last30: 0,
+    allTime: 0,
+    usersTotal: 0,
+  };
+}
+
+export const EMPTY_ACTIVATION: ActivationMetrics = {
+  signups: 0, eligible24h: 0, within24h: 0, rate24h: 0, eligible7d: 0, within7d: 0, rate7d: 0,
+};
+
+export const EMPTY_AUDIENCE: AudienceMetrics = { dau: 0, wau: 0, mau: 0 };
+
+export const EMPTY_COHORTS: CohortMetrics = {
+  rows: [],
+  threeWeekActive: { eligible: 0, users: 0, share: 0 },
+};
+
+export const EMPTY_PAPER: PaperMetrics = {
+  trades24h: 0, prev24h: 0, trades7d: 0, traders24h: 0, traders7d: 0,
+};
+
+export const EMPTY_TEACHER: TeacherMetrics = {
+  served24h: 0, served7d: 0, bySource: [], byPlan: [], paywall24h: 0, paywall7d: 0, paywallBySurface: [],
+};
+
+export const EMPTY_PRACTICE: PracticeMetrics = {
+  runs: 0, submits: 0, accepted: 0, users: 0, top: [],
+};
+
+/** The funnel's step LABELS are the contract ProFunnel renders; the counts are
+    what Mongo says. An offline page keeps the steps and zeroes the counts, so
+    the shape of the journey is still legible. */
+export const FUNNEL_STEPS = [
+  "Visited /trade",
+  "Opened a bet",
+  "Placed a trade",
+  "Hit the paywall",
+  "Started checkout",
+  "Subscribed",
+] as const;
+
+export function emptyFunnel(): FunnelStep[] {
+  return FUNNEL_STEPS.map((label) => ({ label, count: 0 }));
+}
+
+export function emptyRevenue(): RevenueMetrics {
+  return {
+    mrrUsd: 0, mrrFromInrUsd: 0, mrrInrNative: 0, inrPerUsd: 0,
+    active: 0, byPlan: [], byProvider: [], newSubs30d: 0, cancelled30d: 0,
+    waitlist: [], waitlistTotal: 0,
+  };
 }

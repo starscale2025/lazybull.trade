@@ -1,94 +1,60 @@
 "use client";
 
-// Pricing — the strategy's tier ladder (docs/strategy §4) rendered in the house
-// style. Free + Pro are the launch tiers; Plus anchors, Power ships after a real
-// IV feed. Billing isn't wired yet, so every CTA routes to sign-in / learn — no
-// fake checkout. Design ref: docs/design-refs/08-pricing.png.
-import { useState } from "react";
+// Pricing — the plan ladder (docs/strategy §4) in the house style, wired to
+// the money rail. Every feature line comes from PLAN_LIMITS through
+// components/pricing/tiers.ts and every price from PLAN_PRICES through
+// lib/billing/prices.ts, so nothing on this page can drift from what the
+// gates enforce or the checkout charges. The CTA (components/pricing/PlanCta)
+// is a real checkout when the rail for the chosen currency is configured and
+// a real waitlist when it is not — never a fake checkout, and never the
+// "CTAs route to sign-in" the 2026-09 diligence memo found. Design ref:
+// docs/design-refs/08-pricing.png.
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import type { Currency, PaidPlan } from "@/lib/billing/config";
+import { annualTotal, fmtMoney, monthlyPrice, monthsSaved } from "@/lib/billing/prices";
+import { buildTiers, ctaClass } from "@/components/pricing/tiers";
+import { PlanCta } from "@/components/pricing/PlanCta";
+import { useBillingConfig } from "@/components/pricing/useBillingConfig";
 
-type Tier = {
-  name: string;
-  monthly: number;
-  annualMo: number; // effective per-month when billed annually
-  blurb: string;
-  features: string[]; // the 2-3 lines that actually differentiate the tier
-  extras?: string[]; // commodity lines, rendered demoted
-  cta: { label: string; href: string };
-  popular?: boolean;
-  soon?: boolean;
-};
-
-const TIERS: Tier[] = [
-  {
-    name: "Free",
-    monthly: 0,
-    annualMo: 0,
-    blurb: "The whole primer. Real practice. Forever.",
-    features: [
-      "Full 14-chapter interactive primer",
-      "Unlimited paper trades · $5k account",
-      "AI teacher · 5 explains per day",
-    ],
-    extras: ["3 bots in the quant workbench", "1 saved workspace"],
-    cta: { label: "Start for free", href: "/learn" },
-  },
-  {
-    name: "Plus",
-    monthly: 19,
-    annualMo: 15,
-    blurb: "For the learner who finished the primer.",
-    features: [
-      "Unlimited AI-teacher explains",
-      "15+ bots · trend, stats & risk tribes",
-      "Advanced charting · alerts · replay",
-    ],
-    extras: ["Unlimited saved workspaces", "Priority support"],
-    cta: { label: "Join early access", href: "/auth/signin" },
-  },
-  {
-    name: "Pro",
-    monthly: 39,
-    annualMo: 29,
-    blurb: "The full workbench, nothing held back.",
-    features: [
-      "All 27 bots + consensus engine",
-      "Bring-your-own-bot · hot-load & backtest",
-      "Pro charting suite · shareable workspaces",
-    ],
-    extras: ["Everything in Plus", "Early access to new features"],
-    cta: { label: "Join early access", href: "/auth/signin" },
-    popular: true,
-  },
-  {
-    name: "Power",
-    monthly: 59,
-    annualMo: 45,
-    blurb: "For graduating quants. Ships with real IV.",
-    features: [
-      "13 trained ML models exposed",
-      "Real IV & Greeks data feed",
-      "API access",
-    ],
-    extras: ["Everything in Pro", "Dedicated support"],
-    cta: { label: "Join the waitlist", href: "/auth/signin" },
-    soon: true,
-  },
-];
-
-// The badge used to hard-code "save 3.4 months", which no tier reaches — best
-// case is Pro at 3.08. Derive it so the claim can never contradict the dollar
-// figures this same page renders.
-const MAX_MONTHS_SAVED = Math.floor(
-  Math.max(
-    ...TIERS.filter((t) => t.monthly > 0).map((t) => ((t.monthly - t.annualMo) * 12) / t.monthly)
-  )
-);
+const TIERS = buildTiers();
+const PAID = TIERS.map((t) => t.id).filter((id): id is PaidPlan => id !== "free");
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(true);
+  const { config, counts } = useBillingConfig();
+
+  // ₹ by default for a visitor the edge places in India; a touched toggle
+  // wins, so a late config answer can never flip a currency already chosen.
+  const [currency, setCurrency] = useState<Currency>("USD");
+  const [currencyTouched, setCurrencyTouched] = useState(false);
+  useEffect(() => {
+    if (!currencyTouched && config.loaded && config.region === "IN") setCurrency("INR");
+  }, [config.loaded, config.region, currencyTouched]);
+  const pickCurrency = (c: Currency) => {
+    setCurrencyTouched(true);
+    setCurrency(c);
+  };
+
+  const interval = annual ? "year" : "month";
+  const configured = currency === "INR" ? config.providers.inr : config.providers.usd;
+  // Derived, so the badge can never claim a saving the prices below don't show.
+  const maxMonthsSaved = Math.max(...PAID.map((p) => monthsSaved(p, currency)));
+
+  // The strip under the cards says exactly what the config says — which rail
+  // is live, or that none is and the lists are what they are.
+  const liveRails = [
+    config.providers.usd && "Lemon Squeezy (USD cards · merchant of record)",
+    config.providers.inr && "Razorpay (INR · UPI autopay & cards)",
+  ].filter(Boolean);
+  const railNote = !config.loaded
+    ? "checking which billing rails are live…"
+    : liveRails.length === 0
+      ? "Checkout is not open yet. Joining a list records demand for that tier in your currency — nothing is charged and there is no card to enter."
+      : `Billing by ${liveRails.join(" and ")} · cancel any time · access runs to the end of the paid period.`;
+
   return (
     <div className="min-h-screen bg-bg">
       <Nav />
@@ -106,61 +72,78 @@ export default function PricingPage() {
             practice with purpose · upgrade for power
           </p>
 
-          {/* billing toggle */}
-          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-3 surface-card border border-border bg-surface px-4 py-2.5">
-            <button
-              onClick={() => setAnnual(false)}
-              aria-pressed={!annual}
-              className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {/* billing toggle */}
+            <div className="inline-flex flex-wrap items-center justify-center gap-3 surface-card border border-border bg-surface px-4 py-2.5">
+              <button
+                onClick={() => setAnnual(false)}
+                aria-pressed={!annual}
+                className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${!annual ? "text-fg" : "text-fg-faint hover:text-fg-dim"}`}
+              >
+                Billed monthly
+              </button>
+              <button
+                onClick={() => setAnnual(!annual)}
+                // The toggle's state was conveyed by colour alone — a screen
+                // reader (or anyone who can't see the green) got no signal at all
+                // about which billing period was active.
+                role="switch"
+                aria-checked={annual}
+                aria-label="Bill annually"
+                className={`relative h-5 w-10 rounded-full border transition-colors ${annual ? "border-bull/60 bg-bull/20" : "border-border bg-bg"}`}
+              >
+                <span
+                  className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-all ${annual ? "left-[1.375rem] bg-bull" : "left-1 bg-fg-dim"}`}
+                />
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                aria-pressed={annual}
+                className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
+              >
+                Billed annually
+              </button>
+              {annual && maxMonthsSaved > 0 && (
+                <span className="whitespace-nowrap border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull max-sm:basis-full max-sm:text-center">
+                  save up to {maxMonthsSaved} months
+                </span>
+              )}
+            </div>
+
+            {/* currency toggle — $ via Lemon Squeezy, ₹ via Razorpay */}
+            <div
+              role="group"
+              aria-label="Currency"
+              className="inline-flex items-center gap-1 surface-card border border-border bg-surface p-1"
             >
-              Billed monthly
-            </button>
-            <button
-              onClick={() => setAnnual(!annual)}
-              // The toggle's state was conveyed by colour alone — a screen
-              // reader (or anyone who can't see the green) got no signal at all
-              // about which billing period was active.
-              role="switch"
-              aria-checked={annual}
-              aria-label="Bill annually"
-              className={`relative h-5 w-10 rounded-full border transition-colors ${annual ? "border-bull/60 bg-bull/20" : "border-border bg-bg"}`}
-            >
-              <span
-                className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-all ${annual ? "left-[1.375rem] bg-bull" : "left-1 bg-fg-dim"}`}
-              />
-            </button>
-            <button
-              onClick={() => setAnnual(true)}
-              aria-pressed={annual}
-              className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
-            >
-              Billed annually
-            </button>
-            {annual && (
-              <span className="whitespace-nowrap border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull max-sm:basis-full max-sm:text-center">
-                save up to {MAX_MONTHS_SAVED} months
-              </span>
-            )}
+              {(["USD", "INR"] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => pickCurrency(c)}
+                  aria-pressed={currency === c}
+                  className={`px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
+                    currency === c ? "bg-bull/15 text-bull" : "text-fg-faint hover:text-fg-dim"
+                  }`}
+                >
+                  {c === "USD" ? "$ USD" : "₹ INR"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* tier cards */}
-        {/* gap-8 while stacked: the Pro card's -top-3 badge needs the extra air */}
-        <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+        <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
           {TIERS.map((t) => {
-            const price = annual ? t.annualMo : t.monthly;
+            const price = t.id === "free" ? 0 : monthlyPrice(t.id, interval, currency);
             return (
               <div
-                key={t.name}
-                className={`relative flex flex-col border bg-surface p-6 ${
-                  t.popular ? "border-bull/60 shadow-[0_0_40px_-12px_var(--bull)]" : "border-border"
+                key={t.id}
+                id={t.id}
+                className={`relative flex scroll-mt-28 flex-col border bg-surface p-6 ${
+                  t.primary ? "border-bull/60" : "border-border"
                 } ${t.soon ? "opacity-80" : ""}`}
               >
-                {t.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 border border-bull/60 bg-bg px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.2em] text-bull">
-                    Most popular
-                  </span>
-                )}
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-mono text-[0.6875rem] uppercase tracking-[0.25em] text-fg-dim">
                     {t.name}
@@ -173,15 +156,17 @@ export default function PricingPage() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-1.5">
                   <span className="font-display text-5xl tracking-tightest text-fg">
-                    ${price}
+                    {fmtMoney(price, currency)}
                   </span>
                   <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
-                    {t.monthly === 0 ? "/forever" : "/mo"}
+                    {t.id === "free" ? "/forever" : "/mo"}
                   </span>
                 </div>
-                {t.monthly > 0 && (
+                {t.id !== "free" && (
                   <div className="mt-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
-                    {annual ? `$${t.annualMo * 12} billed annually` : `or $${t.annualMo}/mo billed annually`}
+                    {annual
+                      ? `${fmtMoney(annualTotal(t.id, currency), currency)} billed annually`
+                      : `or ${fmtMoney(monthlyPrice(t.id, "year", currency), currency)}/mo billed annually`}
                   </div>
                 )}
                 <p className="mt-3 text-[0.8125rem] leading-relaxed text-fg-dim">{t.blurb}</p>
@@ -204,7 +189,7 @@ export default function PricingPage() {
                       </span>
                     </li>
                   ))}
-                  {t.extras?.map((f) => (
+                  {t.extras.map((f) => (
                     // pl matches the 14px icon + 10px gap above so the rows align
                     <li
                       key={f}
@@ -215,21 +200,25 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <Link
-                  href={t.cta.href}
-                  className={`mt-6 inline-flex h-10 items-center justify-center gap-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors ${
-                    t.popular
-                      ? "bg-bull text-bg hover:bg-bull-dim"
-                      : t.soon
-                      ? "border border-border text-fg-faint hover:border-fg-dim hover:text-fg-dim"
-                      : "border border-border text-fg-dim hover:border-fg-dim hover:text-fg"
-                  }`}
-                >
-                  {t.cta.label}
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
-                </Link>
+                {t.id === "free" ? (
+                  <Link href="/learn" className={`mt-6 ${ctaClass(t)}`}>
+                    Start for free
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+                      <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                  </Link>
+                ) : (
+                  <PlanCta
+                    plan={t.id}
+                    interval={interval}
+                    currency={currency}
+                    configured={configured}
+                    soon={t.soon}
+                    primary={t.primary}
+                    waitlistCount={counts[t.id]}
+                    priceLabel={`${fmtMoney(price, currency)}/mo`}
+                  />
+                )}
               </div>
             );
           })}
@@ -244,8 +233,12 @@ export default function PricingPage() {
           {/* The full disclaimer lives in the Footer, which renders on this very
               page — repeating it here stacked the same sentence twice within a
               few hundred pixels. The pill above carries the short version. */}
-          <div className="text-center font-mono text-[0.6875rem] text-fg-dim">
-            Billing launches soon — early users lock founding pricing.
+          <div className="max-w-2xl text-center font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
+            {railNote}
+          </div>
+          <div className="max-w-2xl text-center font-mono text-[0.625rem] leading-relaxed text-fg-faint">
+            Roadmap lines are not enforced yet — today every tier sees the full bot library. Power stays a
+            waitlist until the IV feed is licensed.
           </div>
         </div>
       </main>

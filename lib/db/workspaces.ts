@@ -89,9 +89,37 @@ export async function getPublicWorkspace(id: string): Promise<PublicWorkspace | 
  */
 export class WorkspaceLimitError extends Error {}
 
+/**
+ * The PLAN cap (PLAN_LIMITS[plan].workspaces — one on the free tier), as
+ * opposed to the hard per-user bound above. Carries the numbers so the route
+ * can answer with the 402 paywall body from lib/billing/gate.ts instead of a
+ * message: this is not an error the user fixes by deleting, it is the limit
+ * the pricing page advertises for their tier (the 2026-09 diligence memo's
+ * "no entitlement checks anywhere").
+ */
+export class WorkspacePlanLimitError extends Error {
+  constructor(
+    public readonly limit: number,
+    public readonly owned: number,
+  ) {
+    super(`plan limit reached (${limit})`);
+  }
+}
+
+/** How many workspaces a user has saved — what /account shows against the plan cap. */
+export async function countWorkspaces(userId: string): Promise<number> {
+  if (!ObjectId.isValid(userId)) return 0;
+  const col = (await db()).collection<Workspace>("workspaces");
+  return col.countDocuments({ userId: new ObjectId(userId) });
+}
+
 export async function createWorkspace(
   userId: string,
   input: z.infer<typeof WorkspaceInput>,
+  opts: {
+    /** PLAN_LIMITS[plan].workspaces: a number caps CREATE, null is unlimited, absent skips the plan check. */
+    planLimit?: number | null;
+  } = {},
 ): Promise<WithId<Workspace>> {
   const parsed = WorkspaceInput.parse(input);
   const col = (await db()).collection<Workspace>("workspaces");
@@ -102,6 +130,12 @@ export async function createWorkspace(
     throw new WorkspaceLimitError(
       `workspace limit reached (${MAX_WORKSPACES_PER_USER}) — delete one first`,
     );
+  }
+  // The plan cap sits under the hard cap and applies to CREATE only: edits,
+  // deletes and reads of what a user already saved are never gated, so a
+  // downgrade can never lock someone out of their own work.
+  if (typeof opts.planLimit === "number" && owned >= opts.planLimit) {
+    throw new WorkspacePlanLimitError(opts.planLimit, owned);
   }
   const now = new Date();
   const doc = {

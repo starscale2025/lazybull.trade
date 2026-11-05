@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   // root metadata into every route, so a single canonical there told Google
   // that every page on the domain was a duplicate of the homepage.
   alternates: { canonical: "/learn/broken-vwap" },
-  title: "Anatomy of a Broken VWAP · Learn · Lazybull",
+  title: "Anatomy of a Broken VWAP · Learn · lazybull",
   description:
     "We shipped a VWAP that was secretly just typical price. This is the full autopsy — the exact code, the lie it drew, and the test that makes it impossible now.",
 };

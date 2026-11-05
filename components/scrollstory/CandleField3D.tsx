@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA } from "@react-three/postprocessing";
-import { Grid, Line } from "@react-three/drei";
+import { Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cinemaClock } from "@/lib/cinema-clock";
@@ -583,18 +583,19 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
     wickRef.current?.scale.set(0.11 * slim, (c.wh - c.wl) * (1 + 2.3 * s) * (1 + 0.5 * hb), 0.11 * slim);
     // THREE-PHASE COLOUR MORPH — all pure f(lt), sequential smooth ramps so any
     // channel is a clean chained lerp: start GREEN (matches the field candle at
-    // hand-off) → ICE (A, scan) → GREEN (B, bullish candidate) → RED (C, downside
-    // stress-test) → GREEN (R, settle to the confirmed paper candidate).
+    // hand-off) → ICE (A, scan) → GREEN (B, one reading) → RED (C, downside
+    // stress-test) → ICE (R, back to neutral). It used to settle on GREEN, which
+    // read as a confirmed bullish pick; a teaching film ends the replay neutral.
     const A = smooth(0.12, 0.4, lt); // freeze to ice
     const B = smooth(0.44, 0.62, lt); // warm to green
     const C = smooth(0.66, 0.84, lt); // stress to red
-    const R = smooth(0.88, 0.985, lt); // settle back to green
+    const R = smooth(0.88, 0.985, lt); // settle back to ice
     const G = LAB_POSE.green, I = LAB_POSE.ice, D = LAB_POSE.red;
-    // dst = G→I(A)→G(B)→D(C)→G(R). .lerp mutates in place, so chaining composes.
+    // dst = G→I(A)→G(B)→D(C)→I(R). .lerp mutates in place, so chaining composes.
     const paint = (dst: THREE.Color, g: THREE.Color, i: THREE.Color, r: THREE.Color) =>
-      dst.copy(g).lerp(i, A).lerp(g, B).lerp(r, C).lerp(g, R);
+      dst.copy(g).lerp(i, A).lerp(g, B).lerp(r, C).lerp(i, R);
     const chain = (g: number, i: number, r: number) =>
-      lerp(lerp(lerp(lerp(g, i, A), g, B), r, C), g, R);
+      lerp(lerp(lerp(lerp(g, i, A), g, B), r, C), i, R);
     paint(glass.color, G.color, I.color, D.color);
     paint(glass.attenuationColor, G.attenuation, I.attenuation, D.attenuation);
     paint(glass.emissive, G.emissive, I.emissive, D.emissive);
@@ -1158,97 +1159,6 @@ function Dust({
   );
 }
 
-// AI forecast: from the divergence peak, a probability CONE (uncertainty band,
-// green→red gradient, widening + biased down) plus a dashed predicted-PATH line
-// its median follows. Reality (the red crash candles) falls onto the path / into
-// the cone — "it saw the crash coming." Echoes the 2D chart's amber prediction.
-function AIForecast() {
-  const { coneGeo, path } = useMemo(() => {
-    const divX = DIVERGE * SP;
-    const endX = SPAN + 3;
-    const segs = 26;
-    const green = new THREE.Color("#00ff87");
-    const red = new THREE.Color("#ff2e63");
-    const pos: number[] = [];
-    const col: number[] = [];
-    const idx: number[] = [];
-    const path: [number, number, number][] = [];
-    for (let i = 0; i <= segs; i++) {
-      const t = i / segs;
-      const x = lerp(divX, endX, t);
-      const median = lerp(PEAK_Y, 1.0, smooth(0, 1, t)); // predicted decline
-      const spread = 0.3 + t * 3.6; // uncertainty grows with horizon
-      pos.push(x, median + spread * 0.5, 0, x, median - spread * 1.0, 0); // biased down
-      const c = green.clone().lerp(red, t);
-      col.push(c.r, c.g, c.b, c.r, c.g, c.b);
-      path.push([x, median, 0.05]);
-      if (i < segs) {
-        const a = i * 2;
-        idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-      }
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
-    g.setIndex(idx);
-    g.computeVertexNormals();
-    return { coneGeo: g, path };
-  }, []);
-  const coneRef = useRef<THREE.Mesh>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lineRef = useRef<any>(null); // drei <Line> → Line2 (has .material.opacity)
-  useFrame(() => {
-    // THE FORECAST HAS TO ARRIVE BEFORE THE THING IT FORECASTS.
-    //
-    // This used to open at buildAt 0.5. Candle 26 — DIVERGE, where the crash
-    // starts — prints at buildAt 0.4875. So the cone began drawing 0.0023
-    // AFTER the crash was already on screen: the film asserted "It saw the
-    // crash coming" over a frame in which nothing had been predicted, and the
-    // reveal was still exactly 0.000 at that beat's plateau. The single
-    // most important claim in the film was contradicted by its own pixels.
-    //
-    // 0.26 is not a taste value: it is where candle 14 prints, twelve bars
-    // before DIVERGE. So "Flagged DOWN — 12 bars early" is now literally what
-    // is on screen, countable. Fully drawn by 0.47 (global ~0.4046), a beat
-    // before the crash lands at ~0.4078 — the cone is complete, and THEN
-    // reality falls into it.
-    //
-    // Opacity lifts 0.19 -> 0.34 because the cone now has to read against a
-    // still-green chart rather than against an already-red crash.
-    const reveal =
-      smooth(0.26, 0.47, buildAt(cinemaClock.progress)) *
-      (1 - smooth(0, 0.3, candleLabT(cinemaClock.progress)));
-    const cm = coneRef.current?.material as THREE.MeshBasicMaterial | undefined;
-    if (cm) cm.opacity = 0.34 * reveal;
-    if (lineRef.current?.material) lineRef.current.material.opacity = 0.92 * reveal;
-  });
-  return (
-    <group>
-      <mesh ref={coneRef} geometry={coneGeo}>
-        <meshBasicMaterial
-          vertexColors
-          transparent
-          opacity={0}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-      <Line
-        ref={lineRef}
-        points={path}
-        color="#ffce4d"
-        lineWidth={2.5}
-        dashed
-        dashSize={0.6}
-        gapSize={0.4}
-        transparent
-        opacity={0}
-        depthWrite={false}
-      />
-    </group>
-  );
-}
-
 function Rig() {
   const pos = useRef(new THREE.Vector3(-7, 7, 11));
   const look = useRef(new THREE.Vector3(0, 3, 0));
@@ -1357,7 +1267,6 @@ export default function CandleField3D({
       <CrashShards />
       <PrintHead />
       <ClickFX />
-      <AIForecast />
       {/* z-ranges stay well in front of the camera (z≈11+) — no giant near-plane dots */}
       <Dust seed={11} count={420} area={[70, 16, 14]} center={[SPAN / 2, 7, 0]} color="#57ffb0" size={0.055} speed={0.11} react={1} />
       <Dust seed={23} count={320} area={[80, 20, 16]} center={[SPAN / 2, 9, -4]} color="#28d7ff" size={0.045} speed={0.07} react={0.5} />

@@ -109,7 +109,7 @@ export function detect(legsRaw: Leg[]): Detection {
         bias: "bearish",
         defined: true,
         net: "credit",
-        blurb: "You collect premium betting the stock stays below the lower strike. Risk capped.",
+        blurb: "You collect premium and profit if the stock stays below the lower strike. Risk capped.",
       };
     }
   }
@@ -154,7 +154,7 @@ export function detect(legsRaw: Leg[]): Detection {
       if (allLong)
         return { kind: "Long Strangle", bias: "volatile", defined: true, net: "debit", blurb: "Cheaper than a straddle but needs a bigger move to pay off." };
       if (allShort)
-        return { kind: "Short Strangle", bias: "neutral", defined: false, net: "credit", blurb: "You collect premium betting the stock stays inside a range." };
+        return { kind: "Short Strangle", bias: "neutral", defined: false, net: "credit", blurb: "You collect premium and profit if the stock stays inside a range." };
     }
   }
 

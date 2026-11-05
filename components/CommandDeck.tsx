@@ -28,13 +28,14 @@ export function CommandDeck() {
   useEffect(() => {
     const go = (href: string) => () => router.push(href);
     return registerCommands("global", [
-      { id: "nav-trade", label: "Open the visual chain", group: "navigate", run: go("/trade") },
+      { id: "nav-trade", label: "Open the strategy builder", group: "navigate", run: go("/trade") },
       { id: "nav-chain", label: "Open the options chain", group: "navigate", run: go("/trade/chain") },
       { id: "nav-pro", label: "Open pro charts", group: "navigate", run: go("/pro") },
       { id: "nav-quant", label: "Open the quant workbench", group: "navigate", run: go("/quant") },
       { id: "nav-portfolio", label: "Open your portfolio", group: "navigate", run: go("/portfolio") },
       { id: "nav-greeks", label: "Open the Greeks lab", group: "navigate", run: go("/greeks") },
       { id: "nav-learn", label: "Open learn", group: "navigate", run: go("/learn") },
+      { id: "nav-practice", label: "Open practice", group: "navigate", run: go("/practice") },
       {
         id: "toggle-contrast",
         label: "Toggle contrast mode (radar / stealth)",

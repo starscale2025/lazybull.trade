@@ -42,22 +42,27 @@ function generateRegimeSeries(hurst: number) {
 }
 
 function regimeLabel(h: number) {
-  if (h > 0.6) return { kind: "TRENDING", color: "var(--bull)", desc: "Moves keep going. Trend bots win." };
-  if (h > 0.55) return { kind: "WEAK TREND", color: "var(--bull)", desc: "Mild momentum. Trend bots have an edge." };
+  // The descriptions say what the SERIES did, not what to do about it — an
+  // H reading is a description of a window that has already happened.
+  if (h > 0.6) return { kind: "TRENDING", color: "var(--bull)", desc: "Moves kept going. Trend rules scored better here." };
+  if (h > 0.55) return { kind: "WEAK TREND", color: "var(--bull)", desc: "Mild momentum. Trend rules scored a little better." };
   // --fg-dim, not --fg-faint. H opens at 0.50, so RANDOM is the DEFAULT state of
   // the flagship chart on a page titled "Trading, visualized." — and --fg-faint
   // is the site's lowest ink, measured near-invisible against the panel. Three
   // other surfaces already draw the random regime in --fg-dim; this was the
   // outlier.
-  if (h > 0.45) return { kind: "RANDOM", color: "var(--fg-dim)", desc: "Coin flip. No bot has an edge today — sit it out." };
-  if (h > 0.4) return { kind: "WEAK REVERSION", color: "var(--cyan)", desc: "Mild snap-back. Reversion bots have an edge." };
-  return { kind: "MEAN-REVERTING", color: "var(--cyan)", desc: "Prices snap back. Reversion bots win." };
+  if (h > 0.45) return { kind: "RANDOM", color: "var(--fg-dim)", desc: "Coin flip. No rule showed measurable predictive lift historically." };
+  if (h > 0.4) return { kind: "WEAK REVERSION", color: "var(--cyan)", desc: "Mild snap-back. Reversion rules scored a little better." };
+  return { kind: "MEAN-REVERTING", color: "var(--cyan)", desc: "Prices snapped back. Reversion rules scored better here." };
 }
 
+// Which teaching instrument is worth OPENING for a series shaped like this —
+// a pointer to another page, never a trade. The reasons say what each rule
+// does, in the present tense of a tool rather than of a market.
 function recommendedBot(h: number) {
-  if (h > 0.55) return { name: "SMA Crossover", id: "sma-cross", reason: "Catches the early lean and rides the trend." };
-  if (h > 0.45) return { name: "Hurst Exponent", id: "hurst", reason: "Confirms the regime — don't trade for edge today." };
-  return { name: "Z-Score Reversion", id: "zscore", reason: "Fades the extremes back to the mean." };
+  if (h > 0.55) return { name: "SMA Crossover", id: "sma-cross", reason: "Marks the early lean and holds it while the trend runs." };
+  if (h > 0.45) return { name: "Hurst Exponent", id: "hurst", reason: "Describes the regime itself — the one instrument for a coin-flip window." };
+  return { name: "Z-Score Reversion", id: "zscore", reason: "Marks the extremes and measures the snap back." };
 }
 
 export function LearnRegimeVisualizer() {

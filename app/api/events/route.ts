@@ -1,11 +1,16 @@
 // /api/events — the product-events sink. POST-only, batched, auth-optional:
 // signed-in events carry the userId, anonymous ones carry the device id so
 // pre-signup activity can be linked after conversion.
+//
+// Schema v2: the server stamps `country` (ISO-2 from the platform geo header —
+// never an IP) onto every stored event so channels can be attributed by
+// region; the client stamps `sv` + first-touch referrer/UTM (lib/track.ts).
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { EventsBody, insertEvents, MAX_EVENTS_BODY_BYTES } from "@/lib/db/events";
 import { clientIp } from "@/lib/rate-limit";
+import { regionFromHeaders } from "@/lib/region";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +43,9 @@ export async function POST(req: Request) {
     }
     const { device, events } = EventsBody.parse(JSON.parse(raw));
     const session = await auth().catch(() => null);
-    const inserted = await insertEvents(session?.user?.id ?? null, device, events);
+    const inserted = await insertEvents(session?.user?.id ?? null, device, events, {
+      country: regionFromHeaders(req.headers),
+    });
     return NextResponse.json({ ok: true, inserted });
   } catch (err) {
     return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 400 });

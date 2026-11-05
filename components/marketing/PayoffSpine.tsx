@@ -16,8 +16,9 @@
  *   Product   the legs snap on: a real multi-leg structure, one leg per
  *             feature row.
  *   Safety    the curve CAPS. The section's whole claim, drawn.
- *   Pricing   it splits — Free stays flat at zero forever (which is both the
- *             joke and the truth), Pro runs capped-up.
+ *   Pricing   it goes flat at zero: no position, no real money. The curve
+ *             used to rise into the $29 card, which read as "pay and profit",
+ *             and its Free leg sat 52 units BELOW zero (free loses).
  *
  * WHY THIS IS A SERVER COMPONENT AND STAYS ONE:
  * The marketing region ships zero client JS on purpose — the landing already
@@ -46,16 +47,18 @@ function shape(fn: (t: number) => number): string {
   return pts.join(" ");
 }
 
-const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
 /**
- * The same shape, closed down to the floor so it can be FILLED.
+ * The same shape, closed to the ZERO line so it can be FILLED.
+ *
+ * It used to close to the floor (y = H), which tinted the loss side green in
+ * every keyframe: a loss painted as a gain.
  *
  * Two extra points on the end, identical across all four keyframes, so the
  * polygon keeps the matching point count AttrPlugin needs — it tweens the
  * number list positionally and does not care that the last two never move.
  */
-const area = (pts: string) => `${pts} ${W},${H} 0,${H}`;
+const area = (pts: string) => `${pts} ${W},${ZERO} 0,${ZERO}`;
 
 // 01 · WORKFLOW — flat, three rising kinks. Three steps, no position yet.
 const WORKFLOW = shape((t) => {
@@ -79,12 +82,9 @@ const SAFETY = shape((t) => {
   return ZERO + 96 - ((t - lo) / (hi - lo)) * 166;
 });
 
-// 04 · PRICING — Pro: uncapped above the strike. (Free is the flat line below.)
-const PRICING = shape((t) => {
-  const k = 0.28;
-  if (t < k) return ZERO + 52;
-  return clamp(ZERO + 52 - ((t - k) / (1 - k)) * 190, ZERO - 108, ZERO + 52);
-});
+// 04 · PRICING — flat at zero. Whatever the plan costs, the paper account
+// risks no real money; the price is not a position.
+const PRICING = shape(() => ZERO);
 
 export function PayoffSpine() {
   return (
@@ -125,11 +125,18 @@ export function PayoffSpine() {
             x1="0"
             y1={ZERO - 150}
             x2="0"
-            y2={ZERO + 120}
+            y2={ZERO + 150}
           >
+            {/* Green above zero, red below, split exactly on the zero line:
+                the area is closed to ZERO, so anything under it is a loss. */}
             <stop offset="0" stopColor="var(--bull)" stopOpacity="0.2" />
-            <stop offset="0.5" stopColor="var(--bull)" stopOpacity="0.07" />
-            <stop offset="1" stopColor="var(--bull)" stopOpacity="0" />
+            <stop offset="0.5" stopColor="var(--bull)" stopOpacity="0.04" />
+            <stop offset="0.5" stopColor="var(--bear)" stopOpacity="0.04" />
+            <stop offset="1" stopColor="var(--bear)" stopOpacity="0.16" />
+          </linearGradient>
+          <linearGradient id="spine-stroke" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={H}>
+            <stop offset={ZERO / H} stopColor="var(--bull)" />
+            <stop offset={ZERO / H} stopColor="var(--bear)" />
           </linearGradient>
         </defs>
 
@@ -169,7 +176,7 @@ export function PayoffSpine() {
         <polyline
           points={WORKFLOW}
           fill="none"
-          stroke="var(--bull)"
+          stroke="url(#spine-stroke)"
           strokeWidth="2"
           strokeLinejoin="round"
           strokeLinecap="round"

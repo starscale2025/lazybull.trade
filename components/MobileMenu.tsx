@@ -12,10 +12,12 @@ import Link from "next/link";
 
 const LINKS = [
   { l: "Learn", href: "/learn" },
-  { l: "Visual chain", href: "/trade" },
+  { l: "Practice", href: "/practice" },
+  { l: "Strategy builder", href: "/trade" },
   { l: "Pro charts", href: "/pro" },
   { l: "Quant", href: "/quant" },
   { l: "Portfolio", href: "/portfolio" },
+  { l: "Account & plan", href: "/account" },
   { l: "Greeks", href: "/greeks" },
   { l: "Pricing", href: "/pricing" },
   { l: "About", href: "/about" },

@@ -60,7 +60,20 @@ export const yahoo: MarketDataProvider = {
   supportsRealtime: () => false,
   supportsCrypto: () => false,
   supportsIntraday: () => true,
-  available: () => true, // keyless — always a candidate, just last
+  // Keyless, so it used to be an unconditional candidate. It is also an
+  // undocumented scrape with no redistribution licence, which the 2026-09
+  // diligence memo flagged as the one data source that must be retired
+  // before anyone is charged for data: "personal use" stops being a defence
+  // the day a subscription clears. So: ON in development (keyless local runs
+  // need some real tape), OFF in production unless MARKET_DATA_ALLOW_YAHOO=1
+  // is set deliberately — a keyless production deploy then falls through to
+  // the last-good cache and the labelled synthetic tape, never to a scrape.
+  available: () => {
+    const flag = process.env.MARKET_DATA_ALLOW_YAHOO;
+    if (flag === "1") return true;
+    if (flag === "0") return false;
+    return process.env.NODE_ENV !== "production";
+  },
   health: (): ProviderHealth => getHealth("yahoo"),
 
   async getBars(symbol: string, tf: string): Promise<BarsResult> {

@@ -47,8 +47,6 @@ next-env.d.ts
 *.pt
 ai quants/weights/
 
-# scroll-cinema intermediates (the served shots in public/cinema/shots ARE committed)
-scripts/cinema/shots/
 scripts/cinema/raw/
 scripts/cinema/bull.mp4
 
@@ -63,3 +61,13 @@ scripts/cinema/bull.mp4
 # Keep it local, or move it somewhere private. See scripts/verify-prod.mjs for
 # the parts that are safe to share.
 docs/THREAT_MODEL.md
+
+# Business-strategy working documents — deliberately NOT published.
+# This repo is public. Pricing assumptions, conversion models, capital and
+# exit thinking are internal; they were tracked here until 2026-09-08 and
+# were untracked (git rm --cached) the same day. They stay on disk for the
+# founders. History before that commit still contains them — rotate the
+# repo to private, or rewrite history, if that matters.
+STRATEGY.md
+REMEDIATION_ROADMAP.txt
+docs/strategy/

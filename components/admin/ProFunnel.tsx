@@ -1,42 +1,61 @@
 import type { FunnelStep } from "@/lib/admin-data";
+import { Empty, Tile } from "./Tile";
+
+// Distinct users (or devices, pre-signup) at each step from /trade to paid,
+// over 30 days.
+//
+// The seeded version built each step by multiplying the previous one by a
+// decay constant, so it could only ever draw a tidy staircase. Real steps are
+// not nested — someone can hit the paywall on /practice without ever opening a
+// bet — so a later step CAN out-count an earlier one. That is a finding about
+// where people actually meet the wall, so a rise renders as a rise rather than
+// as a negative "drop".
 
 export function ProFunnel({ steps }: { steps: FunnelStep[] }) {
-  const max = steps[0]?.count ?? 1;
+  const max = Math.max(1, ...steps.map((s) => s.count));
+  const top = steps[0]?.count ?? 0;
+  const end = steps[steps.length - 1]?.count ?? 0;
   return (
-    <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-        <div className="flex items-center gap-3">
-          <span className="text-bull">pro funnel</span>
-          <span className="text-fg-faint">·</span>
-          <span>last 14d</span>
+    <Tile
+      label="pro funnel"
+      meta="distinct actors · 30d"
+      right={top > 0 ? `${((end / top) * 100).toFixed(2)}% end-to-end` : "end-to-end"}
+    >
+      {steps.every((s) => s.count === 0) ? (
+        <Empty reason="no page_view, bet or checkout event in the last 30 days — every step of this funnel is genuinely at zero." />
+      ) : (
+        <div className="flex flex-1 flex-col divide-y divide-border-soft">
+          {steps.map((s, i) => {
+            const prev = i > 0 ? steps[i - 1].count : null;
+            const change = prev && prev > 0 ? (s.count - prev) / prev : null;
+            return (
+              <div key={s.label} className="group flex flex-col gap-1 px-3 py-2 transition-colors hover:bg-surface">
+                <div className="flex items-center justify-between gap-2 t-chrome">
+                  <span className="truncate text-fg-dim">{s.label}</span>
+                  <span className="flex shrink-0 items-center gap-2 tabular-nums">
+                    <span className="text-fg">{s.count.toLocaleString()}</span>
+                    {change != null && (
+                      <span className={change < 0 ? "text-bear" : change > 0 ? "text-bull" : "text-fg-faint"}>
+                        {change < 0 ? "−" : change > 0 ? "+" : "·"}
+                        {Math.abs(change * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="h-2 w-full overflow-hidden bg-border-soft">
+                  <div
+                    className="h-full bg-gradient-to-r from-bull/80 to-bull transition-all duration-700 ease-out"
+                    style={{ width: `${((s.count / max) * 100).toFixed(1)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          <div className="px-3 py-2 font-mono text-[0.625rem] leading-relaxed text-fg-faint">
+            steps are independent counts, not a nested cohort — a later step can exceed an earlier one when people meet the paywall somewhere other than /trade.
+          </div>
         </div>
-        <span className="text-fg-faint">end-to-end</span>
-      </div>
-      <div className="flex flex-1 flex-col divide-y divide-border-soft">
-        {steps.map((s, i) => {
-          const w = (s.count / max) * 100;
-          const drop = i > 0 ? (1 - s.count / steps[i - 1].count) * 100 : 0;
-          return (
-            <div key={s.label} className="group flex flex-col gap-1 px-3 py-2 transition-colors hover:bg-surface">
-              <div className="flex items-center justify-between t-chrome">
-                <span className="text-fg-dim">{s.label}</span>
-                <span className="flex items-center gap-2 tabular-nums">
-                  <span className="text-fg">{s.count.toLocaleString()}</span>
-                  {i > 0 && (
-                    <span className="text-bear">−{drop.toFixed(0)}%</span>
-                  )}
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden bg-border-soft">
-                <div
-                  className="h-full bg-gradient-to-r from-bull/80 to-bull transition-all duration-700 ease-out"
-                  style={{ width: `${w.toFixed(1)}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      )}
+    </Tile>
   );
 }

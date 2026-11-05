@@ -71,7 +71,9 @@ export function Diploma() {
     ctx.fillText(`CONF #${cid}   ·   ${date}   ·   $0 REAL RISK`, 60, 352);
     ctx.fillStyle = "#00ff87";
     ctx.font = "600 26px ui-monospace, monospace";
-    ctx.fillText("lazybull.trade", 60, H - 70);
+    // The domain is printed on an artefact people keep and share, so it has
+    // to be one that resolves. lazybull.us is the site.
+    ctx.fillText("lazybull.us", 60, H - 70);
     cv.toBlob((blob) => {
       if (!blob) return;
       const url = URL.createObjectURL(blob);

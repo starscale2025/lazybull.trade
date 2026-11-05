@@ -6,15 +6,15 @@ import { SITE_URL } from "@/lib/site";
 // AI-search citation, and every one of those starts with a crawler.
 //
 // Disallowed paths are the ones that are either per-user or not content:
-// /api/* is JSON, /admin is gated, /auth is a sign-in flow, and /portfolio is
-// someone's paper account.
+// /api/* is JSON, /admin is gated, /auth is a sign-in flow, /portfolio is
+// someone's paper account, and /practice/profile is someone's practice ledger.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/admin", "/auth/", "/portfolio"],
+        disallow: ["/api/", "/admin", "/auth/", "/portfolio", "/practice/profile"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

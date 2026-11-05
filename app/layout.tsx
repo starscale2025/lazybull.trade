@@ -13,6 +13,9 @@ import { Narrator } from "@/components/Narrator";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
 import { GlassAtmosphere } from "@/components/atmosphere/GlassAtmosphere";
 import { RouteLoader } from "@/components/atmosphere/RouteLoader";
+import { ConsentGate } from "@/components/ConsentGate";
+import { MotionProvider } from "@/components/MotionProvider";
+import { SkipLink } from "@/components/SkipLink";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -82,7 +85,7 @@ export const metadata: Metadata = {
   // depends on — rendered as a bare text link with no image card.
   openGraph: {
     type: "website",
-    siteName: "lazybull.trade",
+    siteName: "lazybull",
     title: "LAZYBULL // Options You Can See",
     description: DESCRIPTION,
     url: "/",
@@ -107,12 +110,11 @@ export default function RootLayout({
       className={`${fraunces.variable} ${jetbrainsMono.variable} ${funnel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-fg selection:bg-bull selection:text-bg">
+        <MotionProvider>
         {/* The aurora every glass surface refracts. First child, fixed and
             behind everything — pages with their own canvas paint over it. */}
         <GlassAtmosphere />
-        <a href="#main" className="skip-link">
-          skip to content
-        </a>
+        <SkipLink />
         <SessionProvider>
           {/* The skip-link target, and NOTHING else. This used to be a <main>,
               but every page renders its own <main> as well, so every document
@@ -135,6 +137,14 @@ export default function RootLayout({
           {/* The terminal's spoken voice: fills, kill switch, resets → aria-live. */}
           <Narrator />
         </SessionProvider>
+        {/* The age gate + consent dialog. Last in the tree and above every
+            other dialog on purpose: nothing in the app may record a product
+            event before this has an answer (lib/track.ts drops what it queues
+            until then), and the DPDP age gate has to outrank the first-visit
+            risk briefing rather than queue behind it. Needs no provider —
+            lib/consent.ts is a plain isomorphic store — so it sits outside
+            SessionProvider and cannot perturb the order above. */}
+        <ConsentGate />
         {/* Daily-loss guard: global, because share trades now book from /pro
             and /quant too, and the limit has to be watched everywhere. */}
         <KillSwitchSentinel />
@@ -143,6 +153,7 @@ export default function RootLayout({
             app/template.tsx: that one covers the new page's first paint, this
             one covers the wait before it. Debounced, so fast hops draw nothing. */}
         <RouteLoader />
+        </MotionProvider>
       </body>
     </html>
   );

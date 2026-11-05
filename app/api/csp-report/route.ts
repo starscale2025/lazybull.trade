@@ -1,4 +1,5 @@
 import { clientIp, underLimit } from "@/lib/rate-limit";
+import { logServerEvent } from "@/lib/db/events";
 
 // Collector for the report-only CSP in next.config.ts. Browsers POST an
 // application/csp-report JSON body here on every violation; one compact warn
@@ -27,9 +28,17 @@ export async function POST(req: Request) {
         const text = await req.text();
         if (text.length <= MAX_BODY_BYTES) {
           const r = (JSON.parse(text)?.["csp-report"] ?? {}) as Record<string, unknown>;
-          console.warn(
-            `csp-report: ${logSafe(r["violated-directive"])} blocked ${logSafe(r["blocked-uri"])} on ${logSafe(r["document-uri"])}`,
-          );
+          const directive = logSafe(r["violated-directive"]);
+          const blocked = logSafe(r["blocked-uri"]);
+          const document = logSafe(r["document-uri"]);
+          console.warn(`csp-report: ${directive} blocked ${blocked} on ${document}`);
+          // Also into the events stream. The admin cockpit has no error store
+          // at all — its "top errors" tile was seeded fiction until the
+          // 2026-09 metrics pass replaced it with an honest empty state, and
+          // this is the one real error signal the app already receives. Fields
+          // are the same flattened, clamped strings the log line uses, so an
+          // attacker-controlled report cannot smuggle structure into Mongo.
+          await logServerEvent("csp_violation", null, { directive, blocked, document });
         }
       }
     } catch {

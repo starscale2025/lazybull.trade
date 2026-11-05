@@ -1,5 +1,6 @@
 import { TickerBar } from "@/components/TickerBar";
 import { GetStarted } from "@/components/GetStarted";
+import { HeroInstrument } from "@/components/HeroInstrument";
 import { CinemaGate } from "@/components/scrollstory/CinemaGate";
 import { Footer } from "@/components/Footer";
 import { MarketingSections } from "@/components/marketing/MarketingSections";
@@ -14,10 +15,12 @@ export const metadata = {
   alternates: { canonical: "/" },
 };
 
-// The homepage is now the scroll-cinema: it tells the whole product story as one
-// animated sequence, then hands off to a single Get Started. It auto-plays on
-// every load for everyone — logged in or not (see CinemaGate). The marketing
-// sections it replaced live on in git history if we ever want them back.
+// FRAME ZERO (2026-11). The first frame is the hero instrument: "Options you
+// can see." on the zero axis of a live payoff, server-rendered, the LCP. The
+// film still plays on every load, but UNDER it: its section starts one viewport
+// up beneath the hero, so scrolling lifts the hero off the pinned film like a
+// curtain. When the film ends it collapses, and the hero sits directly above
+// the landing again. No scroll lock, no baked plate, no toll booth.
 export default function Home() {
   return (
     <main className="tap-floor relative flex min-h-screen flex-col bg-bg text-fg">
@@ -28,24 +31,19 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col">
         <TickerBar />
-        {/* No navbar here — the landing IS the navigation: the cinema hands off
-            to the hero, and the page directory inside GetStarted links every
-            page. Product pages keep the full <Nav />. */}
 
+        {/* Frame zero. Opaque and stacked above the film (z-30 over z-20). */}
+        <HeroInstrument />
+
+        {/* The film, under the curtain. Keep the section after it immediately
+            after: collapse() anchors on its next sibling to keep the page still
+            while ~12,000px of film leave the layout. */}
         <CinemaGate />
 
-        {/* NOTE: keep GetStarted immediately after the cinema — its opening block
-            ("Options you can see." + Get started) is pixel-matched to the cinema's
-            final overlay, which is what makes the collapse hand-off invisible.
-            Never insert a section between them. The crystal-bull showcase renders
-            INSIDE GetStarted, above the eye band. */}
+        {/* The landing begins with the eye band. */}
         <GetStarted />
 
-        {/* The marketing recomposition (design system: ui_kits/site-redesign +
-            ui_kits/site-glass) — workflow, product, safety, pricing. It mounts
-            HERE, strictly after GetStarted, because the cinema→hero hand-off
-            above depends on those two being adjacent and pixel-matched. This
-            region is additive: nothing above it changed. */}
+        {/* The rest of the landing: workflow, product, safety, pricing. */}
         <MarketingSections />
 
         <ScrollReveal as="div" speed="slow">

@@ -715,14 +715,14 @@ export function QuantPage() {
 
       <ImportBotModal open={importOpen} onClose={() => setImportOpen(false)} onImport={importBot} />
 
-      {/* One-tap paper bet, fed the same candles the bots just ran on. Locked
+      {/* One-tap paper trade, fed the same candles the bots just ran on. Locked
           in seed mode: synthetic prices must never book into the real shared
           paper account. */}
       <QuickBet
         symbol={symbol}
         spot={lastSpot}
         candles={candles}
-        lockReason={mode === "seed" ? "seed tape — switch to live to bet at real prices" : null}
+        lockReason={mode === "seed" ? "seed tape — switch to the live tape to paper-trade on it" : null}
         onUnlock={() => setMode("live")}
       />
     </>

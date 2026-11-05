@@ -23,6 +23,8 @@ import { usePaper } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { patchLastBar, reconcileBars, syntheticBars } from "@/lib/live-bars";
 import { registerCommands } from "@/lib/command-deck";
+import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
+import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 
 const PRESET_TO_LASTN: Record<string, number> = {
   "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
@@ -193,6 +195,9 @@ export default function ProPage() {
   const [replaySpeed, setReplaySpeed] = useState(2);
   const [toast, setToast] = useState<{ id: number; text: string; tone?: "ok" | "warn" } | null>(null);
   const showToast = (text: string, tone?: "ok" | "warn") => setToast({ id: Date.now(), text, tone });
+  // The plan's saved-workspace cap — /api/workspaces answers 402 with the
+  // paywall body (lib/billing/gate.ts); this holds it until dismissed.
+  const [nudge, setNudge] = useState<PaywallBody | null>(null);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(null), 3200);
@@ -479,6 +484,13 @@ export default function ProPage() {
         return;
       }
       const j = await r.json();
+      if (isPaywall(r.status, j)) {
+        // Plan cap on saved workspaces. The layout is already in localStorage
+        // (above); the nudge says what lifts the cap.
+        setNudge(j);
+        showToast("Saved locally · plan limit on synced workspaces", "warn");
+        return;
+      }
       if (!j.ok) throw new Error(j.error || "save failed");
       showToast(`Saved as "${j.workspace.name}" — synced to your account`, "ok");
     } catch (e) {
@@ -964,6 +976,13 @@ export default function ProPage() {
             )}
           </AnimatePresence>
 
+          {/* Plan cap on save — the 402 nudge (lib/billing/gate.ts) */}
+          {nudge && (
+            <div className="absolute inset-x-0 bottom-12 z-30 mx-auto w-full max-w-sm px-3">
+              <UpgradeNudge paywall={nudge} onClose={() => setNudge(null)} />
+            </div>
+          )}
+
           {/* Boot intro */}
           <AnimatePresence>
             {intro && (
@@ -1046,6 +1065,8 @@ export default function ProPage() {
           `${indicators.length} indicator`,
           `${alerts.length} alert`,
           `${bars.length} bars`,
+          // the terminal renders no footer; this is its disclaimer
+          "paper only · not advice · not SEBI-registered",
         ]
           .filter(Boolean)
           .join(" · ")}

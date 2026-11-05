@@ -1,0 +1,17 @@
+# Compliance-guard allow-list — `path:rule-id`, one per line.
+#
+# READ THIS BEFORE ADDING A LINE. Every entry here is a rule switched OFF for
+# one file, so each one is a small hole in the guard. The bar is "this hit is
+# a FALSE POSITIVE", never "this hit is inconvenient". A hit you cannot defend
+# in a sentence gets the copy rewritten instead — that is the whole point of
+# scripts/check-compliance.mjs, and widening a rule to dodge one is the single
+# edit that file exists to prevent.
+#
+# The canonical legitimate case is /safety, which quotes the words we promise
+# never to say in order to promise never to say them.
+#
+# THE LIST IS EMPTY, and that is the target state. Two provisional entries
+# lived here during the 2026-09 copy pass, both in lib/practice/content/**
+# (the put-call-parity statement's "free money", and a Kelly editorial that
+# named a fraction to stake). Both were reworded on 2026-09-09 and both lines
+# removed. Every rule is live against every file.

@@ -1,44 +1,38 @@
-import type { BotRunRow } from "@/lib/admin-data";
+import type { BotRuns } from "@/lib/admin-data";
+import { BarRow, Empty, Stat, Tile } from "./Tile";
 
-export function BotRunDistribution({ rows }: { rows: BotRunRow[] }) {
-  const max = Math.max(...rows.map((r) => r.runs));
+// The most convincing lie on the old cockpit lived here: twelve REAL bot names
+// ("6-Model Consensus", "Kalman Filter", "Monte Carlo VaR") against run counts
+// straight out of the PRNG. It looked like the most specific tile on the page.
+//
+// The truth is that quant_run_all / setup_applied / preset_applied carry how
+// MANY bots ran, never which — so a leaderboard cannot be built at all. The two
+// totals below are what the props support; the rest is a note saying what to
+// emit to get the leaderboard back.
+
+export function BotRunDistribution({ data }: { data: BotRuns }) {
+  const max = data.rows.length ? Math.max(...data.rows.map((r) => r.runs)) : 1;
   return (
-    <div className="relative flex h-full flex-col overflow-hidden border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-        <div className="flex items-center gap-3">
-          <span className="text-bull">quant bots</span>
-          <span className="text-fg-faint">·</span>
-          <span>runs · 24h</span>
+    <Tile label="quant bots" meta="runs · 7d" right={`${data.runs.toLocaleString()} runs`}>
+      <div className="grid grid-cols-2 gap-4 border-b border-border-soft px-3 py-3">
+        <Stat k="workbench runs · 7d" v={data.runs.toLocaleString()} tone={data.runs ? "bull" : "fg"} />
+        <Stat k="bot slots engaged" v={data.botsEngaged.toLocaleString()} />
+      </div>
+      {data.rows.length === 0 ? (
+        <Empty reason={data.note ?? "no data"} />
+      ) : (
+        <div className="flex flex-col divide-y divide-border-soft">
+          {data.rows.map((r, i) => (
+            <BarRow
+              key={r.id}
+              rank={i + 1}
+              label={r.label}
+              value={r.runs.toLocaleString()}
+              pct={r.runs / max}
+            />
+          ))}
         </div>
-        <span className="text-fg-faint">{rows.length} bots</span>
-      </div>
-      <div className="flex flex-col divide-y divide-border-soft">
-        {rows.map((r, i) => {
-          const w = (r.runs / max) * 100;
-          return (
-            <div key={r.id} className="group relative grid grid-cols-[28px_1fr_72px_44px] items-center gap-2 px-3 py-1.5 transition-colors hover:bg-surface">
-              <span className="t-chrome text-fg-faint tabular-nums">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div className="min-w-0">
-                <div className="truncate font-mono text-[0.75rem] text-fg">{r.label}</div>
-                <div className="mt-1 h-1 w-full overflow-hidden bg-border-soft">
-                  <div
-                    className="h-full bg-bull transition-all duration-700 ease-out"
-                    style={{ width: `${w.toFixed(1)}%` }}
-                  />
-                </div>
-              </div>
-              <span className="text-right font-mono text-[0.6875rem] tabular-nums text-fg">
-                {r.runs.toLocaleString()}
-              </span>
-              <span className="text-right font-mono text-[0.625rem] tabular-nums text-fg-faint">
-                {(r.pct * 100).toFixed(1)}%
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      )}
+    </Tile>
   );
 }

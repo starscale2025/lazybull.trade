@@ -4,10 +4,17 @@ import { MobileMenu } from "./MobileMenu";
 import { TruthBadge } from "./pro/TruthBadge";
 import { NAV_DIRECTORY } from "@/lib/directory";
 
-// Rail links folded into the MORE menu until 2xl frees enough width for the
-// full seven-link rail. Learn / Visual chain / Pro charts / Pricing stay
-// top-level — they are the funnel; these three are reference pages.
-const FOLDED = new Set<string>(["/quant", "/greeks", "/about"]);
+// Rail links behind the MORE menu. Learn / Practice / Strategy builder / Pro
+// charts stay top-level at xl — they are the funnel (learn it, prove it, build
+// it, trade it on paper) and each has to be visible on a 1280–1535 laptop — so
+// the xl rail keeps its hard-won four-links-plus-MORE width budget. Quant returns to the
+// rail at 2xl. The three reference pages stay in MORE at EVERY width: the
+// pill's max-width is fixed (87.5rem), so an eight-link rail overflowed it by
+// 66–104px at 1536 and 1920 alike — measured, not guessed. Pricing is still
+// one click away in MORE, the footer and every CTA.
+const FOLDED = new Set<string>(["/quant"]);
+const ALWAYS_FOLDED = new Set<string>(["/greeks", "/pricing", "/about"]);
+const inMenu = (href: string) => FOLDED.has(href) || ALWAYS_FOLDED.has(href);
 
 const railLink =
   "group relative h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3";
@@ -17,8 +24,8 @@ const railLink =
  *
  * It floats: a sticky, inset, frosted bar rather than a full-bleed border-
  * bottom strip. Same information, same destinations. Breakpoint budget: the
- * rail is xl+ (with Quant/Greeks/About folded into a MORE menu until 2xl),
- * the Truth badge min-[1360px]+, Portfolio xl+, and the hamburger covers
+ * rail is xl+ (Quant folded into a MORE menu until 2xl; Greeks/Pricing/About
+ * always in it), the Truth badge min-[1360px]+, Portfolio xl+, and the hamburger covers
  * everything below xl. Nothing was dropped to make it fit — below xl every
  * destination lives in the sheet.
  *
@@ -73,21 +80,24 @@ export function Nav({ wide = false }: { wide?: boolean }) {
 
         {/* xl (not lg): at 1024–1279 even the slimmed rail + account cluster
             overflowed the pill and clipped the CTA — the hamburger covers that
-            band. At xl the rail runs four links + MORE; the full seven return
-            at 2xl. Every child here is shrink-0, so there is no give elsewhere. */}
+            band. At xl the rail runs four links + MORE; Quant joins at 2xl and
+            MORE stays. Every child here is shrink-0, so there is no give elsewhere. */}
         <div className="hidden items-center gap-1.5 xl:flex">
           {NAV_DIRECTORY.map((item) => (
             <Link
               key={item.l}
               href={item.href}
-              className={`${FOLDED.has(item.href) ? "hidden 2xl:flex" : "flex"} ${railLink}`}
+              className={`${
+                ALWAYS_FOLDED.has(item.href) ? "hidden" : FOLDED.has(item.href) ? "hidden 2xl:flex" : "flex"
+              } ${railLink}`}
             >
               <span>{item.l}</span>
             </Link>
           ))}
           {/* MORE ▾ — CSS-only disclosure (details/summary: no client JS in this
-              server component). Panel matches the mobile sheet's idiom. */}
-          <details className="relative 2xl:hidden">
+              server component). Panel matches the mobile sheet's idiom. Always
+              present on the rail: the reference pages never leave it. */}
+          <details className="relative">
             <summary
               className={`flex cursor-pointer select-none list-none gap-1.5 [&::-webkit-details-marker]:hidden ${railLink}`}
             >
@@ -97,11 +107,13 @@ export function Nav({ wide = false }: { wide?: boolean }) {
               </span>
             </summary>
             <div className="absolute right-0 top-full z-50 mt-3 flex min-w-36 flex-col overflow-hidden rounded-[var(--r-panel)] border border-[var(--glass-border)] bg-bg py-1.5 shadow-2xl">
-              {NAV_DIRECTORY.filter((item) => FOLDED.has(item.href)).map((item) => (
+              {NAV_DIRECTORY.filter((item) => inMenu(item.href)).map((item) => (
                 <Link
                   key={item.l}
                   href={item.href}
-                  className="flex h-9 items-center px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg"
+                  className={`${
+                    FOLDED.has(item.href) ? "flex 2xl:hidden" : "flex"
+                  } h-9 items-center px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg`}
                 >
                   {item.l}
                 </Link>
@@ -135,8 +147,8 @@ export function Nav({ wide = false }: { wide?: boolean }) {
             <span aria-hidden className="size-1.5 rounded-full bg-[#04140b] pulse-dot" />
             {/* Short label below sm AND in the 1024–1279 hamburger band, where
                 the audit measured the full CTA clipping off the pill's edge. */}
-            <span className="sm:hidden lg:inline xl:hidden">Chain</span>
-            <span className="hidden sm:inline lg:hidden xl:inline">Open the chain</span>
+            <span className="sm:hidden lg:inline xl:hidden">Builder</span>
+            <span className="hidden sm:inline lg:hidden xl:inline">Open the builder</span>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
               <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
             </svg>

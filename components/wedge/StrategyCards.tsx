@@ -20,7 +20,7 @@ type Props = {
 
 const TONE: Record<Strategy["id"], { label: string; color: string; pillBg: string }> = {
   cheap: { label: "Cheap & risky", color: "var(--plasma)", pillBg: "rgba(201,255,0,0.12)" },
-  income: { label: "Defined-risk income", color: "var(--bull)", pillBg: "rgba(0,255,135,0.12)" },
+  income: { label: "Defined-risk credit", color: "var(--bull)", pillBg: "rgba(0,255,135,0.12)" },
   aggressive: { label: "Aggressive", color: "var(--bear)", pillBg: "rgba(255,46,99,0.12)" },
 };
 
@@ -187,7 +187,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
         >
           <span className="inline-flex items-center gap-2">
             <span className="size-1.5 rounded-full pulse-dot" style={{ background: tone.color }} />
-            place this bet on {symbol}
+            place paper trade on {symbol}
           </span>
           <span>→</span>
         </button>

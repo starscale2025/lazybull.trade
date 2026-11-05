@@ -14,12 +14,14 @@
  *   3. THE ART WAS A JPEG OF THE THING. A 20%-opacity screenshot of the film is
  *      a picture of what you are missing.
  *
- * So this draws the film's decisive beat instead of describing it: the forecast
- * cone opening at the call, and price falling into its lower half — "flagged
- * DOWN, 12 bars early; reality fell into the cone it drew." That is the one
- * moment that carries the product's whole claim, and it is pure static SVG:
- * legal under reduced-motion, and it needs no GPU, which is precisely why the
- * other two audiences are here.
+ * So this draws the film's decisive beat instead of describing it: the price
+ * falls through the lower strike of a defined-risk position and keeps falling,
+ * while the position's loss stops at the floor chosen before the trade. It used
+ * to draw a down-biased forecast cone that "called" the crash; the 2026-11
+ * tribunal found that oracle here, in the largest type a reduced-motion reader
+ * meets. Nothing is predicted now, only bounded. It is pure static SVG: legal
+ * under reduced-motion, and it needs no GPU, which is precisely why the other
+ * two audiences are here.
  *
  * Everything else the film says becomes a numbered index. The numbers are not
  * decoration — the film IS a sequence, and the order is the argument: it reads
@@ -32,8 +34,10 @@
 
 const W = 640;
 const H = 300;
-const SPLIT = 292; // x of the call — history left, forecast right
-const BASE = 150; // y of the price at the moment of the call
+const SPLIT = 292; // x where the drop begins — the tape left, the crash right
+const BASE = 150; // y of the price where the drop begins
+const RIGHT_PAD = 52;
+const SPAN = W - SPLIT - RIGHT_PAD;
 
 /** Deterministic noise. A screenshot of this page must not shift between runs. */
 function rng(seed: number) {
@@ -47,74 +51,46 @@ function rng(seed: number) {
 const pts = (a: Array<[number, number]>) =>
   a.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
 
-// ── history: the tape up to the call. Mildly upward, so the DOWN call is a
-//    genuine contrarian read rather than an extrapolation of a visible slide.
+// ── the tape: mildly upward into the drop, so the fall is a surprise rather
+//    than an extrapolation of a visible slide.
 const rHist = rng(20250824);
 const HISTORY: Array<[number, number]> = [];
 for (let i = 0; i <= 46; i++) {
   const t = i / 46;
-  const x = t * SPLIT;
-  const drift = -26 * t; // up and to the right
   const wobble = Math.sin(t * 9.4) * 7 + (rHist() - 0.5) * 9;
-  HISTORY.push([x, BASE + 18 + drift + wobble]);
+  HISTORY.push([t * SPLIT, BASE + 18 - 26 * t + wobble]);
 }
-const CALL_Y = HISTORY[HISTORY.length - 1][1];
+const START_Y = HISTORY[HISTORY.length - 1][1];
 
-// ── the cone. Widens with √t, the way a diffusion band actually does — a
-//    straight-edged triangle is the tell of a cone drawn by someone who has
-//    never priced one.
-// The forecast stops SHORT of the frame edge. Run it to x=W and the cone is
-// guillotined by the viewBox — it reads as a picture someone cropped badly
-// rather than as a band that resolves. The gap is the drawing's margin.
-const RIGHT_PAD = 52;
-const SPAN = W - SPLIT - RIGHT_PAD;
-const BARS = 34; // steps of `reality` — the unit the "12 bars" claim counts in
-const EARLY = 12;
-const halfWidth = (t: number) => Math.sqrt(t) * 96;
-const UPPER: Array<[number, number]> = [];
-const LOWER: Array<[number, number]> = [];
-for (let i = 0; i <= 30; i++) {
-  const t = i / 30;
-  const x = SPLIT + t * SPAN;
-  const centre = CALL_Y + t * 34; // the ensemble's median: down
-  UPPER.push([x, centre - halfWidth(t)]);
-  LOWER.push([x, centre + halfWidth(t)]);
-}
-const CONE_FILL = `${pts(UPPER)} ${pts([...LOWER].reverse())}`;
+// ── the lower strike of a bull call spread. Below it the spread's loss is
+//    fixed at what it cost, so this line is where the position stops losing.
+const K1_Y = START_Y + 62;
 
-// ── reality: what actually happened. Stays inside the cone the whole way and
-//    finishes in its lower half — vindication, not a lucky straight line.
-const rReal = rng(77);
-const REALITY: Array<[number, number]> = [];
-for (let i = 0; i <= BARS; i++) {
-  const t = i / BARS;
-  const x = SPLIT + t * SPAN;
-  const centre = CALL_Y + t * 34;
-  const fall = Math.pow(t, 1.35) * 58; // slow at first, then the drop
-  const wobble = Math.sin(t * 11) * 6 * (1 - t * 0.4) + (rReal() - 0.5) * 7;
-  const y = centre + fall + wobble;
-  const lo = centre + halfWidth(t) - 4;
-  REALITY.push([x, Math.min(y, lo)]);
+// ── the crash: slow at first, then through the strike and well past it.
+const rFall = rng(77);
+const CRASH: Array<[number, number]> = [];
+for (let i = 0; i <= 34; i++) {
+  const t = i / 34;
+  const wobble = Math.sin(t * 11) * 6 * (1 - t * 0.4) + (rFall() - 0.5) * 7;
+  CRASH.push([SPLIT + t * SPAN, START_Y + Math.pow(t, 1.35) * 118 + wobble]);
 }
-const END = REALITY[REALITY.length - 1];
-// where the twelfth bar lands — the bracket below measures exactly the claim
-const EARLY_X = SPLIT + (EARLY / BARS) * SPAN;
+const END = CRASH[CRASH.length - 1];
 
 /** The acts, in order. `lede` marks the two that carry the climax. */
 // THE THIRD COPY OF THE FILM'S STORY. lib/cinema.ts drives the desktop film,
 // MobileCinema carries the phone's, and this static index is what a
 // reduced-motion visitor — the person most likely to actually READ it — gets
 // instead. It was the last place still shipping the spec sheet, including a
-// "historically 65–77% right" win rate no reader can check, on a financial
-// education product. Three surfaces, one story: change a beat and change it in
-// all three.
+// historical win-rate range no reader can check, on a financial-education
+// product. Three surfaces, one story: change a beat and change it in all
+// three.
 const INDEX = [
   { n: "01", h: "A desk that shows its work.", s: "Every number here can be opened." },
-  { n: "02", h: "Nothing here costs you money.", s: "Paper only — so you can afford to be wrong on purpose." },
+  { n: "02", h: "No trade here uses real money.", s: "Paper only — so you can afford to be wrong on purpose." },
   { n: "03", h: "Markets have moods.", s: "Trending, reverting, or noise — named before you commit to anything." },
   { n: "04", h: "Your worst case is a number you chose.", s: "Not a number you find out afterwards." },
   { n: "05", h: "They vote. They disagree.", s: "You see the split, not just the answer." },
-  { n: "06", h: "Learn it. Backtest it.", s: "Only then trade it." },
+  { n: "06", h: "Learn it. Backtest it.", s: "Then paper-trade it." },
 ];
 
 export function CinemaStill() {
@@ -127,21 +103,15 @@ export function CinemaStill() {
         {/* ── THE FRAME ─────────────────────────────────────────────────── */}
         <div className="flex flex-col justify-center">
           <div className="t-eyebrow text-fg-faint">The film, in one frame</div>
-          {/* The oracle claim was rewritten out of all nine film beats and then
-              left standing HERE, in the largest type on the page, where the
-              reduced-motion reader — the one most likely to actually read it —
-              meets it first. The picture below is unchanged and still shows a
-              forecast cone that contained what happened; the difference is that
-              it is now offered as something you can watch, not as a prediction
-              being sold. */}
           <h2 className="mt-4 font-display text-[clamp(2rem,4.4vw,3.25rem)] leading-[0.98] tracking-tightest text-fg [text-wrap:balance]">
-            It drew the <span className="text-bear">range</span>. Then the floor went.
+            Your worst case is a number you <span className="text-bear">chose</span>.
           </h2>
           <p className="measure-wide mt-4 text-fg-dim">
-            Price fell inside the cone the terminal had already drawn — and you
-            got to watch it happen with nothing at stake. Everything below is
-            what the desk does around that one call; read it in order, because
-            the order is the argument.
+            The price fell through the lower strike and kept falling. A
+            defined-risk position stops losing there: the most it can lose is
+            what it cost, set before the trade. Here you watch that happen with
+            nothing at stake. Everything below is what the desk does around that
+            one idea; read it in order, because the order is the argument.
           </p>
 
           <figure className="mt-9">
@@ -149,80 +119,29 @@ export function CinemaStill() {
               viewBox={`0 0 ${W} ${H}`}
               className="block h-auto w-full"
               role="img"
-              aria-label="A price chart. The line rises gently, then a forecast cone opens at the moment of the call and widens to the right. The price that followed falls through the lower half of the cone, ending near its floor."
+              aria-label="A price chart. The line rises gently, then falls sharply through a horizontal line marking the lower strike of a bull call spread, and keeps falling. The area below the strike is labelled: below this strike the position's loss stops at minus 80 dollars."
             >
-              {/* THE BAND THE MODEL COMMITTED TO — dissolving rightward.
-                  Drawn as a closed polygon it ended on a hard vertical chord,
-                  which reads as a wall: a shape that stopped rather than a
-                  forecast getting less certain. The mask fades the fill AND
-                  both boundaries together over the last third, so the cone runs
-                  out of confidence instead of running out of room. `reality`
-                  sits outside this group and stays at full strength — what
-                  actually happened is not in doubt. */}
-              <defs>
-                {/* userSpaceOnUse across the CONE's own x-extent, not the
-                    viewBox's. Spanning 0..W left the terminus at ~21% instead
-                    of 0, so the chord was dimmer but still visibly there. */}
-                <linearGradient
-                  id="cs-fade"
-                  gradientUnits="userSpaceOnUse"
-                  x1={SPLIT}
-                  x2={SPLIT + SPAN}
-                  y1="0"
-                  y2="0"
-                >
-                  <stop offset="0" stopColor="#fff" />
-                  <stop offset="0.46" stopColor="#fff" />
-                  <stop offset="1" stopColor="#000" />
-                </linearGradient>
-                <mask id="cs-cone-mask" maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
-                  <rect x="0" y="0" width={W} height={H} fill="url(#cs-fade)" />
-                </mask>
-              </defs>
-              <g mask="url(#cs-cone-mask)">
-                <polygon points={CONE_FILL} fill="var(--amber)" opacity="0.15" />
-                <polyline
-                  points={pts(UPPER)}
-                  fill="none"
-                  stroke="var(--amber)"
-                  strokeWidth="1.25"
-                  opacity="0.6"
-                  vectorEffect="non-scaling-stroke"
-                />
-                <polyline
-                  points={pts(LOWER)}
-                  fill="none"
-                  stroke="var(--amber)"
-                  strokeWidth="1.25"
-                  opacity="0.6"
-                  vectorEffect="non-scaling-stroke"
-                />
-              </g>
+              {/* below the strike: the part of the fall a defined-risk position never pays for */}
+              <rect x={SPLIT} y={K1_Y} width={W - SPLIT} height={H - K1_Y} fill="var(--bear)" opacity="0.07" />
 
-              {/* the call: one rule, and the only vertical in the picture */}
+              {/* the strike itself — the floor, set before the trade */}
               <line
-                x1={SPLIT}
-                y1="18"
-                x2={SPLIT}
-                y2={H - 40}
-                stroke="var(--fg-faint)"
-                strokeDasharray="3 6"
-                strokeWidth="1"
-                opacity="0.55"
+                x1="0"
+                y1={K1_Y}
+                x2={W}
+                y2={K1_Y}
+                stroke="var(--bear)"
+                strokeWidth="1.5"
                 vectorEffect="non-scaling-stroke"
               />
-              <text
-                x={SPLIT - 9}
-                y="26"
-                textAnchor="end"
-                fill="var(--fg-faint)"
-                className="t-chrome"
-                style={{ fontSize: 10, letterSpacing: "0.14em" }}
-              >
-                the call
+              <text x="10" y={K1_Y - 8} fill="var(--fg-dim)" style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.14em" }}>
+                K1 · LOWER STRIKE
+              </text>
+              <text x={W - 10} y={K1_Y + 20} textAnchor="end" fill="var(--fg)" style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>
+                below this strike, the loss stops at −$80
               </text>
 
-              {/* the tape before it */}
+              {/* the tape before the drop */}
               <polyline
                 points={pts(HISTORY)}
                 fill="none"
@@ -233,9 +152,9 @@ export function CinemaStill() {
                 vectorEffect="non-scaling-stroke"
               />
 
-              {/* what happened */}
+              {/* the drop — price is not bounded, only the position is */}
               <polyline
-                points={pts(REALITY)}
+                points={pts(CRASH)}
                 fill="none"
                 stroke="var(--bear)"
                 strokeWidth="2.25"
@@ -244,31 +163,11 @@ export function CinemaStill() {
                 vectorEffect="non-scaling-stroke"
               />
               <circle cx={END[0]} cy={END[1]} r="3.5" fill="var(--bear)" />
-              <circle cx={SPLIT} cy={CALL_Y} r="3" fill="var(--fg)" opacity="0.85" />
-
-              {/* THE CLAIM, MEASURED. The headline says twelve bars early; this
-                  brackets exactly twelve, so the picture states the number
-                  rather than leaving the reader to take it on faith. */}
-              <g stroke="var(--fg-faint)" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.8">
-                <line x1={SPLIT} y1={H - 26} x2={EARLY_X} y2={H - 26} />
-                <line x1={SPLIT} y1={H - 30} x2={SPLIT} y2={H - 22} />
-                <line x1={EARLY_X} y1={H - 30} x2={EARLY_X} y2={H - 22} />
-              </g>
-              <text
-                x={(SPLIT + EARLY_X) / 2}
-                y={H - 10}
-                textAnchor="middle"
-                fill="var(--fg-faint)"
-                style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.14em" }}
-              >
-                12 BARS
-              </text>
             </svg>
             <figcaption className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
               {[
-                { c: "var(--fg-dim)", t: "tape" },
-                { c: "var(--amber)", t: "forecast cone" },
-                { c: "var(--bear)", t: "what happened" },
+                { c: "var(--fg-dim)", t: "price" },
+                { c: "var(--bear)", t: "the drop, and the strike where the loss stops" },
               ].map((k) => (
                 <span key={k.t} className="flex items-center gap-2 t-chrome text-fg-faint">
                   <span
@@ -279,6 +178,7 @@ export function CinemaStill() {
                   {k.t}
                 </span>
               ))}
+              <span className="t-chrome text-fg-faint">illustrative · paper-only</span>
             </figcaption>
           </figure>
         </div>

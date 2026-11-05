@@ -7,30 +7,27 @@ progress. Because the scene is a pure function of `t` (renders in ~1ms), it draw
 every in-between frame at 60fps — smooth at any scroll speed, no pre-rendered
 frame stepping.
 
-The only build artifacts are the **shots** — screenshots of distinct app screens
-the scene composites into the flying panels and the final reveal hero. They live
-in `public/cinema/shots/*.webp` and ARE committed. Raw PNGs in this folder's
-`shots/` subdir are intermediate and gitignored.
+The only build artifacts are the **plates**: seven diagrams (strategy builder,
+options chain, a learn chapter, the quant workbench, pro charts, the bot
+library, about) that the scene flies past in the dive and that the landing's
+feature rows show. They live in `public/cinema/plates/*.svg` and ARE committed.
 
-## Regenerate the shots (only when those pages change visually)
+They used to be screenshots of the app, and screenshots go stale silently: the
+film kept advertising screens the product had removed, and nothing in
+`npm run verify` could notice. The plates are drawn from code, every number on
+them is labelled illustrative, and the compliance lint reads them like any
+other source file.
 
-1. Start the dev server: `npm run dev` (the pipeline screenshots the live pages).
-2. `npm run cinema:capture` — screenshots `/`, `/learn`, `/trade`, `/quant`,
-   `/pro`, `/trade/chain`, `/learn/bots`, `/about`, and the real `<Hero>`, then
-   encodes them to `public/cinema/shots/*.webp`.
-   - `SITE=http://localhost:3001 npm run cinema:capture` for a non-default port.
-3. Commit the regenerated `public/cinema/shots/`.
+## Redraw the plates
 
-### Requirements
-
-- **Playwright Chromium** — `npx playwright install chromium` (one-time).
-- **cwebp** — `brew install webp` (the shot encoder).
+`npm run cinema:plates` (no server, no browser) rewrites
+`public/cinema/plates/*.svg` from `scripts/cinema/plates.mjs`. Commit the result.
 
 ## Tuning the animation
 
 - **Choreography / visuals**: `public/cinema/scene.html`. Its `PHASES`
-  boundaries MUST stay in sync with `ACTS` in `lib/cinema.ts` — the same six
-  numbers. Because the scene renders live, edits show up on reload with no
+  boundaries MUST stay in sync with `ACTS` in `lib/cinema.ts` (initScene
+  passes them in; the table in the file is only the standalone fallback). Because the scene renders live, edits show up on reload with no
   re-capture needed.
 - **Pace & smoothness**: `SCROLL_LENGTH_VH` (pin length) and the `SMOOTH` lerp
   factor in `ScrollCinema.tsx`.

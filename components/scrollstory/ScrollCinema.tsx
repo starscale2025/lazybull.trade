@@ -18,7 +18,7 @@ import { CinemaRail, type CinemaRailHandle } from "./CinemaRail";
 import { CinemaStill } from "./CinemaStill";
 // Shared with CinemaGate, which reserves exactly this height on the first paint
 // so mounting the film shifts nothing. See cinema-metrics.ts.
-import { SCROLL_LENGTH_VH } from "./cinema-metrics";
+import { SCROLL_LENGTH_VH, CURTAIN_VH, FILM_START, scrollToFilm, filmToScroll } from "./cinema-metrics";
 
 // smoothstep — the phase ramps for the quant-lab type-on/colour narration, kept
 // identical in shape to the 3D IceCandle's so the panel and candle read as one clock.
@@ -41,8 +41,9 @@ if (typeof window !== "undefined") {
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 // "/" is now the cinema itself, so no "home" shot — panels use real product routes.
-const SHOT_NAMES = ["learn", "trade", "quant", "pro", "chain", "bots", "about", "hero"];
-const SHOTS = Object.fromEntries(SHOT_NAMES.map((n) => [n, `/cinema/shots/${n}.webp`]));
+const SHOT_NAMES = ["learn", "trade", "quant", "pro", "chain", "bots", "about"];
+// Drawn from code by scripts/cinema/plates.mjs; screenshots went stale.
+const SHOTS = Object.fromEntries(SHOT_NAMES.map((n) => [n, `/cinema/plates/${n}.svg`]));
 
 type SceneWindow = Window & {
   initScene?: (cfg: {
@@ -261,7 +262,7 @@ export function ScrollCinema() {
   const labRef = useRef<HTMLDivElement>(null);
   const labLineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const labValRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const labPhaseRef = useRef<HTMLSpanElement>(null); // header tag: scan → candidate → stress → staged
+  const labPhaseRef = useRef<HTMLSpanElement>(null); // header tag: replay → reading → stress → replayed
   // per-line char lengths, measured once — the type-on reveals `budget` chars
   // cumulatively across lines (monospace → 1ch/char), so it's pure f(labT).
   const labLenRef = useRef<number[] | null>(null);
@@ -350,24 +351,25 @@ export function ScrollCinema() {
     // not also try: its restore lands before the film has a ScrollTrigger and
     // fights the preloader's lock.
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-    // Where a reload left off, resolved ONCE. Read here rather than at reveal
-    // because the preloader is about to scroll to 0, which is the position we
-    // would otherwise be reading back.
+    // Where a reload left off, resolved ONCE, before anything can move the
+    // scroll position this would otherwise be reading back.
     const resumeAt = cinemaResumeAt();
 
-    // Lock scroll while the cinema preloads so the scroll animation only begins
-    // once everything is ready (restored on reveal / on cleanup).
-    const rootStyle = document.documentElement.style;
-    const prevOverflow = rootStyle.overflow;
-    rootStyle.overflow = "hidden";
-    window.scrollTo(0, 0);
+    // NEVER LOCK SCROLL. This used to set overflow:hidden and scrollTo(0,0)
+    // while the scene preloaded: the H1 was 13,500px away, the first frame was
+    // an empty laptop, and anyone who scrolled before the lock landed (0.2-2.1s
+    // after navigation) was yanked back to the top. Frame zero is the hero
+    // instrument now, stacked above this section, so the film can load under it
+    // at its own pace. The page progress bar hides while the film is pinned;
+    // the act rail is the film's meter (globals.css, html[data-film]).
+    document.documentElement.dataset.film = "pinned";
 
     let disposed = false;
     let ready = false;
     let st: ScrollTrigger | null = null;
     let raf = 0;
-    let progress = 0; // smoothed value that drives the scene
-    let targetProgress = 0; // raw scroll position
+    let progress = FILM_START; // smoothed value that drives the scene (film space)
+    let targetProgress = FILM_START; // raw scroll position, mapped into film space
     let resizeTimer = 0;
     let collapsed = false;
     let creep = 0; // interval that eases the loading bar up during preload
@@ -424,7 +426,18 @@ export function ScrollCinema() {
       const prevAnchor = rootStyle.overflowAnchor;
       rootStyle.overflowAnchor = "none";
       const before = hero ? hero.getBoundingClientRect().top : 0;
+      // Focus inside the film (the rail's Skip, a rail row) would be dropped to
+      // <body> when the section hides; capture it so it can land somewhere real.
+      const hadFocus = section.contains(document.activeElement);
       section.style.display = "none";
+      delete document.documentElement.dataset.film;
+      if (hadFocus && hero) {
+        const h = hero.querySelector<HTMLElement>("h1, h2, [data-skip-target]");
+        if (h) {
+          if (!h.hasAttribute("tabindex")) h.tabIndex = -1;
+          h.focus({ preventScroll: true });
+        }
+      }
       const keepHeroInPlace = () => {
         if (!hero) return;
         const delta = hero.getBoundingClientRect().top - before;
@@ -547,30 +560,33 @@ export function ScrollCinema() {
             ln.style.opacity = started ? "1" : "0";
             ln.classList.toggle("lab-caret", started && !done); // blink only at the frontier
             // phase accents narrate the colour story on the key lines
-            // (indices match the SIX-line panel: 2 candidate, 3-4 stress, 5 verdict):
+            // (indices match the SIX-line panel: 2 the split, 3-4 stress, 5 the lesson):
             let glow = 0.28; // base cyan-ish scan glow once a line is in
             let rgb = "125,255,201";
-            if (i === 2) { rgb = "0,255,135"; glow = 0.2 + 0.6 * B; }          // candidate → green in phase B
+            if (i === 2) { glow = 0.2 + 0.5 * B; }                              // the split, neutral: no colour picks a side
             else if (i === 3 || i === 4) { rgb = "255,46,99"; glow = 0.15 + 0.6 * C; } // stress → red in phase C
-            else if (i === 5) { rgb = "0,255,135"; glow = 0.2 + 0.7 * Math.max(RS, lt > 0.9 ? 1 : 0); } // verdict → green at settle
+            else if (i === 5) { rgb = "191,232,255"; glow = 0.2 + 0.7 * Math.max(RS, lt > 0.9 ? 1 : 0); } // the lesson → ice at settle
             ln.style.textShadow = started ? `0 0 ${(8 + 14 * glow).toFixed(0)}px rgba(${rgb},${glow.toFixed(2)})` : "none";
           });
           // live values interpolate on the SAME clock; all fixed-width so the ch
-          // reveal stays exact. agree climbs to 6/6 for the settled verdict.
+          // reveal stays exact. The replay ends on a 4/2 split, never a unanimous
+          // verdict and never a named strike: the lab shows a disagreement, it does
+          // not stage a trade (the 2026-11 tribunal found a named strike and a
+          // staged pick here).
           const ve = clamp01(lt / 0.85);
           const mu = (0.12 + 0.72 * ve).toFixed(2);
           const sg = (1.24 + 0.68 * ve).toFixed(2);
-          const ag = String(1 + Math.round(4 * ve));
-          const K = String(240 + 2 * Math.round(9 * ve));
-          const ag6 = String(1 + Math.round(5 * ve));
-          const vals = [mu, sg, ag, K, ag6];
+          const ag = String(1 + Math.round(3 * ve));
+          const agreed = String(1 + Math.round(3 * ve));
+          const dissent = String(6 - (1 + Math.round(3 * ve)));
+          const vals = [mu, sg, ag, agreed, dissent];
           labValRefs.current.forEach((sp, i) => {
             if (sp) sp.textContent = vals[i];
           });
           // header tag + its colour follow the phase the candle is in
           if (labPhaseRef.current) {
             const ph =
-              lt >= 0.86 ? ["staged", "#00ff87"] : C > 0.5 ? ["stress", "#ff2e63"] : B > 0.5 ? ["candidate", "#00ff87"] : ["scan", "#bfe8ff"];
+              lt >= 0.86 ? ["replayed", "#bfe8ff"] : C > 0.5 ? ["stress", "#ff2e63"] : B > 0.5 ? ["reading", "#7dffc9"] : ["replay", "#bfe8ff"];
             labPhaseRef.current.textContent = ph[0];
             labPhaseRef.current.style.color = ph[1];
           }
@@ -627,6 +643,7 @@ export function ScrollCinema() {
       (navigator.hardwareConcurrency || 8) <= 4 ||
       ((navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
     const EASE_RATE = LOW_END ? 3.0 : 5.0; // lower = slower/glidier (≈0.05 / 0.08 per 60fps frame)
+    const JUMP_CUT = 0.15; // film progress; past this the follower cuts, see tick()
     let lastNow = -1;
     // Resume marker bookkeeping. Twice a second at most, and only when the film
     // has actually moved — sessionStorage is synchronous, and this loop sits
@@ -638,7 +655,15 @@ export function ScrollCinema() {
       const now = ts / 1000;
       const dt = lastNow < 0 ? 1 / 60 : Math.min(0.05, now - lastNow);
       lastNow = now;
-      const diff = targetProgress - progress;
+      let diff = targetProgress - progress;
+      // A jump (Home/End, a rail seek, a fragment link) CUTS instead of gliding:
+      // easing across half the film fast-forwards every act in between, mounting
+      // and compiling three WebGL layers on the way to a frame nobody asked for.
+      // Ordinary scrolling never lags this far behind (it would take ~8,000vh/s).
+      if (Math.abs(diff) > JUMP_CUT) {
+        progress = targetProgress;
+        diff = 0;
+      }
       const k = 1 - Math.exp(-EASE_RATE * dt);
       progress = Math.abs(diff) < 0.0002 ? targetProgress : progress + diff * k;
       pxS += (cinemaClock.px - pxS) * 0.055;
@@ -695,7 +720,7 @@ export function ScrollCinema() {
         start: "top top",
         end: "bottom bottom",
         onUpdate: (self) => {
-          targetProgress = self.progress;
+          targetProgress = scrollToFilm(self.progress);
         },
         onLeave: () => collapse(), // scrolled past the end onto the homepage → lock it out
       });
@@ -791,7 +816,6 @@ export function ScrollCinema() {
       return p;
     };
     const extras = Promise.allSettled([step(import("./three-stage"))]);
-    const minTime = new Promise((r) => window.setTimeout(r, 650)); // don't flash the loader
 
     // the bar is anchored to REAL gate steps; the creep only eases it toward
     // the next milestone so a long download still visibly breathes
@@ -812,44 +836,47 @@ export function ScrollCinema() {
       window.clearTimeout(slowTimer);
       setSlowLoad(false);
       setLoadPct(100);
-      window.setTimeout(() => {
-        if (disposed) return;
-        rootStyle.overflow = prevOverflow; // unlock scroll
-        // The film has actually started in this tab. CinemaGate reads this — it
-        // is what stops a same-session return to "/" from replaying the intro.
-        // And a replay request is met the moment the film runs, so consume it
-        // here: leaving it set would replay on every later visit in this tab.
-        try {
-          sessionStorage.setItem(AUTOPLAYED_KEY, "1");
-          sessionStorage.removeItem(REPLAY_KEY);
-        } catch {}
-        // RESUME. A reload used to snap to 0 and start again from the boot
-        // screen, i.e. charge you 13,500px to get back to where you already
-        // were. Put the scroll back BEFORE creating the trigger so the trigger
-        // is born at the right progress, then snap the smoothed value onto it —
-        // otherwise the film scrubs from act one to act six in one visible
-        // lurch while the reader watches.
-        if (resumeAt !== null) {
-          const range = section.offsetHeight - window.innerHeight;
-          if (range > 0) window.scrollTo(0, Math.round(section.offsetTop + range * resumeAt));
+      // No 420ms beat here any more, and no 650ms floor above: those existed
+      // to hold a scroll lock that is gone. The film reveals the moment its
+      // geometry is ready, under the hero curtain.
+      // The film has actually started in this tab. CinemaGate reads this — it
+      // is what stops a same-session return to "/" from replaying the intro.
+      // And a replay request is met the moment the film runs, so consume it
+      // here: leaving it set would replay on every later visit in this tab.
+      try {
+        sessionStorage.setItem(AUTOPLAYED_KEY, "1");
+        sessionStorage.removeItem(REPLAY_KEY);
+      } catch {}
+      // RESUME. A reload used to snap to 0 and start again from the boot
+      // screen, i.e. charge you 13,500px to get back to where you already
+      // were. Put the scroll back BEFORE creating the trigger so the trigger
+      // is born at the right progress, then snap the smoothed value onto it —
+      // otherwise the film scrubs from act one to act six in one visible
+      // lurch while the reader watches. Only if the reader has not moved yet:
+      // never yank someone who already scrolled.
+      let resumed = false;
+      if (resumeAt !== null && window.scrollY < 4) {
+        const range = section.offsetHeight - window.innerHeight;
+        if (range > 0) {
+          window.scrollTo(0, Math.round(section.offsetTop + range * filmToScroll(resumeAt)));
+          resumed = true;
         }
-        createScrollTrigger(); // enable the scroll animation
-        if (resumeAt !== null) {
-          // Take the number we just scrolled TO, not ScrollTrigger's read of it.
-          // The trigger caches scroll positions and reports the pre-restore
-          // value on the frame it is created — measured 0.722 for a restore to
-          // 0.800, i.e. the film opened a whole act early. The trigger's start
-          // is "top top" and its end "bottom bottom", so resumeAt IS its
-          // progress at this scroll; update() puts its own bookkeeping straight.
-          ScrollTrigger.update();
-          targetProgress = resumeAt;
-          progress = resumeAt;
-          renderScene();
-          applyOverlays();
-        }
-        setReveal(true); // fade the loading screen out
-        window.setTimeout(() => { if (!disposed) setLoading(false); }, 550);
-      }, 420);
+      }
+      createScrollTrigger(); // enable the scroll animation
+      if (resumed && resumeAt !== null) {
+        // Take the number we just scrolled TO, not ScrollTrigger's read of it.
+        // The trigger caches scroll positions and reports the pre-restore
+        // value on the frame it is created — measured 0.722 for a restore to
+        // 0.800, i.e. the film opened a whole act early. update() puts its own
+        // bookkeeping straight.
+        ScrollTrigger.update();
+        targetProgress = resumeAt;
+        progress = resumeAt;
+        renderScene();
+        applyOverlays();
+      }
+      setReveal(true); // fade the loading screen out
+      window.setTimeout(() => { if (!disposed) setLoading(false); }, 550);
     };
     // the loader's skip: the user bails to the static homepage — the same
     // landing as a genuine scene failure, but chosen, never automatic
@@ -858,17 +885,17 @@ export function ScrollCinema() {
       settled = true;
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
-      rootStyle.overflow = prevOverflow;
+      delete document.documentElement.dataset.film;
       markCinemaSeen(); // a chosen exit counts as seen — do not re-gate them
       stopCinemaAudio();
       setMode("static");
     };
-    Promise.all([step(shotsLoaded), extras, minTime]).then(reveal).catch(() => {
+    Promise.all([step(shotsLoaded), extras]).then(reveal).catch(() => {
       if (settled || disposed) return;
       settled = true;
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
-      rootStyle.overflow = prevOverflow;
+      delete document.documentElement.dataset.film;
       setMode("static");
     });
 
@@ -896,7 +923,7 @@ export function ScrollCinema() {
       window.clearTimeout(slowTimer);
       window.clearInterval(creep);
       window.clearTimeout(sceneTimeout);
-      rootStyle.overflow = prevOverflow; // never leave scroll locked
+      delete document.documentElement.dataset.film;
       if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
       if (onSceneError) iframe.removeEventListener("error", onSceneError);
       window.removeEventListener("resize", onResize);
@@ -942,10 +969,41 @@ export function ScrollCinema() {
 
   return (
     <>
+      <section
+        ref={sectionRef}
+        data-cinema
+        className="pointer-events-none relative z-20"
+        // Divided by --ui-zoom for the same reason globals.css divides
+        // h-screen: these are inline, so the stylesheet cannot reach them, and
+        // an un-divided 1500vh would stretch the whole film by 10% and leave
+        // the -100vh hand-off overlap short by the same amount.
+        style={{
+          height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
+          // The curtain: start one viewport UP, under the hero instrument, so
+          // scrolling lifts frame zero off an already-pinned stage.
+          marginTop: `calc(-${CURTAIN_VH}vh / var(--ui-zoom))`,
+          marginBottom: "calc(-100vh / var(--ui-zoom))",
+        }}
+      >
+      {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
+          the section — otherwise the section's opaque bg stays over the real Hero
+          in the -100vh overlap and the handoff reveals black instead of the page. */}
+      {/* --rail-w reserves the act rail's column (rail at left-[2.5vw] + its
+          rows) as ONE shared number: the lab panel offsets past it and the
+          caption widths subtract it per side, so nothing prints over the rail. */}
+      <div
+        ref={stickyRef}
+        className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg"
+        style={{ "--rail-w": "200px" } as React.CSSProperties}
+      >
+        {/* The loader lives INSIDE the stage now. It used to be a fixed,
+            full-viewport gate at z-120 over a scroll lock; under frame zero it
+            sits beneath the hero curtain and only shows if a reader scrolls
+            into the film before its geometry is ready. */}
       {loading && (
         <div
           aria-hidden
-          className="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-7 bg-bg transition-opacity duration-500 ease-out"
+          className="absolute inset-0 z-[40] flex flex-col items-center justify-center gap-7 bg-bg transition-opacity duration-500 ease-out"
           style={{ opacity: reveal ? 0 : 1, pointerEvents: reveal ? "none" : "auto" }}
         >
           <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.14]" />
@@ -1012,30 +1070,6 @@ export function ScrollCinema() {
           </div>
         </div>
       )}
-      <section
-        ref={sectionRef}
-        data-cinema
-        className="pointer-events-none relative z-20"
-        // Divided by --ui-zoom for the same reason globals.css divides
-        // h-screen: these are inline, so the stylesheet cannot reach them, and
-        // an un-divided 1500vh would stretch the whole film by 10% and leave
-        // the -100vh hand-off overlap short by the same amount.
-        style={{
-          height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
-          marginBottom: "calc(-100vh / var(--ui-zoom))",
-        }}
-      >
-      {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
-          the section — otherwise the section's opaque bg stays over the real Hero
-          in the -100vh overlap and the handoff reveals black instead of the page. */}
-      {/* --rail-w reserves the act rail's column (rail at left-[2.5vw] + its
-          rows) as ONE shared number: the lab panel offsets past it and the
-          caption widths subtract it per side, so nothing prints over the rail. */}
-      <div
-        ref={stickyRef}
-        className="pointer-events-none sticky top-0 h-screen w-full overflow-hidden bg-bg"
-        style={{ "--rail-w": "200px" } as React.CSSProperties}
-      >
         {!dead && (<>
         <iframe
           ref={frameRef}
@@ -1131,13 +1165,13 @@ export function ScrollCinema() {
           }}
         >
           <div className="flex items-center justify-between border-b border-border px-3.5 py-2 text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            <span>quant-bot · candidate lab</span>
-            <span ref={labPhaseRef} style={{ color: "#bfe8ff" }}>scan</span>
+            <span>quant-bot · replay lab</span>
+            <span ref={labPhaseRef} style={{ color: "#bfe8ff" }}>replay</span>
           </div>
           {/* Lines TYPE ON with scroll (width in ch, driven in applyOverlays) and
-              light through the colour story: cyan scan → green candidate (B) →
-              red downside stress (C) → green verdict. Content is descriptive /
-              paper-only — never an imperative. */}
+              light through the colour story: cyan replay → a neutral reading (B) →
+              red downside stress (C) → ice, back to neutral. Content is past tense,
+              names no instrument and stages nothing — never an imperative. */}
           {/* Six lines, not eleven: the four model-parameter rows (hurst, ewma,
               garch, kelly_cap …) collapsed into ONE summary row — they were
               noise competing with the three story lines. Full parameter detail
@@ -1145,13 +1179,13 @@ export function ScrollCinema() {
               clock via labValRefs. */}
           <div className="px-3.5 py-3 text-[0.6875rem] leading-[1.7] text-fg md:text-[0.75rem] md:leading-[1.8]">
             <div ref={(el) => { labLineRefs.current[0] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --scan NVDA --paper
+              <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --replay SIM --paper
             </div>
             <div ref={(el) => { labLineRefs.current[1] = el; }} className="lab-line" style={{ opacity: 0 }}>
               <span className="text-bull">regime</span> TREND · μ +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span> · σ <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span> · agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#28d7ff" }}>1</span>/6
             </div>
             <div ref={(el) => { labLineRefs.current[2] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-fg-dim">→</span> candidate = <span className="text-bull">CALL <span ref={(el) => { labValRefs.current[3] = el; }}>240</span></span> · agree <span ref={(el) => { labValRefs.current[4] = el; }}>1</span>/6
+              <span className="text-fg-dim">→</span> 6 models replayed: <span ref={(el) => { labValRefs.current[3] = el; }} style={{ color: "#28d7ff" }}>1</span> agreed, <span ref={(el) => { labValRefs.current[4] = el; }} style={{ color: "#28d7ff" }}>5</span> did not
             </div>
             <div ref={(el) => { labLineRefs.current[3] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
               <span style={{ color: "#ff6b8a" }}>stress</span>(-2σ shock) <span className="text-fg-dim">→</span> max loss capped
@@ -1160,7 +1194,7 @@ export function ScrollCinema() {
               VaR(95%) = -1.0R <span className="text-fg-dim">·</span> daily kill-switch armed
             </div>
             <div ref={(el) => { labLineRefs.current[5] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
-              <span className="text-fg-dim">→</span> historical agreement <span className="text-bull">6/6 models</span> · paper pick staged
+              <span className="text-fg-dim">→</span> a split, not a call <span className="text-fg-dim">·</span> nothing staged
             </div>
           </div>
           <div className="border-t border-border px-3.5 py-1.5 text-[0.625rem] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
@@ -1188,7 +1222,7 @@ export function ScrollCinema() {
             const sec = sectionRef.current;
             if (!sec) return;
             const range = sec.offsetHeight - window.innerHeight;
-            window.scrollTo({ top: sec.offsetTop + range * target, behavior: "smooth" });
+            window.scrollTo({ top: sec.offsetTop + range * filmToScroll(target), behavior: "smooth" });
           }}
         />
         {/* `absolute bottom-7` anchored this to the sticky wrapper, which at
@@ -1208,9 +1242,6 @@ export function ScrollCinema() {
         >
           Skip intro ↓
         </button>
-        <noscript>
-          <img src="/cinema/shots/hero.webp" alt="LazyBull — options, without the fog" className="absolute inset-0 h-full w-full object-cover" />
-        </noscript>
         <style>{`
           .beat-word { display: inline-block; white-space: nowrap; }
           /* THE COPY LAYER RUNS ON THE FILM'S CLOCK.

@@ -3,6 +3,8 @@
 //   • fresh-cache short-circuit (rate saver)      • in-flight de-duplication
 //   • the provider chain w/ breaker + availability • last-good stale-serve (Tier C)
 //   • gap-filling quotes across providers          • provenance + tier stamping
+//   • the Indian-securities data-lag policy (lib/region.ts) — applied HERE, on
+//     read, so /api/quote, /api/quote-batch and the SSE stream cannot disagree
 //
 // Add a provider = implement the interface and drop it in the chain. No route or
 // frontend change. Move to a paid feed = swap the adapter or its env. That's it.
@@ -33,6 +35,7 @@ import {
   type CacheEntry,
 } from "./cache";
 import { allHealth, breakerClosed, isQualifyingFailure, recordFailure, recordSuccess } from "./health";
+import { applyLagPolicy, isIndianSecurity, LAG_POLICY, type LagStamp } from "@/lib/region";
 
 /** Default priority order. First usable provider that returns real data wins. */
 const DEFAULT_CHAIN: MarketDataProvider[] = [alpaca, twelvedata, finnhub, yahoo];
@@ -78,8 +81,78 @@ function cachedProv(entry: CacheEntry<unknown>, stale: boolean): Provenance {
 }
 
 // Results the routes consume.
-export type BarsResponse = (BarsResult & { provenance: Provenance }) | null; // null → Tier D
+export type BarsResponse =
+  | (BarsResult & {
+      provenance: Provenance;
+      /** Set for Indian securities: the series ends ≥31 days ago by policy. */
+      delayed?: true;
+      asOf?: number | null;
+      policy?: string;
+    })
+  | null; // null → Tier D
 export type QuotesResponse = { quotes: Quote[]; provenance: Provenance };
+
+/**
+ * The lag policy, applied to a full bars response. Drops every bar newer than
+ * the cut, then SCRUBS THE META: `regularMarketPrice`, `previousClose`,
+ * `regularMarketTime` and the 52-week range all embed the live tape, and a
+ * lagged series with a live price in its meta would leak exactly what the
+ * policy exists to withhold. Returns the input untouched for non-Indian symbols.
+ */
+export function lagBarsResponse(res: NonNullable<BarsResponse>, symbol: string, now = Date.now()): NonNullable<BarsResponse> {
+  const { bars, lag } = applyLagPolicy(res.bars, symbol, now);
+  if (!lag) return res;
+  const last = bars[bars.length - 1];
+  const prev = bars[bars.length - 2];
+  return {
+    ...res,
+    bars,
+    meta: {
+      currency: res.meta.currency,
+      exchangeName: res.meta.exchangeName,
+      instrumentType: res.meta.instrumentType,
+      gmtoffset: res.meta.gmtoffset,
+      regularMarketPrice: last?.c,
+      regularMarketTime: last ? Math.floor(last.t / 1000) : undefined,
+      previousClose: prev?.c,
+      chartPreviousClose: prev?.c,
+      regularMarketVolume: last?.v,
+      marketState: "DELAYED",
+    },
+    provenance: { ...res.provenance, isRealtime: false, policy: lag.policy },
+    delayed: true,
+    asOf: lag.asOf,
+    policy: lag.policy,
+  };
+}
+
+/**
+ * A Quote for an Indian security under the lag policy: the newest ALLOWED daily
+ * close stands in for `last`, the close before it for the change. Never a live
+ * print. Returns null when nothing survives the cut (a listing younger than the
+ * lag window) — a coverage gap, like any other missing symbol.
+ */
+export function laggedQuoteFromBars(symbol: string, res: NonNullable<BarsResponse>, lag: LagStamp): Quote | null {
+  const bars = res.bars;
+  const last = bars[bars.length - 1];
+  if (!last) return null;
+  const prevClose = bars[bars.length - 2]?.c ?? last.c;
+  const chg = last.c - prevClose;
+  return {
+    sym: symbol,
+    name: symbol,
+    last: last.c,
+    chg,
+    chgPct: prevClose ? (chg / prevClose) * 100 : 0,
+    currency: res.meta.currency,
+    exch: res.meta.exchangeName,
+    marketState: "DELAYED",
+    marketTime: Math.floor(last.t / 1000),
+    delayed: true,
+    asOf: lag.asOf,
+    policy: lag.policy,
+  };
+}
 
 export function createOrchestrator(chain: MarketDataProvider[], opts?: { deadlineMs?: number }) {
   const deadlineMs = opts?.deadlineMs ?? CHAIN_DEADLINE_MS;
@@ -95,7 +168,9 @@ export function createOrchestrator(chain: MarketDataProvider[], opts?: { deadlin
     return p;
   }
 
-  async function getBars(symbol: string, tf: string): Promise<BarsResponse> {
+  // The raw chain walk. Cache holds the RAW series; the lag policy is applied by
+  // getBars() on the way out so the cut moves with the clock (see lib/region).
+  async function getBarsRaw(symbol: string, tf: string): Promise<BarsResponse> {
     const key = `b:${symbol}:${tf}`;
     return dedup(key, async () => {
       const cached = await cacheGet<BarsResult>(key);
@@ -148,7 +223,67 @@ export function createOrchestrator(chain: MarketDataProvider[], opts?: { deadlin
     });
   }
 
+  async function getBars(symbol: string, tf: string): Promise<BarsResponse> {
+    const res = await getBarsRaw(symbol, tf);
+    if (!res || !isIndianSecurity(symbol)) return res;
+    return lagBarsResponse(res, symbol);
+  }
+
+  /**
+   * Indian symbols never go to a live quote endpoint: their "quote" is derived
+   * from the lagged DAILY series (cached 10 min, deduped), so no code path in
+   * this layer can hand a live NSE/BSE print to a route by accident.
+   */
+  async function laggedQuotes(symbols: string[]): Promise<Quote[]> {
+    const out: Quote[] = [];
+    await Promise.all(
+      symbols.map(async (sym) => {
+        try {
+          const res = await getBars(sym, "D");
+          if (!res || !res.delayed) return;
+          const q = laggedQuoteFromBars(sym, res, {
+            delayed: true,
+            asOf: res.asOf ?? null,
+            policy: LAG_POLICY,
+            lagDays: 31,
+          });
+          if (q) out.push(q);
+        } catch {
+          /* a single lagged symbol miss must not sink the batch */
+        }
+      })
+    );
+    return out;
+  }
+
   async function getQuotes(symbols: string[]): Promise<QuotesResponse> {
+    const indian = symbols.filter(isIndianSecurity);
+    if (indian.length) {
+      // Split the batch: live symbols walk the chain as before, Indian ones are
+      // rebuilt from lagged bars, and the merged provenance carries the policy
+      // so the badge can say so even when the batch is mostly US names.
+      const live = symbols.filter((s) => !isIndianSecurity(s));
+      const [liveRes, lagged] = await Promise.all([
+        live.length ? getQuotesLive(live) : Promise.resolve<QuotesResponse | null>(null),
+        laggedQuotes(indian),
+      ]);
+      const provenance: Provenance = liveRes
+        ? { ...liveRes.provenance, policy: LAG_POLICY }
+        : {
+            provider: lagged.length ? "lagged-bars" : "none",
+            tier: lagged.length ? "B" : "D",
+            updatedAt: Date.now(),
+            cacheAge: 0,
+            isRealtime: false,
+            isCached: false,
+            policy: LAG_POLICY,
+          };
+      return { quotes: [...(liveRes?.quotes ?? []), ...lagged], provenance };
+    }
+    return getQuotesLive(symbols);
+  }
+
+  async function getQuotesLive(symbols: string[]): Promise<QuotesResponse> {
     const key = `q:${[...symbols].sort().join(",")}`;
     return dedup(key, async () => {
       const cached = await cacheGet<Quote[]>(key);

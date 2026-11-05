@@ -11,6 +11,7 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import type { Adapter, AdapterAccount } from "next-auth/adapters";
 import { mongo } from "./mongo";
 import { logServerEvent } from "./db/events";
+import { getPlan } from "./billing/entitlements";
 
 // R-11 — where callback and redirect URLs get their origin.
 //
@@ -18,7 +19,9 @@ import { logServerEvent } from "./db/events";
 // origin to it before Auth.js sees the request, and builds every callback and
 // redirect URL from that origin, so a forged Host header can no longer steer
 // the OAuth callback. Set it in production to the canonical origin
-// (AUTH_URL=https://lazybull.trade). It is mandatory before this ever
+// (AUTH_URL=https://www.lazybull.us — see lib/site.ts, and note that the
+// .trade host this line used to name resolves NXDOMAIN). It is mandatory
+// before this ever
 // self-hosts behind a proxy that doesn't normalize Host.
 //
 // `trustHost` below is NOT a host allow-list, which is the part worth stating
@@ -96,7 +99,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async session({ session, user }) {
       // Surface the Mongo user id so client code can scope queries.
-      if (session.user && user) session.user.id = user.id;
+      if (session.user && user) {
+        session.user.id = user.id;
+        // The plan rides on the session so every gated route (/api/explain,
+        // /api/workspaces) decides from the same answer /account shows,
+        // without a second subscriptions lookup of its own. getPlan never
+        // throws — a Mongo blip reads as "free", not as a 500 — and it is
+        // re-resolved on every session read, so a webhook that lands mid-
+        // session is honoured on the next request rather than the next
+        // sign-in. See next-auth.d.ts for the type.
+        session.user.plan = await getPlan(user.id, user.email);
+      }
       return session;
     },
   },
@@ -111,8 +124,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email_domain: user?.email?.split("@")[1] ?? null,
       });
     },
-    async signOut() {
-      await logServerEvent("sign_out");
+    // The payload is a discriminated union: a database session carries
+    // `session`, a JWT one carries `token`. This app uses database sessions,
+    // so the userId is on the session record — without reading it every
+    // sign-out landed unattributed and no session-length or return metric
+    // could be built from the stream.
+    async signOut(message) {
+      const userId =
+        "session" in message && message.session && "userId" in message.session
+          ? String(message.session.userId)
+          : undefined;
+      await logServerEvent("sign_out", userId);
     },
   },
   // Stays true on purpose — see the AUTH_URL note at the top of this file.

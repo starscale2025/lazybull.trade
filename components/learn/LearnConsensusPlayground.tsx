@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ACCURACY_BAND, HYPOTHETICAL_NOTE } from "@/lib/quant/types";
 
 const ALL_BOTS = [
   { id: "sma", name: "SMA Crossover", family: "trend", color: "var(--bull)" },
@@ -22,17 +23,17 @@ const ALL_BOTS = [
 const SCENARIOS = {
   bull: {
     label: "Strong uptrend",
-    desc: "AMZN +14% in 30 days, low realized vol, broad market in risk-on. All trend bots fire long; mean-reversion bots quietly disagree.",
+    desc: "AMZN +14% in 30 days, low realized vol, broad market in risk-on. Every trend rule leans long; the mean-reversion rules quietly disagree.",
     votes: { sma: "buy", macd: "buy", rsi: "hold", boll: "buy", donchian: "buy", z: "sell", kalman: "buy", linreg: "buy", dir: "buy", mag: "buy", cnn: "buy", txr: "buy" } as Record<string, "buy" | "sell" | "hold">,
   },
   chop: {
     label: "Chop / range-bound",
-    desc: "SPY oscillating ±2% inside a 30-day range. Trend bots whipsaw and lose. Reversion bots feast.",
+    desc: "SPY oscillating ±2% inside a 30-day range. The trend rules whipsaw; the reversion rules read it far better.",
     votes: { sma: "hold", macd: "sell", rsi: "buy", boll: "buy", donchian: "hold", z: "buy", kalman: "hold", linreg: "buy", dir: "hold", mag: "hold", cnn: "hold", txr: "hold" } as Record<string, "buy" | "sell" | "hold">,
   },
   bear: {
     label: "Sharp drawdown",
-    desc: "TSLA -22% over 4 weeks after an earnings miss. Volatility regime flipped. Most bots lean bearish; a contrarian Kelly stays neutral.",
+    desc: "TSLA -22% over 4 weeks after an earnings miss. The volatility regime flipped. Most rules lean short; two contrarians do not.",
     votes: { sma: "sell", macd: "sell", rsi: "buy", boll: "sell", donchian: "sell", z: "buy", kalman: "sell", linreg: "sell", dir: "sell", mag: "sell", cnn: "sell", txr: "sell" } as Record<string, "buy" | "sell" | "hold">,
   },
 };
@@ -55,11 +56,15 @@ export function LearnConsensusPlayground() {
     const lean = buy > sell && buy > hold ? "buy" : sell > buy && sell > hold ? "sell" : "hold";
     const agreeCount = lean === "buy" ? buy : lean === "sell" ? sell : hold;
     const agreePct = total > 0 ? agreeCount / total : 0;
-    const tier = agreePct >= 0.85 ? "ULTRA" : agreePct >= 0.7 ? "HIGH" : agreePct >= 0.55 ? "MEDIUM" : "SPLIT";
+    // The thresholds are unchanged; only the WORDS are. The old upper-case
+    // grade ladder read as trade grades on a page teaching beginners what
+    // a model output is. These say what the quantity actually measures —
+    // the same vocabulary lib/quant/ai-bots.ts BAND_LABEL uses on the cards.
+    const tier = agreePct >= 0.85 ? "very strong agreement" : agreePct >= 0.7 ? "moderate agreement" : agreePct >= 0.55 ? "lean" : "split";
     return { buy, sell, hold, total, lean, agreeCount, agreePct, tier };
   }, [active, scn]);
 
-  const tierTone = tally.tier === "ULTRA" ? "bull" : tally.tier === "HIGH" ? "info" : tally.tier === "MEDIUM" ? "warn" : "neutral";
+  const tierTone = tally.tier === "very strong agreement" ? "bull" : tally.tier === "moderate agreement" ? "info" : tally.tier === "lean" ? "warn" : "neutral";
   const TIER_BG: Record<string, string> = {
     bull: "border-bull/50 bg-bull/10 text-bull",
     info: "border-cyan/50 bg-cyan/10 text-cyan",
@@ -120,7 +125,7 @@ export function LearnConsensusPlayground() {
                 <button
                   key={b.id}
                   onClick={() => toggle(b.id)}
-                  title={`${b.name} — ${v.toUpperCase()}`}
+                  title={`${b.name} — ${v === "buy" ? "lean long" : v === "sell" ? "lean short" : "no lean"}`}
                   className={`flex items-center justify-between gap-1.5 bg-bg px-2 py-1.5 text-left transition-opacity ${
                     isActive ? "opacity-100" : "opacity-30 hover:opacity-50"
                   }`}
@@ -148,7 +153,7 @@ export function LearnConsensusPlayground() {
           <div className="p-5">
             <div className={`inline-flex items-center gap-2 border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider ${TIER_BG[tierTone]}`}>
               <span className="size-1.5 rounded-full bg-current" />
-              {tally.tier} · {tally.lean.toUpperCase()}
+              {tally.tier} · {tally.lean === "buy" ? "lean long" : tally.lean === "sell" ? "lean short" : "no lean"}
             </div>
             <div className="mt-4 font-display text-5xl tracking-tightest tabular-nums text-fg">
               {tally.agreeCount} / {tally.total}
@@ -160,9 +165,13 @@ export function LearnConsensusPlayground() {
 
           <div className="border-t border-border-soft p-5">
             <div className="grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
-              <Bucket label="BUY" value={tally.buy} tone="bull" />
-              <Bucket label="HOLD" value={tally.hold} tone="neutral" />
-              <Bucket label="SELL" value={tally.sell} tone="bear" />
+              {/* The three buckets counted models under BUY / HOLD / SELL —
+                  which reads as a desk handing down orders when it is really
+                  a histogram of six opinions. Same numbers, named as leans:
+                  what a model TILTED towards, not what anyone should do. */}
+              <Bucket label="lean long" value={tally.buy} tone="bull" />
+              <Bucket label="no lean" value={tally.hold} tone="neutral" />
+              <Bucket label="lean short" value={tally.sell} tone="bear" />
             </div>
           </div>
 
@@ -171,17 +180,19 @@ export function LearnConsensusPlayground() {
               what this means
             </div>
             <p className="text-[0.8125rem] leading-relaxed text-fg-dim">
-              {tally.tier === "ULTRA" &&
-                <>Strong historical agreement. When ≥85% of independent models agreed in backtests, next-bar direction matched about 63–66% of the time — the top of the observed range.</>}
-              {tally.tier === "HIGH" &&
-                <>Moderate agreement. 70–85% agreement corresponded to roughly 60–63% historical accuracy.</>}
-              {tally.tier === "MEDIUM" &&
-                <>A lean, not a conviction. 55–70% agreement corresponded to roughly 55–60% historical accuracy.</>}
-              {tally.tier === "SPLIT" &&
-                <>Models disagree. Historically the next move was close to a coin flip — the clearest sign the market itself was uncertain.</>}
+              {tally.tier === "very strong agreement" &&
+                <>Almost every model landed on the same side. That is a fact about the models — built on the same tape, they found the same thing — and not a better set of odds: the measured band below covers this state and every other one.</>}
+              {tally.tier === "moderate agreement" &&
+                <>Most models landed on the same side, with real dissent. Worth reading the dissenters: they are usually a different family seeing a different thing.</>}
+              {tally.tier === "lean" &&
+                <>A lean, and a thin one. Just over half of the models tilted the same way, which is nearly what you would get from noise.</>}
+              {tally.tier === "split" &&
+                <>The models disagree. Historically the next move was close to a coin flip — and a split is the most useful reading on this panel, because it is the models admitting the tape is ambiguous.</>}
             </p>
+            {/* ONE band, printed at every agreement level, with the hedge
+                attached to it rather than floating a paragraph away. */}
             <p className="mt-2 font-mono text-[0.625rem] italic text-fg-faint">
-              hypothetical backtests · education only · not advice
+              measured hit rate {ACCURACY_BAND} at every agreement level · {HYPOTHETICAL_NOTE} · education only, not advice
             </p>
           </div>
         </div>

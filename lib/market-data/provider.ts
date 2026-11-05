@@ -38,6 +38,14 @@ export type Quote = {
   marketState?: string;
   /** upstream snapshot time (epoch seconds) — lets the client order feeds. */
   marketTime?: number | null;
+  /**
+   * Set ONLY for Indian securities (lib/region.ts): `last` is the newest close
+   * the SEBI education-lag policy allows, not a live print. `asOf` is that
+   * bar's time (epoch ms); `policy` names the rule so the UI can say why.
+   */
+  delayed?: boolean;
+  asOf?: number | null;
+  policy?: string;
 };
 
 export type BarsResult = { bars: Bar[]; meta: QuoteMeta };
@@ -61,6 +69,12 @@ export type Provenance = {
   cacheAge: number;
   isRealtime: boolean;
   isCached: boolean;
+  /**
+   * Present when a data-lag policy shaped this response (today: the SEBI
+   * education lag on Indian securities, lib/region.ts). The provenance badge
+   * renders it as "delayed 31 d · SEBI education norms".
+   */
+  policy?: string;
 };
 
 export type ProviderHealth = {

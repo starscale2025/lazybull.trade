@@ -7,6 +7,9 @@ import { detect } from "@/lib/detector";
 import { pnlSummary } from "@/lib/pricing";
 import { PnLDiagram } from "./PnLDiagram";
 import { PreTradeModal } from "@/components/safety/PreTradeModal";
+import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
+import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
+import { noteExplainRequest, tradeFingerprint } from "@/lib/confusion";
 
 const fmt = (n: number) =>
   Number.isFinite(n) ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}` : "unbounded";
@@ -33,7 +36,9 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
   );
 
   const [explainOpen, setExplainOpen] = useState(false);
-  const [explanation, setExplanation] = useState<{ source: string; text: string } | null>(null);
+  const [explanation, setExplanation] = useState<{ source: string; text: string; disclosure?: string } | null>(null);
+  // The daily cap (app/api/explain answers 402 with lib/billing/gate.ts's body).
+  const [paywall, setPaywall] = useState<PaywallBody | null>(null);
   const [explainLoading, setExplainLoading] = useState(false);
 
   const [tradeModal, setTradeModal] = useState(false);
@@ -42,6 +47,16 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
     if (!summary) return;
     setExplainOpen(true);
     setExplainLoading(true);
+    // Asking twice about the SAME position inside five minutes is the clearest
+    // signal we get that an explanation did not land — the confusion trace the
+    // teacher is meant to learn from. It records only under the "trace" consent
+    // basis and never carries the position itself, just a fingerprint of it.
+    // The chain is the second of the two explain call sites; the builder's is
+    // wired in app/trade/workbench.tsx.
+    noteExplainRequest(
+      tradeFingerprint({ strategy: detection.kind, underlying, legs }),
+      "chain",
+    );
     try {
       const r = await fetch("/api/explain", {
         method: "POST",
@@ -59,7 +74,13 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
         }),
       });
       const data = await r.json();
-      setExplanation(data);
+      if (isPaywall(r.status, data)) {
+        setPaywall(data);
+        setExplanation(null);
+      } else {
+        setPaywall(null);
+        setExplanation(data);
+      }
     } finally {
       setExplainLoading(false);
     }
@@ -67,13 +88,15 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
 
   const placeTrade = () => {
     if (!summary) return;
-    open({
+    // null = refused by the safety settings; PreTradeModal already says why.
+    const pos = open({
       underlying,
       legs,
       strategy: detection.kind,
       openSpot: spot,
       cost,
     });
+    if (!pos) return;
     clear();
     setTradeModal(false);
   };
@@ -254,7 +277,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
               className="relative max-w-xl w-full border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.4)]"
             >
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
-                <span className="text-bull">● teacher · {explanation?.source ?? "..."}</span>
+                <span className="text-bull">● teacher · {paywall ? "paused" : explanation?.source ?? "..."}</span>
                 <button onClick={() => setExplainOpen(false)} className="text-fg-faint hover:text-fg">
                   ✕
                 </button>
@@ -266,13 +289,24 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
                 <div className="mt-1 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
                   on {underlying} · spot ${spot.toFixed(2)}
                 </div>
-                <div className="mt-4 min-h-[7.5rem] whitespace-pre-line t-body-sm text-fg">
-                  {explainLoading ? (
-                    <span className="text-fg-faint">teacher is thinking…</span>
-                  ) : (
-                    explanation?.text
-                  )}
-                </div>
+                {paywall && !explainLoading ? (
+                  <UpgradeNudge paywall={paywall} className="mt-4" />
+                ) : (
+                  <div className="mt-4 min-h-[7.5rem] whitespace-pre-line t-body-sm text-fg">
+                    {explainLoading ? (
+                      <span className="text-fg-faint">teacher is thinking…</span>
+                    ) : (
+                      explanation?.text
+                    )}
+                  </div>
+                )}
+                {/* The AI-output disclosure travels with every response
+                    (lib/billing/explain-policy.ts) and is rendered, not assumed. */}
+                {!explainLoading && !paywall && explanation?.disclosure && (
+                  <div className="mt-4 border-t border-border-soft pt-3 t-chrome text-fg-faint">
+                    {explanation.disclosure}
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

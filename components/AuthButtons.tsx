@@ -109,6 +109,17 @@ export function AuthButtons() {
             >
               ↗ Learn
             </Link>
+            {/* The plan, usage and subscription live on /account (app/account).
+                A paid tier a user cannot find or cancel is a support ticket and
+                a chargeback; the link sits in the one menu every signed-in
+                visitor already opens. */}
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              className="block px-3 py-2 text-fg-dim hover:bg-surface hover:text-fg"
+            >
+              ↗ Account &amp; plan
+            </Link>
           </div>
           <div className="border-t border-border">
             <button

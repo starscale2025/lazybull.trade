@@ -7,6 +7,11 @@ import { getProvider } from "@/lib/market-data";
 //   { ok:true, quotes: [{sym,name,last,chg,chgPct,currency,exch,marketState,marketTime}], provenance, source }
 // so TickerBar, the hero HUD, LivingPage, the pro panels, portfolio, etc. keep
 // working untouched.
+//
+// Indian securities in the batch arrive from the orchestrator as LAGGED quotes
+// (`delayed: true`, `asOf`, `policy` — lib/region.ts): the newest close the
+// SEBI education-lag policy allows, never a live print. The batch provenance
+// carries `policy` whenever one was in the set, so the badge can say so.
 
 export const revalidate = 0; // the market-data layer owns caching now
 

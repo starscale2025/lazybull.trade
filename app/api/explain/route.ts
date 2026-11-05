@@ -1,30 +1,42 @@
+// POST /api/explain — the AI teacher, gated the way /pricing says it is.
+//
+// The 2026-09 diligence memo, verbatim: "/api/explain … is not gated by
+// sign-in, plan, or a daily cap. The '5 explains per day' free-tier limit on
+// the pricing page does not exist in code." Three things changed:
+//   • a per-UTC-day cap from PLAN_LIMITS[plan].explainsPerDay, counted in
+//     lib/billing/usage.ts BEFORE the model is called (a capped request must
+//     cost nothing), keyed per user when signed in and per IP otherwise, so
+//     the free allowance is five a day whether or not a visitor made an
+//     account — the same number the pricing page prints;
+//   • the system prompt is the locked one in lib/billing/explain-policy.ts:
+//     explain the position you built; never recommend, forecast or size;
+//   • every response, mock and live, carries the AI-output disclosure.
+// The per-minute limiter stays. The daily cap is a product limit; the
+// per-minute one bounds spend against IP rotation (lib/rate-limit.ts).
+//
+// Sign-in is NOT required. The free tier is the funnel; what an anonymous
+// visitor gets is the free allowance on their network address, not an open
+// tap. The failure policy is unchanged: no key, an upstream error or a
+// timeout all fall back to `source:"mock"` — the deterministic explanation
+// built from the numbers the client already computed — so the teacher never
+// answers with a 500.
+
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { auth } from "@/lib/auth";
+import {
+  EXPLAIN_DISCLOSURE,
+  ExplainBody,
+  MAX_EXPLAIN_BODY_BYTES,
+  TEACHER_SYSTEM_PROMPT,
+  mockExplanation,
+} from "@/lib/billing/explain-policy";
+import { PAYWALL_STATUS, paywall } from "@/lib/billing/gate";
+import { BILLING_EVENTS, PLAN_LIMITS, type Plan } from "@/lib/billing/types";
+import { consumeDaily, type DailyResult } from "@/lib/billing/usage";
+import { logServerEvent } from "@/lib/db/events";
 import { clientIp, underLimit } from "@/lib/rate-limit";
 
-// The body used to be cast straight from req.json() with no checks: a missing
-// `breakevens` threw on `.length` (raw 500), and unbounded strings flowed into
-// the paid LLM prompt. Note JSON has no Infinity — an unlimited maxProfit
-// arrives as null, so these are nullable and null MEANS unlimited.
-const BodySchema = z.object({
-  strategy: z.string().min(1).max(120),
-  bias: z.string().min(1).max(40),
-  defined: z.boolean(),
-  net: z.string().min(1).max(40),
-  maxProfit: z.number().nullable().default(null),
-  maxLoss: z.number().nullable().default(null),
-  breakevens: z.array(z.number().finite()).max(8).default([]),
-  spot: z.number().finite().positive(),
-  underlying: z.string().min(1).max(20),
-});
-type Body = z.infer<typeof BodySchema>;
-
-/** JSON has no Infinity: null means unbounded on the wire. */
-const num = (n: number | null) =>
-  typeof n === "number" && Number.isFinite(n) ? n.toFixed(0) : "unbounded";
-
-/** Largest body we'll accept (chars) — keeps junk out of the LLM bill. */
-const MAX_BODY_BYTES = 4_000;
+export const dynamic = "force-dynamic";
 
 // Per-minute caps (per-IP + global) — each request can bill paid gpt-4o-mini.
 // KV-backed when configured, per-instance in-memory otherwise; see
@@ -32,38 +44,21 @@ const MAX_BODY_BYTES = 4_000;
 const MAX_PER_IP = 10;
 const MAX_GLOBAL = 60;
 
-function mockExplanation(b: Body) {
-  const fmt = (n: number | null) =>
-    typeof n === "number" && Number.isFinite(n) ? `$${Math.abs(n).toFixed(0)}` : "unlimited";
-  const lossLine = b.defined
-    ? `your worst case is losing ${fmt(b.maxLoss)} — that's the most you can ever lose on this trade.`
-    : `your worst case is open-ended. If the move goes the wrong way without you closing, the loss can keep growing.`;
-  // null/non-finite maxProfit means UNLIMITED (e.g. a long call), not "you
-  // collected premium" — JSON drops Infinity to null, and the old check sent
-  // every unlimited-upside trade down the credit-strategy branch.
-  const mp = typeof b.maxProfit === "number" && Number.isFinite(b.maxProfit) ? b.maxProfit : null;
-  const winLine =
-    mp === null
-      ? `your best case is open-ended — the further the move runs your way, the more this gains.`
-      : mp > 0
-        ? `your best case is making ${fmt(mp)}, which happens at expiry if the stock lands in the right zone.`
-        : `your best case is the premium you collected up front.`;
-  const beLine =
-    b.breakevens.length > 0
-      ? `Your break-even price${b.breakevens.length > 1 ? "s are" : " is"} ${b.breakevens
-          .map((p) => `$${p.toFixed(2)}`)
-          .join(" and ")}.`
-      : `There's no clean break-even on this one — read the P&L curve closely.`;
-  const wrong = b.defined
-    ? `The thing that goes wrong: the stock moves against you fast and you panic-close before expiry. Plan your exit before you click trade.`
-    : `The thing that goes wrong: a sudden gap (earnings, news) past your strikes. Defined-risk versions exist — consider one.`;
+/** JSON has no Infinity: null means unbounded on the wire. */
+const num = (n: number | null) =>
+  typeof n === "number" && Number.isFinite(n) ? n.toFixed(0) : "unbounded";
 
-  return [
-    `Here's a ${b.strategy} on ${b.underlying} in plain English. It's a ${b.bias} bet you're paying a ${b.net} to enter.`,
-    `${winLine} On the other side, ${lossLine}`,
-    beLine,
-    wrong,
-  ].join("\n\n");
+type Source = "openai" | "mock";
+
+/** The one response shape, mock or live: text + disclosure + today's tally. */
+async function served(source: Source, text: string, plan: Plan, userId: string | null, usage: DailyResult) {
+  await logServerEvent(BILLING_EVENTS.explainServed, userId, { source, plan });
+  return NextResponse.json({
+    source,
+    text,
+    disclosure: EXPLAIN_DISCLOSURE,
+    usage: { count: usage.count, limit: usage.limit, resetsAt: usage.resetsAt },
+  });
 }
 
 export async function POST(req: Request) {
@@ -73,14 +68,14 @@ export async function POST(req: Request) {
   }
 
   const declared = Number(req.headers.get("content-length") ?? 0);
-  if (declared > MAX_BODY_BYTES) {
+  if (declared > MAX_EXPLAIN_BODY_BYTES) {
     return NextResponse.json({ error: "payload too large" }, { status: 413 });
   }
 
   let raw: unknown;
   try {
     const text = await req.text();
-    if (text.length > MAX_BODY_BYTES) {
+    if (text.length > MAX_EXPLAIN_BODY_BYTES) {
       return NextResponse.json({ error: "payload too large" }, { status: 413 });
     }
     raw = JSON.parse(text);
@@ -88,23 +83,40 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad json" }, { status: 400 });
   }
 
-  const parsed = BodySchema.safeParse(raw);
+  const parsed = ExplainBody.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "invalid body", issues: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`) },
-      { status: 400 }
+      { status: 400 },
     );
   }
-  const body: Body = parsed.data;
+  const body: ExplainBody = parsed.data;
+
+  // Who is asking, and on which plan. auth() reads the session cookie; a
+  // failure there (no Mongo, no auth secret in local dev) is an anonymous
+  // request, never a 500 — the memo's complaint was the missing gate, and a
+  // gate that breaks the teacher whenever auth hiccups would be a worse one.
+  // The cap is consumed AFTER validation (a malformed body must not spend an
+  // explain) and BEFORE the model call (a capped one must not cost anything).
+  const session = await auth().catch(() => null);
+  const userId = session?.user?.id ?? null;
+  const plan: Plan = session?.user?.plan ?? "free";
+  const usage = await consumeDaily(
+    "explain",
+    userId ? `user:${userId}` : `ip:${ip}`,
+    PLAN_LIMITS[plan].explainsPerDay,
+  );
+  if (!usage.allowed) {
+    await logServerEvent(BILLING_EVENTS.hitPaywall, userId, { surface: "explain", plan });
+    return NextResponse.json(paywall("explain_cap", plan, usage.limit), { status: PAYWALL_STATUS });
+  }
 
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
-    return NextResponse.json({ source: "mock", text: mockExplanation(body) });
+    return served("mock", mockExplanation(body), plan, userId, usage);
   }
 
   try {
-    const sys =
-      "You are an options-trading teacher explaining strategies to a curious 12-year-old. Be warm, plain, and concrete. Always cover: the bet being made, max profit, max loss, breakeven price(s), and one specific thing that could go wrong. 4 short paragraphs, no jargon, no markdown.";
     const user = `Explain this position:
 Strategy: ${body.strategy}
 Underlying: ${body.underlying} (spot $${body.spot.toFixed(2)})
@@ -123,18 +135,19 @@ Breakevens: ${body.breakevens.map((b) => `$${b.toFixed(2)}`).join(", ") || "n/a"
         model: "gpt-4o-mini",
         temperature: 0.6,
         messages: [
-          { role: "system", content: sys },
+          { role: "system", content: TEACHER_SYSTEM_PROMPT },
           { role: "user", content: user },
         ],
       }),
     });
     if (!r.ok) {
-      return NextResponse.json({ source: "mock", text: mockExplanation(body) });
+      return served("mock", mockExplanation(body), plan, userId, usage);
     }
     const data = await r.json();
     const text = data?.choices?.[0]?.message?.content?.trim();
-    return NextResponse.json({ source: "openai", text: text || mockExplanation(body) });
+    if (!text) return served("mock", mockExplanation(body), plan, userId, usage);
+    return served("openai", text, plan, userId, usage);
   } catch {
-    return NextResponse.json({ source: "mock", text: mockExplanation(body) });
+    return served("mock", mockExplanation(body), plan, userId, usage);
   }
 }

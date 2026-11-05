@@ -1,6 +1,6 @@
 "use client";
 
-// Ref-style options chain for the bet builder: CALLS | STRIKE | PUTS with
+// Ref-style options chain for the strategy builder: CALLS | STRIKE | PUTS with
 // DELTA / BID / ASK / IV / OI per side. Reuses the same in-process
 // Black-Scholes chain (`priceChain`) that powers /trade/chain — synthetic
 // quotes/OI, labelled as such in the footer. The expiry stepper drives the

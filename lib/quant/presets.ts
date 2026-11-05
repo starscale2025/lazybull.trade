@@ -48,7 +48,7 @@ export const SYMBOL_PRESETS: Record<string, SymbolPreset> = {
       { defId: "hurst", why: "regime detector first: TSLA flips between trending and chopping — knowing which mode you're in IS the edge" },
       { defId: "donchian", why: "when it trends, breakouts capture the squeeze legs" },
       { defId: "ai-quantile", why: "fat tails both ways — a p10/p90 band is honest where a point forecast isn't" },
-      { defId: "mc-var", why: "the widest tails in the list — simulate the downside before betting" },
+      { defId: "mc-var", why: "the widest tails in the list — simulate the downside before trading" },
     ],
   },
   SPY: {

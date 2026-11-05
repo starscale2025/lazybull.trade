@@ -1,6 +1,7 @@
 import { getProvider } from "@/lib/market-data";
 import type { Quote } from "@/lib/market-data/provider";
 import { clientIp } from "@/lib/rate-limit";
+import { isIndianSecurity } from "@/lib/region";
 import { tryAcquire, release } from "@/lib/streaming/guard";
 
 // Server-Sent Events transport for live quotes. The browser opens ONE
@@ -23,6 +24,12 @@ import { tryAcquire, release } from "@/lib/streaming/guard";
 //   event: quotes  — { quotes: Quote[], provenance }  id: <seq>   (only changed)
 //   : heartbeat                                    every tick (stale detection)
 //   event: bye     — { reason }                    at the cycle boundary (client reconnects)
+//
+// INDIAN SECURITIES ARE NEVER STREAMED (lib/region.ts). A tick is by definition
+// a live print, which SEBI's education-lag rule forbids for unregistered
+// education. They get exactly ONE snapshot — the lagged quote the orchestrator
+// builds, `delayed: true` — in the priming pump, and are then excluded from
+// every subsequent tick. US/UK names in the same connection keep ticking.
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -108,6 +115,8 @@ export async function GET(req: Request) {
       const lastSent = new Map<string, number>();
       let seq = 0;
       const startedAt = Date.now();
+      // After the priming snapshot, only the live (non-Indian) set is polled.
+      const liveSymbols = symbols.filter((s) => !isIndianSecurity(s));
 
       // P0-2: heartbeats run on their OWN clock, so a slow (or failing) provider
       // fetch can never delay them — the client won't stale-reconnect just
@@ -119,7 +128,9 @@ export async function GET(req: Request) {
       // retries. Only a client disconnect or the cycle boundary ends the stream.
       const safePump = async (initial: boolean) => {
         try {
-          const { quotes, provenance } = await getProvider().getQuotes(symbols);
+          const wanted = initial ? symbols : liveSymbols;
+          if (!wanted.length) return; // nothing live to tick; heartbeats keep the stream honest
+          const { quotes, provenance } = await getProvider().getQuotes(wanted);
           const changed: Quote[] = initial
             ? quotes
             : quotes.filter((q) => lastSent.get(q.sym) !== q.last);

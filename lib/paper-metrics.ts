@@ -5,7 +5,7 @@
 // with each other. The identities below are the contract:
 //
 //   holdingsValue   = Σ signed qty × price over share positions
-//   betsAtCost      = Σ cost of OPEN option bets (debit +, credit −)
+//   betsAtCost      = Σ cost of OPEN option positions (debit +, credit −)
 //   equity          = balance + holdingsValue + betsAtCost
 //   accountMargin   = Σ |qty| × price (1:1 leverage)
 //   availableFunds  = equity − accountMargin − ordersMargin
@@ -21,7 +21,7 @@
 // Leverage is fixed at 1:1 rather than mimicking a broker's margin-rate table.
 // A teaching account that quietly granted leverage would understate what a
 // position actually costs, which is exactly the lesson it exists to teach.
-// Open option bets are carried at cost — pricing them live needs the chain
+// Open option positions are carried at cost — pricing them live needs the chain
 // model, and a stale model price would invent P&L; the cost is at least true.
 
 import type { SharePosition } from "./paper-shares";
@@ -32,7 +32,7 @@ export type AccountMetrics = {
   balance: number;
   /** Signed market value of share holdings (longs +, shorts −). */
   holdingsValue: number;
-  /** Open option bets carried at cost (debit +, credit −). */
+  /** Open option positions carried at cost (debit +, credit −). */
   betsAtCost: number;
   /** Account value: balance + holdingsValue + betsAtCost. */
   equity: number;
@@ -59,7 +59,7 @@ export function accountMetrics(args: {
   orders: Order[];
   /** Live price per symbol. A symbol absent here is carried at cost. */
   marks: Record<string, number>;
-  /** Signed cost of OPEN option bets, so equity can carry them at cost. */
+  /** Signed cost of OPEN option positions, so equity can carry them at cost. */
   openBetCost?: number;
 }): AccountMetrics {
   const { cash, realizedToday, shares, orders, marks } = args;

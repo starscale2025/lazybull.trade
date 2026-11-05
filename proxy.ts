@@ -79,7 +79,14 @@ function csp(nonce: string): string {
   // 'strict-dynamic' drops 'self' for CSP3 browsers and lets Next's own
   // (nonce'd) chunk loader vouch for the chunks it injects; 'self' stays for
   // CSP2-only agents.
-  const script = ["script-src", "'self'", `'nonce-${nonce}'`, "'strict-dynamic'", "'wasm-unsafe-eval'", "'unsafe-eval'"];
+  // https://cdn.jsdelivr.net carries ONE thing: the Pyodide runtime that the
+  // /practice judge loads on demand (public/practice/pyodide-worker.js pulls
+  // pyodide.js, its .wasm and the stdlib zip from the pinned version there).
+  // It is the only third-party script origin on the site, and it is loaded
+  // from inside a same-origin worker, never as a page <script>; listing it in
+  // script-src AND connect-src is what keeps the runtime's own fetches inside
+  // the policy once this header stops being report-only.
+  const script = ["script-src", "'self'", `'nonce-${nonce}'`, "'strict-dynamic'", "'wasm-unsafe-eval'", "'unsafe-eval'", "https://cdn.jsdelivr.net"];
 
   return [
     "default-src 'self'",
@@ -88,7 +95,7 @@ function csp(nonce: string): string {
     // <style> with no nonce, and an injected stylesheet is a far weaker sink
     // than an injected script. Standard practice, accepted trade-off.
     "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://api.openai.com" + (quantAiOrigin ? " " + quantAiOrigin : ""),
+    "connect-src 'self' https://api.openai.com https://cdn.jsdelivr.net" + (quantAiOrigin ? " " + quantAiOrigin : ""),
     "img-src 'self' data: blob: https://*.googleusercontent.com",
     "font-src 'self' data:",
     "media-src 'self'",

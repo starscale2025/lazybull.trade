@@ -194,8 +194,8 @@ export function QuantHero({
 
             <p className="max-w-[60ch] text-balance text-[0.9375rem] leading-relaxed text-fg-dim md:text-base">
               A workbench for quant traders and a class-12 math kid alike. Stack bots like
-              Jupyter cells. Tune the math. See where they agree, where they fight, and what
-              the combined edge says — in plain English if you want, or in formulas if
+              Jupyter cells. Tune the math. See where they agree, where they fight, and read
+              back what each one did — in plain English if you want, or in formulas if
               you'd rather. Drop in your own bot in under a minute.
             </p>
           </div>

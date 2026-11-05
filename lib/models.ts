@@ -380,7 +380,7 @@ export function generateStrategies({
     };
   })();
 
-  // Defined-risk income — sell premium that pays you if the stock stays in the band
+  // Defined-risk credit — sell premium that pays you if the stock stays in the band
   const income: Strategy = (() => {
     // iron condor / put credit spread / call credit spread depending on bias
     if (bias === "neutral" || bias === "volatile") {

@@ -6,6 +6,24 @@ import Image from "next/image";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+// WHO DID WHAT, checkable against the commit history.
+//
+// The 2026-09 diligence memo, verbatim: "Team: Warm bios, 'cold brews per
+// week' stats, no credentials, one builder. Replace whimsy with proof: what
+// each person shipped, with dates."
+//
+// So the stats are facts a reader could verify from `git log` and nothing
+// else. What the history actually supports, as of Sep 2026:
+//   • Shaurya authored 194 of 211 commits, May–Sep 2026 — the pricing engine,
+//     the order engine, the market-data layer, the on-device models and the
+//     security hardening.
+//   • Joshmann authored the About page (May 2026) and the Pro voice co-pilot
+//     (Jul 2026). Product, design and brand are his ROLE; the engineering the
+//     old copy attributed to him is not in the history, so it is not claimed.
+//   • Pratham has no commits. Ops, research and the roadmap are real work and
+//     are named as such — no invented interview counts, no user counts.
+// Two rules for anyone editing this: never add a number you cannot point at,
+// and never attribute code to someone the log does not.
 const FOUNDERS = [
   {
     no: "01",
@@ -17,19 +35,19 @@ const FOUNDERS = [
     color: "var(--cyan)",
     borderClass: "border-cyan/30",
     glowBg: "rgba(0,229,255,0.08)",
-    bio: "Shaurya is where LazyBull started. A CS student teaching himself derivatives on the side, he kept watching friends lose money on options trades they didn't fully understand — and decided the interfaces, not the people, were broken.",
-    longBio: "The whole thing began with Shaurya sketching a drag-to-build options chain on the back of a notebook. He'd been teaching himself derivatives pricing for months, and the gap between what a retail platform showed you and what was actually happening under the hood drove him crazy. The first crude prototype was his — everything else grew from that seed.",
+    bio: "Shaurya is where lazybull started, and he has written most of it. A CS student teaching himself derivatives on the side, he kept watching friends lose money on options trades they didn't fully understand — and decided the interfaces, not the people, were broken.",
+    longBio: "The whole thing began with Shaurya sketching a drag-to-build options chain on the back of a notebook. Between May and September 2026 he authored 194 of the repository's 211 commits: the Black-Scholes pricing engine and the Greeks math, the order engine behind the paper account, the market-data layer, the on-device quant models, and the security hardening pass across the API routes.",
     achievements: [
-      { icon: "✦", text: "Teaching himself derivatives & options pricing" },
-      { icon: "◈", text: "Originated the drag-to-build chain concept" },
-      { icon: "▲", text: "Hand-rolled the first Black-Scholes prototype in C++" },
-      { icon: "◎", text: "Owns the on-device ML + quant models" },
-      { icon: "⬡", text: "Maintains the pricing engine and Greeks math" },
+      { icon: "✦", text: "Originated the drag-to-build chain concept" },
+      { icon: "◈", text: "Wrote the pricing engine and the Greeks math" },
+      { icon: "▲", text: "Wrote the order engine behind the $5k paper account" },
+      { icon: "◎", text: "Wrote the market-data layer and the on-device models" },
+      { icon: "⬡", text: "Ran the security-hardening pass across the API routes" },
     ],
     stats: [
-      { k: "Idea started", v: "2026" },
-      { k: "Boards filled", v: "27" },
-      { k: "Cold brews / wk", v: "12" },
+      { k: "Commits authored", v: "194 / 211" },
+      { k: "Shipped", v: "May–Sep 2026" },
+      { k: "Owns", v: "pricing · orders · data" },
     ],
     tag: "Idea · Math · Engine",
     quote: "Options aren't actually complicated. The interfaces made them complicated. I just wanted something that showed me the truth.",
@@ -44,19 +62,19 @@ const FOUNDERS = [
     color: "var(--bull)",
     borderClass: "border-bull/30",
     glowBg: "rgba(0,255,135,0.08)",
-    bio: "Joshmann took Shaurya's idea and made it shippable. He refined the rough prototype into the visual language, motion, and product flow LazyBull is built around today.",
-    longBio: "When Shaurya showed him the first scrappy chain mockup, Joshmann saw the whole product hiding inside it. He spent the next few months reshaping the UX — the heatmap grid, the drag interactions, the AI teacher panel — and turned a clever prototype into something a stranger could open and instantly understand. Product, design, and front-end are his domain.",
+    bio: "Joshmann owns product and design. He shipped the page you are reading in May 2026, and the Pro voice co-pilot in July — the two pieces of the product with his name on the commits.",
+    longBio: "When Shaurya showed him the first scrappy chain mockup, Joshmann saw the product hiding inside it. His shipped work is this About page (May 2026) and the voice co-pilot on /pro (July 2026); the rest of his contribution is the part a repository does not record — the product decisions, the visual language and the argument about what a stranger should see first.",
     achievements: [
-      { icon: "✦", text: "Turned the prototype into a product you can just open" },
-      { icon: "◈", text: "Refined Shaurya's prototype into the product it is today" },
-      { icon: "▲", text: "Designed the visual chain, motion system, and AI teacher UI" },
-      { icon: "◎", text: "Owns the front-end, design system, and brand" },
-      { icon: "⬡", text: "Built the heatmap grid and drag-to-build interactions" },
+      { icon: "✦", text: "Shipped this About page — May 2026" },
+      { icon: "◈", text: "Shipped the Pro voice co-pilot — July 2026" },
+      { icon: "▲", text: "Owns product direction, design and brand" },
+      { icon: "◎", text: "Argued the case for the drag-first chain" },
+      { icon: "⬡", text: "Sets what a first-time visitor sees, and in what order" },
     ],
     stats: [
-      { k: "Pixel iterations", v: "2.4k" },
-      { k: "Figma frames", v: "847" },
-      { k: "Sleep / night", v: "~5h" },
+      { k: "Shipped", v: "May & Jul 2026" },
+      { k: "Built", v: "voice co-pilot" },
+      { k: "Owns", v: "product · design" },
     ],
     tag: "Product · Design · Front-end",
     quote: "Shaurya brought the idea. My job was to make sure that on day one, a stranger could open it and just get it.",
@@ -74,19 +92,19 @@ const FOUNDERS = [
     color: "var(--plasma)",
     borderClass: "border-plasma/30",
     glowBg: "rgba(180,120,255,0.08)",
-    bio: "Pratham joined later — and turned a strong idea into a real company. He took the prototype, the vision, and the loose roadmap, and pulled them into a launch plan, an early-access program, and the business behind LazyBull.",
-    longBio: "By the time Pratham came in, the product worked but the company didn't. He brought structure: a roadmap, a feedback loop with early users, a real onboarding flow, and the safety-rail philosophy that runs through every page. If Shaurya is the why and Joshmann is the how, Pratham is the when, where, and who-for.",
+    bio: "Pratham writes none of the code and owns everything around it: operations, research, and the roadmap that decides what the other two build next.",
+    longBio: "Pratham's work does not appear in the commit log, which is the honest way to describe it — he owns operations, the research behind what gets built, and the roadmap. The paper-only rule and the safety rails that come with it are a company decision before they are an engineering one, and that decision is his to argue for.",
     achievements: [
-      { icon: "✦", text: "Owns ops, strategy, and growth" },
-      { icon: "◈", text: "Solidified the vision into a roadmap and launch plan" },
-      { icon: "▲", text: "Designed the safety-rail and paper-trade onboarding" },
-      { icon: "◎", text: "Runs early-user research and the feedback loop" },
-      { icon: "⬡", text: "Talks to new options traders every week" },
+      { icon: "✦", text: "Owns operations, research and the roadmap" },
+      { icon: "◈", text: "Decides what gets built next, and what does not" },
+      { icon: "▲", text: "Holds the paper-only rule against every argument to relax it" },
+      { icon: "◎", text: "Runs the early-access programme" },
+      { icon: "⬡", text: "No commits — and that is the role, not a gap" },
     ],
     stats: [
-      { k: "Specs written", v: "39" },
-      { k: "User chats", v: "ongoing" },
-      { k: "Sticky notes", v: "∞" },
+      { k: "Owns", v: "ops · research" },
+      { k: "Writes", v: "roadmap & specs" },
+      { k: "Joined", v: "2026" },
     ],
     tag: "Ops · Strategy · Research",
     quote: "A great prototype isn't a company. My job was to turn what Shaurya and Joshmann built into something traders could actually rely on.",
@@ -104,7 +122,7 @@ const TIMELINE = [
   {
     date: "2026",
     label: "Joshmann Shapes It",
-    desc: "Joshmann sees the prototype and immediately reshapes it — the heatmap, the motion, the AI teacher panel. The rough idea starts to look like a product.",
+    desc: "Joshmann takes over product and design, and the rough idea starts to look like something a stranger could open.",
     color: "var(--bull)",
     side: "right",
   },
@@ -118,14 +136,14 @@ const TIMELINE = [
   {
     date: "2026",
     label: "Pratham Joins",
-    desc: "Pratham turns scattered docs into a real roadmap. Safety rails, onboarding, and early-user research all get owners.",
+    desc: "Pratham turns scattered docs into a real roadmap. The paper-only rule, the safety rails and the research all get an owner.",
     color: "var(--plasma)",
     side: "right",
   },
   {
     date: "2026",
     label: "On-device AI",
-    desc: "The AI teacher and on-device quant models ship — Greeks, IV, and predictions that explain themselves and run right in your browser.",
+    desc: "The AI teacher and the on-device quant models ship — Greeks and IV computed and explained in your own browser, with nothing leaving it.",
     color: "var(--bull)",
     side: "left",
   },
@@ -410,7 +428,7 @@ export function About() {
           <div className="flex items-center gap-3">
             <span>⟢ Section / About</span>
             <span className="hidden sm:inline">·</span>
-            <span className="hidden sm:inline">lazybull.trade</span>
+            <span className="hidden sm:inline">lazybull.us</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-bull pulse-dot" />
@@ -442,11 +460,10 @@ export function About() {
             </h1>
 
             <p className="mt-8 measure text-balance text-base leading-relaxed text-fg-dim md:text-lg">
-              LazyBull was built by three founders who believed options trading
-              was being made{" "}
-              <span className="text-fg">artificially complex</span> to keep
-              retail traders on the wrong side of the trade. We're changing
-              that.
+              lazybull is built by three students who think options are made{" "}
+              <span className="text-fg">artificially complex</span>, and that a
+              beginner who can SEE a position is a beginner far less likely to
+              be on the wrong side of it. Paper only, while we prove it.
             </p>
           </motion.div>
         </div>
@@ -828,8 +845,12 @@ export function About() {
                   <path d="M1 6h10M6 1l5 5-5 5" stroke="currentColor" strokeWidth="1.6" />
                 </svg>
               </a>
+              {/* hello@lazybull.us — the address /privacy, /terms, /safety and
+                  /account already publish. The team@ address this replaced was
+                  on a domain that does not resolve, so every mail sent from
+                  this button bounced. */}
               <a
-                href="mailto:team@lazybull.trade"
+                href="mailto:hello@lazybull.us"
                 className="inline-flex items-center gap-3 border border-border px-5 py-3.5 font-mono text-xs uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
               >
                 Work with us →

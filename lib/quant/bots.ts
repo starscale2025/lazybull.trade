@@ -82,8 +82,8 @@ const smaCrossover: BotDef = {
       verdict: {
         side: trending ? "buy" : "sell",
         text: trending
-          ? "Fast SMA is above slow SMA. Trend is up — bias long."
-          : "Fast SMA is below slow SMA. Trend is down — bias short or stand aside.",
+          ? "Fast SMA is above slow SMA: the rule read the trend as up."
+          : "Fast SMA is below slow SMA: the rule read the trend as down.",
         confidence: Math.min(1, Math.abs((lastF ?? 0) - (lastS ?? 0)) / (px[px.length - 1] || 1) * 20),
       },
       equity: bt.equity,
@@ -362,7 +362,7 @@ const zscoreBot: BotDef = {
   name: "Z-Score Reversion",
   category: "stats",
   glyph: "ζ",
-  tagline: "Bet on snap-back when the price wanders too far.",
+  tagline: "Faded moves that wandered far from the mean.",
   formula: "z = (price − μ) / σ over n bars",
   params: [
     { key: "period", label: "Window", kind: "number", default: 30, min: 10, max: 120, step: 1 },
@@ -601,14 +601,17 @@ const kellyBot: BotDef = {
   name: "Kelly Criterion",
   category: "risk",
   glyph: "$",
-  tagline: "Optimal bet size given win odds and payoff.",
+  tagline: "The growth-optimal fraction, and what happens either side of it.",
   formula: "f* = (p·b − q) / b   where q = 1−p, b = win$/loss$",
   params: [
     { key: "winProb", label: "Win probability %", kind: "number", default: 55, min: 10, max: 90, step: 1 },
     { key: "winAmt", label: "Avg win $", kind: "number", default: 200, min: 10, max: 5000, step: 10 },
     { key: "lossAmt", label: "Avg loss $", kind: "number", default: 150, min: 10, max: 5000, step: 10 },
     { key: "bankroll", label: "Bankroll $", kind: "number", default: 100000, min: 100, max: 10000000, step: 100 },
-    { key: "fraction", label: "Kelly fraction", kind: "number", default: 0.5, min: 0.1, max: 1, step: 0.05, hint: "use 0.25–0.5 in real life" },
+    // The hint used to read "use 0.25–0.5 in real life" — a sizing
+    // instruction on a control, which is the one place a disclaimer can never
+    // reach. It now says what the multiplier DOES to the curve.
+    { key: "fraction", label: "Kelly fraction", kind: "number", default: 0.5, min: 0.1, max: 1, step: 0.05, hint: "multiplier on f* — growth falls away on both sides of 1×" },
   ],
   run: (_ctx, p): BotResult => {
     const pw = num(p, "winProb", 55) / 100;
@@ -629,12 +632,18 @@ const kellyBot: BotDef = {
         { key: "size", label: "Bet size", value: fmtMoney(sizeUsed), tone: "info" },
         { key: "ev", label: "EV / trade", value: fmtMoney(ev), tone: ev > 0 ? "bull" : "bear" },
       ],
-      summary: `Full Kelly = ${(fStar * 100).toFixed(1)}%. Using ${(fUse * 100).toFixed(1)}% → bet ${fmtMoney(sizeUsed)} on a ${fmtMoney(bk)} stack.`,
+      summary: `f* = ${(fStar * 100).toFixed(1)}% of bankroll. At ${frac}× that is ${(fUse * 100).toFixed(1)}%, or ${fmtMoney(sizeUsed)} against the ${fmtMoney(bk)} you entered.`,
+      // MATHS, not a recommendation. This line used to name a fraction and
+      // say what "most pros" do with it, which is a personalised sizing
+      // recommendation dressed as a fun fact. What the formula computes, and
+      // the shape of the curve around it, is the whole lesson.
       beginner:
-        "Kelly tells you how much of your bankroll to risk per trade so it grows fastest without ever hitting zero. Half-Kelly (0.5×) gives 75% of the growth with way less stomach-turn — that's what most pros actually use.",
+        "Kelly answers one question exactly: which constant fraction of a bankroll, staked over and over on the same bet, makes it grow fastest in the long run. The answer is a curve, not a number — growth climbs to f*, falls away past it, and hits zero at twice f*. Every figure here is arithmetic on the win probability you typed in, which is the fragile part.",
       verdict: {
         side: fStar > 0 ? "buy" : "warn",
-        text: fStar > 0 ? `Edge exists. Bet up to ${(fUse * 100).toFixed(1)}% per shot.` : "No edge — don't bet.",
+        text: fStar > 0
+          ? `f* = ${(fStar * 100).toFixed(1)}% for these inputs; growth reaches zero at ${(fStar * 200).toFixed(1)}%.`
+          : "f* ≤ 0 — for these inputs the formula describes a losing bet.",
         confidence: Math.min(1, fStar * 4),
       },
     };

@@ -61,8 +61,8 @@ export const COPY_BEATS: CopyBeat[] = [
   // THE COPY IS THE VIEWER'S STORY, NOT THE PRODUCT'S SPEC SHEET.
   //
   // Eight of these ten beats used to be the product talking about itself —
-  // "27 bots · 13 models · 8 live demos", "0.4ms pricing engine", "It saw the
-  // crash coming", "historically 65–77% right". Exactly one line spoke to the
+  // a bot count, a models count, a latency figure, a line claiming the film
+  // had foreseen its own crash, and an unverifiable win rate. Exactly one line spoke to the
   // person reading it, and it was the best line in the film. A design review
   // put it plainly: the rail already names a real story (boot, the desk, the
   // dive, regime, the crash, your worst case, the vote, conviction, welcome
@@ -72,15 +72,18 @@ export const COPY_BEATS: CopyBeat[] = [
   //   1. No specs. Counts and latencies belong on the pages that prove them,
   //      not in a film — and the counts contradicted each other anyway
   //      (27 bots / 13 models / a 12-bot vote, all on one scroll).
-  //   2. No oracle. "It saw the crash coming" claims foresight about a crash
+  //   2. No oracle. A line claiming foresight about a crash
   //      this very scene generates, on a paper-only teaching product, three
   //      hundred pixels above a footer disclaiming exactly that. The crash is
   //      a lesson you get to watch, not a prophecy we sell.
-  //   3. No unverifiable win rate. "65–77% right" is a number nobody reading
-  //      it can check, on a financial-education site. It is gone.
-  { id: "boot", from: 0.006, to: 0.045, heading: "lazybull.trade", sub: "options — without the fog" },
+  //   3. No unverifiable win rate. A hit-rate range nobody reading it can
+  //      check has no business in a film on a financial-education site.
+  //      It is gone.
+  //   4. The right name. The first beat used to boot into a hostname that
+  //      does not resolve. The brand is lazybull; the site is lazybull.us.
+  { id: "boot", from: 0.006, to: 0.045, heading: "lazybull", sub: "options — without the fog" },
   { id: "assembly", from: 0.075, to: 0.145, heading: "A desk that shows its work.", sub: "Every number here can be opened." },
-  { id: "dive", from: 0.165, to: 0.235, heading: "Nothing here costs you money.", sub: "Paper only — so you can afford to be wrong on purpose." },
+  { id: "dive", from: 0.165, to: 0.235, heading: "No trade here uses real money.", sub: "Paper only — so you can afford to be wrong on purpose." },
   { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "Markets have moods.", sub: "Trending, reverting, or noise — named before you commit to anything." },
   { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "Then the floor goes.", sub: "This is the part nobody rehearses." },
   // sits over the crash landing + pull-back, which end at CANDLE_BUILD_END —
@@ -94,7 +97,7 @@ export const COPY_BEATS: CopyBeat[] = [
   // sub-line no longer reverts to a feature triad under it.
   { id: "safety", from: 0.61, to: 0.685, pos: "top", heading: "Your worst case is a number you chose.", sub: "Not a number you find out afterwards." },
   { id: "consensus", from: 0.697, to: 0.727, pos: "top", heading: "They vote. They disagree.", sub: "You see the split, not just the answer." },
-  { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Only then trade it." },
+  { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: "Then paper-trade it." },
   { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
 ];
 
@@ -168,13 +171,11 @@ export function flashOpacity(progress: number): number {
   return p < mid ? (p - from) / (mid - from) : (to - p) / (to - mid);
 }
 
-// The canvas holds opaque almost to the very end: the scene's final frames show
-// the homepage (resolved from the Matrix rain), so the gap above the rising real
-// <Hero> stays hidden until the pin releases with the Hero at top:0. Only a 2%
-// crossfade at the very end blends the scene's homepage → the live page.
-// Fade only in the last sliver: the real Get Started rises into place via the
-// -100vh overlap and is only aligned with the baked reveal at progress 1. A
-// wider window crossfades while it's still offset → a visible double image.
+// The canvas holds opaque almost to the very end: the scene's final frames
+// settle to the page ground (the rain clears by 0.955, the outro dips to black),
+// so the gap above the rising real <Hero> stays hidden until the pin releases
+// with the Hero at top:0. Only a 2% crossfade at the very end hands off, from
+// an empty frame — there is no baked hero plate to line up any more.
 const HANDOFF_FADE = { from: 0.998, to: 1.0 };
 
 /** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end. */

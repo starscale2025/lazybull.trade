@@ -2,11 +2,12 @@
 
 // The paper account in one place. /pro's sub-window shows the account while
 // you chart; this page is the account — equity, open positions across both
-// books (shares from /pro, option bets from /trade and /quant), working
+// books (shares from /pro, option positions from /trade and /quant), working
 // orders, wagered totals, realized history, the cash ledger and the journal.
 // Everything reads the ONE shared usePaper store, so a number here can never
 // disagree with the panel on /pro.
 
+import { RegulatoryLine } from "@/components/RegulatoryLine";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
@@ -108,7 +109,7 @@ export default function PortfolioPage() {
     const openBets = bets.filter((p) => p.status === "open");
     const closedBets = bets.filter((p) => p.status === "closed");
     const wageredOpen = openBets.reduce((a, p) => a + Math.abs(p.cost), 0);
-    /** Signed — what equity carries the open bets at. */
+    /** Signed — what equity carries the open positions at. */
     const openCost = openBets.reduce((a, p) => a + p.cost, 0);
     const wins = closedBets.filter((p) => p.pnl > 0).length;
     const betPnl = closedBets.reduce((a, p) => a + p.pnl, 0);
@@ -320,8 +321,8 @@ export default function PortfolioPage() {
         >
           {positionRows.length === 0 ? (
             <Empty>
-              No open positions. Place a trade on <Link className="text-bull underline" href="/pro">/pro</Link> or bet a
-              direction on <Link className="text-bull underline" href="/quant">/quant</Link>.
+              No open positions. Place a paper trade on <Link className="text-bull underline" href="/pro">/pro</Link> or try
+              a paper option position on <Link className="text-bull underline" href="/quant">/quant</Link>.
             </Empty>
           ) : (
             <table className="w-full t-data text-[0.6875rem]">
@@ -385,22 +386,22 @@ export default function PortfolioPage() {
           )}
         </Section>
 
-        {/* ── option bets ── */}
+        {/* ── option positions ── */}
         <Section
-          title={`Option bets · ${betStats.openBets.length} open`}
+          title={`Option positions · ${betStats.openBets.length} open`}
           headerExtra={
             <span className="hidden t-chrome text-fg-faint sm:inline">
               {money(betStats.wageredOpen)} at risk
               {" · "}
               {betStats.closedBets.length
                 ? `${betStats.wins}W · ${betStats.closedBets.length - betStats.wins}L · ${signedMoney(betStats.betPnl)} settled`
-                : "no settled bets"}
+                : "none settled yet"}
             </span>
           }
         >
           {bets.length === 0 ? (
             <Empty>
-              No bets yet. The UP/DOWN slip on <Link className="text-bull underline" href="/quant">/quant</Link> and{" "}
+              No option positions yet. Paper trades placed on <Link className="text-bull underline" href="/quant">/quant</Link> and{" "}
               <Link className="text-bull underline" href="/trade/chain">the chain</Link> books here.
             </Empty>
           ) : (
@@ -411,7 +412,7 @@ export default function PortfolioPage() {
                   <Th left>Underlying</Th>
                   <Th left>Strategy</Th>
                   <Th left>Legs</Th>
-                  <Th>Wagered</Th>
+                  <Th>Premium</Th>
                   <Th>Status</Th>
                   <Th>P&L</Th>
                 </Tr>
@@ -447,7 +448,7 @@ export default function PortfolioPage() {
           )}
           {bets.length > 0 && (
             <div className="mt-2 t-chrome text-fg-faint">
-              settle or manage bets on <Link className="text-bull underline" href="/trade">/trade</Link>
+              settle or manage positions on <Link className="text-bull underline" href="/trade">/trade</Link>
             </div>
           )}
         </Section>
@@ -671,9 +672,7 @@ export default function PortfolioPage() {
           )}
         </Section>
 
-        <div className="mt-10 text-center t-eyebrow text-fg-faint">
-          paper only · not advice · history and ledger keep the last 200 entries
-        </div>
+        <RegulatoryLine className="mt-10" extra="history and ledger keep the last 200 entries" />
       </main>
 
       {toast && (

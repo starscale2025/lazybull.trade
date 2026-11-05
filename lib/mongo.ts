@@ -16,7 +16,13 @@
 
 import { MongoClient, type Db } from "mongodb";
 
-const dbName = process.env.MONGODB_DB || "lazybull";
+// Read at CALL time, not module load — the same rule lib/kv.ts documents for
+// its own env. A module-level const is captured when the import graph is
+// evaluated, which in vitest happens BEFORE a suite's beforeAll can point
+// MONGODB_DB at its ephemeral server: the library then wrote to "lazybull"
+// while the test read from its own database and saw an empty collection.
+// In production the variable is fixed at boot, so this changes nothing there.
+const dbName = () => process.env.MONGODB_DB || "lazybull";
 const options = {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 8000,
@@ -85,7 +91,7 @@ export function mongo(): Promise<MongoClient> {
 
 export async function db(): Promise<Db> {
   const client = await getClient();
-  return client.db(dbName);
+  return client.db(dbName());
 }
 
 /** Pings the cluster — used by /api/health and the smoke-test script. */
@@ -95,7 +101,7 @@ export async function pingMongo() {
   const stats = await d.command({ dbStats: 1, scale: 1024 * 1024 }).catch(() => null);
   return {
     ok: true,
-    db: dbName,
+    db: dbName(),
     storageMB: stats?.storageSize ? Math.round(stats.storageSize) : null,
     collections: stats?.collections ?? null,
   };

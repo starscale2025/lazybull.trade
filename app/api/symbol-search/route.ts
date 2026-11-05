@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import { isIndianSecurity } from "@/lib/region";
+
+// Indian results stay in the list — the beginner funnel IS India — but each one
+// is tagged `delayed: true` so the picker can say "31 d lag" before the user
+// commits to a symbol whose prices will never be live here (lib/region.ts).
 
 export const revalidate = 300;
 
@@ -24,6 +29,7 @@ export async function GET(req: Request) {
         name: it.shortname || it.longname || it.symbol,
         exch: it.exchange || "",
         type: it.typeDisp || it.quoteType || "",
+        ...(isIndianSecurity(it.symbol) ? { delayed: true } : {}),
       }));
     return NextResponse.json({ ok: true, items });
   } catch (e) {

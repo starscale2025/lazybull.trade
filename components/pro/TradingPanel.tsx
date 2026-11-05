@@ -102,7 +102,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
     return m;
   }, [marks, chartSymbol, chartLast]);
 
-  // Open option bets carried at cost — they share this cash balance, so
+  // Open option positions carried at cost — they share this cash balance, so
   // leaving them out made every bet read as an instant loss of its premium.
   const openBetCost = useMemo(
     () => optionBets.reduce((a, p) => (p.status === "open" ? a + p.cost : a), 0),

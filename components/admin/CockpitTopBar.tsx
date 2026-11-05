@@ -2,9 +2,23 @@
 
 import { useEffect, useState } from "react";
 
-const BUILD = "a4f819";
+// Chrome, but chrome that has to be true too. `build`, `env` and `region` were
+// hardcoded strings — build "a4f819", env "prod", region "iad-1" — printed
+// with the same confidence as a real deploy id on a machine that might be a
+// laptop. They are props now, resolved on the server from the platform's own
+// env vars, and each falls back to "unknown" rather than to a plausible value.
 
-export function CockpitTopBar({ admin }: { admin: string }) {
+export function CockpitTopBar({
+  admin,
+  build,
+  env,
+  region,
+}: {
+  admin: string;
+  build: string;
+  env: string;
+  region: string;
+}) {
   const [time, setTime] = useState<string>("");
   const [uptime, setUptime] = useState<number>(0);
   const [fps, setFps] = useState<number>(60);
@@ -48,13 +62,13 @@ export function CockpitTopBar({ admin }: { admin: string }) {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
           <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-          ADMIN COCKPIT · LIVE
+          ADMIN COCKPIT
         </div>
-        <span className="hidden md:inline">build {BUILD}</span>
+        <span className="hidden md:inline">build {build}</span>
         <span className="hidden md:inline">·</span>
-        <span className="hidden md:inline">env <span className="text-bull">prod</span></span>
+        <span className="hidden md:inline">env <span className="text-bull">{env}</span></span>
         <span className="hidden lg:inline">·</span>
-        <span className="hidden lg:inline">region iad-1</span>
+        <span className="hidden lg:inline">region {region}</span>
         <span className="hidden lg:inline">·</span>
         <span className="hidden lg:inline">uptime {upStr}</span>
       </div>

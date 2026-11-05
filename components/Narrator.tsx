@@ -47,7 +47,7 @@ export function Narrator() {
   const killedRef = useRef(killed);
   useEffect(() => {
     if (killed && !killedRef.current) {
-      narrate("Kill switch armed — all positions flattened, orders cancelled.", { assertive: true });
+      narrate("Kill switch fired — all positions flattened, orders cancelled.", { assertive: true });
     }
     killedRef.current = killed;
   }, [killed]);

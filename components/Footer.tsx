@@ -1,6 +1,7 @@
 import Link from "next/link";
 import pkg from "../package.json";
 import { ContrastToggle } from "./ContrastToggle";
+import { ConsentLink } from "./ConsentLink";
 
 // Every entry here used to be href="#" — 32 links plus the three legal ones,
 // all of which looked clickable and went nowhere. Unshipped items now collapse
@@ -22,6 +23,7 @@ const COLS: { title: string; links: FooterLink[]; roadmap?: string }[] = [
   {
     title: "Learn",
     links: [
+      { label: "Practice problems", href: "/practice" },
       { label: "The three pieces", href: "/learn#three-pieces" },
       { label: "Greeks 101", href: "/learn#greeks" },
       { label: "The vol smile", href: "/learn#volsmile" },
@@ -50,6 +52,50 @@ const COLS: { title: string; links: FooterLink[]; roadmap?: string }[] = [
   },
 ];
 
+/**
+ * SOCIAL LINKS, FROM THE ENVIRONMENT ONLY.
+ *
+ * The 2026-09 diligence memo: "No Discord, X, LinkedIn, YouTube, GitHub or
+ * Product Hunt link anywhere on the site." What stood here instead was five
+ * grey badges — TW, GH, DC, TG, YT — captioned "Coming soon", which is a
+ * footer telling every visitor the company has no presence anywhere.
+ *
+ * These render ONLY when the matching env var holds a real URL, and NOTHING
+ * renders when none is set, so this ships dark today and lights up the moment
+ * an account exists — no code change, no dead link, and never a placeholder
+ * for an account nobody has created.
+ *
+ * Written out one by one rather than looped over a dynamic key: NEXT_PUBLIC_*
+ * is inlined at BUILD time by static substitution, so `process.env[name]` for
+ * a computed `name` inlines to undefined and the whole column would silently
+ * stay empty in production.
+ *
+ * `httpUrl` is not ceremony. These values arrive from deploy configuration,
+ * and an href is one of the few places a string becomes executable — a
+ * `javascript:` value in an anchor runs on click. Only http(s) survives.
+ */
+const httpUrl = (v: string | undefined): string | null => {
+  const s = (v ?? "").trim();
+  if (!s) return null;
+  try {
+    const u = new URL(s);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
+const SOCIALS = (
+  [
+    { label: "X", name: "X (Twitter)", href: httpUrl(process.env.NEXT_PUBLIC_SOCIAL_X) },
+    { label: "DC", name: "Discord", href: httpUrl(process.env.NEXT_PUBLIC_SOCIAL_DISCORD) },
+    { label: "YT", name: "YouTube", href: httpUrl(process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE) },
+    { label: "GH", name: "GitHub", href: httpUrl(process.env.NEXT_PUBLIC_SOCIAL_GITHUB) },
+    { label: "IN", name: "LinkedIn", href: httpUrl(process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN) },
+    { label: "IG", name: "Instagram", href: httpUrl(process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM) },
+  ] as const
+).filter((s): s is (typeof s) & { href: string } => s.href !== null);
+
 // The subscribe callout belongs to the marketing story; app routes start the
 // footer at the wordmark. The caller passes this rather than the footer reading
 // usePathname, which would make every page's footer a client component.
@@ -75,37 +121,23 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             </h2>
           </div>
           <div className="col-span-12 lg:col-span-5">
-            {/* NOT wired to anything yet — and until it is, this must not be
-                allowed to SUBMIT. The form had no action and no onSubmit, and
-                the button defaulted to
-                type="submit", so pressing Subscribe fired a native GET at the
-                current URL. On the homepage that full-reloads the page and
-                replays the loader gate plus all 13,500px of the film from zero
-                — the single most punishing thing any control on this site could
-                do — and the address was discarded on the way.
-                `type="button"` below stops that with no client boundary and no
-                JavaScript. Whether we actually collect addresses is a product
-                and privacy decision, not a styling one: wiring the real island
-                and POST /api/subscribe is tracked as its own task. */}
-            <form className="flex flex-col gap-2">
-              <label className="t-chrome text-fg-faint">
-                One email a week · a single new strategy explained
-              </label>
-              <div className="surface-card flex overflow-hidden border border-border bg-surface focus-within:border-bull">
-                <span className="flex items-center px-3 font-mono text-sm text-bull">$</span>
-                <input
-                  type="email"
-                  placeholder="learner@inbox.io"
-                  className="flex-1 bg-transparent py-3.5 font-mono text-sm text-fg placeholder:text-fg-faint outline-none"
-                />
-                <button type="button" className="btn-primary-glass rounded-none px-5 font-mono text-xs font-semibold uppercase tracking-wider">
-                  Subscribe →
-                </button>
-              </div>
+            {/* There was a newsletter form here that collected nothing: no
+                action, no handler, and with a single email field pressing Enter
+                still submitted it implicitly, a GET to "/?" that reloaded the
+                page and restarted the film. Until a real subscribe route exists
+                (rate-limited, with its own consent notice) the slot holds the
+                one action the headline above asks for. */}
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/trade"
+                className="btn-primary-glass inline-flex w-fit items-center gap-2 px-6 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider"
+              >
+                Open the strategy builder →
+              </Link>
               <p className="font-mono text-[0.625rem] text-fg-faint">
-                no upsells. one strategy per email. unsubscribe with <span className="text-bull">/quit</span>.
+                paper-only · $0 real money, ever
               </p>
-            </form>
+            </div>
           </div>
         </div>
       </div>
@@ -165,18 +197,25 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             <br />
             <span className="italic">Make them visible. Make them safe.</span>
           </p>
-          <div className="mt-6 flex items-center gap-2">
-            {/* No accounts published yet — render as badges, not dead links. */}
-            {["TW", "GH", "DC", "TG", "YT"].map((s) => (
-              <span
-                key={s}
-                title="Coming soon"
-                className="flex size-8 cursor-default items-center justify-center rounded-[10px] border border-border bg-bg t-chrome font-semibold text-fg-faint"
-              >
-                {s}
-              </span>
-            ))}
-          </div>
+          {/* Nothing at all when no account is configured — an empty row says
+              less than five badges saying "coming soon". See SOCIALS above. */}
+          {SOCIALS.length > 0 && (
+            <div className="mt-6 flex items-center gap-2">
+              {SOCIALS.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  aria-label={s.name}
+                  title={s.name}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex size-8 items-center justify-center rounded-[10px] border border-border bg-bg t-chrome font-semibold text-fg-faint transition-colors hover:border-bull hover:text-bull"
+                >
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
         {COLS.map((col) => (
           <div key={col.title}>
@@ -226,6 +265,11 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             <Link href="/terms" className="hover:text-fg">terms</Link>
             <span className="text-fg-faint">·</span>
             <Link href="/safety" className="hover:text-fg">safety</Link>
+            <span className="text-fg-faint">·</span>
+            {/* The withdrawal path. /privacy promises consent can be changed
+                at any time, and DPDP requires it — a promise with no control
+                behind it is the kind of thing diligence reads as theatre. */}
+            <ConsentLink />
             {/* the graveyard easter egg moved into the About column — this row
                 was clipping at 375px under the footer's overflow-hidden */}
           </div>
@@ -238,10 +282,12 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
       <div className="relative border-t border-border bg-bg">
         <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 font-mono text-[0.6875rem] leading-relaxed text-fg-dim sm:pr-5">
           LAZYBULL is an educational platform for learning about options. We do
-          not accept real funds, are not a registered broker-dealer, and do not
-          provide investment advice. Paper-trading results are simulated using
-          delayed market data and a Black-Scholes pricing model. Real options
-          trading involves substantial risk and is not suitable for every investor.
+          not accept real funds, are not a registered broker-dealer, and are not
+          registered with SEBI as an investment adviser or research analyst. Nothing
+          here is investment advice or a recommendation to trade. Paper-trading
+          results are simulated using delayed market data and a Black-Scholes
+          pricing model. Real options trading involves substantial risk and is not
+          suitable for every investor.
         </p>
       </div>
     </footer>

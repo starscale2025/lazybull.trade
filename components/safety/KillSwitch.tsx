@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useModalFocus } from "./useModalFocus";
 import { AnimatePresence, motion } from "motion/react";
 import { useSafety, usePaper } from "@/lib/stores";
 import { useTheme } from "@/lib/stores";
@@ -10,6 +11,8 @@ export function SafetySettingsButton() {
   const safety = useSafety();
   const paper = usePaper();
   const theme = useTheme();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useModalFocus(panelRef, open, { onEscape: () => setOpen(false) });
 
   return (
     <>
@@ -35,15 +38,20 @@ export function SafetySettingsButton() {
             onClick={() => setOpen(false)}
           >
             <motion.div
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="safety-panel-title"
+              tabIndex={-1}
               initial={{ scale: 0.96, y: 8 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 8 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"
+              className="relative w-full max-w-md outline-none border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"
             >
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
-                <span className="text-bull">● safety panel</span>
-                <button onClick={() => setOpen(false)} className="text-fg-faint hover:text-fg">✕</button>
+                <span id="safety-panel-title" className="text-bull">● safety panel</span>
+                <button type="button" onClick={() => setOpen(false)} aria-label="Close safety panel" className="text-fg-faint hover:text-fg">✕</button>
               </div>
               <div className="space-y-5 p-5">
                 <Toggle

@@ -9,6 +9,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { track } from "@/lib/track";
+import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
+import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 
 export type QuantSetupState = {
   symbol: string;
@@ -35,6 +37,9 @@ export function SetupsBar({
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  // The plan's saved-workspace cap (setups are workspaces) — the 402 body
+  // from lib/billing/gate.ts, rendered as the nudge rather than a failure.
+  const [nudge, setNudge] = useState<PaywallBody | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
   const say = (msg: string) => {
@@ -76,6 +81,10 @@ export function SetupsBar({
         body: JSON.stringify({ kind: "quant", name: trimmed, state: getState() }),
       });
       const j = await r.json();
+      if (isPaywall(r.status, j)) {
+        setNudge(j);
+        return;
+      }
       if (j?.ok) {
         setName("");
         say(`saved "${trimmed}"`);
@@ -140,6 +149,12 @@ export function SetupsBar({
         my setups {open ? "▴" : "▾"}
       </button>
       {note && <span className="ml-1 text-fg-faint normal-case tracking-normal">{note}</span>}
+
+      {nudge && (
+        <div className="absolute right-0 top-8 z-40 w-80 normal-case tracking-normal">
+          <UpgradeNudge paywall={nudge} onClose={() => setNudge(null)} />
+        </div>
+      )}
 
       {open && (
         <div className="absolute right-0 top-8 z-40 w-72 surface-instrument border border-border bg-surface shadow-2xl">

@@ -8,24 +8,30 @@
 // Numbering it here means a destination has the SAME number everywhere: the nav
 // used to number its 7 items by index (Pricing = 06) while the landing numbered
 // 8 incl. Portfolio (Pricing = 07), so the same link showed two different
-// numbers on one page. The first 7 entries are the numbered content pages the
-// nav rail shows (in its order); Portfolio (the account page) is entry 08 and
+// numbers on one page. The first 8 entries are the numbered content pages the
+// nav rail shows (in its order); Portfolio (the account page) is entry 09 and
 // appears only in the landing index, so it adds no conflicting number.
 export const SITE_DIRECTORY = [
   { n: "01", l: "Learn", href: "/learn", d: "zero to your first spread, in plain English" },
+  // Practice sits right after Learn because that is the story: read the
+  // chapter, then prove it on a problem. It is the free tier's daily return
+  // loop — real Python judged in the browser and on the server, a weekly
+  // timed set, streaks — so it stays top-level in the rail while Pricing
+  // folds (see components/Nav.tsx).
+  { n: "02", l: "Practice", href: "/practice", d: "48 problems across 5 tracks — write it, run it, submit it. $0 at risk" },
   // Named "Visual chain" until a review pointed out that this entry opens
   // /trade, whose own <title> is "Strategy Builder" — while the actual visual
   // chain lives at /trade/chain and is not in this list at all. The nav was
   // lying about its own front door. A destination is called what its page is
   // called; /trade/chain stays reachable from inside /trade rather than adding
-  // an eighth rail link to a bar whose overflow was hard-won.
-  { n: "02", l: "Strategy builder", href: "/trade", d: "draw your forecast — the strategies that fit it draw themselves" },
-  { n: "03", l: "Pro charts", href: "/pro", d: "the terminal: drawing tools, replay, paper trading" },
-  { n: "04", l: "Quant", href: "/quant", d: "27 bots on live or seed tape, verdicts in English" },
-  { n: "05", l: "Greeks", href: "/greeks", d: "every Greek as a picture, an AI teacher on top" },
-  { n: "06", l: "Pricing", href: "/pricing", d: "free while we build. what pro will include" },
-  { n: "07", l: "About", href: "/about", d: "why paper-only, and who's behind it" },
-  { n: "08", l: "Portfolio", href: "/portfolio", d: "your paper account — positions, wagered, history" },
+  // a ninth rail link to a bar whose overflow was hard-won.
+  { n: "03", l: "Strategy builder", href: "/trade", d: "draw your forecast — the strategies that fit it draw themselves" },
+  { n: "04", l: "Pro charts", href: "/pro", d: "the terminal: drawing tools, replay, paper trading" },
+  { n: "05", l: "Quant", href: "/quant", d: "27 teaching bots on real or seed tape — watch models agree and disagree" },
+  { n: "06", l: "Greeks", href: "/greeks", d: "every Greek as a picture, an AI teacher on top" },
+  { n: "07", l: "Pricing", href: "/pricing", d: "free while we build. what pro will include" },
+  { n: "08", l: "About", href: "/about", d: "why paper-only, and who's behind it" },
+  { n: "09", l: "Portfolio", href: "/portfolio", d: "your paper account — positions, wagered, history" },
 ] as const;
 
 // The nav rail shows the numbered content pages; Portfolio lives in the account
