@@ -101,7 +101,7 @@ export default function LearnPage() {
       reveal: "You can't tell from return alone — you need Sharpe. A's +40% might ride a 60% drawdown. Run it and see.",
     },
     consensus: {
-      question: "One bot flashes BUY at 60% confidence. How much should you trust it?",
+      question: "One bot reads UP at 60% confidence. How much should you trust it?",
       options: [{ label: "A lot" }, { label: "Barely", correct: true }, { label: "Fully" }],
       reveal: "One bot is a guess. Trust is earned when many independent models line up — toggle more and watch the tier flip.",
     },
@@ -589,14 +589,14 @@ export default function LearnPage() {
             tone="cyan"
             title="Bot"
             tldr="A trading rule. Eats a chart, spits out a verdict."
-            body="Could be 70-year-old textbook math (Black-Scholes, RSI, SMA crossover) or a 2024 neural net trained on real markets. Either way the output is the same shape: BUY / SELL / HOLD / WARN with a confidence score."
+            body="Could be 70-year-old textbook math (Black-Scholes, RSI, SMA crossover) or a 2024 neural net trained on real markets. Either way the output is the same shape: a read of the window (up, down, flat or caution) with a confidence score."
           />
           <Piece
             num="03"
             tone="amber"
             title="Workspace"
             tldr="Stack as many bots as you want."
-            body="They all see the same chart. The Output panel tallies who agreed. When 5 trend bots and 3 AI bots all flash BUY at the same time, that's a signal worth noticing."
+            body="They all see the same chart, a window that ended 60 sessions ago. The Output panel tallies who agreed, then shows what the tape did next. When 5 trend bots and 3 AI bots read the same window the same way, that agreement is worth studying, and worth checking against what followed."
           />
         </div>
       </Chapter>
@@ -749,7 +749,7 @@ export default function LearnPage() {
               <div className="text-fg-dim">Backtest return +4.2%.</div>
             </div>
             <div className="mt-4 inline-flex items-center gap-2 border border-bull/30 bg-bull/10 px-2 py-0.5 t-eyebrow text-bull">
-              BUY · 78% CONF
+              READ UP · 78% CONF
             </div>
           </div>
           <div className="relative border-l-2 border-bull bg-bull/5 p-6">
@@ -758,11 +758,11 @@ export default function LearnPage() {
               ● TEACHER · ON
             </div>
             <p className="mt-4 font-display text-lg leading-relaxed text-fg">
-              RSI is a 0-to-100 thermometer. Below 30 means everyone panicked and the price
-              is probably going to bounce. The bot just spotted three of those bounces in
-              your window —{" "}
-              <span className="italic text-bull">that&apos;s why it leans BUY</span> with high
-              confidence.
+              RSI is a 0-to-100 thermometer. Below 30 meant sellers had pushed hard and fast,
+              and three times in this window the price bounced from there. The bot counted
+              those bounces —{" "}
+              <span className="italic text-bull">that&apos;s why it reads up</span> with high
+              confidence. About this window, not the next one.
             </p>
           </div>
         </div>

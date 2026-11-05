@@ -500,7 +500,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
         a: "30/70 marks far more crossings at lower precision each; 20/80 marks few, with higher precision per marking. In trending stretches the wider band produced fewer losing markers; in choppy ones the tighter band caught more reversions. Both are one backtest away.",
       },
       {
-        q: "Why does the bot say BUY when the price is still falling?",
+        q: "Why does the bot read UP while the price is still falling?",
         a: "RSI moves on the relative strength of UP days versus DOWN days, not on absolute price. Sometimes price keeps drifting down while the down-momentum slows — that is RSI leaving oversold. The marker is about momentum turning, not about the low of the bar.",
       },
     ],

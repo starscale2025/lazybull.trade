@@ -8,6 +8,7 @@ import { SYMBOL_PRESETS, presetSignature } from "@/lib/quant/presets";
 import { track } from "@/lib/track";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
+import { HOLDOUT, READ, modelWindow, outcomeOf } from "@/lib/quant/reads";
 import { QuantHero } from "./QuantHero";
 import { useRetryCountdown } from "./RetryCountdown";
 import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
@@ -98,8 +99,10 @@ export function QuantPage() {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&tf=D`);
         const j = await r.json();
         if (cancelled) return;
-        if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
-          const tail: Candle[] = j.bars.slice(-bars).map((b: { o: number; h: number; l: number; c: number }) => ({
+        // `bars` for the models plus the HOLDOUT sessions they never see
+        // (lib/quant/reads). Too short to hold both back -> the fallback walk.
+        if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30 + HOLDOUT) {
+          const tail: Candle[] = j.bars.slice(-(bars + HOLDOUT)).map((b: { o: number; h: number; l: number; c: number }) => ({
             o: b.o, h: b.h, l: b.l, c: b.c,
           }));
           // A 30s-cached refetch must never walk the tape behind a newer tick.
@@ -151,13 +154,19 @@ export function QuantPage() {
   const liveCandles = mode === "live" && live && live.key === liveKey ? live.candles : null;
 
   const syntheticCandles = useMemo<Candle[]>(
-    () => generateCandles(bars, seed + symbol.charCodeAt(0), spotForSymbol(symbol), drift, vol),
+    () => generateCandles(bars + HOLDOUT, seed + symbol.charCodeAt(0), spotForSymbol(symbol), drift, vol),
     [bars, seed, symbol, drift, vol]
   );
   // SEED mode is a deliberate choice of the synthetic tape; in LIVE mode the
   // synthetic walk remains only as a visible fallback when the feed is down.
-  const candles = mode === "seed" ? syntheticCandles : (liveCandles ?? syntheticCandles);
-  const lastSpot = candles[candles.length - 1]?.c ?? 100;
+  const allBars = mode === "seed" ? syntheticCandles : (liveCandles ?? syntheticCandles);
+  // The models read a window that ended HOLDOUT sessions ago and never see the
+  // rest; the Output panel then shows what the price did next. Nothing here is
+  // a read of today's tape for a named stock (lib/quant/reads).
+  const candles = useMemo(() => modelWindow(allBars), [allBars]);
+  const outcome = useMemo(() => outcomeOf(candles, allBars), [candles, allBars]);
+  // Today's price: the paper-trade mark, not something the models saw.
+  const lastSpot = allBars[allBars.length - 1]?.c ?? 100;
 
   // The badge must describe the bars the bots are ACTUALLY computing on.
   // "fallback" is live mode without live data — same walk as seed, but shown
@@ -600,7 +609,7 @@ export function QuantPage() {
           <div className="surface-instrument border border-border bg-surface">
             <div className={`flex flex-wrap items-center gap-2 px-3 py-2 ${showPresetCards ? "border-b border-border-soft" : ""}`}>
               <span className="t-eyebrow text-bull">
-                ★ recommended for {symbol}
+                ★ starting stack for this tape
               </span>
               <span className="t-chrome text-fg-faint">
                 {symbolPreset.character}
@@ -690,7 +699,7 @@ export function QuantPage() {
           </div>
 
           <div className="col-span-12 h-[calc(100vh/var(--ui-zoom)-2rem)] lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh/var(--ui-zoom)-2rem)]">
-            <OutputPanel runs={rows} symbol={symbol} spot={lastSpot} beginner={beginner} ranAt={ranAt} dataSource={dataSource} />
+            <OutputPanel runs={rows} symbol={symbol} outcome={outcome} beginner={beginner} ranAt={ranAt} dataSource={dataSource} />
           </div>
         </div>
       </section>
@@ -715,13 +724,12 @@ export function QuantPage() {
 
       <ImportBotModal open={importOpen} onClose={() => setImportOpen(false)} onImport={importBot} />
 
-      {/* One-tap paper trade, fed the same candles the bots just ran on. Locked
-          in seed mode: synthetic prices must never book into the real shared
-          paper account. */}
+      {/* One-tap paper trade at today's price. Locked in seed mode: synthetic
+          prices must never book into the real shared paper account. */}
       <QuickBet
         symbol={symbol}
         spot={lastSpot}
-        candles={candles}
+        candles={allBars}
         lockReason={mode === "seed" ? "seed tape — switch to the live tape to paper-trade on it" : null}
         onUnlock={() => setMode("live")}
       />
@@ -773,7 +781,7 @@ function buildTape(rows: { def: BotDef; result: BotResult | null }[]): { text: s
   const items: { text: string; tone: string }[] = [];
   for (const r of rows) {
     if (!r.result) continue;
-    items.push({ text: `${r.def.name.toUpperCase()} → ${r.result.verdict.side.toUpperCase()}`, tone: r.result.verdict.side });
+    items.push({ text: `${r.def.name.toUpperCase()} · READ ${READ[r.result.verdict.side].toUpperCase()}`, tone: r.result.verdict.side });
   }
   if (items.length === 0) {
     return [

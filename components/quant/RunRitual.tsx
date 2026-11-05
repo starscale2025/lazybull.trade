@@ -26,6 +26,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DecimatedNumber } from "./DecimatedNumber";
 import type { ActiveBot, BotDef, BotResult, Verdict } from "@/lib/quant/types";
+import { AGGREGATE_READ, HOLDOUT, READ } from "@/lib/quant/reads";
 
 export type RunPhase = "idle" | "lockdown" | "streaming" | "decimating" | "verdict";
 
@@ -68,8 +69,8 @@ function sideColor(side: Verdict["side"]) {
         : "var(--fg-faint)";
 }
 
-/** The phosphor glow behind the verdict, in that verdict's own colour — a
-    green halo behind a red "sell." would say the opposite of the word. */
+/** The phosphor glow behind the read, in that read's own colour — a green
+    halo behind a red "leaned down." would say the opposite of the words. */
 function sideGlow(side: Verdict["side"]) {
   const rgb =
     side === "buy"
@@ -208,10 +209,10 @@ export function RunRitual({
 
   const tapeLabel =
     dataSource === "live"
-      ? `${symbol} · D · ${bars}d live tape`
+      ? `${symbol} · D · ${bars}d live tape, ending ${HOLDOUT} sessions back`
       : dataSource === "fallback"
-        ? `${symbol} · D · ${bars}d fallback tape`
-        : `${symbol} · D · ${bars}d seed tape`;
+        ? `${symbol} · D · ${bars}d fallback tape, ending ${HOLDOUT} sessions back`
+        : `${symbol} · D · ${bars}d seed tape, ending ${HOLDOUT} sessions back`;
 
   if (settled && folded) {
     return (
@@ -226,15 +227,15 @@ export function RunRitual({
             className="font-display text-lg leading-none tracking-tightest"
             style={{ color: sideColor(aggregate) }}
           >
-            {aggregate}.
+            {AGGREGATE_READ[aggregate]}.
           </span>
           <span className="t-chrome text-fg-faint">
-            <span className="text-bull">{counts.buy} buy</span> · {counts.hold} hold ·{" "}
-            <span className="text-bear">{counts.sell} sell</span>
+            <span className="text-bull">{counts.buy} {READ.buy}</span> · {counts.hold} {READ.hold} ·{" "}
+            <span className="text-bear">{counts.sell} {READ.sell}</span>
             {counts.warn > 0 && (
               <>
                 {" · "}
-                <span className="text-amber">{counts.warn} warn</span>
+                <span className="text-amber">{counts.warn} {READ.warn}</span>
               </>
             )}
           </span>
@@ -337,7 +338,7 @@ export function RunRitual({
                   textShadow: sideGlow(aggregate),
                 }}
               >
-                {aggregate}
+                {AGGREGATE_READ[aggregate]}
                 <span className="crt-flicker">.</span>
               </h2>
             ) : (
@@ -353,15 +354,15 @@ export function RunRitual({
             <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1 t-chrome text-fg-faint">
               {settled ? (
                 <>
-                  <span className="text-bull">{counts.buy} buy</span>
+                  <span className="text-bull">{counts.buy} {READ.buy}</span>
                   <span>·</span>
-                  <span>{counts.hold} hold</span>
+                  <span>{counts.hold} {READ.hold}</span>
                   <span>·</span>
-                  <span className="text-bear">{counts.sell} sell</span>
+                  <span className="text-bear">{counts.sell} {READ.sell}</span>
                   {counts.warn > 0 && (
                     <>
                       <span>·</span>
-                      <span className="text-amber">{counts.warn} warn</span>
+                      <span className="text-amber">{counts.warn} {READ.warn}</span>
                     </>
                   )}
                 </>
@@ -465,7 +466,7 @@ export function RunRitual({
                   <div
                     key={r.active.uid}
                     className={c ? "dc-cell" : undefined}
-                    title={`${r.def.name}${v ? ` · ${v}` : " · pending"}`}
+                    title={`${r.def.name}${v ? ` · read ${READ[v]}` : " · pending"}`}
                     style={{
                       height: 20,
                       border: `1px solid ${
@@ -480,8 +481,8 @@ export function RunRitual({
 
             <div className="flex items-center justify-between border-t border-border bg-bg-soft px-3 py-1.5 t-chrome text-fg-faint">
               <span>
-                <span className="text-bull">{counts.buy} buy</span> · {counts.hold} hold ·{" "}
-                <span className="text-bear">{counts.sell} sell</span>
+                <span className="text-bull">{counts.buy} {READ.buy}</span> · {counts.hold} {READ.hold} ·{" "}
+                <span className="text-bear">{counts.sell} {READ.sell}</span>
               </span>
               <span>in-process</span>
             </div>

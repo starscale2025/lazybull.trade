@@ -642,7 +642,7 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
     name: "Direction Ensemble",
     category: "ai",
     glyph: "▲▼",
-    tagline: "Will the stock be up or down 20 days from now? GBM ensemble vote.",
+    tagline: "Was the stock up or down 20 days later? A GBM ensemble votes, then the tape answers.",
     formula: "GradientBoosting · 12 levers · cross-asset features · embargo CV",
     endpoint: "/api/direction",
     module: "ai quants/models/direction/train.py",
@@ -744,7 +744,7 @@ const magnitudeReg: BotDef = aiBot<DirReq, MagRes>(
     name: "Magnitude Regression",
     category: "ai",
     glyph: "Δ%",
-    tagline: "Predicts the size of the next 20-day move, not just the sign.",
+    tagline: "Estimates the size of the 20-day move that followed, not just the sign.",
     formula: "HistGradientBoosting regressor · 5-fold ensemble",
     endpoint: "/api/magnitude",
     module: "ai quants/models/magnitude/train.py",
@@ -996,10 +996,10 @@ const quantileForecast: BotDef = aiBot<DirReq, QuantRes>(
         ],
         summary: `80% CI: [${(data.p10 * 100).toFixed(2)}%, ${(data.p90 * 100).toFixed(2)}%]. Median ${(data.p50 * 100).toFixed(2)}%. Decision: ${decision.toUpperCase()}.`,
         beginner:
-          "Most predictors give one number. This one gives three — best case (p90), worst case (p10), median (p50). Edge fires when the entire interval is on one side of zero.",
+          "Most predictors give one number. This one gives three — best case (p90), worst case (p10), median (p50). It reads a direction only when the entire interval sits on one side of zero.",
         verdict: {
           side: decision === "long" ? "buy" : decision === "short" ? "sell" : "hold",
-          text: decision === "flat" ? "Range straddles zero — no clean edge." : `${decision === "long" ? "Long" : "Short"} signal — entire 80% interval ${decision === "long" ? "above" : "below"} zero.`,
+          text: decision === "flat" ? "Range straddles zero — no clean edge." : `Read ${decision === "long" ? "up" : "down"} — the entire 80% interval sat ${decision === "long" ? "above" : "below"} zero.`,
           confidence: decision === "flat" ? 0.2 : 0.85,
         },
       };
@@ -1030,7 +1030,7 @@ const quantileForecast: BotDef = aiBot<DirReq, QuantRes>(
         beginner: "Best-case, worst-case, median — three numbers, not one.",
         verdict: {
           side: decision === "long" ? "buy" : decision === "short" ? "sell" : "hold",
-          text: decision === "flat" ? "Range straddles zero." : `${decision === "long" ? "Long" : "Short"} signal.`,
+          text: decision === "flat" ? "Range straddles zero." : `Read ${decision === "long" ? "up" : "down"}.`,
           confidence: decision === "flat" ? 0.2 : 0.85,
         },
       };
@@ -1138,7 +1138,7 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
           side: c.direction === "up" ? "buy" : c.direction === "down" ? "sell" : "hold",
           text: c.direction === "split"
             ? `Models split ${c.agree_count}/${c.n_models} — no measurable predictive lift historically.`
-            : `${bandLabel(c.tier)} — ${c.agree_count}/${c.n_models} say ${c.direction.toUpperCase()}.`,
+            : `${bandLabel(c.tier)} — ${c.agree_count}/${c.n_models} read ${c.direction}.`,
           confidence: c.tier === "ultra" ? 0.95 : c.tier === "high" ? 0.78 : c.tier === "medium" ? 0.55 : 0.3,
         },
       };
@@ -1195,7 +1195,7 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
           side: dir === "up" ? "buy" : dir === "down" ? "sell" : "hold",
           text: dir === "split"
             ? `Models split ${upVotes}↑ / ${downVotes}↓ — no measurable predictive lift historically.`
-            : `${bandLabel(tier)} — ${agree}/6 say ${dir.toUpperCase()}. Historical hit rate ${accBand} · ${HYPOTHETICAL_NOTE}.`,
+            : `${bandLabel(tier)} — ${agree}/6 read ${dir}. Historical hit rate ${accBand} · ${HYPOTHETICAL_NOTE}.`,
           confidence: tier === "ultra" ? 0.95 : tier === "high" ? 0.78 : tier === "medium" ? 0.55 : 0.3,
         },
       };

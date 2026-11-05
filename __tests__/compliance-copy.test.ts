@@ -54,6 +54,15 @@ describe("banned copy is caught", () => {
     ["bet", "Max profit $570 (model odds 62%)."],
     ["income-promise", "Defined-risk income"],
     ["income-promise", "Learn it. Backtest it. Only then trade it."],
+    // 2026-11-05 Gate A re-tribunal: what /quant and /learn printed.
+    ["verdict-token", "One bot flashes BUY at 60% confidence."],
+    ["verdict-token", "BUY · 78% CONF"],
+    ["verdict-token", "2 BUY · 1 HOLD · 1 SELL"],
+    ["verdict-token", "moderate agreement — 5/5 say UP."],
+    ["verdict-token", "SMA CROSSOVER → BUY"],
+    ["verdict-token", "the BUY / SELL / HOLD pill at the top of the cell"],
+    ["verdict-token", "value={result.verdict.side.toUpperCase()}"],
+    ["recommended-for", "★ recommended for {symbol}"],
   ])("flags %s", (id, line) => {
     expect(ids(line)).toContain(id);
   });
@@ -87,6 +96,11 @@ describe("teaching copy is left alone", () => {
     "Learn it. Backtest it. Then paper-trade it.",
     "Black-Scholes probability 62%, a model, not a forecast",
     "The models disagreed, and the split is the lesson.",
+    "moderate agreement — 5/5 read up.",
+    "2 up · 1 flat · 1 down",
+    "On-chart order ticket — SELL | qty | BUY, top-left.",
+    "placePaperOrder({ sym, side: dir === \"up\" ? \"buy\" : \"sell\" })",
+    "overstating p by 10% can double your recommended fraction",
   ])("passes: %s", (line) => {
     expect(scan(line)).toEqual([]);
   });

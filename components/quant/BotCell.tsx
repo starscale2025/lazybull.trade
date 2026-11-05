@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ActiveBot, BotDef, BotResult, ParamSpec, Tone } from "@/lib/quant/types";
 import { SOURCE_META, sourceForCategory } from "@/lib/quant/provenance";
+import { READ } from "@/lib/quant/reads";
 import { closes } from "@/lib/quant/series";
 import type { Candle } from "@/lib/candles";
 import { PriceWithOverlay, PaneLine, EquitySpark } from "./MiniViz";
@@ -319,7 +320,7 @@ export function BotCell({
                 >
                   <span className="size-1.5 rounded-full bg-current" />
                   <DecimatedNumber
-                    value={result.verdict.side.toUpperCase()}
+                    value={READ[result.verdict.side].toUpperCase()}
                     duration={DECIMATE_MS - 80}
                     active={decimating}
                   />

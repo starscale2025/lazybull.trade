@@ -1595,13 +1595,23 @@ html.lb-modal-open { overflow: hidden; }
        nothing. */
     min-height: 44px;
   }
-  /* Inline text links are the ones that actually failed: they are 16-17px tall
-     because they are type, not controls. Give them the hit area without
-     changing how they read — padding on an inline-flex box, not a min-height
-     that would push the line box around. */
-  .tap-floor a[href]:not([class*="btn"]) {
-    display: inline-flex;
-    align-items: center;
+}
+/* Inline text links are the ones that actually failed: they are 16-17px tall
+   because they are type, not controls. Give them the hit area without changing
+   how they read — padding on an inline-flex box, not a min-height that would
+   push the line box around.
+
+   In the base layer, so any display utility on the link still wins. Unlayered,
+   this beat every Tailwind utility regardless of specificity: on touch screens
+   it turned the Nav's `hidden xl:inline-flex` Portfolio link back on, which
+   pushed the menu button off a 412px screen on six routes (Gate A re-tribunal,
+   2026-11-05). It is only meant for links that carry no display of their own. */
+@layer base {
+  @media (pointer: coarse) {
+    .tap-floor a[href]:not([class*="btn"]) {
+      display: inline-flex;
+      align-items: center;
+    }
   }
 }
 

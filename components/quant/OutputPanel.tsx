@@ -1,6 +1,7 @@
 "use client";
 
 import type { BotDef, BotResult, ActiveBot, Verdict } from "@/lib/quant/types";
+import { AGGREGATE_READ, READ, type Outcome } from "@/lib/quant/reads";
 import { EquitySpark } from "./MiniViz";
 
 export type RunRow = {
@@ -12,14 +13,15 @@ export type RunRow = {
 export function OutputPanel({
   runs,
   symbol,
-  spot,
+  outcome,
   beginner,
   ranAt,
   dataSource,
 }: {
   runs: RunRow[];
   symbol: string;
-  spot: number;
+  /** What the price did after the window the models read (lib/quant/reads). */
+  outcome?: Outcome | null;
   beginner: boolean;
   /** When the last full run started — a verdict on a moving tape must say how
       old it is, because bots deliberately never re-run on their own. */
@@ -54,7 +56,8 @@ export function OutputPanel({
           </span>
         </div>
         <div className="mt-1 t-chrome text-fg-faint">
-          aggregate verdict for {symbol}
+          how the models read {symbol}
+          {outcome ? `, ${outcome.sessions} sessions back` : ""}
           {ranAt != null && completed.length > 0 && (
             <>
               {" · ran "}
@@ -73,19 +76,37 @@ export function OutputPanel({
             side={aggregate}
             counts={counts}
             confidence={conf}
-            spot={spot}
+            then={outcome?.then}
           />
         </div>
+
+        {/* The other half of every run: the models read a window that has
+            already played out, so the page can show what came next. */}
+        {completed.length > 0 && outcome && (
+          <div className="border-b border-border p-3">
+            <div className="t-chrome text-fg-faint">what the tape did next</div>
+            <p className="mt-1 text-[0.75rem] leading-relaxed text-fg">
+              The models read {symbol} up to {outcome.sessions} sessions ago, at ${outcome.then.toFixed(2)}.
+              {outcome.after20 != null && (
+                <>
+                  {" "}20 sessions later it was ${outcome.after20.toFixed(2)} (<Move from={outcome.then} to={outcome.after20} />).
+                </>
+              )}
+              {" "}On the last bar, ${outcome.now.toFixed(2)} (<Move from={outcome.then} to={outcome.now} />).
+            </p>
+            <p className="mt-1 t-chrome text-fg-faint">one window, one outcome · it says nothing about the next one</p>
+          </div>
+        )}
 
         {/* Per-bot verdicts */}
         <div className="border-b border-border p-3">
           <div className="mb-2 flex items-center justify-between t-chrome text-fg-faint">
             <span>per bot</span>
-            <span>{completed.length} verdicts</span>
+            <span>{completed.length} reads</span>
           </div>
           {completed.length === 0 && (
             <div className="grid h-16 place-items-center t-chrome text-fg-faint">
-              run bots to see verdicts
+              run bots to see their reads
             </div>
           )}
           <div className="space-y-1.5">
@@ -99,7 +120,7 @@ export function OutputPanel({
                   <div className="min-w-0">
                     <div className="truncate font-mono text-[0.6875rem] text-fg">{r.def.name}</div>
                   </div>
-                  <span className={`t-chrome ${tone}`}>{v.side}</span>
+                  <span className={`t-chrome ${tone}`}>{READ[v.side]}</span>
                 </div>
               );
             })}
@@ -198,12 +219,13 @@ function AggregateVerdict({
   side,
   counts,
   confidence,
-  spot,
+  then,
 }: {
   side: Verdict["side"];
   counts: { buy: number; sell: number; hold: number; warn: number };
   confidence: number;
-  spot: number;
+  /** Close on the last bar the models saw. */
+  then?: number;
 }) {
   const bg =
     side === "buy"
@@ -232,14 +254,12 @@ function AggregateVerdict({
   const agreeing = Math.max(counts.buy, counts.sell, counts.hold, counts.warn);
   const arcColor =
     side === "buy" ? "var(--bull)" : side === "sell" ? "var(--bear)" : side === "warn" ? "var(--amber)" : "var(--fg-dim)";
-  const mood =
-    side === "buy" ? "bullish" : side === "sell" ? "bearish" : side === "warn" ? "caution" : "mixed";
 
   return (
     <div className={`border ${bg} p-3`}>
       <div className="flex items-center justify-between t-chrome text-fg-faint">
         <span>consensus meter</span>
-        <span>spot ${spot.toFixed(2)}</span>
+        {then != null && <span>close then ${then.toFixed(2)}</span>}
       </div>
 
       {/* segmented agreement arc — one segment per completed bot, lit = the
@@ -283,19 +303,17 @@ function AggregateVerdict({
         </div>
       )}
 
-      <div className="mt-2 flex items-center justify-center gap-2">
-        <span className={`border px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-[0.2em] ${text} ${side === "buy" ? "border-bull/40" : side === "sell" ? "border-bear/40" : side === "warn" ? "border-amber/40" : "border-border"}`}>
-          {mood}
-        </span>
-        <span className={`font-display text-xl tracking-tightest ${text}`}>{side.toUpperCase()}</span>
+      {/* A read of a past window, never a trade action: no BUY or SELL here. */}
+      <div className="mt-2 flex items-center justify-center">
+        <span className={`font-display text-xl tracking-tightest ${text}`}>{AGGREGATE_READ[side]}</span>
       </div>
 
       <div className="mt-2 grid grid-cols-4 gap-px overflow-hidden border border-border bg-border">
         {[
-          { l: "buy", v: counts.buy, c: "text-bull" },
-          { l: "sell", v: counts.sell, c: "text-bear" },
-          { l: "hold", v: counts.hold, c: "text-fg-dim" },
-          { l: "warn", v: counts.warn, c: "text-amber" },
+          { l: READ.buy, v: counts.buy, c: "text-bull" },
+          { l: READ.sell, v: counts.sell, c: "text-bear" },
+          { l: READ.hold, v: counts.hold, c: "text-fg-dim" },
+          { l: READ.warn, v: counts.warn, c: "text-amber" },
         ].map((row) => (
           <div key={row.l} className="bg-bg p-2 text-center">
             <div className="t-chrome text-fg-faint">{row.l}</div>
@@ -323,6 +341,17 @@ function AggregateVerdict({
   );
 }
 
+/** A signed percentage move, coloured by sign. */
+function Move({ from, to }: { from: number; to: number }) {
+  const r = to / from - 1;
+  return (
+    <span className={r >= 0 ? "text-bull" : "text-bear"}>
+      {r >= 0 ? "+" : "−"}
+      {Math.abs(r * 100).toFixed(1)}%
+    </span>
+  );
+}
+
 function countSides(vs: Verdict[]) {
   const c = { buy: 0, sell: 0, hold: 0, warn: 0 };
   for (const v of vs) c[v.side]++;
@@ -338,15 +367,15 @@ function teacherNote(side: Verdict["side"], counts: ReturnType<typeof countSides
     return "Add a bot or two from the library, then press RUN ALL. The agreement between bots is more interesting than any single one.";
   }
   if (side === "buy" && counts.buy >= 2) {
-    return `${counts.buy} bots agree on long. When independent methods land on the same answer, that agreement is historically more informative than any single model — though it is still model output, not advice.`;
+    return `${counts.buy} bots read the window as up. Independent methods landing on the same read was historically more informative than any single model. Check it against what the tape did next, just below the meter.`;
   }
   if (side === "sell" && counts.sell >= 2) {
-    return `${counts.sell} bots lean bearish. Multiple methods pointing the same way was historically the strongest evidence this workbench produces — worth understanding why before dismissing it.`;
+    return `${counts.sell} bots read the window as down. Several methods agreeing was historically the strongest evidence this workbench produces. Check it against what the tape did next, just below the meter.`;
   }
   if (counts.buy > 0 && counts.sell > 0) {
     // "Wait for confirmation" was an instruction — the one thing these notes
     // must never give. Disagreement is a finding; describe it and stop.
-    return `Bots disagree (${counts.buy} long / ${counts.sell} short). That usually means the trend and reversion rules are reading the same bars differently — historically a sign the series was between regimes.`;
+    return `Bots disagree (${counts.buy} up / ${counts.sell} down). That usually means the trend and reversion rules are reading the same bars differently — historically a sign the series was between regimes.`;
   }
   if (btCount > 0) {
     return `The leaderboard at the top of this panel ranks your bots by realised return on this seed — one sample, one seed. It describes what happened on this tape and nothing beyond it.`;

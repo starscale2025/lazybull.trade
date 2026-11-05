@@ -93,6 +93,16 @@ const RULES = [
   { id: "income-promise", re: /\brisk income\b|\bonly then trade\b/i,
     why: "frames a short-premium position as income, or ends a lesson on 'now trade'; it is a credit with a defined loss, and the next step is a paper trade" },
 
+  // ── model output as a call (Gate A re-tribunal, 2026-11-05: /quant printed
+  // "★ recommended for AMZN" and "BUY · 5/5 say UP" beside PAPER TRADE, and the
+  // line rules above passed it, because the BUY came from verdict.side at
+  // runtime). Uppercase on purpose: lowercase buy/sell is the paper order
+  // ticket's own vocabulary on /pro and in the stores.
+  { id: "verdict-token", re: /(?:\b(?:[Ff]lash(?:es|ed)?|[Ss]ays?|[Ll]ean(?:s|ed)?|[Vv]erdict(?: is)?)|→)\s*(?:a\s+)?(?:BUY|SELL)\b|\b(?:BUY|SELL)\s*·\s*\d|\b\d+\s+(?:BUY|SELL)\b|\bBUY\s*\/\s*SELL\b|\b\d+\/\d+\s+say\s+(?:UP|DOWN)\b|\bverdict\.side\.toUpperCase\(\)/,
+    why: "prints a model's output as a trade action or a vote on the price; the workbench prints a read (up / down / flat / caution) of a window that has already played out (lib/quant/reads)" },
+  { id: "recommended-for", re: /\brecommended for\b/i,
+    why: "recommends something for a named security; say what a stack or a tool is for, not which stock it suits" },
+
   // ── demo-ware vocabulary that must not return ────────────────────────────
   { id: "seeded-fake", re: /\bseeded fake|\bSIM lamp\b|\bscripted judge\b|\bpitch prototype\b/i,
     why: "fabricated figures presented as product; make the number real or omit it" },

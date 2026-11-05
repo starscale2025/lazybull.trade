@@ -1,5 +1,8 @@
-// The two-sided read shown in the QuickBet slip: what the QUANT bots say and
-// what the pricing MODELS say, computed from the same daily bars.
+// The two-sided read the QuickBet slip USED to show: what the QUANT bots say
+// and what the pricing MODELS say, computed from the same daily bars. No page
+// renders it any more. On today's tape for a named stock, beside a trade
+// button, it was a forward-looking call (Gate A re-tribunal, 2026-11-05;
+// docs/COMPLIANCE.md (b)3). Kept, with its tests, as pure math.
 //
 // Pure functions over candles — no fetching, no store access — so the numbers
 // are unit-testable and identical wherever the slip mounts (/quant, /trade/chain).

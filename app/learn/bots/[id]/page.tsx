@@ -226,7 +226,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                   <li><code className="text-cyan">id</code> — unique key the workbench uses to find the bot.</li>
                   <li><code className="text-cyan">params</code> — the sliders + inputs you see on the cell.</li>
                   <li><code className="text-cyan">run(ctx, p)</code> — the function that gets called with candles + your params and returns the verdict.</li>
-                  <li><code className="text-cyan">verdict</code> — the BUY / SELL / HOLD pill at the top of the cell.</li>
+                  <li><code className="text-cyan">verdict</code> — the read pill at the top of the cell (up, down, flat or caution).</li>
                   <li><code className="text-cyan">metrics</code> — the small stat boxes shown in the cell body.</li>
                 </ul>
               </div>
@@ -518,5 +518,5 @@ function defaultFails(category: string): string[] {
   ];
 }
 function defaultVerdict(name: string): string {
-  return `The verdict pill summarises ${name}'s output as BUY / SELL / HOLD / WARN with a confidence score from 0 to 1. Each bot computes that confidence from its own internal signal — for a trend bot it's typically the gap between the indicator lines, for a probabilistic bot it's the deviation from the noise floor. Use it to weight ensemble votes, not as a hard threshold.`;
+  return `The read pill summarises ${name}'s output as UP, DOWN, FLAT or CAUTION, a read of the window it was shown, with a confidence score from 0 to 1. Each bot computes that confidence from its own internal signal — for a trend bot it's typically the gap between the indicator lines, for a probabilistic bot it's the deviation from the noise floor. Use it to weight ensemble votes, not as a hard threshold.`;
 }

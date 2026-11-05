@@ -2,11 +2,14 @@
 
 // The one-tap paper trade: UP or DOWN, a dollar amount, one button.
 //
-// Mounted on /quant and /trade/chain. Before you commit, the slip shows the
-// read from both halves of the product — what the quant jury says and what the
-// pricing models say. On /quant it runs on the SAME candles the page's bots
-// just ran on (so slip and page always agree there); elsewhere it fetches its
-// own daily bars.
+// Mounted on /quant and /trade/chain. It is an order ticket and nothing else.
+// It used to print "what the quants say" (N/6 bots lean UP · conf) and "what
+// the models say" (P% chance above $X in 30d) for the named stock, on today's
+// tape, directly above the UP/DOWN buttons: a stock-specific, forward-looking
+// read beside a trade button, which docs/COMPLIANCE.md (b)3 rules out (Gate A
+// re-tribunal, 2026-11-05). The models' reads live on /quant, on a window
+// that has already played out (lib/quant/reads). The bars below only supply
+// the mark when the page does not pass a spot.
 //
 // A bet books as shares on the SHARED paper account (lib/pro/paper.ts):
 // UP = buy $stake of stock, DOWN = short $stake. Same cash, same realized
@@ -14,7 +17,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { modelRead, quantRead } from "@/lib/bet-analysis";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { track } from "@/lib/track";
 import { narrate } from "@/lib/narrator";
@@ -62,9 +64,6 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
         const j = await r.json();
         if (cancelled) return;
         if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
-          // 180 to match the /quant workbench's default window — a different
-          // bar count made the SAME symbol report opposite Hurst regimes on
-          // /quant and /trade/chain at the same instant.
           setFetched(
             j.bars.slice(-180).map((b: { o: number; h: number; l: number; c: number }) => ({
               o: b.o, h: b.h, l: b.l, c: b.c,
@@ -81,15 +80,6 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
   const candles = candlesProp?.length ? candlesProp : fetched;
   const last = candles?.[candles.length - 1]?.c;
   const mark = Number.isFinite(spot) && (spot as number) > 0 ? (spot as number) : last;
-
-  // ── the two reads (memoized: the jury is cheap but not free)
-  const reads = useMemo(() => {
-    if (!candles || candles.length < 30 || !Number.isFinite(mark)) return null;
-    return {
-      quant: quantRead(candles, symbol),
-      model: modelRead(candles, mark as number, 30),
-    };
-  }, [candles, symbol, mark]);
 
   // ── context from the rest of the app
   const legs = useStrategy((s) => s.legs);
@@ -155,21 +145,10 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
       setError(res.error);
       return;
     }
-    // The analysis shown at decision time is data gold: did people bet WITH
-    // the jury or against it, and how did that go?
-    track("bet_placed", {
-      sym: symbol,
-      dir,
-      stake,
-      jury_lean: reads?.quant.lean ?? null,
-      jury_conf: reads?.quant.confidence ?? null,
-      model_p_up: reads?.model.pUp ?? null,
-    });
+    track("bet_placed", { sym: symbol, dir, stake });
     narrate(`Paper trade placed — ${dir} $${stake.toLocaleString()} on ${symbol} at ${mark.toFixed(2)}.`);
     setPlaced(`${dir === "up" ? "▲ UP" : "▼ DOWN"} $${stake.toLocaleString()} on ${symbol} @ ${mark.toFixed(2)}`);
   };
-
-  const pct = (x: number) => `${Math.round(x * 100)}%`;
 
   return (
     <DockSlot order={20}>
@@ -282,40 +261,8 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
                   </div>
                 </div>
 
-                {/* the two reads */}
+                {/* No model read here: see the header comment. */}
                 <div className="space-y-2 px-3 py-3">
-                  <div className="border border-border-soft bg-surface px-2.5 py-2">
-                    <div className="font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">what the quants say</div>
-                    {reads ? (
-                      <div className="mt-1 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
-                        <span className={reads.quant.lean === "UP" ? "text-bull" : reads.quant.lean === "DOWN" ? "text-bear" : "text-fg"}>
-                          {reads.quant.lean === "NEUTRAL"
-                            ? "jury is split"
-                            : `${Math.max(reads.quant.up, reads.quant.down)}/${reads.quant.jurySize} bots lean ${reads.quant.lean}`}
-                        </span>
-                        {reads.quant.lean !== "NEUTRAL" && <> · conf {pct(reads.quant.confidence)}</>}
-                        <br />
-                        {reads.quant.regime.toLowerCase()} regime · H {reads.quant.h.toFixed(2)}
-                      </div>
-                    ) : (
-                      <div className="mt-1 font-mono text-[0.6875rem] text-fg-faint">reading the tape…</div>
-                    )}
-                  </div>
-                  <div className="border border-border-soft bg-surface px-2.5 py-2">
-                    <div className="font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">what the models say</div>
-                    {reads ? (
-                      <div className="mt-1 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
-                        <span className={reads.model.pUp >= 0.5 ? "text-bull" : "text-bear"}>
-                          {pct(reads.model.pUp)} chance above ${(mark as number).toFixed(0)}
-                        </span>{" "}
-                        in {reads.model.days}d
-                        <br />
-                        vol {pct(reads.model.vol)} · 1σ ${reads.model.lo.toFixed(0)}–${reads.model.hi.toFixed(0)}
-                      </div>
-                    ) : (
-                      <div className="mt-1 font-mono text-[0.6875rem] text-fg-faint">pricing the range…</div>
-                    )}
-                  </div>
                   {chainNote && (
                     <div className="border border-border-soft bg-surface px-2.5 py-2">
                       <div className="font-mono text-[0.625rem] uppercase tracking-widest text-fg-faint">on your chain</div>
