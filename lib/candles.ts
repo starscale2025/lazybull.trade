@@ -15,6 +15,10 @@ export type Candle = {
   h: number;
   l: number;
   c: number;
+  /** Bar time, ms. Only real tapes carry it: the synthetic walks are undated. */
+  t?: number;
+  /** Volume, on real tapes only. */
+  v?: number;
 };
 
 export function generateCandles(

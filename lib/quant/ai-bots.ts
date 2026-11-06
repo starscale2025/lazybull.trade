@@ -7,14 +7,25 @@
 //
 // Provenance for every bot points at the python module under
 // `ai quants/models/<dir>/train.py` or `ai quants/serve.py`.
+//
+// The bots that read the tape (direction, magnitude, sequence, transformer,
+// quantile, consensus, triple-barrier) read a NAMED security, so they say
+// nothing about it that has not already played out: they read the page's
+// window, which ends HOLDOUT sessions back, and every line of their copy is
+// in the past tense. An outside result (hosted, on-device, snapshot) counts
+// only when it is dated to that window's last bar; see aiBot below and
+// lib/quant/reads. The Gate A re-run (2026-11-06) found these paths reading
+// the live tape by ticker, so /quant printed a consensus of "UP · 5/5" on
+// real AMZN beside PAPER TRADE.
 
-import type { BotDef, BotContext, BotResult, Signal, SourceId } from "./types";
+import type { BotDef, BotContext, BotResult, Signal, SourceId, Verdict } from "./types";
 import { ACCURACY_BAND, HYPOTHETICAL_NOTE } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
 import { snapshotLookup } from "./snapshot";
 import { runSequenceCnn, runTransformer } from "./onnx";
 import { sourceForCategory } from "./provenance";
+import { HOLDOUT, READ, windowEnd } from "./reads";
 
 // Base URL of the FastAPI service. Override with NEXT_PUBLIC_QUANTAI_URL.
 // NEXT_PUBLIC_* is inlined into the CLIENT bundle at build time, so an
@@ -97,9 +108,14 @@ type ApiBotConfig<TReq, TRes> = {
   request: (ctx: BotContext, p: Record<string, unknown>) => TReq;
   build: (data: TRes, ctx: BotContext, p: Record<string, unknown>) => BotResult;
   mock: (ctx: BotContext, p: Record<string, unknown>) => BotResult;
+  /** Reads the price tape, i.e. says something about a named security. Such a
+      bot takes an outside result only when it is dated to the window's last
+      bar, and its card prints that date. The option pricers don't set it. */
+  readsTape?: boolean;
   /** Optional on-device inference (onnxruntime-web) — the real model in the
-      browser, no server. Returns an API-shaped result, or null if unavailable. */
-  device?: (ctx: BotContext, p: Record<string, unknown>) => Promise<TRes | null>;
+      browser, no server, on the tape up to `end` (the window's last day).
+      Returns an API-shaped result, or null if unavailable. */
+  device?: (ctx: BotContext, p: Record<string, unknown>, end: string) => Promise<TRes | null>;
   /** Which on-device source to label when `device` runs. */
   deviceSource?: SourceId;
   /** What the non-NN fallback ACTUALLY is (exact Black-Scholes, a heuristic,
@@ -116,23 +132,34 @@ function aiBot<TReq, TRes>(
     run: async (ctx, params) => {
       const p = params as Record<string, unknown>;
       const fallback = cfg.fallbackSource ?? sourceForCategory(base.category);
-      if (!base.endpoint) return withSource(cfg.mock(ctx, p), fallback);
+      // A tape reader speaks only about the window it was given. `end` is that
+      // window's last day; an outside result dated to any other day is a read
+      // of a different window (later: it has seen the held-back sessions), so
+      // it is dropped and the stand-in reads the window instead.
+      const end = cfg.readsTape ? windowEnd(ctx.candles) : null;
+      const fits = (data: unknown) => !cfg.readsTape || (end != null && asOfOf(data) === end);
+      const dated = (r: BotResult): BotResult => (cfg.readsTape ? { ...r, asOf: windowLabel(ctx) } : r);
+      const mock = () => dated(withSource(cfg.mock(ctx, p), fallback));
+      if (!base.endpoint) return mock();
+      // An undated window is a synthetic walk: no outside read describes it.
+      if (cfg.readsTape && end == null) return mock();
       const req = cfg.request(ctx, p);
       const hz = (d: unknown) => (d as { horizon_days?: number })?.horizon_days;
       // 1. hosted API (paid tier) — only when a base URL is configured.
       if (API_BASE) {
         try {
           const data = await callApi<TRes>(base.endpoint, req);
-          return withSource(cfg.build(data, ctx, p), "hosted", "live", hz(data));
+          if (fits(data)) return dated(withSource(cfg.build(data, ctx, p), "hosted", "live", hz(data)));
         } catch {
           /* fall through */
         }
       }
       // 2. on-device NN — the real trained model in your browser (free tier).
-      if (cfg.device) {
+      //    Only the tape readers have one, and they always have an `end` here.
+      if (cfg.device && end != null) {
         try {
-          const data = await cfg.device(ctx, p);
-          if (data) return withSource(cfg.build(data, ctx, p), cfg.deviceSource ?? "device-cnn", "computed just now", hz(data));
+          const data = await cfg.device(ctx, p, end);
+          if (data && fits(data)) return dated(withSource(cfg.build(data, ctx, p), cfg.deviceSource ?? "device-cnn", "computed just now", hz(data)));
         } catch {
           /* fall through */
         }
@@ -141,15 +168,35 @@ function aiBot<TReq, TRes>(
       try {
         const ticker = (req as { ticker?: string })?.ticker;
         const snap = await snapshotLookup<TRes>(base.endpoint, ticker);
-        if (snap) return withSource(cfg.build(snap.data, ctx, p), "snapshot", snap.generated, hz(snap.data));
+        if (snap && fits(snap.data)) return dated(withSource(cfg.build(snap.data, ctx, p), "snapshot", snap.generated, hz(snap.data)));
       } catch {
         /* fall through to the client fallback */
       }
       // 4. deterministic client fallback — exact math or a heuristic per the bot.
-      return withSource(cfg.mock(ctx, p), fallback);
+      return mock();
     },
   };
 }
+
+/** The day an outside result says it was computed for, if it says. */
+function asOfOf(data: unknown): string | null {
+  const a = (data as { as_of?: unknown } | null)?.as_of;
+  return typeof a === "string" ? a.slice(0, 10) : null;
+}
+
+/** What a tape reader's card prints as its date: the window's last day, or,
+    on an undated (synthetic) tape, where the window ends. */
+function windowLabel(ctx: BotContext): string {
+  return windowEnd(ctx.candles) ?? `${HOLDOUT} sessions back`;
+}
+
+/** The read a model's lean prints as, from the same thresholds the verdict
+    uses. */
+const sideOf = (x: number, up: number, down: number): Verdict["side"] =>
+  x > up ? "buy" : x < down ? "sell" : "hold";
+
+/** A signed percentage: "+2.10%", "−0.85%". */
+const signedPct = (x: number, d = 2) => `${x >= 0 ? "+" : "−"}${Math.abs(x * 100).toFixed(d)}%`;
 
 const num = (p: Record<string, unknown>, k: string, d: number) => {
   const v = p[k];
@@ -620,9 +667,12 @@ const hestonSurrogate: BotDef = aiBot<HestonReq, BSRes>(
 );
 
 // ─────────────── Direction-style requests share this shape ───────────────
-type DirReq = { ticker: string; period: string };
+// `as_of` asks the service to read the tape only up to the window's last day.
+// The service may not honour it yet; aiBot drops any answer not dated to it.
+type DirReq = { ticker: string; period: string; as_of?: string };
 function dirRequest(ctx: BotContext, _p: Record<string, unknown>): DirReq {
-  return { ticker: ctx.symbol.toUpperCase(), period: "2y" };
+  const end = windowEnd(ctx.candles);
+  return { ticker: ctx.symbol.toUpperCase(), period: "2y", ...(end ? { as_of: end } : {}) };
 }
 
 // ─────────────── Direction Ensemble — /api/direction ───────────────
@@ -653,10 +703,11 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
   },
   {
     request: dirRequest,
+    readsTape: true,
     build: (data) => {
       const pUp = data.p_up;
-      const label = data.prediction.toUpperCase();
       const band = data.conviction_band;
+      const side = sideOf(pUp, 0.6, 0.4);
       // `data.expected_accuracy` is still sent by the service and is
       // deliberately not read: it is a per-band figure, and printing a number
       // that rises with agreement is the grade-scale reading this rewrite
@@ -666,19 +717,20 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
       return {
         signals: [],
         metrics: [
-          { key: "p", label: "P(up)", value: `${(pUp * 100).toFixed(1)}%`, tone: pUp > 0.5 ? "bull" : "bear" },
-          { key: "label", label: "Direction", value: label, tone: pUp > 0.5 ? "bull" : "bear" },
+          // A score, not a chance: P(up) for sessions that have already
+          // played out, printed as the 0–1 model output it is.
+          { key: "p", label: "Ensemble score", value: pUp.toFixed(2), tone: pUp > 0.5 ? "bull" : "bear", hint: "the ensemble's up-probability output for the sessions after the window · 0.50 = no lean" },
           { key: "band", label: "Model agreement", value: bandLabel(band), tone: band === "ultra" || band === "extreme" ? "bull" : band === "high" ? "info" : "neutral" },
           { key: "std", label: "Ensemble σ", value: fmtNum(data.ensemble_std, 3), tone: data.ensemble_std < 0.05 ? "bull" : "neutral", hint: "lower σ = models agree" },
           { key: "exp", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "size", label: "Ensemble", value: `${data.ensemble_size} models`, tone: "neutral" },
         ],
-        summary: `Real ensemble of ${data.ensemble_size} GBMs on ${data.ticker} says ${label} (P=${(pUp * 100).toFixed(1)}%) for ${data.horizon_days}d — ${bandLabel(band)}. Embargoed CV hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
+        summary: `${data.ensemble_size} GBMs read the ${data.horizon_days} sessions after this window as ${READ[side]} (score ${pUp.toFixed(2)}, ${bandLabel(band)}). Embargoed CV hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
         beginner:
-          "Boosted-tree models each vote on whether the stock will be up or down 20 days from now. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
+          "Boosted-tree models each voted on whether the stock finished up or down 20 sessions after the window. The page shows what it actually did. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
         verdict: {
-          side: pUp > 0.6 ? "buy" : pUp < 0.4 ? "sell" : "hold",
-          text: `${(pUp * 100).toFixed(0)}% chance ${data.prediction} — ${bandLabel(band)}. Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
+          side,
+          text: `${bandLabel(band)} across ${data.ensemble_size} models, on a window that has already played out.`,
           confidence: Math.min(1, conviction * 4),
         },
       };
@@ -700,28 +752,25 @@ const directionEnsemble: BotDef = aiBot<DirReq, DirRes>(
       const std = Math.sqrt(probs.reduce((a, b) => a + (b - pUp) ** 2, 0) / probs.length);
       const conviction = Math.abs(pUp - 0.5);
       const band = conviction > 0.20 ? "ultra" : conviction > 0.15 ? "extreme" : conviction > 0.07 ? "high" : "low";
-      // Capped to the canonical out-of-sample band. These four numbers were
-      // 0.77 / 0.66 / 0.61 / 0.555 — a top figure that no walk-forward run in
-      // `ai quants/README.md` supports, printed on the HEURISTIC path, i.e.
-      // the one shown when the real service is unreachable. A stand-in must
+      const side = sideOf(pUp, 0.6, 0.4);
+      // One band, the same at every agreement level (ACCURACY_BAND, ./types).
+      // This stand-in used to print its own ladder, topping out at 0.77, which
+      // no walk-forward run in `ai quants/README.md` supports. A stand-in must
       // never quote a better number than the model it stands in for.
-      const expAcc = band === "ultra" ? 0.66 : band === "extreme" ? 0.63 : band === "high" ? 0.60 : 0.555;
-      const label: "up" | "down" = pUp > 0.5 ? "up" : "down";
       return {
         signals: [],
         metrics: [
-          { key: "p", label: "P(up)", value: `${(pUp * 100).toFixed(1)}%`, tone: pUp > 0.5 ? "bull" : "bear" },
-          { key: "label", label: "Direction", value: label.toUpperCase(), tone: label === "up" ? "bull" : "bear" },
+          { key: "p", label: "Ensemble score", value: pUp.toFixed(2), tone: pUp > 0.5 ? "bull" : "bear", hint: "the stand-in ensemble's up-probability output for the sessions after the window · 0.50 = no lean" },
           { key: "band", label: "Model agreement", value: bandLabel(band), tone: band === "ultra" || band === "extreme" ? "bull" : band === "high" ? "info" : "neutral" },
           { key: "std", label: "Ensemble σ", value: fmtNum(std, 3), tone: std < 0.05 ? "bull" : "neutral", hint: "lower σ = models agree" },
-          { key: "exp", label: "Historical hit rate (hypothetical)", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info", hint: HYPOTHETICAL_NOTE },
+          { key: "exp", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "rv", label: "Realised vol", value: `${(rv * 100).toFixed(0)}%`, tone: "neutral" },
         ],
-        summary: `Ensemble of ${probs.length} GBMs says ${label.toUpperCase()} (P=${(pUp * 100).toFixed(1)}%) for ${horizon}d — ${bandLabel(band)}.`,
-        beginner: "Boosted-tree models each vote on direction. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
+        summary: `The stand-in ensemble of ${probs.length} read the ${horizon} sessions after this window as ${READ[side]} (score ${pUp.toFixed(2)}, ${bandLabel(band)}).`,
+        beginner: "Boosted-tree models each voted on which way the stock went in the sessions after the window. Historically, tighter agreement (low σ) meant the ensemble was more often right.",
         verdict: {
-          side: pUp > 0.6 ? "buy" : pUp < 0.4 ? "sell" : "hold",
-          text: `${(pUp * 100).toFixed(0)}% chance ${label} — ${bandLabel(band)}.`,
+          side,
+          text: `${bandLabel(band)} across ${probs.length} models, on a window that has already played out.`,
           confidence: Math.min(1, conviction * 4),
         },
       };
@@ -755,26 +804,28 @@ const magnitudeReg: BotDef = aiBot<DirReq, MagRes>(
   },
   {
     request: dirRequest,
+    readsTape: true,
     build: (data, _ctx, p) => {
       const expRet = data.expected_return;
       const macro = p["macro"] !== false;
       const band = data.magnitude_band;
-      const expAcc = data.expected_dir_accuracy;
+      // `data.expected_dir_accuracy` is a per-band figure, like direction's
+      // `expected_accuracy`, and is not read for the same reason: one band at
+      // every agreement level (./types).
       return {
         signals: [],
         metrics: [
-          { key: "exp", label: "Expected return", value: `${(expRet * 100).toFixed(2)}%`, tone: expRet > 0 ? "bull" : "bear" },
-          { key: "band", label: "Agreement", value: BAND_LABEL[band] ?? band, tone: "info" },
-          { key: "dir", label: "Direction", value: data.direction.toUpperCase(), tone: data.direction === "up" ? "bull" : "bear" },
+          { key: "exp", label: `${data.horizon_days}d estimate`, value: signedPct(expRet), tone: expRet > 0 ? "bull" : "bear", hint: "the model's estimate for the sessions after the window" },
+          { key: "band", label: "Agreement", value: bandLabel(band), tone: "info" },
           { key: "std", label: "Ensemble σ", value: fmtNum(data.ensemble_std, 3) },
-          { key: "exp_acc", label: "Historical hit rate (hypothetical)", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info", hint: HYPOTHETICAL_NOTE },
+          { key: "exp_acc", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "macro", label: "Macro features", value: macro ? "ON" : "OFF", tone: macro ? "bull" : "neutral" },
         ],
-        summary: `Real model estimates ${(expRet * 100).toFixed(2)}% over ${data.horizon_days}d (${band}). ${macro ? "Macro features on" : "Pure price"}. Historical hit rate ${(expAcc * 100).toFixed(0)}% · ${HYPOTHETICAL_NOTE}.`,
-        beginner: "Beyond direction — this one estimates how BIG the move would be. A model that leans up on a 0.4% estimate is saying almost nothing.",
+        summary: `The model estimated ${signedPct(expRet)} for the ${data.horizon_days} sessions after this window (${bandLabel(band)}). ${macro ? "Macro features on" : "Pure price"}. Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
+        beginner: "Beyond direction: this one estimated how big the move after the window was. A model that leaned up on a 0.4% estimate was saying almost nothing.",
         verdict: {
-          side: expRet > 0.02 ? "buy" : expRet < -0.02 ? "sell" : "hold",
-          text: `Expected ${(expRet * 100).toFixed(2)}% over ${data.horizon_days}d (${band}).`,
+          side: sideOf(expRet, 0.02, -0.02),
+          text: `Estimated ${signedPct(expRet)} for the ${data.horizon_days} sessions after the window (${bandLabel(band)}).`,
           confidence: Math.min(1, Math.abs(expRet) * 12),
         },
       };
@@ -789,25 +840,22 @@ const magnitudeReg: BotDef = aiBot<DirReq, MagRes>(
       const rand = seedRand(seed);
       const expRet = trend * 0.6 + (rand() - 0.5) * rv * 0.4;
       const std = rv * 0.18;
-      const dir = expRet > 0 ? "up" : "down";
       const absMag = Math.abs(expRet);
       const band = absMag > 0.07 ? "ultra" : absMag > 0.045 ? "extreme" : absMag > 0.027 ? "high" : absMag > 0.015 ? "medium" : "low";
-      const expAcc = band === "ultra" ? 0.66 : band === "extreme" ? 0.64 : band === "high" ? 0.61 : band === "medium" ? 0.60 : 0.555;
       return {
         signals: [],
         metrics: [
-          { key: "exp", label: "Expected return", value: `${(expRet * 100).toFixed(2)}%`, tone: expRet > 0 ? "bull" : "bear" },
-          { key: "band", label: "Agreement", value: BAND_LABEL[band] ?? band, tone: "info" },
-          { key: "dir", label: "Direction", value: dir.toUpperCase(), tone: dir === "up" ? "bull" : "bear" },
+          { key: "exp", label: `${horizon}d estimate`, value: signedPct(expRet), tone: expRet > 0 ? "bull" : "bear", hint: "the stand-in's estimate for the sessions after the window" },
+          { key: "band", label: "Agreement", value: bandLabel(band), tone: "info" },
           { key: "std", label: "Ensemble σ", value: fmtNum(std, 3) },
-          { key: "exp_acc", label: "Historical hit rate (hypothetical)", value: `${(expAcc * 100).toFixed(0)}%`, tone: "info", hint: HYPOTHETICAL_NOTE },
+          { key: "exp_acc", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
           { key: "macro", label: "Macro features", value: macro ? "ON" : "OFF", tone: macro ? "bull" : "neutral" },
         ],
-        summary: `Estimates ${(expRet * 100).toFixed(2)}% over ${horizon}d (${band}). Historical hit rate ${(expAcc * 100).toFixed(0)}% · ${HYPOTHETICAL_NOTE}.`,
-        beginner: "Beyond direction — this one estimates how BIG the move would be.",
+        summary: `The stand-in estimated ${signedPct(expRet)} for the ${horizon} sessions after this window (${bandLabel(band)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
+        beginner: "Beyond direction: this one estimated how big the move after the window was.",
         verdict: {
-          side: expRet > 0.02 ? "buy" : expRet < -0.02 ? "sell" : "hold",
-          text: `Expected ${(expRet * 100).toFixed(2)}% over ${horizon}d (${band}).`,
+          side: sideOf(expRet, 0.02, -0.02),
+          text: `Estimated ${signedPct(expRet)} for the ${horizon} sessions after the window (${bandLabel(band)}).`,
           confidence: Math.min(1, absMag * 12),
         },
       };
@@ -816,14 +864,14 @@ const magnitudeReg: BotDef = aiBot<DirReq, MagRes>(
 );
 
 // ─────────────── 1D CNN Sequence — /api/sequence ───────────────
-type SeqRes = { expected_return: number; direction: "up" | "down"; horizon_days: number };
+type SeqRes = { expected_return: number; direction: "up" | "down"; horizon_days: number; as_of?: string };
 const sequenceCnn: BotDef = aiBot<DirReq, SeqRes>(
   {
     id: "ai-sequence",
     name: "1D CNN (Sequence)",
     category: "ai",
     glyph: "▰",
-    tagline: "Reads the last 60 raw OHLCV candles like an image.",
+    tagline: "Reads the window's last 60 raw OHLCV candles like an image.",
     formula: "Conv1d → GAP → linear · trained on shape, not features",
     endpoint: "/api/sequence",
     module: "ai quants/models/sequence/train.py",
@@ -833,12 +881,13 @@ const sequenceCnn: BotDef = aiBot<DirReq, SeqRes>(
   },
   {
     request: dirRequest,
+    readsTape: true,
     // Free tier: run the real CNN on the user's machine (onnxruntime-web).
     deviceSource: "device-cnn",
-    device: async (ctx) => {
-      const res = await runSequenceCnn(ctx.symbol.toUpperCase());
+    device: async (ctx, _p, end) => {
+      const res = await runSequenceCnn(ctx.symbol.toUpperCase(), end);
       return res
-        ? { expected_return: res.expectedReturn, direction: res.direction, horizon_days: 20 }
+        ? { expected_return: res.expectedReturn, direction: res.direction, horizon_days: 20, as_of: res.asOf }
         : null;
     },
     build: (data) => {
@@ -846,17 +895,16 @@ const sequenceCnn: BotDef = aiBot<DirReq, SeqRes>(
       return {
         signals: [],
         metrics: [
-          { key: "pred", label: "20d return", value: `${(pred * 100).toFixed(2)}%`, tone: pred > 0 ? "bull" : "bear" },
-          { key: "dir", label: "Direction", value: data.direction.toUpperCase(), tone: data.direction === "up" ? "bull" : "bear" },
+          { key: "pred", label: "20d estimate", value: signedPct(pred), tone: pred > 0 ? "bull" : "bear", hint: "the model's estimate for the 20 sessions after the window" },
           { key: "lookback", label: "Window", value: "60d OHLCV" },
           { key: "model", label: "Architecture", value: "Conv1d → GAP → Linear", tone: "info" },
         ],
-        summary: `1D CNN reads the last 60 bars and outputs ${(pred * 100).toFixed(2)}% expected 20d return.`,
+        summary: `The 1D CNN read the window's last 60 bars and estimated ${signedPct(pred)} for the 20 sessions after it.`,
         beginner:
-          "We treat the last 60 days of price data like an image and run a small convolutional network across it.",
+          "We treat 60 days of price data like an image and run a small convolutional network across it.",
         verdict: {
-          side: pred > 0.015 ? "buy" : pred < -0.015 ? "sell" : "hold",
-          text: `CNN sees a ${(pred * 100).toFixed(2)}% setup over the next 20 days.`,
+          side: sideOf(pred, 0.015, -0.015),
+          text: `Estimated ${signedPct(pred)} for the 20 sessions after the window.`,
           confidence: Math.min(1, Math.abs(pred) * 15),
         },
       };
@@ -871,16 +919,15 @@ const sequenceCnn: BotDef = aiBot<DirReq, SeqRes>(
       return {
         signals: [],
         metrics: [
-          { key: "pred", label: "20d return", value: `${(pred * 100).toFixed(2)}%`, tone: pred > 0 ? "bull" : "bear" },
-          { key: "dir", label: "Direction", value: pred > 0 ? "UP" : "DOWN", tone: pred > 0 ? "bull" : "bear" },
+          { key: "pred", label: "20d estimate", value: signedPct(pred), tone: pred > 0 ? "bull" : "bear", hint: "the stand-in's estimate for the 20 sessions after the window" },
           { key: "lookback", label: "Window", value: `${lookback}d OHLCV` },
-          { key: "shape", label: "Detected pattern", value: trend > 0.05 ? "uptrend" : trend < -0.05 ? "downtrend" : "chop", tone: "info" },
+          { key: "shape", label: "Window shape", value: trend > 0.05 ? "uptrend" : trend < -0.05 ? "downtrend" : "chop", tone: "info" },
         ],
-        summary: `1D CNN (TS mock) suggests ${(pred * 100).toFixed(2)}% over 20d.`,
-        beginner: "We treat the last 60 days of price data like an image and run a CNN.",
+        summary: `The stand-in estimated ${signedPct(pred)} for the 20 sessions after the window.`,
+        beginner: "We treat 60 days of price data like an image and run a CNN.",
         verdict: {
-          side: pred > 0.015 ? "buy" : pred < -0.015 ? "sell" : "hold",
-          text: `CNN sees a ${(pred * 100).toFixed(2)}% setup over the next 20 days.`,
+          side: sideOf(pred, 0.015, -0.015),
+          text: `Estimated ${signedPct(pred)} for the 20 sessions after the window.`,
           confidence: Math.min(1, Math.abs(pred) * 15),
         },
       };
@@ -905,12 +952,13 @@ const transformerSeq: BotDef = aiBot<DirReq, SeqRes>(
   },
   {
     request: dirRequest,
+    readsTape: true,
     // Free tier: run the real transformer on the user's machine (onnxruntime-web).
     deviceSource: "device-transformer",
-    device: async (ctx) => {
-      const res = await runTransformer(ctx.symbol.toUpperCase());
+    device: async (ctx, _p, end) => {
+      const res = await runTransformer(ctx.symbol.toUpperCase(), end);
       return res
-        ? { expected_return: res.expectedReturn, direction: res.direction, horizon_days: 20 }
+        ? { expected_return: res.expectedReturn, direction: res.direction, horizon_days: 20, as_of: res.asOf }
         : null;
     },
     build: (data) => {
@@ -918,17 +966,16 @@ const transformerSeq: BotDef = aiBot<DirReq, SeqRes>(
       return {
         signals: [],
         metrics: [
-          { key: "pred", label: "20d return", value: `${(pred * 100).toFixed(2)}%`, tone: pred > 0 ? "bull" : "bear" },
-          { key: "dir", label: "Direction", value: data.direction.toUpperCase(), tone: data.direction === "up" ? "bull" : "bear" },
+          { key: "pred", label: "20d estimate", value: signedPct(pred), tone: pred > 0 ? "bull" : "bear", hint: "the model's estimate for the 20 sessions after the window" },
           { key: "lookback", label: "Window", value: "252d" },
           { key: "model", label: "Architecture", value: "TransformerEncoder · 4 heads · 2 layers", tone: "info" },
         ],
-        summary: `Transformer attends over 252 days. Predicts ${(pred * 100).toFixed(2)}% over the next 20d.`,
+        summary: `The transformer attended over the 252 days up to the window's end and estimated ${signedPct(pred)} for the 20 sessions after it.`,
         beginner:
           "Same architecture that powers ChatGPT, applied to a year of price data. Attention focuses on the right days — earnings, vol spikes, regime changes.",
         verdict: {
-          side: pred > 0.015 ? "buy" : pred < -0.015 ? "sell" : "hold",
-          text: `Transformer expects ${(pred * 100).toFixed(2)}% in 20d.`,
+          side: sideOf(pred, 0.015, -0.015),
+          text: `Estimated ${signedPct(pred)} for the 20 sessions after the window.`,
           confidence: Math.min(1, Math.abs(pred) * 15),
         },
       };
@@ -944,16 +991,15 @@ const transformerSeq: BotDef = aiBot<DirReq, SeqRes>(
       return {
         signals: [],
         metrics: [
-          { key: "pred", label: "20d return", value: `${(pred * 100).toFixed(2)}%`, tone: pred > 0 ? "bull" : "bear" },
-          { key: "dir", label: "Direction", value: pred > 0 ? "UP" : "DOWN", tone: pred > 0 ? "bull" : "bear" },
+          { key: "pred", label: "20d estimate", value: signedPct(pred), tone: pred > 0 ? "bull" : "bear", hint: "the stand-in's estimate for the 20 sessions after the window" },
           { key: "lookback", label: "Window", value: `${lookback}d` },
           { key: "regime", label: "Vol regime", value: rv > 0.3 ? "high" : "low", tone: rv > 0.3 ? "warn" : "neutral" },
         ],
-        summary: `Transformer (TS mock) expects ${(pred * 100).toFixed(2)}% in 20d, vol regime ${(rv * 100).toFixed(0)}%.`,
+        summary: `The stand-in estimated ${signedPct(pred)} for the 20 sessions after the window, whose vol ran at ${(rv * 100).toFixed(0)}%.`,
         beginner: "Attention over a year of OHLCV. The Python model is the real one.",
         verdict: {
-          side: pred > 0.015 ? "buy" : pred < -0.015 ? "sell" : "hold",
-          text: `Transformer expects ${(pred * 100).toFixed(2)}% in 20d.`,
+          side: sideOf(pred, 0.015, -0.015),
+          text: `Estimated ${signedPct(pred)} for the 20 sessions after the window.`,
           confidence: Math.min(1, Math.abs(pred) * 15),
         },
       };
@@ -965,7 +1011,11 @@ const transformerSeq: BotDef = aiBot<DirReq, SeqRes>(
 type QuantRes = {
   p10: number; p50: number; p90: number;
   uncertainty_width: number;
+  // Sent by the service and only ever read as the side of the read: the card
+  // never prints it (a printed decision of LONG was a trade call on a named
+  // stock).
   decision: "long" | "short" | "flat";
+  horizon_days?: number;
 };
 const quantileForecast: BotDef = aiBot<DirReq, QuantRes>(
   {
@@ -983,23 +1033,24 @@ const quantileForecast: BotDef = aiBot<DirReq, QuantRes>(
   },
   {
     request: dirRequest,
-    build: (data) => {
+    readsTape: true,
+    build: (data, _ctx, p) => {
       const decision = data.decision;
+      const horizon = data.horizon_days ?? num(p, "horizon", 20);
       return {
         signals: [],
         metrics: [
-          { key: "p10", label: "p10 (worst)", value: `${(data.p10 * 100).toFixed(2)}%`, tone: "bear" },
-          { key: "p50", label: "p50 (median)", value: `${(data.p50 * 100).toFixed(2)}%`, tone: data.p50 > 0 ? "bull" : "bear" },
-          { key: "p90", label: "p90 (best)", value: `${(data.p90 * 100).toFixed(2)}%`, tone: "bull" },
-          { key: "width", label: "80% CI width", value: `${(data.uncertainty_width * 100).toFixed(2)}%`, tone: "info" },
-          { key: "decision", label: "Edge", value: decision.toUpperCase(), tone: decision === "long" ? "bull" : decision === "short" ? "bear" : "neutral" },
+          { key: "p10", label: "p10 (low case)", value: signedPct(data.p10), tone: "bear" },
+          { key: "p50", label: "p50 (median)", value: signedPct(data.p50), tone: data.p50 > 0 ? "bull" : "bear" },
+          { key: "p90", label: "p90 (high case)", value: signedPct(data.p90), tone: "bull" },
+          { key: "width", label: "80% range width", value: `${(data.uncertainty_width * 100).toFixed(2)}%`, tone: "info" },
         ],
-        summary: `80% CI: [${(data.p10 * 100).toFixed(2)}%, ${(data.p90 * 100).toFixed(2)}%]. Median ${(data.p50 * 100).toFixed(2)}%. Decision: ${decision.toUpperCase()}.`,
+        summary: `The model's 80% range for the ${horizon} sessions after this window ran from ${signedPct(data.p10)} to ${signedPct(data.p90)}, median ${signedPct(data.p50)}.`,
         beginner:
-          "Most predictors give one number. This one gives three — best case (p90), worst case (p10), median (p50). It reads a direction only when the entire interval sits on one side of zero.",
+          "Most predictors give one number. This one gave three for the sessions after the window: a low case (p10), the median (p50) and a high case (p90). It read a direction only when the whole range sat on one side of zero.",
         verdict: {
           side: decision === "long" ? "buy" : decision === "short" ? "sell" : "hold",
-          text: decision === "flat" ? "Range straddles zero — no clean edge." : `Read ${decision === "long" ? "up" : "down"} — the entire 80% interval sat ${decision === "long" ? "above" : "below"} zero.`,
+          text: decision === "flat" ? "The 80% range straddled zero." : `Read ${decision === "long" ? "up" : "down"}: the whole 80% range sat ${decision === "long" ? "above" : "below"} zero.`,
           confidence: decision === "flat" ? 0.2 : 0.85,
         },
       };
@@ -1016,22 +1067,21 @@ const quantileForecast: BotDef = aiBot<DirReq, QuantRes>(
       const p10 = center - spread;
       const p50 = center;
       const p90 = center + spread;
-      const decision = p10 > 0 ? "long" : p90 < 0 ? "short" : "flat";
+      const side: Verdict["side"] = p10 > 0 ? "buy" : p90 < 0 ? "sell" : "hold";
       return {
         signals: [],
         metrics: [
-          { key: "p10", label: "p10 (worst)", value: `${(p10 * 100).toFixed(2)}%`, tone: "bear" },
-          { key: "p50", label: "p50 (median)", value: `${(p50 * 100).toFixed(2)}%`, tone: p50 > 0 ? "bull" : "bear" },
-          { key: "p90", label: "p90 (best)", value: `${(p90 * 100).toFixed(2)}%`, tone: "bull" },
-          { key: "width", label: "80% CI width", value: `${((p90 - p10) * 100).toFixed(2)}%`, tone: "info" },
-          { key: "decision", label: "Edge", value: decision.toUpperCase(), tone: decision === "long" ? "bull" : decision === "short" ? "bear" : "neutral" },
+          { key: "p10", label: "p10 (low case)", value: signedPct(p10), tone: "bear" },
+          { key: "p50", label: "p50 (median)", value: signedPct(p50), tone: p50 > 0 ? "bull" : "bear" },
+          { key: "p90", label: "p90 (high case)", value: signedPct(p90), tone: "bull" },
+          { key: "width", label: "80% range width", value: `${((p90 - p10) * 100).toFixed(2)}%`, tone: "info" },
         ],
-        summary: `80% CI: [${(p10 * 100).toFixed(2)}%, ${(p90 * 100).toFixed(2)}%]. Decision: ${decision.toUpperCase()}.`,
-        beginner: "Best-case, worst-case, median — three numbers, not one.",
+        summary: `The stand-in's 80% range for the ${horizon} sessions after this window ran from ${signedPct(p10)} to ${signedPct(p90)}.`,
+        beginner: "A low case, a high case and the median: three numbers, not one.",
         verdict: {
-          side: decision === "long" ? "buy" : decision === "short" ? "sell" : "hold",
-          text: decision === "flat" ? "Range straddles zero." : `Read ${decision === "long" ? "up" : "down"}.`,
-          confidence: decision === "flat" ? 0.2 : 0.85,
+          side,
+          text: side === "hold" ? "The 80% range straddled zero." : `Read ${READ[side]}.`,
+          confidence: side === "hold" ? 0.2 : 0.85,
         },
       };
     },
@@ -1064,34 +1114,40 @@ const tripleBarrier: BotDef = {
     const pHitBot = (1 - pUp) * 0.7;
     const pTimeOut = 1 - pHitTop - pHitBot;
     const label = pHitTop > pHitBot && pHitTop > pTimeOut ? "+1 (TP)" : pHitBot > pTimeOut ? "−1 (SL)" : "0 (TO)";
-    return withSource(
-      {
-        signals: [],
-        metrics: [
-          { key: "pTop", label: "P(profit)", value: `${(pHitTop * 100).toFixed(0)}%`, tone: "bull" },
-          { key: "pBot", label: "P(stop)", value: `${(pHitBot * 100).toFixed(0)}%`, tone: "bear" },
-          { key: "pTime", label: "P(time-out)", value: `${(Math.max(0, pTimeOut) * 100).toFixed(0)}%`, tone: "neutral" },
-          { key: "label", label: "Most likely label", value: label, tone: label.startsWith("+") ? "bull" : label.startsWith("−") ? "bear" : "neutral" },
-          { key: "ptSl", label: "PT/SL × σ", value: ptSl.toFixed(1), tone: "info" },
-          { key: "rv", label: "σ used", value: `${(rv * 100).toFixed(0)}%`, tone: "neutral" },
-        ],
-        summary: `Setting profit target = stop-loss = ${ptSl.toFixed(1)}× ${(rv * 100).toFixed(0)}% vol over ${horizon}d. Most likely outcome: ${label}.`,
-        beginner:
-          "De Prado's idea: instead of asking 'will the price be up?', ask 'will it hit my +5% target before -5% stop, or neither?'. Better-labelled training data = smarter models.",
-        verdict: {
-          side: pHitTop > pHitBot * 1.4 ? "buy" : pHitBot > pHitTop * 1.4 ? "sell" : "hold",
-          text: `Most likely outcome: ${label}.`,
-          confidence: Math.abs(pHitTop - pHitBot),
+    return {
+      ...withSource(
+        {
+          signals: [],
+          // Shares of the label the model gave the sessions after the window,
+          // not the chances of anything: those sessions have already happened.
+          metrics: [
+            { key: "pTop", label: "Target first", value: `${(pHitTop * 100).toFixed(0)}%`, tone: "bull" },
+            { key: "pBot", label: "Stop first", value: `${(pHitBot * 100).toFixed(0)}%`, tone: "bear" },
+            { key: "pTime", label: "Timed out", value: `${(Math.max(0, pTimeOut) * 100).toFixed(0)}%`, tone: "neutral" },
+            { key: "label", label: "Likeliest label", value: label, tone: label.startsWith("+") ? "bull" : label.startsWith("−") ? "bear" : "neutral" },
+            { key: "ptSl", label: "PT/SL × σ", value: ptSl.toFixed(1), tone: "info" },
+            { key: "rv", label: "σ used", value: `${(rv * 100).toFixed(0)}%`, tone: "neutral" },
+          ],
+          summary: `Target = stop = ${ptSl.toFixed(1)}× the window's ${(rv * 100).toFixed(0)}% vol, over ${horizon} sessions. The likeliest label for the sessions after this window was ${label}.`,
+          beginner:
+            "De Prado's idea: instead of asking 'was the price up?', ask 'did it touch a +5% target before a −5% stop, or neither?'. Better-labelled training data makes smarter models.",
+          verdict: {
+            side: pHitTop > pHitBot * 1.4 ? "buy" : pHitBot > pHitTop * 1.4 ? "sell" : "hold",
+            text: `Likeliest label after the window: ${label}.`,
+            confidence: Math.abs(pHitTop - pHitBot),
+          },
         },
-      },
-      "statistical",
-    );
+        "statistical",
+      ),
+      asOf: windowLabel(ctx),
+    };
   },
 };
 
 // ─────────────── 6-Model Consensus — /api/consensus ───────────────
 type ConsRes = {
   ticker: string;
+  as_of?: string;
   consensus: {
     n_models: number;
     agree_count: number;
@@ -1105,10 +1161,12 @@ type ConsRes = {
 const consensus: BotDef = aiBot<DirReq, ConsRes>(
   {
     id: "ai-consensus",
-    name: "6-Model Consensus",
+    // Not "6-Model": the service runs five or six depending on the ticker,
+    // and a card named for six that reports 5/5 reads as a mistake.
+    name: "Model Consensus",
     category: "ai",
     glyph: "⌬",
-    tagline: "All AI quants vote. Watch where they agree — and where they don't.",
+    tagline: "The AI quants vote on the same window. Watch where they agreed, and where they didn't.",
     formula: "binary + magnitude + +macro + sequence + transformer + quantile",
     endpoint: "/api/consensus",
     module: "ai quants/models/best_consensus/build.py",
@@ -1116,29 +1174,32 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
   },
   {
     request: dirRequest,
+    readsTape: true,
     build: (data) => {
       const c = data.consensus;
+      const side: Verdict["side"] = c.direction === "up" ? "buy" : c.direction === "down" ? "sell" : "hold";
       return {
         signals: [],
         metrics: [
-          { key: "dir", label: "Consensus direction", value: c.direction.toUpperCase(), tone: c.direction === "up" ? "bull" : c.direction === "down" ? "bear" : "neutral" },
-          { key: "agree", label: "Agree", value: `${c.agree_count} / ${c.n_models}`, tone: c.agree_count >= c.n_models - 1 ? "bull" : "neutral" },
+          { key: "agree", label: "Models agreeing", value: `${c.agree_count} / ${c.n_models}`, tone: c.agree_count >= c.n_models - 1 ? "bull" : "neutral" },
           { key: "tier", label: "Model agreement", value: bandLabel(c.tier), tone: c.tier === "ultra" ? "bull" : c.tier === "high" ? "info" : "neutral" },
           // The service still sends its own `expected_accuracy_band` per tier.
           // It is deliberately NOT rendered: a band that climbs with agreement
           // is the grade-scale reading the memo asked us to stop publishing.
           // One canonical band, the same figure at every agreement level.
           { key: "acc", label: "Historical hit rate (hypothetical)", value: ACCURACY_BAND, tone: "info", hint: HYPOTHETICAL_NOTE },
-          { key: "mag", label: "Avg magnitude", value: `${(c.avg_magnitude * 100).toFixed(2)}%`, tone: "info" },
+          { key: "mag", label: "Avg estimated move", value: `${(c.avg_magnitude * 100).toFixed(2)}%`, tone: "info", hint: "the models' average estimate for the sessions after the window, by size" },
         ],
-        summary: `Real-model consensus on ${data.ticker}: ${c.agree_count}/${c.n_models} agree → ${c.direction.toUpperCase()} (${bandLabel(c.tier)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
+        summary: c.direction === "split"
+          ? `The ${c.n_models} models split on this window (${bandLabel(c.tier)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`
+          : `${c.agree_count} of ${c.n_models} models read this window ${READ[side]} (${bandLabel(c.tier)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
         beginner:
-          "Six different AI models look at the same stock and vote. When 5 or 6 land on the same side, the card calls that strong agreement between the models. When they split, six models built on the same data could not agree — which is the most useful thing on this card.",
+          "Several different AI models read the same window and voted. When nearly all of them landed on the same side, the card called that strong agreement. When they split, models built on the same data could not agree, which is the most useful thing on this card.",
         verdict: {
-          side: c.direction === "up" ? "buy" : c.direction === "down" ? "sell" : "hold",
+          side,
           text: c.direction === "split"
-            ? `Models split ${c.agree_count}/${c.n_models} — no measurable predictive lift historically.`
-            : `${bandLabel(c.tier)} — ${c.agree_count}/${c.n_models} read ${c.direction}.`,
+            ? `Models split ${c.agree_count}/${c.n_models}: no measurable predictive lift historically.`
+            : `${bandLabel(c.tier)}: ${c.agree_count}/${c.n_models} read ${READ[side]}.`,
           confidence: c.tier === "ultra" ? 0.95 : c.tier === "high" ? 0.78 : c.tier === "medium" ? 0.55 : 0.3,
         },
       };
@@ -1169,33 +1230,34 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
       // models line up. See ACCURACY_BAND in ./types for the full reasoning.
       const accBand = ACCURACY_BAND;
       const signals: Signal[] = [];
+      const side: Verdict["side"] = dir === "up" ? "buy" : dir === "down" ? "sell" : "hold";
       return {
         signals,
         metrics: [
-          { key: "dir", label: "Consensus direction", value: dir.toUpperCase(), tone: dir === "up" ? "bull" : dir === "down" ? "bear" : "neutral" },
-          { key: "agree", label: "Agree", value: `${agree} / 6`, tone: agree >= 5 ? "bull" : "neutral" },
+          { key: "agree", label: "Models agreeing", value: `${agree} / 6`, tone: agree >= 5 ? "bull" : "neutral" },
           { key: "tier", label: "Model agreement", value: bandLabel(tier), tone: tier === "ultra" ? "bull" : tier === "high" ? "info" : "neutral" },
           { key: "acc", label: "Historical hit rate (hypothetical)", value: accBand, tone: "info", hint: HYPOTHETICAL_NOTE },
+          { key: "mag", label: "Avg estimated move", value: `${(avgMag * 100).toFixed(2)}%`, tone: "info", hint: "the stand-ins' average estimate for the sessions after the window, by size" },
         ],
         pane: {
           kind: "histogram",
           series: [{
             values: models.map((m) => m.p - 0.5),
             color: "var(--bear)",
-            label: "P(up) − 0.5 per model",
+            label: "each model's lean on the window (score − 0.5)",
           }],
           refLines: [{ value: 0, color: "var(--fg-faint)" }],
           height: 100,
         },
         summary:
-          `Models voting UP: ${upVotes}/6 — ${bandLabel(tier)}. ` +
-          models.map((m) => `${m.name} ${(m.p * 100).toFixed(0)}%${m.vote === 1 ? "↑" : "↓"}`).join(" · "),
-        beginner: "Six models vote on direction. Historically, 5–6 landing on the same side was the tightest agreement the ensemble produced; a split vote showed no measurable predictive lift historically.",
+          `${upVotes} of 6 stand-in models read this window up, ${downVotes} down (${bandLabel(tier)}). ` +
+          models.map((m) => `${m.name} ${m.vote === 1 ? "up" : "down"}`).join(" · "),
+        beginner: "Six models voted on the same window. Historically, 5–6 landing on the same side was the tightest agreement the ensemble produced; a split vote showed no measurable predictive lift historically.",
         verdict: {
-          side: dir === "up" ? "buy" : dir === "down" ? "sell" : "hold",
+          side,
           text: dir === "split"
-            ? `Models split ${upVotes}↑ / ${downVotes}↓ — no measurable predictive lift historically.`
-            : `${bandLabel(tier)} — ${agree}/6 read ${dir}. Historical hit rate ${accBand} · ${HYPOTHETICAL_NOTE}.`,
+            ? `Models split ${upVotes} up / ${downVotes} down: no measurable predictive lift historically.`
+            : `${bandLabel(tier)}: ${agree}/6 read ${dir}.`,
           confidence: tier === "ultra" ? 0.95 : tier === "high" ? 0.78 : tier === "medium" ? 0.55 : 0.3,
         },
       };

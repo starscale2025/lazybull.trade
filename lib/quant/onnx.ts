@@ -4,8 +4,10 @@
 // onnxruntime-web (WASM), zero server. Each fetches the SAME daily OHLCV the
 // Python service uses (/api/quote?tf=D) and applies the SAME normalization as
 // `ai quants/serve.py` (last N bars, OHLC ÷ last close, volume ÷ mean volume,
-// shape 1×N×5), so the output matches the trained model. Any failure returns
-// null and the bot falls back to the snapshot, then the TS surrogate.
+// shape 1×N×5), so the output matches the trained model. The tape is cut at
+// the end of the page's window first, so the nets never see the held-back
+// sessions (lib/quant/reads). Any failure returns null and the bot falls back
+// to the snapshot, then the TS surrogate.
 //
 // The runtime is SELF-HOSTED (threat model R-09). It used to load from
 // cdn.jsdelivr.net with no integrity check, which meant a third party could
@@ -30,6 +32,7 @@
 // onnxruntime-web version in package.json moves, or inference stops loading.
 
 import type { InferenceSession } from "onnxruntime-web";
+import { isoDay } from "./reads";
 
 const ORT_WASM = "/ort/ort-wasm-simd-threaded.wasm";
 const MODEL_VER = "2"; // bump to cache-bust the .onnx files when re-exported
@@ -58,13 +61,19 @@ type QuoteBar = { o: number; h: number; l: number; c: number; v: number; t: numb
 
 export type NnResult = { expectedReturn: number; direction: "up" | "down"; asOf: string };
 
-async function runOhlcvModel(model: string, lookback: number, ticker: string): Promise<NnResult | null> {
+async function runOhlcvModel(model: string, lookback: number, ticker: string, end: string): Promise<NnResult | null> {
   if (typeof window === "undefined") return null;
   try {
     const r = await fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}&tf=D`);
     if (!r.ok) return null;
     const j = await r.json();
-    const bars: QuoteBar[] = Array.isArray(j?.bars) ? j.bars : [];
+    const all: QuoteBar[] = Array.isArray(j?.bars) ? j.bars : [];
+    // Only what the page's models may see: the tape up to and including the
+    // window's last session (lib/quant/reads). If that session is not on this
+    // tape, it is a different series and there is no read to give.
+    const cut = all.findIndex((b) => isoDay(b.t) === end);
+    if (cut < 0) return null;
+    const bars = all.slice(0, cut + 1);
     if (bars.length < lookback) return null;
 
     const win = bars.slice(-lookback);
@@ -86,19 +95,18 @@ async function runOhlcvModel(model: string, lookback: number, ticker: string): P
     const session = await getSession(`/models/${model}.onnx?v=${MODEL_VER}`);
     const out = await session.run({ ohlcv: new ort.Tensor("float32", data, [1, lookback, 5]) });
     const pred = (out.ret.data as Float32Array)[0];
-    const t = win[win.length - 1].t;
     return {
       expectedReturn: pred,
       direction: pred > 0 ? "up" : "down",
-      asOf: t ? new Date(t).toISOString().slice(0, 10) : "",
+      asOf: isoDay(win[win.length - 1].t),
     };
   } catch {
     return null;
   }
 }
 
-/** 1D-CNN over the last 60 OHLCV bars → expected 20d return, in the browser. */
-export const runSequenceCnn = (ticker: string) => runOhlcvModel("sequence_cnn", 60, ticker);
+/** 1D-CNN over the 60 OHLCV bars ending on `end` → a 20d return estimate, in the browser. */
+export const runSequenceCnn = (ticker: string, end: string) => runOhlcvModel("sequence_cnn", 60, ticker, end);
 
-/** Transformer encoder over the last 252 OHLCV bars → expected 20d return. */
-export const runTransformer = (ticker: string) => runOhlcvModel("transformer_seq", 252, ticker);
+/** Transformer encoder over the 252 OHLCV bars ending on `end` → a 20d return estimate. */
+export const runTransformer = (ticker: string, end: string) => runOhlcvModel("transformer_seq", 252, ticker, end);

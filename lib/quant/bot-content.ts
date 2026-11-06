@@ -40,15 +40,15 @@ export type BotContent = {
 export const BOT_SIMPLE: Record<string, string> = {
   // ─────────────── AI QUANTS ───────────────
   "ai-consensus":
-    "Six different AI models look at the same stock and each one votes 'up' or 'down' for the next month. If 5 or 6 of them agree, the card calls that very strong agreement. If they're split 3-3, the models disagree and the card says so. What you are watching is six opinions failing or managing to line up — the card shows who voted and how far apart they landed.",
+    "Six different AI models read the same stretch of a stock's history and each one votes on whether the month after it went 'up' or 'down'. If 5 or 6 of them agree, the card calls that very strong agreement. If they're split 3-3, the models disagree and the card says so. What you are watching is six opinions failing or managing to line up — the card shows who voted and how far apart they landed.",
   "ai-direction":
-    "An AI brain made of 7 little decision-tree models, each guessing whether the price will go up or down 20 days from now. We average their guesses to get one probability. When the little models all agree (low spread), the card reports very strong agreement. When they disagree, they were effectively guessing: that state showed no measurable predictive lift historically.",
+    "An AI brain made of 7 little decision-tree models, each guessing whether the price finished up or down 20 days after the stretch it read. We average their guesses to get one probability. When the little models all agree (low spread), the card reports very strong agreement. When they disagree, they were effectively guessing: that state showed no measurable predictive lift historically.",
   "ai-magnitude":
     "Direction models guess which way. This one estimates how big. A 0.5% estimate sits inside the noise of a normal month; a 5% estimate sits outside it. The size printed on the card is one model's estimate of a distribution — never a promise about the next month.",
   "ai-quantile":
     "Most predictors give you one number. This one gives three: a low case, a high case, and the middle. When the whole range sat above zero, the model's uncertainty was one-sided; when the range straddled zero, the model was genuinely unsure. The WIDTH of the range is the lesson — it is the model admitting how little it knows.",
   "ai-transformer":
-    "The same kind of AI that powers ChatGPT — but instead of reading words, this one reads a whole year of price data. It learns to focus on the important days (earnings, big drops, regime shifts) and uses them to guess the next month's move.",
+    "The same kind of AI that powers ChatGPT — but instead of reading words, this one reads a whole year of price data. It learns to focus on the important days (earnings, big drops, regime shifts) and uses them to estimate the month that followed.",
   "ai-sequence":
     "A small AI model that looks at the last 60 days of prices like a picture and learns to spot familiar shapes — breakouts, coils, head-and-shoulders. It doesn't know the names of these patterns, it just notices the ones that tend to come before big moves.",
   "ai-triple-barrier":
@@ -108,7 +108,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-consensus": {
     intro:
-      `Six AI models look at the same stock and vote on direction. The card shows their tally, how strongly they agreed, and the one out-of-sample hit-rate band this family of models has ever been measured at (${HYPOTHETICAL_NOTE}). The agreement number is the teaching object here: six models built on the same data disagreeing is the most useful thing a beginner can watch.`,
+      `Six AI models read the same window of a stock's history and vote on which way the sessions after it went. The card shows their tally, how strongly they agreed, and the one out-of-sample hit-rate band this family of models has ever been measured at (${HYPOTHETICAL_NOTE}). The agreement number is the teaching object here: six models built on the same data disagreeing is the most useful thing a beginner can watch.`,
     shines: [
       "Liquid US large-caps (AAPL, NVDA, AMZN, SPY) where macro context is rich and per-asset training data is plentiful.",
       "Stable volatility regimes — the models were trained on bands, not regime shifts.",
@@ -122,7 +122,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Split votes. When 3-3 or 4-2, the consensus number is essentially noise — the bot will say SPLIT and that's the right answer.",
     ],
     verdict:
-      `The card leans long or short only when ≥5 models point the same way AND the average expected magnitude clears 4%; otherwise it stays neutral. The agreement label runs very strong agreement → strong → moderate → lean → split, and it describes the models, not your odds. Every tier is described by ONE hit-rate band, ${HYPOTHETICAL_NOTE} — the band does not climb with the tier.`,
+      `The card reads up or down only when ≥5 models point the same way AND the average estimated magnitude clears 4%; otherwise it reads flat. The agreement label runs very strong agreement → strong → moderate → lean → split, and it describes the models, not your odds. Every tier is described by ONE hit-rate band, ${HYPOTHETICAL_NOTE} — the band does not climb with the tier.`,
     faq: [
       {
         q: "Why does the consensus give the same answer for AAPL and TSLA?",
@@ -154,7 +154,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
       "Tail events. The labels were clipped at the 99th percentile — the model literally hasn't seen 2020 March.",
     ],
     verdict:
-      `The card's label turns long above p_up 0.6 and short below 0.4, and stays neutral between them. The agreement band sorts that probability into split / moderate / strong / very strong agreement, and the same single hit-rate band is published beside every one of them (${HYPOTHETICAL_NOTE}).`,
+      `The card reads up above a score (p_up) of 0.6 and down below 0.4, and flat between them. The agreement band sorts that probability into split / moderate / strong / very strong agreement, and the same single hit-rate band is published beside every one of them (${HYPOTHETICAL_NOTE}).`,
     faq: [
       {
         q: "What features does it use?",
@@ -170,7 +170,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-magnitude": {
     intro:
-      "Direction's quieter sibling. Instead of asking 'up or down?', it estimates the size of the next 20-day move. A 0.5% expected return is inside the noise; a 5% one clears the bot's noise floor and registers as a high-magnitude reading. The sign is the model's lean and the magnitude is the size it estimated — both are outputs of a fitted regression, not statements about what will happen.",
+      "Direction's quieter sibling. Instead of asking 'up or down?', it estimates the size of the 20-day move that followed the window it read. A 0.5% expected return is inside the noise; a 5% one clears the bot's noise floor and registers as a high-magnitude reading. The sign is the model's lean and the magnitude is the size it estimated — both are outputs of a fitted regression, not statements about what will happen.",
     shines: [
       "Reading a direction call next to a size. A model that leans up on a 0.4% estimate is telling you almost nothing, and this is where that becomes visible.",
       "Comparing two models on the same tape. When Direction Ensemble and this one lean the same way AND magnitude clears 3%, more of the workbench agreed — which is a fact about the models, not a stronger case.",
@@ -228,7 +228,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-transformer": {
     intro:
-      "A Transformer encoder — same architecture that made ChatGPT work — but fed a year of OHLCV data instead of text tokens. It learns to attend to the right days: earnings prints, vol spikes, regime changes. Predicts the next 20-day return purely from raw price/volume shape. No hand-engineered features.",
+      "A Transformer encoder — same architecture that made ChatGPT work — but fed a year of OHLCV data instead of text tokens. It learns to attend to the right days: earnings prints, vol spikes, regime changes. Estimates the 20-day return that followed the window purely from raw price/volume shape. No hand-engineered features.",
     shines: [
       "Long-horizon patterns: seasonality, regime detection, post-earnings drift. The 252-day window covers a full annual cycle.",
       "Names with rich price history and multiple regime episodes (SPY, AAPL, JPM). The attention learns which past contexts are similar to today's.",
@@ -244,7 +244,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     faq: [
       {
         q: "What makes this different from the 1D CNN?",
-        a: "CNN sees 60 bars; this sees 252. CNN learns local patterns (cup-and-handle, breakouts); this learns global context (where in the cycle are we?). They complement each other — that's why both feed into the 6-Model Consensus.",
+        a: "CNN sees 60 bars; this sees 252. CNN learns local patterns (cup-and-handle, breakouts); this learns global context (where in the cycle are we?). They complement each other — that's why both feed into the Model Consensus.",
       },
       {
         q: "Why a Transformer for 252 numbers?",
@@ -284,7 +284,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
 
   "ai-triple-barrier": {
     intro:
-      "Marcos López de Prado's labelling method, productionised. Instead of asking 'will the stock be up in 20 days?', it asks 'will it hit my +5% profit target before it hits my -5% stop, or will neither happen and I time out?' Three barriers, three labels. Better-shaped training data → smarter downstream models.",
+      "Marcos López de Prado's labelling method, productionised. Instead of asking 'was the stock up 20 days later?', it asks 'did it touch a +5% profit target before a −5% stop, or did neither happen and the trade time out?' Three barriers, three labels. Better-shaped training data → smarter downstream models.",
     shines: [
       "Strategy research. If you're building your own bots, this shows you what de Prado-style labels look like for your asset.",
       "Stop-loss design. The PT/SL multiplier on the card lets you see how the label changes as you tighten or loosen barriers.",

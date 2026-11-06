@@ -102,6 +102,12 @@ const RULES = [
     why: "prints a model's output as a trade action or a vote on the price; the workbench prints a read (up / down / flat / caution) of a window that has already played out (lib/quant/reads)" },
   { id: "recommended-for", re: /\brecommended for\b/i,
     why: "recommends something for a named security; say what a stack or a tool is for, not which stock it suits" },
+  // Gate A re-run, 2026-11-06: the AI cells still printed "73% chance up",
+  // "CONSENSUS DIRECTION UP", "Decision: LONG" and "a 2.10% setup over the next
+  // 20 days". The rules above missed them because the words sat around
+  // template expressions; these match the fixed text either side of one.
+  { id: "forward-read", re: /%\s*chance\b|\bconsensus direction\b|\bDecision:\s*(?:\$\{|LONG\b|SHORT\b)|\bover the next \d+\s*(?:d\b|days?\b|sessions?\b)/i,
+    why: "speaks about what a named security will do (a % chance, a direction call, a decision, 'over the next N days'); a /quant read describes a window that has already played out (lib/quant/reads)" },
 
   // ── demo-ware vocabulary that must not return ────────────────────────────
   { id: "seeded-fake", re: /\bseeded fake|\bSIM lamp\b|\bscripted judge\b|\bpitch prototype\b/i,

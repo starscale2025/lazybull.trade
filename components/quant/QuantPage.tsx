@@ -102,8 +102,10 @@ export function QuantPage() {
         // `bars` for the models plus the HOLDOUT sessions they never see
         // (lib/quant/reads). Too short to hold both back -> the fallback walk.
         if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30 + HOLDOUT) {
-          const tail: Candle[] = j.bars.slice(-(bars + HOLDOUT)).map((b: { o: number; h: number; l: number; c: number }) => ({
-            o: b.o, h: b.h, l: b.l, c: b.c,
+          // Dated, so the AI bots can tell a read of this window from a read
+          // of any other (lib/quant/reads windowEnd).
+          const tail: Candle[] = j.bars.slice(-(bars + HOLDOUT)).map((b: Candle) => ({
+            o: b.o, h: b.h, l: b.l, c: b.c, t: b.t, v: b.v,
           }));
           // A 30s-cached refetch must never walk the tape behind a newer tick.
           setLive({ key, candles: reconcileBars(tail, j.meta, symbol, freshestRef) });
@@ -699,7 +701,28 @@ export function QuantPage() {
           </div>
 
           <div className="col-span-12 h-[calc(100vh/var(--ui-zoom)-2rem)] lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh/var(--ui-zoom)-2rem)]">
-            <OutputPanel runs={rows} symbol={symbol} outcome={outcome} beginner={beginner} ranAt={ranAt} dataSource={dataSource} />
+            <OutputPanel
+              runs={rows}
+              symbol={symbol}
+              outcome={outcome}
+              beginner={beginner}
+              ranAt={ranAt}
+              dataSource={dataSource}
+              footer={
+                // One-tap paper trade at today's price, docked under the reads
+                // rather than floating over them. Locked in seed mode:
+                // synthetic prices must never book into the real shared paper
+                // account.
+                <QuickBet
+                  inline
+                  symbol={symbol}
+                  spot={lastSpot}
+                  candles={allBars}
+                  lockReason={mode === "seed" ? "seed tape — switch to the live tape to paper-trade on it" : null}
+                  onUnlock={() => setMode("live")}
+                />
+              }
+            />
           </div>
         </div>
       </section>
@@ -723,16 +746,6 @@ export function QuantPage() {
       </section>
 
       <ImportBotModal open={importOpen} onClose={() => setImportOpen(false)} onImport={importBot} />
-
-      {/* One-tap paper trade at today's price. Locked in seed mode: synthetic
-          prices must never book into the real shared paper account. */}
-      <QuickBet
-        symbol={symbol}
-        spot={lastSpot}
-        candles={allBars}
-        lockReason={mode === "seed" ? "seed tape — switch to the live tape to paper-trade on it" : null}
-        onUnlock={() => setMode("live")}
-      />
     </>
   );
 }

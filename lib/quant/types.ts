@@ -115,6 +115,10 @@ export type BotResult = {
   source?: SourceId;
   sourceNote?: string;
   horizon?: string; // e.g. "20d" — the prediction horizon, when applicable
+  /** The last session a tape-reading model saw, printed on the card: a day
+      (YYYY-MM-DD), or where an undated window ends. Everything after it is
+      what the tape did next (lib/quant/reads). */
+  asOf?: string;
 };
 
 export type BotContext = {

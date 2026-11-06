@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { BotDef, BotResult, ActiveBot, Verdict } from "@/lib/quant/types";
 import { AGGREGATE_READ, READ, type Outcome } from "@/lib/quant/reads";
 import { EquitySpark } from "./MiniViz";
@@ -17,6 +18,7 @@ export function OutputPanel({
   beginner,
   ranAt,
   dataSource,
+  footer,
 }: {
   runs: RunRow[];
   symbol: string;
@@ -27,6 +29,9 @@ export function OutputPanel({
       old it is, because bots deliberately never re-run on their own. */
   ranAt?: number | null;
   dataSource?: "live" | "seed" | "fallback";
+  /** Docked under the scroll area: /quant's paper-trade ticket, which used to
+      float over this panel and cover its outcome line. */
+  footer?: ReactNode;
 }) {
   const completed = runs.filter((r) => r.result !== null);
   const verdicts = completed.map((r) => r.result!.verdict);
@@ -68,8 +73,7 @@ export function OutputPanel({
         </div>
       </div>
 
-      {/* pb-16 keeps the last rows clear of the fixed QuickBet FAB (C7) */}
-      <div className="flex-1 overflow-y-auto pb-16">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {/* Aggregate verdict block */}
         <div className="border-b border-border p-3">
           <AggregateVerdict
@@ -211,6 +215,7 @@ export function OutputPanel({
           </div>
         )}
       </div>
+      {footer && <div className="border-t border-border bg-bg-soft p-2">{footer}</div>}
     </aside>
   );
 }

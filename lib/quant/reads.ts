@@ -45,6 +45,24 @@ export function modelWindow(all: Candle[]): Candle[] {
   return all.slice(0, Math.max(0, all.length - HOLDOUT));
 }
 
+/** A bar time (ms) as its UTC day, YYYY-MM-DD: how every read here is dated. */
+export function isoDay(t: number): string {
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/**
+ * The day of the window's last bar, or null when the tape is undated (the seed
+ * and fallback walks are synthetic). A model read from outside the page (the
+ * hosted API, the snapshot, the on-device nets) counts only if it is dated to
+ * exactly this day: anything later has seen the held-back sessions, and
+ * anything earlier is a read of some other window, which the outcome the page
+ * shows cannot check.
+ */
+export function windowEnd(window: Candle[]): string | null {
+  const t = window[window.length - 1]?.t;
+  return typeof t === "number" && Number.isFinite(t) ? isoDay(t) : null;
+}
+
 export type Outcome = {
   /** Sessions between the end of the window and the last bar. */
   sessions: number;

@@ -629,7 +629,9 @@ const kellyBot: BotDef = {
       metrics: [
         { key: "f", label: "f* full", value: `${(fStar * 100).toFixed(1)}%`, tone: fStar > 0 ? "bull" : "bear" },
         { key: "f-use", label: `f used (${frac}×)`, value: `${(fUse * 100).toFixed(1)}%`, tone: "neutral" },
-        { key: "size", label: "Bet size", value: fmtMoney(sizeUsed), tone: "info" },
+        // What the formula computes, labelled as that: "Bet size" read as an
+        // amount to stake (caught by the rendered-copy test).
+        { key: "size", label: "f used × bankroll", value: fmtMoney(sizeUsed), tone: "info" },
         { key: "ev", label: "EV / trade", value: fmtMoney(ev), tone: ev > 0 ? "bull" : "bear" },
       ],
       summary: `f* = ${(fStar * 100).toFixed(1)}% of bankroll. At ${frac}× that is ${(fUse * 100).toFixed(1)}%, or ${fmtMoney(sizeUsed)} against the ${fmtMoney(bk)} you entered.`,

@@ -63,6 +63,15 @@ describe("banned copy is caught", () => {
     ["verdict-token", "the BUY / SELL / HOLD pill at the top of the cell"],
     ["verdict-token", "value={result.verdict.side.toUpperCase()}"],
     ["recommended-for", "★ recommended for {symbol}"],
+    // 2026-11-06 Gate A re-run: what the AI cells on /quant still printed, and
+    // the source lines that printed it.
+    ["forward-read", "73% chance up — strong agreement."],
+    ["forward-read", "text: `${(pUp * 100).toFixed(0)}% chance ${label} — ${bandLabel(band)}.`,"],
+    ["forward-read", "CONSENSUS DIRECTION UP"],
+    ["forward-read", "80% CI: [-2.1%, 6.4%]. Decision: LONG."],
+    ["forward-read", "summary: `80% CI: [${p10}]. Decision: ${decision.toUpperCase()}.`,"],
+    ["forward-read", "CNN sees a 2.10% setup over the next 20 days."],
+    ["forward-read", "Predicts 1.40% over the next 20d."],
   ])("flags %s", (id, line) => {
     expect(ids(line)).toContain(id);
   });
@@ -101,6 +110,11 @@ describe("teaching copy is left alone", () => {
     "On-chart order ticket — SELL | qty | BUY, top-left.",
     "placePaperOrder({ sym, side: dir === \"up\" ? \"buy\" : \"sell\" })",
     "overstating p by 10% can double your recommended fraction",
+    "Estimated +2.10% for the 20 sessions after the window.",
+    "4 of 5 models read this window up (strong agreement).",
+    "The 80% range straddled zero.",
+    "Run thousands of simulated 'next 10 days'. The 5th-worst outcome out of 100 is your Value-at-Risk.",
+    "This layout is the gate that RENDERS the decision: React runs it",
   ])("passes: %s", (line) => {
     expect(scan(line)).toEqual([]);
   });

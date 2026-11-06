@@ -42,6 +42,17 @@ const VERDICT_BG: Record<string, string> = {
   warn: "bg-amber/15 text-amber border-amber/30",
 };
 
+// Metric grid columns by count, so as few slots as possible sit empty showing
+// the border colour (3 → 3 across, 6 → 3 + 3); four across otherwise.
+const METRIC_COLS: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  5: "sm:grid-cols-3",
+  6: "sm:grid-cols-3",
+  9: "sm:grid-cols-3",
+};
+
 // Provenance badge tint per source tone.
 const BADGE_CLS: Record<Tone, string> = {
   bull: "border-bull/40 text-bull",
@@ -338,9 +349,19 @@ export function BotCell({
                       {srcMeta.label}
                     </span>
                   )}
+                  {/* On the card, not in a tooltip: the read is of this day's
+                      window, and only that makes it history (lib/quant/reads). */}
+                  {result.asOf && (
+                    <span
+                      title="The last session this model read. Everything after it is what the tape did next."
+                      className="border border-border px-1.5 py-0.5 t-chrome text-fg-dim"
+                    >
+                      as of {result.asOf}
+                    </span>
+                  )}
                   {result.horizon && (
                     <span
-                      title="Prediction horizon"
+                      title="How many sessions after the window the model read"
                       className="border border-border px-1.5 py-0.5 t-chrome text-fg-faint"
                     >
                       {result.horizon}
@@ -364,7 +385,7 @@ export function BotCell({
               </div>
 
               {/* Metrics */}
-              <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4">
+              <div className={`grid grid-cols-2 gap-px overflow-hidden border border-border bg-border ${METRIC_COLS[result.metrics.length] ?? "sm:grid-cols-4"}`}>
                 {result.metrics.map((m) => (
                   <div
                     key={m.key}

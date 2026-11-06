@@ -4,7 +4,7 @@
 //
 // Mounted on /quant and /trade/chain. It is an order ticket and nothing else.
 // It used to print "what the quants say" (N/6 bots lean UP · conf) and "what
-// the models say" (P% chance above $X in 30d) for the named stock, on today's
+// the models say" (the odds of closing above $X in 30d) for the named stock, on today's
 // tape, directly above the UP/DOWN buttons: a stock-specific, forward-looking
 // read beside a trade button, which docs/COMPLIANCE.md (b)3 rules out (Gate A
 // re-tribunal, 2026-11-05). The models' reads live on /quant, on a window
@@ -37,11 +37,15 @@ type Props = {
   lockReason?: string | null;
   /** Offered as the way out of the lock (e.g. switch the page to live mode). */
   onUnlock?: () => void;
+  /** Render in the page's own flow instead of the floating dock. /quant puts
+      the ticket in its Output panel's footer: floating, it sat over the
+      panel's "what the tape did next" line (Gate A re-run, d35). */
+  inline?: boolean;
 };
 
 const STAKES = [500, 1000, 5000] as const;
 
-export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnlock }: Props) {
+export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnlock, inline = false }: Props) {
   const [open, setOpen] = useState(false);
   const [dir, setDir] = useState<"up" | "down">("up");
   // Stake is held as TEXT while typing so a decimal point survives keystrokes;
@@ -150,9 +154,8 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
     setPlaced(`${dir === "up" ? "▲ UP" : "▼ DOWN"} $${stake.toLocaleString()} on ${symbol} @ ${mark.toFixed(2)}`);
   };
 
-  return (
-    <DockSlot order={20}>
-    <div className="flex flex-col items-end gap-2">
+  const ticket = (
+    <div className={`flex flex-col gap-2 ${inline ? "" : "items-end"}`}>
       <AnimatePresence>
         {open && (
           <motion.div
@@ -160,7 +163,7 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="pointer-events-auto w-[20rem] border border-border bg-bg shadow-2xl"
+            className={`pointer-events-auto border border-border bg-bg ${inline ? "w-full" : "w-[20rem] shadow-2xl"}`}
           >
             {/* header */}
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
@@ -309,12 +312,17 @@ export function QuickBet({ symbol, spot, candles: candlesProp, lockReason, onUnl
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="pointer-events-auto flex items-center gap-2 border border-bull/50 bg-bg/90 px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull shadow-xl backdrop-blur transition-colors hover:bg-bull hover:text-bg"
+        className={`pointer-events-auto flex items-center gap-2 border border-bull/50 bg-bg/90 px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg ${
+          inline ? "w-full justify-center" : "shadow-xl backdrop-blur"
+        }`}
       >
         <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-        {open ? "Hide" : "Paper trade"}
+        {/* Docked under the reads, it says which price it trades at: today's,
+            not the window's the reads are about. */}
+        {open ? "Hide" : inline ? "Paper trade · today's price" : "Paper trade"}
       </button>
     </div>
-    </DockSlot>
   );
+
+  return inline ? ticket : <DockSlot order={20}>{ticket}</DockSlot>;
 }
