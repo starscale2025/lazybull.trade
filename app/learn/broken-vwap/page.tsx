@@ -181,7 +181,7 @@ export default function BrokenVwapLesson() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/pro"
-              className="inline-flex h-9 items-center bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+              className="inline-flex h-9 items-center btn-grad px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
             >
               open /pro — see the ✓ live
             </Link>

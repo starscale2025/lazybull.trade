@@ -252,7 +252,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
           </div>
           <button
             onClick={() => setTradeModal(true)}
-            className="inline-flex items-center gap-2 bg-bull px-4 py-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim transition-colors"
+            className="inline-flex items-center gap-2 btn-grad px-4 py-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
           >
             paper trade →
           </button>
@@ -274,7 +274,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 8 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-xl w-full border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.4)]"
+              className="relative max-w-xl w-full border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(82,255,165,0.4)]"
             >
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
                 <span className="text-bull">● teacher · {paywall ? "paused" : explanation?.source ?? "..."}</span>

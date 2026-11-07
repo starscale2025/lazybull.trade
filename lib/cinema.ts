@@ -52,6 +52,13 @@ export const ACT_ORDER: Act[] = [
  * (re-tribunal #10).
  */
 export const TAGLINE = "Then paper-trade it.";
+/**
+ * And the words before it, fixed the same way (Gate A2): the film said "Learn
+ * it. Backtest it.", the landing "Learn it. Prove it —" and the phone film
+ * nothing at all. "Prove it" covers the practice track, the certificates and
+ * the quant lab, and asks no jargon of a beginner.
+ */
+export const TAGLINE_LEAD = "Learn it. Prove it.";
 
 export type CopyBeat = {
   id: string;
@@ -61,8 +68,9 @@ export type CopyBeat = {
   heading: string;
   sub?: string;
   /** "top" lifts the beat into the upper third so it clears the feature-act
-   *  charts; default (undefined) centers it over the laptop/bull visuals. */
-  pos?: "top";
+   *  charts; "left" sets it in the left third, beside a subject framed on the
+   *  right (the bull); default (undefined) centers it. */
+  pos?: "top" | "left";
 };
 
 // DOM overlays synced to scroll progress (crisp text, not baked into the scene).
@@ -106,7 +114,10 @@ export const COPY_BEATS: CopyBeat[] = [
   // sub-line no longer reverts to a feature triad under it.
   { id: "safety", from: 0.61, to: 0.685, pos: "top", heading: "Your worst case is a number you chose.", sub: "Not a number you find out afterwards." },
   { id: "consensus", from: 0.697, to: 0.727, pos: "top", heading: "They vote. They disagree.", sub: "You see the split, not just the answer." },
-  { id: "bull", from: 0.75, to: 0.82, heading: "Learn it. Backtest it.", sub: TAGLINE },
+  // Beside the bull, not across it (Gate A2, d12: the headline sat on the
+  // bull), and over before the charge, which runs ~0.782 → 0.805: the bull
+  // lunges through the left third the copy would otherwise still be in.
+  { id: "bull", from: 0.738, to: 0.786, pos: "left", heading: TAGLINE_LEAD, sub: TAGLINE },
   { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
 ];
 
@@ -189,13 +200,16 @@ export function flashOpacity(progress: number): number {
 // which sits under the stage's last viewport, rises through it.
 const HANDOFF_FADE = { from: 0.975, to: 1.0 };
 
-/** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end. */
+/** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end.
+ *  Smoothstep, not linear, so the dissolve eases in and settles (Gate A2); it
+ *  plays pinned, over the hold the section keeps after the film reaches 1
+ *  (HANDOFF_HOLD_VH in cinema-metrics.ts). */
 export function canvasOpacity(progress: number): number {
   const { from, to } = HANDOFF_FADE;
   const p = clamp01(progress);
   if (p <= from) return 1;
   if (p >= to) return 0;
-  return 1 - (p - from) / (to - from);
+  return 1 - ss01((p - from) / (to - from));
 }
 
 // Real-3D (R3F) layers crossfade OVER the 2D scene across their act, holding
@@ -232,6 +246,27 @@ export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.585, out1: 0.605
 // 0.085 (≈1.8× felt with the longer scroll section) for the colour story to
 // breathe. Pure f(progress) — scrub-reversible by construction.
 export const CANDLE_BUILD_END = 0.5;
+/**
+ * Where the climb gives way to the crash: the colour script's HOT room starts
+ * ramping here (GRADE_ROOMS). The film's act rail names the candle act's three
+ * parts (climb · crash · lab) instead of calling all of it "the crash", which
+ * labelled a rising market a crash for a third of the act (Gate A2).
+ */
+export const CANDLE_CRASH_FROM = 0.42;
+
+/**
+ * How far the frame is IN the safety act, 0..1, on the scene's own envelope
+ * (scene.html: actEnv(t, safety, 0.02, 0.008)). The stage's lens vignette lifts
+ * by this much so the act's loss figure, low in the corner, keeps its full
+ * token red; the scene lifts its own vignette on the same curve.
+ */
+export function safetyLight(progress: number): number {
+  const { from, to } = ACTS.safety;
+  const p = clamp01(progress);
+  const fadeIn = clamp01((p - (from - 0.02)) / 0.04);
+  const fadeOut = clamp01((p - (to - 0.008)) / 0.016);
+  return fadeIn * (1 - fadeOut);
+}
 export const CANDLE_LAB = { from: 0.5, to: 0.585 };
 /** 0→1 through the lab beat (liftoff → ice → green → red → settle → verdict). */
 export const candleLabT = (progress: number) =>
@@ -251,6 +286,13 @@ export const candleLabT = (progress: number) =>
 // fade begins. The lunge and the burst happen at full opacity; the wrapper
 // clears afterwards, out of the white.
 export const BULL3D: Fade4 = { in0: 0.71, in1: 0.735, out0: 0.805, out1: 0.825 };
+// The bull's VISIBILITY, apart from its clock. BULL3D above is the timeline
+// the bull's camera, dolly and charge run on, and it still starts at 0.71 so
+// the charge completes at out0 at full opacity. Showing it from 0.71 put it
+// over the vote, which then never had the screen to itself (Gate A2, d11: the
+// vote is 0.04 wide and had 0.044 of crossfades). It now appears once the vote
+// has cleared; the layer still mounts and warms from in0 - 0.04, out of sight.
+export const BULL3D_SHOW: Fade4 = { in0: 0.733, in1: 0.75, out0: BULL3D.out0, out1: BULL3D.out1 };
 
 /**
  * THE COLOUR SCRIPT — three rooms inside the candle act.
@@ -330,4 +372,4 @@ export const dive3dOpacity = (progress: number) =>
 /** Opacity for the 3D candle-canyon DOM layer. */
 export const candle3dOpacity = (progress: number) => windowOpacity(progress, CANDLE3D);
 /** Opacity for the 3D bull DOM layer. */
-export const bull3dOpacity = (progress: number) => windowOpacity(progress, BULL3D);
+export const bull3dOpacity = (progress: number) => windowOpacity(progress, BULL3D_SHOW);

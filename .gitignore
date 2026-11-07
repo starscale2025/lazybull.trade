@@ -71,3 +71,6 @@ docs/THREAT_MODEL.md
 STRATEGY.md
 REMEDIATION_ROADMAP.txt
 docs/strategy/
+
+# /brag launch-video output (local renders, not shipped)
+brag-output*/

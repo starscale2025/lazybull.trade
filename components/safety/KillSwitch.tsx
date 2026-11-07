@@ -47,7 +47,7 @@ export function SafetySettingsButton() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 8 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md outline-none border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(0,255,135,0.3)]"
+              className="relative w-full max-w-md outline-none border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(82,255,165,0.3)]"
             >
               <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
                 <span id="safety-panel-title" className="text-bull">● safety panel</span>

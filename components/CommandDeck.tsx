@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { deckSnapshot, registerCommands, subscribeDeck, type DeckCommand } from "@/lib/command-deck";
+import { isMotionPaused, setMotionPaused } from "@/lib/motion/bus";
 
 function useDeckCommands(): DeckCommand[] {
   return useSyncExternalStore(subscribeDeck, deckSnapshot, deckSnapshot);
@@ -51,6 +52,12 @@ export function CommandDeck() {
             try { localStorage.setItem("lb-contrast", "stealth"); } catch {}
           }
         },
+      },
+      {
+        id: "toggle-motion",
+        label: "Pause or resume motion",
+        group: "view",
+        run: () => setMotionPaused(!isMotionPaused()),
       },
       {
         id: "replay-film",

@@ -58,7 +58,7 @@ function OddsRing({ prob }: { prob: number }) {
 
 export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCount, onPlace, onJump }: Props) {
   return (
-    <div className="surface-instrument border border-border bg-surface/80 backdrop-blur-sm shadow-[0_24px_90px_-40px_rgba(0,255,135,0.35)]">
+    <div className="surface-instrument border border-border bg-surface/80 backdrop-blur-sm shadow-[0_24px_90px_-40px_rgba(82,255,165,0.35)]">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2.5">
         <span className="t-eyebrow text-bull">⟢ your position</span>
         <span className="flex items-center gap-1.5 t-chrome text-fg-dim">
@@ -166,12 +166,14 @@ export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "select
           {selected ? selected.kind : "pick a strategy"}
         </div>
       </div>
+      {/* Says what it does, as the desktop slip does (Gate A2, m60): a bare
+          "place" on a paper-only product read like the real thing. */}
       <button
         onClick={onPlace}
         disabled={!selected}
-        className="shrink-0 bg-bull px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg disabled:opacity-30"
+        className="btn-grad shrink-0 px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider disabled:opacity-30"
       >
-        place →
+        place paper trade →
       </button>
     </div>
   );

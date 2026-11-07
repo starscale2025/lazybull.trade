@@ -156,7 +156,7 @@ function EmptyState({ onClick }: { onClick: () => void }) {
         </div>
         <div className="mt-4 font-display text-2xl tracking-tightest text-fg">Empty workspace</div>
         <p className="mt-2 text-balance t-body-sm text-fg-dim">
-          Pick a bot from the library on the left, or import your own. Then press
+          Pick a bot from the bot library, or import your own. Then press
           <span className="mx-1 inline-flex items-center border border-bull bg-bull/10 px-1.5 py-0.5 t-chrome text-bull">▶ run all</span>
           to fire them all on the dataset above.
         </p>

@@ -18,6 +18,7 @@ import { Workspace } from "./Workspace";
 import { OutputPanel } from "./OutputPanel";
 import { RunRitual, useRunRitual } from "./RunRitual";
 import { ImportBotModal } from "./ImportBotModal";
+import { glideTo } from "@/lib/motion/scroll";
 
 type ResultsMap = Record<string, BotResult>;
 
@@ -460,7 +461,7 @@ export function QuantPage() {
 
   function flashLibrary() {
     setLibrarySpotlight(true);
-    libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (libraryRef.current) glideTo(libraryRef.current);
     later(() => setLibrarySpotlight(false), 1200);
   }
 
@@ -509,57 +510,79 @@ export function QuantPage() {
 
   const tape = buildTape(rows);
 
-  return (
-    <>
-      {/* Never stack two banners: the reconnect notice takes precedence over the
-          first-time tip so the workbench is never pushed down by both at once. */}
-      {showLearnBanner && !(mode === "live" && status === "synthetic") && (
-        <div className="border-b border-bull/30 bg-bull/5 py-2.5">
-          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-wider">
-            <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            <span className="text-bull">First time here?</span>
-            <span className="text-fg-dim normal-case tracking-normal">
+  // The page's one notice. It renders inside the hero's reserved slot
+  // (QuantHero) instead of above the hero, so neither a notice arriving after
+  // hydration nor one swapping for the other moves the page (2026-11-06: the
+  // in-flow banners cost /quant 0.06 of its desktop CLS). Never two at once:
+  // the reconnect notice outranks the first-visit tip. Each is one row of a
+  // fixed h-12, on an opaque base because the hero's grid and video now sit
+  // behind it. On a phone the labels shorten and the sentence waits for lg,
+  // rather than wrapping the row taller than the slot.
+  const notice =
+    mode === "live" && status === "synthetic" ? (
+      <div key="reconnect" className="h-12 border-b border-border-soft bg-bg">
+        <div className="h-full bg-bg-soft">
+          <div className="shell shell-wide flex h-full items-center gap-3 font-mono text-[0.6875rem]">
+            {/* sm:shrink-0: from sm up the title always fits, so only the
+                sentence gives way when the row runs short (lg, ~1024-1070px). */}
+            <span className="flex min-w-0 items-center gap-1.5 uppercase tracking-wider text-cyan/90 sm:shrink-0">
+              <span className="size-1.5 shrink-0 rounded-full bg-cyan/80" />
+              <span className="truncate">
+                Live data <span className="hidden sm:inline">temporarily </span>unavailable
+              </span>
+            </span>
+            {/* Calm + self-healing: the tape reconnects on its own (countdown),
+                so this reads as a graceful degrade, not a breakage. Never say the
+                market is "delayed" — it's our connection that dropped, not the
+                market. Verdicts run on a safe practice tape meanwhile. Below lg
+                the hero's OFFLINE badge and source line, right under this row,
+                carry the same practice-tape and live-in-Ns facts. */}
+            <span className="hidden min-w-0 truncate normal-case tracking-normal text-fg-dim lg:block">
+              Showing a practice tape while we reconnect — <LiveReturnsIn retryAt={retryAt} />
+            </span>
+            <button
+              onClick={() => setMode("seed")}
+              className="ml-auto shrink-0 border border-border px-3 py-1 uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+            >
+              <span className="hidden sm:inline">use </span>seed mode →
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : showLearnBanner ? (
+      <div key="first-visit" className="h-12 border-b border-bull/30 bg-bg">
+        <div className="h-full bg-bull/5">
+          <div className="shell shell-wide flex h-full items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-wider">
+            <span className="flex min-w-0 items-center gap-1.5 text-bull sm:shrink-0">
+              <span className="size-1.5 shrink-0 rounded-full bg-bull pulse-dot" />
+              <span className="truncate">First time here?</span>
+            </span>
+            <span className="hidden min-w-0 truncate normal-case tracking-normal text-fg-dim lg:block">
               Stack bots like Lego blocks. The Learn page walks through it in 3 minutes.
             </span>
             <a
               href="/learn"
-              className="ml-auto inline-flex items-center gap-2 border border-bull bg-bull/10 px-3 py-1 text-bull hover:bg-bull/20"
+              className="ml-auto inline-flex shrink-0 items-center gap-2 border border-bull bg-bull/10 px-3 py-1 text-bull hover:bg-bull/20"
             >
-              See how it works →
+              <span>
+                <span className="hidden sm:inline">See how</span>
+                <span className="sm:hidden">How</span> it works →
+              </span>
             </a>
             <button
               onClick={dismissLearnBanner}
-              className="text-fg-faint hover:text-fg"
+              className="shrink-0 text-fg-faint hover:text-fg"
               aria-label="Dismiss"
             >
               ✕
             </button>
           </div>
         </div>
-      )}
-      {mode === "live" && status === "synthetic" && (
-        <div className="border-b border-border-soft bg-bg-soft py-2">
-          <div className="shell shell-wide flex flex-wrap items-center gap-3 font-mono text-[0.6875rem]">
-            <span className="inline-flex items-center gap-1.5 uppercase tracking-wider text-cyan/90">
-              <span className="size-1.5 rounded-full bg-cyan/80" />
-              Live data temporarily unavailable
-            </span>
-            {/* Calm + self-healing: the tape reconnects on its own (countdown),
-                so this reads as a graceful degrade, not a breakage. Never say the
-                market is "delayed" — it's our connection that dropped, not the
-                market. Verdicts run on a safe practice tape meanwhile. */}
-            <span className="normal-case tracking-normal text-fg-dim">
-              Showing a practice tape while we reconnect — <LiveReturnsIn retryAt={retryAt} />
-            </span>
-            <button
-              onClick={() => setMode("seed")}
-              className="ml-auto border border-border px-3 py-1 uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
-            >
-              use seed mode →
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
+    ) : null;
+
+  return (
+    <>
       <QuantHero
         symbol={symbol}
         setSymbol={setSymbol}
@@ -585,6 +608,7 @@ export function QuantPage() {
         updatedAt={updatedAt}
         syntheticKnobsActive={syntheticKnobsActive}
         runLocked={runLocked}
+        notice={notice}
       />
 
       {/* The run ritual — the workspace-level beat the per-cell decimation

@@ -1,6 +1,7 @@
 # The compliance lint is only a gate if something runs it. `npm run build`
 # now does (package.json), and this runs the whole verify chain on every PR:
-# types, tests, the production build, the guard and the copy lint.
+# types, tests, the production build, the guard and the copy lint. Then the
+# performance budget (scripts/perf/budget.mjs) runs against that same build.
 name: verify
 
 on:
@@ -19,3 +20,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify
+      - run: npx playwright install --with-deps chromium
+      - name: performance budget
+        run: |
+          npx next start -p 3100 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3100/ > /dev/null && break; sleep 1; done
+          npm run budget

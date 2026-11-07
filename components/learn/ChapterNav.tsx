@@ -31,6 +31,7 @@
 
 import { useEffect, useState } from "react";
 import { LEARN_CHAPTERS, CONCEPT_IDS, useLearnProgress } from "@/lib/learn-progress";
+import { glideTo } from "@/lib/motion/scroll";
 
 const CONCEPT_SET = new Set<string>(CONCEPT_IDS);
 
@@ -67,7 +68,13 @@ export function ChapterNav() {
     };
   }, []);
 
-  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Centred, as scrollIntoView({ block: "center" }) did, but through Lenis.
+  const jump = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    glideTo(r.top + window.scrollY - (window.innerHeight - r.height) / 2);
+  };
 
   // equity curve over the 8 concepts — correct +1.4, answered +0.6.
   let cum = 0;

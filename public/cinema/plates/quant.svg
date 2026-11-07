@@ -1,31 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
-<rect width="1280" height="800" fill="#070908"/>
-<rect x="0" y="0" width="1280" height="52" fill="#0c1210"/>
-<line x1="0.0" y1="52.0" x2="1280.0" y2="52.0" stroke="#1d2420" stroke-width="1"/>
-<circle cx="28" cy="26" r="6" fill="#3a403c"/><circle cx="48" cy="26" r="6" fill="#3a403c"/><circle cx="68" cy="26" r="6" fill="#3a403c"/>
+<rect width="1280" height="800" fill="#07080d"/>
+<rect x="0" y="0" width="1280" height="52" fill="#0c0f19"/>
+<line x1="0.0" y1="52.0" x2="1280.0" y2="52.0" stroke="#1c2232" stroke-width="1"/>
+<circle cx="28" cy="26" r="6" fill="#3b4152"/><circle cx="48" cy="26" r="6" fill="#3b4152"/><circle cx="68" cy="26" r="6" fill="#3b4152"/>
 <text x="96.0" y="31.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="15" font-weight="600" fill="#f5f5f0" text-anchor="start" letter-spacing="1">lazybull · quant workbench</text>
 <circle cx="980" cy="26" r="4" fill="#ffb800"/>
 <text x="1252.0" y="31.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="12" font-weight="500" fill="#ffb800" text-anchor="end" letter-spacing="1">SIM · ILLUSTRATIVE · PAPER-ONLY</text>
-<rect x="60.0" y="96.0" width="1160.0" height="400.0" rx="6" fill="#0c1210" stroke="#1d2420" stroke-width="1"/>
+<rect x="60.0" y="96.0" width="1160.0" height="400.0" rx="6" fill="#0c0f19" stroke="#1c2232" stroke-width="1"/>
 <text x="90.0" y="136.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="12" font-weight="500" fill="#8a8a82" text-anchor="start" letter-spacing="2">6 MODELS REPLAYED · SAME TAPE · WALK-FORWARD</text>
-<line x1="760.0" y1="160.0" x2="760.0" y2="470.0" stroke="#3a403c" stroke-width="1"/>
+<line x1="760.0" y1="160.0" x2="760.0" y2="470.0" stroke="#3b4152" stroke-width="1"/>
 <text x="748.0" y="176.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="11" font-weight="500" fill="#8a8a82" text-anchor="end" letter-spacing="0">← leaned down</text>
 <text x="772.0" y="176.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="11" font-weight="500" fill="#8a8a82" text-anchor="start" letter-spacing="0">leaned up →</text>
 <text x="90.0" y="220.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">SMA Crossover</text>
-<rect x="760.0" y="204" width="378.0" height="20" rx="3" fill="#00ff87" fill-opacity="0.55"/>
+<rect x="760.0" y="204" width="378.0" height="20" rx="3" fill="#52ffa5" fill-opacity="0.55"/>
 <text x="90.0" y="264.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">RSI Reversion</text>
 <rect x="481.0" y="248" width="279.0" height="20" rx="3" fill="#ff2e63" fill-opacity="0.55"/>
 <text x="90.0" y="308.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Kalman Filter</text>
-<rect x="760.0" y="292" width="162.0" height="20" rx="3" fill="#00ff87" fill-opacity="0.55"/>
+<rect x="760.0" y="292" width="162.0" height="20" rx="3" fill="#52ffa5" fill-opacity="0.55"/>
 <text x="90.0" y="352.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Bollinger Bands</text>
 <rect x="562.0" y="336" width="198.0" height="20" rx="3" fill="#ff2e63" fill-opacity="0.55"/>
 <text x="90.0" y="396.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Z-Score Reversion</text>
-<rect x="760.0" y="380" width="243.0" height="20" rx="3" fill="#00ff87" fill-opacity="0.55"/>
+<rect x="760.0" y="380" width="243.0" height="20" rx="3" fill="#52ffa5" fill-opacity="0.55"/>
 <text x="90.0" y="440.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Hurst Exponent</text>
 <rect x="652.0" y="424" width="108.0" height="20" rx="3" fill="#ff2e63" fill-opacity="0.55"/>
 <text x="90.0" y="530.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="18" font-weight="600" fill="#f5f5f0" text-anchor="start" letter-spacing="0">3 agreed, 3 did not: a split, not a call</text>
-<rect x="60.0" y="560.0" width="1160.0" height="196.0" rx="6" fill="#0c1210" stroke="#1d2420" stroke-width="1"/>
+<rect x="60.0" y="560.0" width="1160.0" height="196.0" rx="6" fill="#0c0f19" stroke="#1c2232" stroke-width="1"/>
 <text x="90.0" y="594.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="12" font-weight="500" fill="#8a8a82" text-anchor="start" letter-spacing="2">BACKTEST · HYPOTHETICAL · NOT A FORECAST</text>
-<line x1="90.0" y1="690.0" x2="1190.0" y2="690.0" stroke="#3a403c" stroke-width="1" stroke-dasharray="4 6"/>
-<polyline points="90.0,694.2 101.0,698.0 112.0,693.5 123.0,691.5 134.0,691.2 145.0,691.8 156.0,692.0 167.0,694.1 178.0,693.5 189.0,691.2 200.0,693.2 211.0,696.1 222.0,693.6 233.0,693.2 244.0,695.8 255.0,696.8 266.0,698.5 277.0,698.0 288.0,699.6 299.0,695.1 310.0,697.2 321.0,693.6 332.0,696.2 343.0,699.3 354.0,702.2 365.0,703.9 376.0,703.3 387.0,700.8 398.0,704.4 409.0,700.5 420.0,699.8 431.0,698.6 442.0,696.8 453.0,692.4 464.0,691.1 475.0,687.1 486.0,684.0 497.0,688.0 508.0,690.7 519.0,691.8 530.0,692.3 541.0,696.4 552.0,700.0 563.0,697.4 574.0,698.4 585.0,698.9 596.0,699.0 607.0,694.8 618.0,692.8 629.0,690.9 640.0,692.2 651.0,693.3 662.0,696.4 673.0,699.5 684.0,695.6 695.0,697.0 706.0,699.7 717.0,698.3 728.0,699.6 739.0,703.5 750.0,701.7 761.0,697.7 772.0,697.1 783.0,694.0 794.0,692.4 805.0,688.4 816.0,691.7 827.0,691.2 838.0,689.7 849.0,686.0 860.0,681.7 871.0,678.5 882.0,677.4 893.0,673.1 904.0,668.7 915.0,668.1 926.0,665.0 937.0,669.3 948.0,669.0 959.0,670.4 970.0,668.2 981.0,667.5 992.0,665.0 1003.0,660.6 1014.0,659.9 1025.0,656.8 1036.0,657.2 1047.0,655.8 1058.0,653.5 1069.0,652.8 1080.0,654.3 1091.0,656.5 1102.0,660.7 1113.0,664.8 1124.0,660.7 1135.0,657.5 1146.0,656.1 1157.0,660.3 1168.0,659.1 1179.0,658.0 1190.0,655.9" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="90.0" y1="690.0" x2="1190.0" y2="690.0" stroke="#3b4152" stroke-width="1" stroke-dasharray="4 6"/>
+<polyline points="90.0,694.2 101.0,698.0 112.0,693.5 123.0,691.5 134.0,691.2 145.0,691.8 156.0,692.0 167.0,694.1 178.0,693.5 189.0,691.2 200.0,693.2 211.0,696.1 222.0,693.6 233.0,693.2 244.0,695.8 255.0,696.8 266.0,698.5 277.0,698.0 288.0,699.6 299.0,695.1 310.0,697.2 321.0,693.6 332.0,696.2 343.0,699.3 354.0,702.2 365.0,703.9 376.0,703.3 387.0,700.8 398.0,704.4 409.0,700.5 420.0,699.8 431.0,698.6 442.0,696.8 453.0,692.4 464.0,691.1 475.0,687.1 486.0,684.0 497.0,688.0 508.0,690.7 519.0,691.8 530.0,692.3 541.0,696.4 552.0,700.0 563.0,697.4 574.0,698.4 585.0,698.9 596.0,699.0 607.0,694.8 618.0,692.8 629.0,690.9 640.0,692.2 651.0,693.3 662.0,696.4 673.0,699.5 684.0,695.6 695.0,697.0 706.0,699.7 717.0,698.3 728.0,699.6 739.0,703.5 750.0,701.7 761.0,697.7 772.0,697.1 783.0,694.0 794.0,692.4 805.0,688.4 816.0,691.7 827.0,691.2 838.0,689.7 849.0,686.0 860.0,681.7 871.0,678.5 882.0,677.4 893.0,673.1 904.0,668.7 915.0,668.1 926.0,665.0 937.0,669.3 948.0,669.0 959.0,670.4 970.0,668.2 981.0,667.5 992.0,665.0 1003.0,660.6 1014.0,659.9 1025.0,656.8 1036.0,657.2 1047.0,655.8 1058.0,653.5 1069.0,652.8 1080.0,654.3 1091.0,656.5 1102.0,660.7 1113.0,664.8 1124.0,660.7 1135.0,657.5 1146.0,656.1 1157.0,660.3 1168.0,659.1 1179.0,658.0 1190.0,655.9" fill="none" stroke="#3884ff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

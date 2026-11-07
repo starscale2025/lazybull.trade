@@ -195,6 +195,18 @@ export function pnlCurve(legs: Leg[], spot: number, range = 0.4, points = 81) {
   return pts;
 }
 
+// Float noise, not a slope. Two legs whose intrinsic terms cancel on paper (a
+// vertical's flat tail) leave a residue near 1e-13 once the cent-rounded
+// premiums go through payoff(), and a strict `> 0` read that residue as a tail:
+// in a sweep of 3,200 verticals, 391 defined-risk spreads came back "unbounded
+// risk" (so training wheels refused them), and the share card printed
+// "uncapped" over capped call spreads. A real tail moves qty × 100 × (1.2 ×
+// spot / 400) per sample, cents at the least, so a change within a billionth of
+// the P&L's own size is flat.
+function sloped(slope: number, level: number): number {
+  return Math.abs(slope) <= Math.max(1e-6, Math.abs(level) * 1e-9) ? 0 : slope;
+}
+
 // Find max profit, max loss, breakevens (numerical, robust enough for demo).
 export function pnlSummary(legs: Leg[], spot: number) {
   const curve = pnlCurve(legs, spot, 0.6, 401);
@@ -216,8 +228,8 @@ export function pnlSummary(legs: Leg[], spot: number) {
   // Detect unbounded loss tails (naked shorts past visible range).
   const tailLeft = curve[0].pnl;
   const tailRight = curve[curve.length - 1].pnl;
-  const lastSlopeLeft = curve[1].pnl - curve[0].pnl;
-  const lastSlopeRight = curve[curve.length - 1].pnl - curve[curve.length - 2].pnl;
+  const lastSlopeLeft = sloped(curve[1].pnl - curve[0].pnl, tailLeft);
+  const lastSlopeRight = sloped(curve[curve.length - 1].pnl - curve[curve.length - 2].pnl, tailRight);
   const unboundedDown = lastSlopeLeft > 0 && tailLeft < 0; // loss grows as spot falls
   const unboundedUp = lastSlopeRight < 0 && tailRight < 0; // loss grows as spot rises
   return {
@@ -225,5 +237,7 @@ export function pnlSummary(legs: Leg[], spot: number) {
     maxLoss: maxL,
     breakevens: Array.from(new Set(breakevens.map((b) => +b.toFixed(2)))),
     unboundedRisk: unboundedDown || unboundedUp,
+    // Profit keeps growing past the top of the range: net long calls.
+    profitUncapped: lastSlopeRight > 0,
   };
 }

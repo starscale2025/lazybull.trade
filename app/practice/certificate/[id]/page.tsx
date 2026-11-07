@@ -70,7 +70,7 @@ function Record({ cert }: { cert: CertificateRecord }) {
     <div className="mt-6 max-w-3xl">
       <div
         className="relative overflow-hidden border border-bull/50 bg-bg p-8 sm:p-10"
-        style={{ boxShadow: "0 0 60px -20px rgba(0,255,135,0.4)" }}
+        style={{ boxShadow: "0 0 60px -20px rgba(82,255,165,0.4)" }}
       >
         <div aria-hidden className="pointer-events-none absolute -right-6 -top-10 select-none font-display text-[16rem] leading-none text-bull/[0.05]">
           ✓

@@ -149,7 +149,7 @@ const TOOLS: Tool[] = [
   },
 ];
 
-const COLORS = ["#00ff87", "#22d3ee", "#ffb800", "#ff2e63", "#a78bfa", "#f5f5f0"];
+const COLORS = ["#52ffa5", "#3884ff", "#ffb800", "#ff2e63", "#8f73ff", "#f5f5f0"];
 
 export function LeftToolbar({
   tool,
@@ -228,7 +228,7 @@ function ToolBtn({ t, active, onClick }: { t: Tool; active: boolean; onClick: ()
         onClick={onClick}
         whileTap={{ scale: 0.92 }}
         className={`flex size-8 items-center justify-center border transition-colors ${
-          active ? "border-bull bg-bull/10 text-bull" : "border-transparent bg-bg text-fg-dim hover:border-border hover:text-fg"
+          active ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink" : "border-transparent bg-bg text-fg-dim hover:border-border hover:text-fg"
         }`}
         aria-label={t.label}
       >

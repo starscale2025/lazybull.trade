@@ -7,7 +7,7 @@ import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
-import { StrategyCards, PnlSparkline, STRATEGY_TONE } from "@/components/wedge/StrategyCards";
+import { StrategyCards, PnlSparkline, EmptyPnlSparkline, STRATEGY_TONE } from "@/components/wedge/StrategyCards";
 import { PlainGreeks } from "@/components/wedge/PlainGreeks";
 import { TimeMachine } from "@/components/wedge/TimeMachine";
 import { EventTimeline } from "@/components/wedge/EventTimeline";
@@ -523,7 +523,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
             {/* symbol block — one dense baseline row on lg */}
             <div className="lg:flex lg:flex-wrap lg:items-baseline lg:gap-x-4" data-gsap="fade-up">
               <div className="flex flex-wrap items-baseline gap-3">
-                <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]" style={{ textShadow: "0 0 32px rgba(0,255,135,0.12)" }}>
+                <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]" style={{ textShadow: "0 0 32px rgba(82,255,165,0.12)" }}>
                   {sym.sym}
                 </h1>
                 <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">{quote?.name ?? sym.name}</span>
@@ -639,7 +639,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           </div>
 
           {/* chart + draggable probability cone — ≈55% of the column on lg */}
-          <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(0,255,135,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
+          <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(82,255,165,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
               <span className="t-eyebrow text-bull">⟢ implied range · Black-Scholes · {sym.sym}</span>
               {/* the expiry date is the decision token — keep it shrink-0 so
@@ -738,6 +738,8 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               columns={1}
               compact
             />
+            {/* nothing picked yet: the payoff frame, empty (see EmptyStrategyDetail) */}
+            {!selected && <EmptyStrategyDetail spot={spot} />}
             {selected && <LegsList s={selected} />}
             {selected && (
               <StrategyDetail
@@ -830,7 +832,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               exit={{ scale: 0.96, y: 12 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(0,255,135,0.5)] outline-none"
+              className="w-full max-w-xl border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(82,255,165,0.5)] outline-none"
             >
               <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-bull">
                 confirm paper trade · {sym.sym}
@@ -857,7 +859,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                 )}
                 <div className="mt-5 flex items-center justify-end gap-2">
                   <button type="button" onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg lg:py-2">cancel</button>
-                  <button type="button" onClick={confirmBet} disabled={!!confirmRefusal} className="bg-bull px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim disabled:opacity-40 lg:py-2">place paper trade</button>
+                  <button type="button" onClick={confirmBet} disabled={!!confirmRefusal} className="btn-grad px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider disabled:opacity-40 lg:py-2">place paper trade</button>
                 </div>
               </div>
             </motion.div>
@@ -935,7 +937,7 @@ function InBandRing({ prob }: { prob: number }) {
             strokeDashoffset={dashOffset}
             transform="rotate(-90 52 52)"
             style={{
-              filter: "drop-shadow(0 0 6px rgba(0,255,135,0.45))",
+              filter: "drop-shadow(0 0 6px rgba(82,255,165,0.45))",
               transition: "stroke-dashoffset 0.5s cubic-bezier(.22,.68,.26,1), stroke 0.3s",
             }}
           />
@@ -993,6 +995,37 @@ function LegsList({ s }: { s: Strategy }) {
         <span className={`t-figure ${s.cost > 0 ? "text-fg" : "text-bull"}`}>
           {Math.abs(s.cost / 100).toFixed(2)}
         </span>
+      </div>
+    </div>
+  );
+}
+
+/** The strategy panel before anything is picked. /trade opens with no position
+ *  (see selectedId), and this panel used to end at the three example rows, so
+ *  the first view of a product whose promise is "options you can see" had no
+ *  picture in it. This is StrategyDetail's frame with nothing in it: the $0
+ *  axis and today's spot, the rail's labels with no figures, and no legs and no
+ *  place button, because nothing has been chosen. */
+function EmptyStrategyDetail({ spot }: { spot: number }) {
+  return (
+    <div className="@container border-t border-border p-3">
+      <div className="flex items-stretch gap-4">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <EmptyPnlSparkline spot={spot} note="pick an example to draw it" />
+          <div className="mt-1 text-center t-eyebrow text-fg-faint">p/l @ expiration</div>
+        </div>
+        {/* the rail StrategyDetail fills in, unfilled. Beside a 12.5rem rail a
+            narrow panel leaves the frame too thin for its note (phones, and the
+            desktop rail below ~1360px), so it waits on the panel's own width:
+            a container query, not a viewport breakpoint. */}
+        <div aria-hidden className="hidden w-[12.5rem] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5 @md:grid">
+          {["max profit", "max loss", "breakeven", "pop"].map((k) => (
+            <div key={k} className="contents">
+              <span className="t-chrome text-fg-faint">{k}</span>
+              <span className="text-right t-data text-[0.75rem] text-fg-faint">—</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1304,7 +1337,7 @@ function TeacherPanel({
             text={
               selected
                 ? `This panel describes the ${selected.kind} you built — max profit, max loss, breakevens, and what can go wrong. Press "explain this position", or type a question below.`
-                : "Pick a strategy on the left to get a plain-English read of the position."
+                : "Pick an example strategy to get a plain-English read of the position."
             }
           />
         )}
@@ -1328,7 +1361,7 @@ function TeacherPanel({
           type="submit"
           disabled={!selected || narrating || !q.trim()}
           aria-label="ask the teacher"
-          className="flex size-9 shrink-0 items-center justify-center bg-bull text-bg transition-colors hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex size-9 shrink-0 items-center justify-center btn-grad transition-colors disabled:cursor-not-allowed disabled:opacity-30"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M5 12h14M13 5l7 7-7 7" />

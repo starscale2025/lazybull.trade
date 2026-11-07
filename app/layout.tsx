@@ -11,6 +11,7 @@ import { DockProvider } from "@/components/Dock";
 import { CommandDeck } from "@/components/CommandDeck";
 import { Narrator } from "@/components/Narrator";
 import { GsapScroller } from "@/components/atmosphere/GsapScroller";
+import { LenisRoot } from "@/components/motion/LenisRoot";
 import { GlassAtmosphere } from "@/components/atmosphere/GlassAtmosphere";
 import { RouteLoader } from "@/components/atmosphere/RouteLoader";
 import { ConsentGate } from "@/components/ConsentGate";
@@ -148,6 +149,7 @@ export default function RootLayout({
         {/* Daily-loss guard: global, because share trades now book from /pro
             and /quant too, and the limit has to be watched everywhere. */}
         <KillSwitchSentinel />
+        <LenisRoot />
         <GsapScroller />
         {/* Pending-navigation feedback. Pairs with the commit-side veil in
             app/template.tsx: that one covers the new page's first paint, this

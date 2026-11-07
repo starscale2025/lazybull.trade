@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity } from "@/lib/cinema";
+import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity, safetyLight } from "@/lib/cinema";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { getHeroPosition, onHeroPosition, type HeroPosition } from "@/lib/hero-position";
 import {
@@ -20,6 +20,9 @@ import { CinemaStill } from "./CinemaStill";
 // Shared with CinemaGate, which reserves exactly this height on the first paint
 // so mounting the film shifts nothing. See cinema-metrics.ts.
 import { SCROLL_LENGTH_VH, CURTAIN_VH, FILM_START, FILM_LIFT_END, scrollToFilm, filmToScroll } from "./cinema-metrics";
+// The page scrolls through Lenis; moving it with window.scrollTo mid-glide is undone next frame.
+import { glideTo, isSmoothing, jumpBy, jumpTo } from "@/lib/motion/scroll";
+import { AUTOPLAYED_KEY, REPLAY_KEY, RESUME_KEY, cinemaResumeAt, markCinemaSeen } from "./cinema-memory";
 
 // smoothstep — the phase ramps for the quant-lab type-on/colour narration, kept
 // identical in shape to the 3D IceCandle's so the panel and candle read as one clock.
@@ -39,6 +42,10 @@ const Tunnel3D = lazy(() => import("./three-stage").then((m) => ({ default: m.Tu
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
+
+// Film progress. Past this the follower cuts instead of gliding (see tick()),
+// and a rail seek further than this cuts behind a dip instead of gliding.
+const JUMP_CUT = 0.15;
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 // "/" is now the cinema itself, so no "home" shot — panels use real product routes.
@@ -163,92 +170,18 @@ function injectMono(doc: Document): string | null {
   return `${family}, ui-monospace, SFMono-Regular, Menlo, monospace`;
 }
 
-// ── THE FILM'S MEMORY ────────────────────────────────────────────────────────
-//
-// Three keys, and each one now has a reader. They used to be written with a
-// comment claiming "CinemaGate reads this" next to them; it did not, and a grep
-// for either name found the two writes below and nothing else. So the film
-// re-ran in full on every single load, including the reload you did because you
-// were eight thousand pixels into it.
-//
-//   lb-cinema-seen        localStorage   played through, or skipped, at least
-//                                        once on this device. STILL WRITTEN,
-//                                        NO LONGER GATES: keying the intro on
-//                                        it made the film a once-per-browser
-//                                        event, so the site quietly lost its
-//                                        opening for good. The gate reads the
-//                                        session key below instead. Kept
-//                                        because it is the honest record of
-//                                        "has this person ever seen it", which
-//                                        a future first-run tour would want.
-//   lb-cinema-autoplayed  sessionStorage the film has already RUN in this tab →
-//                                        same, but only for this tab, so a new
-//                                        session gets the film back.
-//   lb-cinema-resume      sessionStorage where in the film you were. Read only
-//                                        below, and only after a reload.
-//   lb-cinema-replay      sessionStorage you asked for the film (⌘K, or
-//                                        GetStarted's "watch the film"). Read by
-//                                        CinemaGate; CONSUMED here, the moment
-//                                        the film actually starts.
-//
-// The consuming lives on this side on purpose. CinemaGate's decision is now a
-// pure read, which is what lets it re-run freely — on a resize, on React's
-// double-invoked effects in dev, and on a client-side navigation back to "/".
-// When the gate consumed the flag itself it needed a module-level memo to
-// survive those, and that memo then re-mounted the whole film on the trip back
-// from /learn, which is the toll booth all of this exists to remove.
-const SEEN_KEY = "lb-cinema-seen";
-const AUTOPLAYED_KEY = "lb-cinema-autoplayed";
-const RESUME_KEY = "lb-cinema-resume";
-const REPLAY_KEY = "lb-cinema-replay";
-
-/** Played through or skipped — never auto-play at them again. */
-function markCinemaSeen() {
-  try {
-    localStorage.setItem(SEEN_KEY, "1");
-    sessionStorage.setItem(AUTOPLAYED_KEY, "1");
-    sessionStorage.removeItem(RESUME_KEY); // the film is over; there is no place to return to
-    sessionStorage.removeItem(REPLAY_KEY); // and any request for it has been met
-  } catch {
-    /* storage blocked (private mode, third-party frame) — the film just replays */
-  }
-}
-
-/**
- * Where in the film to come back to, or null to start at the top.
- *
- * ONLY A RELOAD RESUMES. A fresh navigation to "/" is someone arriving, and
- * dropping an arrival into act six because they once left a tab open mid-film
- * would be stranger than replaying it. `back_forward` counts too: that is the
- * back button landing on a page it already had.
- */
-export function cinemaResumeAt(): number | null {
-  try {
-    // Someone who asked for the film wants the film, not the back half of it.
-    if (sessionStorage.getItem(REPLAY_KEY) === "1") return null;
-    const nav = performance.getEntriesByType("navigation")[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-    if (nav?.type !== "reload" && nav?.type !== "back_forward") return null;
-    const raw = sessionStorage.getItem(RESUME_KEY);
-    if (raw === null) return null;
-    const p = Number(raw);
-    // Up to the end of the curtain's lift there is nothing worth restoring:
-    // the loop records FILM_START at rest under the hero, and the old 0.02
-    // floor let that through, so a reload on frame zero scrolled the page
-    // into the film. Above 0.97 the film is already handing off, and resuming
-    // there would drop you into the seam.
-    return Number.isFinite(p) && p > FILM_LIFT_END && p < 0.97 ? p : null;
-  } catch {
-    return null;
-  }
-}
+// The film's memory (seen / autoplayed / resume / replay) lives in
+// cinema-memory.ts, where CinemaGate can read it before the film loads.
 
 export function ScrollCinema() {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const railRef = useRef<CinemaRailHandle>(null);
+  // The rail seek's dip to the stage colour; see onSeek.
+  const dipRef = useRef<HTMLDivElement>(null);
+  // The stage's lens vignette, which lifts off the safety act (safetyLight).
+  const vignetteRef = useRef<HTMLDivElement>(null);
   const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
   const bull3dWrapRef = useRef<HTMLDivElement>(null);
@@ -305,6 +238,18 @@ export function ScrollCinema() {
   const handleDiveReady = () => {
     dive3dReadyRef.current = true;
   };
+  // A lost WebGL context (GPU reset, too many contexts) hands the frame back
+  // to the 2D scene, which draws its own version of whatever a layer that is
+  // not ready would have shown. Restoring calls the ready handler again.
+  const handleBullLost = () => {
+    bull3dReadyRef.current = false;
+  };
+  const handleCandleLost = () => {
+    candle3dReadyRef.current = false;
+  };
+  const handleDiveLost = () => {
+    dive3dReadyRef.current = false;
+  };
 
   // Skip the intro: THE SHATTER — you break the fourth wall to get to the
   // desk. A portaled glass-crack burst plays over the reveal (it survives the
@@ -314,7 +259,7 @@ export function ScrollCinema() {
   const doSkip = () => {
     const s = sectionRef.current;
     if (!s) return;
-    window.scrollTo(0, s.offsetTop + s.offsetHeight - window.innerHeight + 4);
+    jumpTo(s.offsetTop + s.offsetHeight - window.innerHeight + 4);
     collapseRef.current?.();
   };
   const handleSkip = () => {
@@ -374,6 +319,7 @@ export function ScrollCinema() {
 
     let disposed = false;
     let ready = false;
+    let sceneErrorLogged = false; // one console.error per mount, not one per frame
     let st: ScrollTrigger | null = null;
     let raf = 0;
     let progress = FILM_START; // smoothed value that drives the scene (film space)
@@ -477,7 +423,7 @@ export function ScrollCinema() {
       const keepHeroInPlace = () => {
         if (!hero) return;
         const delta = hero.getBoundingClientRect().top - before;
-        if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+        if (Math.abs(delta) > 1) jumpBy(delta);
       };
       keepHeroInPlace();
       // Played through (or skipped) once — never replay the toll booth. The
@@ -518,11 +464,15 @@ export function ScrollCinema() {
       // its WebGL frameloop on only near its window (a rare toggle, not per frame).
       const driveLayer = (
         wrap: React.RefObject<HTMLDivElement | null>,
-        opacity: number,
+        scheduled: number,
         win: typeof BULL3D,
         activeRef: React.RefObject<boolean>,
-        setActive: (v: boolean) => void
+        setActive: (v: boolean) => void,
+        readyRef: React.RefObject<boolean>
       ) => {
+        // Only a live layer covers the 2D scene: before its context exists,
+        // and after one is lost, the scene draws the act itself underneath.
+        const opacity = readyRef.current ? scheduled : 0;
         if (wrap.current) {
           wrap.current.style.opacity = String(opacity);
           wrap.current.style.visibility = opacity > 0.001 ? "visible" : "hidden";
@@ -533,9 +483,10 @@ export function ScrollCinema() {
           setActive(near);
         }
       };
-      driveLayer(bull3dWrapRef, bull3dOpacity(progress), BULL3D, bull3dActiveRef, setBull3dActive);
-      driveLayer(candle3dWrapRef, candle3dOpacity(progress), CANDLE3D, candle3dActiveRef, setCandle3dActive);
-      driveLayer(dive3dWrapRef, dive3dOpacity(progress), DIVE3D, dive3dActiveRef, setDive3dActive);
+      driveLayer(bull3dWrapRef, bull3dOpacity(progress), BULL3D, bull3dActiveRef, setBull3dActive, bull3dReadyRef);
+      if (vignetteRef.current) vignetteRef.current.style.opacity = String(1 - 0.9 * safetyLight(progress));
+      driveLayer(candle3dWrapRef, candle3dOpacity(progress), CANDLE3D, candle3dActiveRef, setCandle3dActive, candle3dReadyRef);
+      driveLayer(dive3dWrapRef, dive3dOpacity(progress), DIVE3D, dive3dActiveRef, setDive3dActive, dive3dReadyRef);
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
@@ -546,10 +497,12 @@ export function ScrollCinema() {
         // its index, so the reveal is f(progress) and scrubs backwards exactly
         // like the lab type-on does. See beatCharT in lib/cinema.ts.
         el.style.setProperty("--t", beatCharT(progress, beat).toFixed(4));
-        // "top" beats anchor at their top edge (upper third); others center. The
+        // "top" beats anchor at their top edge (upper third); "left" beats at
+        // their left edge (the left third, beside the bull); others center. The
         // type layer parallaxes harder than the scene → real depth.
-        const baseY = beat.pos === "top" ? "0px" : "-50%";
-        el.style.transform = `translate(calc(-50% + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
+        const baseY = beat.pos === "top" || beat.pos === "left" ? "0px" : "-50%";
+        const baseX = beat.pos === "left" ? "0px" : "-50%";
+        el.style.transform = `translate(calc(${baseX} + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
       });
       // Quant-lab panel — the candle finale's left-hand brain. Lines highlight
       // one-by-one and the live values (μ, σ, agree, K) interpolate on the SAME
@@ -643,6 +596,11 @@ export function ScrollCinema() {
       if (dive3dWrapRef.current) dive3dWrapRef.current.style.transform = t3;
     };
 
+    const syncPosition = () => {
+      const pos = getHeroPosition();
+      if (ready && pos) win()?.setPosition?.(pos);
+    };
+
     const renderScene = (now = 0) => {
       cinemaClock.progress = progress; // shared clock the 3D layers read
       // Un-hide the 2D particle logo at out0 — where the 3D bull STARTS fading,
@@ -654,16 +612,28 @@ export function ScrollCinema() {
       // reads is the logo condensing OUT of the burst — which is what
       // Bull3D's ImpactFlash was written to do.
       const hideBull = bull3dReadyRef.current && progress < BULL3D.out0;
-      if (ready)
-        win()?.renderAt?.(
-          progress,
-          hideBull,
-          candle3dReadyRef.current,
-          now,
-          pxS,
-          pyS,
-          dive3dReadyRef.current
-        );
+      // A throw from the scene must cost one 2D frame, not the film: this runs
+      // inside the rAF loop, and an uncaught error here ended the loop, which
+      // froze the whole film at the last good act (2026-11-06: a scene helper
+      // read an out-of-scope canvas context on the vote act's first frame).
+      if (ready) {
+        try {
+          win()?.renderAt?.(
+            progress,
+            hideBull,
+            candle3dReadyRef.current,
+            now,
+            pxS,
+            pyS,
+            dive3dReadyRef.current
+          );
+        } catch (err) {
+          if (!sceneErrorLogged) {
+            sceneErrorLogged = true;
+            console.error("cinema scene: renderAt threw; the film keeps running", err);
+          }
+        }
+      }
     };
 
     // Persistent render loop: smooth-scrubs progress toward the scroll position
@@ -681,7 +651,11 @@ export function ScrollCinema() {
       (navigator.hardwareConcurrency || 8) <= 4 ||
       ((navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
     const EASE_RATE = LOW_END ? 3.0 : 5.0; // lower = slower/glidier (≈0.05 / 0.08 per 60fps frame)
-    const JUMP_CUT = 0.15; // film progress; past this the follower cuts, see tick()
+    // Under Lenis the scroll arrives already eased, and two lags in series
+    // compound: at 5.0 the picture trailed the wheel by ~1.4 s. The follower
+    // tightens so wheel-stop to film-settle stays where native scrolling had
+    // it (~0.8 s, measured on the prod build); the glide is Lenis's now.
+    const EASE_RATE_LENIS = LOW_END ? 9.0 : 14.0;
     let lastNow = -1;
     // Resume marker bookkeeping. Twice a second at most, and only when the film
     // has actually moved — sessionStorage is synchronous, and this loop sits
@@ -743,12 +717,16 @@ export function ScrollCinema() {
       // A jump (Home/End, a rail seek, a fragment link) CUTS instead of gliding:
       // easing across half the film fast-forwards every act in between, mounting
       // and compiling three WebGL layers on the way to a frame nobody asked for.
-      // Ordinary scrolling never lags this far behind (it would take ~8,000vh/s).
+      // Ordinary scrolling never lags this far behind. A first-order follower
+      // trails a steady scroll by speed / rate, and one film unit is ~1,400vh,
+      // so a lag of 0.15 takes ~1,050vh/s at the native rate (630vh/s on
+      // LOW_END) and ~2,900vh/s under Lenis (1,900vh/s on LOW_END). The old
+      // "~8,000vh/s" here was never right (Gate A2).
       if (Math.abs(diff) > JUMP_CUT) {
         progress = targetProgress;
         diff = 0;
       }
-      const k = 1 - Math.exp(-EASE_RATE * dt);
+      const k = 1 - Math.exp(-(isSmoothing() ? EASE_RATE_LENIS : EASE_RATE) * dt);
       progress = Math.abs(diff) < 0.0002 ? targetProgress : progress + diff * k;
       pxS += (cinemaClock.px - pxS) * 0.055;
       pyS += (cinemaClock.py - pyS) * 0.055;
@@ -772,12 +750,12 @@ export function ScrollCinema() {
           if (tx > maxX) tx = Math.max(8, hov.sx - el.offsetWidth - 14);
           const ty = Math.max(8, hov.sy - 40);
           el.style.transform = `translate(${tx.toFixed(0)}px, ${ty.toFixed(0)}px)`;
-          el.style.borderColor = hov.up ? "rgba(0,255,135,0.55)" : "rgba(255,46,99,0.55)";
+          el.style.borderColor = hov.up ? "rgba(82,255,165,0.55)" : "rgba(255,46,99,0.55)";
           const [l, p] = [el.children[0] as HTMLElement, el.children[1] as HTMLElement];
           if (l) l.textContent = hov.label;
           if (p) {
             p.textContent = hov.pct;
-            p.style.color = hov.up ? "#00ff87" : "#ff2e63";
+            p.style.color = hov.up ? "#52ffa5" : "#ff2e63";
           }
         } else {
           el.style.opacity = "0";
@@ -858,6 +836,11 @@ export function ScrollCinema() {
             insetLeft: railInset(),
           });
           ready = true;
+          // initScene applies the position it was handed AFTER a font await,
+          // and setPosition is dropped until `ready`: a strike dragged in that
+          // window left the safety act on a stale spread (Gate A2). Push the
+          // latest one now that the scene will take it.
+          syncPosition();
           renderScene();
           applyOverlays();
           resolve();
@@ -950,7 +933,7 @@ export function ScrollCinema() {
       if (resumeAt !== null && window.scrollY < 4) {
         const range = section.offsetHeight - window.innerHeight;
         if (range > 0) {
-          window.scrollTo(0, Math.round(section.offsetTop + range * filmToScroll(resumeAt)));
+          jumpTo(Math.round(section.offsetTop + range * filmToScroll(resumeAt)));
           resumed = true;
         }
       }
@@ -1005,17 +988,18 @@ export function ScrollCinema() {
           mono: w2 ? injectMono(w2.document) ?? undefined : undefined,
           position: getHeroPosition() ?? undefined,
           insetLeft: railInset(),
-        }).then(() => renderScene());
+        }).then(() => {
+          // Same race on every re-init: the snapshot above lands late.
+          syncPosition();
+          renderScene();
+        });
       }, 160);
     };
     window.addEventListener("resize", onResize);
 
     // The visitor can still be dragging strikes on the hero after the scene is
     // up; the safety act follows. Drawn on the next frame the film renders.
-    const offPosition = onHeroPosition(() => {
-      const pos = getHeroPosition();
-      if (ready && pos) win()?.setPosition?.(pos);
-    });
+    const offPosition = onHeroPosition(syncPosition);
 
     return () => {
       offPosition();
@@ -1117,10 +1101,10 @@ export function ScrollCinema() {
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
-            style={{ background: "radial-gradient(ellipse at center, rgba(0,255,135,0.06), transparent 62%)" }}
+            style={{ background: "radial-gradient(ellipse at center, rgba(110,120,255,0.08), transparent 62%)" }}
           />
           <div aria-hidden className="relative flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center bg-bull font-mono text-[0.8125rem] font-bold tracking-tight text-bg">
+            <span className="flex size-8 items-center justify-center bg-[image:var(--grad-fill)] font-mono text-[0.8125rem] font-bold tracking-tight text-[var(--grad-on)]">
               LB
             </span>
             <span className="font-display text-3xl tracking-tight text-fg">
@@ -1129,15 +1113,15 @@ export function ScrollCinema() {
           </div>
           <div aria-hidden className="relative h-px w-[16.25rem] overflow-hidden bg-border">
             <div
-              className="h-full bg-bull transition-[width] duration-300 ease-out"
-              style={{ width: `${loadPct}%`, boxShadow: "0 0 12px rgba(0,255,135,0.7)" }}
+              className="h-full bg-[image:var(--grad-fill)] transition-[width] duration-300 ease-out"
+              style={{ width: `${loadPct}%`, boxShadow: "0 0 12px rgba(110,120,255,0.7)" }}
             />
           </div>
           <div aria-hidden className="relative flex w-[16.25rem] items-center justify-between font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint">
             <span className="flex items-center gap-1.5">
               <span className="size-1 rounded-full bg-bull pulse-dot" /> Initializing terminal
             </span>
-            <span className="tabular-nums text-bull/90">{Math.round(loadPct)}%</span>
+            <span className="tabular-nums text-grad">{Math.round(loadPct)}%</span>
           </div>
           {/* The exit is available from second 0 — for the first 10 seconds of a
               slow load this overlay used to cover the only skip button, leaving
@@ -1155,7 +1139,7 @@ export function ScrollCinema() {
               onClick={() => bailToStaticRef.current?.()}
               className="pointer-events-auto border border-border bg-bg/70 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
             >
-              Skip intro →
+              Skip the film →
             </button>
           </div>
         </div>
@@ -1178,7 +1162,7 @@ export function ScrollCinema() {
           style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
         >
           <Suspense fallback={null}>
-            <Tunnel3D active={dive3dActive} onReady={handleDiveReady} />
+            <Tunnel3D active={dive3dActive} onReady={handleDiveReady} onLost={handleDiveLost} />
           </Suspense>
         </div>
         <div
@@ -1187,7 +1171,7 @@ export function ScrollCinema() {
           style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
         >
           <Suspense fallback={null}>
-            <CandleField3D active={candle3dActive} onReady={handleCandleReady} />
+            <CandleField3D active={candle3dActive} onReady={handleCandleReady} onLost={handleCandleLost} />
           </Suspense>
         </div>
         <div
@@ -1196,7 +1180,7 @@ export function ScrollCinema() {
           style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
         >
           <Suspense fallback={null}>
-            <Bull3D active={bull3dActive} onReady={handleBullReady} />
+            <Bull3D active={bull3dActive} onReady={handleBullReady} onLost={handleBullLost} />
           </Suspense>
         </div>
         </>)}
@@ -1205,6 +1189,7 @@ export function ScrollCinema() {
             it did not move with anything, and the grade belongs to the
             composers now (ToneMapping in each 3D layer). */}
         <div
+          ref={vignetteRef}
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.62) 100%)" }}
         />
@@ -1216,23 +1201,40 @@ export function ScrollCinema() {
           <div
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
-            className="absolute left-1/2 text-center"
+            className={b.pos === "left" ? "absolute text-left" : "absolute left-1/2 text-center"}
             style={{
               // "top" beats: viewport-aware — 14% of a 720px viewport bottomed
               // the heading out into the rail's top rows, so the anchor stops
               // at calc(50% - 260px) (and never above 64px on short screens).
-              top: b.pos === "top" ? "clamp(64px, 14%, calc(50% - 260px))" : "50%",
+              // "left" beats sit in the upper-left, above the bull's horns: the
+              // bull fills the lower right and faces left, so beside it at
+              // mid-height its head still crossed the line (Gate A2, d12).
+              top:
+                b.pos === "top"
+                  ? "clamp(64px, 14%, calc(50% - 260px))"
+                  : b.pos === "left"
+                    ? "clamp(64px, 15%, calc(50% - 250px))"
+                    : "50%",
               opacity: 0,
-              // Reserve the rail gutter on BOTH sides (centered text, one rail):
-              // at 768-1000px the old min(92vw, 680px) printed captions over the
-              // rail's box. 100vw divided by --ui-zoom (see the section note);
-              // 2.5vw stays raw because the rail's own left-[2.5vw] is raw.
-              width: "min(680px, calc(100vw / var(--ui-zoom) - 2 * (2.5vw + var(--rail-w) + 10px)))",
+              ...(b.pos === "left"
+                ? {
+                    // The left third, clear of the rail: the subject (the bull)
+                    // is framed in the right third (Bull3D's lens shift).
+                    left: "calc(2.5vw + var(--rail-w) + 24px)",
+                    width: "min(520px, calc(100vw / var(--ui-zoom) * 0.5 - 2.5vw - var(--rail-w) - 48px))",
+                  }
+                : {
+                    // Reserve the rail gutter on BOTH sides (centered text, one rail):
+                    // at 768-1000px the old min(92vw, 680px) printed captions over the
+                    // rail's box. 100vw divided by --ui-zoom (see the section note);
+                    // 2.5vw stays raw because the rail's own left-[2.5vw] is raw.
+                    width: "min(680px, calc(100vw / var(--ui-zoom) - 2 * (2.5vw + var(--rail-w) + 10px)))",
+                  }),
             }}
           >
             <div
               className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl"
-              style={{ textShadow: "0 0 36px rgba(0,255,135,0.16), 0 2px 22px rgba(0,0,0,0.85)" }}
+              style={{ textShadow: "0 0 36px rgba(110,120,255,0.18), 0 2px 22px rgba(0,0,0,0.85)" }}
             >
               {renderChars(b.heading)}
             </div>
@@ -1271,13 +1273,13 @@ export function ScrollCinema() {
               clock via labValRefs. */}
           <div className="px-3.5 py-3 text-[0.6875rem] leading-[1.7] text-fg md:text-[0.75rem] md:leading-[1.8]">
             <div ref={(el) => { labLineRefs.current[0] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-fg-dim">$</span> <span className="text-bull">quantbot</span> --replay SIM --paper
+              <span className="text-fg-dim">$</span> <span className="text-brand-ink">quantbot</span> --replay SIM --paper
             </div>
             <div ref={(el) => { labLineRefs.current[1] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-bull">regime</span> TREND · μ +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#28d7ff" }}>0.12</span> · σ <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#28d7ff" }}>1.24</span> · agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#28d7ff" }}>1</span>/6
+              <span className="text-cyan">regime</span> TREND · μ +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#4d93ff" }}>0.12</span> · σ <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#4d93ff" }}>1.24</span> · agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#4d93ff" }}>1</span>/6
             </div>
             <div ref={(el) => { labLineRefs.current[2] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-fg-dim">→</span> 6 models replayed: <span ref={(el) => { labValRefs.current[3] = el; }} style={{ color: "#28d7ff" }}>1</span> agreed, <span ref={(el) => { labValRefs.current[4] = el; }} style={{ color: "#28d7ff" }}>5</span> did not
+              <span className="text-fg-dim">→</span> 6 models replayed: <span ref={(el) => { labValRefs.current[3] = el; }} style={{ color: "#4d93ff" }}>1</span> agreed, <span ref={(el) => { labValRefs.current[4] = el; }} style={{ color: "#4d93ff" }}>5</span> did not
             </div>
             <div ref={(el) => { labLineRefs.current[3] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
               <span style={{ color: "#ff6b8a" }}>stress</span>(-2σ shock) <span className="text-fg-dim">→</span> max loss capped
@@ -1297,11 +1299,15 @@ export function ScrollCinema() {
         <div
           ref={tooltipRef}
           className="pointer-events-none absolute left-0 top-0 z-30 flex items-center gap-2 border bg-black/85 px-2.5 py-1.5 font-mono text-[0.6875rem] backdrop-blur-sm transition-opacity duration-150"
-          style={{ opacity: 0, borderColor: "rgba(0,255,135,0.5)" }}
+          style={{ opacity: 0, borderColor: "rgba(82,255,165,0.5)" }}
         >
           <span className="text-fg" />
           <span />
         </div>
+        {/* The rail seek's dip: over every layer of the picture and its copy
+            (z-20), under the rail and the price tag (z-30), so the control you
+            clicked never blinks. */}
+        <div ref={dipRef} aria-hidden className="pointer-events-none absolute inset-0 z-[25] bg-bg opacity-0" />
         {/* The film's spine, and its only control: the acts, sound, and skip.
             The centre "Skip intro" pill that used to sit beside it is gone; it
             duplicated the rail's skip row, sat over the dive's best frame, and
@@ -1327,7 +1333,36 @@ export function ScrollCinema() {
             // filmToScroll(FILM_START) is 0, the top of the page, so row 01
             // used to drop the hero back over the film it was opening.
             const p = Math.max(target, FILM_LIFT_END);
-            window.scrollTo({ top: sec.offsetTop + range * filmToScroll(p), behavior: "smooth" });
+            const y = sec.offsetTop + range * filmToScroll(p);
+            // A neighbouring act glides. Anything further CUTS behind a short
+            // dip to the stage colour, so the film never fast-forwards through
+            // the acts in between (Gate A2, ranked item 7): the follower
+            // already cuts a jump this size, and the dip hides the cut and the
+            // next act's layers coming up.
+            const here = scrollToFilm(Math.min(1, Math.max(0, (window.scrollY - sec.offsetTop) / range)));
+            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (Math.abs(p - here) <= JUMP_CUT && !reduced) {
+              glideTo(y, { duration: 1.1 });
+              return;
+            }
+            const dip = dipRef.current;
+            if (!dip || reduced) {
+              jumpTo(y);
+              return;
+            }
+            dip.getAnimations().forEach((a) => a.cancel());
+            dip
+              .animate([{ opacity: 0 }, { opacity: 1 }], { duration: 90, easing: "ease-in", fill: "forwards" })
+              .finished.then(() => {
+                jumpTo(y);
+                // two frames: the follower cuts, then the new act draws
+                requestAnimationFrame(() =>
+                  requestAnimationFrame(() => {
+                    dip.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: "ease-out", fill: "forwards" });
+                  })
+                );
+              })
+              .catch(() => {});
           }}
         />
         <style>{`
@@ -1402,11 +1437,11 @@ function ShatterOverlay() {
             key={i}
             d={d}
             fill="none"
-            stroke={i % 3 === 0 ? "rgba(0,255,135,0.75)" : "rgba(245,245,240,0.6)"}
+            stroke={i % 3 === 0 ? "rgba(143,115,255,0.8)" : "rgba(245,245,240,0.6)"}
             strokeWidth={i % 4 === 0 ? 0.35 : 0.18}
           />
         ))}
-        <circle cx="50" cy="50" r="3.5" fill="none" stroke="rgba(0,255,135,0.8)" strokeWidth="0.3" />
+        <circle cx="50" cy="50" r="3.5" fill="none" stroke="rgba(143,115,255,0.85)" strokeWidth="0.3" />
         <circle cx="50" cy="50" r="7" fill="none" stroke="rgba(245,245,240,0.35)" strokeWidth="0.15" />
       </svg>
     </div>

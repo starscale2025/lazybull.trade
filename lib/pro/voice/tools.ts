@@ -172,7 +172,7 @@ export const VOICE_TOOLS: RealtimeTool[] = [
   {
     type: "function",
     name: "set_color",
-    description: "Set the drawing colour as a hex code like #00ff87.",
+    description: "Set the drawing colour as a hex code like #52ffa5.",
     parameters: { type: "object", properties: { color: { type: "string" } }, required: ["color"] },
   },
   { type: "function", name: "clear_drawings", description: "Erase all drawings.", parameters: { type: "object", properties: {}, required: [] } },

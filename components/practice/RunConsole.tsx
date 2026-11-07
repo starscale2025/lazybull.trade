@@ -163,7 +163,7 @@ const TONE_CLS: Record<LogTone, string> = {
 };
 
 // sideGlow() from RunRitual.tsx, for the two sides the judge can land on.
-const BULL_GLOW = "0 0 30px rgba(0,255,135,.45), 0 0 80px rgba(0,255,135,.2)";
+const BULL_GLOW = "0 0 30px rgba(82,255,165,.45), 0 0 80px rgba(82,255,165,.2)";
 const BEAR_GLOW = "0 0 30px rgba(255,46,99,.45), 0 0 80px rgba(255,46,99,.2)";
 const HEADLINE = "dc-verdict font-display text-[clamp(2rem,4vw,3rem)] leading-[0.9] tracking-[-0.04em]";
 

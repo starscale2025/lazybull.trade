@@ -17,6 +17,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { CANDLE3D, CANDLE_BUILD_END, candleLabT, grade } from "@/lib/cinema";
+import { watchContext } from "./gl-context";
+import { Grade } from "./Grade";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -346,7 +348,7 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
       reflectionFade(
         new THREE.MeshStandardMaterial({
           color: "#031a10",
-          emissive: new THREE.Color("#00ff87"),
+          emissive: new THREE.Color("#52ffa5"),
           emissiveIntensity: 0.4,
           roughness: 0.35,
           metalness: 0.1,
@@ -473,15 +475,15 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
 const LAB_POSE = {
   green: {
     color: new THREE.Color("#9fffd4"),
-    attenuation: new THREE.Color("#00ff87"),
-    emissive: new THREE.Color("#00ff87"),
+    attenuation: new THREE.Color("#52ffa5"),
+    emissive: new THREE.Color("#52ffa5"),
     core: new THREE.Color("#7dffc9"),
-    wick: new THREE.Color("#00ff87"),
+    wick: new THREE.Color("#52ffa5"),
   },
   ice: {
     color: new THREE.Color("#f2fbff"),
     attenuation: new THREE.Color("#bfe8ff"),
-    emissive: new THREE.Color("#9fdcff"),
+    emissive: new THREE.Color("#a9c4ff"),
     core: new THREE.Color("#e4f6ff"),
     wick: new THREE.Color("#cfeeff"),
   },
@@ -510,11 +512,11 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
         ior: 1.5,
         roughness: 0.16,
         metalness: 0,
-        attenuationColor: new THREE.Color("#00ff87"),
+        attenuationColor: new THREE.Color("#52ffa5"),
         attenuationDistance: 1.1,
         clearcoat: 0.7,
         clearcoatRoughness: 0.22,
-        emissive: new THREE.Color("#00ff87"),
+        emissive: new THREE.Color("#52ffa5"),
         emissiveIntensity: 0.22,
         flatShading: true,
       }),
@@ -535,7 +537,7 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
     () =>
       new THREE.MeshStandardMaterial({
         color: "#052a1b",
-        emissive: new THREE.Color("#00ff87"),
+        emissive: new THREE.Color("#52ffa5"),
         emissiveIntensity: 1.7,
         roughness: 0.4,
         metalness: 0,
@@ -653,11 +655,11 @@ function Candles() {
         ior: 1.5,
         roughness: 0.16,
         metalness: 0,
-        attenuationColor: new THREE.Color("#00ff87"),
+        attenuationColor: new THREE.Color("#52ffa5"),
         attenuationDistance: 1.1,
         clearcoat: 0.7,
         clearcoatRoughness: 0.22,
-        emissive: new THREE.Color("#00ff87"),
+        emissive: new THREE.Color("#52ffa5"),
         emissiveIntensity: 0.22,
         flatShading: true,
       }),
@@ -715,7 +717,7 @@ function Candles() {
     () =>
       new THREE.MeshStandardMaterial({
         color: "#052a1b",
-        emissive: new THREE.Color("#00ff87"),
+        emissive: new THREE.Color("#52ffa5"),
         emissiveIntensity: 1.7,
         roughness: 0.4,
         metalness: 0,
@@ -775,7 +777,7 @@ function Candles() {
       fl.visible = FLARE.amt > 0.02;
       fl.position.set(c.x, c.cy + 0.4, 1.1);
       fl.intensity = 26 * FLARE.amt;
-      fl.color.set(c.up ? "#00ff87" : "#ff2e63");
+      fl.color.set(c.up ? "#52ffa5" : "#ff2e63");
     }
   });
   return (
@@ -844,7 +846,7 @@ function Baseline() {
     <mesh ref={ref} visible={false} position={[0, -0.45, 0]}>
       <boxGeometry args={[1, 0.04, 0.04]} />
       <meshBasicMaterial
-        color="#00ff87"
+        color="#52ffa5"
         toneMapped={false}
         transparent
         opacity={0}
@@ -967,7 +969,7 @@ function PrintHead() {
       light.current.visible = on;
       light.current.position.set(x, y + 0.5, 1.4);
       light.current.intensity = (3 + 30 * flash) * (crash ? 1.6 : 1);
-      light.current.color.set(crash ? "#ff2e63" : "#00ff87");
+      light.current.color.set(crash ? "#ff2e63" : "#52ffa5");
     }
     if (ring.current) {
       ring.current.visible = on;
@@ -983,11 +985,11 @@ function PrintHead() {
         <sphereGeometry args={[1, 16, 16]} />
         <meshBasicMaterial color="#c8ffe4" toneMapped={false} />
       </mesh>
-      <pointLight ref={light} visible={false} color="#00ff87" distance={8} decay={2} />
+      <pointLight ref={light} visible={false} color="#52ffa5" distance={8} decay={2} />
       <mesh ref={ring} visible={false}>
         <ringGeometry args={[0.9, 1, 48]} />
         <meshBasicMaterial
-          color="#00ff87"
+          color="#52ffa5"
           transparent
           opacity={0}
           side={THREE.DoubleSide}
@@ -1239,9 +1241,11 @@ function Rig() {
 export default function CandleField3D({
   active,
   onReady,
+  onLost,
 }: {
   active: boolean;
   onReady?: () => void;
+  onLost?: () => void;
 }) {
   // A handle on the live post chain so the colour script can write to it.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1253,7 +1257,10 @@ export default function CandleField3D({
       frameloop={active ? "always" : "never"}
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 42, position: [-5, 9, 12], near: 0.1, far: 200 }}
-      onCreated={() => onReady?.()}
+      onCreated={({ gl }) => {
+        onReady?.();
+        watchContext(gl.domElement, onLost, onReady);
+      }}
       fallback={null}
     >
       <color attach="background" args={["#050505"]} />
@@ -1269,8 +1276,10 @@ export default function CandleField3D({
       <PrintHead />
       <ClickFX />
       {/* z-ranges stay well in front of the camera (z≈11+) — no giant near-plane dots */}
-      <Dust seed={11} count={420} area={[70, 16, 14]} center={[SPAN / 2, 7, 0]} color="#57ffb0" size={0.055} speed={0.11} react={1} />
-      <Dust seed={23} count={320} area={[80, 20, 16]} center={[SPAN / 2, 9, -4]} color="#28d7ff" size={0.045} speed={0.07} react={0.5} />
+      {/* The air is the brand ramp (violet, blue, a little mint); the candles
+          keep mint and red, because up and down are data. */}
+      <Dust seed={11} count={420} area={[70, 16, 14]} center={[SPAN / 2, 7, 0]} color="#8f9bff" size={0.055} speed={0.11} react={1} />
+      <Dust seed={23} count={320} area={[80, 20, 16]} center={[SPAN / 2, 9, -4]} color="#4d93ff" size={0.045} speed={0.07} react={0.5} />
       <Dust seed={37} count={260} area={[60, 10, 10]} center={[SPAN / 2, 2.5, 1]} color="#9dffcf" size={0.04} speed={0.16} react={1.3} />
 
       {/* Polished black-glass floor — deliberately NOT a render-to-texture
@@ -1301,10 +1310,10 @@ export default function CandleField3D({
         args={[SPAN * 2.5, 60]}
         cellSize={1.05}
         cellThickness={0.35}
-        cellColor="#06180f"
+        cellColor="#0a0d1c"
         sectionSize={SP * 6}
         sectionThickness={0.6}
-        sectionColor="#07301e"
+        sectionColor="#161c3e"
         fadeDistance={70}
         fadeStrength={2}
         infiniteGrid
@@ -1320,7 +1329,7 @@ export default function CandleField3D({
       <EffectComposer ref={composerRef} multisampling={0}>
         <Bloom mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
         <ChromaticAberration offset={[0.0005, 0.0009]} />
-        {/* THE GRADE. A composer renders into a float target, and three only
+        {/* TONE MAPPING, which is not the grade. A composer renders into a float target, and three only
             tone-maps on the way to the screen, so this layer had none: every
             emissive over 1.0 clipped flat (the 2026-11 re-tribunal measured
             54.7% of the cube clipped and 186px undithered green runs). Khronos
@@ -1329,6 +1338,9 @@ export default function CandleField3D({
             salmon and the bull green mint, which breaks a colour script built
             on red arriving late and hard. SMAA after it, on display values. */}
         <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+        {/* The grade itself: the loss red and gain green back on their tokens,
+            and a dither for the 8-bit steps. See Grade.tsx. */}
+        <Grade />
         <SMAA />
       </EffectComposer>
       {/* Drives the three rooms onto the live chain. Inside <Canvas> for useFrame. */}

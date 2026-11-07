@@ -174,11 +174,11 @@ export const FIB_COLORS = [
   "#ff2e63", // 0.236
   "#ffb800", // 0.382
   "#22c55e", // 0.5
-  "#22d3ee", // 0.618
-  "#06b6d4", // 0.786
+  "#3884ff", // 0.618
+  "#2f6fe0", // 0.786
   "#9aa0a6", // 1
-  "#a78bfa", // 1.272
-  "#00ff87", // 1.618
+  "#8f73ff", // 1.272
+  "#52ffa5", // 1.618
 ];
 
 // Format number with thousand separators + n decimals

@@ -34,7 +34,7 @@ const FOUNDERS = [
     code: "FOUNDER-IDEA",
     color: "var(--cyan)",
     borderClass: "border-cyan/30",
-    glowBg: "rgba(0,229,255,0.08)",
+    glowBg: "rgba(56,132,255,0.08)",
     bio: "Shaurya is where lazybull started, and he has written most of it. A CS student teaching himself derivatives on the side, he kept watching friends lose money on options trades they didn't fully understand — and decided the interfaces, not the people, were broken.",
     longBio: "The whole thing began with Shaurya sketching a drag-to-build options chain on the back of a notebook. Between May and September 2026 he authored 194 of the repository's 211 commits: the Black-Scholes pricing engine and the Greeks math, the order engine behind the paper account, the market-data layer, the on-device quant models, and the security hardening pass across the API routes.",
     achievements: [
@@ -61,7 +61,7 @@ const FOUNDERS = [
     code: "FOUNDER-PRODUCT",
     color: "var(--bull)",
     borderClass: "border-bull/30",
-    glowBg: "rgba(0,255,135,0.08)",
+    glowBg: "rgba(82,255,165,0.08)",
     bio: "Joshmann owns product and design. He shipped the page you are reading in May 2026, and the Pro voice co-pilot in July — the two pieces of the product with his name on the commits.",
     longBio: "When Shaurya showed him the first scrappy chain mockup, Joshmann saw the product hiding inside it. His shipped work is this About page (May 2026) and the voice co-pilot on /pro (July 2026); the rest of his contribution is the part a repository does not record — the product decisions, the visual language and the argument about what a stranger should see first.",
     achievements: [
@@ -437,12 +437,15 @@ export function About() {
         </div>
 
         <div className="relative shell section-y">
-          <motion.div
-            className="max-w-4xl"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease }}
-          >
+          {/* The H1 is this page's largest paint (on a phone, the paragraph
+              under it is). Both sat in a motion entrance that started at
+              opacity 0, so LCP waited for hydration and then the 0.8s fade
+              (944ms at the Gate A2 review). The block now paints whole from
+              the server HTML and rises out of a blur in CSS, the homepage
+              headline's `matter-rise`: transform and filter only, never
+              opacity, no wait for JS, and off under reduced motion
+              (2026-11-06). */}
+          <div className="matter-rise max-w-4xl">
             <div className="flex items-center gap-3 t-chrome mb-8">
               <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
                 <span className="size-1.5 rounded-full bg-bull pulse-dot" />
@@ -465,7 +468,7 @@ export function About() {
               beginner who can SEE a position is a beginner far less likely to
               be on the wrong side of it. Paper only, while we prove it.
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 

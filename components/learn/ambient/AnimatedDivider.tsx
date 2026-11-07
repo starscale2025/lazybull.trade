@@ -34,7 +34,7 @@ export function AnimatedDivider({
           <div className="relative size-3 diamond-spin">
             <span
               className="absolute inset-0 border border-bull"
-              style={{ transform: "rotate(45deg)", boxShadow: "0 0 12px rgba(0,255,135,0.5)" }}
+              style={{ transform: "rotate(45deg)", boxShadow: "0 0 12px rgba(82,255,165,0.5)" }}
             />
           </div>
           {label && (
@@ -45,7 +45,7 @@ export function AnimatedDivider({
           <div className="relative size-3 diamond-spin" style={{ animationDirection: "reverse" }}>
             <span
               className="absolute inset-0 border border-bull"
-              style={{ transform: "rotate(45deg)", boxShadow: "0 0 12px rgba(0,255,135,0.5)" }}
+              style={{ transform: "rotate(45deg)", boxShadow: "0 0 12px rgba(82,255,165,0.5)" }}
             />
           </div>
         </div>

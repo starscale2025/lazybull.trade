@@ -23,7 +23,7 @@
  * when none did), and runtime is measured, not asserted.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { DecimatedNumber } from "./DecimatedNumber";
 import type { ActiveBot, BotDef, BotResult, Verdict } from "@/lib/quant/types";
 import { AGGREGATE_READ, HOLDOUT, READ } from "@/lib/quant/reads";
@@ -57,6 +57,19 @@ function worstDrawdown(rows: Row[]): number | null {
     worst = worst === null ? dd : Math.min(worst, dd);
   }
   return worst;
+}
+
+/** The headline's type, shared by the live <h2> and the spacers that hold
+    its height (see the monument). */
+const HEADLINE = "font-display text-[clamp(3rem,8vw,6rem)] leading-[0.87] tracking-[-0.05em]";
+
+function RunTheTape() {
+  return (
+    <>
+      Run the <span className="t-accent">tape</span>
+      <span className="text-bull">.</span>
+    </>
+  );
 }
 
 function sideColor(side: Verdict["side"]) {
@@ -142,14 +155,38 @@ export function RunRitual({
   // after the verdict lands, this band folds to a slim strip so three copies
   // of the same numbers don't compete. Unfolding remounts the monument, which
   // replays the settle animation. A new run always unfolds.
+  //
+  // It folds only while the band is OFF screen (2026-11, Gate A2 CLS). On a
+  // timer it folded under the reader's eyes ~6.4s after load and shoved
+  // everything below it up: 0.05 of /quant's layout shift. Off screen, a band
+  // below the viewport changes nothing visible, and one above it is held in
+  // place by scroll anchoring. If it is on screen when the 4s are up, it
+  // waits for the reader to scroll it away.
   const [folded, setFolded] = useState(false);
+  const bandRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!settled) {
       setFolded(false);
       return;
     }
-    const t = setTimeout(() => setFolded(true), 4000);
-    return () => clearTimeout(t);
+    let due = false;
+    let visible = true;
+    const fold = () => {
+      if (due && !visible) setFolded(true);
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      visible = !!entry?.isIntersecting;
+      fold();
+    });
+    if (bandRef.current) io.observe(bandRef.current);
+    const t = setTimeout(() => {
+      due = true;
+      fold();
+    }, 4000);
+    return () => {
+      clearTimeout(t);
+      io.disconnect();
+    };
   }, [settled]);
 
   // The run log types out while the machine holds the lock. Lines are paced
@@ -261,6 +298,7 @@ export function RunRitual({
 
   return (
     <section
+      ref={bandRef}
       aria-label="Run the workbench"
       className="shell shell-wide relative mt-4"
     >
@@ -290,13 +328,17 @@ export function RunRitual({
             </span>
           )}
           <div className="flex-1" />
-          <span className={`t-data text-[0.625rem] ${locked ? "text-bull" : "text-fg-faint"}`}>
+          {/* Both held at their widest state (2026-11-06). The label goes
+              run all (N) → running… → ↻ run again, and at its natural width
+              the button, and this count beside it, slid 39px along the strip
+              at every change. */}
+          <span className={`t-data min-w-[5ch] text-right text-[0.625rem] ${locked ? "text-bull" : "text-fg-faint"}`}>
             {armed}/{total}
           </span>
           <button
             onClick={onRunAll}
             disabled={locked || total === 0}
-            className={`inline-flex h-7 items-center gap-2 border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors ${
+            className={`inline-flex h-7 min-w-[8.5rem] items-center justify-center gap-2 border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors ${
               locked || total === 0
                 ? "cursor-not-allowed border-border text-fg-faint"
                 : "border-bull bg-bull/10 text-bull hover:bg-bull hover:text-bg"
@@ -307,21 +349,29 @@ export function RunRitual({
           </button>
         </div>
 
-        {/* the phosphor rail — the machine's pulse while it holds the lock */}
-        {locked ? <div className="dc-rail relative" /> : <div className="h-0.5" />}
-
-        {/* ── the lockdown notice ─────────────────────────────────────────── */}
-        {locked && (
-          <div className="dc-line relative flex items-stretch border-b border-amber/30 bg-amber/6">
-            <span aria-hidden className="dc-hazard w-1.5 shrink-0" />
-            <span className="t-chrome px-3 py-1.5 text-amber">
-              workspace locked · run in progress · inputs frozen
-            </span>
-          </div>
-        )}
+        {/* the phosphor rail — the machine's pulse while it holds the lock.
+            One 2px element in every phase: the idle spacer used to be h-0.5,
+            2.2px at the 110% root, a hair off the rail it stood in for. */}
+        <div className={`relative h-[2px] ${locked ? "dc-rail" : ""}`} />
 
         {/* ── the monument ────────────────────────────────────────────────── */}
-        <div className="relative grid gap-6 p-6 lg:grid-cols-[1fr_380px] lg:items-center lg:p-8">
+        <div className="relative grid gap-6 px-6 pb-6 pt-9 lg:grid-cols-[1fr_380px] lg:items-center lg:p-8">
+          {/* ── the lockdown notice ─────────────────────────────────────────
+              Laid over the monument's top padding instead of inserted above
+              it (2026-11-06). In flow it pushed the monument down 29px as the
+              lock engaged and pulled it back as the verdict landed: two layout
+              shifts per run, mid first screen. It is one line, ~31px, so the
+              padding has room for it at every width (pt-9 below lg, where it
+              was p-6) and a phone gets the short copy, not a second line. */}
+          {locked && (
+            <div className="dc-line absolute inset-x-0 top-0 flex items-stretch border-b border-amber/30 bg-amber/6">
+              <span aria-hidden className="dc-hazard w-1.5 shrink-0" />
+              <span className="t-chrome min-w-0 truncate px-3 py-1.5 text-amber">
+                workspace locked · <span className="hidden sm:inline">run in progress · </span>inputs frozen
+              </span>
+            </div>
+          )}
+
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 t-eyebrow text-fg-faint">
               <span aria-hidden className="text-bull">
@@ -330,59 +380,92 @@ export function RunRitual({
               <span className="whitespace-nowrap">the workbench</span>
             </div>
 
-            {settled ? (
-              <h2
-                className="dc-verdict mt-1.5 font-display text-[clamp(3rem,8vw,6rem)] leading-[0.87] tracking-[-0.05em]"
-                style={{
-                  color: sideColor(aggregate),
-                  textShadow: sideGlow(aggregate),
-                }}
-              >
-                {AGGREGATE_READ[aggregate]}
-                <span className="crt-flicker">.</span>
-              </h2>
-            ) : (
-              <h2
-                className="mt-1.5 font-display text-[clamp(3rem,8vw,6rem)] leading-[0.87] tracking-[-0.05em] text-fg transition-opacity duration-400 [transition-timing-function:var(--ease-settle)]"
-                style={{ opacity: locked ? 0.35 : 1 }}
-              >
-                Run the <span className="t-accent">tape</span>
-                <span className="text-bull">.</span>
-              </h2>
-            )}
-
-            <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1 t-chrome text-fg-faint">
+            {/* Every headline this band can print, stacked in one grid cell
+                (2026-11-06). The cell takes the tallest, so the verdict cannot
+                resize the card by wrapping differently from "Run the tape."
+                (at 360px "mixed." is one line and "Run the tape." two). Only
+                the live one shows; the rest are invisible, aria-hidden spacers. */}
+            <div className="mt-1.5 grid">
               {settled ? (
-                <>
-                  <span className="text-bull">{counts.buy} {READ.buy}</span>
-                  <span>·</span>
-                  <span>{counts.hold} {READ.hold}</span>
-                  <span>·</span>
-                  <span className="text-bear">{counts.sell} {READ.sell}</span>
-                  {counts.warn > 0 && (
-                    <>
-                      <span>·</span>
-                      <span className="text-amber">{counts.warn} {READ.warn}</span>
-                    </>
-                  )}
-                </>
+                <h2
+                  className={`dc-verdict col-start-1 row-start-1 ${HEADLINE}`}
+                  style={{
+                    color: sideColor(aggregate),
+                    textShadow: sideGlow(aggregate),
+                  }}
+                >
+                  {AGGREGATE_READ[aggregate]}
+                  <span className="crt-flicker">.</span>
+                </h2>
               ) : (
-                <span>{total} staged</span>
+                <h2
+                  className={`col-start-1 row-start-1 ${HEADLINE} text-fg transition-opacity duration-400 [transition-timing-function:var(--ease-settle)]`}
+                  style={{ opacity: locked ? 0.35 : 1 }}
+                >
+                  <RunTheTape />
+                </h2>
               )}
-              <span>·</span>
-              <span>walk-forward · no lookahead</span>
-              <span>·</span>
-              {/* The provenance must name the SAME tape the chrome strip
-                  named — a header reading "fallback tape" over a line reading
-                  "seed tape" is exactly the contradiction the simulated-data
-                  lamp exists to prevent. */}
-              <span className="text-amber">
-                {dataSource === "live"
-                  ? "live tape · not advice"
-                  : dataSource === "fallback"
-                    ? "fallback tape · not advice"
-                    : "seed tape · not advice"}
-              </span>
+              <div aria-hidden className={`invisible col-start-1 row-start-1 ${HEADLINE}`}>
+                <RunTheTape />
+              </div>
+              {Object.values(AGGREGATE_READ).map((read) => (
+                <div key={read} aria-hidden className={`invisible col-start-1 row-start-1 ${HEADLINE}`}>
+                  {read}.
+                </div>
+              ))}
+            </div>
+
+            {/* The same for the line under it: the verdict's counts run
+                longer than "4 staged", and gain a fourth item when a bot reads
+                caution. A spacer holding the longest line this can print (each
+                count at the stack's size, the longest tape name) keeps the
+                height it will need from the first frame; content-start packs
+                the live rows at the top instead of spreading them over it. */}
+            <div className="mt-2 grid">
+              <div className="col-start-1 row-start-1 flex flex-wrap content-start gap-x-3.5 gap-y-1 t-chrome text-fg-faint">
+                {settled ? (
+                  <>
+                    <span className="text-bull">{counts.buy} {READ.buy}</span>
+                    <span>·</span>
+                    <span>{counts.hold} {READ.hold}</span>
+                    <span>·</span>
+                    <span className="text-bear">{counts.sell} {READ.sell}</span>
+                    {counts.warn > 0 && (
+                      <>
+                        <span>·</span>
+                        <span className="text-amber">{counts.warn} {READ.warn}</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <span>{total} staged</span>
+                )}
+                <span>·</span>
+                <span>walk-forward · no lookahead</span>
+                <span>·</span>
+                {/* The provenance must name the SAME tape the chrome strip
+                    named — a header reading "fallback tape" over a line reading
+                    "seed tape" is exactly the contradiction the simulated-data
+                    lamp exists to prevent. */}
+                <span className="text-amber">
+                  {dataSource === "live"
+                    ? "live tape · not advice"
+                    : dataSource === "fallback"
+                      ? "fallback tape · not advice"
+                      : "seed tape · not advice"}
+                </span>
+              </div>
+              <div aria-hidden className="invisible col-start-1 row-start-1 flex flex-wrap gap-x-3.5 gap-y-1 t-chrome">
+                {(["buy", "hold", "sell", "warn"] as const).map((side) => (
+                  <Fragment key={side}>
+                    <span>{total} {READ[side]}</span>
+                    <span>·</span>
+                  </Fragment>
+                ))}
+                <span>walk-forward · no lookahead</span>
+                <span>·</span>
+                <span>fallback tape · not advice</span>
+              </div>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-x-11 gap-y-7">

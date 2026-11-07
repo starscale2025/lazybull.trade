@@ -10,6 +10,12 @@ import { useModalFocus } from "./useModalFocus";
 
 // Naked short call demo: short 1 call at $100 strike, premium $3
 const NAKED_CALL = [{ id: "demo", type: "C" as const, side: "short" as const, strike: 100, qty: 1, premium: 3 }];
+// The slider's travel, and the price where the $5,000 balance crosses $0
+// (strike + (capital + premium collected) / 100 shares): $153.
+const SPOT_MIN = 80;
+const SPOT_MAX = 200;
+const ZERO_AT = 100 + (DEFAULT_CAPITAL + 300) / 100;
+const zeroPct = ((ZERO_AT - SPOT_MIN) / (SPOT_MAX - SPOT_MIN)) * 100;
 
 // The /trade first-visit briefing. The 2026-11 verification found it invisible
 // to assistive tech (no dialog role, no focus), mounting UNDER the open consent
@@ -17,6 +23,15 @@ const NAKED_CALL = [{ id: "demo", type: "C" as const, side: "short" as const, st
 // docs/COMPLIANCE.md (so it could never go negative and never showed "more than
 // that"), and offering a "skip" that silently turned training wheels off while
 // its own copy claimed training wheels owned the loss limit and kill switch.
+//
+// 2026-11-06: it then gated BOTH exits on dragging the balance below $0, and
+// the safe one on a checkbox too. On an $80–$160 slider $0 only arrives past
+// $153, the last tenth of the track, so a visitor who slid to "−$2,000, got
+// it" found two dead buttons and read the page as broken. Keeping training
+// wheels on is the default and cannot hurt anyone, so it is one click now.
+// Only turning them off still waits for the balance to go below $0 and an
+// explicit "I understand". The track runs to $200, so $0 arrives at 61% of it,
+// and a tick marks where.
 export function RiskWizard() {
   const { wizardSeen, setWizardSeen, setTrainingWheels } = useSafety();
   const { consent, ready } = useConsent();
@@ -129,15 +144,15 @@ export function RiskWizard() {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between t-chrome text-fg-dim">
-                  <span>$80</span>
+                  <span>${SPOT_MIN}</span>
                   <span className="text-bull">strike $100</span>
-                  <span>$160</span>
+                  <span>${SPOT_MAX}</span>
                 </div>
                 <input
                   id="risk-spot"
                   type="range"
-                  min={80}
-                  max={160}
+                  min={SPOT_MIN}
+                  max={SPOT_MAX}
                   step={1}
                   value={spot}
                   onChange={(e) => {
@@ -146,57 +161,75 @@ export function RiskWizard() {
                     if (DEFAULT_CAPITAL + payoff(NAKED_CALL, v) < 0) setSawLoss(true);
                   }}
                   aria-label="stock price"
+                  aria-valuetext={`$${spot}, balance ${balance < 0 ? "minus " : ""}$${fmt(balance)}`}
                   className="mt-1 w-full accent-bull"
                 />
-                <div className="mt-1 text-center t-data text-[0.6875rem] text-fg">
+                {/* Where the balance crosses $0: past this tick it is debt. */}
+                <div className="relative mt-1 h-4" aria-hidden>
+                  <span
+                    className="absolute top-0 flex -translate-x-1/2 flex-col items-center t-chrome text-bear"
+                    style={{ left: `${zeroPct.toFixed(2)}%` }}
+                  >
+                    <span className="h-1.5 w-px bg-bear" />
+                    $0 balance
+                  </span>
+                </div>
+                <div className="mt-2 text-center t-data text-[0.6875rem] text-fg">
                   spot price ${spot}
                 </div>
               </div>
 
-              {/* Acknowledgment */}
-              <label className="mt-5 flex cursor-pointer items-start gap-3 border border-border bg-bg p-3 hover:border-bull/40">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 size-4 accent-bull"
-                  checked={accepted}
-                  onChange={(e) => setAccepted(e.target.checked)}
-                />
-                <div className="t-body-sm text-fg">
-                  I understand options can lose more than I put in. I&apos;ll start with{" "}
-                  <span className="text-bull">training wheels on</span>: defined-risk strategies only. The $500 daily
-                  loss limit and the kill switch stay on either way.
-                </div>
-              </label>
-
-              {!sawLoss && (
-                <p className="mt-3 t-chrome text-amber" aria-live="polite">
-                  slide until the balance goes below $0 — both choices below wait for that
-                </p>
-              )}
-
-              <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-                <div className="flex max-w-xs flex-col gap-1">
+              <div className="mt-6 grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                {/* The risky exit: it waits for the loss and an explicit yes. */}
+                <div className="order-last flex flex-col gap-2.5 border border-border bg-bg p-3 md:order-none">
+                  <span className="text-[0.75rem] leading-snug text-fg-faint">
+                    Turning training wheels off allows unbounded-risk strategies (naked calls and puts, short
+                    straddles) and short selling. Your $500 daily loss limit and kill switch stay on.
+                  </span>
+                  <label className={`flex items-start gap-2.5 ${sawLoss ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 size-4 accent-bull"
+                      checked={accepted}
+                      disabled={!sawLoss}
+                      onChange={(e) => setAccepted(e.target.checked)}
+                    />
+                    <span className="t-body-sm text-fg">I understand options can lose more than I put in.</span>
+                  </label>
+                  {!sawLoss && (
+                    <p className="t-chrome text-amber">
+                      first slide past ${ZERO_AT} and watch the balance go below $0
+                    </p>
+                  )}
+                  {/* Always mounted, so the crossing is heard: the hint above
+                      unmounts at the very moment the balance goes below $0, and
+                      a live region that leaves the page announces nothing
+                      (Gate A2). */}
+                  <p className="sr-only" aria-live="polite">
+                    {sawLoss
+                      ? "The balance went below $0: this position can lose more than the account holds. You can now turn training wheels off."
+                      : ""}
+                  </p>
                   <button
                     type="button"
                     onClick={() => close(false)}
-                    disabled={!sawLoss}
-                    className="w-fit font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-fg hover:underline disabled:opacity-40 disabled:hover:no-underline"
+                    disabled={!sawLoss || !accepted}
+                    className="w-fit font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-fg hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
                   >
                     Turn training wheels off
                   </button>
-                  <span className="text-[0.75rem] leading-snug text-fg-faint">
-                    Unbounded-risk strategies (naked calls and puts, short straddles) and short selling become allowed.
-                    Your $500 daily loss limit and kill switch stay on.
-                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => close(true)}
-                  disabled={!accepted || !sawLoss}
-                  className="inline-flex items-center gap-2 bg-bull px-5 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-opacity disabled:opacity-30"
-                >
-                  keep training wheels on →
-                </button>
+                {/* The safe exit is the default and is never gated. */}
+                <div className="flex flex-col items-stretch gap-1.5 md:items-end">
+                  <button
+                    type="button"
+                    onClick={() => close(true)}
+                    className="inline-flex items-center justify-center gap-2 btn-grad px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-[filter] hover:brightness-110"
+                  >
+                    keep training wheels on →
+                  </button>
+                  <span className="t-chrome text-fg-faint md:text-right">defined-risk strategies only</span>
+                </div>
               </div>
             </div>
           </motion.div>

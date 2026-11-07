@@ -43,7 +43,7 @@ export function BottomBar({
             onClick={() => onPreset(p)}
             className={`h-6 min-w-7 border px-1.5 transition-colors ${
               p === preset
-                ? "border-bull bg-bull/10 text-bull"
+                ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink"
                 : "border-transparent text-fg-dim hover:border-border hover:text-fg"
             }`}
           >
@@ -54,7 +54,7 @@ export function BottomBar({
           className="ml-2 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 text-fg-dim"
           title="Y-axis auto-scales to the visible range."
         >
-          <span className="size-1 rounded-full bg-bull" />
+          <span className="size-1 rounded-full bg-[image:var(--grad-fill)]" />
           AUTO Y
         </span>
         {onToggleLog && (
@@ -63,7 +63,7 @@ export function BottomBar({
             aria-pressed={log}
             title={log ? "Log price scale — click for linear" : "Linear price scale — click for log"}
             className={`inline-flex h-6 items-center border px-1.5 transition-colors ${
-              log ? "border-bull bg-bull/10 text-bull" : "border-transparent text-fg-dim hover:border-border hover:text-fg"
+              log ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink" : "border-transparent text-fg-dim hover:border-border hover:text-fg"
             }`}
           >
             LOG

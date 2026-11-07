@@ -5,7 +5,7 @@
 <style>
   :root {
     --bg: #050505; --fg: #f5f5f0; --fg-dim: #8a8a82;
-    --bull: #00ff87; --bear: #ff2e63; --cyan: #00e5ff; --amber: #ffb800; --border: #1f1f1f;
+    --bull: #52ffa5; --bear: #ff2e63; --cyan: #3884ff; --amber: #ffb800; --border: #1f1f1f;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; transition: none !important; animation: none !important; }
   html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
@@ -30,14 +30,14 @@
     position: absolute; left: 50%; top: 50%; width: 120vw; height: 120vh;
     transform: translate(-50%, -50%);
     background:
-      radial-gradient(38% 42% at 42% 44%, rgba(0,255,135,0.16), transparent 70%),
-      radial-gradient(34% 40% at 62% 58%, rgba(0,229,255,0.08), transparent 70%);
+      radial-gradient(38% 42% at 42% 44%, rgba(110,120,255,0.16), transparent 70%),
+      radial-gradient(34% 40% at 62% 58%, rgba(56,132,255,0.08), transparent 70%);
     pointer-events: none;
   }
   #outline { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
   #outline path {
-    fill: none; stroke: var(--bull); stroke-width: 2;
-    filter: drop-shadow(0 0 12px rgba(0,255,135,0.55));
+    fill: none; stroke: #8f9bff; stroke-width: 2;
+    filter: drop-shadow(0 0 12px rgba(110,120,255,0.55));
   }
   #mac { position: absolute; left: 50%; top: 50%; width: 840px; height: 560px;
          transform: translate(-50%, -50%); }
@@ -61,7 +61,7 @@
   .panel {
     position: absolute; border: 1px solid var(--border); border-radius: 8px;
     background-color: #0a0a0a; background-repeat: no-repeat;
-    box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,255,135,0.06);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(143,115,255,0.08);
     overflow: hidden; will-change: transform, opacity;
   }
   .panel::after {
@@ -144,7 +144,21 @@ function mixHex(a, b, t) {
 // nine-act showpiece was typeset in Menlo on a Mac, Consolas on Windows and
 // DejaVu on Linux. MONO is the parent's own JetBrains Mono face, injected into
 // this document as an @font-face by ScrollCinema before initScene runs.
-let GREEN = "#00ff87", RED = "#ff2e63", CYAN = "#00e5ff", AMBER = "#ffb800", INK = "#f5f5f0", GRAY = "#8a8a82";
+let GREEN = "#52ffa5", RED = "#ff2e63", CYAN = "#3884ff", AMBER = "#ffb800", INK = "#f5f5f0", GRAY = "#8a8a82", BG = "#050505";
+// The brand ramp (globals.css THE BRAND GRADIENT): violet → blue → mint. GREEN
+// stays for what it means (up, profit, armed); decoration draws from this.
+const RAMP = [[143, 115, 255], [92, 154, 255], [82, 255, 165]];
+function rampAt(f) {
+  f = Math.min(1, Math.max(0, f)) * (RAMP.length - 1);
+  const i = Math.min(RAMP.length - 2, Math.floor(f)), k = f - i;
+  return RAMP[i].map((v, j) => Math.round(v + (RAMP[i + 1][j] - v) * k));
+}
+function ringGradient(ctx, cx, cy) {
+  if (!ctx.createConicGradient) return CYAN;
+  const g = ctx.createConicGradient(-Math.PI / 2, cx, cy);
+  g.addColorStop(0, "#8f73ff"); g.addColorStop(0.5, "#5c9aff"); g.addColorStop(1, "#52ffa5");
+  return g;
+}
 let MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 // alpha wrapper that accepts either #rrggbb or rgb(...) so fills never break
 function withAlpha(c, a) {
@@ -325,6 +339,7 @@ window.initScene = async function initScene(cfg) {
     if (t.amber) AMBER = t.amber;
     if (t.fg) INK = t.fg;
     if (t.fgDim) GRAY = t.fgDim;
+    if (t.bg) BG = t.bg;
     const rs = document.documentElement.style;
     for (const [k, v] of Object.entries({
       "--bull": t.bull, "--bear": t.bear, "--cyan": t.cyan,
@@ -593,7 +608,7 @@ function drawSafety(ctx, q, env, W, H) {
   for (const pt of pts) area.lineTo(pt.x, pt.y);
   area.lineTo(pts[pts.length - 1].x, P.zeroY); area.closePath();
   const sides = [
-    [ch.y, P.zeroY - ch.y, GREEN, 0.10],
+    [ch.y, P.zeroY - ch.y, GREEN, 0.06],
     [P.zeroY, P.lossY - P.zeroY + 2, RED, 0.14],
   ];
   for (const [y0, h, col, a] of sides) {
@@ -602,12 +617,16 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.fillStyle = withAlpha(col, a); ctx.fill(area);
     ctx.restore();
   }
-  // the payoff line: green where it makes money, red where it loses
-  for (const [y0, h, col] of [[ch.y - 8, P.zeroY - ch.y + 8, GREEN], [P.zeroY, P.lossY - P.zeroY + 8, RED]]) {
+  // the payoff line: green where it makes money, red where it loses. LIGHT IS
+  // THE HIERARCHY (Gate A2): full strength and glow go only to the loss, its
+  // floor and its figure, the one certain number; the conditional upside ramp
+  // and its ceiling hold at ~60% until the reader has the loss.
+  for (const [y0, h, col, a, glow] of [[ch.y - 8, P.zeroY - ch.y + 8, GREEN, 0.6, 4], [P.zeroY, P.lossY - P.zeroY + 8, RED, 1, 10]]) {
     ctx.save();
     ctx.beginPath(); ctx.rect(ch.x - 4, y0, ch.w + 8, h); ctx.clip();
     pathTo(revealX);
-    ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.shadowBlur = 10; ctx.shadowColor = col; ctx.stroke();
+    ctx.globalAlpha = alpha * a;
+    ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.shadowBlur = glow; ctx.shadowColor = col; ctx.stroke();
     ctx.restore();
   }
   // laser tip riding the reveal front — the payoff is being cut, not faded in
@@ -645,8 +664,12 @@ function drawSafety(ctx, q, env, W, H) {
   const SMALL = `500 ${Math.round(fs * 0.72)}px ${MONO}`;
   const money = (v) => "$" + Math.round(Math.abs(v)).toLocaleString("en-US");
   const pos = P.pos || POSITION;
+  // THE LABELS ARE READ, SO THEY ARRIVE BY HALF-WAY AND HOLD (Gate A2, d10).
+  // They used to finish at q 0.7, a breath before the act began to fade, so
+  // the finished frame was on screen for almost no scroll. All four now settle
+  // by q 0.5 and hold until the act's out-fade (0.682), about 500px later.
   // the floor: a live guard line where the loss stops
-  const guard = seg(q, 0.32, 0.6) * alpha;
+  const guard = seg(q, 0.3, 0.42) * alpha;
   if (guard > 0.02) {
     ctx.globalAlpha = guard; ctx.strokeStyle = RED; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
     ctx.lineDashOffset = -((NOW * 22) % 12); // marching ants — the guard is live
@@ -659,14 +682,14 @@ function drawSafety(ctx, q, env, W, H) {
     const figure = "−" + money(pos.maxLoss);
     ctx.fillText(figure, ch.x, P.lossY + 12);
     ctx.font = SMALL; ctx.fillStyle = GRAY;
-    const why = "most it can lose · " + (pos.chosen ? "you set it before the trade" : "the example spread up top");
+    const why = "most it can lose · " + (pos.chosen ? "you set it before the trade" : "an example spread");
     ctx.fillText(why, ch.x, P.lossY + 16 + big);
     ctx.globalAlpha = alpha;
   }
   // breakeven: neutral, labelled on the zero axis to the LEFT of the crossing,
   // where the curve never goes (the hero puts its B/E in the same place). It
   // used to sit above the chart's top edge, ~25px under the copy's sub-line.
-  const be = seg(q, 0.4, 0.66) * alpha;
+  const be = seg(q, 0.36, 0.48) * alpha;
   if (be > 0.02) {
     ctx.globalAlpha = be; ctx.strokeStyle = "rgba(245,245,240,0.45)"; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.2;
     ctx.lineDashOffset = -((NOW * 16) % 9);
@@ -681,7 +704,7 @@ function drawSafety(ctx, q, env, W, H) {
   // sits just above the floor, to the left of its own tick, where the curve
   // never goes (left of K1 is the flat floor; between the ramp and K2 is
   // empty), so neither can collide with the loss figure under the floor.
-  const lbl = seg(q, 0.45, 0.7) * alpha;
+  const lbl = seg(q, 0.4, 0.5) * alpha;
   if (lbl > 0.02) {
     ctx.globalAlpha = lbl; ctx.font = SMALL; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
     ctx.strokeStyle = GRAY; ctx.lineWidth = 1;
@@ -689,14 +712,16 @@ function drawSafety(ctx, q, env, W, H) {
       ctx.beginPath(); ctx.moveTo(x, P.lossY - 6); ctx.lineTo(x, P.lossY + 6); ctx.stroke();
       ctx.fillStyle = CYAN; ctx.fillText(name, x - 8, P.lossY - 8);
     }
-    // the upside: neutral, under its own ceiling, with the condition attached
+    // the upside: neutral, under its own ceiling, with the condition attached.
+    // Neutral is not faint: at 75% alpha these measured under 4.5:1 (Gate A2),
+    // so they are full GRAY now, smaller and uncoloured, still legible.
     ctx.textAlign = "right"; ctx.textBaseline = "top";
     const rx = ch.x + ch.w, ty = P.profY + 10;
-    ctx.globalAlpha = lbl * 0.75; ctx.font = SMALL; ctx.fillStyle = GRAY;
+    ctx.globalAlpha = lbl; ctx.font = SMALL; ctx.fillStyle = GRAY;
     ctx.fillText("most it can make", rx, ty);
-    ctx.globalAlpha = lbl; ctx.font = `500 ${fs}px ${MONO}`; ctx.fillStyle = GRAY;
+    ctx.font = `500 ${fs}px ${MONO}`;
     ctx.fillText("+" + money(pos.maxProfit), rx, ty + fs);
-    ctx.globalAlpha = lbl * 0.75; ctx.font = SMALL;
+    ctx.font = SMALL;
     ctx.fillText("only above " + pos.k2 + " at expiry", rx, ty + fs * 2.3);
     ctx.textAlign = "left";
     ctx.globalAlpha = alpha;
@@ -704,7 +729,7 @@ function drawSafety(ctx, q, env, W, H) {
   // kill switch: armed early, while the headline is still up, and parked under
   // the chart's right edge. A status lamp, not a headline: the green is the
   // dot, the words stay neutral so the loss figure keeps the top of the frame.
-  const kill = seg(q, 0.30, 0.50) * alpha;
+  const kill = seg(q, 0.28, 0.42) * alpha;
   if (kill > 0.02) {
     ctx.globalAlpha = kill; ctx.font = SMALL; ctx.textAlign = "right"; ctx.textBaseline = "top";
     const label = "kill switch armed", kx = ch.x + ch.w, ky = P.lossY + 44;
@@ -764,19 +789,19 @@ function drawConsensus(ctx, v, env, W, H) {
   // center charge glow: the verdict accumulating energy behind the tally
   const chgA = Math.max(0, 0.05 + 0.10 * arcT + 0.05 * Math.sin(NOW * 3));
   const cg = ctx.createRadialGradient(R.cx, R.cy, 0, R.cx, R.cy, R.r * 0.40);
-  cg.addColorStop(0, `rgba(0,255,135,${chgA})`);
-  cg.addColorStop(1, "rgba(0,255,135,0)");
+  cg.addColorStop(0, `rgba(110,120,255,${chgA})`);
+  cg.addColorStop(1, "rgba(110,120,255,0)");
   ctx.globalAlpha = alpha; ctx.fillStyle = cg;
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.40, 0, TAU); ctx.fill();
   ctx.lineWidth = 6; ctx.strokeStyle = "rgba(245,245,240,0.10)";
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, 0, TAU); ctx.stroke();
-  ctx.strokeStyle = GREEN; ctx.shadowBlur = 12; ctx.shadowColor = GREEN;
+  ctx.strokeStyle = ringGradient(ctx, R.cx, R.cy); ctx.shadowBlur = 12; ctx.shadowColor = "#6f86ff";
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, -Math.PI / 2, -Math.PI / 2 + TAU * arcT); ctx.stroke();
   ctx.shadowBlur = 0;
   // radar sweep: a soft arc orbiting the ring — the ensemble is always scanning
   const sweep = (NOW * 0.9) % TAU;
-  ctx.globalAlpha = alpha * 0.45; ctx.lineWidth = 2.2; ctx.strokeStyle = "rgba(0,255,135,0.55)";
-  ctx.shadowBlur = 8; ctx.shadowColor = GREEN;
+  ctx.globalAlpha = alpha * 0.45; ctx.lineWidth = 2.2; ctx.strokeStyle = "rgba(143,155,255,0.55)";
+  ctx.shadowBlur = 8; ctx.shadowColor = "#7b8cff";
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42 + 8, sweep, sweep + 0.65); ctx.stroke();
   ctx.shadowBlur = 0; ctx.globalAlpha = alpha;
   // tier text
@@ -785,6 +810,26 @@ function drawConsensus(ctx, v, env, W, H) {
   // The band words from lib/quant/ai-bots.ts BAND_LABEL: what the ring measures
   // is how tightly the models agreed, not a grade on a trade.
   const tier = tierPct >= 0.83 ? "very strong agreement" : tierPct >= 0.7 ? "moderate agreement" : tierPct >= 0.55 ? "lean" : "split";
+  // A clean plate under the tally: the spokes and their sparks ran straight
+  // through "9/12 moderate agreement" (Gate A2, d11). Soft-edged, in the stage
+  // colour, so it reads as space rather than as a box.
+  {
+    const countFont = `700 ${Math.round(H * 0.05)}px ${MONO}`, tierFont = `600 ${Math.round(H * 0.02)}px ${MONO}`;
+    ctx.font = countFont; const cw = ctx.measureText(`${shown}/${R.nodes.length}`).width;
+    ctx.font = tierFont; const tw = ctx.measureText(tier).width;
+    const pw = Math.max(cw, tw) / 2 + H * 0.03, ph = H * 0.06;
+    const pcy = R.cy + H * 0.008;
+    const plate = ctx.createRadialGradient(R.cx, pcy, 0, R.cx, pcy, pw * 1.15);
+    plate.addColorStop(0, withAlpha(BG, 0.94));
+    plate.addColorStop(0.72, withAlpha(BG, 0.88));
+    plate.addColorStop(1, withAlpha(BG, 0));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(R.cx, pcy); ctx.scale(1, ph / pw); ctx.translate(-R.cx, -pcy);
+    ctx.fillStyle = plate;
+    ctx.beginPath(); ctx.arc(R.cx, pcy, pw * 1.15, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
   ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.font = `700 ${Math.round(H * 0.05)}px ${MONO}`;
   ctx.fillText(`${shown}/${R.nodes.length}`, R.cx, R.cy - H * 0.008);
@@ -796,12 +841,12 @@ function drawConsensus(ctx, v, env, W, H) {
   const fl = seg(v, 0.86, 0.93) * (1 - seg(v, 0.93, 1.0));
   if (fl > 0.01) {
     ctx.globalAlpha = alpha * fl * 0.9;
-    ctx.strokeStyle = GREEN; ctx.lineWidth = 3; ctx.shadowBlur = 16; ctx.shadowColor = GREEN;
+    ctx.strokeStyle = ringGradient(ctx, R.cx, R.cy); ctx.lineWidth = 3; ctx.shadowBlur = 16; ctx.shadowColor = "#7b5cff";
     ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * (0.42 + fl * 0.5), 0, TAU); ctx.stroke();
     ctx.shadowBlur = 0;
     const fg = ctx.createRadialGradient(R.cx, R.cy, 0, R.cx, R.cy, Math.max(W, H) * 0.55);
-    fg.addColorStop(0, `rgba(0,255,135,${0.10 * fl})`);
-    fg.addColorStop(1, "rgba(0,255,135,0)");
+    fg.addColorStop(0, `rgba(110,120,255,${0.10 * fl})`);
+    fg.addColorStop(1, "rgba(110,120,255,0)");
     ctx.globalAlpha = alpha; ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
   }
   ctx.restore();
@@ -897,8 +942,8 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     const poA = 0.16 * Math.sin(po * Math.PI); // spike then settle
     if (poA > 0.002) {
       const pg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * 0.45);
-      pg.addColorStop(0, `rgba(0,255,135,${poA})`);
-      pg.addColorStop(1, "rgba(0,255,135,0)");
+      pg.addColorStop(0, `rgba(110,120,255,${poA})`);
+      pg.addColorStop(1, "rgba(110,120,255,0)");
       ctx.fillStyle = pg; ctx.fillRect(0, 0, W, H);
     }
   }
@@ -906,11 +951,21 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   // crossfade envelopes overlap at boundaries → no black flash between acts.
   // Gated on CHART so a 0-size init (geometry not built yet) can't NaN/crash.
   if (CHART) {
-    const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety), eCon = actEnv(t, P.consensus);
+    // Safety and the vote cross in ONE short dissolve (0.682 → 0.698), and the
+    // vote then holds a plateau three times its fade before it clears (Gate
+    // A2, d11): at the default fades it overlapped safety for ~555px and never
+    // reached full opacity at all. The 3D bull waits for it (BULL3D_SHOW).
+    const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety, 0.02, 0.008), eCon = actEnv(t, P.consensus, 0.008, 0.008);
     if (eReg > 0.001) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
     // 3D candle canyon (R3F) owns this beat when live → skip the 2D chart.
     if (eCan > 0.001 && !hideCandle) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
     if (eSaf > 0.001) drawSafety(ctx, seg(t, ...P.safety), eSaf, W, H);
+    // The safety act is the one information frame: the lens vignette lifts
+    // off it so the loss figure in the corner shows at the full token red (it
+    // measured ~76% under two stacked vignettes, Gate A2). The parent's own
+    // vignette follows the same envelope (safetyLight in lib/cinema.ts).
+    const vig = document.getElementById("vignette");
+    if (vig) vig.style.opacity = String(1 - 0.9 * eSaf);
     if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
   }
 
@@ -935,14 +990,14 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     for (const pt of PARTICLES) {
       const x = lerp(pt.sx, pt.tx, conv), y = lerp(pt.sy, pt.ty, conv);
       ctx.globalAlpha = (0.35 + 0.65 * conv) * brightness * dissolve;
-      ctx.shadowBlur = pt.glow ? 10 : 0; ctx.shadowColor = GREEN;
-      ctx.fillStyle = pt.tint < 0.6 ? GREEN : INK;
+      ctx.shadowBlur = pt.glow ? 10 : 0; ctx.shadowColor = "#7b8cff";
+      ctx.fillStyle = pt.tint < 0.6 ? `rgb(${rampAt(pt.tint / 0.6).join(",")})` : INK;
       ctx.fillRect(x, y, pt.size, pt.size);
     }
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     const g = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, W * 0.3);
-    g.addColorStop(0, `rgba(0,255,135,${0.16 * conv * brightness * dissolve})`);
-    g.addColorStop(1, "rgba(0,255,135,0)");
+    g.addColorStop(0, `rgba(110,120,255,${0.16 * conv * brightness * dissolve})`);
+    g.addColorStop(1, "rgba(110,120,255,0)");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   bullR.style.opacity = "0";
@@ -954,7 +1009,8 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   // frame to black, which left the film ending on empty screen. Now it thins
   // right up to the hand-off and the parent dissolves the whole stage over it
   // (HANDOFF_FADE in lib/cinema.ts), so the last frame has rain in it.
-  const rainStart = 0.9, rainPeakEnd = 0.925, rainThin = 0.955, rainEnd = 1.0;
+  // It thins WITH the stage's dissolve (0.975), not 0.02 ahead of it (Gate A2).
+  const rainStart = 0.9, rainPeakEnd = 0.925, rainThin = 0.975, rainEnd = 1.0;
   const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, rainEnd));
   if (rainAmt > 0.002) {
     const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
@@ -969,8 +1025,9 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
         const y = row * cell;
         if (y > H) continue;
         const chc = MATRIX_CHARS[(col.lead + row * 3 + Math.floor(fall * 26)) % MATRIX_CHARS.length];
-        if (k === 0) { ctx.fillStyle = `rgba(214,255,232,${rainAmt})`; ctx.shadowBlur = 8; ctx.shadowColor = GREEN; }
-        else { ctx.fillStyle = `rgba(0,255,135,${rainAmt * (1 - k / col.len) * 0.82})`; ctx.shadowBlur = 0; }
+        const rc = col.rgb || (col.rgb = rampAt(col.x / Math.max(1, W)));
+        if (k === 0) { ctx.fillStyle = `rgba(${rc.map((v) => Math.round(v + (255 - v) * 0.7)).join(",")},${rainAmt})`; ctx.shadowBlur = 8; ctx.shadowColor = `rgb(${rc.join(",")})`; }
+        else { ctx.fillStyle = `rgba(${rc.join(",")},${rainAmt * (1 - k / col.len) * 0.82})`; ctx.shadowBlur = 0; }
         ctx.fillText(chc, col.x, y);
       }
     }
@@ -983,9 +1040,9 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     const fadeOut = 1 - seg(t, 0.91, 0.97); // clear before the hand-off
     const rad = Math.min(W, H) * 0.34;
     const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, rad);
-    g.addColorStop(0, `rgba(0,255,135,${0.05 * fadeOut})`);
-    g.addColorStop(0.5, `rgba(0,255,135,${0.02 * fadeOut})`);
-    g.addColorStop(1, "rgba(0,255,135,0)");
+    g.addColorStop(0, `rgba(130,140,255,${0.05 * fadeOut})`);
+    g.addColorStop(0.5, `rgba(130,140,255,${0.02 * fadeOut})`);
+    g.addColorStop(1, "rgba(130,140,255,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
   }

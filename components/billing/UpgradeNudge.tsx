@@ -101,7 +101,7 @@ export function UpgradeNudge({
           )}
           <Link
             href={paywall.upgrade}
-            className="inline-flex h-8 items-center gap-2 bg-bull px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim"
+            className="inline-flex h-8 items-center gap-2 btn-grad px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
           >
             {copy.cta}
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>

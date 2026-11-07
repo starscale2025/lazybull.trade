@@ -1,6 +1,7 @@
 import Link from "next/link";
 import pkg from "../package.json";
 import { ContrastToggle } from "./ContrastToggle";
+import { MotionToggle } from "./MotionToggle";
 import { ConsentLink } from "./ConsentLink";
 
 // Every entry here used to be href="#" — 32 links plus the three legal ones,
@@ -143,43 +144,26 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
       </div>
       )}
 
-      {/* Massive wordmark — the italic-light "bull" with a gradient applied
-          via background-clip: text WILL clip its rightward italic overhang
-          unless the inline box explicitly extends past the glyph. The fix
-          stack:
-            • inline-block on the italic span so padding takes effect
-            • padding-right: 0.22em — extends the gradient region past the
-              second 'l's slanted top-right stroke
-            • drop tracking-tightest (-0.05em letter-spacing) on the h2 — the
-              negative spacing pulled the last 'l' inside its own box
-            • margin-left on the period to clear the extended italic span */}
-      <div className="relative shell overflow-visible pt-8">
-        <div
-          aria-hidden
+      {/* THE DISPLAY LINE IS THE MANIFESTO (Gate A2). This slot used to hold a
+          9vw gradient wordmark with a shine sweeping across it: the brand's
+          name, shouted, where its belief should be. The belief is the display
+          line now, set in --fg like the H1 it answers, and the name sits small
+          at the head of the columns below. */}
+      <div className="relative shell overflow-visible pt-10">
+        <p
           data-gsap="reveal-clip"
           data-gsap-duration="1.6"
-          className="wonk-type select-none font-display leading-[0.82] text-fg"
+          className="wonk-type font-display leading-[0.98] text-fg text-balance"
           style={{
-            fontSize: "clamp(3.5rem, 9vw, 7.5rem)",
-            letterSpacing: "-0.02em",
-            paddingRight: "0.3em",
-            paddingBottom: "0.06em",
+            fontSize: "clamp(2.2rem, 4.2vw, 4.5rem)",
+            letterSpacing: "-0.03em",
+            paddingBottom: "0.08em",
           }}
         >
-          lazy
-          <span
-            className="t-accent inline-block headline-sweep"
-            style={{ paddingLeft: "0.04em", paddingRight: "0.22em" }}
-          >
-            bull
-          </span>
-          <span
-            className="text-bull crt-flicker inline-block"
-            style={{ marginLeft: "-0.08em" }}
-          >
-            .
-          </span>
-        </div>
+          Options shouldn&apos;t be a guessing game.
+          <br />
+          <span className="italic">Make them visible. Make them safe.</span>
+        </p>
       </div>
 
       {/* Link columns */}
@@ -189,13 +173,11 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
         className="relative shell grid grid-cols-2 gap-x-5 gap-y-10 py-10 md:grid-cols-6"
       >
         <div className="col-span-2">
-          <div className="t-chrome text-fg-faint mb-4">
-            Manifesto
+          <div className="font-display text-3xl leading-none tracking-[-0.02em] text-fg">
+            lazy<span className="italic">bull</span>
           </div>
-          <p className="font-display text-base leading-snug text-fg-dim">
-            Options shouldn't be a guessing game.
-            <br />
-            <span className="italic">Make them visible. Make them safe.</span>
+          <p className="mt-3 font-display text-base leading-snug text-fg-dim">
+            Options you can see.
           </p>
           {/* Nothing at all when no account is configured — an empty row says
               less than five badges saying "coming soon". See SOCIALS above. */}
@@ -254,6 +236,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             <span>v{pkg.version}</span>
             <span className="text-fg-faint">·</span>
             <ContrastToggle />
+            <MotionToggle />
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span>© 2026 lazybull labs</span>

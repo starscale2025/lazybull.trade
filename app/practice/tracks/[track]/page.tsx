@@ -96,7 +96,7 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
                 <TrackStartLink
                   track={track}
                   fallback={first.id}
-                  className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+                  className="inline-flex items-center gap-2 btn-grad px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
                 >
                   start next →
                 </TrackStartLink>

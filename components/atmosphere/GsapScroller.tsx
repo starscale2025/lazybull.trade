@@ -194,9 +194,9 @@ export function GsapScroller() {
             // `points` on a <polyline>, deliberately, NOT `d` on a <path>: a
             // point list is pure numbers with a guaranteed-matching count, so
             // GSAP CORE's AttrPlugin can tween it. Morphing path data would need
-            // MorphSVGPlugin, which is a paid Club plugin this project does not
-            // and should not have. Same reason the shapes below must all carry
-            // the SAME number of points.
+            // MorphSVGPlugin, which now ships free inside the gsap package we
+            // already have (no Club licence); this spine just does not need it,
+            // as long as the shapes below all carry the SAME number of points.
             //
             // Because this is driven by a data attribute, the section that owns
             // the spine stays a SERVER component — the marketing region ships no

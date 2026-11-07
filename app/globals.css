@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root, [data-theme="dark"] {
   --bg: #050505;
@@ -33,22 +34,52 @@
      site. #787872 measures 4.589:1. The pro (6.45) and light (4.76)
      variants below were already honest; only this one was not. */
   --fg-faint: #787872;
-  --bull: #00ff87;
+  /* ── THE PALETTE (2026-11): violet #582EFF, mint #52FFA5, blue #3884FF ────
+     Violet is the brand: primary actions, the mark, selection, the glass
+     glow. Mint is what green always meant here (up, profit, live, the accent
+     word), and blue takes over everything cyan did (strikes, info, data
+     strokes). The token NAMES stay (--bull, --cyan, --plasma) because ~1,300
+     call sites read them; only the values moved. Loss red and warning amber
+     are not brand colours and do not change: a loss drawn in violet would
+     stop reading as a loss.
+     Violet is 3.3:1 on #050505, so it is a FILL: --brand-ink (5.9:1) is the
+     violet for type, the same ink/fill split as below. */
+  --brand: #582eff;
+  --brand-ink: #8f73ff;
+  --brand-hi: #7b5cff;
+  /* ── THE BRAND GRADIENT: one ramp, everywhere a brand accent appears ──────
+     violet → blue → mint, left to right: the frame-zero sphere's ramp turned
+     on its side. It was running as five different accents (solid mint words,
+     violet buttons, a violet-to-blue mark, blue words on /quant, green glows
+     on /learn); now every brand accent draws from these four, and the solid
+     semantic colours (--bull up, --bear loss, --cyan strikes) stay solid,
+     because those are data, not brand.
+       --grad-ink   TYPE. Tints, every stop ≥5.8:1 on --bg.
+       --grad-fill  FILLS (primary buttons, the mark), with --grad-on type:
+                    ≥4.6:1 at the violet end, ≥6.4:1 everywhere else.
+       --grad-line  hairlines and rules, fading out at both ends.
+       --grad-glow  the shadow a filled control throws. */
+  --grad-ink: linear-gradient(100deg, #9a82ff 0%, #5c9aff 48%, #7ef0c9 100%);
+  --grad-fill: linear-gradient(100deg, #7b5cff 0%, #4d8dff 52%, #6dffc0 100%);
+  --grad-on: #07060f;
+  --grad-line: linear-gradient(90deg, transparent, #8f73ff 18%, #5c9aff 50%, #52ffa5 82%, transparent);
+  --grad-glow: 0 10px 30px -12px rgba(88, 46, 255, 0.6), 0 18px 56px -26px rgba(56, 132, 255, 0.5);
+  --bull: #52ffa5;
   /* INK vs FILL. The vivid accents are for fills, strokes and 3D emissives; the
      -ink pair is for TYPE. On #050505 they are the same colour, because the
      vivid values already clear AA against it. On warm paper they are not —
      measured, --bull is 2.87:1 and --amber 2.72:1 as text, i.e. the brand
      colour failed AA in every role it occupied. Splitting the two lets the
      light theme keep its glow without asking anyone to read 2.87:1. */
-  --bull-ink: #00ff87;
-  --cyan-ink: #00e5ff;
+  --bull-ink: #52ffa5;
+  --cyan-ink: #3884ff;
   --amber-ink: #ffb800;
-  --bull-dim: #00b85f;
+  --bull-dim: #3dbf7c;
   --bear: #ff2e63;
   --bear-dim: #b8204a;
   --amber: #ffb800;
-  --cyan: #00e5ff;
-  --plasma: #c9ff00;
+  --cyan: #3884ff;
+  --plasma: #8f73ff;
   --grid: rgba(245, 245, 240, 0.05);
   --grid-strong: rgba(245, 245, 240, 0.1);
 }
@@ -100,18 +131,26 @@
   --fg: #0c0c0c;
   --fg-dim: #5a5a52;
   --fg-faint: #6e6e64; /* ≥4.5:1 on the light canvas (was #9a9a8e ≈ 2.6:1) */
+  /* Violet clears 6.0:1 on paper, so here one value is both fill and ink. */
+  --brand: #582eff;
+  --brand-ink: #582eff;
+  --brand-hi: #6a45ff;
+  /* On paper the tints wash out: the type ramp runs on the deep values. */
+  --grad-ink: linear-gradient(100deg, #582eff 0%, #1f5fd6 50%, #00875a 100%);
+  --grad-line: linear-gradient(90deg, transparent, #582eff 18%, #1f5fd6 50%, #00a85a 82%, transparent);
+  --grad-glow: 0 10px 30px -14px rgba(88, 46, 255, 0.35), 0 18px 56px -28px rgba(31, 95, 214, 0.3);
   --bull: #00a85a;
-  /* Measured against --bg #f7f6f0: 4.66, 6.51 and 5.27 : 1. The fills above
+  /* Measured against --bg #f7f6f0: 4.66, 5.3 and 5.27 : 1. The fills above
      stay vivid; only type reads these. */
   --bull-ink: #00803f;
-  --cyan-ink: #00607f;
+  --cyan-ink: #1a4fb5;
   --amber-ink: #8a5e00;
   --bull-dim: #00803f;
   --bear: #d61f4a;
   --bear-dim: #a01838;
   --amber: #c98a00;
-  --cyan: #007aa3;
-  --plasma: #6f9700;
+  --cyan: #1f5fd6;
+  --plasma: #582eff;
   --grid: rgba(12, 12, 12, 0.05);
   --grid-strong: rgba(12, 12, 12, 0.12);
 }
@@ -126,6 +165,8 @@
   --color-fg: var(--fg);
   --color-fg-dim: var(--fg-dim);
   --color-fg-faint: var(--fg-faint);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
   --color-bull: var(--bull);
   --color-bull-dim: var(--bull-dim);
   --color-bear: var(--bear);
@@ -137,6 +178,68 @@
   --font-sans: var(--font-funnel), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
+
+/* ══ SHADCN, ALIASED (2026-11). shadcn/ui and the registry parts are written
+   against their own token names (bg-background, text-muted-foreground,
+   ring-ring, and a few raw var(--popover) reads, e.g. in sonner). Each one is
+   an alias of a lazybull token here, so a pulled part comes out on-brand with
+   no overrides and follows the light theme, the /pro canvas and stealth
+   contrast like everything else.
+   The aliases are declared on every element that redefines the base tokens: a
+   custom property resolves var() where it is declared, so an alias set on
+   :root alone would keep the root's colours inside .pro-theme.
+   The radius scale is deliberately NOT mapped: shadcn's --radius-sm…xl would
+   restyle every rounded-* utility already on the site. --border needs no
+   alias; both systems use the same name for the same thing. ══ */
+:root, [data-theme], [data-contrast], .pro-theme {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  /* Opaque on purpose: a menu over content cannot be a 3.5% film. */
+  --popover: color-mix(in srgb, var(--fg) 6%, var(--bg));
+  --popover-foreground: var(--fg);
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--fg);
+  --muted: var(--surface);
+  --muted-foreground: var(--fg-dim);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--fg);
+  --destructive: var(--bear);
+  --input: var(--border);
+  --ring: var(--brand-ink);
+  --radius: 0.625rem;
+}
+[data-theme="light"] {
+  --popover: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* `dark:` follows the site's theme, not the OS: dark is every page that is not
+   data-theme="light", plus the /pro canvas, which stays dark in both. Nothing
+   on the site used `dark:` before shadcn arrived. */
+@custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *, .pro-theme, .pro-theme *));
 
 /* default border color lives in @layer base so Tailwind border-color utilities
    (border-bull, border-bear/40, …) can override it — unlayered, this rule beat
@@ -288,8 +391,8 @@ html, body {
 }
 
 ::selection {
-  background: var(--bull);
-  color: var(--bg);
+  background: var(--brand);
+  color: #fff;
 }
 
 /* THE FOCUS LAW (WCAG 2.4.7). Deliberately UNLAYERED so it outranks every
@@ -339,7 +442,7 @@ nav[aria-label="Site pages"] a:focus-visible {
   z-index: var(--z-dialog);
   pointer-events: none;
   background:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 255, 135, 0.03) 50%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, rgba(82, 255, 165, 0.03) 50%, transparent 100%),
     var(--bg);
   animation: route-veil-out 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -403,7 +506,7 @@ nav[aria-label="Site pages"] a:focus-visible {
   0% { transform: scale(0.25); opacity: 0.9; }
   100% { transform: scale(2.6); opacity: 0; }
 }
-.fill-ring {
+.fill-ring-pulse {
   transform-box: fill-box;
   transform-origin: center;
   animation: fill-ring 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -416,7 +519,7 @@ nav[aria-label="Site pages"] a:focus-visible {
   animation: fill-flash 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .fill-ring { display: none; }
+  .fill-ring-pulse { display: none; }
   .fill-flash { animation-duration: 1ms; }
 }
 
@@ -523,7 +626,15 @@ nav[aria-label="Site pages"] a:focus-visible {
 
 /* Phosphor glow */
 .phosphor {
-  text-shadow: 0 0 20px rgba(0, 255, 135, 0.4), 0 0 4px rgba(0, 255, 135, 0.6);
+  text-shadow: 0 0 20px rgba(82, 255, 165, 0.4), 0 0 4px rgba(82, 255, 165, 0.6);
+}
+/* On gradient type a text-shadow paints OVER the clipped gradient (it sits
+   between the background and the transparent fill), so the glow there is a
+   drop-shadow filter in the gradient's own colours. */
+.t-accent.phosphor,
+.text-grad.phosphor {
+  text-shadow: none;
+  filter: drop-shadow(0 0 14px rgba(110, 90, 255, 0.45)) drop-shadow(0 0 3px rgba(92, 154, 255, 0.5));
 }
 
 .phosphor-red {
@@ -581,8 +692,8 @@ nav[aria-label="Site pages"] a:focus-visible {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 255, 135, 0.02) 2px,
-    rgba(0, 255, 135, 0.02) 3px
+    rgba(82, 255, 165, 0.02) 2px,
+    rgba(82, 255, 165, 0.02) 3px
   );
 }
 
@@ -609,7 +720,7 @@ nav[aria-label="Site pages"] a:focus-visible {
 
 /* Glow effects */
 .glow-bull {
-  box-shadow: 0 0 0 1px rgba(0, 255, 135, 0.3), 0 0 40px -10px rgba(0, 255, 135, 0.4);
+  box-shadow: 0 0 0 1px rgba(82, 255, 165, 0.3), 0 0 40px -10px rgba(82, 255, 165, 0.4);
 }
 
 .glow-bear {
@@ -712,7 +823,7 @@ nav[aria-label="Site pages"] a:focus-visible {
 @keyframes hero-glow-in {
   0%   { opacity: 0; transform: scale(0.94); filter: blur(6px); text-shadow: 0 0 0 transparent; }
   60%  { opacity: 1; filter: blur(0); }
-  100% { opacity: 1; transform: scale(1); filter: blur(0); text-shadow: 0 0 24px rgba(0,255,135,0.55), 0 0 60px rgba(0,255,135,0.25); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); text-shadow: 0 0 24px rgba(82,255,165,0.55), 0 0 60px rgba(82,255,165,0.25); }
 }
 @keyframes hero-reveal-clip {
   from { clip-path: inset(0 100% 0 0); }
@@ -773,7 +884,7 @@ nav[aria-label="Site pages"] a:focus-visible {
      re-enable both animations for reduced-motion users. */
   .hero-headline-line.pull-quote-glow { animation: none; opacity: 1; }
   .hero-glow-in   { animation: none; opacity: 1; transform: none; filter: none;
-                    text-shadow: 0 0 24px rgba(0,255,135,0.55), 0 0 60px rgba(0,255,135,0.25); }
+                    text-shadow: 0 0 24px rgba(82,255,165,0.55), 0 0 60px rgba(82,255,165,0.25); }
   .hero-line-grow { animation: none; transform: scaleX(1); }
   .hero-rise      { animation: none; transform: none; }
 }
@@ -826,15 +937,15 @@ nav[aria-label="Site pages"] a:focus-visible {
 
 /* Phosphor pulse — for "live" key terms in body prose */
 @keyframes text-glow-pulse {
-  0%, 100% { text-shadow: 0 0 16px rgba(0, 255, 135, 0.45), 0 0 4px rgba(0, 255, 135, 0.6); }
-  50%      { text-shadow: 0 0 28px rgba(0, 255, 135, 0.7),  0 0 8px rgba(0, 255, 135, 0.8); }
+  0%, 100% { text-shadow: 0 0 16px rgba(82, 255, 165, 0.45), 0 0 4px rgba(82, 255, 165, 0.6); }
+  50%      { text-shadow: 0 0 28px rgba(82, 255, 165, 0.7),  0 0 8px rgba(82, 255, 165, 0.8); }
 }
 .text-glow-pulse { animation: text-glow-pulse 4s ease-in-out infinite; }
 
 /* Ambient slow zoom on chart frames */
 @keyframes ambient-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-  50%      { box-shadow: 0 0 60px -20px rgba(0, 255, 135, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(82, 255, 165, 0); }
+  50%      { box-shadow: 0 0 60px -20px rgba(82, 255, 165, 0.25); }
 }
 .ambient-glow { animation: ambient-glow 6s ease-in-out infinite; }
 
@@ -904,9 +1015,11 @@ nav[aria-label="Site pages"] a:focus-visible {
 .crosshair-sweep { animation: crosshair-sweep 11s ease-in-out infinite; }
 
 /* Pull-quote glow — used on the BIG editorial italic words */
+/* A filter, not a text-shadow: the lines it breathes on are gradient type
+   (.t-accent), and a text-shadow would paint over the gradient. */
 @keyframes pull-quote-glow {
-  0%, 100% { text-shadow: 0 0 24px rgba(0, 255, 135, 0.55), 0 0 60px rgba(0, 255, 135, 0.25); }
-  50%      { text-shadow: 0 0 38px rgba(0, 255, 135, 0.75), 0 0 90px rgba(0, 255, 135, 0.35); }
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(110, 90, 255, 0.4)) drop-shadow(0 0 30px rgba(56, 132, 255, 0.18)); }
+  50%      { filter: drop-shadow(0 0 24px rgba(110, 90, 255, 0.6)) drop-shadow(0 0 46px rgba(82, 255, 165, 0.22)); }
 }
 .pull-quote-glow {
   animation: pull-quote-glow 5s ease-in-out infinite;
@@ -937,8 +1050,8 @@ nav[aria-label="Site pages"] a:focus-visible {
   background:
     radial-gradient(
       600px circle at var(--mx, 50%) var(--my, 50%),
-      rgba(0, 255, 135, 0.08),
-      rgba(0, 255, 135, 0.025) 25%,
+      rgba(82, 255, 165, 0.08),
+      rgba(82, 255, 165, 0.025) 25%,
       transparent 55%
     );
   transition: opacity 0.4s ease;
@@ -1009,15 +1122,35 @@ html[data-film="pinned"] .scroll-progress-rail { opacity: 0; }
 /* A modal's scroll lock. On <html>, because `html, body { overflow-x: clip }`
    stops a body-level overflow:hidden from ever reaching the viewport. */
 html.lb-modal-open { overflow: hidden; }
+/* LENIS (2026-11). lenis/dist/lenis.css is not imported (components/motion/
+   LenisRoot.tsx says why); these are the two of its rules worth having. A pane
+   marked data-lenis-prevent keeps its scroll from chaining into the page, and
+   while Lenis glides, an iframe cannot swallow the wheel mid-glide. */
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* MOTION, PAUSED (2026-11). The site's pause for motion that runs by itself
+   (WCAG 2.2.2), flipped from the footer or ⌘K and remembered per visitor (lib/
+   motion/bus.ts). Every CSS animation jumps to its end and stops: loops halt,
+   and an entrance lands finished instead of freezing half-way in. Transitions
+   stay, because they answer the reader. */
+html[data-motion="paused"] *,
+html[data-motion="paused"] *::before,
+html[data-motion="paused"] *::after {
+  animation-delay: 0s !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+}
 .scroll-progress-fill {
   height: 100%;
   width: 100%;
   transform: scaleX(var(--p, 0));
-  background: linear-gradient(90deg, transparent, var(--bull) 25%, var(--cyan) 60%, var(--bull) 100%);
+  /* the brand ramp (globals THE BRAND GRADIENT), shimmering along the bar */
+  background: linear-gradient(90deg, #8f73ff, #5c9aff 35%, #52ffa5 60%, #5c9aff 80%, #8f73ff);
   background-size: 200% 100%;
   animation: progress-shimmer 4s linear infinite;
   transform-origin: left center;
-  box-shadow: 0 0 14px rgba(0, 255, 135, 0.55);
+  box-shadow: 0 0 14px rgba(92, 154, 255, 0.55);
 }
 
 /* Scroll reveal — content always renders; transform-only lift on first view.
@@ -1091,7 +1224,8 @@ html.lb-modal-open { overflow: hidden; }
   content: "";
   position: absolute;
   inset: -20px;
-  background: radial-gradient(120px circle at var(--lx, 50%) var(--ly, 50%), rgba(0, 255, 135, 0.35), transparent 60%);
+  /* violet: the magnet sits on primary actions, which are the brand now */
+  background: radial-gradient(120px circle at var(--lx, 50%) var(--ly, 50%), rgba(123, 92, 255, 0.45), transparent 60%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -1115,7 +1249,7 @@ html.lb-modal-open { overflow: hidden; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(450px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 135, 0.18), transparent 55%);
+  background: radial-gradient(450px circle at var(--mx, 50%) var(--my, 50%), rgba(82, 255, 165, 0.18), transparent 55%);
   opacity: 0;
   transition: opacity 0.4s ease;
   mix-blend-mode: screen;
@@ -1142,15 +1276,15 @@ html.lb-modal-open { overflow: hidden; }
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 255, 135, 0.04) 2px,
-    rgba(0, 255, 135, 0.04) 3px
+    rgba(82, 255, 165, 0.04) 2px,
+    rgba(82, 255, 165, 0.04) 3px
   );
   pointer-events: none;
 }
 .boot-flash {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,255,135,0.15) 0%, transparent 60%, rgba(0,255,135,0.08) 100%);
+  background: linear-gradient(180deg, rgba(82,255,165,0.15) 0%, transparent 60%, rgba(82,255,165,0.08) 100%);
   animation: boot-flash 0.6s ease-out 0.1s forwards;
   opacity: 0;
 }
@@ -1172,7 +1306,7 @@ html.lb-modal-open { overflow: hidden; }
   background: var(--bull);
   width: 0%;
   animation: boot-progress 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards;
-  box-shadow: 0 0 14px rgba(0, 255, 135, 0.6);
+  box-shadow: 0 0 14px rgba(82, 255, 165, 0.6);
 }
 
 /* Big section "chapter §N" callouts — float in from left */
@@ -1196,13 +1330,14 @@ html.lb-modal-open { overflow: hidden; }
   100% { background-position: 200% 50%; }
 }
 .headline-sweep {
+  /* the brand ramp, mirrored so the loop is seamless */
   background: linear-gradient(
     100deg,
-    var(--bull) 0%,
-    var(--cyan) 25%,
-    var(--plasma) 50%,
-    var(--cyan) 75%,
-    var(--bull) 100%
+    #9a82ff 0%,
+    #5c9aff 25%,
+    #7ef0c9 50%,
+    #5c9aff 75%,
+    #9a82ff 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
@@ -1241,66 +1376,6 @@ html.lb-modal-open { overflow: hidden; }
   97% { opacity: 1; }
 }
 .crt-flicker { animation: crt-flicker 8s ease-in-out infinite; }
-
-/* ── THE EYE BAND'S TITLE BED (components/GetStarted.tsx) ─────────────────
-   "27 bots watching" is set ON the matrix-eye footage, and that footage is
-   bull-green. So was the headline: display serif over lit phosphor strokes,
-   measured across real frames of the loop at 1.00:1 at the worst pixel behind
-   line 1. No text-shadow rescues that — the failure is HUE, not value. And
-   the hue change alone is not enough either (--fg on raw footage still
-   measures ~1.19:1 at the worst pixel), so the type went to --fg AND the
-   footage got this bed. Both levers are load-bearing.
-
-   WHY THIS IS NOT THE FULL-BAND SHADE THE COMPONENT FORBIDS: that rule is
-   about ONSET LINES, and a uniform overlay has two of them, one per band edge.
-   This has none. Measured on the real stop list: alpha is 0.0000 at the band's
-   top row and 0.9976 (= var(--bg)) at the bottom row, with a steepest vertical
-   step of 0.0091 alpha per CSS pixel. The top is reached on an EASED ramp — a
-   linear one holds a constant slope right up to the transparent end, and that
-   constant slope is itself the line the eye finds. The bottom is exactly
-   var(--bg), the value the section's own hand-off ramp lands on and the value
-   MarketingSections opens with, so that boundary has nothing to see either.
-
-   TWO LAYERS, ONE ELEMENT. A POOL — an ellipse over the title block only, so
-   the eye's corners, the lashes and both upper HUD cards keep full footage —
-   riding a shallow FLOOR that carries it down to the page. Measured veil: the
-   pupil 0.018, the P(down) card and the IV chip 0.000, the mean over the whole
-   band 0.267, and the peak under the title block ~0.87. The code still ticks
-   through its own title card. An opaque plate would turn a scene into an embed.
-
-   Painted by ::after, so it lands above the footage and the HUD but below the
-   title card, which takes z-10. The one chip that falls inside the pool (the
-   Δ −0.32 chip at top:62%) takes 0.231 of veil and recedes — correct hierarchy
-   for a title card. If it must stay at full strength, give that mapped chip
-   z-10; nothing else changes.
-   Static: no animation, so there is nothing for reduced motion to land on. */
-.eye-title-bed::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      ellipse 72% 24% at 50% 79%,
-      color-mix(in srgb, var(--bg) 78%, transparent) 0%,
-      color-mix(in srgb, var(--bg) 73%, transparent) 20%,
-      color-mix(in srgb, var(--bg) 62%, transparent) 35%,
-      color-mix(in srgb, var(--bg) 39%, transparent) 50%,
-      color-mix(in srgb, var(--bg) 16%, transparent) 65%,
-      color-mix(in srgb, var(--bg) 5%, transparent) 80%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to top,
-      var(--bg) 0%,
-      color-mix(in srgb, var(--bg) 60%, transparent) 12%,
-      color-mix(in srgb, var(--bg) 38%, transparent) 22%,
-      color-mix(in srgb, var(--bg) 26%, transparent) 30%,
-      color-mix(in srgb, var(--bg) 10%, transparent) 42%,
-      color-mix(in srgb, var(--bg) 3%, transparent) 50%,
-      transparent 60%
-    );
-}
 
 /* ── The Desk (/learn): channel-change on demo swap. One-shot flicker overlay
       + a fade/scale entrance for the incoming demo. The terminal swaps its
@@ -1426,8 +1501,8 @@ html.lb-modal-open { overflow: hidden; }
 }
 .hover-lift:hover {
   transform: translateY(-3px);
-  box-shadow: 0 24px 60px -30px rgba(0, 255, 135, 0.35);
-  border-color: rgba(0, 255, 135, 0.35);
+  box-shadow: 0 24px 60px -30px rgba(82, 255, 165, 0.35);
+  border-color: rgba(82, 255, 165, 0.35);
 }
 
 /* ───── Cards: scan-line ripple sweeping on hover ───── */
@@ -1440,7 +1515,7 @@ html.lb-modal-open { overflow: hidden; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(115deg, transparent 30%, rgba(0,255,135,0.07) 50%, transparent 70%);
+  background: linear-gradient(115deg, transparent 30%, rgba(82,255,165,0.07) 50%, transparent 70%);
   transform: translateX(-110%);
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -1463,6 +1538,9 @@ html.lb-modal-open { overflow: hidden; }
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .link-draw:hover::after { transform: scaleX(1); }
+/* A gradient-type link draws its underline in the same ramp. */
+.text-grad.link-draw::after,
+.link-draw .text-grad::after { background: var(--grad-line); }
 
 /* ───── Floating tilt — gentle Y-bob for accent badges ───── */
 @keyframes float-bob {
@@ -1495,7 +1573,7 @@ html.lb-modal-open { overflow: hidden; }
   background: linear-gradient(
     115deg,
     transparent 30%,
-    rgba(0,255,135,0.5) 50%,
+    rgba(82,255,165,0.5) 50%,
     transparent 70%
   );
   background-size: 200% 100%;
@@ -1550,7 +1628,7 @@ html.lb-modal-open { overflow: hidden; }
   background: linear-gradient(90deg, transparent, var(--bull) 50%, transparent);
   background-size: 200% 100%;
   animation: progress-shimmer 1.4s linear infinite;
-  box-shadow: 0 0 12px rgba(0, 255, 135, 0.55);
+  box-shadow: 0 0 12px rgba(82, 255, 165, 0.55);
   pointer-events: none;
   z-index: 1;
 }
@@ -1698,13 +1776,25 @@ html.lb-modal-open { overflow: hidden; }
 
   /* The accent word inside a display line. One rule sitewide: it was running
      as bull / cyan / bear / fg with no discernible logic, which is how a
-     signature device stops signifying. Colour is a plain declaration, so a
-     deliberate `text-bear` on a danger heading still overrides it. */
+     signature device stops signifying. Since 2026-11-06 it is the brand
+     gradient (--grad-ink), the same ramp as the frame-zero sphere.
+     The fill is `color: transparent` over a text-clipped background, not
+     -webkit-text-fill-color, so a deliberate `text-bear` on a danger heading
+     (a utility, which outranks this layer) still paints the word red over it. */
   .t-accent {
     font-style: italic;
     font-weight: 300;
-    /* -ink, not the vivid fill: this is TYPE. See the ink/fill note above. */
-    color: var(--bull-ink);
+    background-image: var(--grad-ink);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Each wrapped line gets the whole ramp, not a slice of it. */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    /* The italic overhangs its box and the clip paints only inside it: widen
+       the box over the last stroke, give the width back with the margin. */
+    padding-right: 0.07em;
+    margin-right: -0.07em;
   }
 
   /* ── Reading — Funnel sans. ────────────────────────────────────────────── */
@@ -1851,8 +1941,9 @@ html.lb-modal-open { overflow: hidden; }
 .cinema-rail .rail-row .rail-label {
   transition: color 0.35s var(--ease-settle), background-color 0.35s var(--ease-settle), width 0.35s var(--ease-settle);
 }
-.cinema-rail .rail-row[data-on="1"] .rail-tick { background: var(--bull); width: 1.25rem; }
-.cinema-rail .rail-row[data-on="1"] .rail-num { color: var(--bull); }
+/* the active act in the brand gradient, like every other "you are here" */
+.cinema-rail .rail-row[data-on="1"] .rail-tick { background: var(--grad-line); background-size: 160% 100%; background-position: 40% 0; width: 1.25rem; }
+.cinema-rail .rail-row[data-on="1"] .rail-num { background-image: var(--grad-ink); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .cinema-rail .rail-row[data-on="1"] .rail-label { color: var(--fg); }
 .cinema-rail .rail-row:hover .rail-label { color: var(--fg); }
 .cinema-rail .rail-skip:hover .rail-tick { background: var(--bull); }
@@ -1907,9 +1998,9 @@ html.lb-modal-open { overflow: hidden; }
   --ease-boot: cubic-bezier(0.65, 0, 0.35, 1);
   /* Elevation is never a neutral drop shadow in this brand — it is a coloured
      glow. These are the two that were already being hand-written. */
-  --glow-bull: 0 0 0 1px rgba(0, 255, 135, 0.3), 0 0 40px -10px rgba(0, 255, 135, 0.4);
-  --glow-rail: 0 0 12px rgba(0, 255, 135, 0.55);
-  --phosphor-bull: 0 0 30px rgba(0, 255, 135, 0.45), 0 0 80px rgba(0, 255, 135, 0.2);
+  --glow-bull: 0 0 0 1px rgba(82, 255, 165, 0.3), 0 0 40px -10px rgba(82, 255, 165, 0.4);
+  --glow-rail: 0 0 12px rgba(82, 255, 165, 0.55);
+  --phosphor-bull: 0 0 30px rgba(82, 255, 165, 0.45), 0 0 80px rgba(82, 255, 165, 0.2);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1951,12 +2042,12 @@ html.lb-modal-open { overflow: hidden; }
     rgba(25, 31, 28, 0.51) 100%
   );
   --glass-border: rgba(245, 245, 240, 0.1);
-  --glass-border-hot: rgba(0, 255, 135, 0.32);
+  --glass-border-hot: rgba(123, 92, 255, 0.45);
   /* Lit on the top AND right edges — the two the light actually reaches. */
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset -1px 0 0 rgba(255, 255, 255, 0.055);
   --glass-blur: blur(26px) saturate(150%);
-  --glass-glow: 0 24px 80px -32px rgba(0, 255, 135, 0.28);
+  --glass-glow: 0 24px 80px -32px rgba(88, 46, 255, 0.4);
   /* Role-fixed radii. The kit's rule is that nothing else rounds — a value
      picked per-component is how a glass system stops looking machined. */
   --r-panel: 22px;
@@ -2000,10 +2091,10 @@ html.lb-modal-open { overflow: hidden; }
     rgba(255, 255, 255, 0.61) 100%
   );
   --glass-border: rgba(12, 12, 12, 0.1);
-  --glass-border-hot: rgba(0, 168, 90, 0.35);
+  --glass-border-hot: rgba(88, 46, 255, 0.35);
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.8),
     inset -1px 0 0 rgba(255, 255, 255, 0.45);
-  --glass-glow: 0 24px 80px -32px rgba(0, 168, 90, 0.22);
+  --glass-glow: 0 24px 80px -32px rgba(88, 46, 255, 0.22);
 }
 
 @layer components {
@@ -2093,6 +2184,15 @@ html.lb-modal-open { overflow: hidden; }
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-hi), var(--glass-glow);
   }
+  /* The nav's glass sits on the page ground. Frosted alone, it let a heading
+     scrolling under it read straight through its links (Gate A2, d16, d20);
+     the near-opaque base under the same gradient keeps the material and drops
+     the double print. */
+  .glass-strong.nav-pill {
+    background:
+      var(--glass-grad-strong, var(--glass-bg-strong)),
+      color-mix(in srgb, var(--bg) 88%, transparent);
+  }
 
   /* The specular sheen that sells the material: a fixed diagonal highlight,
      white at the top-left corner and phosphor at the bottom-right. Not an
@@ -2117,7 +2217,7 @@ html.lb-modal-open { overflow: hidden; }
        white at top-LEFT, which crossed the fill and flattened it. */
     background: linear-gradient(
       45deg,
-      rgba(0, 255, 135, 0.055) 0%,
+      rgba(82, 255, 165, 0.055) 0%,
       transparent 26%,
       transparent 72%,
       rgba(255, 255, 255, 0.11) 100%
@@ -2133,7 +2233,7 @@ html.lb-modal-open { overflow: hidden; }
   .glass-hover:hover {
     transform: translateY(-3px);
     border-color: var(--glass-border-hot);
-    box-shadow: var(--glass-hi), 0 30px 90px -30px rgba(0, 255, 135, 0.4);
+    box-shadow: var(--glass-hi), 0 30px 90px -30px rgba(82, 255, 165, 0.4);
   }
 }
 
@@ -2177,17 +2277,17 @@ html.lb-modal-open { overflow: hidden; }
 }
 .glass-aurora .a1 {
   width: 56vw; height: 56vw; left: -14vw; top: -8vw;
-  background: radial-gradient(circle, rgba(0, 255, 135, 0.2), transparent 65%);
+  background: radial-gradient(circle, rgba(88, 46, 255, 0.26), transparent 65%);
   animation: drift 22s ease-in-out infinite;
 }
 .glass-aurora .a2 {
   width: 44vw; height: 44vw; right: -12vw; top: 28%;
-  background: radial-gradient(circle, rgba(0, 229, 255, 0.13), transparent 65%);
+  background: radial-gradient(circle, rgba(56, 132, 255, 0.16), transparent 65%);
   animation: drift 26s ease-in-out infinite reverse;
 }
 .glass-aurora .a3 {
   width: 50vw; height: 50vw; left: 24vw; bottom: -24vw;
-  background: radial-gradient(circle, rgba(201, 255, 0, 0.07), transparent 65%);
+  background: radial-gradient(circle, rgba(82, 255, 165, 0.07), transparent 65%);
   animation: drift 30s ease-in-out infinite;
 }
 /* The masked 72px grid the orbs sit behind — content never sits on bare black. */
@@ -2333,28 +2433,42 @@ html.lb-modal-open { overflow: hidden; }
    flush field needs (`rounded-none`).
 
    The specular inset sits at 0.25, not the kit's 0.4 — at 0.4 the top edge of
-   the gradient blows out to mint-white and the control reads as 2010s gloss
-   the moment it renders large (retina, zoom, the h-14 marketing size). */
+   the gradient blows out to white and the control reads as 2010s gloss the
+   moment it renders large (retina, zoom, the h-14 marketing size).
+   Violet since the 2026-11 palette: white type on it measures 6.5:1. */
 @layer components {
   .btn-primary-glass {
-    border: 1px solid color-mix(in srgb, var(--bull) 50%, transparent);
-    background: linear-gradient(180deg, #24f596, #00d96f);
-    color: #04140b;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    /* The brand gradient, not a violet slab: the button is the one place the
+       whole ramp is a surface. Wider than the box so hover can slide it. */
+    background-image: var(--grad-fill);
+    background-size: 150% 100%;
+    background-position: 0% 50%;
+    /* From the OUTER edge and drawn once: by default the image starts inside
+       the border and repeats, so the 1px border on the left showed a sliver
+       of the gradient's far (mint) end, a light seam on the left of every
+       pill (nav "Open the builder", 2026-11-06). */
+    background-origin: border-box;
+    background-repeat: no-repeat;
+    color: var(--grad-on);
     border-radius: var(--r-btn);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.25),
-      0 8px 26px -12px rgba(0, 255, 135, 0.55);
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      var(--grad-glow);
     transition:
       box-shadow 0.3s var(--ease-settle),
       transform 0.3s var(--ease-settle),
-      filter 0.3s var(--ease-settle);
+      filter 0.3s var(--ease-settle),
+      background-position 0.6s var(--ease-settle);
   }
   .btn-primary-glass:hover {
     transform: translateY(-1px);
-    filter: brightness(1.06);
+    filter: brightness(1.05);
+    background-position: 100% 50%;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.32),
-      0 12px 34px -10px rgba(0, 255, 135, 0.65);
+      inset 0 1px 0 rgba(255, 255, 255, 0.42),
+      0 12px 34px -10px rgba(88, 46, 255, 0.75),
+      0 20px 60px -24px rgba(82, 255, 165, 0.35);
   }
   .btn-primary-glass:active {
     transform: translateY(0);
@@ -2406,5 +2520,114 @@ html.lb-modal-open { overflow: hidden; }
   .bg-surface:not(.surface-instrument),
   .bg-surface-2:not(.surface-instrument) {
     border-radius: var(--r-cell);
+  }
+}
+
+/* ── FRAME ZERO: the matter (components/ui/anomalous-matter-hero.tsx) ───────
+   The haze the sphere floats in, in the sphere's own tints (Aurora UI: large
+   soft radial layers, no hard stops, a slow drift). Off to the top-left, as in
+   the reference the owner gave: one blue-cyan bloom with a mint lift and a
+   teal wash along the top, a faint violet low on the far side, and black
+   behind the sphere so its dark core stays dark. It is CSS so it is there
+   before the first WebGL frame and is the whole backdrop if WebGL never
+   arrives. */
+.matter-glow {
+  background:
+    radial-gradient(46% 52% at 8% 2%, rgba(76, 150, 255, 0.34), transparent 70%),
+    radial-gradient(30% 34% at 20% -4%, rgba(120, 240, 200, 0.16), transparent 72%),
+    radial-gradient(40% 28% at 50% -2%, rgba(90, 200, 215, 0.12), transparent 74%),
+    radial-gradient(38% 40% at 94% 96%, rgba(120, 100, 255, 0.14), transparent 72%),
+    radial-gradient(26% 26% at 50% 38%, rgba(76, 150, 255, 0.05), transparent 75%);
+  background-repeat: no-repeat;
+  animation: matter-haze 12s ease-in-out infinite alternate;
+}
+@keyframes matter-haze {
+  from { transform: translate3d(0, 0, 0) scale(1); opacity: 0.92; }
+  to { transform: translate3d(1.5%, 1%, 0) scale(1.04); opacity: 1; }
+}
+@media (max-width: 767px) {
+  .matter-glow {
+    background:
+      radial-gradient(80% 34% at 10% 0%, rgba(76, 150, 255, 0.34), transparent 70%),
+      radial-gradient(50% 22% at 30% -2%, rgba(120, 240, 200, 0.16), transparent 72%),
+      radial-gradient(60% 26% at 92% 70%, rgba(120, 100, 255, 0.12), transparent 72%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .matter-glow { animation: none; }
+}
+
+/* The entrance: each line rises out of a blur, staggered by an
+   [animation-delay] on the element. `both` holds the first keyframe through
+   the delay, so nothing flashes in at full strength first. */
+@keyframes matter-in {
+  from { opacity: 0; transform: translateY(18px); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.matter-in { animation: matter-in 1.1s var(--ease-settle) both; }
+/* The headline rises out of the blur but is never invisible: Chrome does not
+   count an element that starts at opacity 0 as the LCP, and frame zero's H1
+   is meant to be it (measured: with matter-in it lost LCP to the nav). */
+@keyframes matter-rise {
+  from { transform: translateY(14px); filter: blur(10px); }
+  to { transform: none; filter: none; }
+}
+.matter-rise { animation: matter-rise 1.2s var(--ease-settle) both; }
+@media (prefers-reduced-motion: reduce) {
+  .matter-in, .matter-rise { animation: none; }
+}
+
+/* ── THE BRAND GRADIENT, as utilities (tokens at the top of this file) ──────
+   In @layer components so a utility can still override them.
+     .text-grad    gradient type, upright (the accent word is .t-accent)
+     .btn-grad     a filled control in the brand gradient, dark type
+     .border-grad  a 1px gradient hairline round any box, glass or not (a
+                   masked ::before, so the fill underneath stays its own)
+     .rule-grad    a gradient rule: give it a height */
+@layer components {
+  .text-grad {
+    background-image: var(--grad-ink);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .btn-grad {
+    background-image: var(--grad-fill);
+    background-size: 150% 100%;
+    background-position: 0% 50%;
+    background-origin: border-box;
+    background-repeat: no-repeat;
+    color: var(--grad-on);
+    transition:
+      background-position 0.6s var(--ease-settle),
+      box-shadow 0.3s var(--ease-settle),
+      filter 0.3s var(--ease-settle);
+  }
+  .btn-grad:hover {
+    background-position: 100% 50%;
+    box-shadow: var(--grad-glow);
+  }
+  .btn-grad:disabled {
+    filter: saturate(0.4);
+  }
+  .border-grad {
+    position: relative;
+  }
+  .border-grad::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--grad-ink);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .rule-grad {
+    background-image: var(--grad-line);
   }
 }

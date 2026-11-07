@@ -48,7 +48,7 @@ const DEFAULT_WORKSPACE: Workspace = {
   indicators: ["ema20", "vwap"],
   layout: 1,
   chart: "candles",
-  color: "#00ff87",
+  color: "#52ffa5",
   alerts: [],
 };
 
@@ -517,7 +517,7 @@ export default function ProPage() {
       setIndicators(ws.indicators || []);
       setLayout(ws.layout || 1);
       setChartType(ws.chart || "candles");
-      setColor(ws.color || "#00ff87");
+      setColor(ws.color || "#52ffa5");
       setAlerts(ws.alerts || []);
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -839,8 +839,8 @@ export default function ProPage() {
             identifies itself with a badge and a workspace strip — so the
             heading is screen-reader-only rather than invented chrome. */}
         <h1 className="sr-only">Pro terminal — charting, indicators and paper trading</h1>
-        <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 t-chrome font-semibold text-bull">
-          pro
+        <span className="border-grad bg-[#582eff]/12 px-1.5 py-0.5 t-chrome font-semibold">
+          <span className="text-grad">pro</span>
         </span>
         <div className="ml-1 hidden items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim md:flex">
           <span>workspace · "godmode"</span>
@@ -997,7 +997,7 @@ export default function ProPage() {
                   <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }} className="font-display text-5xl tracking-tightest">
                     lazybull<span className="t-accent">.pro</span>
                   </motion.div>
-                  <motion.div initial={{ width: 0 }} animate={{ width: "200px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="h-px bg-bull" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: "200px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="h-px rule-grad" />
                   <div className="t-eyebrow text-fg-faint">connecting to the market feed</div>
                 </div>
               </motion.div>

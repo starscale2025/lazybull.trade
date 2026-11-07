@@ -103,7 +103,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/quant?add=${bot.id}`}
-                className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+                className="inline-flex items-center gap-2 btn-grad px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
               >
                 ▶ Try it now
               </Link>
@@ -428,7 +428,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               </Link>
               <Link
                 href={`/quant?add=${bot.id}`}
-                className="inline-flex items-center gap-2 bg-bull px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+                className="inline-flex items-center gap-2 btn-grad px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
               >
                 Try {bot.name} →
               </Link>

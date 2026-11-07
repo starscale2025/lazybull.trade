@@ -823,10 +823,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
         {/* Indicator overlay lines (drawn on top of candles) */}
         {indicators.includes("ema20") && (
-          <SeriesLine values={ind.ema20!} bars={bars} vp={vp} geom={geom} color="#22d3ee" />
+          <SeriesLine values={ind.ema20!} bars={bars} vp={vp} geom={geom} color="#3884ff" />
         )}
         {indicators.includes("ema50") && (
-          <SeriesLine values={ind.ema50!} bars={bars} vp={vp} geom={geom} color="#a78bfa" />
+          <SeriesLine values={ind.ema50!} bars={bars} vp={vp} geom={geom} color="#8f73ff" />
         )}
         {indicators.includes("vwap") && (
           <SeriesLine values={ind.vwap!} bars={bars} vp={vp} geom={geom} color="#ffb800" />
@@ -1076,8 +1076,8 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 stroke={c}
                 strokeWidth={2}
               />
-              <circle className="fill-ring" cx={size.w - geom.padR - 14} cy={y} r={9} fill="none" stroke={c} strokeWidth={1.6} />
-              <circle className="fill-ring" style={{ animationDelay: "120ms" }} cx={size.w - geom.padR - 14} cy={y} r={9} fill="none" stroke={c} strokeWidth={0.8} />
+              <circle className="fill-ring-pulse" cx={size.w - geom.padR - 14} cy={y} r={9} fill="none" stroke={c} strokeWidth={1.6} />
+              <circle className="fill-ring-pulse" style={{ animationDelay: "120ms" }} cx={size.w - geom.padR - 14} cy={y} r={9} fill="none" stroke={c} strokeWidth={0.8} />
             </g>
           );
         })}
@@ -1364,9 +1364,9 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
 /** Legend metadata per indicator id — label + swatch colour. */
 const IND_META: Record<string, { label: string; color: string }> = {
-  ema20: { label: "EMA 20", color: "#22d3ee" },
-  ema50: { label: "EMA 50", color: "#a78bfa" },
-  rsi: { label: "RSI 14", color: "#22d3ee" },
+  ema20: { label: "EMA 20", color: "#3884ff" },
+  ema50: { label: "EMA 50", color: "#8f73ff" },
+  rsi: { label: "RSI 14", color: "#3884ff" },
   macd: { label: "MACD", color: "var(--amber)" },
   bb: { label: "BB 20·2σ", color: "var(--bull)" },
   vwap: { label: "VWAP", color: "var(--amber)" },
@@ -1557,8 +1557,8 @@ function BBOverlay({ bb, bars, vp, geom }: { bb: { mid: (number | null)[]; upper
   return (
     <g>
       <SeriesLine values={bb.mid} bars={bars} vp={vp} geom={geom} color="rgba(245,245,240,0.4)" dashed />
-      <path d={upPath} stroke="rgba(0,255,135,0.5)" strokeWidth={1} fill="none" pathLength={1} className="svg-draw-in" />
-      <path d={loPath} stroke="rgba(0,255,135,0.5)" strokeWidth={1} fill="none" pathLength={1} className="svg-draw-in" />
+      <path d={upPath} stroke="rgba(82,255,165,0.5)" strokeWidth={1} fill="none" pathLength={1} className="svg-draw-in" />
+      <path d={loPath} stroke="rgba(82,255,165,0.5)" strokeWidth={1} fill="none" pathLength={1} className="svg-draw-in" />
     </g>
   );
 }
@@ -1578,7 +1578,7 @@ function IchimokuOverlay({ ichi, bars, vp, geom }: { ichi: { conv: (number | nul
   return (
     <g>
       {cloud.map((s, i) => (
-        <line key={i} x1={s.x} x2={s.x} y1={s.aY} y2={s.bY} stroke={s.bullish ? "rgba(0,255,135,0.18)" : "rgba(255,46,99,0.18)"} strokeWidth={4} />
+        <line key={i} x1={s.x} x2={s.x} y1={s.aY} y2={s.bY} stroke={s.bullish ? "rgba(82,255,165,0.18)" : "rgba(255,46,99,0.18)"} strokeWidth={4} />
       ))}
       <SeriesLine values={ichi.conv} bars={bars} vp={vp} geom={geom} color="rgba(34,211,238,0.7)" />
       <SeriesLine values={ichi.base} bars={bars} vp={vp} geom={geom} color="rgba(255,46,99,0.7)" />

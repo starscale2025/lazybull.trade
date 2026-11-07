@@ -216,7 +216,7 @@ export default function LearnPage() {
       ),
       takeaway: (
         <Takeaway>
-          &quot;<span className="text-bull italic">Sharpe &gt; 1</span> is the line where a
+          &quot;<span className="t-accent">Sharpe &gt; 1</span> is the line where a
           return starts to look paid-for rather than lucky. Most published retail
           strategies never cleared it.&quot;
         </Takeaway>
@@ -246,7 +246,7 @@ export default function LearnPage() {
           apart when you tweak the dataset&apos;s drift, vol or seed. Six models built on the
           same tape failing to agree is the most honest thing a workbench can show you.
           Whatever the agreement, one band describes them all:{" "}
-          <span className="text-bull italic">{ACCURACY_BAND}</span> on embargoed walk-forward
+          <span className="t-accent">{ACCURACY_BAND}</span> on embargoed walk-forward
           CV — {HYPOTHETICAL_NOTE}.
         </>
       ),
@@ -318,7 +318,7 @@ export default function LearnPage() {
       takeaway: (
         <Takeaway>
           &quot;Black-Scholes is a beautiful model.{" "}
-          <span className="text-plasma italic">Heston is a useful one.</span>&quot;
+          <span className="t-accent">Heston is a useful one.</span>&quot;
         </Takeaway>
       ),
       demo: <LearnVolSmile />,
@@ -425,8 +425,9 @@ export default function LearnPage() {
               style={{ animationDelay: "0.1s" }}
             >
               {/* One chip — the subtitle and body already say the rest. */}
-              <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/5 px-2 py-1 text-bull">
-                <span className="size-1.5 rounded-full bg-bull pulse-dot" /> LEARN · 8 MIN · ALL LIVE
+              <span className="border-grad inline-flex items-center gap-2 bg-[rgba(123,92,255,0.06)] px-2 py-1">
+                <span className="size-1.5 rounded-full bg-bull pulse-dot" />
+                <span className="text-grad">LEARN · 8 MIN · ALL LIVE</span>
               </span>
             </div>
 
@@ -437,7 +438,7 @@ export default function LearnPage() {
               </span>
               <span className="block" style={{ animationDelay: "0.65s" }}>
                 <span
-                  className="italic font-light text-bull pull-quote-glow inline-block"
+                  className="pull-quote-glow inline-block t-accent"
                   style={{ animationDelay: "0.65s" }}
                 >
                   visualized
@@ -473,8 +474,8 @@ export default function LearnPage() {
             >
               <a
                 href="#regime"
-                className="group inline-flex items-center gap-3 bg-bull px-6 py-4 font-mono text-xs font-semibold uppercase tracking-[0.3em] text-bg transition-colors hover:bg-bull-dim"
-                style={{ boxShadow: "0 0 40px -8px rgba(0,255,135,0.5)" }}
+                className="group inline-flex items-center gap-3 btn-grad px-6 py-4 font-mono text-xs font-semibold uppercase tracking-[0.3em] transition-colors"
+                style={{ boxShadow: "0 0 40px -8px rgba(82,255,165,0.5)" }}
               >
                 ▶ Begin chapter 01
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -504,9 +505,11 @@ export default function LearnPage() {
                 <span>v0.1</span>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <BigStat value={27} label="bots" tone="bull" size="sm" />
+                {/* Violet, blue, mint, left to right: the brand ramp, not
+                    three unrelated accents (amber is the warning colour). */}
+                <BigStat value={27} label="bots" tone="plasma" size="sm" />
                 <BigStat value={13} label="ml models" tone="cyan" size="sm" />
-                <BigStat value={8} label="live demos" tone="amber" size="sm" />
+                <BigStat value={8} label="live demos" tone="bull" size="sm" />
               </div>
             </div>
           </div>
@@ -556,7 +559,7 @@ export default function LearnPage() {
           <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
             Dataset.
           </span>
-          <span className="block hero-headline-line italic font-light text-bull" style={{ animationDelay: "0.3s" }}>
+          <span className="block w-fit hero-headline-line t-accent" style={{ animationDelay: "0.3s" }}>
             Bot.
           </span>
           <span className="block hero-headline-line italic font-light text-amber" style={{ animationDelay: "0.5s" }}>
@@ -616,7 +619,7 @@ export default function LearnPage() {
           <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
             27 bots,
           </span>
-          <span className="block hero-headline-line italic font-light text-bull" style={{ animationDelay: "0.32s" }}>
+          <span className="block w-fit hero-headline-line t-accent" style={{ animationDelay: "0.32s" }}>
             organized so
           </span>
           <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.55s" }}>
@@ -717,7 +720,7 @@ export default function LearnPage() {
           <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
             Toggle on.
           </span>
-          <span className="block hero-headline-line italic font-light text-bull" style={{ animationDelay: "0.32s" }}>
+          <span className="block w-fit hero-headline-line t-accent" style={{ animationDelay: "0.32s" }}>
             The math
           </span>
           <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.55s" }}>
@@ -761,7 +764,7 @@ export default function LearnPage() {
               RSI is a 0-to-100 thermometer. Below 30 meant sellers had pushed hard and fast,
               and three times in this window the price bounced from there. The bot counted
               those bounces —{" "}
-              <span className="italic text-bull">that&apos;s why it reads up</span> with high
+              <span className="t-accent">that&apos;s why it reads up</span> with high
               confidence. About this window, not the next one.
             </p>
           </div>
@@ -781,7 +784,7 @@ export default function LearnPage() {
           <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.32s" }}>
             a JS function,
           </span>
-          <span className="block hero-headline-line italic font-light text-bull pull-quote-glow" style={{ animationDelay: "0.55s" }}>
+          <span className="block w-fit hero-headline-line pull-quote-glow t-accent" style={{ animationDelay: "0.55s" }}>
             you can write a bot.
           </span>
         </ChapterHeadline>
@@ -850,7 +853,7 @@ export default {
           <span className="block hero-headline-line text-fg" style={{ animationDelay: "0.1s" }}>
             Two halves.
           </span>
-          <span className="block hero-headline-line italic font-light text-bull" style={{ animationDelay: "0.32s" }}>
+          <span className="block w-fit hero-headline-line t-accent" style={{ animationDelay: "0.32s" }}>
             One workbench.
           </span>
         </ChapterHeadline>
@@ -922,7 +925,7 @@ export default {
           <span className="block hero-headline-line italic font-light text-fg-dim" style={{ animationDelay: "0.3s" }}>
             the whole tour.
           </span>
-          <span className="block hero-headline-line italic font-light text-bull pull-quote-glow" style={{ animationDelay: "0.55s" }}>
+          <span className="block w-fit hero-headline-line pull-quote-glow t-accent" style={{ animationDelay: "0.55s" }}>
             Try it.
           </span>
         </ChapterHeadline>
@@ -1132,7 +1135,7 @@ function CTACard({ label, sub, href, primary }: { label: string; sub: string; hr
           ? "bg-bull text-bg hover:bg-bull-dim"
           : "border border-border bg-bg text-fg hover:border-bull hover:text-bull"
       }`}
-      style={primary ? { boxShadow: "0 0 50px -12px rgba(0,255,135,0.5)" } : undefined}
+      style={primary ? { boxShadow: "0 0 50px -12px rgba(82,255,165,0.5)" } : undefined}
     >
       <div>
         <div

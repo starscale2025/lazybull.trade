@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ScrollCinema } from "./ScrollCinema";
+import dynamic from "next/dynamic";
 import { MobileCinema } from "./MobileCinema";
 import { CinemaStill } from "./CinemaStill";
 import { SCROLL_LENGTH_VH, CURTAIN_VH } from "./cinema-metrics";
+import { REPLAY_KEY, cinemaResumeAt } from "./cinema-memory";
 
 // The intro film auto-plays on EVERY load of the homepage, then hands off to
 // the hero. Nobody is trapped: the cinema carries an always-visible "Skip
@@ -26,9 +27,8 @@ import { SCROLL_LENGTH_VH, CURTAIN_VH } from "./cinema-metrics";
 //
 // So it plays, every time. What survives from that work is the part that
 // shortens the film without removing it: a reload resumes where you were,
-// and Skip is always one click away. GetStarted's "▶ watch the film" and
-// ⌘K's "Replay the landing film" set `lb-cinema-replay`, which forces it from
-// the top even mid-session.
+// and Skip is always one click away. ⌘K's "Replay the landing film" sets
+// `lb-cinema-replay`, which forces it from the top even mid-session.
 //
 // Reloading at act six still puts you back at act six rather than the boot
 // screen — that lives inside ScrollCinema now (cinemaResumeAt), and it is the
@@ -55,6 +55,63 @@ import { SCROLL_LENGTH_VH, CURTAIN_VH } from "./cinema-metrics";
 // `.film-phone-only` (app/globals.css), which match PHONE_FILM_QUERY below
 // exactly: the desktop box is the film's height, the phone box MobileCinema's
 // 400svh. Nothing moves on either one.
+// THE FILM WAITS FOR SCROLL INTENT (2026-11, THE MATTER plan Phase 0.5)
+// ──────────────────────────────────────────────────────────────────────
+// Mounting the desktop film at once cost every visitor its three.js stage,
+// three WebGL contexts, two GLBs, a Draco decoder and the scene document before
+// they had moved, including everyone who never scrolls (Gate A2: 1.53 MB and
+// three contexts at frame zero). The reservation below holds the film's exact
+// box, so nothing shifts, until the first sign the reader is heading down: a
+// scroll, a downward wheel, a scroll key or a touch drag. Both cases that mean
+// "I am here for the film" still mount at once: a reload mid-film
+// (cinemaResumeAt) and an asked-for replay. The curtain covers the stage for
+// its first 100vh, and the film's own loader shows inside the stage if a fast
+// reader gets there before it is ready.
+const ScrollCinema = dynamic(() => import("./ScrollCinema").then((m) => m.ScrollCinema), {
+  ssr: false,
+  loading: () => <DesktopReserve />,
+});
+
+const SCROLL_KEYS = new Set([" ", "Spacebar", "PageDown", "ArrowDown", "End"]);
+
+function replayAsked(): boolean {
+  try {
+    return sessionStorage.getItem(REPLAY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** True from the first sign the reader is heading into the film (see above). */
+function useScrollIntent(watching: boolean): boolean {
+  const [intent, setIntent] = useState(false);
+  useEffect(() => {
+    if (!watching || intent) return;
+    if (window.scrollY > 0 || cinemaResumeAt() !== null || replayAsked()) {
+      setIntent(true);
+      return;
+    }
+    const go = () => setIntent(true);
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY > 0) go();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (SCROLL_KEYS.has(e.key)) go();
+    };
+    window.addEventListener("scroll", go, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("touchmove", go, { passive: true });
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("scroll", go);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchmove", go);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [watching, intent]);
+  return intent;
+}
+
 // "pending" until a REAL viewport width exists to decide from. Phones get their
 // OWN film — a 2D canvas cut for portrait, zero three.js. See MobileCinema for
 // why it is a different film rather than a smaller one.
@@ -77,8 +134,8 @@ const PHONE_FILM_QUERY = "(max-width: 767px), (pointer: coarse) and (max-height:
  *
  * What DOES stay from that work, because none of it removes the film:
  *   · a reload mid-film resumes where you were instead of restarting from the
- *     boot screen (cinemaResumeAt, below)
- *   · "Skip intro" is always on screen, on desktop and on phones
+ *     boot screen (cinemaResumeAt, in cinema-memory.ts)
+ *   · "Skip the film" is always on screen, on desktop and on phones
  *   · ⌘K / "watch the film" force it from the top
  *
  * `lb-cinema-replay` still has to be CONSUMED, or an asked-for replay would
@@ -104,6 +161,7 @@ function decideDesktop(): "film" | "still" {
 
 export function CinemaGate() {
   const [mode, setMode] = useState<Mode>("pending");
+  const intent = useScrollIntent(mode === "film");
 
   useEffect(() => {
     const mql = window.matchMedia(PHONE_FILM_QUERY);
@@ -150,33 +208,42 @@ export function CinemaGate() {
     };
   }, []);
 
-  if (mode === "film") return <ScrollCinema />;
+  if (mode === "film") return intent ? <ScrollCinema /> : <DesktopReserve />;
   if (mode === "mobile") return <MobileCinema />;
   if (mode === "still") return <CinemaStill />;
 
-  // The reservation. Same height and same negative hand-off overlap as the real
-  // section in ScrollCinema — both divided by --ui-zoom for the reason
-  // globals.css divides h-screen. Keep these two in step; cinema-metrics.ts is
-  // the shared source of the number.
   return (
     <>
-      <div
-        aria-hidden
-        data-cinema-reserve
-        className="film-desktop-only pointer-events-none relative z-20"
-        style={{
-          height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
-          marginTop: `calc(-${CURTAIN_VH}vh / var(--ui-zoom))`,
-          marginBottom: "calc(-100vh / var(--ui-zoom))",
-        }}
-      >
-        {/* The stage the film will occupy, painted in the page ground so the
-            pre-mount frame reads as the film's own black rather than as a gap.
-            The loader gate takes over the moment ScrollCinema mounts. */}
-        <div className="sticky top-0 h-screen w-full bg-bg" />
-      </div>
+      <DesktopReserve />
       {/* MobileCinema's box, so mounting it below the hero moves nothing. */}
       <div aria-hidden data-cinema-reserve className="film-phone-only bg-bg" style={{ height: "400svh" }} />
     </>
+  );
+}
+
+/**
+ * The reservation. Same height and same negative hand-off overlap as the real
+ * section in ScrollCinema, both divided by --ui-zoom for the reason globals.css
+ * divides h-screen. Keep these two in step; cinema-metrics.ts is the shared
+ * source of the number. It stands in before the gate decides, while the film
+ * waits for scroll intent, and while the film's code loads.
+ */
+function DesktopReserve() {
+  return (
+    <div
+      aria-hidden
+      data-cinema-reserve
+      className="film-desktop-only pointer-events-none relative z-20"
+      style={{
+        height: `calc(${SCROLL_LENGTH_VH}vh / var(--ui-zoom))`,
+        marginTop: `calc(-${CURTAIN_VH}vh / var(--ui-zoom))`,
+        marginBottom: "calc(-100vh / var(--ui-zoom))",
+      }}
+    >
+      {/* The stage the film will occupy, painted in the page ground so the
+          pre-mount frame reads as the film's own black rather than as a gap.
+          The loader gate takes over the moment ScrollCinema mounts. */}
+      <div className="sticky top-0 h-screen w-full bg-bg" />
+    </div>
   );
 }

@@ -32,7 +32,7 @@
  * is a few hundred bytes of geometry rather than a second scene.
  */
 
-import { TAGLINE } from "@/lib/cinema";
+import { TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
 
 const W = 640;
 const H = 300;
@@ -92,7 +92,7 @@ const INDEX = [
   { n: "03", h: "Markets have moods.", s: "Trending, reverting, or noise — named before you commit to anything." },
   { n: "04", h: "Your worst case is a number you chose.", s: "Not a number you find out afterwards." },
   { n: "05", h: "They vote. They disagree.", s: "You see the split, not just the answer." },
-  { n: "06", h: "Learn it. Backtest it.", s: TAGLINE },
+  { n: "06", h: TAGLINE_LEAD, s: TAGLINE },
 ];
 
 export function CinemaStill() {

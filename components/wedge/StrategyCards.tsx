@@ -19,9 +19,16 @@ type Props = {
 };
 
 const TONE: Record<Strategy["id"], { label: string; color: string; pillBg: string }> = {
-  cheap: { label: "Cheap & risky", color: "var(--plasma)", pillBg: "rgba(201,255,0,0.12)" },
-  income: { label: "Defined-risk credit", color: "var(--bull)", pillBg: "rgba(0,255,135,0.12)" },
-  aggressive: { label: "Aggressive", color: "var(--bear)", pillBg: "rgba(255,46,99,0.12)" },
+  cheap: { label: "Cheap & risky", color: "var(--plasma)", pillBg: "rgba(143,115,255,0.12)" },
+  income: { label: "Defined-risk credit", color: "var(--bull)", pillBg: "rgba(82,255,165,0.12)" },
+  // This pill read "Aggressive" in --bear. Red means loss on this site, so it
+  // coloured a judgement as an outcome, on a spread whose loss is capped at the
+  // debit. It is named for what it is now: a debit spread that takes a side.
+  // --cyan is the palette's data colour (spot, strikes, data strokes), never
+  // gain or loss. --fg-dim was the other neutral, but a grey pill, selection
+  // bar and place button read as disabled, which is a verdict of its own.
+  // The `aggressive` key stays: it is an id, never shown.
+  aggressive: { label: "Directional debit", color: "var(--cyan)", pillBg: "rgba(56,132,255,0.12)" },
 };
 
 /** Shared tone map so the strategy panel (page shell) can color its detail block consistently. */
@@ -46,8 +53,10 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
               {selected && (
                 <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5" style={{ background: tone.color }} aria-hidden />
               )}
-              {/* line 1: the fixed-width chrome */}
-              <span className="flex items-center gap-2">
+              {/* line 1: the fixed-width chrome. Price and odds travel as one
+                  group and drop under the pill when a narrow phone has no room
+                  for all three, instead of running out past the panel edge. */}
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span
                   className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 t-chrome"
                   style={{ color: tone.color, background: tone.pillBg }}
@@ -55,10 +64,12 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
                   <span className="size-1 rounded-full" style={{ background: tone.color }} />
                   {tone.label}
                 </span>
-                <span className="ml-auto shrink-0 t-chrome text-fg-faint tabular-nums">
-                  {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
+                <span className="ml-auto flex shrink-0 items-center gap-2">
+                  <span className="t-chrome text-fg-faint tabular-nums">
+                    {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
+                  </span>
+                  <span className="w-9 text-right t-data text-[0.6875rem] text-bull">{(s.prob * 100).toFixed(0)}%</span>
                 </span>
-                <span className="w-9 shrink-0 text-right t-data text-[0.6875rem] text-bull">{(s.prob * 100).toFixed(0)}%</span>
               </span>
               {/* line 2: the payload — name + strikes, never truncated */}
               <span className="text-[0.6875rem] leading-snug text-fg">{s.kind}</span>
@@ -203,6 +214,33 @@ export function PnlSparkline({ s, spot, className = "h-20 w-full" }: { s: Strate
     return pnlCurve(legs, spot, 0.35, 81);
   }, [s.legs, s.id, spot]);
   return <Sparkline curve={curve} spot={spot} color={TONE[s.id].color} className={className} />;
+}
+
+/** PnlSparkline's frame with nothing drawn in it: /trade before the visitor
+ *  picks an example. The $0 line and the dashed spot marker are Sparkline's
+ *  own, in the same places (pnlCurve samples spot ± 35%, so spot sits dead
+ *  centre in both), so picking an example only adds the curve. The marker drops
+ *  from the axis to its label instead of spanning the frame, which keeps the
+ *  upper half clear for the note. No legs and no strikes: an empty frame must
+ *  never sketch a position. Labels are HTML because the SVG stretches
+ *  (preserveAspectRatio="none") and would smear text. */
+export function EmptyPnlSparkline({ spot, note, className = "h-20 w-full" }: { spot: number; note: string; className?: string }) {
+  const w = 280, h = 84;
+  return (
+    <div className={`relative ${className}`}>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
+        {/* Sparkline draws $0 in --border and lets its fills carry the edge.
+            Alone, the axis is the whole picture, so it steps up to --fg-faint. */}
+        <line x1="0" x2={w} y1={h / 2} y2={h / 2} stroke="var(--fg-faint)" strokeOpacity="0.6" vectorEffect="non-scaling-stroke" />
+        <line x1={w / 2} x2={w / 2} y1={h / 2} y2={h} stroke="var(--cyan)" strokeOpacity="0.4" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <span aria-hidden className="absolute left-0 top-1/2 -translate-y-full whitespace-nowrap pb-0.5 t-chrome text-fg-faint">$0</span>
+      <span aria-hidden className="absolute bottom-0 left-1/2 whitespace-nowrap pl-1.5 t-chrome tabular-nums text-fg-faint">
+        spot ${spot.toFixed(2)}
+      </span>
+      <p className="absolute inset-x-3 top-1/4 -translate-y-1/2 text-balance text-center t-chrome text-fg-dim">{note}</p>
+    </div>
+  );
 }
 
 function Sparkline({ curve, spot, color, className = "h-20 w-full" }: { curve: { s: number; pnl: number }[]; spot: number; color: string; className?: string }) {

@@ -16,6 +16,8 @@ import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { BULL3D } from "@/lib/cinema";
+import { watchContext } from "./gl-context";
+import { Grade } from "./Grade";
 
 // Model: Higgsfield/Meshy image_to_3d from our own faceted-obsidian bull concept
 // still — owned output, no attribution. Deliberately low-poly (~8k tri, untextured)
@@ -173,7 +175,7 @@ function AssemblyParticles({ fitted }: { fitted: THREE.Object3D }) {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        color="#7dffc9"
+        color="#8f9bff"
         size={0.035}
         sizeAttenuation
         map={dotTexture()}
@@ -229,15 +231,22 @@ function Bull() {
       flatShading: true, // faceted obsidian-crystal read — sharp low-poly facets catch the rim light
       side: THREE.DoubleSide, // Meshy meshes can ship reversed winding — render both sides so nothing culls
     });
-    // Fresnel edge-glow: a continuous green→cyan rim on the silhouette (independent
-    // of light angle) so the sculpture always reads against the black + feeds bloom.
+    // Fresnel edge-glow: a continuous rim on the silhouette (independent of light
+    // angle) so the sculpture always reads against the black + feeds bloom. The
+    // brand ramp across the screen, violet on the left through blue to mint on
+    // the right (linear values of #7b5cff, #4d8dff, #52ffa5). It was the old
+    // green→cyan, written as floats, so the 2026-11 hex sweep never saw it and
+    // the bull stayed the one green thing in the film.
     mat.onBeforeCompile = (shader) => {
       shader.fragmentShader = shader.fragmentShader.replace(
         "#include <emissivemap_fragment>",
         `#include <emissivemap_fragment>
          float _fres = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 4.5);
-         vec3 _rim = mix(vec3(0.0, 1.0, 0.529), vec3(0.0, 0.898, 1.0), clamp(normal.x * 0.5 + 0.5, 0.0, 1.0));
-         totalEmissiveRadiance += _rim * _fres * 1.05;`
+         float _k = clamp(normal.x * 0.5 + 0.5, 0.0, 1.0);
+         vec3 _rim = _k < 0.5
+           ? mix(vec3(0.198, 0.107, 1.0), vec3(0.074, 0.266, 1.0), _k * 2.0)
+           : mix(vec3(0.074, 0.266, 1.0), vec3(0.084, 1.0, 0.376), (_k - 0.5) * 2.0);
+         totalEmissiveRadiance += _rim * _fres * 1.1;`
       );
     };
     mat.customProgramCacheKey = () => "bull-fresnel";
@@ -314,7 +323,7 @@ function Bull() {
       <pointLight
         ref={headLight}
         position={[-1.02, 1.78, 0.5]}
-        color="#7dffc9"
+        color="#9aa8ff"
         distance={2.6}
         decay={2}
         intensity={0.4}
@@ -396,7 +405,7 @@ function Aura() {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        color="#38ffa1"
+        color="#6f9dff"
         size={0.028}
         sizeAttenuation
         map={dotTexture()}
@@ -437,7 +446,7 @@ function ImpactFlash() {
     <sprite ref={ref} scale={[40, 40, 1]} frustumCulled={false} renderOrder={999}>
       <spriteMaterial
         map={dotTexture()}
-        color="#ccffe2"
+        color="#dfe3ff"
         transparent
         opacity={0}
         depthWrite={false}
@@ -499,6 +508,14 @@ function Rig() {
       cam.fov += (targetFov - cam.fov) * 0.1;
       cam.updateProjectionMatrix();
     }
+    // THE BULL STANDS IN THE RIGHT THIRD (Gate A2, d12): the tagline is set
+    // in the left third beside it, not across it. A lens shift, not a camera
+    // move, so the perspective, the dolly and the orbit are untouched; it eases
+    // back to centre through the charge, so the lunge still comes straight on.
+    const shift = (1 - charge) / 6;
+    const { width, height } = state.size;
+    if (shift > 0.0005) cam.setViewOffset(width, height, -width * shift, 0, width, height);
+    else if (cam.view) cam.clearViewOffset();
   });
   return null;
 }
@@ -506,9 +523,11 @@ function Rig() {
 export default function Bull3D({
   active,
   onReady,
+  onLost,
 }: {
   active: boolean;
   onReady?: () => void;
+  onLost?: () => void;
 }) {
   return (
     <Canvas
@@ -517,7 +536,10 @@ export default function Bull3D({
       frameloop={active ? "always" : "never"}
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 34, position: [2.5, 1.55, 5.3], near: 0.1, far: 60 }}
-      onCreated={() => onReady?.()}
+      onCreated={({ gl }) => {
+        onReady?.();
+        watchContext(gl.domElement, onLost, onReady);
+      }}
       fallback={null}
     >
       <color attach="background" args={["#050505"]} />
@@ -526,12 +548,14 @@ export default function Bull3D({
       {/* Dim ambient so recesses aren't pure black */}
       <ambientLight intensity={0.12} />
       {/* Key: soft cool-white, front-top-left */}
-      <directionalLight position={[3.5, 5, 4]} intensity={2.1} color="#dfeee7" />
+      <directionalLight position={[3.5, 5, 4]} intensity={2.1} color="#e4e6f5" />
       {/* Rim: bright green from behind-right → sculptural edge glow */}
-      <directionalLight position={[-4.5, 2.4, -3.2]} intensity={5} color="#00ff87" />
+      {/* Lit in the brand ramp (2026-11-06): violet rim, blue fill, and the
+          mint head light, so the bull carries the gradient itself. */}
+      <directionalLight position={[-4.5, 2.4, -3.2]} intensity={6.5} color="#7b5cff" />
       {/* Rim: subtle cyan accent from behind-left (kept low so the rear stays dark
           and sculptural, not flat teal) */}
-      <directionalLight position={[4.8, 1.4, -4.2]} intensity={1.5} color="#00e5ff" />
+      <directionalLight position={[4.8, 1.4, -4.2]} intensity={1.5} color="#3884ff" />
 
       <Suspense fallback={null}>
         <Bull />
@@ -552,7 +576,7 @@ export default function Bull3D({
           intensity={0.9}
         />
         <ChromaticAberration offset={[0.0005, 0.0009]} />
-        {/* THE GRADE. A composer renders into a float target, and three only
+        {/* TONE MAPPING, which is not the grade. A composer renders into a float target, and three only
             tone-maps on the way to the screen, so this layer had none: every
             emissive over 1.0 clipped flat (the 2026-11 re-tribunal measured
             54.7% of the cube clipped and 186px undithered green runs). Khronos
@@ -561,6 +585,9 @@ export default function Bull3D({
             salmon and the bull green mint, which breaks a colour script built
             on red arriving late and hard. SMAA after it, on display values. */}
         <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+        {/* The grade itself: the loss red and gain green back on their tokens,
+            and a dither for the 8-bit steps. See Grade.tsx. */}
+        <Grade />
         <SMAA />
       </EffectComposer>
     </Canvas>

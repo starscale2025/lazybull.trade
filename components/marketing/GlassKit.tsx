@@ -48,17 +48,17 @@ export function GlassSection({
 
 export function GlassEyebrow({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 t-eyebrow text-bull">
+    <div className="flex items-center gap-2.5 t-eyebrow">
       <span
         aria-hidden
-        className="h-px w-[1.375rem] bg-[linear-gradient(90deg,var(--bull),transparent)]"
+        className="h-px w-[1.375rem] bg-[linear-gradient(90deg,#8f73ff,#5c9aff_60%,transparent)]"
       />
-      {children}
+      <span className="text-grad">{children}</span>
     </div>
   );
 }
 
-/* ── Section heading — roman serif, then exactly one italic-green phrase ─── */
+/* ── Section heading — roman serif, then exactly one italic gradient phrase ─ */
 
 export function GlassHeading({
   children,
@@ -139,10 +139,10 @@ const BTN_SIZE = {
 } as const;
 
 const BTN_KIND = {
+  // The brand gradient (globals.css THE BRAND GRADIENT), dark type on it.
   primary:
-    "bg-[linear-gradient(180deg,#24f596,#00d96f)] text-[#04140b] font-bold border border-bull/50 " +
-    "shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_34px_-14px_rgba(0,255,135,0.5)] " +
-    "hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_14px_44px_-12px_rgba(0,255,135,0.6)]",
+    "btn-grad font-bold border border-white/20 " +
+    "shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.42),0_14px_44px_-12px_rgba(88,46,255,0.7)]",
   glass:
     "glass font-medium text-fg hover:bg-[rgba(245,245,240,0.1)] hover:border-[rgba(245,245,240,0.22)]",
   ghost:

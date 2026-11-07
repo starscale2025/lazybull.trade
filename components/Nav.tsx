@@ -61,16 +61,16 @@ export function Nav({ wide = false }: { wide?: boolean }) {
           at 18px = 28 − 10. Change the bar height or the padding and these
           must move together. */}
       <nav
-        className={`glass-strong specular pointer-events-auto mx-auto flex h-14 ${
+        className={`glass-strong nav-pill specular pointer-events-auto mx-auto flex h-14 ${
           wide ? "max-w-[100rem]" : "max-w-[87.5rem]"
         } items-center justify-between gap-2 rounded-full py-2.5 pl-4 pr-2.5 sm:pl-5`}
       >
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <span
             aria-hidden
-            className="relative flex size-7 items-center justify-center rounded-[9px] bg-bull shadow-[0_0_16px_rgba(0,255,135,0.45),inset_0_1px_0_rgba(255,255,255,0.55)]"
+            className="relative flex size-7 items-center justify-center rounded-[9px] bg-[image:var(--grad-fill)] shadow-[0_0_16px_rgba(88,46,255,0.5),inset_0_1px_0_rgba(255,255,255,0.5)]"
           >
-            <span className="font-mono text-[0.625rem] font-bold text-[#04140b]">LB</span>
+            <span className="font-mono text-[0.625rem] font-bold text-[var(--grad-on)]">LB</span>
           </span>
           <span className="font-display text-lg font-medium tracking-tightest text-fg">
             lazybull
@@ -144,7 +144,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
             href="/trade"
             className="btn-primary-glass group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider sm:px-4"
           >
-            <span aria-hidden className="size-1.5 rounded-full bg-[#04140b] pulse-dot" />
+            <span aria-hidden className="size-1.5 rounded-full bg-bull pulse-dot" />
             {/* Short label below sm AND in the 1024–1279 hamburger band, where
                 the audit measured the full CTA clipping off the pill's edge. */}
             <span className="sm:hidden lg:inline xl:hidden">Builder</span>

@@ -268,7 +268,7 @@ export function CodeEditor({
             onClick={onSubmit}
             disabled={locked || !runnable}
             title={runnable ? undefined : "TypeScript judging ships next — Python runs for real today"}
-            className="h-7 bg-bull px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-7 btn-grad px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             submit
           </button>

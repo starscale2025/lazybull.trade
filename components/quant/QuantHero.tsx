@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRetryCountdown } from "./RetryCountdown";
 
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY", "QQQ", "BTC", "META", "MSFT", "GOOG"];
@@ -86,6 +86,7 @@ export function QuantHero({
   updatedAt,
   syntheticKnobsActive,
   runLocked = false,
+  notice = null,
 }: {
   symbol: string;
   setSymbol: (s: string) => void;
@@ -122,6 +123,9 @@ export function QuantHero({
       duration — a slider moved at bot 14 of 27 silently splits a run across
       two different tapes and the verdict then describes neither. */
   runLocked?: boolean;
+  /** The one page notice (degraded data, or the first-visit tip), shown in
+      the slot at the top of this section in place of the tape row. */
+  notice?: ReactNode;
 }) {
   const knobTitle = runLocked
     ? "Frozen while the run holds the workspace lock."
@@ -161,14 +165,29 @@ export function QuantHero({
         style={{ maskImage: "radial-gradient(95% 130% at 30% 70%, black 28%, transparent 74%)" }}
       />
 
-      {/* tape — two items max: the totals live in the library header and the
-          Run All button already, repeating them here was noise (Q3) */}
-      <div className="shell shell-wide relative flex items-center justify-between py-2 t-eyebrow text-fg-faint">
-        <span>QUANT WORKBENCH · v0.1</span>
-        <span className="hidden md:inline">CLIENT-SIDE MATH</span>
+      {/* THE NOTICE SLOT (2026-11-06). The degraded-data notice and the
+          first-visit tip used to mount ABOVE this section once the page had
+          hydrated (the data status is only known when /api/quote answers, the
+          tip only once localStorage is read), and pushed the whole page down:
+          51px on a 1440 desktop, CLS 0.083 against a 0.05 budget, and 148px
+          on a phone, where the notice wrapped. They now swap in place inside a
+          box the server already drew, exactly the height of what stood here
+          before (the tape row, 1.9625rem, plus the pt-8 / lg:pt-12 that opened
+          the block under it), so a notice arriving, changing or leaving moves
+          nothing. Each notice is one fixed-height row (QuantPage) that fits
+          with room to spare; overflow-hidden is only the backstop. */}
+      <div className="relative h-[3.9625rem] overflow-hidden lg:h-[4.9625rem]">
+        {notice ?? (
+          /* tape — two items max: the totals live in the library header and
+             the Run All button already, repeating them here was noise (Q3) */
+          <div className="shell shell-wide flex items-center justify-between py-2 t-eyebrow text-fg-faint">
+            <span>QUANT WORKBENCH · v0.1</span>
+            <span className="hidden md:inline">CLIENT-SIDE MATH</span>
+          </div>
+        )}
       </div>
 
-      <div className="shell shell-wide relative pb-6 pt-8 lg:pt-12">
+      <div className="shell shell-wide relative pb-6">
         <div className="grid grid-cols-12 items-end gap-5">
           {/* Title block — on mobile it drops BELOW the workbench panel so a
               phone user lands on the actual tool, not a full screen of copy. */}
@@ -188,7 +207,7 @@ export function QuantHero({
             <h1 className="wonk-type font-display tracking-tightest text-[clamp(2.6rem,7.5vw,6.4rem)] leading-[0.88] text-fg">
               run math
               <br />
-              <span className="t-accent text-cyan phosphor" style={{ textShadow: "0 0 20px rgba(0,229,255,0.4), 0 0 4px rgba(0,229,255,0.7)" }}>at the market</span>
+              <span className="t-accent phosphor" style={{ textShadow: "0 0 20px rgba(56,132,255,0.4), 0 0 4px rgba(56,132,255,0.7)" }}>at the market</span>
               <span className="text-cyan">.</span>
             </h1>
 

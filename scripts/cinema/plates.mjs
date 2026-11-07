@@ -20,16 +20,21 @@ import { fileURLToPath } from "node:url";
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "../../public/cinema/plates");
 const W = 1280;
 const H = 800;
+// Neutrals are navy-tinted blacks and the interface chrome is the brand
+// violet; mint is kept for what it MEANS (profit, up candles, values above
+// zero). Until 2026-11-06 the neutrals were green-tinted and the chrome mint,
+// so the tunnel's screens read as a green terminal beside a violet site.
 const C = {
-  bg: "#070908",
-  panel: "#0c1210",
-  line: "#1d2420",
-  faint: "#3a403c",
+  bg: "#07080d",
+  panel: "#0c0f19",
+  line: "#1c2232",
+  faint: "#3b4152",
+  brand: "#8f73ff",
   gray: "#8a8a82",
   ink: "#f5f5f0",
-  bull: "#00ff87",
+  bull: "#52ffa5",
   bear: "#ff2e63",
-  cyan: "#00e5ff",
+  cyan: "#3884ff",
   amber: "#ffb800",
 };
 const MONO = "JetBrains Mono, ui-monospace, Menlo, monospace";
@@ -132,8 +137,8 @@ plates.trade = () => {
     text(944, 492, "BREAKEVEN", { size: 12, ls: 2 }),
     text(944, 524, "$102.30", { size: 22, fill: C.cyan, weight: 600 }),
     line(944, 556, 1216, 556),
-    text(944, 592, "defined risk · chosen before", { size: 13, fill: C.bull }),
-    text(944, 614, "the trade, not found after it", { size: 13, fill: C.bull }),
+    text(944, 592, "defined risk · chosen before", { size: 13, fill: C.brand }),
+    text(944, 614, "the trade, not found after it", { size: 13, fill: C.brand }),
   ].join("\n");
   return frame("strategy builder", [
     text(110, 104, "BULL CALL SPREAD · SIM · 30 DAYS", { size: 13, ls: 2 }),
@@ -151,7 +156,7 @@ plates.chain = () => {
     [90, "Δ"], [190, "BID"], [290, "ASK"], [470, "STRIKE"], [650, "BID"], [750, "ASK"], [850, "Δ"], [990, "IV"],
   ];
   rows.push(rect(60, 96, 1160, 660));
-  rows.push(text(90, 130, "CALLS", { size: 12, fill: C.bull, ls: 2 }));
+  rows.push(text(90, 130, "CALLS", { size: 12, fill: C.brand, ls: 2 }));
   rows.push(text(650, 130, "PUTS", { size: 12, fill: C.bear, ls: 2 }));
   rows.push(text(1190, 130, "SIM · 30 DTE", { size: 12, anchor: "end", ls: 1 }));
   for (const [x, h] of cols) rows.push(text(x, 166, h, { size: 12, ls: 2, anchor: h === "STRIKE" ? "middle" : "start" }));
@@ -165,18 +170,18 @@ plates.chain = () => {
     const cp = Math.max(0.05, (100 - k) + 2.6 * Math.exp(-((k - 100) ** 2) / 120));
     const pp = Math.max(0.05, (k - 100) + 2.6 * Math.exp(-((k - 100) ** 2) / 120));
     const iv = 22 + Math.abs(k - 100) * 0.35;
-    if (k === 100) rows.push(rect(70, y - 26, 1140, 38, { fill: "#0f1f18", stroke: C.bull, r: 4 }));
+    if (k === 100) rows.push(rect(70, y - 26, 1140, 38, { fill: "#15132b", stroke: C.brand, r: 4 }));
     const cell = (x, s, fill = C.ink, anchor = "start") => rows.push(text(x, y, s, { size: 16, fill, anchor }));
     cell(90, cd.toFixed(2), C.gray);
     cell(190, Math.max(0.01, cp - 0.05).toFixed(2));
     cell(290, (cp + 0.05).toFixed(2));
-    cell(470, String(k), k === 100 ? C.bull : C.ink, "middle");
+    cell(470, String(k), k === 100 ? C.brand : C.ink, "middle");
     cell(650, Math.max(0.01, pp - 0.05).toFixed(2));
     cell(750, (pp + 0.05).toFixed(2));
     cell(850, (cd - 1).toFixed(2), C.gray);
     cell(990, `${iv.toFixed(1)}%`, C.gray);
   }
-  rows.push(text(470, 744, "ATM · spot 100.00", { size: 12, fill: C.bull, anchor: "middle", ls: 1 }));
+  rows.push(text(470, 744, "ATM · spot 100.00", { size: 12, fill: C.brand, anchor: "middle", ls: 1 }));
   return frame("options chain", rows.join("\n"));
 };
 
@@ -190,20 +195,20 @@ plates.learn = () => {
   chapters.forEach((c, i) => {
     const y = 128 + i * 44;
     const on = i === 5;
-    if (on) nav.push(rect(52, y - 26, 236, 38, { fill: "#0f1f18", stroke: C.bull, r: 4 }));
-    nav.push(text(70, y, String(i + 1).padStart(2, "0"), { size: 13, fill: on ? C.bull : C.faint }));
+    if (on) nav.push(rect(52, y - 26, 236, 38, { fill: "#15132b", stroke: C.brand, r: 4 }));
+    nav.push(text(70, y, String(i + 1).padStart(2, "0"), { size: 13, fill: on ? C.brand : C.faint }));
     nav.push(text(110, y, c, { size: 15, fill: on ? C.ink : C.gray }));
   });
   const ch = payoff("le", 400, 300, 700, 300, { lo: 86, hi: 116, fn: longCall, pmin: -500, pmax: 1400, strikes: [100] });
   const slider = [
     line(400, 690, 1100, 690, { stroke: C.faint, sw: 4 }),
-    line(400, 690, 790, 690, { stroke: C.bull, sw: 4 }),
+    line(400, 690, 790, 690, { stroke: C.brand, sw: 4 }),
     `<circle cx="790" cy="690" r="11" fill="${C.ink}"/>`,
     text(400, 728, "drag the price: watch delta move", { size: 13 }),
   ].join("\n");
   return frame("learn · chapter 06", [
     nav.join("\n"),
-    text(360, 140, "CHAPTER 06 · GREEKS", { size: 13, fill: C.bull, ls: 2 }),
+    text(360, 140, "CHAPTER 06 · GREEKS", { size: 13, fill: C.brand, ls: 2 }),
     text(360, 196, "Delta is a slope,", { size: 40, fill: C.ink, weight: 700 }),
     text(360, 244, "not a promise.", { size: 40, fill: C.gray, weight: 700 }),
     ch.svg,
@@ -311,7 +316,7 @@ plates.bots = () => {
     }
     out.push(line(x + 22, y + 140, x + 346, y + 140, { stroke: C.faint, dash: "3 5" }));
     out.push(poly(pts, { stroke: i % 2 ? C.cyan : C.gray, sw: 2 }));
-    out.push(text(x + 22, y + 192, "open the math →", { size: 12, fill: C.bull }));
+    out.push(text(x + 22, y + 192, "open the math →", { size: 12, fill: C.brand }));
   });
   return frame("27 teaching bots", out.join("\n"));
 };
@@ -321,7 +326,7 @@ plates.about = () => {
   const ch = payoff("ab", 140, 470, 1000, 220, { lo: 86, hi: 114, fn: condor, pmin: -320, pmax: 220, strikes: [96, 104], labels: false });
   return frame("about", [
     text(140, 250, "lazybull", { size: 120, fill: C.ink, weight: 700, ls: -4 }),
-    text(146, 320, "options you can see", { size: 26, fill: C.bull }),
+    text(146, 320, "options you can see", { size: 26, fill: C.brand }),
     text(146, 372, "paper-only · $0 real money, ever · education, not advice", { size: 16 }),
     ch.svg,
   ].join("\n"));

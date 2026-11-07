@@ -1,7 +1,7 @@
 "use client";
 
 // Auth UI dropped into the Nav. Three states:
-//   - loading: spinner stub (don't flash "Sign in" then jump to a face)
+//   - loading: an invisible "Sign in"-sized stub (holds the space, flashes nothing)
 //   - unauthenticated: "Sign in" → /auth/signin
 //   - authenticated: avatar + name → click → menu with sign out
 
@@ -23,10 +23,17 @@ export function AuthButtons() {
     return () => window.removeEventListener("mousedown", onClick);
   }, [open]);
 
+  // The stub holds "Sign in"'s exact box, invisibly. It used to be a 30px
+  // pulsing dot, so the nav's right cluster grew ~49px the moment the session
+  // answered, a layout shift on every page (2026-11, Gate A2 CLS). Most
+  // visitors are signed out, so for them nothing moves at all.
   if (status === "loading") {
     return (
-      <span className="hidden h-9 items-center px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint sm:inline-flex">
-        <span className="size-1.5 rounded-full bg-fg-faint animate-pulse" />
+      <span
+        aria-hidden
+        className="invisible hidden h-9 items-center gap-2 rounded-full px-3 font-mono text-[0.6875rem] uppercase tracking-wider sm:inline-flex"
+      >
+        Sign in
       </span>
     );
   }

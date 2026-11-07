@@ -1,7 +1,8 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { ACTS } from "@/lib/cinema";
+import { ACTS, CANDLE_CRASH_FROM, CANDLE_LAB } from "@/lib/cinema";
+import { FILM_LIFT_END } from "./cinema-metrics";
 
 /**
  * THE ACT RAIL — the film's spine.
@@ -39,26 +40,23 @@ import { ACTS } from "@/lib/cinema";
 // Boot and the desk are retired: frame zero (the hero instrument) replaced
 // them in 2026-11 and the film now starts at the dive, so they are never on
 // screen and have no business in the film's own table of contents.
-const ACT_ORDER = [
-  "dive",
-  "regime",
-  "candle",
-  "safety",
-  "consensus",
-  "bull",
-  "matrix",
+//
+// The candle act is three rows, not one. Called "the crash" from end to end,
+// the rail labelled a rising market a crash for a third of the act and the
+// lab finale for another third (Gate A2): it reads climb · crash · lab now,
+// split where the colour script changes room (lib/cinema.ts).
+/** What each act is actually about, for the label and the announcer, and where it runs. */
+const RAIL = [
+  { key: "dive", label: "the dive", ...ACTS.dive },
+  { key: "regime", label: "regime", ...ACTS.regime },
+  { key: "climb", label: "the climb", from: ACTS.candle.from, to: CANDLE_CRASH_FROM },
+  { key: "crash", label: "the crash", from: CANDLE_CRASH_FROM, to: CANDLE_LAB.from },
+  { key: "lab", label: "the lab", from: CANDLE_LAB.from, to: ACTS.candle.to },
+  { key: "safety", label: "your worst case", ...ACTS.safety },
+  { key: "consensus", label: "the vote", ...ACTS.consensus },
+  { key: "bull", label: "conviction", ...ACTS.bull },
+  { key: "matrix", label: "welcome in", ...ACTS.matrix },
 ] as const;
-
-/** What each act is actually about, for the label and the announcer. */
-const ACT_LABEL: Record<(typeof ACT_ORDER)[number], string> = {
-  dive: "the dive",
-  regime: "regime",
-  candle: "the crash",
-  safety: "your worst case",
-  consensus: "the vote",
-  bull: "conviction",
-  matrix: "welcome in",
-};
 
 export type CinemaRailHandle = {
   /** Called from the cinema's existing per-frame pass. No rAF of its own. */
@@ -99,10 +97,15 @@ export const CinemaRail = forwardRef<
 
   useImperativeHandle(ref, () => ({
     update(progress: number) {
-      // the whole rail fades with the film's own outro
+      // The rail arrives as the curtain finishes lifting, and leaves with the
+      // film's own outro. It used to stand there from the first pixel of the
+      // lift, half under the hero, offering controls nobody could see the
+      // point of yet (Gate A2, d03).
       const host = hostRef.current;
       if (host) {
-        const o = progress < 0.86 ? 1 : Math.max(0, 1 - (progress - 0.86) / 0.07);
+        const arrive = Math.max(0, Math.min(1, (progress - FILM_LIFT_END) / 0.012));
+        const leave = progress < 0.86 ? 1 : Math.max(0, 1 - (progress - 0.86) / 0.07);
+        const o = arrive * leave;
         host.style.opacity = String(o);
         host.style.pointerEvents = o > 0.1 ? "auto" : "none";
       }
@@ -118,8 +121,8 @@ export const CinemaRail = forwardRef<
       const seen = progress - CROSSFADE;
       let act = 0;
       let frac = 0; // how far through that act
-      for (let i = 0; i < ACT_ORDER.length; i++) {
-        const a = ACTS[ACT_ORDER[i]];
+      for (let i = 0; i < RAIL.length; i++) {
+        const a = RAIL[i];
         if (seen >= a.from && seen < a.to) {
           act = i;
           frac = (seen - a.from) / (a.to - a.from);
@@ -141,7 +144,10 @@ export const CinemaRail = forwardRef<
         const g = geo.current ?? (geo.current = measure());
         if (g) {
           const from = g.ticks[act];
-          const to = act + 1 < g.ticks.length ? g.ticks[act + 1] : g.h;
+          // The last act fills a little past its own tick, never on down the
+          // spine past the sound and skip rows, which are not acts.
+          const to =
+            act + 1 < g.ticks.length ? g.ticks[act + 1] : from + (from - (g.ticks[act - 1] ?? 0)) * 0.45;
           const y = from + (to - from) * Math.max(0, Math.min(1, frac));
           fill.style.transform = `scaleY(${Math.max(0, Math.min(1, y / g.h)).toFixed(4)})`;
         }
@@ -157,7 +163,7 @@ export const CinemaRail = forwardRef<
       });
       // one polite announcement per act change — not per frame
       if (liveRef.current) {
-        liveRef.current.textContent = `Act ${act + 1} of ${ACT_ORDER.length}: ${ACT_LABEL[ACT_ORDER[act]]}`;
+        liveRef.current.textContent = `Act ${act + 1} of ${RAIL.length}: ${RAIL[act].label}`;
       }
     },
   }));
@@ -174,19 +180,19 @@ export const CinemaRail = forwardRef<
         <span
           ref={fillRef}
           aria-hidden
-          className="absolute left-0 top-1 bottom-1 w-px origin-top bg-bull"
+          className="absolute left-0 top-1 bottom-1 w-px origin-top bg-[linear-gradient(180deg,#8f73ff,#5c9aff_55%,#52ffa5)]"
           style={{ transform: "scaleY(0)", boxShadow: "var(--glow-rail)" }}
         />
-        {ACT_ORDER.map((act, i) => (
+        {RAIL.map((row, i) => (
           <button
-            key={act}
+            key={row.key}
             ref={(el) => {
               rowRefs.current[i] = el;
             }}
             type="button"
             data-on="0"
-            onClick={() => onSeek(ACTS[act].from)}
-            aria-label={`Act ${i + 1} of ${ACT_ORDER.length}: ${ACT_LABEL[act]}`}
+            onClick={() => onSeek(row.from)}
+            aria-label={`Act ${i + 1} of ${RAIL.length}: ${row.label}`}
             className="rail-row group flex items-center gap-2 text-left"
           >
             <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
@@ -194,12 +200,14 @@ export const CinemaRail = forwardRef<
               {String(i + 1).padStart(2, "0")}
             </span>
             <span className="rail-label t-chrome text-fg-dim" aria-hidden>
-              {ACT_LABEL[act]}
+              {row.label}
             </span>
           </button>
         ))}
         {/* Sound: OFF until asked, always. Turning it on is the browser's
-            required gesture by construction. */}
+            required gesture by construction. One fixed name, with aria-pressed
+            carrying the state: a label that changed under a toggle announced
+            "sound off, pressed" (Gate A2). The on/off word is for the eye. */}
         <button
           type="button"
           onClick={onSound}
@@ -207,7 +215,9 @@ export const CinemaRail = forwardRef<
           className="rail-row rail-skip mt-1 flex items-center gap-2 text-left"
         >
           <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
-          <span className="t-chrome text-fg-dim">{sound ? "sound on" : "sound off"}</span>
+          <span className="t-chrome text-fg-dim">
+            sound <span aria-hidden className={sound ? "text-bull" : undefined}>{sound ? "on" : "off"}</span>
+          </span>
         </button>
         {/* Skip demoted to the rail's last row: one option among several, on
             the left edge, instead of a pill parked over the dive corridor. */}
@@ -217,7 +227,7 @@ export const CinemaRail = forwardRef<
           className="rail-row rail-skip flex items-center gap-2 text-left"
         >
           <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
-          <span className="t-chrome text-fg-dim">skip film ↓</span>
+          <span className="t-chrome text-fg-dim">skip the film ↓</span>
         </button>
       </nav>
     </div>

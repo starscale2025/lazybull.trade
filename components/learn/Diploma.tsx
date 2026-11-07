@@ -56,10 +56,10 @@ export function Diploma() {
     if (!ctx) return;
     ctx.fillStyle = "#07070a";
     ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "#00ff87";
+    ctx.strokeStyle = "#52ffa5";
     ctx.lineWidth = 2;
     ctx.strokeRect(24, 24, W - 48, H - 48);
-    ctx.fillStyle = "#00ff87";
+    ctx.fillStyle = "#52ffa5";
     ctx.font = "600 20px ui-monospace, monospace";
     ctx.fillText("LAZYBULL · PAPER DIPLOMA", 60, 90);
     ctx.fillStyle = "#e8e8e0";
@@ -69,7 +69,7 @@ export function Diploma() {
     ctx.font = "18px ui-monospace, monospace";
     ctx.fillText(`CALLED ${answeredCount}/${total} CONCEPTS · ${correctCount} RIGHT FIRST TRY`, 60, 320);
     ctx.fillText(`CONF #${cid}   ·   ${date}   ·   $0 REAL RISK`, 60, 352);
-    ctx.fillStyle = "#00ff87";
+    ctx.fillStyle = "#52ffa5";
     ctx.font = "600 26px ui-monospace, monospace";
     // The domain is printed on an artefact people keep and share, so it has
     // to be one that resolves. lazybull.us is the site.
@@ -90,7 +90,7 @@ export function Diploma() {
       <div
         ref={cardRef}
         className="relative overflow-hidden border border-bull/50 bg-bg p-8 sm:p-10"
-        style={{ boxShadow: "0 0 60px -20px rgba(0,255,135,0.4)" }}
+        style={{ boxShadow: "0 0 60px -20px rgba(82,255,165,0.4)" }}
       >
         <div className="pointer-events-none absolute -right-6 -top-8 select-none font-display italic leading-none text-bull/[0.05]" style={{ fontSize: "16rem" }} aria-hidden>
           ✓
@@ -129,7 +129,7 @@ export function Diploma() {
             </button>
             <button
               onClick={savePng}
-              className="h-9 bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim"
+              className="h-9 btn-grad px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
             >
               save card ↓
             </button>

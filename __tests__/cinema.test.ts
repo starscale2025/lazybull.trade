@@ -3,6 +3,7 @@ import {
   ACTS,
   ACT_ORDER,
   BULL3D,
+  BULL3D_SHOW,
   CANDLE3D,
   DIVE3D,
   COPY_BEATS,
@@ -103,18 +104,33 @@ describe("canvasOpacity", () => {
 });
 
 describe("bull3dOpacity", () => {
-  it("is 0 outside the bull window", () => {
+  it("is 0 outside the bull's visible window", () => {
     expect(bull3dOpacity(0)).toBe(0);
     expect(bull3dOpacity(BULL3D.in0)).toBe(0);
+    expect(bull3dOpacity(BULL3D_SHOW.in0)).toBe(0);
     expect(bull3dOpacity(BULL3D.out1)).toBe(0);
     expect(bull3dOpacity(1)).toBe(0);
   });
   it("fades in, holds opaque, then dissolves out", () => {
-    expect(bull3dOpacity((BULL3D.in0 + BULL3D.in1) / 2)).toBeCloseTo(0.5, 5);
-    expect(bull3dOpacity(BULL3D.in1)).toBe(1);
-    expect(bull3dOpacity((BULL3D.in1 + BULL3D.out0) / 2)).toBe(1);
-    expect(bull3dOpacity(BULL3D.out0)).toBe(1);
-    expect(bull3dOpacity((BULL3D.out0 + BULL3D.out1) / 2)).toBeCloseTo(0.5, 5);
+    expect(bull3dOpacity((BULL3D_SHOW.in0 + BULL3D_SHOW.in1) / 2)).toBeCloseTo(0.5, 5);
+    expect(bull3dOpacity(BULL3D_SHOW.in1)).toBe(1);
+    expect(bull3dOpacity((BULL3D_SHOW.in1 + BULL3D_SHOW.out0) / 2)).toBe(1);
+    expect(bull3dOpacity(BULL3D_SHOW.out0)).toBe(1);
+    expect(bull3dOpacity((BULL3D_SHOW.out0 + BULL3D_SHOW.out1) / 2)).toBeCloseTo(0.5, 5);
+  });
+  it("leaves the vote alone on screen: the bull appears only once it clears", () => {
+    // Gate A2, d11: shown from 0.71 the bull sat over the whole vote act.
+    expect(BULL3D_SHOW.in0).toBeGreaterThanOrEqual(ACTS.consensus.to);
+    // and the clock the charge runs on is untouched, so it still lands at full opacity
+    expect(BULL3D_SHOW.out0).toBe(BULL3D.out0);
+    expect(BULL3D_SHOW.out1).toBe(BULL3D.out1);
+  });
+  it("keeps the bull's copy off the charge", () => {
+    const beat = COPY_BEATS.find((b) => b.id === "bull")!;
+    // the charge runs over bull-clock 0.626 → 0.826 (Bull3D.tsx)
+    const chargeFrom = BULL3D.in0 + 0.626 * (BULL3D.out1 - BULL3D.in0);
+    expect(beat.from).toBeGreaterThanOrEqual(BULL3D_SHOW.in0);
+    expect(beat.to).toBeLessThanOrEqual(chargeFrom + 0.005);
   });
   it("hands off cleanly: monotonic window, gone before the homepage resolve", () => {
     // The 2D Matrix rain starts mid-bull-act (~0.796), so the 3D fade-out overlaps

@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { getHeroPosition } from "@/lib/hero-position";
-import { TAGLINE } from "@/lib/cinema";
+import Link from "next/link";
+import { TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
+import { jumpTo } from "@/lib/motion/scroll";
 
 /**
  * THE PHONE'S FILM — a different film, not a smaller one.
@@ -48,14 +50,17 @@ const ACTS = [
 // spec sheet, this file still carried the oracle framing (a forecast that
 // claimed foresight of the crash) and shipped it to every phone. Two films,
 // one story: if you change a beat there, change its counterpart here.
-const COPY: { from: number; to: number; h: string; sub: string }[] = [
+const COPY: { from: number; to: number; h: string; sub: string; cta?: true }[] = [
   // Beat one used to repeat the H1. Frame zero (the hero instrument) is above
   // this film now, so the film opens on the paper-only promise instead.
   { from: 0.03, to: 0.14, h: "No trade here uses real money.", sub: "paper-only · $0 at risk" },
   { from: 0.2, to: 0.4, h: "Markets have moods.", sub: "trending, reverting, or noise" },
   { from: 0.47, to: 0.6, h: "Then the floor goes.", sub: "the part nobody rehearses" },
   { from: 0.65, to: 0.8, h: "Your worst case is a number you chose.", sub: "not one you find out afterwards" },
-  { from: 0.86, to: 0.99, h: `Learn it. ${TAGLINE}`, sub: "welcome in" },
+  // THE FILM ENDS ON THE LINE AND A WAY IN, never on a faded crash (Gate A2,
+  // m53). The beat holds past 1.0, so the last frame is this, the bull, and a
+  // first step on paper.
+  { from: 0.86, to: 1.04, h: `${TAGLINE_LEAD} ${TAGLINE}`, sub: "welcome in", cta: true },
 ];
 
 const N = 34; // candles — fewer than desktop's 48; portrait has less width
@@ -194,15 +199,19 @@ export function MobileCinema() {
     io.observe(section);
 
     const css = getComputedStyle(document.documentElement);
-    const BULL = css.getPropertyValue("--bull").trim() || "#00ff87";
+    const BULL = css.getPropertyValue("--bull").trim() || "#52ffa5";
     const BEAR = css.getPropertyValue("--bear").trim() || "#ff2e63";
     const INK = css.getPropertyValue("--fg").trim() || "#f5f5f0";
     const DIM = css.getPropertyValue("--fg-dim").trim() || "#8a8a82";
 
     const draw = (p: number) => {
       const r = canvas.getBoundingClientRect();
-      const W = r.width, H = r.height;
-      ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0, 0, r.width, r.height);
+      // The stage fills the phone now (no seam of page under it, Gate A2); the
+      // picture keeps the 9:16 frame it was composed for, centred in it.
+      const W = r.width, H = Math.min(r.height, (r.width * 16) / 9);
+      ctx.save();
+      ctx.translate(0, (r.height - H) / 2);
 
       // ── act 1 · the aperture opens ───────────────────────────────────────
       const boot = ss(0.0, 0.13, p);
@@ -231,7 +240,7 @@ export function MobileCinema() {
       // ── acts 2 + 3 · the tape prints, then detonates ─────────────────────
       // The tape recedes once the bull begins to rise: two full-strength
       // subjects in a 9:16 frame just fight each other.
-      const tapeAlpha = 1 - ss(0.82, 0.93, p) * 0.72;
+      const tapeAlpha = 1 - ss(0.82, 0.93, p) * 0.72 - ss(0.93, 0.99, p) * 0.28;
       ctx.save();
       ctx.globalAlpha = tapeAlpha;
       for (let i = 0; i < printed; i++) {
@@ -272,7 +281,9 @@ export function MobileCinema() {
       // cost. The bars below the line are dimmed (the part a defined-risk
       // position never pays for) and the line carries the number. This replaced a down-biased
       // forecast cone: nothing here is predicted, only bounded.
-      const floorT = ss(0.6, 0.68, p) * (1 - ss(0.9, 1.0, p));
+      // Gone before the bull rises at 0.82: it used to linger to the end and
+      // print across the bull's outline (Gate A2, m51/m52).
+      const floorT = ss(0.6, 0.68, p) * (1 - ss(0.78, 0.83, p));
       if (floorT > 0.001) {
         const floorY = yOf(LO + (HI - LO) * 0.42);
         const x0 = padX + DIVERGE * cw;
@@ -292,15 +303,32 @@ export function MobileCinema() {
         ctx.lineTo(reach, floorY);
         ctx.stroke();
         ctx.shadowBlur = 0;
-        ctx.fillStyle = INK;
-        ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "bottom";
-        // The hero's own number (lib/hero-position.ts): the worst case this act
-        // calls "a number you chose" is the one set at the top of the page.
+        // The payoff instrument's number (lib/hero-position.ts), and honest
+        // about whose it is: on a phone the film plays before the instrument,
+        // so unless the visitor has set one, this is an example spread. Set
+        // UNDER the line, in the dimmed region, on a plate: above it, the label
+        // printed across the crash's last bars (Gate A2, m50).
         const pos = getHeroPosition();
         const loss = Math.round(pos?.maxLoss ?? 230).toLocaleString("en-US");
-        ctx.fillText(`below K1 ${pos?.k1 ?? 100}, the loss stops at −$${loss}`, x1, floorY - 6);
+        const lead = `the loss stops at −$${loss}`;
+        const note = `below K1 ${pos?.k1 ?? 100} · ${pos?.chosen ? "your spread" : "an example spread"}`;
+        ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+        const w1 = ctx.measureText(lead).width;
+        ctx.font = "500 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+        const w2 = ctx.measureText(note).width;
+        const tw = Math.max(w1, w2);
+        ctx.globalAlpha = 0.82 * floorT;
+        ctx.fillStyle = "#050505";
+        ctx.fillRect(x1 - tw - 8, floorY + 4, tw + 12, 34);
+        ctx.globalAlpha = floorT;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = INK;
+        ctx.font = "600 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.fillText(lead, x1, floorY + 8);
+        ctx.fillStyle = DIM;
+        ctx.font = "500 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.fillText(note, x1, floorY + 23);
         ctx.restore();
       }
 
@@ -315,7 +343,8 @@ export function MobileCinema() {
         // brand's language here is wireframe and phosphor (the desktop film
         // opens on a self-drawing outline and closes on particles), so the
         // silhouette should look drawn rather than stamped.
-        const vis = Math.min(1, bt2 * 2) * (1 - ss(0.97, 1.0, p));
+        // Holds to the end: the last frame is the bull and the line (Gate A2).
+        const vis = Math.min(1, bt2 * 2);
         ctx.save();
         ctx.beginPath();
         const pts = [...BULL_HALF, ...[...BULL_HALF].reverse().map(([x, y]) => [-x, y] as [number, number])];
@@ -346,6 +375,7 @@ export function MobileCinema() {
       ctx.fillStyle = BULL;
       ctx.fillRect(padX * 0.4, chartTop, 1, chartH * clamp01(p));
       ctx.restore();
+      ctx.restore(); // the 9:16 frame
       void INK;
     };
 
@@ -379,6 +409,7 @@ export function MobileCinema() {
           if (!el) return;
           const o = Math.min(1, ss(b.from, b.from + 0.03, progress), 1 - ss(b.to - 0.03, b.to, progress));
           el.style.opacity = String(Math.max(0, o));
+          if (b.cta) el.inert = o < 0.5;
         });
         // Skip leaves with the film: faded and inert by 0.9, so it can never
         // sit under the landing passing taps through to its links.
@@ -417,15 +448,14 @@ export function MobileCinema() {
       aria-label="Intro film"
     >
       <div
-        className="sticky w-full overflow-hidden bg-bg"
+        className="sticky top-0 w-full overflow-hidden bg-bg"
         style={{
-          top: "calc(env(safe-area-inset-top) + 10px)",
-          aspectRatio: "9 / 16",
-          // 62svh left ~300px of dead page below the stage on a 844px screen —
-          // a 9:16 box on a 390px phone wants 693px and was being capped at 523.
-          // 80svh lets the frame actually fill the phone while still leaving the
-          // hero peeking underneath, which is what tells you to keep scrolling.
-          maxHeight: "80svh",
+          // The whole phone. A 9:16 box capped at 80svh left a band of page
+          // showing under the stage, read as a seam rather than as "keep
+          // scrolling" (Gate A2, m50-m53); the drawing keeps its 9:16 frame
+          // inside this (see draw), and the progress spine and the copy say
+          // where you are.
+          height: "100svh",
         }}
       >
         <canvas ref={canvasRef} aria-hidden className="absolute inset-0 h-full w-full" />
@@ -448,11 +478,11 @@ export function MobileCinema() {
             // scroll mid-flight. Lands on the section after the film, and only
             // ever moves the reader DOWN.
             const dest = el.getBoundingClientRect().bottom + window.scrollY;
-            if (dest > window.scrollY) window.scrollTo(0, dest);
+            if (dest > window.scrollY) jumpTo(dest);
           }}
           className="pointer-events-auto absolute bottom-5 left-1/2 z-30 -translate-x-1/2 border border-border bg-bg/70 px-5 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim backdrop-blur transition-colors hover:border-bull/50 hover:text-fg"
         >
-          Skip intro ↓
+          Skip the film ↓
         </button>
         {COPY.map((b, i) => (
           <div
@@ -461,12 +491,22 @@ export function MobileCinema() {
               copyRefs.current[i] = el;
             }}
             style={{ opacity: 0 }}
+            // hidden until its beat is up, so the way in is never a stray tab stop
+            inert={b.cta ? true : undefined}
             className="pointer-events-none absolute inset-x-0 top-[7%] px-6 text-center"
           >
             <p className="font-display text-[clamp(1.5rem,7vw,2.1rem)] leading-[1.05] tracking-[-0.03em] text-fg">
               {b.h}
             </p>
             <p className="mt-2 t-chrome text-fg-dim">{b.sub}</p>
+            {b.cta && (
+              <Link
+                href="/trade"
+                className="btn-grad pointer-events-auto mt-6 inline-flex items-center gap-2 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider"
+              >
+                Start on paper <span aria-hidden>→</span>
+              </Link>
+            )}
           </div>
         ))}
       </div>

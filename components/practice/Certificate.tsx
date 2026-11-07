@@ -114,7 +114,7 @@ export function Certificate({
   return (
     <div
       className="relative overflow-hidden border border-bull/50 bg-bg p-8 sm:p-10"
-      style={{ boxShadow: "0 0 60px -20px rgba(0,255,135,0.4)" }}
+      style={{ boxShadow: "0 0 60px -20px rgba(82,255,165,0.4)" }}
     >
       <div
         aria-hidden
@@ -182,7 +182,7 @@ export function Certificate({
               type="button"
               onClick={mint}
               disabled={minting}
-              className="h-9 bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim disabled:opacity-50"
+              className="h-9 btn-grad px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors disabled:opacity-50"
             >
               {minting ? "minting…" : "mint certificate"}
             </button>

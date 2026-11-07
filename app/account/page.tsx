@@ -147,7 +147,7 @@ export default async function AccountPage({
                   {sub?.provider === "lemonsqueezy" && (
                     <a
                       href="/api/billing/portal"
-                      className="inline-flex h-9 items-center gap-2 bg-bull px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim"
+                      className="inline-flex h-9 items-center gap-2 btn-grad px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
                     >
                       Manage subscription →
                     </a>

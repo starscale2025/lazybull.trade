@@ -90,22 +90,22 @@ export default function PricingPage() {
                 role="switch"
                 aria-checked={annual}
                 aria-label="Bill annually"
-                className={`relative h-5 w-10 rounded-full border transition-colors ${annual ? "border-bull/60 bg-bull/20" : "border-border bg-bg"}`}
+                className={`relative h-5 w-10 rounded-full border transition-colors ${annual ? "border-white/20 bg-[image:var(--grad-fill)]" : "border-border bg-bg"}`}
               >
                 <span
-                  className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-all ${annual ? "left-[1.375rem] bg-bull" : "left-1 bg-fg-dim"}`}
+                  className={`absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full transition-all ${annual ? "left-[1.375rem] bg-[var(--grad-on)]" : "left-1 bg-fg-dim"}`}
                 />
               </button>
               <button
                 onClick={() => setAnnual(true)}
                 aria-pressed={annual}
-                className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${annual ? "text-bull" : "text-fg-faint hover:text-fg-dim"}`}
+                className={`whitespace-nowrap font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${annual ? "text-grad" : "text-fg-faint hover:text-fg-dim"}`}
               >
                 Billed annually
               </button>
               {annual && maxMonthsSaved > 0 && (
-                <span className="whitespace-nowrap border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull max-sm:basis-full max-sm:text-center">
-                  save up to {maxMonthsSaved} months
+                <span className="border-grad whitespace-nowrap bg-[rgba(123,92,255,0.1)] px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider max-sm:basis-full max-sm:text-center">
+                  <span className="text-grad">save up to {maxMonthsSaved} months</span>
                 </span>
               )}
             </div>
@@ -122,10 +122,12 @@ export default function PricingPage() {
                   onClick={() => pickCurrency(c)}
                   aria-pressed={currency === c}
                   className={`px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
-                    currency === c ? "bg-bull/15 text-bull" : "text-fg-faint hover:text-fg-dim"
+                    currency === c ? "bg-[rgba(123,92,255,0.16)]" : "text-fg-faint hover:text-fg-dim"
                   }`}
                 >
-                  {c === "USD" ? "$ USD" : "₹ INR"}
+                  {/* On a span, not the button: background-clip:text would clip the
+                      button's own tint away with the gradient. */}
+                  <span className={currency === c ? "text-grad" : undefined}>{c === "USD" ? "$ USD" : "₹ INR"}</span>
                 </button>
               ))}
             </div>
@@ -141,7 +143,7 @@ export default function PricingPage() {
                 key={t.id}
                 id={t.id}
                 className={`relative flex scroll-mt-28 flex-col border bg-surface p-6 ${
-                  t.primary ? "border-bull/60" : "border-border"
+                  t.primary ? "border-grad border-transparent shadow-[var(--grad-glow)]" : "border-border"
                 } ${t.soon ? "opacity-80" : ""}`}
               >
                 <div className="flex items-center justify-between gap-3">

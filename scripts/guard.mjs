@@ -29,7 +29,10 @@ const ok = (msg) => console.log("✓ " + msg);
   const carriers = [];
   for (const f of readdirSync(CHUNKS_DIR)) {
     if (!f.endsWith(".js")) continue;
-    if (readFileSync(join(CHUNKS_DIR, f), "utf8").includes("WebGLRenderer")) carriers.push(f);
+    // three's own renderer source, not any chunk that calls it: frame zero's
+    // matter scene made three a shared chunk with its callers beside it (see
+    // scripts/check-three-dupes.mjs).
+    if (readFileSync(join(CHUNKS_DIR, f), "utf8").includes("THREE.WebGLRenderer: Error creating WebGL context")) carriers.push(f);
   }
   if (carriers.length > 1) fail(`three.js duplicated across ${carriers.length} chunks: ${carriers.join(", ")}`);
   else ok(carriers.length === 1 ? `one three.js chunk (${carriers[0]})` : "no three.js in the bundle");

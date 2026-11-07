@@ -36,7 +36,7 @@ const MONO = "JetBrains Mono";
 const BG = "#050505";
 const FG = "#f5f5f0";
 const DIM = "#8a8a82";
-const BULL = "#00ff87";
+const BULL = "#52ffa5";
 const BEAR = "#ff2e63";
 const GRID = "rgba(245,245,240,0.06)";
 
@@ -82,11 +82,6 @@ export async function GET(req: Request) {
   const detection = detect(legs);
   const summary = pnlSummary(legs, spot);
 
-  // Does profit grow without bound above the range? The right-tail slope of the
-  // wide curve answers it; pnlSummary already answers the loss side.
-  const wide = pnlCurve(legs, spot, 0.6, 401);
-  const uncappedUp = wide[wide.length - 1].pnl - wide[wide.length - 2].pnl > 0;
-
   // ── the payoff figure, in the card's own coordinate space ──────────────────
   // Vertical bands are hand-balanced against the type below (the column uses
   // flex-start + explicit margins, NOT space-between: space-between packed the
@@ -113,7 +108,7 @@ export async function GET(req: Request) {
   const below = curve.map((p) => `L${X(p.s).toFixed(1)},${Y(Math.min(0, p.pnl)).toFixed(1)}`).join(" ");
 
   const stats: { k: string; v: string; c: string }[] = [
-    { k: "max profit", v: uncappedUp ? "uncapped" : money(summary.maxProfit), c: BULL },
+    { k: "max profit", v: summary.profitUncapped ? "uncapped" : money(summary.maxProfit), c: BULL },
     { k: "max loss", v: summary.unboundedRisk ? "unbounded" : money(summary.maxLoss), c: BEAR },
     {
       k: summary.breakevens.length === 1 ? "breakeven" : "breakevens",

@@ -184,7 +184,7 @@ export function ImportBotModal({
             </button>
             <button
               onClick={handleImport}
-              className="h-9 bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim"
+              className="h-9 btn-grad px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
             >
               compile & import →
             </button>

@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
 
 // The share card. There wasn't one — /opengraph-image 404'd and the metadata
 // carried no openGraph block, so every link to this site rendered as bare text.
@@ -42,7 +43,7 @@ export const contentType = "image/png";
 const BG = "#050505";
 const FG = "#f5f5f0";
 const DIM = "#8a8a82";
-const BULL = "#00ff87";
+const BULL = "#52ffa5";
 const BEAR = "#ff2e63";
 const GRID = "rgba(245,245,240,0.06)";
 
@@ -147,7 +148,7 @@ export default function Image() {
               it — and the second line is the site's mantra, verbatim. */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: MONO, fontSize: 25, letterSpacing: -0.2 }}>
             <div style={{ display: "flex", color: DIM }}>27 bots · 13 models · 8 live demos</div>
-            <div style={{ display: "flex", color: FG }}>Learn it. Backtest it. Paper-trade it.</div>
+            <div style={{ display: "flex", color: FG }}>{`${TAGLINE_LEAD} ${TAGLINE}`}</div>
           </div>
         </div>
 

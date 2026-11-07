@@ -73,7 +73,7 @@ export function BootSequence() {
         <div className="mt-6 h-[2px] w-full overflow-hidden bg-border">
           <div
             className="h-full bg-bull"
-            style={{ animation: "boot-progress 1.5s linear forwards", boxShadow: "0 0 16px rgba(0,255,135,0.7)" }}
+            style={{ animation: "boot-progress 1.5s linear forwards", boxShadow: "0 0 16px rgba(82,255,165,0.7)" }}
           />
         </div>
 

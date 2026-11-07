@@ -1,15 +1,17 @@
-// THE VISITOR'S POSITION, shared between frame zero and the film.
+// THE VISITOR'S POSITION, shared between the payoff instrument and the film.
 //
-// The hero instrument (components/HeroInstrument.tsx) is a bull call spread the
-// visitor can reshape; the film's safety act says "your worst case is a number
-// you chose". They used to be two different positions: the hero showed
-// −$230 / +$570 (or whatever the visitor dragged it to) and the film drew its
-// own hardcoded −$80 / +$420 under that headline (re-tribunal regression 3).
-// Now the hero publishes here and both films read it, so the number the film
-// calls "chosen" is the one the visitor chose.
+// The payoff instrument (components/PayoffInstrument.tsx) is a bull call
+// spread the visitor can reshape; the film's safety act says "your worst case
+// is a number you chose". They used to be two different positions: the
+// instrument showed −$230 / +$570 (or whatever the visitor dragged it to) and
+// the film drew its own hardcoded −$80 / +$420 under that headline
+// (re-tribunal regression 3). Now the instrument publishes here and both films
+// read it. Since 2026-11-06 the instrument sits after the film, so on a first
+// pass the film draws the example spread and says so.
 //
 // A plain module store, like cinema-clock: the films read it every frame and
-// must not re-render to do so. No pricing in here; the hero owns the maths.
+// must not re-render to do so. No pricing in here; the instrument owns the
+// maths.
 
 export type HeroPosition = {
   /** The strikes. */

@@ -28,7 +28,7 @@ export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative max-w-[20rem] border border-bull/40 bg-surface text-fg shadow-[0_20px_60px_-20px_rgba(0,255,135,0.4)]"
+            className="relative max-w-[20rem] border border-bull/40 bg-surface text-fg shadow-[0_20px_60px_-20px_rgba(82,255,165,0.4)]"
           >
             <div className="flex items-start gap-3 p-4">
               <div className="flex size-10 shrink-0 items-center justify-center border border-border bg-bg" style={{ color: "var(--bull)" }}>
@@ -65,14 +65,14 @@ export function TeacherAvatar({ onAsk }: { onAsk?: () => void }) {
         whileTap={{ scale: 0.97 }}
         onClick={onAsk}
         aria-label="AI teacher"
-        className="group relative flex size-14 items-center justify-center rounded-full border border-bull/50 bg-bg shadow-[0_0_40px_-10px_rgba(0,255,135,0.7)]"
+        className="group relative flex size-14 items-center justify-center rounded-full border border-bull/50 bg-bg shadow-[0_0_40px_-10px_rgba(82,255,165,0.7)]"
       >
         <span className="absolute -inset-1 rounded-full bg-bull/20 blur-lg" />
         <svg viewBox="0 0 48 48" width={48} height={48} className="relative">
           <defs>
             <radialGradient id="head" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#00ff87" />
-              <stop offset="100%" stopColor="#00b85f" />
+              <stop offset="0%" stopColor="#52ffa5" />
+              <stop offset="100%" stopColor="#3dbf7c" />
             </radialGradient>
           </defs>
           <circle cx="24" cy="24" r="20" fill="url(#head)" />

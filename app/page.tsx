@@ -1,6 +1,6 @@
 import { TickerBar } from "@/components/TickerBar";
-import { GetStarted } from "@/components/GetStarted";
-import { HeroInstrument } from "@/components/HeroInstrument";
+import { FrameZero } from "@/components/FrameZero";
+import { PayoffInstrument } from "@/components/PayoffInstrument";
 import { CinemaGate } from "@/components/scrollstory/CinemaGate";
 import { Footer } from "@/components/Footer";
 import { MarketingSections } from "@/components/marketing/MarketingSections";
@@ -15,12 +15,13 @@ export const metadata = {
   alternates: { canonical: "/" },
 };
 
-// FRAME ZERO (2026-11). The first frame is the hero instrument: "Options you
-// can see." on the zero axis of a live payoff, server-rendered, the LCP. The
-// film still plays on every load, but UNDER it: its section starts one viewport
-// up beneath the hero, so scrolling lifts the hero off the pinned film like a
-// curtain. When the film ends it collapses, and the hero sits directly above
-// the landing again. No scroll lock, no baked plate, no toll booth.
+// FRAME ZERO (2026-11). The first frame is the matter: "Options you can see."
+// over a living wireframe in the brand palette, the H1 server-rendered and the
+// LCP, the WebGL loaded after it. The film still plays on every load, but
+// UNDER it: its section starts one viewport up beneath the hero, so scrolling
+// lifts the hero off the pinned film like a curtain. When the film ends it
+// collapses, and the hero sits directly above the landing again. The payoff
+// instrument, frame zero until 2026-11-06, opens the landing after the eye band.
 export default function Home() {
   return (
     <main className="tap-floor relative flex min-h-screen flex-col bg-bg text-fg">
@@ -33,15 +34,18 @@ export default function Home() {
         <TickerBar />
 
         {/* Frame zero. Opaque and stacked above the film (z-30 over z-20). */}
-        <HeroInstrument />
+        <FrameZero />
 
         {/* The film, under the curtain. Keep the section after it immediately
             after: collapse() anchors on its next sibling to keep the page still
             while ~12,000px of film leave the layout. */}
         <CinemaGate />
 
-        {/* The landing begins with the eye band. */}
-        <GetStarted />
+        {/* The landing begins with the thing the product does: drag a strike,
+            watch the floor. The Matrix-eye band that stood between the film and
+            this is gone (Gate A2: stock sci-fi, and about 1 MB of video); the
+            film's dissolve lands here now. */}
+        <PayoffInstrument />
 
         {/* The rest of the landing: workflow, product, safety, pricing. */}
         <MarketingSections />

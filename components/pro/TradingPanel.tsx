@@ -272,7 +272,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           role="separator"
           aria-orientation="horizontal"
           aria-label="Resize the paper trading window"
-          className="h-1 shrink-0 cursor-ns-resize bg-transparent transition-colors hover:bg-bull/40"
+          className="h-1 shrink-0 cursor-ns-resize bg-transparent transition-colors hover:bg-[#7b5cff]/50"
         />
       )}
 
@@ -284,9 +284,9 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
         <button
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex items-center gap-2 font-mono text-[0.6875rem] tracking-wider text-fg transition-colors hover:text-bull"
+          className="flex items-center gap-2 font-mono text-[0.6875rem] tracking-wider text-fg transition-colors hover:text-brand-ink"
         >
-          <span className="grid size-4 place-items-center border border-bull/50 text-[0.625rem] font-bold text-bull">LB</span>
+          <span className="grid size-4 place-items-center bg-[image:var(--grad-fill)] text-[0.625rem] font-bold text-[var(--grad-on)]">LB</span>
           Paper Trading
           <span className={`text-fg-faint transition-transform ${open ? "" : "rotate-180"}`}>⌄</span>
         </button>
@@ -323,7 +323,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
           </a>
           <button
             onClick={() => setResetOpen(true)}
-            className="border border-bull/40 px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
+            className="border border-[#7b5cff]/50 px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-brand-ink transition-colors hover:bg-[#582eff] hover:text-white"
             title={`Reset to ${money(startingCash)} — wipes the ENTIRE portfolio (full warning before anything happens)`}
           >
             ↺ reset funds
@@ -395,7 +395,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                   setCapitalOpen(false);
                   onResult(`Account restarted at $${fmt(n, 2)}`, "ok");
                 }}
-                className="border border-bull/50 px-2 py-0.5 text-bull transition-colors hover:bg-bull hover:text-bg"
+                className="border border-[#7b5cff]/50 px-2 py-0.5 text-brand-ink transition-colors hover:bg-[#582eff] hover:text-white"
               >
                 set &amp; restart
               </button>
@@ -527,7 +527,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
                               <>
                                 <button
                                   onClick={() => applyProtection(r.sym, editing!.tp, editing!.sl)}
-                                  className="mr-1 border border-bull/50 px-1.5 text-[0.625rem] text-bull hover:bg-bull hover:text-bg"
+                                  className="mr-1 border border-[#7b5cff]/50 px-1.5 text-[0.625rem] text-brand-ink hover:bg-[#582eff] hover:text-white"
                                 >
                                   save
                                 </button>

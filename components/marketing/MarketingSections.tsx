@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { LAG_DAYS } from "@/lib/region";
 import { PayoffSpine } from "./PayoffSpine";
-import { TAGLINE } from "@/lib/cinema";
+import { TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
 import { buildTiers } from "@/components/pricing/tiers";
 import { fmtMoney, monthlyPrice } from "@/lib/billing/prices";
 import {
@@ -27,11 +27,9 @@ import {
  * each screenshot — the flat version wins, because dropping those was
  * compression for a static preview, not a design decision.
  *
- * WHAT THIS DELIBERATELY DOES NOT TOUCH: the scroll cinema and the hero it
- * hands off to. app/page.tsx documents that GetStarted's opening block is
- * pixel-matched to the cinema's final overlay — that match is what makes the
- * collapse invisible. These sections mount BELOW it, so the film and the
- * hand-off render exactly as they did before.
+ * WHAT THIS DELIBERATELY DOES NOT TOUCH: the scroll cinema and the payoff
+ * instrument it hands off to (app/page.tsx). These sections mount BELOW it,
+ * so the film and the hand-off render exactly as they did before.
  *
  * Server components throughout: hover lives in CSS (see GlassKit), so the
  * whole region adds no JavaScript to a page already carrying the cinema.
@@ -78,7 +76,8 @@ function Workflow() {
     <GlassSection id="workflow">
       <div className="flex flex-col items-center text-center" data-gsap="fade-up">
         <GlassEyebrow>The workflow</GlassEyebrow>
-        <GlassHeading accent={TAGLINE.toLowerCase()}>Learn it. Prove it —</GlassHeading>
+        {/* The one phrasing the film, the phone film and this heading share (lib/cinema.ts). */}
+        <GlassHeading accent={TAGLINE}>{TAGLINE_LEAD}</GlassHeading>
       </div>
 
       <div className="relative mt-14">
@@ -98,14 +97,14 @@ function Workflow() {
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="0.55"
-          className="absolute left-[calc(33.333%-0.75rem)] top-[3.3125rem] hidden h-px w-[1.125rem] bg-bull/35 md:block"
+          className="absolute left-[calc(33.333%-0.75rem)] top-[3.3125rem] hidden h-px w-[1.125rem] rule-grad md:block"
         />
         <span
           aria-hidden
           data-gsap="reveal-clip"
           data-gsap-duration="0.55"
           data-gsap-delay="0.55"
-          className="absolute left-[calc(66.667%-0.375rem)] top-[3.3125rem] hidden h-px w-[1.125rem] bg-bull/35 md:block"
+          className="absolute left-[calc(66.667%-0.375rem)] top-[3.3125rem] hidden h-px w-[1.125rem] rule-grad md:block"
         />
         <div
           className="grid grid-cols-1 gap-4 md:grid-cols-3"
@@ -117,8 +116,8 @@ function Workflow() {
               key={s.n}
               className="glass glass-hover specular relative flex flex-col gap-3.5 rounded-[var(--r-panel)] p-[30px_26px]"
             >
-              <span className="glass inline-flex size-[2.875rem] items-center justify-center rounded-[14px] font-mono text-[0.8125rem] text-bull [text-shadow:0_0_14px_rgba(0,255,135,0.6)]">
-                {s.n}
+              <span className="glass inline-flex size-[2.875rem] items-center justify-center rounded-[14px] font-mono text-[0.8125rem]">
+                <span className="text-grad [filter:drop-shadow(0_0_10px_rgba(110,90,255,0.45))]">{s.n}</span>
               </span>
               <span className="font-display text-[1.5625rem] tracking-[-0.03em] text-fg">
                 {s.title}
@@ -128,7 +127,7 @@ function Workflow() {
               </p>
               <Link
                 href={s.href}
-                className="link-draw relative self-start t-eyebrow text-bull no-underline"
+                className="link-draw text-grad relative self-start t-eyebrow no-underline"
               >
                 {s.cta} →
               </Link>
@@ -271,7 +270,7 @@ function Features() {
               <GlassPoints points={f.points} />
               <Link
                 href={f.href}
-                className="link-draw relative mt-1 self-start t-eyebrow text-bull no-underline"
+                className="link-draw text-grad relative mt-1 self-start t-eyebrow no-underline"
               >
                 open {f.tag} →
               </Link>
@@ -360,7 +359,7 @@ function Safety() {
               pathLength={1}
               data-gsap="draw"
               data-gsap-duration="1.2"
-              style={{ filter: "drop-shadow(0 0 8px rgba(0,255,135,0.45))" }}
+              style={{ filter: "drop-shadow(0 0 8px rgba(82,255,165,0.45))" }}
             />
             {/* the floor you chose — the flat left leg, called out */}
             <line
@@ -489,7 +488,7 @@ function Pricing() {
             }`}
           >
             <div
-              className={`t-eyebrow ${t.hot ? "text-bull" : "text-fg-faint"}`}
+              className={`t-eyebrow ${t.hot ? "text-grad" : "text-fg-faint"}`}
             >
               {t.name}
             </div>

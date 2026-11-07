@@ -262,7 +262,7 @@ export function ConsentGate() {
         aria-labelledby="consent-title"
         aria-describedby="consent-intro"
         tabIndex={-1}
-        className="max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-xl overflow-y-auto border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(0,255,135,0.45)] outline-none transition-opacity duration-200 motion-reduce:transition-none"
+        className="max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-xl overflow-y-auto border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(82,255,165,0.45)] outline-none transition-opacity duration-200 motion-reduce:transition-none"
       >
         {view === "blocked" ? (
           <BlockedPanel onStartOver={() => clearConsent()} />
@@ -356,7 +356,7 @@ export function ConsentGate() {
                   type="button"
                   onClick={() => record(true, analytics, training)}
                   disabled={!adult}
-                  className="inline-flex items-center gap-2 bg-bull px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-opacity hover:bg-bull-dim disabled:opacity-30 lg:py-2.5"
+                  className="inline-flex items-center gap-2 btn-grad px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-opacity disabled:opacity-30 lg:py-2.5"
                 >
                   continue →
                 </button>

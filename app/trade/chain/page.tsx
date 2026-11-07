@@ -76,7 +76,7 @@ export default function TradePage() {
               onClick={() =>
                 setBubble({
                   title: "Hi, I'm your teacher",
-                  body: "Hover any Greek label for an instant explanation. Drag across the chain to build multi-leg strategies. Click 'Explain this strategy' on the right card and I'll walk you through the trade in plain English.",
+                  body: "Hover any Greek label for an instant explanation. Drag across the chain to build multi-leg strategies. Click 'Explain this strategy' on the strategy card and I'll walk you through the trade in plain English.",
                   icon: "delta",
                 })
               }

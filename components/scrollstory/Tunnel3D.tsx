@@ -15,6 +15,8 @@ import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { cinemaClock } from "@/lib/cinema-clock";
 import { COPY_BEATS, DIVE3D, beatOpacity } from "@/lib/cinema";
+import { watchContext } from "./gl-context";
+import { Grade } from "./Grade";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -85,7 +87,8 @@ const dotTexture = (() => {
   };
 })();
 
-// The light at the end: hot white core → green falloff, built once on a canvas.
+// The light at the end: hot white core → blue → violet falloff (the brand
+// ramp, 2026-11-06; it was a mint fog), built once on a canvas.
 const glowTexture = (() => {
   let t: THREE.CanvasTexture | null = null;
   return () => {
@@ -95,9 +98,10 @@ const glowTexture = (() => {
     const g = c.getContext("2d")!;
     const grad = g.createRadialGradient(128, 128, 0, 128, 128, 126);
     grad.addColorStop(0, "rgba(255,255,255,1)");
-    grad.addColorStop(0.22, "rgba(224,255,240,0.95)");
-    grad.addColorStop(0.5, "rgba(0,255,135,0.4)");
-    grad.addColorStop(1, "rgba(0,255,135,0)");
+    grad.addColorStop(0.2, "rgba(232,236,255,0.95)");
+    grad.addColorStop(0.44, "rgba(92,154,255,0.42)");
+    grad.addColorStop(0.72, "rgba(123,92,255,0.16)");
+    grad.addColorStop(1, "rgba(123,92,255,0)");
     g.fillStyle = grad;
     g.fillRect(0, 0, 256, 256);
     t = new THREE.CanvasTexture(c);
@@ -122,12 +126,12 @@ function Corridor() {
   const plane = useMemo(() => new THREE.PlaneGeometry(6.4, 4), []);
   const edges = useMemo(() => new THREE.EdgesGeometry(plane), [plane]);
   const frameMat = useMemo(
-    () => new THREE.LineBasicMaterial({ color: "#00ff87", transparent: true, opacity: 0.38 }),
+    () => new THREE.LineBasicMaterial({ color: "#6f86ff", transparent: true, opacity: 0.4 }),
     []
   );
   // one material per shot (not per panel) — 7 uploads, panels share
   const mats = useMemo(
-    () => SHOTS.map(() => new THREE.MeshBasicMaterial({ color: "#0c1a13", toneMapped: false })),
+    () => SHOTS.map(() => new THREE.MeshBasicMaterial({ color: "#0c0f1c", toneMapped: false })),
     []
   );
   const texRef = useRef<(THREE.CanvasTexture | null)[]>(SHOTS.map(() => null));
@@ -250,7 +254,7 @@ function SpeedLines() {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     const mat = new THREE.LineBasicMaterial({
-      color: "#baffdd",
+      color: "#b9c6ff",
       transparent: true,
       opacity: 0.25,
       blending: THREE.AdditiveBlending,
@@ -340,7 +344,7 @@ function Dust() {
         <bufferAttribute attach="attributes-position" args={[base, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        color="#8fffc9"
+        color="#a9b6ff"
         size={0.05}
         sizeAttenuation
         map={dotTexture()}
@@ -379,9 +383,11 @@ function Rig() {
 export default function Tunnel3D({
   active,
   onReady,
+  onLost,
 }: {
   active: boolean;
   onReady?: () => void;
+  onLost?: () => void;
 }) {
   return (
     <Canvas
@@ -390,7 +396,10 @@ export default function Tunnel3D({
       frameloop={active ? "always" : "never"}
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 58, position: [0, 0, CAM_Z0], near: 0.1, far: 160 }}
-      onCreated={() => onReady?.()}
+      onCreated={({ gl }) => {
+        onReady?.();
+        watchContext(gl.domElement, onLost, onReady);
+      }}
       fallback={null}
     >
       <color attach="background" args={["#050505"]} />
@@ -409,7 +418,7 @@ export default function Tunnel3D({
             red/blue fringes that read as purple specks over the bloom-blown
             green core. Kept low so big shapes still get a hint of lens fringe. */}
         <ChromaticAberration offset={[0.0002, 0.00028]} />
-        {/* THE GRADE. A composer renders into a float target, and three only
+        {/* TONE MAPPING, which is not the grade. A composer renders into a float target, and three only
             tone-maps on the way to the screen, so this layer had none: every
             emissive over 1.0 clipped flat (the 2026-11 re-tribunal measured
             54.7% of the cube clipped and 186px undithered green runs). Khronos
@@ -418,6 +427,9 @@ export default function Tunnel3D({
             salmon and the bull green mint, which breaks a colour script built
             on red arriving late and hard. SMAA after it, on display values. */}
         <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+        {/* The grade itself: the loss red and gain green back on their tokens,
+            and a dither for the 8-bit steps, and the dive's darks lifted. See Grade.tsx. */}
+        <Grade toe={0.18} />
         <SMAA />
       </EffectComposer>
     </Canvas>

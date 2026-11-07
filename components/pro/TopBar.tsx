@@ -26,7 +26,7 @@ export const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "D", "W", "M"];
 
 export const INDICATORS = [
   { id: "ema20", label: "EMA 20", desc: "Exponential moving avg", color: "var(--cyan)" },
-  { id: "ema50", label: "EMA 50", desc: "Exponential moving avg", color: "#a78bfa" },
+  { id: "ema50", label: "EMA 50", desc: "Exponential moving avg", color: "#8f73ff" },
   { id: "rsi", label: "RSI 14", desc: "Relative strength index · pane", color: "var(--cyan)" },
   { id: "macd", label: "MACD", desc: "12 / 26 / 9 · pane", color: "var(--amber)" },
   { id: "bb", label: "BB 20·2σ", desc: "Bollinger bands", color: "var(--bull)" },
@@ -133,7 +133,7 @@ export function TopBar({
                     <button
                       onClick={() => { setSymbol(s); setSymOpen(false); setQuery(""); setSearchResults([]); }}
                       className={`flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left transition-colors ${
-                        s.sym === symbol.sym ? "bg-bull/10 text-bull" : "text-fg-dim hover:bg-surface hover:text-fg"
+                        s.sym === symbol.sym ? "bg-[#582eff]/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -167,7 +167,7 @@ export function TopBar({
             key={t}
             onClick={() => setTimeframe(t)}
             className={`h-8 min-w-7 border px-1.5 transition-colors ${
-              t === timeframe ? "border-bull bg-bull/10 text-bull" : "border-transparent bg-bg text-fg-dim hover:border-border hover:text-fg"
+              t === timeframe ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink" : "border-transparent bg-bg text-fg-dim hover:border-border hover:text-fg"
             }`}
           >
             {t}
@@ -190,7 +190,7 @@ export function TopBar({
                 <button
                   key={c}
                   onClick={() => { setChart(c); setChartOpen(false); }}
-                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left ${c === chart ? "bg-bull/10 text-bull" : "text-fg-dim hover:bg-surface hover:text-fg"}`}
+                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left ${c === chart ? "bg-[#582eff]/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"}`}
                 >
                   <ChartTypeIcon type={c} />
                   <span className="text-fg">{c}</span>
@@ -212,7 +212,7 @@ export function TopBar({
             <path d="M3 17l4-4 4 4 4-8 6 8" />
           </svg>
           Indicators
-          {indicators.length > 0 && <span className="text-bull">{indicators.length}</span>}
+          {indicators.length > 0 && <span className="text-brand-ink">{indicators.length}</span>}
         </button>
         <AnimatePresence>
           {indOpen && (
@@ -234,7 +234,7 @@ export function TopBar({
                       <button
                         onClick={() => toggleIndicator(i.id)}
                         className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors ${
-                          on ? "bg-bull/10" : "hover:bg-surface"
+                          on ? "bg-[#582eff]/12" : "hover:bg-surface"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ export function TopBar({
                             <span className="text-[0.625rem] text-fg-faint normal-case tracking-normal">{i.desc}</span>
                           </div>
                         </div>
-                        <span className={`size-3 border ${on ? "border-bull bg-bull" : "border-fg-faint"}`} aria-hidden />
+                        <span className={`size-3 border ${on ? "border-[#7b5cff] bg-[image:var(--grad-fill)]" : "border-fg-faint"}`} aria-hidden />
                       </button>
                     </li>
                   );
@@ -284,7 +284,7 @@ export function TopBar({
                   <button
                     key={n}
                     onClick={() => { setLayout(n); setLayoutOpen(false); }}
-                    className={`flex h-12 items-center justify-center border ${n === layout ? "border-bull text-bull" : "border-border text-fg-dim hover:text-fg"}`}
+                    className={`flex h-12 items-center justify-center border ${n === layout ? "border-[#7b5cff] text-brand-ink" : "border-border text-fg-dim hover:text-fg"}`}
                   >
                     <span className="grid grid-cols-2 gap-0.5">
                       {Array.from({ length: n }).map((_, i) => (
@@ -312,7 +312,7 @@ export function TopBar({
             control has to say what it does. */}
         <button
           onClick={onPublish}
-          className="flex h-8 items-center gap-2 bg-bull px-3 font-semibold text-bg hover:bg-bull-dim"
+          className="btn-grad flex h-8 items-center gap-2 px-3 font-semibold"
         >
           Save
         </button>
@@ -348,7 +348,7 @@ function ChartTypeIcon({ type }: { type: Chart }) {
 }
 
 function SymGlyph({ sym }: { sym: string }) {
-  const palette = ["#00ff87", "#22d3ee", "#ffb800", "#ff2e63", "#a78bfa", "#c9ff00"];
+  const palette = ["#52ffa5", "#3884ff", "#ffb800", "#ff2e63", "#8f73ff", "#8f73ff"];
   const c = palette[sym.charCodeAt(0) % palette.length];
   return (
     <span className="flex size-5 items-center justify-center border" style={{ borderColor: c, color: c }}>

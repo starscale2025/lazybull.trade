@@ -310,7 +310,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           const q = quotes[sym];
           const active = sym === symbol.sym;
           return (
-            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-bull/10" : "hover:bg-surface"}`}>
+            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-[#582eff]/12" : "hover:bg-surface"}`}>
               <button
                 className="col-span-5 flex items-center gap-1.5 text-left text-fg"
                 onClick={() => onPickSymbol({ sym, name: q?.name || sym, exch: q?.exch || "" })}
@@ -415,7 +415,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
 }
 
 function SymBadge({ sym }: { sym: string }) {
-  const palette = ["#00ff87", "#22d3ee", "#ffb800", "#ff2e63", "#a78bfa", "#c9ff00", "#06b6d4"];
+  const palette = ["#52ffa5", "#3884ff", "#ffb800", "#ff2e63", "#8f73ff", "#8f73ff", "#2f6fe0"];
   const c = palette[sym.charCodeAt(0) % palette.length];
   return (
     <span className="flex size-4 items-center justify-center" style={{ borderColor: c, color: c, border: `1px solid ${c}` }}>

@@ -147,12 +147,12 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 340, damping: 30 }}
-            className="w-[21.25rem] overflow-hidden border border-bull/40 bg-bg shadow-2xl"
+            className="w-[21.25rem] overflow-hidden border border-[#7b5cff]/40 bg-bg shadow-2xl"
           >
             {/* header */}
             <div className="flex items-center gap-2 border-b border-border bg-bg-soft px-3 py-2 text-[0.625rem] uppercase tracking-[0.2em]">
               <span className={`size-2 rounded-full ${live ? "bg-bull animate-pulse" : connecting ? "bg-cyan animate-pulse" : "bg-bear"}`} />
-              <span className="text-bull">LazyBull</span>
+              <span className="text-grad">LazyBull</span>
               <span className="text-fg-faint">· {statusLabel}</span>
               <button onClick={() => setOpen(false)} className="ml-auto text-fg-faint hover:text-fg" aria-label="Collapse">✕</button>
             </div>
@@ -219,7 +219,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                 <div key={t.id} className={`flex ${t.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[85%] px-2.5 py-1.5 text-[0.6875rem] leading-snug ${
-                      t.role === "user" ? "bg-bull/15 text-fg" : "bg-surface text-fg-dim"
+                      t.role === "user" ? "bg-[#582eff]/20 text-fg" : "bg-surface text-fg-dim"
                     }`}
                   >
                     {t.text || "…"}
@@ -229,7 +229,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
               {/* live interim — proof the mic is picking you up as you speak */}
               {interim && (
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] border border-dashed border-bull/50 px-2.5 py-1.5 text-[0.6875rem] italic leading-snug text-fg-dim">
+                  <div className="max-w-[85%] border border-dashed border-[#7b5cff]/50 px-2.5 py-1.5 text-[0.6875rem] italic leading-snug text-fg-dim">
                     {interim}…
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                     {stagedTrade.orderType === "limit" ? ` @ $${stagedTrade.estPrice.toFixed(2)}` : " @ market"} · ~${stagedTrade.estValue.toFixed(2)}
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={voice.confirmStagedFromUI} className="flex-1 bg-bull py-1.5 text-[0.625rem] font-semibold uppercase tracking-wider text-bg hover:bg-bull-dim">
+                    <button onClick={voice.confirmStagedFromUI} className="btn-grad flex-1 py-1.5 text-[0.625rem] font-semibold uppercase tracking-wider">
                       confirm
                     </button>
                     <button onClick={voice.cancelStagedFromUI} className="flex-1 border border-border py-1.5 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-bear">
@@ -280,7 +280,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                 <button type="submit" disabled={!live || !draft.trim()} className="border border-border px-2 py-1 text-[0.6875rem] text-fg-dim hover:text-fg disabled:opacity-40">↵</button>
               </form>
               <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left text-[0.625rem] uppercase tracking-wider text-fg-faint hover:text-fg-dim">
-                auto-greet on open: <span className={autoGreet ? "text-bull" : "text-fg-faint"}>{autoGreet ? "on" : "off"}</span>
+                auto-greet on open: <span className={autoGreet ? "text-brand-ink" : "text-fg-faint"}>{autoGreet ? "on" : "off"}</span>
               </button>
             </div>
           </motion.div>
@@ -291,19 +291,19 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
       <button
         onClick={onOrbClick}
         aria-label="LazyBull voice co-pilot"
-        className="group relative flex size-14 items-center justify-center rounded-full border border-bull/50 bg-bg-soft shadow-xl transition-transform hover:scale-105 active:scale-95"
+        className="group relative flex size-14 items-center justify-center rounded-full border border-[#7b5cff]/50 bg-bg-soft shadow-xl transition-transform hover:scale-105 active:scale-95"
       >
         {/* pulse rings when live/speaking */}
         {live && (
           <>
-            <span className={`absolute inset-0 rounded-full border border-bull/40 ${speaking ? "animate-ping" : "animate-pulse"}`} />
-            {speaking && <span className="absolute -inset-1 rounded-full border border-bull/20 animate-ping" style={{ animationDelay: "150ms" }} />}
+            <span className={`absolute inset-0 rounded-full border border-[#7b5cff]/40 ${speaking ? "animate-ping" : "animate-pulse"}`} />
+            {speaking && <span className="absolute -inset-1 rounded-full border border-[#7b5cff]/20 animate-ping" style={{ animationDelay: "150ms" }} />}
           </>
         )}
         {connecting && <span className="absolute inset-0 rounded-full border-2 border-cyan/40 border-t-cyan animate-spin" />}
 
         {/* mic glyph */}
-        <span className={`relative flex size-9 items-center justify-center rounded-full ${live ? "bg-bull text-bg" : status === "error" ? "bg-bear/20 text-bear" : "bg-bull/15 text-bull"}`}>
+        <span className={`relative flex size-9 items-center justify-center rounded-full ${live ? "bg-[image:var(--grad-fill)] text-[var(--grad-on)]" : status === "error" ? "bg-bear/20 text-bear" : "bg-[#582eff]/20 text-brand-ink"}`}>
           {muted ? (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="2" y1="2" x2="22" y2="22" /><path d="M18.9 13.4A7 7 0 0 0 19 12v-1" /><path d="M9 5a3 3 0 0 1 6 0v5" /><path d="M12 19v3" /><path d="M5 11a7 7 0 0 0 10.3 6.2" />
