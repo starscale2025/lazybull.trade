@@ -2971,23 +2971,106 @@ html[data-film="pinned"] .dial-root { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .dial-root { transition: none; } }
 html[data-motion="paused"] .dial-root { transition: none; }
 
-/* The Island (components/island/Island.tsx, M32): pure black, a hair of top
-   light and a soft drop, so it reads as an object over the page rather than
-   a hole in it. */
-.island {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 18px 50px -18px rgba(0, 0, 0, 0.9);
+/* The Island (components/island/Island.tsx, M32). Every moving part here is a
+   transform or an opacity, so the whole morph runs on the compositor: nothing
+   is measured, laid out or painted per frame, and a busy page cannot make it
+   stutter. The capsule cannot simply change size for that, so it is nine
+   pieces, four corners, four edges and a middle, that move and stretch apart;
+   a pure black fill makes the seams free (each piece overlaps its neighbour by
+   a pixel). The curves are real springs written out with linear(). */
+.island-root {
+  position: fixed;
+  left: 50%;
+  top: env(safe-area-inset-top, 0px);
+  width: 0;
+  height: 0;
+  z-index: 46;
+  pointer-events: none;
+  transition: transform 0.5s var(--ease-settle);
 }
 @media print {
   .island-root { display: none; }
 }
-.island-dial { transition: transform 0.7s cubic-bezier(0.22, 1.15, 0.36, 1); }
-@media (prefers-reduced-motion: reduce) {
-  .island-dial { transition: none; }
+/* `scale`, not `transform`: Motion owns this element's transform for its entrance. */
+.isl-press { transform-origin: 50% 0; transition: scale 0.26s var(--ease-settle); }
+.isl-press:has(button:active) { scale: 0.975; }
+.isl-drop {
+  position: absolute;
+  /* Thrown in from off to the side, so the shadow is whole: cast from where it
+     lands, it would have a hole in it the shape of this box, and when the box
+     is squeezed that hole shows round the capsule's corners on a light page. */
+  left: -780px;
+  top: 0;
+  width: 360px;
+  height: 156px;
+  border-radius: 34px;
+  box-shadow: 600px 22px 54px -14px rgba(0, 0, 0, 0.85);
+  transform-origin: 780px 0;
+  transform: scale(calc(var(--W) / 360), calc(var(--H) / 156));
 }
-html[data-motion="paused"] .island-dial { transition: none; }
+.isl-shape { position: absolute; left: 0; top: 0; }
+.isl-rim-ring { transform: translateY(-1px); --isl-fill: #1b1c1b; }
+.isl-s {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  background: var(--isl-fill, #000);
+}
+.isl-drop, .isl-s, .isl-panel {
+  transition: transform 0.39s cubic-bezier(0.3, 1, 0.4, 1);
+  transition-timing-function: linear(0, 0.0109, 0.0396, 0.0812, 0.1316, 0.1876, 0.2465, 0.3066, 0.3661, 0.4241, 0.4797, 0.5324, 0.5817, 0.6275, 0.6697, 0.7083, 0.7434, 0.7751, 0.8037, 0.8293, 0.852, 0.8722, 0.8901, 0.9058, 0.9196, 0.9316, 0.9421, 0.9512, 0.9591, 0.9658, 0.9716, 0.9766, 0.9808, 0.9843, 0.9873, 0.9899, 0.992, 0.9937, 0.9952, 0.9964, 0.9973, 0.9981, 0.9988, 0.9993, 1);
+}
+[data-island-open="true"] .isl-drop, [data-island-open="true"] .isl-s {
+  transition-duration: 0.56s;
+  transition-timing-function: cubic-bezier(0.3, 1.25, 0.4, 1);
+  transition-timing-function: linear(0, 0.0151, 0.0551, 0.1129, 0.1827, 0.2597, 0.3399, 0.4202, 0.4984, 0.5726, 0.6416, 0.7047, 0.7615, 0.8117, 0.8556, 0.8933, 0.9251, 0.9516, 0.9733, 0.9906, 1.0041, 1.0143, 1.0217, 1.0267, 1.0298, 1.0313, 1.0315, 1.0308, 1.0293, 1.0274, 1.0251, 1.0226, 1.0201, 1.0175, 1.0151, 1.0128, 1.0107, 1.0088, 1.007, 1.0055, 1.0042, 1.003, 1.0021, 1.0013, 1);
+}
+.isl-tl, .isl-tr, .isl-bl, .isl-br { width: 34px; height: 34px; }
+.isl-tl { border-top-left-radius: 34px; transform-origin: 0 0; transform: translate(calc(var(--W) * -0.5px), 0) scale(calc(var(--R) / 34)); }
+.isl-tr { left: -34px; border-top-right-radius: 34px; transform-origin: 100% 0; transform: translate(calc(var(--W) * 0.5px), 0) scale(calc(var(--R) / 34)); }
+.isl-bl { top: -34px; border-bottom-left-radius: 34px; transform-origin: 0 100%; transform: translate(calc(var(--W) * -0.5px), calc(var(--H) * 1px)) scale(calc(var(--R) / 34)); }
+.isl-br { left: -34px; top: -34px; border-bottom-right-radius: 34px; transform-origin: 100% 100%; transform: translate(calc(var(--W) * 0.5px), calc(var(--H) * 1px)) scale(calc(var(--R) / 34)); }
+.isl-t { width: 1px; height: 34px; transform-origin: 0 0; transform: translate(calc((var(--R) - var(--W) * 0.5 - 1) * 1px), 0) scale(calc(var(--W) - 2 * var(--R) + 2), calc(var(--R) / 34)); }
+.isl-b { top: -34px; width: 1px; height: 34px; transform-origin: 0 100%; transform: translate(calc((var(--R) - var(--W) * 0.5 - 1) * 1px), calc(var(--H) * 1px)) scale(calc(var(--W) - 2 * var(--R) + 2), calc(var(--R) / 34)); }
+.isl-l { width: 34px; height: 1px; transform-origin: 0 0; transform: translate(calc(var(--W) * -0.5px), calc((var(--R) - 1) * 1px)) scale(calc(var(--R) / 34), calc(var(--H) - 2 * var(--R) + 2)); }
+.isl-r { left: -34px; width: 34px; height: 1px; transform-origin: 100% 0; transform: translate(calc(var(--W) * 0.5px), calc((var(--R) - 1) * 1px)) scale(calc(var(--R) / 34), calc(var(--H) - 2 * var(--R) + 2)); }
+.isl-c { width: 1px; height: 1px; transform-origin: 0 0; transform: translate(calc((var(--R) - var(--W) * 0.5 - 1) * 1px), calc((var(--R) - 1) * 1px)) scale(calc(var(--W) - 2 * var(--R) + 2), calc(var(--H) - 2 * var(--R) + 2)); }
+/* What is inside: all of it stays mounted and crossfades, leaving fast and
+   arriving a beat after the capsule has started to open round it. */
+.isl-panel {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  /* Over the button, but only its link takes the pointer. */
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.92);
+  transform-origin: 50% 0;
+  transition-property: transform, opacity, visibility;
+  transition-duration: 0.3s, 0.1s, 0s;
+  transition-delay: 0s, 0s, 0.1s;
+}
+.isl-panel[data-on="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+  transition-duration: 0.56s, 0.26s, 0s;
+  transition-delay: 0.05s, 0.1s, 0s;
+  transition-timing-function: cubic-bezier(0.3, 1.25, 0.4, 1), ease-out, linear;
+  transition-timing-function: linear(0, 0.0151, 0.0551, 0.1129, 0.1827, 0.2597, 0.3399, 0.4202, 0.4984, 0.5726, 0.6416, 0.7047, 0.7615, 0.8117, 0.8556, 0.8933, 0.9251, 0.9516, 0.9733, 0.9906, 1.0041, 1.0143, 1.0217, 1.0267, 1.0298, 1.0313, 1.0315, 1.0308, 1.0293, 1.0274, 1.0251, 1.0226, 1.0201, 1.0175, 1.0151, 1.0128, 1.0107, 1.0088, 1.007, 1.0055, 1.0042, 1.003, 1.0021, 1.0013, 1), ease-out, linear;
+}
+.island-rim {
+  transform-origin: 300px 300px;
+  transition: transform 0.75s cubic-bezier(0.22, 1.15, 0.36, 1);
+  transition-timing-function: linear(0, 0.0165, 0.0596, 0.1208, 0.1935, 0.2724, 0.3534, 0.4333, 0.5099, 0.5818, 0.6478, 0.7075, 0.7607, 0.8073, 0.8477, 0.8823, 0.9114, 0.9356, 0.9555, 0.9715, 0.9842, 0.9941, 1.0015, 1.0069, 1.0107, 1.0132, 1.0146, 1.0151, 1.0151, 1.0145, 1.0137, 1.0127, 1.0115, 1.0103, 1.009, 1.0079, 1.0067, 1.0057, 1.0048, 1.0039, 1.0032, 1.0025, 1.002, 1.0015, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-root, .isl-press, .isl-drop, .isl-s, .isl-panel, .island-rim { transition: none; }
+}
+html[data-motion="paused"] :is(.island-root, .isl-press, .isl-drop, .isl-s, .isl-panel, .island-rim) { transition: none; }
 
 /* ── FRAME ZERO: the matter (components/ui/anomalous-matter-hero.tsx) ───────
    The haze the sphere floats in, in the sphere's own tints (Aurora UI: large

@@ -17,10 +17,11 @@
  * The Island is black in either theme, so its colours are fixed values, not
  * the page's tokens (on paper, --fg is near black and vanished on it).
  *
- * Calm (M33): pure black, mint as its only accent, the reading sans, springs
- * that can be interrupted. Under reduced motion or the site's pause, motion's
- * MotionConfig (components/MotionProvider.tsx) turns the spring into an
- * instant change and the content simply fades.
+ * Calm (M33): pure black, mint as its only accent, the reading sans. The morph
+ * is springs on the compositor (globals.css, "The Island"): transforms and
+ * opacity only, so nothing is measured or painted per frame and a busy page
+ * cannot make it stutter. They can be interrupted, and reduced motion or the
+ * site's pause makes them an instant change.
  *
  * Accessibility: the capsule is a button (aria-expanded; aria-controls only
  * while there is a panel to control) that opens and closes it. A keyboard
@@ -35,13 +36,28 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { getIslandStage, useIsland, useIslandStage, type IslandGlyph, type IslandState } from "@/lib/island";
 import { RollingNumber } from "@/components/motion/RollingNumber";
 
-const SPRING = { type: "spring", stiffness: 380, damping: 30, mass: 0.9 } as const;
 const HOLD_MS = 4000;
 const UNDER_NAV = 8;
+// The capsule's three sizes. The pill's width is whatever its text needs.
+const OPEN = { w: 360, h: 156, r: 34 };
+const PILL = { h: 38, r: 19 };
+const DOT = { w: 24, h: 24, r: 12 };
+const SLICES = ["tl", "tr", "bl", "br", "t", "b", "l", "r", "c"] as const;
+
+/** The capsule's outline: nine pieces, positioned by these three numbers (globals.css). */
+function Shape({ w, h, r, className = "" }: { w: number; h: number; r: number; className?: string }) {
+  return (
+    <div aria-hidden className={`isl-shape ${className}`} style={{ "--W": w, "--H": h, "--R": r } as CSSProperties}>
+      {SLICES.map((s) => (
+        <i key={s} className={`isl-s isl-${s}`} />
+      ))}
+    </div>
+  );
+}
 
 // ── the dial ─────────────────────────────────────────────────────────────────
 // A wide dial whose rim rises through the lower right of the card and runs off
@@ -89,48 +105,48 @@ function Dial({ segments, active, glyph }: Pick<IslandState, "segments" | "activ
   const lit = Math.max(0, Math.min(n - 1, Math.round(active)));
   const [gx, gy] = at(ANCHOR);
   return (
-    <svg aria-hidden viewBox="0 0 360 156" className="pointer-events-none absolute inset-0 h-full w-full">
-      <defs>
-        <linearGradient id={`${uid}-mint`} gradientUnits="userSpaceOnUse" x1={gx - 30} y1={gy - 10} x2={gx + 30} y2={gy + 10}>
-          <stop offset="0" stopColor="#8affc6" />
-          <stop offset="1" stopColor="#2fd98a" />
-        </linearGradient>
-        {/* userSpaceOnUse: a stroked arc's bounding box ignores the stroke,
-            so a bbox-relative region clipped the glow into a hard box. */}
-        <filter id={`${uid}-glow`} filterUnits="userSpaceOnUse" x="0" y="0" width="360" height="156">
-          <feGaussianBlur stdDeviation="9" />
-        </filter>
-        <radialGradient id={`${uid}-well`} cx={CX} cy={CY} r={R + 40} gradientUnits="userSpaceOnUse">
-          <stop offset="0.82" stopColor="#0c2a1c" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#000" stopOpacity="0" />
-        </radialGradient>
-        {/* The dial fades out under the copy on the left. */}
-        <linearGradient id={`${uid}-fade`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0.28" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.55" stopColor="#fff" stopOpacity="1" />
-        </linearGradient>
-        <mask id={`${uid}-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="156">
-          <rect width="360" height="156" fill={`url(#${uid}-fade)`} />
-        </mask>
-      </defs>
-      <g mask={`url(#${uid}-mask)`}>
+    <div aria-hidden className="pointer-events-none absolute left-0 top-0 h-[156px] w-[360px]">
+      <svg viewBox="0 0 360 156" width="360" height="156" className="absolute left-0 top-0">
+        <defs>
+          <radialGradient id={`${uid}-well`} cx={CX} cy={CY} r={R + 40} gradientUnits="userSpaceOnUse">
+            <stop offset="0.82" stopColor="#0c2a1c" stopOpacity="0.5" />
+            <stop offset="1" stopColor="#000" stopOpacity="0" />
+          </radialGradient>
+        </defs>
         <circle cx={CX} cy={CY} r={R + 40} fill={`url(#${uid}-well)`} />
-        <g
-          className="island-dial"
-          style={{ transform: `rotate(${-lit * STEP}deg)`, transformOrigin: `${CX}px ${CY}px` }}
-        >
-          {Array.from({ length: n }, (_, i) =>
-            i === lit ? null : (
-              <path key={i} d={arc(ANCHOR + i * STEP)} stroke="#17231d" strokeWidth={STROKE} strokeLinecap="round" fill="none" />
-            )
-          )}
-        </g>
-      </g>
+      </svg>
+      {/* The rim is its own layer, drawn once and turned by the compositor. */}
+      <svg
+        viewBox="0 0 600 600"
+        width="600"
+        height="600"
+        className="island-rim absolute left-0 top-0"
+        style={{ transform: `rotate(${-lit * STEP}deg)` }}
+      >
+        {Array.from({ length: n }, (_, i) => (
+          <path key={i} d={arc(ANCHOR + i * STEP)} stroke="#17231d" strokeWidth={STROKE} strokeLinecap="round" fill="none" />
+        ))}
+      </svg>
+      {/* The dial fades out under the copy on the left. */}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,#000_28%,transparent_55%)]" />
       {/* The lit segment stays put at the anchor; the dial turns under it. */}
-      <path d={arc(ANCHOR)} stroke="#52ffa5" strokeWidth={STROKE + 8} strokeLinecap="round" fill="none" filter={`url(#${uid}-glow)`} opacity="0.6" />
-      <path d={arc(ANCHOR)} stroke={`url(#${uid}-mint)`} strokeWidth={STROKE + 2} strokeLinecap="round" fill="none" />
-      <Glyph kind={glyph} x={gx} y={gy} />
-    </svg>
+      <svg viewBox="0 0 360 156" width="360" height="156" className="absolute left-0 top-0">
+        <defs>
+          <linearGradient id={`${uid}-mint`} gradientUnits="userSpaceOnUse" x1={gx - 30} y1={gy - 10} x2={gx + 30} y2={gy + 10}>
+            <stop offset="0" stopColor="#8affc6" />
+            <stop offset="1" stopColor="#2fd98a" />
+          </linearGradient>
+          {/* userSpaceOnUse: a stroked arc's bounding box ignores the stroke,
+              so a bbox-relative region clipped the glow into a hard box. */}
+          <filter id={`${uid}-glow`} filterUnits="userSpaceOnUse" x="0" y="0" width="360" height="156">
+            <feGaussianBlur stdDeviation="9" />
+          </filter>
+        </defs>
+        <path d={arc(ANCHOR)} stroke="#52ffa5" strokeWidth={STROKE + 8} strokeLinecap="round" fill="none" filter={`url(#${uid}-glow)`} opacity="0.6" />
+        <path d={arc(ANCHOR)} stroke={`url(#${uid}-mint)`} strokeWidth={STROKE + 2} strokeLinecap="round" fill="none" />
+        <Glyph kind={glyph} x={gx} y={gy} />
+      </svg>
+    </div>
   );
 }
 
@@ -139,6 +155,9 @@ export function Island() {
   const stage = useIslandStage();
   const [open, setOpen] = useState(false);
   const [top, setTop] = useState(12);
+  const [viewW, setViewW] = useState(1440);
+  const [pillW, setPillW] = useState(220);
+  const pillRef = useRef<HTMLDivElement>(null);
   // Under the page's chrome (a nav or the ticker) the pill has somewhere to
   // sit; with none in view it would sit on the page's content, so it recedes.
   const [anchored, setAnchored] = useState(true);
@@ -211,6 +230,7 @@ export function Island() {
       });
       setAnchored(y > 0);
       setTop(y > 0 ? Math.round(y + UNDER_NAV) : 12);
+      setViewW(window.innerWidth);
     };
     const queue = () => {
       if (!raf) raf = requestAnimationFrame(place);
@@ -219,17 +239,34 @@ export function Island() {
     window.addEventListener("scroll", queue, { passive: true });
     window.addEventListener("resize", queue);
     // The nav slides away on the way down (NavAutoHide); follow it when its
-    // slide ends, which no scroll event reports.
-    document.addEventListener("transitionend", queue);
+    // slide ends, which no scroll event reports. The capsule's own pieces end
+    // transitions too, and those are not news about the nav.
+    const onEnd = (e: TransitionEvent) => {
+      if (!(e.target as Element).closest?.(".island-root")) queue();
+    };
+    document.addEventListener("transitionend", onEnd);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", queue);
       window.removeEventListener("resize", queue);
-      document.removeEventListener("transitionend", queue);
+      document.removeEventListener("transitionend", onEnd);
     };
   }, [state]);
 
   useEffect(() => () => window.clearTimeout(hold.current), []);
+
+  // The capsule's size is numbers, so the pill's text is measured; it stays
+  // laid out (hidden) while the card is open, so this is always current.
+  const present = !!state;
+  useLayoutEffect(() => {
+    const el = pillRef.current;
+    if (!present || !el) return;
+    const take = () => setPillW(Math.ceil(el.offsetWidth));
+    take();
+    const ro = new ResizeObserver(take);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [present]);
 
   // Room for it in the page's scroll-padding while it is mounted (SC 2.4.11).
   useEffect(() => {
@@ -254,123 +291,109 @@ export function Island() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const cardW = Math.min(OPEN.w, viewW - 24);
+  const size = open ? { w: cardW, h: OPEN.h, r: OPEN.r } : form === "dot" ? DOT : { w: pillW, h: PILL.h, r: PILL.r };
+
   return (
     <>
       <div role="status" aria-live="polite" className="sr-only">
         {said}
       </div>
-      <AnimatePresence>
-        {state && (
-          <motion.div
-            key="island"
-            initial={{ opacity: 0, y: -8, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.92 }}
-            transition={SPRING}
-            className="island-root pointer-events-none fixed inset-x-0 z-[46] flex justify-center px-3 transition-[top] duration-500 [transition-timing-function:var(--ease-settle)]"
-            style={{ top: `calc(${stage ? 12 : top}px + env(safe-area-inset-top, 0px))` }}
-          >
+      <div className="island-root" data-island-open={open} style={{ transform: `translateY(${stage ? 12 : top}px)` }}>
+        <AnimatePresence>
+          {state && (
             <motion.div
-              layout
-              transition={SPRING}
-              onPointerEnter={(e) => {
-                if (e.pointerType !== "mouse") return;
-                hovering.current = true;
-                window.clearTimeout(hold.current);
-                setOpen(true);
-              }}
-              onPointerLeave={(e) => {
-                if (e.pointerType !== "mouse") return;
-                hovering.current = false;
-                fold(500);
-              }}
-              onBlur={(e) => {
-                // Focus left the capsule (not just moved to its link): fold.
-                if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
-                if (!hovering.current) setOpen(false);
-              }}
-              className="island pointer-events-auto relative overflow-hidden bg-black text-[#f5f5f0]"
-              style={{
-                width: open ? "min(360px, calc(100vw - 24px))" : "auto",
-                height: open ? 156 : form === "dot" ? 24 : 38,
-                borderRadius: open ? 34 : form === "dot" ? 12 : 19,
-              }}
+              key="island"
+              initial={{ opacity: 0, transform: "translateY(-8px) scale(0.92)" }}
+              animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
+              exit={{ opacity: 0, transform: "translateY(-8px) scale(0.92)" }}
+              transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              className="isl-press absolute left-0 top-0 h-0 w-0"
             >
-              <button
-                type="button"
-                aria-expanded={open}
-                aria-controls={open ? panelId : undefined}
-                aria-label={`${state.label}: ${state.value}, ${state.caption}. ${open ? "Close" : "Open"} the live activity.`}
-                onClick={() => {
-                  setOpen((o) => !o);
-                  window.clearTimeout(hold.current);
-                }}
-                onFocus={(e) => {
-                  if (!e.currentTarget.matches(":focus-visible")) return;
+              <div className="isl-drop" style={{ "--W": size.w, "--H": size.h } as CSSProperties} />
+              <Shape w={size.w + 2} h={size.h + 2} r={size.r + 1} className="isl-rim-ring" />
+              <Shape w={size.w} h={size.h} r={size.r} />
+              {/* The hit area and the content take the target size at once;
+                  only the black behind them is seen to travel. */}
+              <div
+                onPointerEnter={(e) => {
+                  if (e.pointerType !== "mouse") return;
+                  hovering.current = true;
                   window.clearTimeout(hold.current);
                   setOpen(true);
                 }}
-                className="absolute inset-0 z-10 cursor-pointer rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bull"
-              />
-              <AnimatePresence initial={false} mode="popLayout">
-                {open ? (
-                  <motion.div
-                    key="open"
-                    id={panelId}
-                    initial={{ opacity: 0, filter: "blur(6px)" }}
-                    animate={{ opacity: 1, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, filter: "blur(6px)" }}
-                    transition={{ duration: 0.22 }}
-                    className="absolute inset-0"
-                  >
-                    <Dial segments={state.segments} active={state.active} glyph={state.glyph} />
-                    <div className="relative px-6 pt-5">
-                      <div className="text-[0.8125rem] font-semibold tracking-[-0.005em] text-[#52ffa5]">{state.label}</div>
-                      <RollingNumber
-                        value={state.value}
-                        className="mt-1 text-[1.875rem] font-semibold leading-none tracking-[-0.03em] text-[#f5f5f0]"
-                      />
-                      <div className="mt-1.5 max-w-[10rem] text-[0.75rem] leading-snug text-[#f5f5f0]/60">{state.caption}</div>
-                    </div>
-                    {state.href && (
-                      <Link
-                        href={state.href}
-                        className="absolute right-5 top-[1.15rem] z-20 text-[0.8125rem] font-medium text-[#f5f5f0]/60 transition-colors hover:text-[#f5f5f0]"
-                      >
-                        {state.hrefLabel ?? "Open"} <span aria-hidden>›</span>
-                      </Link>
-                    )}
-                  </motion.div>
-                ) : form === "dot" ? (
-                  <motion.div
-                    key="dot"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="flex h-full items-center px-2"
-                  >
-                    <span aria-hidden className="size-2 rounded-full bg-[#52ffa5] shadow-[0_0_10px_rgba(82,255,165,0.7)]" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="compact"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="flex h-full items-center gap-2.5 whitespace-nowrap pl-3.5 pr-4"
-                  >
-                    <span aria-hidden className="size-2 rounded-full bg-[#52ffa5] shadow-[0_0_10px_rgba(82,255,165,0.7)]" />
-                    <span className="text-[0.8125rem] font-medium text-[#52ffa5]">{state.label}</span>
-                    <RollingNumber value={state.value} className="text-[0.8125rem] font-semibold text-[#f5f5f0]" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                onPointerLeave={(e) => {
+                  if (e.pointerType !== "mouse") return;
+                  hovering.current = false;
+                  fold(500);
+                }}
+                onBlur={(e) => {
+                  // Focus left the capsule (not just moved to its link): fold.
+                  if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+                  if (!hovering.current) setOpen(false);
+                }}
+                className="island pointer-events-auto absolute top-0 text-[#f5f5f0]"
+                style={{ left: -size.w / 2, width: size.w, height: size.h, borderRadius: size.r }}
+              >
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  aria-controls={open ? panelId : undefined}
+                  aria-label={`${state.label}: ${state.value}, ${state.caption}. ${open ? "Close" : "Open"} the live activity.`}
+                  onClick={() => {
+                    setOpen((o) => !o);
+                    window.clearTimeout(hold.current);
+                  }}
+                  onFocus={(e) => {
+                    if (!e.currentTarget.matches(":focus-visible")) return;
+                    window.clearTimeout(hold.current);
+                    setOpen(true);
+                  }}
+                  className="absolute inset-0 z-10 cursor-pointer rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bull"
+                />
+                <div
+                  id={panelId}
+                  data-on={open}
+                  className="isl-panel overflow-hidden rounded-[34px]"
+                  style={{ width: cardW, height: OPEN.h }}
+                >
+                  <Dial segments={state.segments} active={state.active} glyph={state.glyph} />
+                  <div className="relative px-6 pt-5">
+                    <div className="text-[0.8125rem] font-semibold tracking-[-0.005em] text-[#52ffa5]">{state.label}</div>
+                    <RollingNumber
+                      value={state.value}
+                      className="mt-1 text-[1.875rem] font-semibold leading-none tracking-[-0.03em] text-[#f5f5f0]"
+                    />
+                    <div className="mt-1.5 max-w-[10rem] text-[0.75rem] leading-snug text-[#f5f5f0]/60">{state.caption}</div>
+                  </div>
+                  {state.href && (
+                    <Link
+                      href={state.href}
+                      prefetch={open ? "auto" : false}
+                      className="pointer-events-auto absolute right-5 top-[1.15rem] text-[0.8125rem] font-medium text-[#f5f5f0]/60 transition-colors hover:text-[#f5f5f0]"
+                    >
+                      {state.hrefLabel ?? "Open"} <span aria-hidden>›</span>
+                    </Link>
+                  )}
+                </div>
+                <div aria-hidden data-on={!open && form === "dot"} className="isl-panel flex items-center justify-center" style={{ width: DOT.w, height: DOT.h }}>
+                  <span className="size-2 rounded-full bg-[#52ffa5] shadow-[0_0_10px_rgba(82,255,165,0.7)]" />
+                </div>
+                <div
+                  ref={pillRef}
+                  aria-hidden
+                  data-on={!open && form === "pill"}
+                  className="isl-panel flex h-[38px] items-center gap-2.5 whitespace-nowrap pl-3.5 pr-4"
+                >
+                  <span className="size-2 rounded-full bg-[#52ffa5] shadow-[0_0_10px_rgba(82,255,165,0.7)]" />
+                  <span className="text-[0.8125rem] font-medium text-[#52ffa5]">{state.label}</span>
+                  <RollingNumber value={state.value} className="text-[0.8125rem] font-semibold text-[#f5f5f0]" />
+                </div>
+              </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </>
   );
 }
