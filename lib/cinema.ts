@@ -23,12 +23,9 @@ export const ACTS: Record<Act, { from: number; to: number }> = {
   assembly: { from: 0.05, to: 0.15 },
   dive: { from: 0.15, to: 0.24 },
   regime: { from: 0.24, to: 0.32 },
-  // candle's tail was widened (0.56 → 0.59) to give the ICE-LAB finale ~1.8×
-  // longer felt duration (see CANDLE_LAB). safety + consensus are shifted LATER
-  // to absorb it while bull/mark (and the fragile end handoff near 1.0) stay
-  // EXACTLY fixed; the mild progress-compression on safety/consensus is offset
-  // by the longer scroll section (SCROLL_LENGTH_VH), so their felt pace barely
-  // changes. Contiguous, still covers [0,1].
+  // The act's tail (0.5 → 0.59) is the floor line leaving the chart for the
+  // payoff (floorHandoff); ACT_TEMPO in cinema-metrics.ts gives it less road.
+  // Contiguous, still covers [0,1].
   candle: { from: 0.32, to: 0.59 },
   // safety widened 0.075 -> 0.10 at consensus's expense. The single line that
   // speaks to the viewer ("your worst case is a number you chose") had less
@@ -71,8 +68,9 @@ export type CopyBeat = {
   sub?: string;
   /** "top" lifts the beat into the upper third so it clears the feature-act
    *  charts; "left" sets it in the left third, beside a subject framed on the
-   *  right (the bull); default (undefined) centers it. */
-  pos?: "top" | "left";
+   *  right (the bull); "right" in the right third, the side a fall leaves
+   *  empty; default (undefined) centers it. */
+  pos?: "top" | "left" | "right";
   /** Fade width in progress (default 0.02). A short beat needs a short fade
    *  or it never holds at full strength (Gate A3 #7). */
   fade?: number;
@@ -122,15 +120,13 @@ export const COPY_BEATS: CopyBeat[] = [
   //      does not resolve. The brand is lazybull; the site is lazybull.us.
   { id: "boot", from: 0.006, to: 0.045, heading: "lazybull", sub: "options — without the fog" },
   { id: "assembly", from: 0.075, to: 0.145, heading: "A desk that shows its work.", sub: "Every number here can be opened." },
-  { id: "dive", from: 0.165, to: 0.235, heading: "No trade here uses real money.", sub: "Paper only — so you can afford to be wrong on purpose." },
+  { id: "dive", from: 0.165, to: 0.235, pos: "top", heading: "No trade here uses real money.", sub: "Paper only — so you can afford to be wrong on purpose." },
   { id: "regime", from: 0.255, to: 0.315, pos: "top", heading: "Markets have moods.", sub: "Trending, reverting, or noise — named before you commit to anything." },
-  { id: "candle-foresight", from: 0.385, to: 0.435, pos: "top", heading: "Then the floor goes.", sub: "This is the part nobody rehearses." },
-  // sits over the crash landing + pull-back, which end at CANDLE_BUILD_END —
-  // it must be gone before the lab beat (CANDLE_LAB) takes the stage.
-  { id: "candle-vindication", from: 0.455, to: 0.5, pos: "top", heading: "You get to watch it here first.", sub: "Better here than with your money inside it." },
-  // safety/consensus shifted later with their acts (the lab tail widened). safety
-  // opens after the ice-candle layer's fade tail (CANDLE3D.out1 = 0.605) so the
-  // quant-lab panel is gone before this copy takes the stage.
+  { id: "candle-foresight", from: 0.385, to: 0.435, pos: "right", heading: "Then the floor goes.", sub: "This is the part nobody rehearses." },
+  // Sits over the crash landing and the pull-back, which end at CANDLE_BUILD_END.
+  { id: "candle-vindication", from: 0.455, to: 0.5, pos: "right", heading: "You get to watch it here first.", sub: "Better here than with your money inside it." },
+  // Safety opens once the candle layer has gone (CANDLE3D.out1) and the floor
+  // line has landed on the payoff (floorHandoff).
   // The one line in the film that always spoke to the reader. It used to get
   // less scroll than the exit transition; the safety act is wider now and the
   // sub-line no longer reverts to a feature triad under it.
@@ -196,7 +192,6 @@ export function beatOpacity(
  *
  * Resolving 30% into the window keeps the entrance quick and leaves the
  * headline settled for the remaining 70%, which is where it is meant to be read.
- * The same shape the lab-line type-on already uses — see `.lab-line`.
  */
 export function beatCharT(
   progress: number,
@@ -246,25 +241,13 @@ function windowOpacity(progress: number, w: Fade4): number {
   return ss01(1 - (p - w.out0) / (w.out1 - w.out0));
 }
 
-// The dive act as a REAL 3D tunnel flythrough — a corridor of app screens.
-export const DIVE3D: Fade4 = { in0: 0.148, in1: 0.165, out0: 0.222, out1: 0.242 };
-// The candle act (climb → crash → AI foresight → the lab finale) as a 3D
-// candlestick canyon. out0/out1 hold the layer opaque through the whole widened
-// ICE-LAB window (ends at CANDLE_LAB.to = 0.585) then fade over a sliver into the
-// 2D safety act — clear of the "safety" copy beat, which now opens at 0.61.
-export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.585, out1: 0.605 };
+// The candle act (climb → crash → the pull-back) as a 3D chart. It clears while
+// the floor line, drawn over it by then, makes its way to the payoff; the
+// "safety" copy beat opens at 0.61, well after.
+export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.515, out1: 0.578 };
 
-// THE LAB FINALE inside the candle act: the chart timeline (print → crash →
-// pull-back) intentionally completes at CANDLE_BUILD_END, freeing the window's
-// tail for "the AI takes one candle into the lab" — a single candle lifts out
-// of the field spinning and runs a three-phase colour analysis: freezes to ICE
-// (scan), warms to GREEN (bullish candidate), then to RED (downside stress-test)
-// before settling green (confirmed paper candidate), stretching under analysis
-// while the quant-bot panel (DOM overlay in ScrollCinema) types line-by-line on
-// the left. Both layers read candleLabT so the 3D colour/pose and the panel's
-// type-on + math stay locked to the same clock. The window was widened 0.05 →
-// 0.085 (≈1.8× felt with the longer scroll section) for the colour story to
-// breathe. Pure f(progress) — scrub-reversible by construction.
+// The chart's print → crash → pull-back completes here; the rest of the act is
+// the floor line leaving the chart for the payoff (ScrollCinema, floorHandoff).
 export const CANDLE_BUILD_END = 0.5;
 /**
  * Where "Then the floor goes." comes up and the colour script leaves the
@@ -288,54 +271,85 @@ export function safetyLight(progress: number): number {
   const fadeOut = clamp01((p - (to - 0.008)) / 0.016);
   return fadeIn * (1 - fadeOut);
 }
-export const CANDLE_LAB = { from: 0.5, to: 0.585 };
-/** 0→1 through the lab beat (liftoff → ice → green → red → settle → verdict). */
-export const candleLabT = (progress: number) =>
-  clamp01((clamp01(progress) - CANDLE_LAB.from) / (CANDLE_LAB.to - CANDLE_LAB.from));
-// The bull crescendo: fades in over the consensus tail, holds, CHARGES, and only
-// then clears so the classic particle-bull LOGO can play (assemble → scatter →
-// Matrix). `out0` is also where the 2D logo un-hides (scene LOGO0).
-//
-// out0/out1 moved 0.78/0.80 → 0.805/0.825. The charge used to ramp up over
-// exactly the progress the wrapper was fading out over, so the two multiplied:
-// measured peak ON-SCREEN charge was 0.289 opacity and the impact flash peaked
-// at 0.105 — the film's crescendo played at a quarter strength and its impact
-// at a tenth, while a code comment justified the resulting near-black frame by
-// claiming the flash "is blowing the frame out". It never was.
-//
-// Now the charge COMPLETES at bt 0.826 — which is exactly p=0.805, where the
-// fade begins. The lunge and the burst happen at full opacity; the wrapper
-// clears afterwards, out of the white.
-export const BULL3D: Fade4 = { in0: 0.71, in1: 0.735, out0: 0.805, out1: 0.825 };
-// The bull's VISIBILITY, apart from its clock. BULL3D above is the timeline
-// the bull's camera, dolly and charge run on, and it still starts at 0.71 so
-// the charge completes at out0 at full opacity. Showing it from 0.71 put it
-// over the vote, which then never had the screen to itself (Gate A2, d11: the
-// vote is 0.04 wide and had 0.044 of crossfades). It now appears once the vote
-// has cleared; the layer still mounts and warms from in0 - 0.04, out of sight.
-export const BULL3D_SHOW: Fade4 = { in0: 0.733, in1: 0.75, out0: BULL3D.out0, out1: BULL3D.out1 };
+/**
+ * THE ONE TAKE (2026-11-09): where the matter is at a given moment of the film
+ * (components/scrollstory/FilmMatter.tsx). Each value is 0..1, a pure function
+ * of progress, so the whole passage scrubs both ways. The windows lean on the
+ * acts' own edges: the hero drains over 0.150 → 0.165, the line turns into
+ * candles at the candle act's first print, and the vote hands over as it
+ * clears.
+ */
+export type MatterFrame = {
+  /** 0 while the matter is the river, 1 while it is the vote, the bull and the mark. */
+  stage: number;
+  birth: number;
+  /** How far the camera has come down to fly along the line. */
+  glide: number;
+  /** The dust falling from the line. */
+  curtain: number;
+  /** Deep space behind the matter, and the nebula in it. */
+  deep: number;
+  cloud: number;
+  chop: number;
+  trend: number;
+  pour: number;
+  ringOn: number;
+  swarm: number;
+  /** How long the bull has held the stage. */
+  hold: number;
+  charge: number;
+  mark: number;
+  fade: number;
+};
+
+const ramp01 = (a: number, b: number, p: number) => ss01((p - a) / (b - a));
+
+/** Where the bull's last lunge lands (the score's hit keys to it). */
+export const CHARGE_AT = 0.806;
+
+export function matterAt(progress: number): MatterFrame {
+  const p = clamp01(progress);
+  return {
+    stage: p < 0.5 ? 0 : 1,
+    birth: ramp01(0.151, 0.18, p),
+    glide: ramp01(0.176, 0.204, p) * (1 - ramp01(0.222, 0.256, p)),
+    curtain: ramp01(0.165, 0.2, p) * (1 - ramp01(0.312, 0.33, p)),
+    deep: p < 0.5 ? ramp01(0.155, 0.185, p) * (1 - ramp01(0.318, 0.342, p)) : ramp01(0.585, 0.615, p) * (1 - ramp01(0.84, 0.89, p)),
+    cloud: p < 0.5 ? ramp01(0.155, 0.185, p) * (1 - ramp01(0.318, 0.342, p)) : ramp01(0.725, 0.75, p) * (1 - ramp01(0.84, 0.89, p)),
+    chop: ramp01(0.232, 0.262, p),
+    trend: ramp01(0.274, 0.314, p),
+    pour: ramp01(0.318, 0.35, p),
+    ringOn: ramp01(0.716, 0.732, p),
+    swarm: ramp01(0.728, 0.768, p),
+    hold: ramp01(0.75, 0.79, p),
+    charge: ramp01(0.776, CHARGE_AT, p),
+    mark: ramp01(0.792, 0.872, p),
+    fade: 1 - ramp01(0.872, 0.905, p),
+  };
+}
+
+/** The matter layer is drawn only near the passages it owns. */
+export const matterNear = (progress: number) => (progress > 0.13 && progress < 0.37) || progress > 0.57;
+
+/** The market's mood under the regime act: how far each word is on screen. */
+export const MOODS = [
+  { word: "Mean-reverting", from: 0.246, to: 0.274 },
+  { word: "Random", from: 0.274, to: 0.292 },
+  { word: "Trending", from: 0.292, to: 0.326 },
+] as const;
+
+export function moodOpacity(progress: number, m: { from: number; to: number }): number {
+  const p = clamp01(progress);
+  return ramp01(m.from - 0.003, m.from + 0.004, p) * (1 - ramp01(m.to - 0.004, m.to + 0.003, p));
+}
+
+/** The floor line, leaving the chart for the payoff: 0 on the chart, 1 on the payoff's floor. */
+export const floorHandoff = (progress: number) => ramp01(0.53, 0.588, clamp01(progress));
 
 /**
- * THE COLOUR SCRIPT — three rooms inside the candle act.
- *
- * One Bloom at threshold 0.35 used to run the entire act, which is exactly why
- * a frame at its midpoint reads as a single undifferentiated green wash: every
- * emissive in the scene crossed the same threshold at the same strength for
- * ~27% of the film's runtime. A film with nine acts and one grade is nine acts
- * of the same room.
- *
- * The three rooms, and why each is where it is:
- *
- *   COLD      the chart prints. Threshold is HIGH so only the wick tips and the
- *             print head bloom — the glass candles stay glass instead of neon.
- *   HOT       the crash. Threshold drops and the aberration widens, so the red
- *             detonates. Red is deliberately WITHHELD until this moment: it is
- *             the first red in ~14,000px of scroll, which is what makes it land.
- *   CLINICAL  the lab. Bloom near-off, aberration near-zero — the scene stops
- *             being weather and becomes an instrument being read.
- *
- * Returned values are lerped per frame onto the live Bloom / ChromaticAberration
- * / fog, so the transitions between rooms ARE the act's gear changes.
+ * The candle act's post chain: lerped per frame onto the live Bloom and fog.
+ * Lit, not glowing: the candles are glass with a warm core on a black stage,
+ * and only the print head's speculars reach the bloom at all.
  */
 export type Grade = {
   bloomIntensity: number;
@@ -345,20 +359,16 @@ export type Grade = {
   fogFar: number;
 };
 
+// Bloom round what is genuinely hot: the filaments and the strip-light flashes
+// on the glass. Everything else stays under the threshold, so the frame never
+// washes. No colour fringing.
 const GRADE_ROOMS: { at: number; g: Grade }[] = [
-  // before the act: whatever the neighbours were doing, held steady
-  { at: 0.24, g: { bloomIntensity: 0.95, bloomThreshold: 0.5, caOffset: 0.0005, fogNear: 22, fogFar: 60 } },
-  // COLD — glass, not neon
-  { at: 0.34, g: { bloomIntensity: 0.8, bloomThreshold: 0.55, caOffset: 0.0004, fogNear: 20, fogFar: 58 } },
-  { at: 0.42, g: { bloomIntensity: 0.85, bloomThreshold: 0.52, caOffset: 0.0005, fogNear: 19, fogFar: 56 } },
-  // HOT — the crash detonates
-  // The fog moves out with the pull-back, which now ends ~32 units off the
-  // chart (Gate A4 #3): at 15/48 it greyed the whole revealed crash by half.
-  { at: 0.47, g: { bloomIntensity: 1.25, bloomThreshold: 0.28, caOffset: 0.0016, fogNear: 22, fogFar: 58 } },
-  { at: 0.5, g: { bloomIntensity: 1.15, bloomThreshold: 0.3, caOffset: 0.0012, fogNear: 30, fogFar: 68 } },
-  // CLINICAL — the lab reads the instrument
-  { at: 0.55, g: { bloomIntensity: 0.42, bloomThreshold: 0.72, caOffset: 0.0002, fogNear: 26, fogFar: 70 } },
-  { at: 0.6, g: { bloomIntensity: 0.5, bloomThreshold: 0.68, caOffset: 0.0003, fogNear: 24, fogFar: 66 } },
+  { at: 0.24, g: { bloomIntensity: 0.32, bloomThreshold: 1.05, caOffset: 0, fogNear: 22, fogFar: 60 } },
+  { at: 0.42, g: { bloomIntensity: 0.36, bloomThreshold: 1.0, caOffset: 0, fogNear: 19, fogFar: 56 } },
+  // The fog moves out with the pull-back, which ends ~40 units off the chart.
+  { at: 0.47, g: { bloomIntensity: 0.4, bloomThreshold: 0.95, caOffset: 0, fogNear: 34, fogFar: 74 } },
+  { at: 0.5, g: { bloomIntensity: 0.4, bloomThreshold: 0.95, caOffset: 0, fogNear: 44, fogFar: 96 } },
+  { at: 0.6, g: { bloomIntensity: 0.32, bloomThreshold: 1.05, caOffset: 0, fogNear: 44, fogFar: 96 } },
 ];
 
 /** The grade at a given scroll position — linear between the keyed rooms. */
@@ -392,7 +402,7 @@ export function grade(progress: number): Grade {
  *               corridor never crushes under the headline (the panel's d04)
  *   NEUTRAL     regime and the climb: nothing to say yet
  *   HOT         the crash: saturation and exposure up
- *   CLINICAL    the lab: saturation down
+ *   CLINICAL    the floor line's passage: saturation down
  *   CLEAN       the worst case and the vote: ungraded
  *   WARM        the bull: exposure and saturation up a little
  *   COOL        after the bull; no 3D layer is on screen there, so unseen
@@ -481,18 +491,5 @@ export function colorGrade(progress: number): ColorGrade {
   };
 }
 
-/**
- * Opacity for the 3D dive-tunnel DOM layer.
- *
- * Fully opaque BEFORE the film starts. DIVE3D's in-ramp (0.148 → 0.165) was
- * written for a dive that opened on the laptop and faded the corridor over
- * it; since frame zero, 0.15 is the frame the hero curtain lifts off, so that
- * ramp revealed a double exposure of the retired laptop under the tunnel
- * (re-tribunal regression 5, d03). The flight itself still runs on DIVE3D.
- */
-export const dive3dOpacity = (progress: number) =>
-  windowOpacity(progress, { ...DIVE3D, in0: ACTS.dive.from - 0.02, in1: ACTS.dive.from });
 /** Opacity for the 3D candle-canyon DOM layer. */
 export const candle3dOpacity = (progress: number) => windowOpacity(progress, CANDLE3D);
-/** Opacity for the 3D bull DOM layer. */
-export const bull3dOpacity = (progress: number) => windowOpacity(progress, BULL3D_SHOW);

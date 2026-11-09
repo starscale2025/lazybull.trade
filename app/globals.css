@@ -567,20 +567,6 @@ html[data-motion="paused"]::view-transition-new(*) {
   .fill-flash { animation-duration: 1ms; }
 }
 
-/* ── The shatter: skipping the cinema breaks the glass (ScrollCinema). ── */
-@keyframes shatter-burst {
-  0% { opacity: 0; transform: scale(0.6); }
-  18% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.06); }
-}
-.shatter-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 160;
-  pointer-events: none;
-  animation: shatter-burst 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
 /* ── The Synthetic Truth badge: the site's ONE glitch, 400ms, resolving into
       a checkmark (TruthBadge). Reserved for the one claim that matters —
       noise settling into truth. Reduced-motion never mounts the layers, but
@@ -1963,18 +1949,14 @@ html[data-motion="paused"] *::after {
 
    All state arrives as data-on written by the film's own per-frame pass, so
    nothing here needs React. Colour transitions ride the brand's one curve. */
-.cinema-rail::before {
-  /* Feathered, not boxed: a hard-edged rectangle read as a panel burned onto
-     the 3D (re-tribunal d07, d13). The blur softens only the margin, so the
-     text, 22px in, still sits on ~0.7 black and keeps its 4.5:1. */
-  content: "";
-  position: absolute;
-  inset: -22px -28px -22px -22px;
-  background: rgba(5, 5, 5, 0.72);
-  filter: blur(12px);
-  z-index: -1;
-  pointer-events: none;
-}
+/* Quiet at rest: the ticks, the act you are in, sound and skip. The rest of
+   the contents come up when you reach for them. */
+.cinema-rail .rail-row:not([data-on="1"]):not(.rail-skip) .rail-label,
+.cinema-rail .rail-row .rail-num { opacity: 0; transition: opacity 0.3s var(--ease-settle); }
+.cinema-rail:hover .rail-row .rail-label,
+.cinema-rail:focus-within .rail-row .rail-label,
+.cinema-rail:hover .rail-row .rail-num,
+.cinema-rail:focus-within .rail-row .rail-num { opacity: 1; }
 .cinema-rail .rail-row {
   opacity: 1;
   transition:
@@ -2616,6 +2598,10 @@ html[data-motion="paused"] .nav-bar { transition: none; }
 html[data-motion="paused"] .roll-strip { transition: none; }
 
 html[data-film-done] .fz-film-cue { display: none; }
+/* The hero's soft bottom edge: it hangs below the curtain so the film comes up
+   through a long fade, never past a ruled line. Gone with the film, or it
+   would lie over the landing. */
+html[data-film-done] .fz-skirt { display: none; }
 /* Frame zero's position (components/HeroPosition.tsx): the handle's diamond
    takes the focus ring, and grows a little under the pointer. */
 .hp-handle:focus-visible > span:first-child { outline: 2px solid var(--cyan); outline-offset: 4px; }

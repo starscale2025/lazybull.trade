@@ -18,7 +18,7 @@ import { registerFilmFrame } from "@/lib/cinema-clock";
  * after the layer's scene content, before the composer.
  *
  * compile() walks only VISIBLE objects, so everything an act hides until its
- * beat (the floor, the crash shards, the lab candle) used to compile, and
+ * beat (the floor, the crash shards) used to compile, and
  * upload its buffers, on the frame it first appeared, mid-act (Gate A4 #2).
  * The warm-up shows them for the length of the compile and, while the layer
  * is still off screen, one plain draw, which also allocates the targets and

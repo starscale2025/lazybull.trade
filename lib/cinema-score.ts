@@ -14,7 +14,7 @@
 // that names the reader's own risk had no sound of its own. Each answer is
 // marked below where it lives.
 
-import { ACTS, BULL3D } from "./cinema";
+import { ACTS, CHARGE_AT as CHARGE_LANDS } from "./cinema";
 import { CANDLE_CRASH_AT } from "./candle-series";
 import { START_STRIKES } from "./hero-spread";
 
@@ -36,7 +36,7 @@ export const smooth = (a: number, b: number, x: number) => {
 //   the floor goes." still comes up at 0.385, a deliberate pre-lap.
 //   THE CHARGE. Bull3D's charge completes and ImpactFlash peaks at bt 0.826.
 export const CRASH_AT = CANDLE_CRASH_AT; // ≈0.404
-export const CHARGE_AT = BULL3D.in0 + 0.826 * (BULL3D.out1 - BULL3D.in0); // ≈0.805
+export const CHARGE_AT = CHARGE_LANDS;
 
 export type HitKind = "crash" | "charge";
 

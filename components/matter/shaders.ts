@@ -205,6 +205,25 @@ export const LEDGER_VERT = /* glsl */ `
   }
 `;
 
+// The light on the bull's surface, shared by the footer's bull and the film's.
+// Points are spread evenly over the model, so wherever the surface is seen
+// edge-on more of them land in each pixel, and additive light turned that into
+// a hard white outline round the silhouette and along every seam. Scaling each
+// point by how squarely it faces you cancels the pile-up exactly; the far side
+// is dropped, so it cannot show through; and what is left is lit like a
+// surface, from a key above and a soft fill, with only a breath of rim.
+export const BULL_LIGHT = /* glsl */ `
+  float bullLight(vec3 wn, vec3 toEye, vec3 toLight) {
+    float nv = dot(wn, toEye);
+    float facing = smoothstep(-0.02, 0.24, nv);
+    float spread = clamp(nv, 0.1, 1.0);
+    float key = max(dot(wn, toLight), 0.0);
+    float fill = 0.5 + 0.5 * wn.y;
+    float rim = pow(1.0 - clamp(nv, 0.0, 1.0), 3.0);
+    return facing * (spread * (0.12 + 0.72 * key + 0.2 * fill) + 0.05 * rim);
+  }
+`;
+
 // THE BULL (M18, the curtain call): the film's bull as matter, points on the
 // surface of /models/bull-crystal.glb, normalised to a unit box. It turns to
 // the cursor (the object's rotation, set in JS) and breathes a little.
@@ -222,6 +241,7 @@ export const BULL_VERT = /* glsl */ `
   varying float vAlpha;
   ${RAMP}
   ${SCATTER}
+  ${BULL_LIGHT}
   void main() {
     vec3 p = position * (1.0 + 0.012 * sin(uTime * 1.6 + position.y * 4.0));
     vec4 world = modelMatrix * vec4(p, 1.0);
@@ -231,14 +251,14 @@ export const BULL_VERT = /* glsl */ `
     gl_Position = projectionMatrix * mv;
     vec3 wn = normalize(mat3(modelMatrix) * aNormal);
     vec3 toEye = normalize(cameraPosition - world.xyz);
-    float nv = dot(wn, toEye);
-    float rim = pow(1.0 - abs(nv), 1.4);
-    float lit = max(dot(wn, normalize(uLight - world.xyz)), 0.0);
-    float h = clamp(position.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 toLight = normalize(uLight - world.xyz);
+    float lit = max(dot(wn, toLight), 0.0);
+    // Across the body as it is seen, as on the film's bull.
+    float h = clamp((position.x * 0.58 - position.z * 0.81) * 0.5 + 0.5, 0.0, 1.0);
     vColor = ramp(h) * (0.75 + 0.45 * lit);
     float twinkle = 0.85 + 0.15 * sin(uTime * 2.2 + aSeed * 47.0);
-    float a = (0.08 + 0.7 * rim) * (nv > 0.0 ? 1.0 : 0.45) * (0.7 + 0.6 * aSeed) * twinkle * g * uAlpha;
-    vAlpha = uGlow > 0.5 ? a * 0.07 : a;
+    float a = bullLight(wn, toEye, toLight) * (0.7 + 0.6 * aSeed) * twinkle * g * uAlpha;
+    vAlpha = uGlow > 0.5 ? a * 0.06 : a;
     gl_PointSize = uSize * (0.75 + 0.5 * aSeed) * (uGlow > 0.5 ? 4.0 : 1.0) * uPixelRatio * (3.0 / -mv.z);
   }
 `;

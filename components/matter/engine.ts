@@ -98,6 +98,8 @@ type Rig = {
   root: THREE.Object3D;
   materials: THREE.ShaderMaterial[];
   ready: boolean;
+  /** The lens this shape is shot with, in degrees; the wide one if unset. */
+  fov?: number;
   assemble: { value: number };
   fit(w: number, h: number, ctx: Pick<FrameCtx, "slot" | "visW" | "visH">): void;
   tick(ctx: FrameCtx): void;
@@ -107,6 +109,8 @@ type Rig = {
   still(): void;
   dispose(): void;
 };
+
+const WIDE_LENS = 75;
 
 const ADDITIVE = {
   transparent: true,
@@ -363,13 +367,13 @@ function ledgerRig(shared: Shared, phone: boolean): Rig {
 
 // ── the bull (M18) ──────────────────────────────────────────────────────────
 function bullRig(shared: Shared, phone: boolean, onReady: () => void): Rig {
-  const N = phone ? 14000 : 40000;
+  const N = phone ? 14000 : 30000;
   const assemble = { value: 0 };
   const own: Record<string, U> = {
-    uSize: { value: phone ? 1.9 : 1.7 },
-    uAlpha: { value: 0.9 },
+    uSize: { value: phone ? 1.3 : 0.95 },
+    uAlpha: { value: 1.3 },
     uAssemble: assemble,
-    uLight: { value: new THREE.Vector3(-2, 3, 4) },
+    uLight: { value: new THREE.Vector3(-2.5, 3.5, 3) },
   };
   const dots = dotMaterial(BULL_VERT, shared, own, false);
   const glow = dotMaterial(BULL_VERT, shared, own, true);
@@ -379,24 +383,27 @@ function bullRig(shared: Shared, phone: boolean, onReady: () => void): Rig {
   root.add(bull);
   const rig: Rig = {
     shape: "bull",
+    // The film's long lens. The engine's wide one, this close, made a squat
+    // boar of the same model.
+    fov: 34,
     root,
     materials: [dots, glow],
     ready: false,
     assemble,
     fit(w, h, { visH }) {
-      // The bull fills most of its slot's height, a little to the left.
-      bull.scale.setScalar(visH * 0.4);
-      bull.position.set(0, -visH * 0.02, 0);
+      // Most of its slot's height, a little below centre.
+      bull.scale.setScalar(visH * 0.52);
+      bull.position.set(0, -visH * 0.06, 0);
     },
     tick({ t, pointer }) {
       shared.uTime.value = t * 0.3;
       // It turns to follow the cursor, never all the way round.
-      bull.rotation.y = -0.65 + pointer.x * 0.55;
-      bull.rotation.x = 0.08 - pointer.y * 0.12;
+      bull.rotation.y = -0.72 + pointer.x * 0.45;
+      bull.rotation.x = 0.12 - pointer.y * 0.1;
     },
     settled: () => false,
     still() {
-      bull.rotation.set(0.08, -0.65, 0);
+      bull.rotation.set(0.12, -0.72, 0);
     },
     dispose() {
       geo.dispose();
@@ -466,7 +473,7 @@ class MatterEngine {
   private renderer: THREE.WebGLRenderer;
   private canvas: HTMLCanvasElement;
   private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+  private camera = new THREE.PerspectiveCamera(WIDE_LENS, 1, 0.1, 100);
   private shared: Shared;
   private rigs = new Map<MatterShape, Rig>();
   private active: MatterSlotEntry | null = null;
@@ -696,6 +703,7 @@ class MatterEngine {
     const h = slot.el.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
+    this.camera.fov = this.rigs.get(slot.shape)?.fov ?? WIDE_LENS;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     const visH = 2 * this.camera.position.z * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));

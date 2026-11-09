@@ -26,6 +26,16 @@ type CinemaClock = {
   vel: number; // damped |scroll velocity|, 0..1
   hover: CinemaHover | null; // written by the candle scene, read by the DOM
   click: { x: number; y: number; t: number } | null; // last pointerdown (NDC-ish)
+  /** The 2D scene's geometry in the stage's clip space, for the matter to land on:
+   *  the vote's ring [cx, cy, rx, ry] and the mark's box [left, top, w, h]. And
+   *  the floor line where the candle camera sees it, in stage pixels [x0, y0, x1, y1],
+   *  and the candle being printed, in clip space [x, y]. */
+  stage: {
+    ring: [number, number, number, number] | null;
+    mark: [number, number, number, number] | null;
+    floor: [number, number, number, number] | null;
+    head: [number, number] | null;
+  };
 };
 
 declare global {
@@ -44,6 +54,7 @@ const clock = (globalThis.__cinemaClock ??= {
   vel: 0,
   hover: null,
   click: null,
+  stage: { ring: null, mark: null, floor: null, head: null },
 });
 // Older HMR instances may predate newer fields.
 clock.time ??= 0;
@@ -53,6 +64,7 @@ clock.py ??= 0;
 clock.vel ??= 0;
 clock.hover ??= null;
 clock.click ??= null;
+clock.stage ??= { ring: null, mark: null, floor: null, head: null };
 
 export const cinemaClock: CinemaClock = clock;
 

@@ -22,8 +22,10 @@ import { ACTS, COPY_BEATS } from "@/lib/cinema";
  * curtain's lift added in front. 1450 (the hold, Gate A2) → 1340 (Gate A4 #5):
  * the mark's act went from about 2,120 px to 740 (ACT_TEMPO below), the vote
  * gained about 210, and every other act stayed within 3% of its length.
+ * 1340 → 1284 (the one take): the candle act's tail is the floor line's glide
+ * now, not a lab, and gets half the road; the other acts keep their pace.
  */
-export const SCROLL_LENGTH_VH = 1340;
+export const SCROLL_LENGTH_VH = 1284;
 
 /**
  * THE HOLD (2026-11, Gate A2). The last stretch of the section during which
@@ -75,6 +77,9 @@ const TEMPO_GRID = 2048;
 /** More road for the vote, much less for the mark at rest (see ACT_TEMPO). */
 const VOTE_TEMPO = 1.4;
 const TAIL_TEMPO = 0.18;
+/** The floor line's glide from the chart to the payoff, where a lab stood. */
+const FLOOR_PASSAGE = { from: 0.505, to: 0.59 };
+const FLOOR_TEMPO = 0.5;
 /** Where the mark has finished forming (public/cinema/scene.html, MARK1). */
 const MARK_REST = 0.87;
 const BRAKE = 0.32; // up to 32% more scroll per film unit inside a beat
@@ -105,6 +110,7 @@ function tempoDensity(p: number): number {
 // length in pixels.
 const ACT_TEMPO: { from: number; to: number; k: number }[] = [
   { from: ACTS.consensus.from, to: ACTS.consensus.to, k: VOTE_TEMPO },
+  { from: FLOOR_PASSAGE.from, to: FLOOR_PASSAGE.to, k: FLOOR_TEMPO },
   { from: MARK_REST, to: 1, k: TAIL_TEMPO },
 ];
 const TEMPO_EDGE = 0.008;

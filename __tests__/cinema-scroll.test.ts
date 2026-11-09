@@ -17,9 +17,9 @@ describe("scroll ↔ film mapping", () => {
       expect(scrollToFilm(s)).toBe(1);
     }
     expect(filmToScroll(1)).toBe(FILM_SPAN);
-    // The film itself plays over 1160vh: 1270 until Gate A4 #5 cut the mark's
-    // dead tail (ACT_TEMPO in cinema-metrics) and gave the scroll back.
-    expect((SCROLL_LENGTH_VH - 100) * FILM_SPAN).toBeCloseTo(1160, 9);
+    // The film itself plays over 1104vh: 1270 until Gate A4 #5 cut the mark's
+    // dead tail, 1160 until the candle act's tail gave up half its road.
+    expect((SCROLL_LENGTH_VH - 100) * FILM_SPAN).toBeCloseTo(1104, 9);
   });
 
   it("gives the mark's act under 1,000 px and the vote more road (Gate A4 #5)", () => {
@@ -27,9 +27,10 @@ describe("scroll ↔ film mapping", () => {
     const px = (a: number, b: number) => (filmToScroll(b) - filmToScroll(a)) * (SCROLL_LENGTH_VH - 100) * 9;
     expect(px(ACTS.mark.from, 1)).toBeLessThan(1000);
     expect(px(ACTS.consensus.from, ACTS.consensus.to)).toBeGreaterThan(700);
-    // ...while the long acts keep their pace (Gate A4 lengths, within 4%).
-    expect(px(ACTS.candle.from, ACTS.candle.to) / 3224).toBeGreaterThan(0.96);
-    expect(px(ACTS.candle.from, ACTS.candle.to) / 3224).toBeLessThan(1.04);
+    // ...while the long acts keep their pace (within 4%). 2,717 is the Gate A4
+    // length of 3,224 less the half of the tail the floor line's glide gave up.
+    expect(px(ACTS.candle.from, ACTS.candle.to) / 2717).toBeGreaterThan(0.96);
+    expect(px(ACTS.candle.from, ACTS.candle.to) / 2717).toBeLessThan(1.04);
   });
 
   it("round-trips film → scroll → film from the curtain to the end", () => {

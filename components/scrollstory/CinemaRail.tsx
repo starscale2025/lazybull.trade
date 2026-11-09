@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { ACTS, CANDLE_LAB } from "@/lib/cinema";
+import { ACTS } from "@/lib/cinema";
 import { CANDLE_CRASH_AT } from "@/lib/candle-series";
 import { FILM_LIFT_END } from "./cinema-metrics";
 
@@ -42,10 +42,8 @@ import { FILM_LIFT_END } from "./cinema-metrics";
 // them in 2026-11 and the film now starts at the dive, so they are never on
 // screen and have no business in the film's own table of contents.
 //
-// The candle act is three rows, not one. Called "the crash" from end to end,
-// the rail labelled a rising market a crash for a third of the act and the
-// lab finale for another third (Gate A2): it reads climb · crash · lab now,
-// split where the colour script changes room (lib/cinema.ts).
+// The candle act is two rows, not one: called "the crash" from end to end, the
+// rail labelled a rising market a crash for half the act (Gate A2).
 /** What each act is actually about, for the label and the announcer, and where it runs. */
 const RAIL = [
   { key: "dive", label: "the dive", ...ACTS.dive },
@@ -53,8 +51,7 @@ const RAIL = [
   // The crash row turns at the first red print, the frame the sound and the
   // camera hit too (lib/candle-series.ts), not at the copy's pre-lap.
   { key: "climb", label: "the climb", from: ACTS.candle.from, to: CANDLE_CRASH_AT },
-  { key: "crash", label: "the crash", from: CANDLE_CRASH_AT, to: CANDLE_LAB.from },
-  { key: "lab", label: "the lab", from: CANDLE_LAB.from, to: ACTS.candle.to },
+  { key: "crash", label: "the crash", from: CANDLE_CRASH_AT, to: ACTS.candle.to },
   { key: "safety", label: "your worst case", ...ACTS.safety },
   { key: "consensus", label: "the vote", ...ACTS.consensus },
   { key: "bull", label: "conviction", ...ACTS.bull },
@@ -62,7 +59,7 @@ const RAIL = [
 ] as const;
 
 /** Rows that begin mid-shot (a cut inside the candle act, not a new act). */
-const IN_SHOT = new Set<string>(["crash", "lab"]);
+const IN_SHOT = new Set<string>(["crash"]);
 
 export type CinemaRailHandle = {
   /** Called from the cinema's existing per-frame pass. No rAF of its own. */

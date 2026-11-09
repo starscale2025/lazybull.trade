@@ -72,6 +72,9 @@ export function AnomalousMatterHero({
         // draining into the seam (--matter-lift, written by the engine).
         style={{ opacity: "calc(1 - var(--matter-lift, 0) * 2.2)" }}
       />
+      {/* The last stretch always settles to the page, lifted or not: this is
+          what the skirt under the hero continues (app/page.tsx). */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[20vh] bg-gradient-to-t from-bg to-transparent" />
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-end px-4 pb-12 pt-32 text-center md:pb-16">
         <div className="flex w-full max-w-4xl flex-col items-center">

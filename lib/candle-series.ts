@@ -59,6 +59,13 @@ export const CANDLES: SeriesCandle[] = (() => {
   return out;
 })();
 
+/** Where the candle act's camera starts, so the river can pour into the first candle. */
+export const CANDLE_CAM_START = {
+  pos: [-3.1, 3.7, 5.6] as [number, number, number],
+  look: [-0.6, 2.55, 0] as [number, number, number],
+  fov: 32,
+};
+
 export const PEAK_Y = CANDLES[DIVERGE].cy;
 /** The price at the top of the climb: the close of the last green candle. */
 export const PEAK_PRICE = Math.max(...CANDLES.map((c) => c.c));

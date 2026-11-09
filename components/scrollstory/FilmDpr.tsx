@@ -17,9 +17,9 @@ export const FILM_DPR_MAX = 1.5;
  * the composer's targets, a 30–40 ms frame of its own, so it should happen
  * once, not ten times on the way down. Place it inside the layer's <Canvas>.
  */
-export function FilmDpr() {
+export function FilmDpr({ max = FILM_DPR_MAX }: { max?: number }) {
   const setDpr = useThree((s) => s.setDpr);
-  const top = () => Math.min(window.devicePixelRatio || 1, FILM_DPR_MAX);
+  const top = () => Math.min(window.devicePixelRatio || 1, max);
   return (
     <PerformanceMonitor
       flipflops={2}

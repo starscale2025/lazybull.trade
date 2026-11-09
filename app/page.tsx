@@ -34,6 +34,10 @@ export default function Home() {
 
         {/* Frame zero. Opaque and stacked above the film (z-30 over z-20). */}
         <FrameZero />
+        {/* The curtain's soft edge. It takes no room in the page. */}
+        <div aria-hidden className="fz-skirt film-desktop-only pointer-events-none relative z-30 h-0">
+          <div className="absolute inset-x-0 top-0 h-[42vh] bg-gradient-to-b from-bg via-bg/60 to-transparent" />
+        </div>
 
         {/* The film, under the curtain. Keep the section after it immediately
             after: collapse() anchors on its next sibling to keep the page still

@@ -4,14 +4,13 @@ import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, SAFETY_LINES, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, handoffOpacity, safetyLight } from "@/lib/cinema";
+import { ACTS, CANDLE3D, COPY_BEATS, MOODS, SAFETY_LINES, beatCharT, beatOpacity, candle3dOpacity, clamp01, floorHandoff, handoffOpacity, matterNear, moodOpacity, safetyLight } from "@/lib/cinema";
 import { advanceFilm, cinemaClock, damp } from "@/lib/cinema-clock";
 import { isMotionPaused, motion as busMotion } from "@/lib/motion/bus";
 import { getHeroPosition, onHeroPosition, useHeroChosen, type HeroPosition } from "@/lib/hero-position";
 import {
   cinemaAudioFrame,
   cinemaAudioEnabled,
-  cinemaImpact,
   enableCinemaAudio,
   disableCinemaAudio,
   stopCinemaAudio,
@@ -33,8 +32,6 @@ declare global {
 import { glideTo, isSmoothing, jumpBy, jumpTo } from "@/lib/motion/scroll";
 import { AUTOPLAYED_KEY, REPLAY_KEY, RESUME_KEY, cinemaResumeAt, markCinemaSeen } from "./cinema-memory";
 
-// smoothstep — the phase ramps for the quant-lab type-on/colour narration, kept
-// identical in shape to the 3D IceCandle's so the panel and candle read as one clock.
 const ss = (a: number, b: number, x: number) => {
   const t = clamp01((x - a) / (b - a));
   return t * t * (3 - 2 * t);
@@ -44,9 +41,8 @@ const ss = (a: number, b: number, x: number) => {
 // reduced-motion static fallback, and not until after first paint) — but
 // through ONE boundary (three-stage.ts): three separate lazy chunks used to
 // duplicate the entire three.js graph, shipping WebGLRenderer twice.
-const Bull3D = lazy(() => import("./three-stage").then((m) => ({ default: m.Bull3D })));
 const CandleField3D = lazy(() => import("./three-stage").then((m) => ({ default: m.CandleField3D })));
-const Tunnel3D = lazy(() => import("./three-stage").then((m) => ({ default: m.Tunnel3D })));
+const FilmMatter = lazy(() => import("./three-stage").then((m) => ({ default: m.FilmMatter })));
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -88,6 +84,10 @@ type SceneWindow = Window & {
   markFade?: number;
   /** The mark's box as shares of the scene, and its line width as a share of its width. */
   markRect?: () => { x: number; y: number; w: number; h: number; lw: number };
+  /** The vote's ring as shares of the scene, for the matter to gather on. */
+  ringRect?: () => { cx: number; cy: number; rx: number; ry: number } | null;
+  /** The payoff's floor as shares of the scene, for the floor line to land on. */
+  floorLine?: () => { x0: number; y0: number; x1: number; y1: number } | null;
   // `hideBull` / `hideCandle` / `hideDive` (per frame) drop the matching 2D draw
   // once that 3D layer is live. `now` (seconds) drives ambient, always-on motion;
   // `cx`/`cy` (-1..1) drive the cursor spotlight.
@@ -123,8 +123,8 @@ function hasWebGL(): boolean {
 // showpiece was typeset in a different face on every operating system.
 //
 // These read what the page ACTUALLY resolved and hand it over.
-function resolvedTokens(): Record<string, string> {
-  const cs = getComputedStyle(document.documentElement);
+function resolvedTokens(from: Element): Record<string, string> {
+  const cs = getComputedStyle(from);
   const get = (n: string) => cs.getPropertyValue(n).trim();
   return {
     bg: get("--bg"), fg: get("--fg"), fgDim: get("--fg-dim"),
@@ -219,30 +219,23 @@ export function ScrollCinema() {
   const vignetteRef = useRef<HTMLDivElement>(null);
   const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const bull3dWrapRef = useRef<HTMLDivElement>(null);
-  const bull3dActiveRef = useRef(false);
-  const bull3dReadyRef = useRef(false);
-  const [bull3dActive, setBull3dActive] = useState(false);
   const candle3dWrapRef = useRef<HTMLDivElement>(null);
   const candle3dActiveRef = useRef(false);
   const candle3dReadyRef = useRef(false);
   const [candle3dActive, setCandle3dActive] = useState(false);
-  const dive3dWrapRef = useRef<HTMLDivElement>(null);
-  const dive3dActiveRef = useRef(false);
-  const dive3dReadyRef = useRef(false);
-  const [dive3dActive, setDive3dActive] = useState(false);
+  // The matter (FilmMatter): the line at the start, the bull at the end.
+  const matterWrapRef = useRef<HTMLDivElement>(null);
+  const matterActiveRef = useRef(false);
+  const matterReadyRef = useRef(false);
+  const matterBullRef = useRef(false);
+  const [matterActive, setMatterActive] = useState(false);
+  // The floor line, once it has left the chart for the payoff.
+  const floorSvgRef = useRef<SVGSVGElement>(null);
+  const floorLineRef = useRef<SVGLineElement>(null);
+  const floorCoreRef = useRef<SVGLineElement>(null);
+  const moodRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   const tooltipRef = useRef<HTMLDivElement>(null); // live price tag on candle hover
-  // quant-lab panel (the candle act's finale): the terminal that "computes"
-  // while the ice candle stretches — lines + live value spans driven per frame
-  const labRef = useRef<HTMLDivElement>(null);
-  const labLineRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const labValRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const labPhaseRef = useRef<HTMLSpanElement>(null); // header tag: replay → reading → stress → replayed
-  // per-line char lengths, measured once — the type-on reveals `budget` chars
-  // cumulatively across lines (monospace → 1ch/char), so it's pure f(labT).
-  const labLenRef = useRef<number[] | null>(null);
-
   // Preloader: scroll is locked and a loading screen shows until the scene, its
   // panel screenshots, three.js and the bull model are all loaded — then the
   // scroll animation is enabled. No more scrolling into half-loaded frames.
@@ -264,33 +257,27 @@ export function ScrollCinema() {
   // Each 3D layer's WebGL context going live tells the 2D scene to drop its
   // matching draw (via the per-frame hide flags). Stays false if WebGL fails →
   // the 2D bull / candle chart remain as fallbacks.
-  const handleBullReady = () => {
-    bull3dReadyRef.current = true;
-  };
   const handleCandleReady = () => {
     candle3dReadyRef.current = true;
   };
-  const handleDiveReady = () => {
-    dive3dReadyRef.current = true;
+  const handleMatterReady = () => {
+    matterReadyRef.current = true;
+  };
+  const handleMatterBull = (ok: boolean) => {
+    matterBullRef.current = ok;
   };
   // A lost WebGL context (GPU reset, too many contexts) hands the frame back
   // to the 2D scene, which draws its own version of whatever a layer that is
   // not ready would have shown. Restoring calls the ready handler again.
-  const handleBullLost = () => {
-    bull3dReadyRef.current = false;
-  };
   const handleCandleLost = () => {
     candle3dReadyRef.current = false;
   };
-  const handleDiveLost = () => {
-    dive3dReadyRef.current = false;
+  const handleMatterLost = () => {
+    matterReadyRef.current = false;
   };
 
-  // Skip the intro: THE SHATTER — you break the fourth wall to get to the
-  // desk. A portaled glass-crack burst plays over the reveal (it survives the
-  // cinema's own unmount), then the same play-once collapse runs so the
-  // intro can't be scrolled back into. Reduced-motion skips the theatrics.
-  const [shatter, setShatter] = useState(false);
+  // Skip the film: the stage dips to the page colour and the landing is simply
+  // there. The collapse keeps the film from being scrolled back into.
   const doSkip = () => {
     const s = sectionRef.current;
     if (!s) return;
@@ -298,17 +285,12 @@ export function ScrollCinema() {
     collapseRef.current?.();
   };
   const handleSkip = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const dip = dipRef.current;
+    if (!dip || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       doSkip();
       return;
     }
-    // The glass gets a sound if sound is on (it no-ops otherwise). The collapse
-    // stops the audio ~180ms later, so what you hear is a crack and then the
-    // room being gone — which is what the picture is doing.
-    cinemaImpact(0.8);
-    setShatter(true);
-    window.setTimeout(doSkip, 180); // glass cracks, then the page is simply there
-    window.setTimeout(() => setShatter(false), 700);
+    dip.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "ease-in", fill: "forwards" }).finished.then(doSkip).catch(doSkip);
   };
   // "cinema" until proven otherwise; flips to static for reduced-motion or load failure
   const [mode, setMode] = useState<"cinema" | "static">("cinema");
@@ -597,7 +579,7 @@ export function ScrollCinema() {
       const driveLayer = (
         wrap: React.RefObject<HTMLDivElement | null>,
         scheduled: number,
-        win: typeof BULL3D,
+        win: typeof CANDLE3D,
         activeRef: React.RefObject<boolean>,
         setActive: (v: boolean) => void,
         readyRef: React.RefObject<boolean>
@@ -609,16 +591,70 @@ export function ScrollCinema() {
           wrap.current.style.opacity = String(opacity);
           wrap.current.style.visibility = opacity > 0.001 ? "visible" : "hidden";
         }
-        const near = progress > win.in0 - 0.04 && progress < win.out1 + 0.04;
+        // Warmed once under the curtain, post chain and all, so its first
+        // visible frame is not also the frame that allocates all of that.
+        const near = (scrollS <= 0 && warm < WARM_FRAMES) || (progress > win.in0 - 0.02 && progress < win.out1 + 0.02);
         if (near !== activeRef.current) {
           activeRef.current = near;
           setActive(near);
         }
       };
-      driveLayer(bull3dWrapRef, bull3dOpacity(progress), BULL3D, bull3dActiveRef, setBull3dActive, bull3dReadyRef);
       if (vignetteRef.current) vignetteRef.current.style.opacity = String(1 - 0.9 * safetyLight(progress));
       driveLayer(candle3dWrapRef, candle3dOpacity(progress), CANDLE3D, candle3dActiveRef, setCandle3dActive, candle3dReadyRef);
-      driveLayer(dive3dWrapRef, dive3dOpacity(progress), DIVE3D, dive3dActiveRef, setDive3dActive, dive3dReadyRef);
+      // The matter's layer is on for the two passages it owns. It carries no
+      // parallax transform of its own: it has to land exactly on the mark.
+      const matterOn = matterNear(progress);
+      if (matterOn !== matterActiveRef.current) {
+        matterActiveRef.current = matterOn;
+        setMatterActive(matterOn);
+      }
+      if (matterWrapRef.current) matterWrapRef.current.style.visibility = matterOn && matterReadyRef.current ? "visible" : "hidden";
+      // The scene's ring and mark, in the stage's clip space, for the matter.
+      const sceneWin = win();
+      const frameEl = frameRef.current;
+      const stageEl = stickyRef.current;
+      if (matterOn && frameEl && stageEl && sceneWin?.ringRect && sceneWin.markRect) {
+        const fr = frameEl.getBoundingClientRect();
+        const st = stageEl.getBoundingClientRect();
+        const ndcX = (px: number) => ((px - st.left) / st.width) * 2 - 1;
+        const ndcY = (py: number) => 1 - ((py - st.top) / st.height) * 2;
+        const rg = sceneWin.ringRect();
+        if (rg) {
+          cinemaClock.stage.ring = [ndcX(fr.left + rg.cx * fr.width), ndcY(fr.top + rg.cy * fr.height), (rg.rx * fr.width * 2) / st.width, (rg.ry * fr.height * 2) / st.height];
+        }
+        const mk = sceneWin.markRect();
+        cinemaClock.stage.mark = [ndcX(fr.left + mk.x * fr.width), ndcY(fr.top + mk.y * fr.height), (mk.w * fr.width * 2) / st.width, (mk.h * fr.height * 2) / st.height];
+      }
+      // THE FLOOR LINE CARRIES THE CUT (the one take). The chart clears, and
+      // the one thing left standing is the line where the loss stops; it
+      // glides from where the candle camera sees it to the payoff's own floor,
+      // and the worst case draws itself on from there.
+      const floorSvg = floorSvgRef.current;
+      const floorLine = floorLineRef.current;
+      if (floorSvg && floorLine) {
+        const alpha = ss(0.505, 0.516, progress) * (1 - ss(0.598, 0.612, progress));
+        const from = cinemaClock.stage.floor;
+        const to = alpha > 0.002 ? sceneWin?.floorLine?.() : null;
+        if (from && to) {
+          const k = floorHandoff(progress);
+          const w = floorSvg.clientWidth;
+          const h = floorSvg.clientHeight;
+          for (const ln of [floorLine, floorCoreRef.current]) {
+            ln?.setAttribute("x1", (from[0] + (to.x0 * w - from[0]) * k).toFixed(1));
+            ln?.setAttribute("y1", (from[1] + (to.y0 * h - from[1]) * k).toFixed(1));
+            ln?.setAttribute("x2", (from[2] + (to.x1 * w - from[2]) * k).toFixed(1));
+            ln?.setAttribute("y2", (from[3] + (to.y1 * h - from[3]) * k).toFixed(1));
+          }
+          floorSvg.style.opacity = alpha.toFixed(3);
+          floorSvg.style.display = "";
+        } else if (floorSvg.style.display !== "none") {
+          floorSvg.style.display = "none";
+        }
+      }
+      MOODS.forEach((m, i) => {
+        const el = moodRefs.current[i];
+        if (el) el.style.opacity = moodOpacity(progress, m).toFixed(3);
+      });
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
@@ -627,94 +663,15 @@ export function ScrollCinema() {
         // The per-character stagger is now a NUMBER written every frame, not a
         // class flip: the CSS below derives each glyph's own 0→1 from this and
         // its index, so the reveal is f(progress) and scrubs backwards exactly
-        // like the lab type-on does. See beatCharT in lib/cinema.ts.
+        // See beatCharT in lib/cinema.ts.
         el.style.setProperty("--t", beatCharT(progress, beat).toFixed(4));
         // "top" beats anchor at their top edge (upper third); "left" beats at
         // their left edge (the left third, beside the bull); others center. The
         // type layer parallaxes harder than the scene → real depth.
-        const baseY = beat.pos === "top" || beat.pos === "left" ? "0px" : "-50%";
-        const baseX = beat.pos === "left" ? "0px" : "-50%";
+        const baseY = beat.pos === "top" || beat.pos === "left" || beat.pos === "right" ? "0px" : "-50%";
+        const baseX = beat.pos === "left" || beat.pos === "right" ? "0px" : "-50%";
         el.style.transform = `translate(calc(${baseX} + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
       });
-      // Quant-lab panel — the candle finale's left-hand brain. Lines highlight
-      // one-by-one and the live values (μ, σ, agree, K) interpolate on the SAME
-      // clock (candleLabT) that spins + stretches the ice candle, so the math
-      // visibly computes in sync. In with the liftoff, out with the candle
-      // layer's own fade. Pure f(progress) like everything else here.
-      if (labRef.current) {
-        const lt = candleLabT(progress);
-        const o =
-          lt <= 0
-            ? 0
-            : Math.min(
-                1,
-                lt / 0.1,
-                Math.max(0, (CANDLE3D.out1 - progress) / (CANDLE3D.out1 - CANDLE3D.out0))
-              );
-        const el = labRef.current;
-        el.style.opacity = String(o);
-        el.style.visibility = o > 0.001 ? "visible" : "hidden";
-        if (o > 0.001) {
-          // phase ramps — SAME shape as the 3D IceCandle, so the panel narrates
-          // exactly what the candle is doing: ice-scan → green candidate → red
-          // stress → settle. Pure f(lt); scrubbing back un-types + un-colours.
-          const B = ss(0.44, 0.62, lt); // candidate (green) emerges
-          const C = ss(0.66, 0.84, lt); // downside stress (red)
-          const RS = ss(0.88, 0.985, lt); // settle / verdict
-          // TYPE-ON: reveal `budget` pixels cumulatively across the lines. Widths
-          // are the lines' intrinsic scrollWidth (glyph-accurate even for →/≥/μ/σ,
-          // which the mono stack renders wider than 1ch — a ch reveal clipped them).
-          // Measured once (scrollWidth is the full content width even while the line
-          // is clipped to width:0). Pure f(lt) so scrub reverses cleanly.
-          if (!labLenRef.current || labLenRef.current[0] === 0) {
-            labLenRef.current = labLineRefs.current.map((ln) => (ln ? ln.scrollWidth + 2 : 0));
-          }
-          const lens = labLenRef.current;
-          const total = lens.reduce((a, b) => a + b, 0) || 1;
-          let budget = clamp01((lt - 0.02) / 0.9) * total; // 0→fully typed by lt≈0.92
-          labLineRefs.current.forEach((ln, i) => {
-            if (!ln) return;
-            const len = lens[i] || 0;
-            const typed = Math.max(0, Math.min(len, budget));
-            budget -= len;
-            ln.style.width = typed.toFixed(1) + "px";
-            const started = typed > 0.5;
-            const done = typed >= len - 0.5;
-            ln.style.opacity = started ? "1" : "0";
-            ln.classList.toggle("lab-caret", started && !done); // blink only at the frontier
-            // phase accents narrate the colour story on the key lines
-            // (indices match the SIX-line panel: 2 the split, 3-4 stress, 5 the lesson):
-            let glow = 0.28; // base cyan-ish scan glow once a line is in
-            let rgb = "125,255,201";
-            if (i === 2) { glow = 0.2 + 0.5 * B; }                              // the split, neutral: no colour picks a side
-            else if (i === 3 || i === 4) { rgb = "255,46,99"; glow = 0.15 + 0.6 * C; } // stress → red in phase C
-            else if (i === 5) { rgb = "191,232,255"; glow = 0.2 + 0.7 * Math.max(RS, lt > 0.9 ? 1 : 0); } // the lesson → ice at settle
-            ln.style.textShadow = started ? `0 0 ${(8 + 14 * glow).toFixed(0)}px rgba(${rgb},${glow.toFixed(2)})` : "none";
-          });
-          // live values interpolate on the SAME clock; all fixed-width so the ch
-          // reveal stays exact. The replay ends on a 4/2 split, never a unanimous
-          // verdict and never a named strike: the lab shows a disagreement, it does
-          // not stage a trade (the 2026-11 tribunal found a named strike and a
-          // staged pick here).
-          const ve = clamp01(lt / 0.85);
-          const mu = (0.12 + 0.72 * ve).toFixed(2);
-          const sg = (1.24 + 0.68 * ve).toFixed(2);
-          const ag = String(1 + Math.round(3 * ve));
-          const agreed = String(1 + Math.round(3 * ve));
-          const dissent = String(6 - (1 + Math.round(3 * ve)));
-          const vals = [mu, sg, ag, agreed, dissent];
-          labValRefs.current.forEach((sp, i) => {
-            if (sp) sp.textContent = vals[i];
-          });
-          // header tag + its colour follow the phase the candle is in
-          if (labPhaseRef.current) {
-            const ph =
-              lt >= 0.86 ? ["replayed", "#bfe8ff"] : C > 0.5 ? ["stress", "#ff2e63"] : B > 0.5 ? ["reading", "#7dffc9"] : ["replay", "#bfe8ff"];
-            labPhaseRef.current.textContent = ph[0];
-            labPhaseRef.current.style.color = ph[1];
-          }
-        }
-      }
       // Layered cursor parallax: the whole composited scene drifts gently against
       // the pointer (scaled up a hair so edges never peek in). The glitch-shake
       // that rattled the whole frame through the matrix burst is gone (Gate A3
@@ -722,8 +679,7 @@ export function ScrollCinema() {
       const t3 = `translate3d(${(pxS * -7).toFixed(2)}px, ${(pyS * -5).toFixed(2)}px, 0) scale(1.015)`;
       if (frameRef.current) frameRef.current.style.transform = t3;
       if (candle3dWrapRef.current) candle3dWrapRef.current.style.transform = t3;
-      if (bull3dWrapRef.current) bull3dWrapRef.current.style.transform = t3;
-      if (dive3dWrapRef.current) dive3dWrapRef.current.style.transform = t3;
+      if (floorSvgRef.current) floorSvgRef.current.style.transform = t3;
     };
 
     const syncPosition = () => {
@@ -733,15 +689,9 @@ export function ScrollCinema() {
 
     const renderScene = (now = 0) => {
       cinemaClock.progress = progress; // shared clock the 3D layers read
-      // Un-hide the 2D particle logo at out0 — where the 3D bull STARTS fading,
-      // not where it finishes. Releasing at out1 left 0.793–0.80 with nothing
-      // drawn at all (bull wrapper ~0, grid 0 since 0.796, consensus dead since
-      // 0.754, logo still gated): a measured black frame on the charge, the
-      // film's climax. The two bulls do overlap for that 0.02, but the charge's
-      // impact flash is blowing the frame out across exactly that span, so what
-      // reads is the logo condensing OUT of the burst — which is what
-      // Bull3D's ImpactFlash was written to do.
-      const hideBull = bull3dReadyRef.current && progress < BULL3D.out0;
+      // The matter owns the bull and the mark's particles once its model has
+      // been sampled; until then, or without it, the 2D scene draws its own.
+      const hideBull = matterReadyRef.current && matterBullRef.current;
       // A throw from the scene must cost one 2D frame, not the film: this runs
       // inside the rAF loop, and an uncaught error here ended the loop, which
       // froze the whole film at the last good act (2026-11-06: a scene helper
@@ -760,7 +710,7 @@ export function ScrollCinema() {
             now,
             pxS,
             pyS,
-            dive3dReadyRef.current
+            matterReadyRef.current
           );
         } catch (err) {
           if (!sceneErrorLogged) {
@@ -812,9 +762,8 @@ export function ScrollCinema() {
     const park = () => {
       parked = true;
       for (const [ref, set] of [
-        [dive3dActiveRef, setDive3dActive],
+        [matterActiveRef, setMatterActive],
         [candle3dActiveRef, setCandle3dActive],
-        [bull3dActiveRef, setBull3dActive],
       ] as const) {
         if (ref.current) {
           ref.current = false;
@@ -835,7 +784,7 @@ export function ScrollCinema() {
         }
         // a quarter-rate count if the tunnel never comes up, so a failed
         // context still parks within a few seconds
-        warm += dive3dReadyRef.current ? 1 : 0.25;
+        warm += matterReadyRef.current ? 1 : 0.25;
       }
       parked = false;
       // THE FILM'S OWN TIME (M31): it runs only while the film plays and the
@@ -897,7 +846,6 @@ export function ScrollCinema() {
           if (tx > maxX) tx = Math.max(8, hov.sx - el.offsetWidth - 14);
           const ty = Math.max(8, hov.sy - 40);
           el.style.transform = `translate(${tx.toFixed(0)}px, ${ty.toFixed(0)}px)`;
-          el.style.borderColor = hov.up ? "rgba(82,255,165,0.55)" : "rgba(255,46,99,0.55)";
           const [l, p] = [el.children[0] as HTMLElement, el.children[1] as HTMLElement];
           if (l) l.textContent = hov.label;
           if (p) {
@@ -977,7 +925,7 @@ export function ScrollCinema() {
             shots: SHOTS,
             phases: ACTS,
             bullFrames: null,
-            tokens: resolvedTokens(),
+            tokens: resolvedTokens(section),
             mono: injectMono(w.document) ?? undefined,
             position: getHeroPosition() ?? undefined,
             insetLeft: railInset(),
@@ -1012,17 +960,13 @@ export function ScrollCinema() {
     //
     // This gate used to also await both GLBs, via two fetch() calls whose
     // ArrayBuffers were thrown away — they existed to warm the HTTP cache. Two
-    // things were wrong with that. The models are not needed until CANDLE3D
-    // (progress 0.32) and BULL3D (0.71), a third and three-quarters of the way
-    // in, so the entrance was blocked on assets nobody sees for thousands of
-    // pixels. And drei already downloads them itself: Bull3D calls
-    // useGLTF.preload and CandleField3D loads its own, so bull-crystal.glb was
-    // fetched TWICE on every visit — confirmed in the production network log.
+    // things were wrong with that. The models are not needed until the candle
+    // act (progress 0.32) and the bull (0.71), so the entrance was blocked on
+    // assets nobody sees for thousands of pixels; and the layers load their
+    // own, so bull-crystal.glb was fetched TWICE on every visit.
     //
-    // Dropping the warmers costs nothing: drei still starts its own load as
-    // soon as the three-stage chunk evaluates, which is inside the gate, so the
-    // models are already in flight while the loader finishes — they simply no
-    // longer hold the door shut.
+    // Dropping the warmers costs nothing: each layer starts its own load when
+    // it mounts, so the models are in flight while the loader finishes.
     //
     // Failures stay non-fatal (allSettled): a dead chunk reveals with its 2D
     // fallback — slow is not broken, and broken still degrades gracefully.
@@ -1133,7 +1077,7 @@ export function ScrollCinema() {
           shots: SHOTS,
           phases: ACTS,
           bullFrames: null,
-          tokens: resolvedTokens(),
+          tokens: resolvedTokens(section),
           mono: w2 ? injectMono(w2.document) ?? undefined : undefined,
           position: getHeroPosition() ?? undefined,
           insetLeft: railInset(),
@@ -1211,6 +1155,9 @@ export function ScrollCinema() {
       <section
         ref={sectionRef}
         data-cinema
+        // The film is light on a black stage in either theme: additive light
+        // has nothing to show against paper.
+        data-theme="dark"
         className="pointer-events-none relative z-20"
         // Divided by --ui-zoom for the same reason globals.css divides
         // h-screen: these are inline, so the stylesheet cannot reach them, and
@@ -1228,7 +1175,7 @@ export function ScrollCinema() {
           the section — otherwise the section's opaque bg stays over the real Hero
           in the -100vh overlap and the handoff reveals black instead of the page. */}
       {/* --rail-w reserves the act rail's column (rail at left-[2.5vw] + its
-          rows) as ONE shared number: the lab panel offsets past it and the
+          rows) as ONE shared number: the
           caption widths subtract it per side, so nothing prints over the rail. */}
       <div
         ref={stickyRef}
@@ -1249,12 +1196,6 @@ export function ScrollCinema() {
           className="absolute inset-0 z-[40] flex flex-col items-center justify-center gap-7 bg-bg transition-opacity duration-500 ease-out"
           style={{ opacity: reveal ? 0 : 1, pointerEvents: reveal ? "none" : "auto" }}
         >
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-grid opacity-[0.14]" />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "radial-gradient(ellipse at center, rgba(110,120,255,0.08), transparent 62%)" }}
-          />
           <div aria-hidden className="relative flex items-center gap-2.5">
             <BullMark className="h-7 w-10" />
             <span className="font-display text-3xl tracking-tight text-fg">
@@ -1264,14 +1205,8 @@ export function ScrollCinema() {
           <div aria-hidden className="relative h-px w-[16.25rem] overflow-hidden bg-border">
             <div
               className="h-full bg-[image:var(--grad-fill)] transition-[width] duration-300 ease-out"
-              style={{ width: `${loadPct}%`, boxShadow: "0 0 12px rgba(110,120,255,0.7)" }}
+              style={{ width: `${loadPct}%` }}
             />
-          </div>
-          <div aria-hidden className="relative flex w-[16.25rem] items-center justify-between font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint">
-            <span className="flex items-center gap-1.5">
-              <span className="size-1 rounded-full bg-bull pulse-dot" /> Initializing terminal
-            </span>
-            <span className="tabular-nums text-grad">{Math.round(loadPct)}%</span>
           </div>
           {/* The exit is available from second 0 — for the first 10 seconds of a
               slow load this overlay used to cover the only skip button, leaving
@@ -1279,17 +1214,17 @@ export function ScrollCinema() {
           <div className="relative flex flex-col items-center gap-3">
             <div
               aria-hidden={!slowLoad}
-              className="font-mono text-[0.625rem] uppercase tracking-[0.15em] text-fg-faint transition-opacity duration-500"
+              className="text-[0.8125rem] text-fg-faint transition-opacity duration-500"
               style={{ opacity: slowLoad ? 1 : 0 }}
             >
-              still loading the heavy bits…
+              Still loading…
             </div>
             <button
               type="button"
               onClick={() => bailToStaticRef.current?.()}
-              className="pointer-events-auto border border-border bg-bg/70 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-fg max-md:px-5 max-md:py-3"
+              className="calm-link pointer-events-auto py-2 text-[0.875rem]"
             >
-              Skip the film →
+              Skip the film ›
             </button>
           </div>
         </div>
@@ -1304,17 +1239,8 @@ export function ScrollCinema() {
           scrolling="no"
           className="pointer-events-none h-full w-full border-0"
         />
-        {/* Real-3D layers, each crossfaded over the 2D scene across its act. They
-            sit above the iframe, below the copy text; only one is visible at a time. */}
-        <div
-          ref={dive3dWrapRef}
-          className="pointer-events-none absolute inset-0"
-          style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
-        >
-          <Suspense fallback={null}>
-            <Tunnel3D active={dive3dActive} onReady={handleDiveReady} onLost={handleDiveLost} />
-          </Suspense>
-        </div>
+        {/* The candle act crossfades over the 2D scene; the matter sits above
+            it (it pours into the first candle) and is otherwise transparent. */}
         <div
           ref={candle3dWrapRef}
           className="pointer-events-none absolute inset-0"
@@ -1324,15 +1250,15 @@ export function ScrollCinema() {
             <CandleField3D active={candle3dActive} onReady={handleCandleReady} onLost={handleCandleLost} />
           </Suspense>
         </div>
-        <div
-          ref={bull3dWrapRef}
-          className="pointer-events-none absolute inset-0"
-          style={{ opacity: 0, visibility: "hidden", background: "#050505" }}
-        >
+        <div ref={matterWrapRef} className="pointer-events-none absolute inset-0" style={{ visibility: "hidden" }}>
           <Suspense fallback={null}>
-            <Bull3D active={bull3dActive} onReady={handleBullReady} onLost={handleBullLost} />
+            <FilmMatter active={matterActive} onReady={handleMatterReady} onLost={handleMatterLost} onBull={handleMatterBull} />
           </Suspense>
         </div>
+        <svg ref={floorSvgRef} aria-hidden className="pointer-events-none absolute inset-0 h-full w-full" style={{ display: "none" }}>
+          <line ref={floorLineRef} stroke="var(--bear)" strokeWidth="3" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 7px rgba(255,46,99,0.7))" }} />
+          <line ref={floorCoreRef} stroke="#ffd9e2" strokeWidth="0.9" strokeLinecap="round" />
+        </svg>
         </>)}
         {/* One vignette over the 2D and 3D acts. The static scanline layer
             that used to sit here was a texture painted on the lens, not grain:
@@ -1351,7 +1277,7 @@ export function ScrollCinema() {
           <div
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
-            className={`${b.pos === "left" ? "absolute text-left" : "absolute left-1/2 text-center"}${b.id.startsWith("candle") ? " beat-scrim" : ""}`}
+            className={`${b.pos === "left" ? "absolute text-left" : b.pos === "right" ? "absolute text-right" : "absolute left-1/2 text-center"}${b.id.startsWith("candle") ? " beat-scrim" : ""}`}
             style={{
               // "top" beats: viewport-aware — 14% of a 720px viewport bottomed
               // the heading out into the rail's top rows, so the anchor stops
@@ -1364,9 +1290,18 @@ export function ScrollCinema() {
                   ? "clamp(64px, 14%, calc(50% - 260px))"
                   : b.pos === "left"
                     ? "clamp(64px, 15%, calc(50% - 250px))"
-                    : "50%",
+                    : b.pos === "right"
+                      ? "44%"
+                      : "50%",
               opacity: 0,
-              ...(b.pos === "left"
+              ...(b.pos === "right"
+                ? {
+                    // The empty side of a fall: the candles run from top left
+                    // to bottom right, and the floor line is above this.
+                    right: "6vw",
+                    width: "min(460px, 36vw)",
+                  }
+                : b.pos === "left"
                 ? {
                     // The left third, clear of the rail: the subject (the bull)
                     // is framed in the right third (Bull3D's lens shift).
@@ -1384,72 +1319,33 @@ export function ScrollCinema() {
           >
             <div
               className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl"
-              style={{ textShadow: "0 0 36px rgba(110,120,255,0.18), 0 2px 22px rgba(0,0,0,0.85)" }}
+              style={{ textShadow: "0 2px 22px rgba(0,0,0,0.85)" }}
             >
               {renderChars(b.heading)}
             </div>
-            {b.sub && <div className="beat-sub mt-3 font-mono text-sm text-fg-dim md:text-base">{b.sub}</div>}
+            {b.sub && <div className="beat-sub mt-3 text-[0.9375rem] leading-relaxed text-fg-dim md:text-[1.0625rem]">{b.sub}</div>}
           </div>
         ))}
-        {/* QUANT-LAB PANEL — the candle act's finale (candleLabT 0→1): the AI
-            "takes one candle into the lab". Terminal lines light up with scroll
-            while the ice candle spins/stretches on the right; all values are
-            driven imperatively in applyOverlays on the same clock. */}
-        {/* Position responsively via classes (JS only drives opacity/visibility):
-            desktop = left rail beside the candle; <md = bottom sheet so the panel
-            never sits on top of the ice candle on a phone. */}
-        <div
-          ref={labRef}
-          data-lab-panel
-          className="absolute z-20 border border-border bg-black/85 font-mono backdrop-blur-sm max-md:bottom-[13vh] max-md:left-1/2 max-md:w-[min(92vw,420px)] max-md:-translate-x-1/2 md:left-[calc(2.5vw+var(--rail-w))] md:top-1/2 md:w-[min(36vw,440px)] md:-translate-y-1/2"
-          style={{
-            opacity: 0,
-            visibility: "hidden",
-            boxShadow: "0 0 70px rgba(0,0,0,0.65), 0 0 28px rgba(191,232,255,0.07)",
-          }}
-        >
-          <div className="flex items-center justify-between border-b border-border px-3.5 py-2 text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            <span>quant-bot · replay lab</span>
-            <span ref={labPhaseRef} style={{ color: "#bfe8ff" }}>replay</span>
-          </div>
-          {/* Lines TYPE ON with scroll (width in ch, driven in applyOverlays) and
-              light through the colour story: cyan replay → a neutral reading (B) →
-              red downside stress (C) → ice, back to neutral. Content is past tense,
-              names no instrument and stages nothing — never an imperative. */}
-          {/* Six lines, not eleven: the four model-parameter rows (hurst, ewma,
-              garch, kelly_cap …) collapsed into ONE summary row — they were
-              noise competing with the three story lines. Full parameter detail
-              lives on /trade/quant. Live values keep interpolating on the same
-              clock via labValRefs. */}
-          <div className="px-3.5 py-3 text-[0.6875rem] leading-[1.7] text-fg md:text-[0.75rem] md:leading-[1.8]">
-            <div ref={(el) => { labLineRefs.current[0] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-fg-dim">$</span> <span className="text-brand-ink">quantbot</span> --replay SIM --paper
-            </div>
-            <div ref={(el) => { labLineRefs.current[1] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-cyan">regime</span> TREND · μ +<span ref={(el) => { labValRefs.current[0] = el; }} style={{ color: "#4d93ff" }}>0.12</span> · σ <span ref={(el) => { labValRefs.current[1] = el; }} style={{ color: "#4d93ff" }}>1.24</span> · agree <span ref={(el) => { labValRefs.current[2] = el; }} style={{ color: "#4d93ff" }}>1</span>/6
-            </div>
-            <div ref={(el) => { labLineRefs.current[2] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              <span className="text-fg-dim">→</span> 6 models replayed: <span ref={(el) => { labValRefs.current[3] = el; }} style={{ color: "#4d93ff" }}>1</span> agreed, <span ref={(el) => { labValRefs.current[4] = el; }} style={{ color: "#4d93ff" }}>5</span> did not
-            </div>
-            <div ref={(el) => { labLineRefs.current[3] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
-              <span style={{ color: "#ff6b8a" }}>stress</span>(-2σ shock) <span className="text-fg-dim">→</span> max loss capped
-            </div>
-            <div ref={(el) => { labLineRefs.current[4] = el; }} className="lab-line" style={{ opacity: 0 }}>
-              VaR(95%) = -1.0R <span className="text-fg-dim">·</span> daily kill-switch armed
-            </div>
-            <div ref={(el) => { labLineRefs.current[5] = el; }} className="lab-line" style={{ opacity: 0, marginTop: "4px" }}>
-              <span className="text-fg-dim">→</span> a split, not a call <span className="text-fg-dim">·</span> nothing staged
-            </div>
-          </div>
-          <div className="border-t border-border px-3.5 py-1.5 text-[0.625rem] uppercase tracking-[0.14em] text-fg-dim" style={{ opacity: 0.75 }}>
-            simulated · educational — not advice
-          </div>
+        {/* The market's mood, in one word under the line. */}
+        <div aria-hidden className="pointer-events-none absolute bottom-[13%] left-1/2 h-6 w-64 -translate-x-1/2 text-center text-[0.9375rem] text-fg-dim">
+          {MOODS.map((m, i) => (
+            <span
+              key={m.word}
+              ref={(el) => {
+                moodRefs.current[i] = el;
+              }}
+              className="absolute inset-0"
+              style={{ opacity: 0 }}
+            >
+              {m.word}
+            </span>
+          ))}
         </div>
         {/* live price tag — follows the hovered 3D candle */}
         <div
           ref={tooltipRef}
-          className="pointer-events-none absolute left-0 top-0 z-30 flex items-center gap-2 border bg-black/85 px-2.5 py-1.5 font-mono text-[0.6875rem] backdrop-blur-sm transition-opacity duration-150"
-          style={{ opacity: 0, borderColor: "rgba(82,255,165,0.5)" }}
+          className="pointer-events-none absolute left-0 top-0 z-30 flex items-center gap-2 rounded-full bg-black/70 px-3 py-1 t-data text-[0.75rem] transition-opacity duration-150"
+          style={{ opacity: 0 }}
         >
           <span className="text-fg" />
           <span />
@@ -1543,13 +1439,6 @@ export function ScrollCinema() {
             transform: translateY(calc((1 - var(--c)) * 10px));
             color: rgba(245,245,240,0.82); letter-spacing: 0.05em;
           }
-          /* QUANT-LAB type-on: each line clips to a ch-width set every frame from
-             labT (monospace → 1ch/char), so the reveal is pure f(progress) and
-             scrubs backwards. Only the frontier line carries the blinking caret
-             (a right border) — the one time-based touch, purely cosmetic. */
-          .lab-line { display: block; white-space: nowrap; overflow: hidden; width: 0; }
-          .lab-caret { box-shadow: inset -2px 0 0 0 rgba(191,232,255,0.85); animation: lab-blink 1.05s steps(1, end) infinite; }
-          @keyframes lab-blink { 50% { box-shadow: inset -2px 0 0 0 transparent; } }
           @media (prefers-reduced-motion: reduce) {
             .beat-char, .beat-sub { --c: 1; opacity: 1; transform: none; filter: none; }
             .lab-caret { animation: none; }
@@ -1557,7 +1446,6 @@ export function ScrollCinema() {
         `}</style>
       </div>
       </section>
-      {shatter && typeof document !== "undefined" && createPortal(<ShatterOverlay />, document.body)}
       {/* The match-cut's line (drawMatchCut): over the stage and the landing
           both, because it travels from one to the other. */}
       {typeof document !== "undefined" &&
@@ -1595,41 +1483,5 @@ export function ScrollCinema() {
           document.body
         )}
     </>
-  );
-}
-
-/** The glass-crack burst the skip plays — deterministic jagged radials, no
-    randomness at render (scrub/replay discipline applies even to exits). */
-function ShatterOverlay() {
-  const cracks: string[] = [];
-  for (let i = 0; i < 14; i++) {
-    const a = (i / 14) * Math.PI * 2 + Math.sin(i * 7.3) * 0.22;
-    const k1 = 16 + ((i * 37) % 11);
-    const k2 = 34 + ((i * 53) % 15);
-    const r = 58 + ((i * 29) % 13);
-    const bend1 = Math.sin(i * 3.1) * 4;
-    const bend2 = Math.cos(i * 5.7) * 5;
-    const x = (t: number, b: number) => 50 + Math.cos(a) * t + Math.cos(a + Math.PI / 2) * b;
-    const y = (t: number, b: number) => 50 + Math.sin(a) * t + Math.sin(a + Math.PI / 2) * b;
-    cracks.push(
-      `M50,50 L${x(k1, bend1).toFixed(1)},${y(k1, bend1).toFixed(1)} L${x(k2, bend2).toFixed(1)},${y(k2, bend2).toFixed(1)} L${x(r, 0).toFixed(1)},${y(r, 0).toFixed(1)}`
-    );
-  }
-  return (
-    <div className="shatter-overlay" aria-hidden>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
-        {cracks.map((d, i) => (
-          <path
-            key={i}
-            d={d}
-            fill="none"
-            stroke={i % 3 === 0 ? "rgba(143,115,255,0.8)" : "rgba(245,245,240,0.6)"}
-            strokeWidth={i % 4 === 0 ? 0.35 : 0.18}
-          />
-        ))}
-        <circle cx="50" cy="50" r="3.5" fill="none" stroke="rgba(143,115,255,0.85)" strokeWidth="0.3" />
-        <circle cx="50" cy="50" r="7" fill="none" stroke="rgba(245,245,240,0.35)" strokeWidth="0.15" />
-      </svg>
-    </div>
   );
 }

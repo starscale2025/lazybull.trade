@@ -69,7 +69,7 @@
     background: linear-gradient(90deg, var(--bull), transparent 60%); opacity: 0.7;
   }
   #panels { position: absolute; inset: 0; }
-  #bull { position: absolute; inset: 0; }
+  #bull { position: absolute; inset: 0; width: 100%; height: 100%; }
   #bullreal {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     height: 92%; opacity: 0;
@@ -160,6 +160,7 @@ function ringGradient(ctx, cx, cy) {
   return g;
 }
 let MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+let SCENE_DPR = 1;
 // alpha wrapper that accepts either #rrggbb or rgb(...) so fills never break
 function withAlpha(c, a) {
   if (c[0] === "#") {
@@ -225,6 +226,17 @@ let MARK_STAGE = { W: 1, H: 1 };
 window.markRect = () => {
   const { W, H } = MARK_STAGE;
   return { x: MARK_BOX.x / W, y: MARK_BOX.y / H, w: MARK_BOX.w / W, h: MARK_BOX.h / H, lw: Math.max(2, MARK_BOX.w / 90) / W };
+};
+
+// The vote's ring and the payoff's floor, as shares of the scene, for the page:
+// the matter gathers on the one and the floor line lands on the other.
+window.ringRect = () => {
+  const { W, H } = MARK_STAGE;
+  return RING ? { cx: RING.cx / W, cy: RING.cy / H, rx: RING.r / W, ry: RING.r / H } : null;
+};
+window.floorLine = () => {
+  const { W, H } = MARK_STAGE;
+  return PAYOFF ? { x0: PAYOFF.floorX0 / W, y0: PAYOFF.lossY / H, x1: PAYOFF.floorX1 / W, y1: PAYOFF.lossY / H } : null;
 };
 
 // 12 bots for the consensus ring — real families/verdicts from the app.
@@ -443,8 +455,12 @@ window.initScene = async function initScene(cfg) {
       mt: markPts[i][0],
     });
   }
+  // At the screen's real resolution. This canvas used to be one pixel per CSS
+  // pixel, so on a retina display every line and figure of the 2D acts was
+  // upscaled and soft, like a video of itself. Drawing stays in CSS pixels.
   const bullCanvas = document.getElementById("bull");
-  bullCanvas.width = W; bullCanvas.height = H;
+  SCENE_DPR = Math.min(window.devicePixelRatio || 1, 2);
+  bullCanvas.width = Math.round(W * SCENE_DPR); bullCanvas.height = Math.round(H * SCENE_DPR);
 
 
   // Precompute feature-act geometry (size dependent → recomputed on resize).
@@ -479,6 +495,26 @@ function strokes() {
 }
 
 // ================= ACT RENDERERS (canvas) =================================
+
+// A line drawn as what the candles are made of: a glass tube with a filament
+// in it. `trace` builds the path; it is called once per layer.
+function tube(ctx, trace, col, w, strength) {
+  const k = strength === undefined ? 1 : strength;
+  ctx.save();
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  // the light it throws on the air
+  for (const [lw, a] of [[w * 9, 0.03], [w * 5.5, 0.055], [w * 3.2, 0.11]]) {
+    trace(); ctx.strokeStyle = withAlpha(col, a * k); ctx.lineWidth = lw; ctx.stroke();
+  }
+  // the sleeve, then the filament
+  trace(); ctx.strokeStyle = withAlpha(col, 0.3 * k); ctx.lineWidth = w * 1.8; ctx.stroke();
+  trace(); ctx.strokeStyle = withAlpha(col, 0.95 * k); ctx.lineWidth = w * 0.72; ctx.stroke();
+  trace(); ctx.strokeStyle = `rgba(255,255,255,${0.72 * k})`; ctx.lineWidth = Math.max(0.7, w * 0.26); ctx.stroke();
+  // and the line of light along the top of the glass
+  ctx.translate(0, -w * 0.72);
+  trace(); ctx.strokeStyle = `rgba(255,255,255,${0.22 * k})`; ctx.lineWidth = 0.7; ctx.stroke();
+  ctx.restore();
+}
 
 // Act: regime — a price path morphs trend↔reversion↔noise and recolors.
 function drawRegime(ctx, r, env, W, H) {
@@ -630,52 +666,31 @@ function drawSafety(ctx, q, env, W, H) {
   area.moveTo(pts[0].x, P.zeroY);
   for (const pt of pts) area.lineTo(pt.x, pt.y);
   area.lineTo(pts[pts.length - 1].x, P.zeroY); area.closePath();
+  // Each side lit from its own line: strongest against the tube, gone at the axis.
+  const lossGrad = ctx.createLinearGradient(0, P.lossY, 0, P.zeroY);
+  lossGrad.addColorStop(0, withAlpha(RED, 0.26)); lossGrad.addColorStop(1, withAlpha(RED, 0.02));
+  const gainGrad = ctx.createLinearGradient(0, P.profY, 0, P.zeroY);
+  gainGrad.addColorStop(0, withAlpha(GREEN, 0.12)); gainGrad.addColorStop(1, withAlpha(GREEN, 0.01));
   const sides = [
-    [ch.y, P.zeroY - ch.y, GREEN, 0.06],
-    [P.zeroY, P.lossY - P.zeroY + 2, RED, 0.14],
+    [ch.y, P.zeroY - ch.y, gainGrad],
+    [P.zeroY, P.lossY - P.zeroY + 2, lossGrad],
   ];
-  for (const [y0, h, col, a] of sides) {
+  for (const [y0, h, fill] of sides) {
     ctx.save();
     ctx.beginPath(); ctx.rect(ch.x, y0, ch.w * draw, h); ctx.clip();
-    ctx.fillStyle = withAlpha(col, a); ctx.fill(area);
+    ctx.fillStyle = fill; ctx.fill(area);
     ctx.restore();
   }
   // the payoff line: green where it makes money, red where it loses. LIGHT IS
   // THE HIERARCHY (Gate A2): full strength and glow go only to the loss, its
   // floor and its figure, the one certain number; the conditional upside ramp
   // and its ceiling hold at ~60% until the reader has the loss.
-  for (const [y0, h, col, a, glow] of [[ch.y - 8, P.zeroY - ch.y + 8, GREEN, 0.6, 4], [P.zeroY, P.lossY - P.zeroY + 8, RED, 1, 10]]) {
+  for (const [y0, h, col, a] of [[ch.y - 8, P.zeroY - ch.y + 8, GREEN, 0.6], [P.zeroY, P.lossY - P.zeroY + 8, RED, 1]]) {
     ctx.save();
-    ctx.beginPath(); ctx.rect(ch.x - 4, y0, ch.w + 8, h); ctx.clip();
-    pathTo(revealX);
+    ctx.beginPath(); ctx.rect(ch.x - 40, y0 - (col === RED ? 0 : 30), ch.w + 80, h + 30); ctx.clip();
     ctx.globalAlpha = alpha * a;
-    ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.shadowBlur = glow; ctx.shadowColor = col; ctx.stroke();
+    tube(ctx, () => pathTo(revealX), col, 3.2);
     ctx.restore();
-  }
-  // laser tip riding the reveal front — the payoff is being cut, not faded in
-  if (draw > 0.05 && draw < 0.99) {
-    const yAt = (x) => { // same interpolation pathTo uses
-      if (x <= pts[0].x) return pts[0].y;
-      for (let i = 1; i < pts.length; i++) {
-        if (x <= pts[i].x) {
-          const tt = (x - pts[i - 1].x) / Math.max(1e-6, pts[i].x - pts[i - 1].x);
-          return lerp(pts[i - 1].y, pts[i].y, tt);
-        }
-      }
-      return pts[pts.length - 1].y;
-    };
-    const tipCol = yAt(revealX) > P.zeroY ? RED : GREEN;
-    ctx.fillStyle = withAlpha(tipCol, 0.95);
-    ctx.shadowBlur = 14; ctx.shadowColor = tipCol;
-    ctx.beginPath(); ctx.arc(revealX, yAt(revealX), 3.5, 0, TAU); ctx.fill();
-    ctx.shadowBlur = 0;
-    for (const [dx, ta] of [[-8, 0.5], [-18, 0.3], [-30, 0.15]]) {
-      const tx = revealX + dx;
-      if (tx < pts[0].x) continue;
-      ctx.globalAlpha = alpha * ta;
-      ctx.beginPath(); ctx.arc(tx, yAt(tx), 2.2, 0, TAU); ctx.fill();
-    }
-    ctx.globalAlpha = alpha;
   }
   // THE HIERARCHY IS THE HERO'S: loss first. The most it can lose is the one
   // certain number, so it is the act's decision tier, in bear red, set right
@@ -695,9 +710,8 @@ function drawSafety(ctx, q, env, W, H) {
   const guard = seg(q, 0.3, 0.42) * alpha;
   if (guard > 0.02) {
     ctx.globalAlpha = guard; ctx.strokeStyle = RED; ctx.setLineDash([7, 5]); ctx.lineWidth = 1.6;
-    ctx.lineDashOffset = -((NOW * 22) % 12); // marching ants — the guard is live
     ctx.beginPath(); ctx.moveTo(ch.x, P.lossY); ctx.lineTo(ch.x + ch.w, P.lossY); ctx.stroke();
-    ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    ctx.setLineDash([]);
     ctx.globalAlpha = alpha * Math.min(1, guard * 2.5);
     ctx.textAlign = "left"; ctx.textBaseline = "top";
     const big = Math.round(fs * 1.75);
@@ -715,9 +729,7 @@ function drawSafety(ctx, q, env, W, H) {
   const be = seg(q, 0.36, 0.48) * alpha;
   if (be > 0.02) {
     ctx.globalAlpha = be; ctx.strokeStyle = "rgba(245,245,240,0.45)"; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.2;
-    ctx.lineDashOffset = -((NOW * 16) % 9);
     ctx.beginPath(); ctx.moveTo(P.beX, P.zeroY - 18); ctx.lineTo(P.beX, P.zeroY + 18); ctx.stroke(); ctx.setLineDash([]);
-    ctx.lineDashOffset = 0;
     ctx.font = SMALL; ctx.fillStyle = GRAY; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
     ctx.fillText("B/E " + pos.breakeven.toFixed(2), P.beX - 8, P.zeroY - 6);
     ctx.textAlign = "left";
@@ -749,129 +761,67 @@ function drawSafety(ctx, q, env, W, H) {
     ctx.textAlign = "left";
     ctx.globalAlpha = alpha;
   }
-  // kill switch: armed early, while the headline is still up, and parked under
-  // the chart's right edge. A status lamp, not a headline: the green is the
-  // dot, the words stay neutral so the loss figure keeps the top of the frame.
-  const kill = seg(q, 0.28, 0.42) * alpha;
-  if (kill > 0.02) {
-    ctx.globalAlpha = kill; ctx.font = SMALL; ctx.textAlign = "right"; ctx.textBaseline = "top";
-    const label = "kill switch armed", kx = ch.x + ch.w, ky = P.lossY + 44;
-    ctx.fillStyle = GRAY; ctx.fillText(label, kx, ky);
-    const dotX = kx - ctx.measureText(label).width - 10;
-    ctx.fillStyle = GREEN;
-    ctx.beginPath(); ctx.arc(dotX, ky + fs * 0.36, 3.5, 0, TAU); ctx.fill();
-    ctx.textAlign = "left";
-  }
   ctx.restore();
 }
 
-// Act: consensus — 12 bots vote on a ring; a tally arc climbs to a tier.
+// Act: consensus. Twelve models, one spoke each, and a tally of how many agree.
+// Colour says agree or not, in the brand's ramp and a neutral: the red and green
+// spokes this used to draw meant nothing about money, which is all they mean
+// anywhere else.
 function drawConsensus(ctx, v, env, W, H) {
   const R = RING, alpha = env;
   if (alpha <= 0.001) return;
-  ctx.save(); ctx.globalAlpha = alpha;
-  // agreement grows: how many bots have "cast" and how strongly they agree BUY
+  ctx.save();
   let agree = 0;
+  const label = `${Math.round(H * 0.014)}px ${MONO}`;
   R.nodes.forEach((nd, i) => {
-    const cast = easeOut(seg(v, 0.08 + i * 0.03, 0.5 + i * 0.02));
-    const strength = (nd.up - 0.5) * 2; // ~0.28..0.76 conviction
-    const len = R.r * lerp(0.12, 0.99, cast) * (0.55 + strength * 0.45);
-    // spoke
-    ctx.strokeStyle = nd.col; ctx.globalAlpha = alpha * (0.35 + 0.5 * cast);
-    ctx.lineWidth = 2; ctx.beginPath();
-    ctx.moveTo(R.cx, R.cy);
-    ctx.lineTo(R.cx + Math.cos(nd.a) * len, R.cy + Math.sin(nd.a) * len);
-    ctx.stroke();
-    // node
-    const lit = cast > 0.5 && nd.up > 0.6;
-    ctx.globalAlpha = alpha * (0.4 + 0.6 * cast);
-    ctx.fillStyle = nd.col; ctx.shadowBlur = lit ? 10 + 5 * Math.sin(NOW * 2.4 + i * 1.7) : 0; ctx.shadowColor = nd.col;
-    ctx.beginPath(); ctx.arc(nd.x, nd.y, lit ? 6 + 0.8 * Math.sin(NOW * 2.4 + i * 1.7) : 4, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
-    // energy pulses: committed bots feed the verdict — 2 sparks per spoke, inward
-    if (cast > 0.55) {
-      for (let k = 0; k < 2; k++) {
-        const f = ((NOW * 0.55 + i * 0.171 + k * 0.5) % 1);
-        ctx.globalAlpha = alpha * (1 - f) * 0.9 * cast;
-        ctx.fillStyle = nd.col; ctx.shadowBlur = 8; ctx.shadowColor = nd.col;
-        ctx.beginPath();
-        ctx.arc(lerp(nd.x, R.cx, f), lerp(nd.y, R.cy, f), 2.5, 0, TAU); ctx.fill();
-        ctx.shadowBlur = 0;
-      }
+    const cast = easeOut(seg(v, 0.04 + i * 0.03, 0.46 + i * 0.02));
+    const yes = nd.up > 0.6;
+    const col = yes ? `rgb(${rampAt(i / (R.nodes.length - 1)).join(",")})` : GRAY;
+    const c = Math.cos(nd.a), s = Math.sin(nd.a), inner = R.r * 0.48 * cast, outer = R.r * cast;
+    ctx.globalAlpha = alpha * (yes ? 1 : 0.4) * cast;
+    tube(ctx, () => { ctx.beginPath(); ctx.moveTo(R.cx + c * inner, R.cy + s * inner); ctx.lineTo(R.cx + c * outer, R.cy + s * outer); }, col, yes ? 1.6 : 1.1, yes ? 0.85 : 0.5);
+    ctx.globalAlpha = alpha * cast;
+    // a bead of glass at the end of each spoke
+    const bx = R.cx + c * outer, by = R.cy + s * outer;
+    if (yes) {
+      const glow = ctx.createRadialGradient(bx, by, 0, bx, by, 16);
+      glow.addColorStop(0, withAlpha(col, 0.5)); glow.addColorStop(1, withAlpha(col, 0));
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(bx, by, 16, 0, TAU); ctx.fill();
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(bx, by, 4.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.beginPath(); ctx.arc(bx - 1.2, by - 1.4, 1.5, 0, TAU); ctx.fill();
+    } else {
+      ctx.strokeStyle = GRAY; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(bx, by, 3.8, 0, TAU); ctx.stroke();
     }
-    if (nd.up > 0.6 && cast > 0.7) agree += 1;
-    // label
+    if (yes && cast > 0.7) agree += 1;
     ctx.globalAlpha = alpha * cast * 0.8; ctx.fillStyle = GRAY;
-    ctx.font = `${Math.round(H * 0.014)}px ${MONO}`;
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(nd.k, R.cx + Math.cos(nd.a) * (R.r + 18), R.cy + Math.sin(nd.a) * (R.r + 18));
+    ctx.font = label; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(nd.k, R.cx + c * (R.r + 20), R.cy + s * (R.r + 20));
   });
-  ctx.textAlign = "left";
-  // central tally arc
-  const pct = (agree / R.nodes.length);
-  const arcT = easeOut(seg(v, 0.2, 0.85)) * pct;
-  // center charge glow: the verdict accumulating energy behind the tally
-  const chgA = Math.max(0, 0.05 + 0.10 * arcT + 0.05 * Math.sin(NOW * 3));
-  const cg = ctx.createRadialGradient(R.cx, R.cy, 0, R.cx, R.cy, R.r * 0.40);
-  cg.addColorStop(0, `rgba(110,120,255,${chgA})`);
-  cg.addColorStop(1, "rgba(110,120,255,0)");
-  ctx.globalAlpha = alpha; ctx.fillStyle = cg;
-  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.40, 0, TAU); ctx.fill();
-  ctx.lineWidth = 6; ctx.strokeStyle = "rgba(245,245,240,0.10)";
+  const arcT = easeOut(seg(v, 0.2, 0.85)) * (agree / R.nodes.length);
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.strokeStyle = "rgba(245,245,240,0.06)";
   ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, 0, TAU); ctx.stroke();
-  ctx.strokeStyle = ringGradient(ctx, R.cx, R.cy); ctx.shadowBlur = 12; ctx.shadowColor = "#6f86ff";
-  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, -Math.PI / 2, -Math.PI / 2 + TAU * arcT); ctx.stroke();
-  ctx.shadowBlur = 0;
-  // radar sweep: a soft arc orbiting the ring — the ensemble is always scanning
-  const sweep = (NOW * 0.9) % TAU;
-  ctx.globalAlpha = alpha * 0.45; ctx.lineWidth = 2.2; ctx.strokeStyle = "rgba(143,155,255,0.55)";
-  ctx.shadowBlur = 8; ctx.shadowColor = "#7b8cff";
-  ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42 + 8, sweep, sweep + 0.65); ctx.stroke();
-  ctx.shadowBlur = 0; ctx.globalAlpha = alpha;
-  // tier text
+  if (arcT > 0.002) {
+    const arc = () => { ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * 0.42, -Math.PI / 2, -Math.PI / 2 + TAU * arcT); };
+    const ramp = ringGradient(ctx, R.cx, R.cy);
+    for (const [lw, a] of [[22, 0.05], [12, 0.1]]) { ctx.globalAlpha = alpha * a; ctx.strokeStyle = ramp; ctx.lineWidth = lw; arc(); ctx.stroke(); }
+    ctx.globalAlpha = alpha; ctx.strokeStyle = ramp; ctx.lineWidth = 3.4; arc(); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 0.9; arc(); ctx.stroke();
+  }
+  ctx.lineCap = "butt";
   const shown = Math.round(arcT * R.nodes.length);
   const tierPct = shown / R.nodes.length;
   // The band words from lib/quant/ai-bots.ts BAND_LABEL: what the ring measures
   // is how tightly the models agreed, not a grade on a trade.
   const tier = tierPct >= 0.83 ? "very strong agreement" : tierPct >= 0.7 ? "moderate agreement" : tierPct >= 0.55 ? "lean" : "split";
-  // A clean plate under the tally: the spokes and their sparks ran straight
-  // through "9/12 moderate agreement" (Gate A2, d11). Soft-edged, in the stage
-  // colour, so it reads as space rather than as a box.
-  {
-    const countFont = `700 ${Math.round(H * 0.05)}px ${MONO}`, tierFont = `600 ${Math.round(H * 0.02)}px ${MONO}`;
-    ctx.font = countFont; const cw = ctx.measureText(`${shown}/${R.nodes.length}`).width;
-    ctx.font = tierFont; const tw = ctx.measureText(tier).width;
-    const pw = Math.max(cw, tw) / 2 + H * 0.03, ph = H * 0.06;
-    const pcy = R.cy + H * 0.008;
-    const plate = ctx.createRadialGradient(R.cx, pcy, 0, R.cx, pcy, pw * 1.15);
-    plate.addColorStop(0, withAlpha(BG, 0.94));
-    plate.addColorStop(0.72, withAlpha(BG, 0.88));
-    plate.addColorStop(1, withAlpha(BG, 0));
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(R.cx, pcy); ctx.scale(1, ph / pw); ctx.translate(-R.cx, -pcy);
-    ctx.fillStyle = plate;
-    ctx.beginPath(); ctx.arc(R.cx, pcy, pw * 1.15, 0, TAU); ctx.fill();
-    ctx.restore();
-  }
   ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.font = `700 ${Math.round(H * 0.05)}px ${MONO}`;
-  ctx.fillText(`${shown}/${R.nodes.length}`, R.cx, R.cy - H * 0.008);
-  ctx.font = `600 ${Math.round(H * 0.02)}px ${MONO}`;
+  ctx.font = `600 ${Math.round(H * 0.05)}px ${MONO}`;
+  ctx.fillText(`${shown}/${R.nodes.length}`, R.cx, R.cy - H * 0.01);
+  ctx.font = `${Math.round(H * 0.016)}px ${MONO}`;
   ctx.fillStyle = GRAY;
-  ctx.fillText(tier, R.cx, R.cy + H * 0.03);
+  ctx.fillText(tier, R.cx, R.cy + H * 0.032);
   ctx.textAlign = "left";
-  // verdict flash: the lock-in moment — pure f(v) so it scrubs both ways
-  const fl = seg(v, 0.86, 0.93) * (1 - seg(v, 0.93, 1.0));
-  if (fl > 0.01) {
-    ctx.globalAlpha = alpha * fl * 0.9;
-    ctx.strokeStyle = ringGradient(ctx, R.cx, R.cy); ctx.lineWidth = 3; ctx.shadowBlur = 16; ctx.shadowColor = "#7b5cff";
-    ctx.beginPath(); ctx.arc(R.cx, R.cy, R.r * (0.42 + fl * 0.5), 0, TAU); ctx.stroke();
-    ctx.shadowBlur = 0;
-    const fg = ctx.createRadialGradient(R.cx, R.cy, 0, R.cx, R.cy, Math.max(W, H) * 0.55);
-    fg.addColorStop(0, `rgba(110,120,255,${0.10 * fl})`);
-    fg.addColorStop(1, "rgba(110,120,255,0)");
-    ctx.globalAlpha = alpha; ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
-  }
   ctx.restore();
 }
 
@@ -896,7 +846,7 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
   const outlineFade = 1 - seg(t, P.assembly[0], P.assembly[0] + (P.assembly[1] - P.assembly[0]) * 0.4);
   outline.style.opacity = String(outlineFade);
   // ambient breathing on the boot glow so the opening frame feels alive at rest
-  glow.style.opacity = String(0.9 * (1 - seg(t, P.assembly[0], P.dive[1])) * (0.82 + 0.18 * Math.sin(NOW * 1.4)));
+  glow.style.opacity = "0";
 
   // ---- assembly + dive (mac + panels) ------------------------------------
   const pAsm = seg(t, ...P.assembly);
@@ -935,13 +885,12 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
       el.style.opacity = String((1 - seg(f, 0.72, 1)) * seg(pDive, 0.42, 0.5));
     });
   }
-  // grid: parallax through the dive, hold faint through the feature acts, gone by the bull
-  grid.style.transform = `translate(${lerp(0, -140, pDive)}px, ${lerp(0, -90, pDive)}px) scale(${lerp(1, 1.6, pDive)})`;
-  // ×0.7: background dimmed so the hero layers (charts, ring, bull) pop
-  grid.style.opacity = String(lerp(0.9, 0.18, seg(t, P.dive[0], P.dive[1])) * (1 - seg(t, P.bull[0], P.bull[0] + (P.bull[1] - P.bull[0]) * 0.6)) * 0.7);
+  // One stage: no graph paper behind the acts.
+  grid.style.opacity = "0";
 
   // ---- canvas: exactly one heavy act draws per frame ---------------------
   const ctx = bullC.getContext("2d");
+  ctx.setTransform(SCENE_DPR, 0, 0, SCENE_DPR, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
   // boot flourish: after the outline finishes, a glass sweep crosses the
@@ -978,8 +927,14 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     // vote then holds a plateau three times its fade before it clears (Gate
     // A2, d11): at the default fades it overlapped safety for ~555px and never
     // reached full opacity at all. The 3D bull waits for it (BULL3D_SHOW).
-    const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle), eSaf = actEnv(t, P.safety, 0.02, 0.008), eCon = actEnv(t, P.consensus, 0.008, 0.008);
-    if (eReg > 0.001) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
+    // The worst case leaves before the vote arrives: never one over the other.
+    // Between them the payoff's zero line closes on the ring's centre, and
+    // the spokes grow out of the point it closes to.
+    const eReg = actEnv(t, P.regime), eCan = actEnv(t, P.candle);
+    const eSaf = seg(t, P.safety[0] - 0.02, P.safety[0] + 0.02) * (1 - seg(t, 0.672, 0.686));
+    const eCon = seg(t, 0.69, 0.704) * (1 - seg(t, 0.722, 0.738));
+    // The matter draws the regime's line when it is live (FilmMatter).
+    if (eReg > 0.001 && !hideDive) drawRegime(ctx, seg(t, ...P.regime), eReg, W, H);
     // 3D candle canyon (R3F) owns this beat when live → skip the 2D chart.
     if (eCan > 0.001 && !hideCandle) drawCandle(ctx, seg(t, ...P.candle), eCan, W, H);
     if (eSaf > 0.001) drawSafety(ctx, seg(t, ...P.safety), eSaf, W, H);
@@ -988,7 +943,16 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     // measured ~76% under two stacked vignettes, Gate A2). The parent's own
     // vignette follows the same envelope (safetyLight in lib/cinema.ts).
     const vig = document.getElementById("vignette");
-    if (vig) vig.style.opacity = String(1 - 0.9 * eSaf);
+    if (vig) vig.style.opacity = "0";
+    const closing = seg(t, 0.672, 0.694);
+    if (closing > 0 && t < 0.704 && PAYOFF && RING) {
+      const e = easeIO(closing), ch = CHART, y = lerp(PAYOFF.zeroY, RING.cy, e);
+      ctx.save();
+      ctx.globalAlpha = 0.5 * (1 - seg(t, 0.694, 0.704));
+      ctx.strokeStyle = INK; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(lerp(ch.x, RING.cx, e), y); ctx.lineTo(lerp(ch.x + ch.w, RING.cx, e), y); ctx.stroke();
+      ctx.restore();
+    }
     if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
   }
 
@@ -1055,19 +1019,6 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   bullR.style.opacity = "0";
-
-  // ---- cursor spotlight: the pointer carries a soft torch through the 2D acts
-  if (cx !== undefined && cy !== undefined) {
-    const gx = (cx * 0.5 + 0.5) * W, gy = (cy * 0.5 + 0.5) * H;
-    const fadeOut = 1 - seg(t, 0.91, 0.97); // clear before the hand-off
-    const rad = Math.min(W, H) * 0.34;
-    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, rad);
-    g.addColorStop(0, `rgba(130,140,255,${0.05 * fadeOut})`);
-    g.addColorStop(0.5, `rgba(130,140,255,${0.02 * fadeOut})`);
-    g.addColorStop(1, "rgba(130,140,255,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-  }
 
   return true;
 };
