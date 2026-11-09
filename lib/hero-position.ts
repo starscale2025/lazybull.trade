@@ -12,6 +12,10 @@
 // A plain module store, like cinema-clock: the films read it every frame and
 // must not re-render to do so. No pricing in here; the instrument owns the
 // maths.
+//
+// A spread the visitor CHOSE also goes to sessionStorage, so it survives what
+// a module variable cannot: a reload, or the full page load of a sign-in round
+// trip. It is the visitor's own, for this tab, and never leaves the browser.
 
 import { useSyncExternalStore } from "react";
 
@@ -27,7 +31,20 @@ export type HeroPosition = {
   chosen: boolean;
 };
 
-let current: HeroPosition | null = null;
+const KEY = "lb-hero-position";
+
+function restore(): HeroPosition | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const p = JSON.parse(sessionStorage.getItem(KEY) ?? "null") as HeroPosition | null;
+    const ok = p && [p.k1, p.k2, p.maxLoss, p.maxProfit, p.breakeven].every(Number.isFinite) && p.k1 < p.k2;
+    return ok ? { ...p, chosen: true } : null;
+  } catch {
+    return null; // storage blocked or the entry is damaged: start from the example
+  }
+}
+
+let current: HeroPosition | null = restore();
 const subs = new Set<() => void>();
 
 /** The latest position, or null before the hero has published one. */
@@ -46,6 +63,13 @@ export function setHeroPosition(p: HeroPosition) {
   )
     return;
   current = p;
+  if (p.chosen) {
+    try {
+      sessionStorage.setItem(KEY, JSON.stringify(p));
+    } catch {
+      /* storage blocked: the spread simply lasts as long as the page */
+    }
+  }
   subs.forEach((fn) => fn());
 }
 
@@ -55,6 +79,14 @@ export function onHeroPosition(fn: () => void): () => void {
   return () => {
     subs.delete(fn);
   };
+}
+
+const chosenSnapshot = () => (current?.chosen ? current : null);
+
+/** The spread the visitor chose, or null. Null on the server and through
+    hydration, so a page rendered there and restored here cannot disagree. */
+export function useChosenPosition(): HeroPosition | null {
+  return useSyncExternalStore(onHeroPosition, chosenSnapshot, () => null);
 }
 
 /** Whether the visitor has set the spread themselves, as React state: the

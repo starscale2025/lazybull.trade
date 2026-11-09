@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
@@ -16,7 +16,9 @@ import { ManagePanel } from "@/components/wedge/ManagePanel";
 import { ChainTable } from "@/components/wedge/ChainTable";
 import { BetBar } from "@/components/wedge/BetSlip";
 import { storySentence, type Bet } from "@/components/wedge/PositionStory";
-import { generateStrategies, probBS, type Strategy } from "@/lib/models";
+import { bullCallSpread, generateStrategies, probBS, type Strategy } from "@/lib/models";
+import { useChosenPosition } from "@/lib/hero-position";
+import { DAYS as SIM_DAYS, IV as SIM_IV, SPOT as SIM_SPOT } from "@/lib/hero-spread";
 import { optionOpenRefusal, usePaper, useSafety } from "@/lib/stores";
 import { useModalFocus } from "@/components/safety/useModalFocus";
 import { RegulatoryLine } from "@/components/RegulatoryLine";
@@ -42,6 +44,11 @@ const SYMBOLS = [
   { sym: "SPY", name: "S&P 500", spot: 612.4, iv: 0.16 },
 ];
 const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
+// The home page's synthetic index. Listed only for a visitor who brought a
+// spread from there. It has no quote or history to fetch and no earnings, and
+// a position on it cannot be placed: paper trades fill at real prices.
+const SIM = { sym: "SIM", name: "Synthetic index", spot: SIM_SPOT, iv: SIM_IV };
+const SIM_NOTE = "SIM is a practice index with no real price to fill at. Pick a real underlying to place a paper trade.";
 
 type LiveQuote = { last: number; chg: number; chgPct: number; name?: string; exch?: string };
 
@@ -91,8 +98,16 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   // position is still SHOWN, it just does not drive the chart.
   const sharedIdx = shared ? SYMBOLS.findIndex((s) => s.sym === shared.underlying) : -1;
 
-  const [symIdx, setSymIdx] = useState(() => (sharedIdx >= 0 ? sharedIdx : 0));
-  const sym = SYMBOLS[symIdx];
+  // THE VISITOR'S SPREAD, BROUGHT FROM THE HOME PAGE (Gate A4 #6). "Open the
+  // builder" used to land on an empty page, whatever they had just shaped. A
+  // shared link outranks it: that link is what the visitor came here to see.
+  const chosen = useChosenPosition();
+  const brought = shared ? null : chosen;
+  const symbols = useMemo(() => (brought ? [SIM, ...SYMBOLS] : SYMBOLS), [brought]);
+
+  const [symId, setSymId] = useState(() => SYMBOLS[sharedIdx >= 0 ? sharedIdx : 0].sym);
+  const sym = symbols.find((s) => s.sym === symId) ?? SYMBOLS[0];
+  const isSim = sym === SIM;
 
   // Live quotes — polls /api/quote-batch for real Yahoo prices (+ change/exchange).
   const [liveQuotes, setLiveQuotes] = useState<Record<string, LiveQuote>>({});
@@ -131,17 +146,20 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const r = await fetch(`/api/quote?symbol=${sym.sym}&tf=D`);
-        const j = await r.json();
-        if (cancelled) return;
-        if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
-          const last60 = j.bars.slice(-60).map((b: { t: number; c: number }, i: number) => ({ i, t: b.t, c: b.c }));
-          setHistBars(last60);
-          return;
+      // SIM has no history to fetch; it takes the deterministic walk below.
+      if (sym !== SIM) {
+        try {
+          const r = await fetch(`/api/quote?symbol=${sym.sym}&tf=D`);
+          const j = await r.json();
+          if (cancelled) return;
+          if (j?.ok && Array.isArray(j.bars) && j.bars.length > 30) {
+            const last60 = j.bars.slice(-60).map((b: { t: number; c: number }, i: number) => ({ i, t: b.t, c: b.c }));
+            setHistBars(last60);
+            return;
+          }
+        } catch {
+          /* fall through to synthetic fallback */
         }
-      } catch {
-        /* fall through to synthetic fallback */
       }
       // Fallback only if Yahoo fails.
       const out: { i: number; t: number; c: number }[] = [];
@@ -160,8 +178,10 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
         s = s * (1 + (rand() - 0.5) * 0.018 + drift);
         out.push({ i, t: baseTime + i * 86_400_000, c: s });
       }
-      out[out.length - 1].c = sym.spot;
-      setHistBars(out);
+      // Scaled to end at the spot. Snapping only the last bar to it printed a
+      // one-day move of up to 10% that never happened in the header.
+      const toSpot = sym.spot / out[out.length - 1].c;
+      setHistBars(out.map((b) => ({ ...b, c: b.c * toSpot })));
     })();
     return () => { cancelled = true; };
   }, [sym]);
@@ -181,6 +201,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
 
   // Next earnings from the same deterministic event calendar the timeline uses.
   const nextEarnings = useMemo(() => {
+    if (sym === SIM) return null; // an index nobody reports earnings for
     const start = new Date();
     const end = new Date();
     end.setDate(end.getDate() + 120);
@@ -244,12 +265,25 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
       setDays(sharedBand.days);
       return;
     }
+    // So does a brought spread, on SIM: the band is the visitor's two strikes.
+    if (isSim && brought) {
+      setLow(brought.k1);
+      setHigh(brought.k2);
+      setDays(SIM_DAYS);
+      return;
+    }
     setLow(spot * 0.95);
     setHigh(spot * 1.06);
     setDays(35);
-  }, [sym.sym, quote, spot, shared, sharedBand]);
+  }, [sym.sym, quote, spot, shared, sharedBand, isSim, brought]);
 
   const resetView = () => {
+    if (isSim && brought) {
+      setLow(brought.k1);
+      setHigh(brought.k2);
+      setDays(SIM_DAYS);
+      return;
+    }
     setLow(spot * 0.95);
     setHigh(spot * 1.06);
     setDays(35);
@@ -275,7 +309,32 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   // The chain's pointer, shared with the cone. Deliberately NOT persisted or
   // debounced: it is a cursor, and a cursor that lags its pointer reads broken.
   const [hoverStrike, setHoverStrike] = useState<number | null>(null);
-  const selected = strategies.find((s) => s.id === selectedId) ?? null;
+  const broughtStrategy = useMemo(
+    () => (brought && isSim ? bullCallSpread({ spot, k1: brought.k1, k2: brought.k2, daysToExpiry: days, iv: sym.iv }) : null),
+    [brought, isSim, spot, days, sym.iv]
+  );
+  const selected = selectedId === "brought" ? broughtStrategy : (strategies.find((s) => s.id === selectedId) ?? null);
+
+  // Open on the brought spread, once, and before the first paint so a visitor
+  // arriving from the home page never sees the empty builder flash by. Its
+  // being set here is what lets the page still render the same on the server.
+  const broughtOpened = useRef(false);
+  useLayoutEffect(() => {
+    if (!brought || broughtOpened.current) return;
+    broughtOpened.current = true;
+    setSymId(SIM.sym);
+    setLow(brought.k1);
+    setHigh(brought.k2);
+    setDays(SIM_DAYS);
+    setTouched(true);
+    setSelectedId("brought");
+  }, [brought]);
+
+  const pickSymbol = (next: string) => {
+    setSymId(next);
+    if (next === SIM.sym) setSelectedId("brought");
+    else if (selectedId === "brought") setSelectedId(null);
+  };
 
   // The Island (M32): the position being built, while there is one. The arc
   // is the weeks to expiry with this week lit; the number is the floor.
@@ -301,6 +360,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
 
   // events
   const events = useMemo(() => {
+    if (sym === SIM) return [];
     const start = new Date();
     const end = new Date();
     end.setDate(end.getDate() + days);
@@ -562,7 +622,11 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               </div>
               <div className="mt-1 lg:mt-0">
                 <Chip dot tone={quote ? "neutral" : "warn"}>
-                  {quote ? `Live price · ${quote.exch ?? "US market"}` : "Seed price · connecting"}
+                  {isSim
+                    ? "Synthetic index · not a real security"
+                    : quote
+                      ? `Live price · ${quote.exch ?? "US market"}`
+                      : "Seed price · connecting"}
                 </Chip>
               </div>
               {/* Provenance where the data is (M33): the chain behind this
@@ -616,8 +680,8 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-label lg:shrink-0 lg:gap-x-3">
             <span className="text-fg-faint">Underlying</span>
             <div className="flex items-center gap-1">
-              {SYMBOLS.map((s, i) => (
-                <TogglePill key={s.sym} on={i === symIdx} onClick={() => setSymIdx(i)} className={DENSE}>
+              {symbols.map((s) => (
+                <TogglePill key={s.sym} on={s.sym === sym.sym} onClick={() => pickSymbol(s.sym)} className={DENSE}>
                   {s.sym}
                 </TogglePill>
               ))}
@@ -739,6 +803,16 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
 
           {/* strategy panel — picker + legs + payoff/stat rail + place CTA, all inside */}
           <section id="pick" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
+            {isSim && brought && (
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
+                <Chip tone="brand">Your spread from the home page · paper</Chip>
+                {selectedId !== "brought" && (
+                  <button type="button" onClick={() => setSelectedId("brought")} className="tool-btn tool-btn-sm">
+                    Show your spread
+                  </button>
+                )}
+              </div>
+            )}
             <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
               <span className="t-eyebrow text-fg-dim">Examples that fit this range</span>
               <Link href="/trade/chain" className={`tool-btn ${DENSE}`}>
@@ -766,6 +840,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                 daysToExpiry={days}
                 prob={probInBand}
                 onPlace={() => placeBet(selected)}
+                placeNote={isSim ? SIM_NOTE : undefined}
               />
             )}
           </section>
@@ -818,7 +893,12 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
       <RegulatoryLine className="shell py-3" />
 
       {/* mobile: essentials + PLACE pinned to the bottom */}
-      <BetBar prob={probInBand} selected={selected} onPlace={() => selected && placeBet(selected)} />
+      <BetBar
+        prob={probInBand}
+        selected={isSim ? null : selected}
+        onPlace={() => selected && placeBet(selected)}
+        hint={isSim ? "Practice index · pick a real underlying to place" : undefined}
+      />
 
       {/* Confirm modal */}
       <AnimatePresence>
@@ -1046,6 +1126,7 @@ function StrategyDetail({
   daysToExpiry,
   prob,
   onPlace,
+  placeNote,
 }: {
   s: Strategy;
   symbol: string;
@@ -1053,6 +1134,8 @@ function StrategyDetail({
   daysToExpiry: number;
   prob: number;
   onPlace: () => void;
+  /** Why this position cannot be placed, in place of the button. */
+  placeNote?: string;
 }) {
   // NaN is not Infinity: `Number.isFinite(NaN)` is false and `NaN > 0` is false,
   // so a failed computation used to print the confident-sounding "unbounded".
@@ -1116,10 +1199,14 @@ function StrategyDetail({
       </div>
 
       {/* place CTA — the page's one main action, inside the panel */}
-      <ToolButton primary onClick={onPlace} className="mt-3 w-full !h-9 !justify-between">
-        <span>Place this trade on {symbol}</span>
-        <span>→</span>
-      </ToolButton>
+      {placeNote ? (
+        <p className="mt-3 t-label text-fg-dim">{placeNote}</p>
+      ) : (
+        <ToolButton primary onClick={onPlace} className="mt-3 w-full !h-9 !justify-between">
+          <span>Place this trade on {symbol}</span>
+          <span>→</span>
+        </ToolButton>
+      )}
       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
         <CopyLinkButton
           trade={{ underlying: symbol, spot, daysToExpiry, legs: s.legs }}

@@ -71,7 +71,7 @@ export function FrameZero() {
           </Link>
         </MagneticCTA>
         <Link
-          href={authed ? "/portfolio" : "/auth/signin"}
+          href={authed ? "/portfolio" : "/auth/signin?callbackUrl=/"}
           className="calm-link py-3"
         >
           {authed ? "Your portfolio" : "Sign in"} <span aria-hidden>›</span>

@@ -151,14 +151,19 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
 }
 
 /** Mobile companion: a slim fixed bottom bar with the essentials + PLACE. */
-export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "selected" | "onPlace">) {
+export function BetBar({
+  prob,
+  selected,
+  onPlace,
+  hint,
+}: Pick<Props, "prob" | "selected" | "onPlace"> & { hint?: string }) {
   const tone = prob > 0.6 ? "text-bull" : prob > 0.35 ? "text-cyan" : "text-bear";
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-border bg-bg/95 px-4 py-3 pr-[calc(var(--dock-gutter)+1rem)] backdrop-blur-md lg:hidden">
       <div className="min-w-0">
         <div className={`t-data text-sm font-semibold ${tone}`}>{(prob * 100).toFixed(0)}% in band</div>
         <div className="truncate t-label text-fg-dim">
-          {selected ? selected.kind : "Pick a strategy"}
+          {hint ?? (selected ? selected.kind : "Pick a strategy")}
         </div>
       </div>
       {/* Says what it does, as the desktop slip does (Gate A2, m60): a bare

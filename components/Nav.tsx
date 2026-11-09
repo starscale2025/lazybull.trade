@@ -3,6 +3,7 @@ import { AuthButtons } from "./AuthButtons";
 import { MobileMenu } from "./MobileMenu";
 import { NavAutoHide } from "./NavAutoHide";
 import { BullMark } from "./BullMark";
+import { NavCta } from "./NavCta";
 import { NAV_DIRECTORY } from "@/lib/directory";
 
 // Rail links behind the MORE menu. Learn / Practice / Strategy builder / Pro
@@ -136,15 +137,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
             Portfolio
           </Link>
           <AuthButtons />
-          <Link
-            href="/trade"
-            className="btn-primary-glass tracking-[-0.01em] group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[0.8125rem] font-semibold sm:px-4"
-          >
-            {/* Short label below sm AND in the 1024–1279 hamburger band, where
-                the audit measured the full CTA clipping off the pill's edge. */}
-            <span className="sm:hidden lg:inline xl:hidden">Builder</span>
-            <span className="hidden sm:inline lg:hidden xl:inline">Open the builder</span>
-          </Link>
+          <NavCta className="btn-primary-glass tracking-[-0.01em] group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[0.8125rem] font-semibold sm:px-4" />
           {/* MobileMenu gates itself lg:hidden, but the rail now starts at xl —
               re-show the hamburger through 1024–1279 from here (it's shared
               chrome owned by the below-lg band), or that band would have no

@@ -237,7 +237,7 @@ export function biasFromThesis(spot: number, low: number, high: number): Bias {
 }
 
 export type Strategy = {
-  id: "cheap" | "income" | "aggressive";
+  id: "cheap" | "income" | "aggressive" | "brought";
   kind: string; // human label of legs
   legs: {
     type: "C" | "P";
@@ -328,6 +328,37 @@ function summarise(legs: Strategy["legs"], spot: number) {
     }
   }
   return { maxProfit: mx, maxLoss: mn, breakevens: Array.from(new Set(bes)) };
+}
+
+/**
+ * The visitor's own bull call spread, brought from the home page to /trade.
+ * Not one of the three generated examples: its strikes are theirs. Priced by
+ * the same engine, so at the home page's spot and days it is the same spread
+ * with the same floor (__tests__/bring-spread.test.ts holds that).
+ */
+export function bullCallSpread({
+  spot, k1, k2, daysToExpiry, iv,
+}: { spot: number; k1: number; k2: number; daysToExpiry: number; iv: number }): Strategy {
+  const t = Math.max(0.01, daysToExpiry / 365);
+  const lP = midPrice(spot, k1, t, iv, "C");
+  const sP = midPrice(spot, k2, t, iv, "C");
+  const legs = [
+    { type: "C" as const, side: "long" as const, strike: k1, qty: 1, premium: lP },
+    { type: "C" as const, side: "short" as const, strike: k2, qty: 1, premium: sP },
+  ];
+  const sum = summarise(legs, spot);
+  return {
+    id: "brought",
+    kind: `Bull call spread ${k1}/${k2}`,
+    legs,
+    cost: (lP - sP) * 100,
+    maxProfit: sum.maxProfit,
+    maxLoss: sum.maxLoss,
+    breakevens: sum.breakevens,
+    prob: probProfit(spot, iv, daysToExpiry, legs),
+    blurb: "The spread you shaped on the home page. Capped loss, capped gain, both set before the trade.",
+    bias: "bullish",
+  };
 }
 
 export function generateStrategies({

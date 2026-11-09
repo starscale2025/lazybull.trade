@@ -33,6 +33,7 @@
  */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { getIslandStage, useIsland, useIslandStage, type IslandGlyph, type IslandState } from "@/lib/island";
@@ -147,6 +148,16 @@ export function Island() {
   const hovering = useRef(false);
   const lastValue = useRef<string | null>(null);
   const panelId = useId();
+  const pathname = usePathname();
+  // A spread restored as the page loads is not news; one made after it is.
+  const loadedAt = useRef(0);
+  useEffect(() => {
+    loadedAt.current = performance.now();
+  }, []);
+  // A card left open must not arrive on the next page over its content.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const fold = useCallback((after = 0) => {
     window.clearTimeout(hold.current);
@@ -167,6 +178,7 @@ export function Island() {
       // On a phone the open card would cover half the screen, so news only
       // updates the pill there; a tap opens it. Nor does it open over the film.
       if (window.matchMedia("(max-width: 639px)").matches || getIslandStage()) return;
+      if (performance.now() - loadedAt.current < 3000) return;
       setOpen(true);
       fold(HOLD_MS);
     }

@@ -31,6 +31,7 @@ const TONE: Record<Strategy["id"], { label: string; color: string; chip: ChipTon
   // gain or loss.
   // The `aggressive` key stays: it is an id, never shown.
   aggressive: { label: "Directional debit", color: "var(--cyan)", chip: "neutral" },
+  brought: { label: "Your spread", color: "var(--brand-ink)", chip: "brand" },
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

@@ -41,7 +41,7 @@ export function AuthButtons() {
   if (status === "unauthenticated" || !session?.user) {
     return (
       <button
-        onClick={() => signIn("google", { callbackUrl: "/quant" })}
+        onClick={() => signIn("google", { callbackUrl: window.location.pathname + window.location.search })}
         className="hidden h-9 items-center gap-2 rounded-full px-3 text-[0.875rem] tracking-[-0.005em] text-fg-dim transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg sm:inline-flex"
       >
         Sign in

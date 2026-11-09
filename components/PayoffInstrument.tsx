@@ -140,6 +140,9 @@ export function PayoffInstrument() {
   // The film's safety act draws this position when there is one
   // (lib/hero-position.ts); until a strike moves it is the example spread.
   useEffect(() => {
+    // Mounting at the example must not overwrite a spread the visitor already
+    // chose: on the way back from /trade, or restored after a reload.
+    if (!touched && getHeroPosition()?.chosen) return;
     setHeroPosition({
       k1,
       k2,
@@ -167,14 +170,12 @@ export function PayoffInstrument() {
       active: Math.floor(clamp((s.breakeven - S_MIN) / (S_MAX - S_MIN), 0, 0.999) * SEGS),
       glyph: "payoff",
       href: "/trade",
-      // Not "Open in builder": /trade cannot draw this spread yet (Phase 5,
-      // Gate A4 #6), so the link promises the builder, not the spread.
-      hrefLabel: "Open the builder",
+      hrefLabel: "Open in the builder",
       announce: "Your spread is pinned at the top of the page, with the most it can lose.",
     });
   }, [touched, s]);
   // Not cleared on unmount: the visitor's spread goes with them to the next
-  // page. /trade's own position replaces it there ("trade-build").
+  // page, and on /trade the same spread takes it over as "trade-build".
 
   // A spread the visitor set under frame zero's headline (HeroPosition) is
   // this spread too: one position, wherever it was shaped.
