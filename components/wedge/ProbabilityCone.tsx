@@ -43,7 +43,6 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 360 });
   // First interaction retires the drag tip — see the tip overlay below.
-  const [touched, setTouched] = useState(false);
   const dragRef = useRef<{ which: "low" | "high" | "both" | null; startY: number; startLow: number; startHigh: number; startTimeX?: number; startDays?: number } | null>(null);
   // Drag listeners live on `window` and were only ever removed by their own
   // mouseup. Unmounting mid-drag (route change, tab switch) leaked both of them
@@ -183,7 +182,6 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   const startDrag = (which: "low" | "high" | "both" | "expiry", e: React.PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setTouched(true);
     if (which === "expiry") {
       dragRef.current = { which: null, startY: 0, startLow: low, startHigh: high, startTimeX: screenX(e), startDays: daysToExpiry };
       const onMove = (ev: PointerEvent) => {
@@ -265,7 +263,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
   }, [events, histBars, totalBars, size.w, size.h]);
 
   return (
-    <div className="flex h-full w-full select-none flex-col overflow-hidden bg-bg">
+    <div className="flex h-full w-full select-none flex-col overflow-hidden">
       {/* Typed fallback for the band (WCAG 2.5.1 — the drag is never the only
           path): on touch the drag was a mouse-only corpse and the whole page
           priced off a default band the user never chose.
@@ -283,7 +281,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeHigh(clampPrice(Math.max(low + 0.5, v)));
             }}
             aria-label="Band high price"
-            className="w-[9ch] rounded-[var(--r-instrument)] border border-border bg-bg px-1 py-0.5 t-data text-[0.6875rem] text-bull outline-none [appearance:textfield] focus:border-brand-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[9ch] rounded-[var(--r-instrument)] border border-border bg-bg px-1 py-0.5 t-data text-[0.6875rem] text-fg outline-none [appearance:textfield] focus:border-brand-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
         <label className="flex items-center gap-1">
@@ -297,21 +295,26 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeLow(clampPrice(Math.min(high - 0.5, v)));
             }}
             aria-label="Band low price"
-            className="w-[9ch] rounded-[var(--r-instrument)] border border-border bg-bg px-1 py-0.5 t-data text-[0.6875rem] text-bear outline-none [appearance:textfield] focus:border-brand-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[9ch] rounded-[var(--r-instrument)] border border-border bg-bg px-1 py-0.5 t-data text-[0.6875rem] text-fg outline-none [appearance:textfield] focus:border-brand-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
       </div>
       <div ref={wrapRef} className="relative min-h-0 w-full flex-1">
       <svg width="100%" height="100%" viewBox={`0 0 ${size.w} ${size.h}`}>
         <defs>
+          <linearGradient id="hist-fade" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--fg)" stopOpacity="0.07" />
+            <stop offset="100%" stopColor="var(--fg)" stopOpacity="0" />
+          </linearGradient>
           <linearGradient id="cone-grad" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.04" />
-            <stop offset="100%" stopColor="var(--bull)" stopOpacity="0.18" />
+            <stop offset="0%" stopColor="var(--edge-a)" stopOpacity="0.08" />
+            <stop offset="55%" stopColor="var(--edge-b)" stopOpacity="0.14" />
+            <stop offset="100%" stopColor="var(--edge-c)" stopOpacity="0.2" />
           </linearGradient>
           <linearGradient id="band-grad" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.16" />
-            <stop offset="50%" stopColor="var(--bull)" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="var(--bear)" stopOpacity="0.16" />
+            <stop offset="0%" stopColor="var(--edge-c)" stopOpacity="0.16" />
+            <stop offset="50%" stopColor="var(--edge-c)" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="var(--edge-a)" stopOpacity="0.16" />
           </linearGradient>
         </defs>
 
@@ -345,7 +348,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
             "L" (no moveto) and threw an SVG error on every page load. */}
         {histPath && (
           <>
-            <path d={`${histPath} L${xOf(histN - 1)},${size.h - PAD.B} L${xOf(0)},${size.h - PAD.B} Z`} fill="var(--fg)" fillOpacity="0.04" className="svg-fade-in" />
+            <path d={`${histPath} L${xOf(histN - 1)},${size.h - PAD.B} L${xOf(0)},${size.h - PAD.B} Z`} fill="url(#hist-fade)" className="svg-fade-in" />
             <path d={histPath} fill="none" stroke="var(--fg)" strokeWidth="1.4" pathLength={1} className="svg-draw-in" />
           </>
         )}
@@ -360,9 +363,9 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           y={Math.min(yLow, yHigh)}
           width={xExpiry - xOf(histN - 1)}
           height={Math.abs(yHigh - yLow)}
-          fill="var(--bull)"
+          fill="var(--edge-c)"
           fillOpacity="0.10"
-          stroke="var(--bull)"
+          stroke="var(--edge-c)"
           strokeOpacity="0.5"
           strokeDasharray="6 3"
           onPointerDown={(e) => startDrag("both", e)}
@@ -371,22 +374,22 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
 
         {/* High handle */}
         <g onPointerDown={(e) => startDrag("high", e)} style={{ cursor: "ns-resize", touchAction: "none" }}>
-          <line x1={xOf(histN - 1)} x2={xExpiry} y1={yHigh} y2={yHigh} stroke="var(--bull)" strokeWidth="1.4" />
+          <line x1={xOf(histN - 1)} x2={xExpiry} y1={yHigh} y2={yHigh} stroke="var(--edge-c)" strokeWidth="1.4" />
           {yHighPill !== yHigh && (
-            <line x1={xExpiry} x2={size.w - PAD.R + 3} y1={yHigh} y2={yHighPill} stroke="var(--bull)" strokeWidth="1" />
+            <line x1={xExpiry} x2={size.w - PAD.R + 3} y1={yHigh} y2={yHighPill} stroke="var(--edge-c)" strokeWidth="1" />
           )}
-          <rect x={size.w - PAD.R + 2} y={yHighPill - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
+          <rect x={size.w - PAD.R + 2} y={yHighPill - 9} width={PAD.R - 4} height="18" fill="var(--edge-c)" />
           <text x={size.w - PAD.R / 2} y={yHighPill + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
             {high.toFixed(2)}
           </text>
         </g>
         {/* Low handle */}
         <g onPointerDown={(e) => startDrag("low", e)} style={{ cursor: "ns-resize", touchAction: "none" }}>
-          <line x1={xOf(histN - 1)} x2={xExpiry} y1={yLow} y2={yLow} stroke="var(--bull)" strokeWidth="1.4" />
+          <line x1={xOf(histN - 1)} x2={xExpiry} y1={yLow} y2={yLow} stroke="var(--edge-c)" strokeWidth="1.4" />
           {yLowPill !== yLow && (
-            <line x1={xExpiry} x2={size.w - PAD.R + 3} y1={yLow} y2={yLowPill} stroke="var(--bull)" strokeWidth="1" />
+            <line x1={xExpiry} x2={size.w - PAD.R + 3} y1={yLow} y2={yLowPill} stroke="var(--edge-c)" strokeWidth="1" />
           )}
-          <rect x={size.w - PAD.R + 2} y={yLowPill - 9} width={PAD.R - 4} height="18" fill="var(--bull)" />
+          <rect x={size.w - PAD.R + 2} y={yLowPill - 9} width={PAD.R - 4} height="18" fill="var(--edge-c)" />
           <text x={size.w - PAD.R / 2} y={yLowPill + 4} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
             {low.toFixed(2)}
           </text>
@@ -520,19 +523,19 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
                 y={labelY}
                 fontFamily="var(--font-sans)"
                 fontSize="10"
-                fill="var(--bull)"
+                fill="var(--edge-c)"
               >
                 {Math.round(bandProb * 100)}% probability range
               </text>
-              <rect x={xs + (xExpiry - xs) * 0.3 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--bull)" strokeWidth="1.2" />
-              <rect x={xs + (xExpiry - xs) * 0.7 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--bull)" strokeWidth="1.2" />
+              <rect x={xs + (xExpiry - xs) * 0.3 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--edge-c)" strokeWidth="1.2" />
+              <rect x={xs + (xExpiry - xs) * 0.7 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--edge-c)" strokeWidth="1.2" />
             </g>
           );
         })()}
 
         {/* Expiry handle (drag along x) */}
         <g onPointerDown={(e) => startDrag("expiry", e)} style={{ cursor: "ew-resize", touchAction: "none" }}>
-          <line x1={xExpiry} x2={xExpiry} y1={PAD.T} y2={size.h - PAD.B} stroke="var(--amber)" strokeWidth="1.4" strokeDasharray="2 4" />
+          <line x1={xExpiry} x2={xExpiry} y1={PAD.T} y2={size.h - PAD.B} stroke="var(--fg-dim)" strokeWidth="1.4" strokeDasharray="2 4" />
           {/* CLAMPED to the plot. At long expiries the line sits hard against
               the right edge, and an un-clamped chip centred on it overhung the
               price gutter and painted out the topmost price label. The chip
@@ -541,7 +544,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
             const cx = Math.min(xExpiry, size.w - PAD.R - 36);
             return (
               <>
-                <rect x={cx - 36} y={PAD.T} width="72" height="16" fill="var(--amber)" />
+                <rect x={cx - 36} y={PAD.T} width="72" height="16" fill="var(--fg)" />
                 <text x={cx} y={PAD.T + 11} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fontWeight="600" fill="var(--bg)">
                   {daysToExpiry}d → exp
                 </text>
@@ -585,32 +588,13 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
         <line x1={PAD.L} x2={size.w - PAD.R} y1={size.h - PAD.B} y2={size.h - PAD.B} stroke="var(--border)" />
       </svg>
 
-      {/* Drag tip overlay.
-          BOTTOM-LEFT, not top-right. Top-right is where this chart puts its
-          DATA — the expiry chip, the confidence legend and the top price label
-          all land in that corner, and the tip was painted straight through the
-          "35d -> exp" chip. An instruction that is read once should not hold the
-          corner that carries numbers read continuously. Bottom-left is the one
-          region of the plot nothing else occupies: history runs along the
-          middle-left and the x baseline is below this. One line, and it fades
-          for good after the first drag — an instruction already followed is
-          just noise on the plot. */}
-      <div
-        className={`pointer-events-none absolute bottom-9 left-4 t-label text-fg-faint transition-opacity duration-700 ${touched ? "opacity-0" : "opacity-100"}`}
-      >
-        Drag bands · drag exp line ⟷
-      </div>
       </div>
     </div>
   );
 }
 
-function eventColor(k: MarketEvent["kind"]) {
-  switch (k) {
-    case "earnings": return "var(--bear)";
-    case "fed": return "var(--amber)";
-    case "cpi": return "var(--cyan)";
-    case "dividend": return "var(--bull)";
-    case "split": return "var(--plasma)";
-  }
+// One colour for every event: the bar's position and its label carry the
+// kind. Earnings in the loss red read as a loss that had not happened.
+function eventColor(_k: MarketEvent["kind"]) {
+  return "var(--edge-b)";
 }

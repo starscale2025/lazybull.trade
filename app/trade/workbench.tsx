@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
-import { TickerBar } from "@/components/TickerBar";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
-import { StrategyCards, PnlSparkline, EmptyPnlSparkline } from "@/components/wedge/StrategyCards";
+import { StrategyCards, PnlSparkline } from "@/components/wedge/StrategyCards";
 import { PlainGreeks } from "@/components/wedge/PlainGreeks";
 import { TimeMachine } from "@/components/wedge/TimeMachine";
 import { EventTimeline } from "@/components/wedge/EventTimeline";
@@ -33,7 +31,8 @@ import { noteBuilderAbandon, noteExplainRequest, tradeFingerprint } from "@/lib/
 import { flushEvents, track } from "@/lib/track";
 import { clearIsland, setIsland } from "@/lib/island";
 import { TruthBadge } from "@/components/pro/TruthBadge";
-import { CalmLink, Chip, TogglePill, ToolButton } from "@/components/calm/kit";
+import { Sparkles, Table2, Zap } from "lucide-react";
+import { CalmLink, Chip, PillButton, TogglePill, ToolButton } from "@/components/calm/kit";
 
 // IV is still synthetic (no free options-IV feed); spot is now live.
 const SYMBOLS = [
@@ -75,8 +74,6 @@ type TabId = (typeof TABS)[number]["id"];
 // and panel headers are thin strips, so here they take a compact size; touch
 // still gets 44px from the tap-floor on <main>.
 const DENSE = "!h-6 !px-2.5 !text-[0.75rem]";
-
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * The strategy builder. Rendered by app/trade/page.tsx, which is a server component
@@ -306,6 +303,8 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   // proposes one (docs/COMPLIANCE.md; re-tribunal #1). The examples are listed;
   // a position exists once the visitor picks or builds one.
   const [selectedId, setSelectedId] = useState<Strategy["id"] | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showChain, setShowChain] = useState(false);
   // The chain's pointer, shared with the cone. Deliberately NOT persisted or
   // debounced: it is a cursor, and a cursor that lags its pointer reads broken.
   const [hoverStrike, setHoverStrike] = useState<number | null>(null);
@@ -515,7 +514,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   const rangeLine = `Your range: ${sym.sym} between $${low.toFixed(2)} and $${high.toFixed(2)}`;
   const thesisSentence = touched
     ? `${rangeLine} by ${fmtDate(dateNDaysOut(days))}.`
-    : "Drag the green band to set a price range.";
+    : "Drag the band or the expiry line.";
 
   // under-the-hood tabs
   const [tab, setTab] = useState<TabId>("whatif");
@@ -572,179 +571,151 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   };
 
   return (
-    <main className="tap-floor flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
-      {/* No AmbientOrbs / CursorSpotlight here: the homepage's drifting
-          atmosphere is marketing language, and on a route that is nothing but
-          live numbers it reads as movement the data did not ask for. */}
+    <main className="page-aura tap-floor flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
       <ScrollProgress />
-      <TickerBar />
       <Nav wide />
 
-      {/* ── App shell: on lg+ everything below the nav fits one screen and panels
-             scroll internally. 91px = measured TickerBar (33.5px) + Nav (57px).
-             100vh is divided by --ui-zoom because html{zoom} does not shrink
-             viewport units — same convention as globals.css's .h-screen rule. */}
-      <div className="flex flex-col lg:h-[calc(100vh/var(--ui-zoom)_-_91px)] lg:overflow-hidden">
-      {/* ── Header row: symbol · price · change | IV cluster · earnings · paper badge */}
-      <section className="relative overflow-hidden border-b border-border bg-bg lg:shrink-0">
-        <img
-          src="/media/trade/chip-hero@1600.webp"
-          srcSet="/media/trade/chip-hero@800.webp 800w, /media/trade/chip-hero@1600.webp 1600w"
-          sizes="100vw"
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-[0.18]"
-          style={{ maskImage: "linear-gradient(to left, black 30%, transparent 78%)" }}
-        />
-        <div className="relative shell shell-wide py-4 lg:py-2.5">
-          <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-2">
-            <div className="flex items-center gap-3 t-eyebrow text-fg-faint" data-gsap="fade-up">
-              Strategy builder
-              <CalmLink href="/trade/chain" className="!text-[0.875rem]">Advanced view: see the chain</CalmLink>
+      {/* THE UNCLUTTERED BUILDER (owner, 2026-11-09). One header, one control
+          bar, the chart beside the strategy summary. The chain and the deeper
+          analysis are a click away instead of all on screen at once. One colour
+          theme: the brand ramp for the instrument, red and mint only on money. */}
+      <div className="shell shell-wide flex flex-col gap-4 pb-8 pt-2">
+        <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-3">
+              <h1 className="font-display text-[clamp(2.4rem,4vw,3.25rem)] leading-none tracking-tightest text-fg">{sym.sym}</h1>
+              <span className="text-fg-dim">{quote?.name ?? sym.name}</span>
             </div>
-            <Chip tone="warn">Paper only · $5k practice account</Chip>
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:mt-3 lg:items-center">
-            {/* symbol block — one dense baseline row on lg */}
-            <div className="lg:flex lg:flex-wrap lg:items-baseline lg:gap-x-4" data-gsap="fade-up">
-              <div className="flex flex-wrap items-baseline gap-3">
-                <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]">
-                  {sym.sym}
-                </h1>
-                <span className="t-label text-fg-dim">{quote?.name ?? sym.name}</span>
-              </div>
-              <div className="mt-1.5 flex flex-wrap items-baseline gap-3 t-data lg:mt-0">
-                <span className="text-2xl text-fg lg:text-xl">${spot.toFixed(2)}</span>
-                <span className={`text-sm ${chg >= 0 ? "text-bull" : "text-bear"}`}>
-                  {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
-                </span>
-              </div>
-              <div className="mt-1 lg:mt-0">
-                <Chip dot tone={quote ? "neutral" : "warn"}>
-                  {isSim
-                    ? "Synthetic index · not a real security"
-                    : quote
-                      ? `Live price · ${quote.exch ?? "US market"}`
-                      : "Seed price · connecting"}
-                </Chip>
-              </div>
-              {/* Provenance where the data is (M33): the chain behind this
-                  builder is synthetic and the badge says so, here rather than
-                  on the nav of every page. */}
-              <div className="mt-2">
-                <TruthBadge />
-              </div>
-            </div>
-
-            {/* IV / earnings cluster — synthetic; the amber dot carries the
-                illustrative disclosure so the chip no longer repeats it */}
-            <div
-              className="flex items-center gap-2.5 lg:gap-3"
-              data-gsap="fade-up"
-              data-gsap-delay="0.08"
-              title="Illustrative · synthetic IV (no real options-IV feed)"
-            >
-              <span className="size-1.5 shrink-0 rounded-full bg-amber" aria-hidden />
-              <div className="flex divide-x divide-border t-data">
-                {[
-                  { k: "IV rank", v: String(ivRank) },
-                  { k: "IV percentile", v: `${ivPctile}%` },
-                  { k: "IV", v: `${(sym.iv * 100).toFixed(1)}%` },
-                ].map((s) => (
-                  <div key={s.k} className="px-4 text-right first:pl-0">
-                    <div className="t-label text-fg-faint">{s.k}</div>
-                    <div className="mt-1 text-lg tabular-nums text-fg lg:mt-0.5 lg:text-base">{s.v}</div>
-                  </div>
-                ))}
-                <div className="px-4 pr-0 text-right">
-                  <div className="t-label text-fg-faint">Earnings</div>
-                  <div className="mt-1 flex items-baseline justify-end gap-1.5 lg:mt-0.5">
-                    <span className="text-lg tabular-nums text-fg lg:text-base">{earnLabel}</span>
-                    {earnDays != null && <Chip>{earnDays}d</Chip>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Terminal grid: chart + chain (≈60%) | strategy · greeks · teacher (≈40%) */}
-      <div className="relative grid shell shell-wide grid-cols-1 items-start gap-4 py-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch lg:gap-3 lg:overflow-hidden lg:py-3">
-        {/* ---- left column: toolbar → cone chart → chain (internal scroll) ---- */}
-        <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-hidden">
-          {/* toolbar strip — live controls only */}
-          {/* wraps at every width — clipping "reset view" behind an invisible
-              x-scroll is worse than a second toolbar row */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-label lg:shrink-0 lg:gap-x-3">
-            <span className="text-fg-faint">Underlying</span>
-            <div className="flex items-center gap-1">
-              {symbols.map((s) => (
-                <TogglePill key={s.sym} on={s.sym === sym.sym} onClick={() => pickSymbol(s.sym)} className={DENSE}>
-                  {s.sym}
-                </TogglePill>
-              ))}
-            </div>
-            <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
-            <label className="flex items-center gap-2 text-fg-faint">
-              Strikes
-              <select
-                value={chainDepth}
-                onChange={(e) => setChainDepth(Number(e.target.value))}
-                className="rounded-[var(--r-instrument)] border border-border bg-bg px-1.5 py-0.5 t-data text-[0.6875rem] text-fg-dim outline-none focus:border-brand-ink/60"
-              >
-                <option value={4}>±4</option>
-                <option value={5}>±5</option>
-                <option value={8}>±8</option>
-              </select>
-            </label>
-            <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
-            {/* days-from-now slider — drives the same `days` state as the cone drag + chain stepper */}
-            <label className="flex shrink-0 items-center gap-2 text-fg-faint">
-              Days from now
-              <input
-                type="range"
-                min={1}
-                max={365}
-                step={1}
-                value={days}
-                onChange={(e) => setDays(Number(e.target.value))}
-                className="h-1 w-24 accent-brand-ink xl:w-32"
-                aria-label="days from now"
-              />
-              <span className="text-amber tabular-nums">
-                {days}d{mounted && <span className="lg:hidden"> · {expiryStr}</span>}
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 t-data">
+              <span className="text-[clamp(1.6rem,2.4vw,2rem)] leading-none text-fg">${spot.toFixed(2)}</span>
+              <span className={`text-base ${chg >= 0 ? "text-bull" : "text-bear"}`}>
+                {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
               </span>
-            </label>
-            <ToolButton onClick={resetView} className={`ml-auto shrink-0 ${DENSE}`}>
-              Reset view ⟲
-            </ToolButton>
+            </div>
+            {/* Every provenance claim on one quiet line: what the price is, that
+                the chain and IV are synthetic, and that this is paper. */}
+            <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 t-label text-fg-dim">
+              <span aria-hidden className={`size-1.5 rounded-full ${quote ? "bg-bull" : "bg-fg-faint"}`} />
+              <span>
+                {isSim
+                  ? "Synthetic index · not a real security"
+                  : quote
+                    ? `Live price · ${quote.exch ?? "US market"}`
+                    : "Seed price · connecting"}
+              </span>
+              <span aria-hidden className="text-fg-faint">·</span>
+              <TruthBadge quiet />
+              <span aria-hidden className="text-fg-faint">·</span>
+              <span>Illustrative IV</span>
+              <span aria-hidden className="text-fg-faint">·</span>
+              <span>Paper only · $5k practice account</span>
+            </p>
           </div>
 
-          {/* chart + draggable probability cone — ≈55% of the column on lg */}
-          <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
-              <span className="t-eyebrow text-fg-dim">Implied range · Black-Scholes · {sym.sym}</span>
+          <div className="glass-tool flex divide-x divide-[color-mix(in_srgb,var(--fg)_10%,transparent)] px-2 py-2.5 t-data">
+            {[
+              { k: "IV rank", v: String(ivRank) },
+              { k: "IV percentile", v: `${ivPctile}%` },
+              { k: "IV", v: `${(sym.iv * 100).toFixed(1)}%` },
+            ].map((s) => (
+              <div key={s.k} className="px-4 text-center">
+                <div className="t-label text-fg-faint">{s.k}</div>
+                <div className="mt-0.5 text-base tabular-nums text-fg">{s.v}</div>
+              </div>
+            ))}
+            <div className="px-4 text-center">
+              <div className="t-label text-fg-faint">Earnings</div>
+              <div className="mt-0.5 flex items-baseline justify-center gap-1.5">
+                <span className="text-base tabular-nums text-fg">{earnLabel}</span>
+                {earnDays != null && <span className="t-label text-fg-faint">{earnDays}d</span>}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* the one control bar */}
+        <div className="glass-tool flex flex-wrap items-center gap-x-5 gap-y-2.5 px-5 py-2.5 t-label">
+          <span className="text-fg-dim">Underlying</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {symbols.map((s) => (
+              <TogglePill key={s.sym} on={s.sym === sym.sym} onClick={() => pickSymbol(s.sym)}>
+                {s.sym}
+              </TogglePill>
+            ))}
+          </div>
+          <span className="hidden h-4 w-px bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] md:block" aria-hidden />
+          <label className="flex items-center gap-2 text-fg-dim">
+            Strikes
+            <select
+              value={chainDepth}
+              onChange={(e) => setChainDepth(Number(e.target.value))}
+              className="calm-input !h-8 !px-2.5 t-data !text-[0.75rem]"
+            >
+              <option value={4}>±4</option>
+              <option value={5}>±5</option>
+              <option value={8}>±8</option>
+            </select>
+          </label>
+          <span className="hidden h-4 w-px bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] md:block" aria-hidden />
+          {/* days-from-now slider — drives the same `days` state as the cone drag + chain stepper */}
+          <label className="flex shrink-0 items-center gap-3 text-fg-dim">
+            Days to expiry
+            <input
+              type="range"
+              min={1}
+              max={365}
+              step={1}
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className="h-1 w-28 accent-brand-ink xl:w-40"
+              aria-label="days from now"
+            />
+            <span className="t-data tabular-nums text-fg">
+              {days}d{mounted && <span className="lg:hidden"> · {expiryStr}</span>}
+            </span>
+          </label>
+          <PillButton size="sm" onClick={resetView} className="ml-auto !h-8">
+            Reset
+          </PillButton>
+        </div>
+
+        {/* a shared trade, rebuilt — only when ?t= decoded */}
+        {shared && (
+          <SharedTradePanel
+            trade={shared}
+            spot={sharedSpot}
+            placed={sharedPlaced}
+            refusal={sharedRefusal}
+            onPlace={placeShared}
+          />
+        )}
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          {/* chart + draggable probability cone */}
+          <section id="thesis" className="glass-tool flex scroll-mt-20 flex-col overflow-hidden">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 pb-1 pt-4">
+              <h2 className="flex flex-wrap items-baseline gap-x-2">
+                <span className="text-[1rem] font-semibold tracking-[-0.01em] text-fg">Implied range</span>
+                <span className="t-label text-fg-dim">Black-Scholes · {sym.sym}</span>
+              </h2>
               {/* the expiry date is the decision token — keep it shrink-0 so
                   mid-width truncation eats the prose, never the date */}
-              <span
-                title={touched ? thesisSentence : undefined}
-                className="hidden min-w-0 max-w-[62%] items-baseline gap-1 t-label text-fg-dim md:flex"
-              >
+              <span title={touched ? thesisSentence : undefined} className="hidden min-w-0 max-w-[62%] items-baseline gap-1 t-label text-fg-dim md:flex">
                 {touched ? (
                   <>
                     <span className="min-w-0 truncate">
                       <ThesisLine sentence={rangeLine} />
                     </span>
-                    <span className="shrink-0 text-amber">by {expiryStr}.</span>
+                    <span className="shrink-0 text-fg">by {expiryStr}.</span>
                   </>
                 ) : (
                   <span className="min-w-0 truncate">{thesisSentence}</span>
                 )}
               </span>
             </div>
-            <div className="relative h-[26.25rem] bg-bg lg:h-auto lg:min-h-0 lg:flex-1">
+            {/* grows with the summary beside it, so the two panels end level */}
+            <div className="relative min-h-[23rem] flex-1">
+              <div className="absolute inset-0">
               {mounted ? (
                 <ProbabilityCone
                   bars={histBars}
@@ -766,45 +737,18 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               ) : (
                 <div className="flex h-full items-center justify-center t-label text-fg-faint">Loading implied range…</div>
               )}
-              {/* in-band probability ring — same number the strategy panel prices
-                  from. Owns the top-left corner: the HI/LO inputs moved into the
-                  cone's header bar, so nothing else shares this edge. */}
-              <div className="pointer-events-none absolute left-2 top-2 z-10 hidden sm:block">
+              </div>
+              {/* in-band probability ring — same number the strategy panel prices from */}
+              <div className="pointer-events-none absolute left-4 top-2 z-10 hidden sm:block">
                 <InBandRing prob={probInBand} />
               </div>
             </div>
           </section>
 
-          {/* options chain — fills the rest of the column; rows scroll internally,
-              footer stays pinned at the bottom of the column */}
-          <ChainTable
-            symbol={sym.sym}
-            spot={spot}
-            iv={sym.iv}
-            days={days}
-            perSide={chainDepth}
-            onStepDays={(d) => setDays(Math.max(1, Math.min(365, days + d)))}
-            onHoverStrike={setHoverStrike}
-          />
-        </div>
-
-        {/* ---- right rail: strategy · greeks · teacher · analytics — its own scroll ---- */}
-        <div className="flex min-w-0 flex-col gap-4 lg:min-h-0 lg:gap-3 lg:overflow-y-auto">
-          {/* a shared trade, rebuilt — only when ?t= decoded */}
-          {shared && (
-            <SharedTradePanel
-              trade={shared}
-              spot={sharedSpot}
-              placed={sharedPlaced}
-              refusal={sharedRefusal}
-              onPlace={placeShared}
-            />
-          )}
-
-          {/* strategy panel — picker + legs + payoff/stat rail + place CTA, all inside */}
-          <section id="pick" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
+          {/* the strategy summary: pick, read, place, ask */}
+          <section id="pick" className="glass-tool scroll-mt-20 p-5">
             {isSim && brought && (
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <Chip tone="brand">Your spread from the home page · paper</Chip>
                 {selectedId !== "brought" && (
                   <button type="button" onClick={() => setSelectedId("brought")} className="tool-btn tool-btn-sm">
@@ -813,12 +757,11 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                 )}
               </div>
             )}
-            <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-              <span className="t-eyebrow text-fg-dim">Examples that fit this range</span>
-              <Link href="/trade/chain" className={`tool-btn ${DENSE}`}>
-                Edit legs ✎
-              </Link>
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="text-[1rem] font-semibold tracking-[-0.01em] text-fg">Strategy summary</h2>
+              <CalmLink href="/trade/chain" className="!text-[0.8125rem]">Edit legs</CalmLink>
             </div>
+            <p className="mt-0.5 t-label text-fg-faint">Examples that fit this range</p>
             <StrategyCards
               strategies={strategies}
               selectedId={selectedId}
@@ -829,9 +772,8 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               columns={1}
               compact
             />
-            {/* nothing picked yet: the payoff frame, empty (see EmptyStrategyDetail) */}
-            {!selected && <EmptyStrategyDetail spot={spot} />}
-            {selected && <LegsList s={selected} />}
+            <div className="my-3 h-px bg-[color-mix(in_srgb,var(--fg)_9%,transparent)]" aria-hidden />
+            {!selected && <EmptyStrategyDetail />}
             {selected && (
               <StrategyDetail
                 s={selected}
@@ -843,31 +785,51 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                 placeNote={isSim ? SIM_NOTE : undefined}
               />
             )}
+            <TeacherPanel
+              selected={selected}
+              narrating={narrating}
+              thread={thread}
+              paywall={paywall}
+              disclosure={disclosure}
+              onDismissPaywall={() => setPaywall(null)}
+              onExplain={() => selected && narrate(selected)}
+              onAsk={(q) => selected && narrate(selected, q)}
+            />
           </section>
+        </div>
 
-          {/* AI teacher */}
-          <TeacherPanel
-            selected={selected}
-            narrating={narrating}
-            thread={thread}
-            paywall={paywall}
-            disclosure={disclosure}
-            onDismissPaywall={() => setPaywall(null)}
-            onExplain={() => selected && narrate(selected)}
-            onAsk={(q) => selected && narrate(selected, q)}
+        {/* The rest, one click away. Set in from the left so the shortcut dial
+            in the corner has the room it needs at rest. */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:pl-[16rem]">
+          <FoldCard
+            icon={<Zap aria-hidden size={18} />}
+            title="What-if machine"
+            sub={openCount > 0 ? `Explore outcomes · ${openCount} open position${openCount === 1 ? "" : "s"}` : "Explore potential outcomes"}
+            action="Run analysis"
+            open={showAnalysis}
+            onToggle={() => setShowAnalysis((v) => !v)}
           />
+          <FoldCard
+            icon={<Table2 aria-hidden size={18} />}
+            title="Options chain"
+            sub="Every strike, bid and ask"
+            action="Show chain"
+            open={showChain}
+            onToggle={() => setShowChain((v) => !v)}
+          />
+        </div>
 
-          {/* under the hood — one analytics panel at a time, compact rail edition */}
-          <section id="detail" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
-            <div className="flex items-center gap-1 overflow-x-auto border-b border-border bg-bg-soft px-2 py-1.5">
+        {showAnalysis && (
+          <section id="detail" className="glass-tool scroll-mt-20 overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto px-4 pt-4">
               {TABS.map((t) => (
-                <TogglePill key={t.id} on={tab === t.id} onClick={() => setTab(t.id)} className={`shrink-0 ${DENSE}`}>
+                <TogglePill key={t.id} on={tab === t.id} onClick={() => setTab(t.id)} className="shrink-0">
                   {t.label}
                   {t.id === "manage" ? ` (${openCount})` : ""}
                 </TogglePill>
               ))}
             </div>
-            <div id="manage" className="scroll-mt-16">
+            <div id="manage" className="scroll-mt-20">
               {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
               {tab === "greeks" && (
                 <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} onDetails={() => { window.location.href = "/greeks"; }} />
@@ -887,9 +849,20 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               )}
             </div>
           </section>
-        </div>
+        )}
+
+        {showChain && (
+          <ChainTable
+            symbol={sym.sym}
+            spot={spot}
+            iv={sym.iv}
+            days={days}
+            perSide={chainDepth}
+            onStepDays={(d) => setDays(Math.max(1, Math.min(365, days + d)))}
+            onHoverStrike={setHoverStrike}
+          />
+        )}
       </div>
-      </div>{/* /app shell */}
       <RegulatoryLine className="shell py-3" />
 
       {/* mobile: essentials + PLACE pinned to the bottom */}
@@ -989,8 +962,8 @@ function ThesisLine({ sentence }: { sentence: string }) {
   return (
     <span className="text-fg">
       {parts.map((p, i) => {
-        if (p.startsWith("$")) return <span key={i} className="text-bull">{p}</span>;
-        if (p.startsWith("by ")) return <span key={i} className="text-amber">{p}</span>;
+        if (p.startsWith("$")) return <span key={i} className="t-data text-fg">{p}</span>;
+        if (p.startsWith("by ")) return <span key={i} className="text-fg">{p}</span>;
         return <span key={i}>{p}</span>;
       })}
     </span>
@@ -1008,17 +981,23 @@ function InBandRing({ prob }: { prob: number }) {
   // both sides; see the same guard in Sparkline (components/wedge/StrategyCards).
   const dash = c.toFixed(2);
   const dashOffset = (c - c * p).toFixed(2);
-  const tone = prob > 0.6 ? "var(--bull)" : prob > 0.35 ? "var(--cyan)" : "var(--bear)";
   return (
     <div className="flex flex-col items-start gap-2">
       <div className="relative">
         <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden>
+          <defs>
+            <linearGradient id="in-band-ramp" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stopColor="var(--edge-a)" />
+              <stop offset="0.55" stopColor="var(--edge-b)" />
+              <stop offset="1" stopColor="var(--edge-c)" />
+            </linearGradient>
+          </defs>
           <circle cx="52" cy="52" r={r} stroke="var(--border)" strokeWidth="6" fill="var(--bg)" fillOpacity="0.55" />
           <circle
             cx="52"
             cy="52"
             r={r}
-            stroke={tone}
+            stroke="url(#in-band-ramp)"
             strokeWidth="6"
             fill="none"
             strokeLinecap="round"
@@ -1029,15 +1008,12 @@ function InBandRing({ prob }: { prob: number }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-display text-2xl leading-none tracking-tightest tabular-nums" style={{ color: tone }}>
+          <span className="font-display text-2xl leading-none tracking-tightest tabular-nums text-fg">
             {Math.round(prob * 100)}%
           </span>
           <span className="mt-1 t-label text-fg-dim">In band</span>
+          <span className="t-label text-fg-faint">at expiry</span>
         </div>
-      </div>
-      <div className="flex items-center gap-1.5 t-label text-fg-faint">
-        <span className="size-2 shrink-0 border border-bull/60 bg-bull/20" aria-hidden />
-        <span>Probability<br />@ expiration</span>
       </div>
     </div>
   );
@@ -1049,39 +1025,27 @@ function InBandRing({ prob }: { prob: number }) {
 function LegsList({ s }: { s: Strategy }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-t border-border">
+    <div className="mt-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between bg-bg-soft px-3 py-1.5 t-label text-fg-faint transition-colors hover:text-fg"
+        className="t-label text-fg-faint transition-colors hover:text-fg"
       >
-        <span>Legs ({s.legs.length}) {open ? "▾" : "▸"}</span>
-        <span>{open ? "Mid px" : ""}</span>
+        Legs ({s.legs.length}) {open ? "▾" : "▸"}
       </button>
       {open && (
-        <ul className="divide-y divide-border-soft border-t border-border-soft">
+        <ul className="mt-1.5 space-y-1">
           {s.legs.map((l, i) => (
-            <li key={i} className="flex items-center justify-between px-3 py-2 t-data text-[0.75rem]">
-              <span className={l.side === "long" ? "text-bull" : "text-bear"}>
-                {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
+            <li key={i} className="flex items-center justify-between t-data text-[0.75rem] text-fg-dim">
+              <span>
+                {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "call" : "put"}
               </span>
-              <span className={l.side === "long" ? "text-fg" : "text-bear"}>
-                {l.side === "long" ? "" : "−"}{l.premium.toFixed(2)}
-              </span>
+              <span>{l.side === "long" ? "" : "−"}{l.premium.toFixed(2)}</span>
             </li>
           ))}
         </ul>
       )}
-      {/* The net debit/credit is the price of the whole trade — the single
-          number a beginner is most likely to be looking for. It used to sit
-          at 12px, identical to the chrome around it. */}
-      <div className="flex items-baseline justify-between border-t border-border-soft bg-bg px-3 py-2.5">
-        <span className="t-label text-fg-dim">{s.cost > 0 ? "Net debit" : "Net credit"}</span>
-        <span className={`t-figure ${s.cost > 0 ? "text-fg" : "text-bull"}`}>
-          {Math.abs(s.cost / 100).toFixed(2)}
-        </span>
-      </div>
     </div>
   );
 }
@@ -1092,27 +1056,47 @@ function LegsList({ s }: { s: Strategy }) {
  *  picture in it. This is StrategyDetail's frame with nothing in it: the $0
  *  axis and today's spot, the rail's labels with no figures, and no legs and no
  *  place button, because nothing has been chosen. */
-function EmptyStrategyDetail({ spot }: { spot: number }) {
+function EmptyStrategyDetail() {
   return (
-    <div className="@container border-t border-border p-3">
-      <div className="flex items-stretch gap-4">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <EmptyPnlSparkline spot={spot} note="Pick an example to draw it" />
-          <div className="mt-1 text-center t-label text-fg-faint">P/L @ expiration</div>
+    <dl className="grid grid-cols-[1fr_auto] gap-y-2">
+      {["Max profit", "Max loss", "Breakeven", "POP"].map((k) => (
+        <div key={k} className="contents">
+          <dt className="text-[0.875rem] text-fg-dim">{k}</dt>
+          <dd className="t-data text-[0.875rem] text-fg-faint">—</dd>
         </div>
-        {/* the rail StrategyDetail fills in, unfilled. Beside a 12.5rem rail a
-            narrow panel leaves the frame too thin for its note (phones, and the
-            desktop rail below ~1360px), so it waits on the panel's own width:
-            a container query, not a viewport breakpoint. */}
-        <div aria-hidden className="hidden w-[12.5rem] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5 @md:grid">
-          {["Max profit", "Max loss", "Breakeven", "POP"].map((k) => (
-            <div key={k} className="contents">
-              <span className="t-label text-fg-faint">{k}</span>
-              <span className="text-right t-data text-[0.75rem] text-fg-faint">—</span>
-            </div>
-          ))}
-        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** A section of the page that waits to be asked for. */
+function FoldCard({
+  icon,
+  title,
+  sub,
+  action,
+  open,
+  onToggle,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  sub: string;
+  action: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="glass-tool flex items-center gap-4 px-5 py-4">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--brand-ink)_16%,transparent)] text-brand-ink">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[1rem] font-semibold tracking-[-0.01em] text-fg">{title}</div>
+        <div className="truncate t-label text-fg-dim">{sub}</div>
       </div>
+      <PillButton size="sm" aria-expanded={open} onClick={onToggle} className="!h-9">
+        {open ? "Hide" : action} <span aria-hidden>{open ? "⌃" : "›"}</span>
+      </PillButton>
     </div>
   );
 }
@@ -1149,11 +1133,6 @@ function StrategyDetail({
           ? "uncapped"
           : "unbounded";
   const definedRisk = Number.isFinite(s.maxLoss);
-  const chips: string[] = [
-    ...(Number.isFinite(s.cost) ? [s.cost > 0 ? "Debit" : "Credit"] : []),
-    cap(s.bias),
-    ...(definedRisk ? ["Defined risk"] : []),
-  ];
   const rr =
     Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0 ? s.maxProfit / Math.abs(s.maxLoss) : null;
   // `lead` marks the figures the decision actually turns on. They get the
@@ -1164,53 +1143,38 @@ function StrategyDetail({
     ...(s.breakevens.length
       ? [{ k: "Breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / "), c: "text-fg" }]
       : []),
-    { k: "POP", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull", lead: true },
+    { k: "POP", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-fg", lead: true },
     ...(rr != null ? [{ k: "R:R", v: rr.toFixed(2), c: "text-fg" }] : []),
   ];
 
   return (
-    <div className="border-t border-border p-3">
-      {/* fact chips — derived from the strategy, never invented */}
-      <div className="flex flex-wrap items-center gap-1">
-        {chips.map((c) => (
-          <Chip key={c}>{c}</Chip>
-        ))}
-        <span className="ml-auto t-label text-fg-faint tabular-nums">
-          {s.cost > 0 ? "You pay" : "You collect"} ${Math.abs(s.cost).toFixed(0)}
-        </span>
-      </div>
-
-      {/* payoff diagram | snug stat rail */}
-      <div className="mt-3 flex items-stretch gap-4">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <PnlSparkline s={s} spot={spot} className="w-full min-h-16 flex-1" />
-          <div className="mt-1 text-center t-label text-fg-faint">
-            P/L @ expiration
+    <div>
+      <PnlSparkline s={s} spot={spot} className="h-24 w-full" />
+      <div className="mt-1 text-center t-label text-fg-faint">P/L at expiration</div>
+      <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        {rail.map((it) => (
+          <div key={it.k} className={`flex items-baseline justify-between gap-3 ${it.k === "Breakeven" && s.breakevens.length > 1 ? "col-span-full" : ""}`}>
+            <dt className="text-[0.875rem] text-fg-dim">{it.k}</dt>
+            <dd className={`text-right t-data ${it.lead ? "text-[1.0625rem]" : "text-[0.875rem]"} ${it.c}`}>{it.v}</dd>
           </div>
+        ))}
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="text-[0.875rem] text-fg-dim">{s.cost > 0 ? "You pay" : "You collect"}</dt>
+          <dd className="text-right t-data text-[0.875rem] text-fg">${Math.abs(s.cost).toFixed(0)}</dd>
         </div>
-        <div className="grid w-[12.5rem] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
-          {rail.map((it) => (
-            <div key={it.k} className="contents">
-              <span className={`t-label ${it.lead ? "self-center text-fg-dim" : "text-fg-faint"}`}>{it.k}</span>
-              <span className={`text-right ${it.lead ? "t-figure" : "t-data text-[0.75rem]"} ${it.c}`}>{it.v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      </dl>
+      <LegsList s={s} />
 
       {/* place CTA — the page's one main action, inside the panel */}
       {placeNote ? (
         <p className="mt-3 t-label text-fg-dim">{placeNote}</p>
       ) : (
-        <ToolButton primary onClick={onPlace} className="mt-3 w-full !h-9 !justify-between">
-          <span>Place this trade on {symbol}</span>
-          <span>→</span>
-        </ToolButton>
+        <PillButton kind="primary" onClick={onPlace} className="mt-4 w-full">
+          Place this paper trade on {symbol}
+        </PillButton>
       )}
-      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-        <CopyLinkButton
-          trade={{ underlying: symbol, spot, daysToExpiry, legs: s.legs }}
-        />
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <CopyLinkButton trade={{ underlying: symbol, spot, daysToExpiry, legs: s.legs }} />
         <span className="ml-auto t-label text-fg-faint">
           {Math.round(prob * 100)}% in band · Black-Scholes · paper only
         </span>
@@ -1376,27 +1340,23 @@ function TeacherPanel({
   };
 
   return (
-    <section className="flex flex-col surface-instrument border border-border bg-surface lg:shrink-0">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-        <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
-          AI teacher
-          <Chip>Beta</Chip>
-        </span>
-        <ToolButton
-          onClick={() => {
-            setOpen(true);
-            onExplain();
-          }}
-          disabled={!selected || narrating}
-          className={DENSE}
-        >
-          Explain this position
-        </ToolButton>
-      </div>
+    <div className="mt-4">
+      <PillButton
+        onClick={() => {
+          setOpen(true);
+          onExplain();
+        }}
+        disabled={!selected || narrating}
+        className="w-full"
+      >
+        <Sparkles aria-hidden size={15} className="text-brand-ink" />
+        Explain this position
+        <span className="t-label text-fg-faint">Beta</span>
+      </PillButton>
 
       {open && (
       <>
-      <div className="flex max-h-[18.75rem] min-h-[10rem] flex-col gap-3 overflow-y-auto p-3 lg:max-h-[15rem] lg:min-h-[7.5rem]">
+      <div className="mt-3 flex max-h-[18.75rem] min-h-[7.5rem] flex-col gap-3 overflow-y-auto lg:max-h-[15rem]">
         {thread.length === 0 && !narrating && (
           <TeacherBubble
             speaker="teacher"
@@ -1415,13 +1375,13 @@ function TeacherPanel({
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={submit} className="flex items-center gap-2 border-t border-border bg-bg-soft p-2">
+      <form onSubmit={submit} className="mt-3 flex items-center gap-2">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask anything about this trade..."
           disabled={!selected}
-          className="min-w-0 flex-1 rounded-[var(--r-instrument)] border border-border bg-bg px-3 py-2 text-[0.8125rem] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-brand-ink/60 disabled:opacity-50"
+          className="calm-input min-w-0 flex-1 outline-none transition-colors placeholder:text-fg-faint focus:border-brand-ink/60 disabled:opacity-50"
         />
         <ToolButton
           type="submit"
@@ -1436,12 +1396,12 @@ function TeacherPanel({
       </form>
       {/* The server's disclosure string once an answer has arrived
           (lib/billing/explain-policy.ts); the house line before that. */}
-      <div className="border-t border-border-soft px-3 py-1.5 t-label text-fg-faint">
+      <div className="mt-2 t-label text-fg-faint">
         {disclosure ?? "Describes the position you built · education, not advice"}
       </div>
       </>
       )}
-    </section>
+    </div>
   );
 }
 

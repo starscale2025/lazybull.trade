@@ -39,36 +39,31 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot, symbol, columns = 3, compact = false }: Props) {
   if (compact) {
     return (
-      <div className="flex flex-col divide-y divide-border-soft">
+      <div className="-mx-2 mt-2 flex flex-col">
         {strategies.map((s) => {
-          const tone = TONE[s.id];
           const selected = selectedId === s.id;
           return (
             <button
               key={s.id}
               type="button"
               onClick={() => onSelect(s)}
-              className={`relative flex flex-col gap-1 px-3 py-2 text-left transition-colors ${
-                selected ? "bg-surface" : "bg-bg hover:bg-surface"
+              aria-pressed={selected}
+              title={TONE[s.id].label}
+              className={`flex items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors ${
+                selected ? "bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]" : "hover:bg-[color-mix(in_srgb,var(--fg)_4%,transparent)]"
               }`}
             >
-              {selected && (
-                <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-brand-ink" aria-hidden />
-              )}
-              {/* line 1: the fixed-width chrome. Price and odds travel as one
-                  group and drop under the pill when a narrow phone has no room
-                  for all three, instead of running out past the panel edge. */}
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <Chip tone={tone.chip} className="shrink-0">{tone.label}</Chip>
-                <span className="ml-auto flex shrink-0 items-center gap-2">
-                  <span className="t-label text-fg-faint tabular-nums">
-                    {s.cost > 0 ? "Pay" : "Collect"} ${Math.abs(s.cost).toFixed(0)}
-                  </span>
-                  <span className="w-9 text-right t-data text-[0.6875rem] text-bull">{(s.prob * 100).toFixed(0)}%</span>
-                </span>
+              <span
+                aria-hidden
+                className={`size-2 shrink-0 rounded-full ${selected ? "bg-[image:var(--grad-fill)]" : "bg-[color-mix(in_srgb,var(--fg)_22%,transparent)]"}`}
+              />
+              <span className="min-w-0 flex-1 text-[0.875rem] leading-snug text-fg">{s.kind}</span>
+              <span className="shrink-0 t-label tabular-nums text-fg-dim">
+                {s.cost > 0 ? "Pay" : "Collect"} ${Math.abs(s.cost).toFixed(0)}
               </span>
-              {/* line 2: the payload — name + strikes, never truncated */}
-              <span className="text-[0.6875rem] leading-snug text-fg">{s.kind}</span>
+              <span className="w-9 shrink-0 text-right t-data text-[0.75rem] text-fg" title="Probability of profit at expiry">
+                {(s.prob * 100).toFixed(0)}%
+              </span>
             </button>
           );
         })}

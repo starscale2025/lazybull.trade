@@ -18,6 +18,7 @@ import { ConsentGate } from "@/components/ConsentGate";
 import { MotionProvider } from "@/components/MotionProvider";
 import { SkipLink } from "@/components/SkipLink";
 import { IslandMount } from "@/components/island/IslandMount";
+import { DialMount } from "@/components/dial/DialMount";
 import { MatterRoot } from "@/components/matter/MatterRoot";
 
 const fraunces = Fraunces({
@@ -144,6 +145,7 @@ export default function RootLayout({
             page that has it (lib/island.ts). Once, here, so it can stay with
             the visitor across sections and routes. */}
         <IslandMount />
+        <DialMount />
         {/* THE MATTER (M1): starts the site's one particle engine the first
             time a page offers it a slot, after load and idle; never on a tool. */}
         <MatterRoot />

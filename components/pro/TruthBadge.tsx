@@ -46,7 +46,9 @@ function Label({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function TruthBadge() {
+/** `quiet` drops the chip for a line of text, for a header that is already
+    calm (/trade). The words, the check and the ledger behind them all stay. */
+export function TruthBadge({ quiet = false }: { quiet?: boolean }) {
   const [resolved, setResolved] = useState(false);
   const [glitching, setGlitching] = useState(false);
   const [open, setOpen] = useState(false);
@@ -73,7 +75,11 @@ export function TruthBadge() {
         aria-haspopup="dialog"
         aria-expanded={open}
         title="What’s real, what’s synthetic, what’s yours — open the honesty ledger"
-        className="calm-chip relative text-amber transition-colors hover:text-fg"
+        className={
+          quiet
+            ? "relative inline-flex items-center gap-1 text-fg-dim underline decoration-dotted underline-offset-2 transition-colors hover:text-fg"
+            : "calm-chip relative text-amber transition-colors hover:text-fg"
+        }
       >
         {resolved && (
           <span className="truth-check-in font-semibold text-brand-ink" aria-hidden>

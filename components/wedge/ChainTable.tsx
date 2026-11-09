@@ -168,7 +168,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHove
           <span className="text-fg-faint">{strikes.length} strikes</span>
         </div>
         <div className="flex items-center gap-3">
-          <Chip tone="warn">Synthetic chain · illustrative</Chip>
+          <Chip tone="neutral">Synthetic chain · illustrative</Chip>
           <CalmLink href="/trade/chain" className="!text-[0.75rem]">
             Configure chain
           </CalmLink>
