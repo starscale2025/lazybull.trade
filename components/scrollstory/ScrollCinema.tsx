@@ -86,6 +86,8 @@ type SceneWindow = Window & {
   markRect?: () => { x: number; y: number; w: number; h: number; lw: number };
   /** The vote's ring as shares of the scene, for the matter to gather on. */
   ringRect?: () => { cx: number; cy: number; rx: number; ry: number } | null;
+  /** The payoff's four corners and its zero as shares of the scene, for the matter. */
+  payoffLine?: () => { pts: number[][]; zero: number } | null;
   /** The payoff's floor as shares of the scene, for the floor line to land on. */
   floorLine?: () => { x0: number; y0: number; x1: number; y1: number } | null;
   // `hideBull` / `hideCandle` / `hideDive` (per frame) drop the matching 2D draw
@@ -503,6 +505,33 @@ export function ScrollCinema() {
       const dn = cutDnRef.current;
       if (!svg || !ramp || !up || !dn) return;
       const hold = holdOf(scrollS);
+      // With the matter up the last shot's horizon is the line, and this thread
+      // only comes up on it as it starts to move; without it, the scene's mark.
+      const horizon = matterReadyRef.current && matterBullRef.current;
+      if (horizon) {
+        // The horizon is made of the same points as everything else, so it
+        // bends itself: into the instrument rising underneath, wherever that
+        // has got to, landing while the stage is still there to carry it.
+        if (svg.style.display !== "none") svg.style.display = "none";
+        const stageBox = stickyRef.current?.getBoundingClientRect();
+        const poly = hold > 0 ? document.querySelector<SVGPolylineElement>("[data-payoff-line]") : null;
+        const ctm = poly?.getScreenCTM();
+        if (collapsed || !stageBox || !poly || !ctm || poly.points.numberOfItems < 4) return;
+        const toClip = (x: number, y: number) => [((x - stageBox.left) / stageBox.width) * 2 - 1, 1 - ((y - stageBox.top) / stageBox.height) * 2];
+        const pts = [0, 1, 2, 3].flatMap((i) => {
+          const q = poly.points.getItem(i);
+          const c = new DOMPoint(q.x, q.y).matrixTransform(ctm);
+          return toClip(c.x, c.y);
+        });
+        const u = clamp01((hold - 0.02) / 0.53);
+        cinemaClock.stage.payoff = {
+          pts,
+          zero: toClip(0, new DOMPoint(0, Number(poly.dataset.zero)).matrixTransform(ctm).y)[1],
+          k: u * u * (3 - 2 * u),
+          reveal: 1,
+        };
+        return;
+      }
       const appear = clamp01((progress - MARK_LINE_IN) / 0.04);
       const alpha = collapsed ? 0 : appear * (1 - clamp01((hold - 0.86) / 0.12));
       const mr = alpha > 0.002 ? win()?.markRect?.() : undefined;
@@ -560,6 +589,7 @@ export function ScrollCinema() {
       // The stage dissolves across the hold, in scroll (lib/cinema.ts, THE
       // HOLD IS THE HAND-OFF), while the landing rises under it.
       if (stickyRef.current) stickyRef.current.style.opacity = String(handoffOpacity(holdOf(scrollS)));
+      cinemaClock.stage.payoff = null;
       drawMatchCut();
       // The Island (M32) recedes to its dot while the film is pinned, and
       // comes back as the pill, signed, where the film speaks of the visitor's
@@ -613,17 +643,27 @@ export function ScrollCinema() {
       const sceneWin = win();
       const frameEl = frameRef.current;
       const stageEl = stickyRef.current;
-      if (matterOn && frameEl && stageEl && sceneWin?.ringRect && sceneWin.markRect) {
+      if (matterOn && frameEl && stageEl && sceneWin?.ringRect) {
         const fr = frameEl.getBoundingClientRect();
         const st = stageEl.getBoundingClientRect();
         const ndcX = (px: number) => ((px - st.left) / st.width) * 2 - 1;
         const ndcY = (py: number) => 1 - ((py - st.top) / st.height) * 2;
+        // The worst-case act's payoff, drawn on by the matter as the scene draws it.
+        const pl = progress > 0.585 && progress < 0.69 ? sceneWin.payoffLine?.() : null;
+        if (pl) {
+          const q = clamp01((progress - ACTS.safety.from) / (ACTS.safety.to - ACTS.safety.from));
+          const d = 1 - clamp01(q / 0.45);
+          cinemaClock.stage.payoff = {
+            pts: pl.pts.flatMap(([x, y]) => [ndcX(fr.left + x * fr.width), ndcY(fr.top + y * fr.height)]),
+            zero: ndcY(fr.top + pl.zero * fr.height),
+            k: ss(0.585, 0.6, progress) * (1 - ss(0.672, 0.686, progress)),
+            reveal: 1 - d * d * d,
+          };
+        }
         const rg = sceneWin.ringRect();
         if (rg) {
           cinemaClock.stage.ring = [ndcX(fr.left + rg.cx * fr.width), ndcY(fr.top + rg.cy * fr.height), (rg.rx * fr.width * 2) / st.width, (rg.ry * fr.height * 2) / st.height];
         }
-        const mk = sceneWin.markRect();
-        cinemaClock.stage.mark = [ndcX(fr.left + mk.x * fr.width), ndcY(fr.top + mk.y * fr.height), (mk.w * fr.width * 2) / st.width, (mk.h * fr.height * 2) / st.height];
       }
       // THE FLOOR LINE CARRIES THE CUT (the one take). The chart clears, and
       // the one thing left standing is the line where the loss stops; it
@@ -658,7 +698,8 @@ export function ScrollCinema() {
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
-        const o = beatOpacity(progress, beat, beat.fade);
+        // The last words step aside as soon as the page starts to rise under them.
+        const o = beatOpacity(progress, beat, beat.fade) * (beat.pos === "bottom" ? 1 - ss(0, 0.26, holdOf(scrollS)) : 1);
         el.style.opacity = String(o);
         // The per-character stagger is now a NUMBER written every frame, not a
         // class flip: the CSS below derives each glyph's own 0→1 from this and
@@ -668,7 +709,7 @@ export function ScrollCinema() {
         // "top" beats anchor at their top edge (upper third); "left" beats at
         // their left edge (the left third, beside the bull); others center. The
         // type layer parallaxes harder than the scene → real depth.
-        const baseY = beat.pos === "top" || beat.pos === "left" || beat.pos === "right" ? "0px" : "-50%";
+        const baseY = beat.pos === "top" || beat.pos === "left" || beat.pos === "right" || beat.pos === "bottom" ? "0px" : "-50%";
         const baseX = beat.pos === "left" || beat.pos === "right" ? "0px" : "-50%";
         el.style.transform = `translate(calc(${baseX} + ${(pxS * -16).toFixed(1)}px), calc(${baseY} + ${((1 - o) * 14).toFixed(2)}px + ${(pyS * -10).toFixed(1)}px))`;
       });
@@ -1292,7 +1333,9 @@ export function ScrollCinema() {
                     ? "clamp(64px, 15%, calc(50% - 250px))"
                     : b.pos === "right"
                       ? "44%"
-                      : "50%",
+                      : b.pos === "bottom"
+                        ? "74%"
+                        : "50%",
               opacity: 0,
               ...(b.pos === "right"
                 ? {
@@ -1319,7 +1362,11 @@ export function ScrollCinema() {
           >
             <div
               className="font-display text-3xl tracking-tightest text-balance text-fg md:text-5xl"
-              style={{ textShadow: "0 2px 22px rgba(0,0,0,0.85)" }}
+              style={{
+                textShadow: "0 2px 22px rgba(0,0,0,0.85)",
+                // The last words are set at the size of the first ones.
+                ...(b.pos === "bottom" ? { fontSize: "clamp(3rem, min(7vw, 11vh), 6.5rem)", lineHeight: 1 } : null),
+              }}
             >
               {renderChars(b.heading)}
             </div>

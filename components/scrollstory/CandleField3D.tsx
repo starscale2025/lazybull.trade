@@ -1,42 +1,25 @@
 "use client";
 
-// The candle act (progress ~0.32–0.58) as a live chart of glass: each candle a
-// cut crystal bar with light traced through it (glass-candle.ts), standing in
-// a dark studio with air behind it and black glass under it. Candles print in
-// as you scroll; hovering one surfaces its price; the camera orbits with your
-// pointer (with inertia). All state flows
+// The signature candle act (progress ~0.32–0.56) as a LIVE INSTRUMENT: candles
+// print in as you scroll with a glowing print-head; hovering a candle flares it
+// and surfaces a live price tag; the drifting dust is repelled by your cursor;
+// clicking fires a shockwave through the field; the camera orbits with your
+// pointer (with inertia) and kicks its FOV when you scroll hard. All state flows
 // through cinemaClock (one-clock rule). Crossfaded over the 2D scene by
 // ScrollCinema.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { EffectComposer, Bloom, DepthOfField, SMAA, ToneMapping } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, ChromaticAberration, SMAA, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { Html } from "@react-three/drei";
+import { Environment, Grid, Html, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cinemaClock, damp } from "@/lib/cinema-clock";
 import { grade } from "@/lib/cinema";
-import { CANDLES, CANDLE_CAM_START, CRASH_END, FIRST_RED_I, N, PEAK_Y, SP, SPAN, buildAt, floorReachF, floorY, revealF } from "@/lib/candle-series";
+import { CANDLES, CRASH_END, FIRST_RED_I, N, PEAK_Y, SP, SPAN, buildAt, floorReachF, floorY, revealF } from "@/lib/candle-series";
 import { getHeroPosition, onHeroPosition } from "@/lib/hero-position";
 import { START_STRIKES, figures, money } from "@/lib/hero-spread";
-import {
-  AIR_FRAG,
-  AIR_VERT,
-  CUT_CROWN,
-  CUT_H0,
-  FLOOR_FRAG,
-  FLOOR_VERT,
-  GLASS_VERT,
-  MIRROR_FRAG,
-  MIRROR_VERT,
-  SHARD_FRAG,
-  SHARD_VERT,
-  WICK_FRAG,
-  WICK_VERT,
-  airNoise,
-  crystalCut,
-  glassFrag,
-} from "./glass-candle";
 import { watchContext } from "./gl-context";
 import { Grade } from "./Grade";
 import { FilmDriver } from "./FilmDriver";
@@ -45,11 +28,13 @@ import { FILM_DPR_MAX, FilmDpr } from "./FilmDpr";
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
 /**
- * Lerps the act's grade (lib/cinema.ts) onto the live bloom and fog, and keeps
- * the lens focused on the printing edge. Effects are found by what they carry
- * (only bloom has `luminanceMaterial`, only depth of field `cocMaterial`):
- * names a minifier cannot rename, and no React ref on the effect, which crashes
- * the page (see the note on the composer below).
+ * THE COLOURIST — lerps the act's colour script onto the live post chain.
+ *
+ * Before this, one Bloom at threshold 0.35 ran the whole 27%-of-the-film candle
+ * act, so the print, the crash and the lab were all graded identically and the
+ * act read as one green wash. grade() in lib/cinema.ts keys three rooms; this
+ * writes them per frame. Damped rather than snapped so a room CHANGE reads as a
+ * gear change rather than a cut.
  */
 function Colourist({
   composerRef,
@@ -57,54 +42,66 @@ function Colourist({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   composerRef: React.MutableRefObject<any>;
 }) {
-  const cur = useRef({ i: 0.32, th: 1.05, focus: 12 });
+  const cur = useRef({ i: 0.95, th: 0.35, ca: 0.0005 });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const found = useRef<{ bloom: any; dof: any } | null>(null);
-  const head = useMemo(() => new THREE.Vector3(), []);
+  const found = useRef<{ bloom: any; ca: any } | null>(null);
 
   useFrame((state, dt) => {
+    // FOUND BY WHAT THEY *ARE*, NOT BY WHAT THEY ARE CALLED.
+    //
+    // Three versions of this, and the middle one was the worst:
+    //
+    //  1. `e.constructor.name.includes("Bloom")` — class names are exactly
+    //     what a minifier renames, and the failure is silent: the effects are
+    //     never located and the per-act grade just stops applying, with
+    //     nothing in the console to say so.
+    //  2. React refs on <Bloom>/<ChromaticAberration>. Minifier-proof, and it
+    //     CRASHED the film in dev: holding an effect instance in a ref hands
+    //     it to React's dev tooling, which serialises props and dies on the
+    //     effect's parent/child cycle — "Converting circular structure to
+    //     JSON", thrown from the scheduler, homepage dead. Production builds
+    //     survived it, which is precisely what made it dangerous.
+    //  3. This. Duck-typing on the library's own API surface: only the bloom
+    //     effect carries `luminanceMaterial`, and only chromatic aberration
+    //     carries a settable `offset` vector. Those are property names the
+    //     library itself reads, so a minifier cannot rename them without
+    //     breaking itself — and nothing holds a reference React can walk.
     if (!found.current) {
       const passes = composerRef.current?.passes;
       if (!passes) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let bloom: any = null, dof: any = null;
+      let bloom: any = null, ca: any = null;
       for (const pass of passes) {
         for (const e of pass.effects ?? []) {
           if (!bloom && e?.luminanceMaterial) bloom = e;
-          if (!dof && e?.cocMaterial) dof = e;
+          if (!ca && typeof e?.offset?.set === "function") ca = e;
         }
       }
-      if (!bloom) return;
-      found.current = { bloom, dof };
+      if (!bloom && !ca) return;
+      found.current = { bloom, ca };
     }
 
     const g = grade(cinemaClock.progress);
+    // frame-rate independent approach, same shape as the cinema clock's follower
     const k = 1 - Math.exp(-6 * Math.min(0.05, dt));
     const c = cur.current;
     c.i += (g.bloomIntensity - c.i) * k;
     c.th += (g.bloomThreshold - c.th) * k;
+    c.ca += (g.caOffset - c.ca) * k;
 
     const b = found.current.bloom;
-    if ("intensity" in b) b.intensity = c.i;
-    const lum = b.luminanceMaterial;
-    if (lum) lum.threshold = c.th;
-
-    const dof = found.current.dof;
-    if (dof) {
-      const rf = revealF(cinemaClock.progress);
-      const idx = clamp(Math.floor(rf), 0, N - 1);
-      head.set(clamp(rf, 0, N - 1) * SP, CANDLES[idx].cy, 0);
-      const pull = smooth(0.46, 0.5, cinemaClock.progress);
-      c.focus += (state.camera.position.distanceTo(head) - c.focus) * k;
-      dof.cocMaterial.focusDistance = c.focus;
-      dof.cocMaterial.focusRange = lerp(9, 44, pull);
+    if (b) {
+      if ("intensity" in b) b.intensity = c.i;
+      const lum = b.luminanceMaterial;
+      if (lum) lum.threshold = c.th;
     }
+    const ca = found.current.ca;
+    if (ca?.offset?.set) ca.offset.set(c.ca, c.ca * 1.8);
 
     const fog = state.scene.fog as THREE.Fog | null;
     if (fog) {
       fog.near += (g.fogNear - fog.near) * k;
       fog.far += (g.fogFar - fog.far) * k;
-      GLASS.uFog.value.set(fog.near, fog.far);
     }
   });
   return null;
@@ -128,7 +125,6 @@ function mulberry32(seed: number) {
 // The deterministic price series (climb → crash → floor chop) and the print
 // head that reveals it live in lib/candle-series.ts, so the sound, the rail
 // and the tests key to the same candles this scene prints (Gate A4 #3).
-
 
 // Soft round sprite for particles (raw gl_Points render as squares up close).
 const dotTexture = (() => {
@@ -218,138 +214,223 @@ function Interaction() {
   return null;
 }
 
-const FLOOR_Y = -0.54;
-
-const STAGE = {
-  uHead: { value: new THREE.Vector3() },
-  uTint: { value: new THREE.Color(0.1, 1, 0.6) },
-  uTime: { value: 0 },
-  uOn: { value: 1 },
-  mix: 0,
-};
-
-/** What every glass surface needs to know each frame, shared by the bars and their wicks. */
-const GLASS = {
-  uReveal: { value: 0 },
-  uSweep: { value: 0 },
-  uFlareIdx: { value: -1 },
-  uFlare: { value: 0 },
-  uHeat: { value: 0 },
-  uFog: { value: new THREE.Vector2(22, 60) },
-  uLightPos: { value: new THREE.Vector3() },
-  uLightCol: { value: new THREE.Color("#52ffa5") },
-};
-
-/** The stage: the air behind the chart and the black glass under it. */
-function Stage() {
-  const { airMat, floorMat, quad } = useMemo(() => {
-    const airMat = new THREE.ShaderMaterial({
-      vertexShader: AIR_VERT,
-      fragmentShader: AIR_FRAG,
-      depthWrite: false,
-      depthTest: false,
-      uniforms: { uInvView: { value: new THREE.Matrix4() }, uInvProj: { value: new THREE.Matrix4() }, uHead: STAGE.uHead, uTint: STAGE.uTint, uTime: STAGE.uTime, uOn: STAGE.uOn, uNoise: { value: airNoise() } },
-    });
-    const floorMat = new THREE.ShaderMaterial({
-      vertexShader: FLOOR_VERT,
-      fragmentShader: FLOOR_FRAG,
-      transparent: true,
-      depthWrite: false,
-      uniforms: { uHead: STAGE.uHead, uTint: STAGE.uTint, uFog: GLASS.uFog },
-    });
-    return { airMat, floorMat, quad: new THREE.PlaneGeometry(2, 2) };
+// Candle bodies: a Higgsfield-generated cut-emerald crystal (normalized to the
+// unit cube so it's a drop-in for the old unit box — per-candle scaling still
+// shapes it). Non-indexed + recomputed normals = crisp gem facets. Falls back
+// to the plain box until the GLB arrives (candles grow on scroll anyway).
+function useCrystalGeometry(fallback: THREE.BufferGeometry) {
+  const [geo, setGeo] = useState<THREE.BufferGeometry | null>(null);
+  useEffect(() => {
+    let disposed = false;
+    let loaded: THREE.BufferGeometry | null = null;
+    // STATIC import (top of file), not a nested dynamic one: this component is
+    // already inside the cinema's lazy chunk, and the extra async boundary
+    // here split the module graph so the bundle shipped three.js TWICE
+    // (2 × 852KB, both with WebGLRenderer — 34% of the static payload).
+    {
+      new GLTFLoader().load(
+        "/models/candle-crystal.glb",
+        (gltf) => {
+          if (disposed) return;
+          let src: THREE.BufferGeometry | null = null;
+          gltf.scene.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!src && m.isMesh && m.geometry) src = m.geometry;
+          });
+          if (!src) return;
+          const g = (src as THREE.BufferGeometry).toNonIndexed();
+          g.computeVertexNormals(); // per-face normals → hard facets
+          g.computeBoundingBox();
+          const bb = g.boundingBox!;
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          bb.getSize(size);
+          bb.getCenter(center);
+          g.translate(-center.x, -center.y, -center.z);
+          g.scale(1 / Math.max(size.x, 1e-6), 1 / Math.max(size.y, 1e-6), 1 / Math.max(size.z, 1e-6));
+          loaded = g;
+          setGeo(g);
+        },
+        undefined,
+        () => {} // load failure → keep the box
+      );
+    }
+    return () => {
+      disposed = true;
+      loaded?.dispose();
+    };
   }, []);
-  useFrame((state) => {
-    (airMat.uniforms.uInvView.value as THREE.Matrix4).copy(state.camera.matrixWorld);
-    (airMat.uniforms.uInvProj.value as THREE.Matrix4).copy(state.camera.projectionMatrixInverse);
-    STAGE.uTime.value = cinemaClock.time;
-    const crashing = revealF(cinemaClock.progress) > FIRST_RED_I ? 1 : 0;
-    STAGE.mix += (crashing - STAGE.mix) * damp(0.05, cinemaClock.dt);
-    STAGE.uTint.value.setRGB(0.1 + 0.9 * STAGE.mix, 1 - 0.84 * STAGE.mix, 0.6 - 0.26 * STAGE.mix);
-    STAGE.uHead.value.copy(GLASS.uLightPos.value);
-    STAGE.uOn.value = 1 - smooth(0.455, 0.495, cinemaClock.progress);
-  });
-  return (
-    <>
-      <mesh geometry={quad} material={airMat} frustumCulled={false} renderOrder={-10} />
-      <mesh rotation-x={-Math.PI / 2} position={[SPAN / 2, FLOOR_Y, 0]} material={floorMat} renderOrder={-1}>
-        <planeGeometry args={[SPAN * 5, 180]} />
-      </mesh>
-    </>
-  );
+  return geo ?? fallback;
 }
+
+// The glass floor's height. The mirrored candle clones that hung from each
+// candle's base are gone (Gate A3, materials): they doubled the chart's draw
+// calls through the transmission pass and read as an upside-down twin. The
+// floor's clearcoat and the Lightformers now give the glass its sheen.
+const FLOOR_Y = -0.54;
 
 function Candles() {
   const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const body = useCrystalGeometry(box);
   const hitMat = useMemo(() => new THREE.MeshBasicMaterial({ visible: false }), []);
-  const { bars, wicks, barMat, wickMat, mirrorMat } = useMemo(() => {
-    const cut = crystalCut();
-    const center = new Float32Array(N * 3);
-    const halfY = new Float32Array(N);
-    const up = new Float32Array(N);
-    const index = new Float32Array(N);
-    const wCenter = new Float32Array(N * 3);
-    const wHalf = new Float32Array(N);
-    CANDLES.forEach((c, i) => {
-      center.set([c.x, c.cy, 0], i * 3);
-      halfY[i] = Math.max(c.h / 2, CUT_CROWN * 1.6);
-      up[i] = c.up ? 1 : 0;
-      index[i] = i;
-      wCenter.set([c.x, (c.wl + c.wh) / 2, 0], i * 3);
-      wHalf[i] = (c.wh - c.wl) / 2;
-    });
-    const instanced = (base: THREE.BufferGeometry, cen: Float32Array, half: Float32Array) => {
-      const g = new THREE.InstancedBufferGeometry();
-      g.index = base.index;
-      g.setAttribute("position", base.attributes.position);
-      g.setAttribute("normal", base.attributes.normal);
-      g.setAttribute("aCenter", new THREE.InstancedBufferAttribute(cen, 3));
-      g.setAttribute("aHalfY", new THREE.InstancedBufferAttribute(half, 1));
-      g.setAttribute("aUp", new THREE.InstancedBufferAttribute(up, 1));
-      g.setAttribute("aIndex", new THREE.InstancedBufferAttribute(index, 1));
-      g.instanceCount = N;
-      return g;
-    };
-    const bars = instanced(cut.geometry, center, halfY);
-    const wickBase = new THREE.CylinderGeometry(0.0125, 0.0125, 1, 10, 1, true);
-    const wicks = instanced(wickBase, wCenter, wHalf);
-    const barMat = new THREE.ShaderMaterial({
-      vertexShader: GLASS_VERT,
-      fragmentShader: glassFrag(cut.count),
-      uniforms: {
-        ...GLASS,
-        uN: { value: cut.normals },
-        uD: { value: cut.offsets },
-        uLift: { value: cut.lifts },
-        uH0: { value: CUT_H0 },
-        uCrown: { value: CUT_CROWN },
-      },
-    });
-    const wickMat = new THREE.ShaderMaterial({ vertexShader: WICK_VERT, fragmentShader: WICK_FRAG, uniforms: GLASS });
-    const mirrorMat = new THREE.ShaderMaterial({
-      vertexShader: MIRROR_VERT,
-      fragmentShader: MIRROR_FRAG,
-      side: THREE.BackSide,
-      uniforms: { ...GLASS, uH0: { value: CUT_H0 }, uCrown: { value: CUT_CROWN }, uFloorY: { value: FLOOR_Y } },
-    });
-    return { bars, wicks, barMat, wickMat, mirrorMat };
-  }, []);
-
-  useFrame(() => {
-    const p = cinemaClock.progress;
-    GLASS.uReveal.value = revealF(p);
-    // The lights turn with the scroll, a slow quarter-turn over the act, so
-    // the facets catch and lose them as the chart goes by.
-    GLASS.uSweep.value = (p - 0.32) * 3.4;
-    GLASS.uFlareIdx.value = FLARE.idx;
-    GLASS.uFlare.value = FLARE.amt;
+  // Bodies are TRANSLUCENT GLASS (the reference: a green glass block with a
+  // luminous heart). Transmission refracts whatever sits behind AND INSIDE the
+  // body — the opaque inner CORE mesh below renders into the transmission
+  // buffer, so the glass shell samples it blurred by its roughness: a bright
+  // center softened by a frosted shell, with the emerald attenuation tinting
+  // the volume between. The shell keeps only a FAINT emissive of its own (edge
+  // life); the core carries the glow. Clearcoat is the wet outer polish;
+  // flatShading keeps the cut-crystal facets frosted. Thickness is the constant
+  // 0.72 x/z footprint (rays cross bodies sideways; only candle HEIGHT varies,
+  // so two shared materials still shade all 48 correctly).
+  const green = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#9fffd4",
+        transmission: 0.92,
+        thickness: 0.72,
+        ior: 1.5,
+        roughness: 0.16,
+        metalness: 0,
+        attenuationColor: new THREE.Color("#52ffa5"),
+        attenuationDistance: 1.1,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.22,
+        emissive: new THREE.Color("#52ffa5"),
+        emissiveIntensity: 0.22,
+        flatShading: true,
+      }),
+    []
+  );
+  const red = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: "#ffc0cf",
+        transmission: 0.92,
+        thickness: 0.72,
+        ior: 1.5,
+        roughness: 0.16,
+        metalness: 0,
+        attenuationColor: new THREE.Color("#ff2e63"),
+        attenuationDistance: 1.0,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.22,
+        emissive: new THREE.Color("#ff2e63"),
+        emissiveIntensity: 0.3,
+        flatShading: true,
+      }),
+    []
+  );
+  // The luminous HEART inside each glass body: a shared unit box scaled to
+  // ~50% of the footprint / ~66% of the height per candle. It draws opaque, so
+  // the transmission pass picks it up and the glass shell shows it frosted —
+  // bright center, deep attenuation color between core and shell. Hotter than
+  // the shell, cooler than the wick, so bloom keeps its hierarchy.
+  const coreGreen = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#000000",
+        emissive: new THREE.Color("#7dffc9"),
+        emissiveIntensity: 1.25,
+        roughness: 0.5,
+        metalness: 0,
+      }),
+    []
+  );
+  const coreRed = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#000000",
+        emissive: new THREE.Color("#ff5c86"),
+        emissiveIntensity: 1.5,
+        roughness: 0.5,
+        metalness: 0,
+      }),
+    []
+  );
+  // Wicks stay opaque and HOT — they are what bloom reads, now that the bodies
+  // glow softly from within instead of carrying the whole emissive load.
+  const wickGreen = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#052a1b",
+        emissive: new THREE.Color("#52ffa5"),
+        emissiveIntensity: 1.7,
+        roughness: 0.4,
+        metalness: 0,
+      }),
+    []
+  );
+  const wickRed = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#2e0a15",
+        emissive: new THREE.Color("#ff2e63"),
+        emissiveIntensity: 2.1,
+        roughness: 0.4,
+        metalness: 0,
+      }),
+    []
+  );
+  const refs = useRef<(THREE.Group | null)[]>([]);
+  const flareLight = useRef<THREE.PointLight>(null);
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const rf = revealF(cinemaClock.progress);
+    for (let i = 0; i < N; i++) {
+      const g = refs.current[i];
+      if (!g) continue;
+      const grow = clamp(rf - i, 0, 1); // 0 until the print reaches this candle
+      g.visible = grow > 0.001;
+      // easeOutBack → candle pops past 100% (~1.1 near grow 0.7) then settles to 1
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      const b = grow - 1;
+      const e = 1 + c3 * b * b * b + c1 * b * b; // 0 at grow=0, 1 at grow=1
+      const f = i === FLARE.idx ? FLARE.amt : 0;
+      g.scale.set(1 + 0.14 * f, Math.max(0.0001, e * (1 + 0.05 * f)), 1 + 0.14 * f);
+    }
+    // the whole ridge breathes faintly — alive even between scrolls. One pulse,
+    // three layers: hot wicks feed bloom, the inner cores throb beneath them,
+    // and the glass shells barely flicker at their edges.
+    green.emissiveIntensity = 0.22 + 0.05 * Math.sin(time * 1.15);
+    red.emissiveIntensity = 0.3 + 0.06 * Math.sin(time * 1.5 + 2);
+    coreGreen.emissiveIntensity = 1.25 + 0.18 * Math.sin(time * 1.15);
+    coreRed.emissiveIntensity = 1.5 + 0.2 * Math.sin(time * 1.5 + 2);
+    wickGreen.emissiveIntensity = 1.7 + 0.25 * Math.sin(time * 1.15);
+    wickRed.emissiveIntensity = 2.1 + 0.3 * Math.sin(time * 1.5 + 2);
+    // hovered candle gets a hot local light (its flare)
+    const fl = flareLight.current;
+    if (fl) {
+      const c = CANDLES[clamp(FLARE.idx, 0, N - 1)];
+      fl.position.set(c.x, c.cy + 0.4, 1.1);
+      fl.intensity = 26 * FLARE.amt;
+      fl.color.set(c.up ? "#52ffa5" : "#ff2e63");
+    }
   });
-
   return (
     <group>
-      <mesh geometry={bars} material={mirrorMat} frustumCulled={false} renderOrder={-2} />
-      <mesh geometry={wicks} material={wickMat} frustumCulled={false} />
-      <mesh geometry={bars} material={barMat} frustumCulled={false} />
+      {CANDLES.map((c, i) => {
+        const bm = c.up ? green : red;
+        const wm = c.up ? wickGreen : wickRed;
+        const cm = c.up ? coreGreen : coreRed;
+        // Body, core and wick are all centered on the close level, so scaling
+        // the parent group's Y grows the whole candle (heart included) in place.
+        return (
+          <group
+            key={i}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            position={[c.x, c.cy, 0]}
+            scale={[1, 0, 1]}
+          >
+            <mesh geometry={body} material={bm} scale={[0.72, c.h, 0.72]} />
+            <mesh geometry={box} material={cm} scale={[0.36, c.h * 0.66, 0.36]} />
+            <mesh geometry={box} material={wm} scale={[0.11, c.wh - c.wl, 0.11]} />
+          </group>
+        );
+      })}
       {/* forgiving invisible hitboxes for hover (material invisible, ray-visible) */}
       <group
         ref={(el) => {
@@ -367,6 +448,8 @@ function Candles() {
           />
         ))}
       </group>
+      {/* Always visible, intensity 0 when idle, so it costs no shader recompile. */}
+      <pointLight ref={flareLight} intensity={0} distance={6} decay={2} />
     </group>
   );
 }
@@ -387,46 +470,6 @@ function floorLabel(): string {
   return `An example floor. Below ${START_STRIKES.k1} the loss stops at −${money(f.maxLoss)}. Illustrative, SIM.`;
 }
 
-function Shards() {
-  const { geometry, material } = useMemo(() => {
-    const falling = CANDLES.map((c, i) => ({ c, i })).filter(({ c, i }) => !c.up && i >= FIRST_RED_I && i < CRASH_END);
-    const PER = 14;
-    const count = falling.length * PER;
-    const origin = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const axis = new Float32Array(count * 3);
-    const param = new Float32Array(count * 2);
-    const rnd = mulberry32(4411);
-    falling.forEach(({ c, i }, k) => {
-      for (let n = 0; n < PER; n++) {
-        const id = k * PER + n;
-        origin.set([c.x + (rnd() - 0.5) * 0.5, c.cy - c.h / 2 + rnd() * c.h * 0.4, (rnd() - 0.5) * 0.5], id * 3);
-        vel.set([(rnd() - 0.5) * 2.1, -0.3 - rnd() * 1.4, (rnd() - 0.2) * 1.6], id * 3);
-        const a = new THREE.Vector3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize();
-        axis.set([a.x, a.y, a.z], id * 3);
-        param.set([i, 0.05 + rnd() * rnd() * 0.15], id * 2);
-      }
-    });
-    const base = new THREE.TetrahedronGeometry(1, 0);
-    const geometry = new THREE.InstancedBufferGeometry();
-    geometry.setAttribute("position", base.attributes.position);
-    geometry.setAttribute("normal", base.attributes.normal);
-    geometry.setAttribute("aOrigin", new THREE.InstancedBufferAttribute(origin, 3));
-    geometry.setAttribute("aVel", new THREE.InstancedBufferAttribute(vel, 3));
-    geometry.setAttribute("aAxis", new THREE.InstancedBufferAttribute(axis, 3));
-    geometry.setAttribute("aParam", new THREE.InstancedBufferAttribute(param, 2));
-    geometry.instanceCount = count;
-    const material = new THREE.ShaderMaterial({
-      vertexShader: SHARD_VERT,
-      fragmentShader: SHARD_FRAG,
-      side: THREE.DoubleSide,
-      uniforms: { uReveal: GLASS.uReveal, uSweep: GLASS.uSweep, uFog: GLASS.uFog },
-    });
-    return { geometry, material };
-  }, []);
-  return <mesh geometry={geometry} material={material} frustumCulled={false} />;
-}
-
 function FloorSlab() {
   const group = useRef<THREE.Group>(null);
   const tagAnchor = useRef<THREE.Group>(null);
@@ -442,7 +485,7 @@ function FloorSlab() {
   const edge = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: new THREE.Color("#ff2e63").multiplyScalar(1.7),
+        color: "#ff8fa8",
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -501,24 +544,241 @@ function FloorSlab() {
   );
 }
 
-// The working light: it rides the printing edge, so each new bar is seen by
-// what it catches, and it tells the glass where it is for the surface glint.
-function PrintLight() {
+// The 2D chart-line made physical: a glowing baseline that races ahead with the
+// print head — candles read as extruding UP from it. Fades once the chart lands.
+function Baseline() {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    const m = ref.current;
+    if (!m) return;
+    const rf = revealF(cinemaClock.progress);
+    const w = clamp(rf, 0, N) * SP + 1; // reach follows the print head
+    m.visible = w > 1.01;
+    m.scale.x = w;
+    m.position.x = w / 2 - 0.5;
+    (m.material as THREE.MeshBasicMaterial).opacity =
+      0.5 * (1 - smooth(0.86, 0.98, buildAt(cinemaClock.progress))); // gone once printed
+  });
+  return (
+    <mesh ref={ref} visible={false} position={[0, -0.45, 0]}>
+      <boxGeometry args={[1, 0.04, 0.04]} />
+      <meshBasicMaterial
+        color="#52ffa5"
+        toneMapped={false}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
+  );
+}
+
+// Every red crash candle detonates on print: 9 emissive shards blast down-and-
+// outward from its base, tumbling under gravity, then vanish once the candle
+// settles (the finished chart stays clean). Pure function of rf — scrubbing
+// backwards un-explodes them. One instancedMesh for the whole crash (~144).
+const SHARDS_PER = 9;
+function CrashShards() {
+  const crash = useMemo(
+    () =>
+      CANDLES.map((c, i) => ({ c, i })).filter(
+        ({ c, i }) => !c.up && i >= FIRST_RED_I && i < CRASH_END
+      ),
+    []
+  );
+  const geo = useMemo(() => new THREE.BoxGeometry(0.16, 0.16, 0.16), []);
+  const mat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#2e0a15",
+        emissive: new THREE.Color("#ff2e63"),
+        emissiveIntensity: 1.6,
+        roughness: 0.4,
+      }),
+    []
+  );
+  // deterministic per-shard trajectory: mostly downward + outward debris
+  const params = useMemo(
+    () =>
+      crash.flatMap(({ i }) =>
+        Array.from({ length: SHARDS_PER }, (_, s) => {
+          const rnd = mulberry32(i * 31 + s);
+          return {
+            vx: (rnd() - 0.5) * 1.6, // [-0.8, 0.8]
+            vy: -0.6 - rnd() * 1.6, // [-2.2, -0.6]
+            vz: (rnd() - 0.5) * 1.0, // [-0.5, 0.5]
+            spin: rnd() * Math.PI * 2,
+            jit: 0.6 + rnd() * 0.8, // size jitter 0.6..1.4
+          };
+        })
+      ),
+    [crash]
+  );
+  const inst = useRef<THREE.InstancedMesh>(null);
+  const obj = useMemo(() => new THREE.Object3D(), []); // scratch for matrices
+  useFrame(() => {
+    const m = inst.current;
+    if (!m) return;
+    const rf = revealF(cinemaClock.progress);
+    for (let k = 0; k < crash.length; k++) {
+      const { c, i } = crash[k];
+      const g = clamp(rf - i, 0, 1);
+      const live = g > 0.05 && g < 1; // hidden before impact + once settled
+      for (let sh = 0; sh < SHARDS_PER; sh++) {
+        const id = k * SHARDS_PER + sh;
+        const p = params[id];
+        if (live) {
+          const s = 1 - (1 - g) * (1 - g); // easeOut → burst fast, drift out
+          obj.position.set(
+            i * SP + p.vx * s * 2.8,
+            c.cy - c.h / 2 + p.vy * s * 2.8 - s * s * 1.8, // extra gravity pull
+            p.vz * s * 2.8
+          );
+          // geometry is already 0.16 per side → scale carries jitter + shrink
+          obj.scale.setScalar(p.jit * (1 - s * 0.7));
+          obj.rotation.set(p.spin + s * 6, p.spin * 1.7 + s * 6, 0);
+        } else {
+          obj.position.set(i * SP, c.cy, 0);
+          obj.scale.setScalar(0);
+          obj.rotation.set(0, 0, 0);
+        }
+        obj.updateMatrix();
+        m.setMatrixAt(id, obj.matrix);
+      }
+    }
+    m.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <instancedMesh
+      ref={inst}
+      args={[geo, mat, crash.length * SHARDS_PER]}
+      frustumCulled={false}
+    />
+  );
+}
+
+// The live print-head: a hot orb riding the newest candle, a point light that
+// flashes the neighbourhood on every print, and a pulse ring expanding around it.
+function PrintHead() {
+  const orb = useRef<THREE.Mesh>(null);
+  const light = useRef<THREE.PointLight>(null);
+  const ring = useRef<THREE.Mesh>(null);
   const head = useMemo(() => new THREE.Vector3(), []);
   useFrame((state) => {
     const rf = revealF(cinemaClock.progress);
+    const on = rf > 0.05 && rf < N - 0.02;
     const idx = clamp(Math.floor(rf), 0, N - 1);
     const frac = clamp(rf - idx, 0, 1);
     const x = clamp(rf, 0, N - 1) * SP;
     const y = lerp(CANDLES[idx].cy, CANDLES[Math.min(idx + 1, N - 1)].cy, frac);
+    const flash = (1 - frac) * (1 - frac); // spikes as each candle lands
+    // the head bleeds red while printing crash candles — .set() per frame is cheap
     const crash = !CANDLES[idx].up && idx >= FIRST_RED_I;
-    GLASS.uLightPos.value.set(x, y + 1.6, 3.4);
-    GLASS.uLightCol.value.set(crash ? "#ff2e63" : "#52ffa5");
-    GLASS.uHeat.value += ((crash ? 1 : 0) - GLASS.uHeat.value) * damp(0.06, cinemaClock.dt);
+    if (orb.current) {
+      orb.current.visible = on;
+      orb.current.position.set(x, y, 0);
+      orb.current.scale.setScalar(0.09 + 0.15 * flash);
+      (orb.current.material as THREE.MeshBasicMaterial).color.set(
+        crash ? "#ffd7e2" : "#c8ffe4"
+      );
+    }
+    if (light.current) {
+      light.current.position.set(x, y + 0.5, 1.4);
+      light.current.intensity = on ? (3 + 30 * flash) * (crash ? 1.6 : 1) : 0;
+      light.current.color.set(crash ? "#ff2e63" : "#52ffa5");
+    }
+    if (ring.current) {
+      ring.current.visible = on;
+      ring.current.position.set(x, y, 0.62);
+      const s = 0.3 + frac * 1.7;
+      ring.current.scale.set(s, s, s);
+      (ring.current.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - frac);
+    }
+    // The line of matter pours into the candle being printed (FilmMatter).
     head.set(x, y, 0).project(state.camera);
     cinemaClock.stage.head = [head.x, head.y];
   });
-  return null;
+  return (
+    <group>
+      <mesh ref={orb} visible={false}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshBasicMaterial color="#c8ffe4" toneMapped={false} />
+      </mesh>
+      <pointLight ref={light} intensity={0} color="#52ffa5" distance={8} decay={2} />
+      <mesh ref={ring} visible={false}>
+        <ringGeometry args={[0.9, 1, 48]} />
+        <meshBasicMaterial
+          color="#52ffa5"
+          transparent
+          opacity={0}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// Click shockwaves: a small pool of expanding rings spawned at the click point.
+function ClickFX() {
+  const refs = useRef<(THREE.Mesh | null)[]>([]);
+  const pool = useRef([
+    { t0: -1e9, x: 0, y: 0 },
+    { t0: -1e9, x: 0, y: 0 },
+    { t0: -1e9, x: 0, y: 0 },
+  ]);
+  const next = useRef(0);
+  const lastClick = useRef(0);
+  useFrame(() => {
+    if (IMPULSE.t !== lastClick.current) {
+      lastClick.current = IMPULSE.t;
+      const slot = pool.current[next.current];
+      slot.t0 = IMPULSE.t;
+      slot.x = IMPULSE.x;
+      slot.y = IMPULSE.y;
+      next.current = (next.current + 1) % pool.current.length;
+    }
+    const now = performance.now();
+    pool.current.forEach((s, i) => {
+      const m = refs.current[i];
+      if (!m) return;
+      const age = (now - s.t0) / 750; // 0..1 over 750ms
+      if (age < 0 || age > 1) {
+        m.visible = false;
+        return;
+      }
+      m.visible = true;
+      m.position.set(s.x, s.y, 0.5);
+      const sc = 0.3 + age * 7;
+      m.scale.set(sc, sc, sc);
+      (m.material as THREE.MeshBasicMaterial).opacity = (1 - age) * (1 - age) * 0.7;
+    });
+  });
+  return (
+    <group>
+      {[0, 1, 2].map((i) => (
+        <mesh
+          key={i}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          visible={false}
+        >
+          <ringGeometry args={[0.94, 1, 56]} />
+          <meshBasicMaterial
+            color="#7dffc9"
+            transparent
+            opacity={0}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 // Drifting particulate with a cursor FORCE-FIELD: particles flee the pointer,
@@ -637,8 +897,8 @@ function traumaAt(rf: number) {
 }
 
 function Rig() {
-  const pos = useRef(new THREE.Vector3(...CANDLE_CAM_START.pos));
-  const look = useRef(new THREE.Vector3(...CANDLE_CAM_START.look));
+  const pos = useRef(new THREE.Vector3(-7, 7, 11));
+  const look = useRef(new THREE.Vector3(0, 3, 0));
   const tmpP = useRef(new THREE.Vector3());
   const tmpL = useRef(new THREE.Vector3());
   const offset = useRef(new THREE.Vector3());
@@ -686,17 +946,11 @@ function Rig() {
     // around y 250–285 of 900, under the act's copy, and the chop still reads
     // at the bottom: the whole sentence, the price falling through the floor.
     const pull = smooth(0.66, 0.95, build);
-    // In close on the first bars, where the glass is the subject, easing out
-    // to the working distance as the chart gets going.
-    const near = 1 - smooth(0.02, 0.2, build);
-    const back = lerp(10.5, 5.6, near);
-    const side = lerp(6.2, 3.1, near);
-    const rise = lerp(3.4, 1.3, near);
-    tmpL.current.set(lerp(edgeX - side * 0.2, SPAN * 0.78, pull), lerp(trendY + 0.15, 9, pull), 0);
+    tmpL.current.set(lerp(edgeX - 1.5, SPAN * 0.78, pull), lerp(trendY, 9, pull), 0);
     tmpP.current.set(
-      lerp(edgeX - side, SPAN * 0.5, pull) + Math.sin(time * 0.33) * 0.12,
-      lerp(trendY + rise, PEAK_Y * 0.5 + 5, pull) + Math.sin(time * 0.47) * 0.09,
-      lerp(back, 40, pull) + Math.cos(time * 0.29) * 0.1
+      lerp(edgeX - 7, SPAN * 0.5, pull) + Math.sin(time * 0.33) * 0.18,
+      lerp(trendY + 4.5, PEAK_Y * 0.5 + 5, pull) + Math.sin(time * 0.47) * 0.14,
+      lerp(11, 30, pull) + Math.cos(time * 0.29) * 0.16
     );
     // orbit the look-target by the pointer: ±12° yaw, ±6° pitch
     offset.current.copy(tmpP.current).sub(tmpL.current);
@@ -709,13 +963,13 @@ function Rig() {
     look.current.lerp(tmpL.current, damp(0.09, dt));
     // deterministic smooth noise (no Math.random: it must reverse under scrub)
     const shake = impact * impact;
-    pos.current.x += (Math.sin(time * 11.1) + Math.sin(time * 15.7 + 1.3)) * 0.02 * shake;
-    pos.current.y += (Math.sin(time * 9.3 + 0.7) + Math.sin(time * 13.1 + 2.9)) * 0.018 * shake;
+    pos.current.x += (Math.sin(time * 23.1) + Math.sin(time * 31.7 + 1.3) + Math.sin(time * 17.9 + 2.1)) * 0.09 * shake;
+    pos.current.y += (Math.sin(time * 19.3 + 0.7) + Math.sin(time * 27.1 + 2.9)) * 0.08 * shake;
     state.camera.position.copy(pos.current);
     state.camera.lookAt(look.current);
     // scroll hard → the world stretches (FOV kick); crash impacts punch in too
     const cam = state.camera as THREE.PerspectiveCamera;
-    const targetFov = CANDLE_CAM_START.fov + cinemaClock.vel * 2.5;
+    const targetFov = 42 + cinemaClock.vel * 9 + impact * 3;
     if (Math.abs(cam.fov - targetFov) > 0.01) {
       cam.fov += (targetFov - cam.fov) * damp(0.1, dt);
       cam.updateProjectionMatrix();
@@ -743,8 +997,14 @@ export default function CandleField3D({
       // On the film's one clock (M31): drawn by ScrollCinema's tick, never by a loop of its own.
       frameloop="never"
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
-      camera={{ fov: CANDLE_CAM_START.fov, position: CANDLE_CAM_START.pos, near: 0.1, far: 200 }}
+      camera={{ fov: 42, position: [-5, 9, 12], near: 0.1, far: 200 }}
       onCreated={({ gl }) => {
+        // The glass bodies refract a second render of the scene, at full
+        // size by default: the act's single largest cost at 2x (Gate A4 #2).
+        // The bodies are frosted (roughness ≥ 0.17, read from blurred mips),
+        // so half the resolution each way, a quarter of the fill, does not
+        // show in them.
+        gl.transmissionResolutionScale = 0.5;
         onReady?.();
         watchContext(gl.domElement, onLost, onReady);
       }}
@@ -753,14 +1013,67 @@ export default function CandleField3D({
       <color attach="background" args={["#050505"]} />
       <fog attach="fog" args={["#050505", 22, 60]} />
 
+      {/* Ambient down from 0.4 (Gate A3, materials): it flattened the glass.
+          A rim from behind and three Lightformers give the bodies edges and
+          something to refract instead. */}
+      <ambientLight intensity={0.1} />
+      <directionalLight position={[6, 14, 8]} intensity={0.7} color="#bfe9ff" />
+      <directionalLight position={[SPAN * 0.6, 6, -12]} intensity={1.3} color="#8f73ff" />
+      <Environment resolution={128} frames={1}>
+        <Lightformer form="rect" intensity={2.2} color="#dfe8ff" position={[SPAN / 2, 9, 10]} scale={[24, 3, 1]} />
+        <Lightformer form="rect" intensity={1.4} color="#7b5cff" position={[SPAN * 0.8, 4, -10]} scale={[16, 6, 1]} />
+        <Lightformer form="ring" intensity={1.1} color="#4d8dff" position={[-6, 6, 4]} scale={4} />
+      </Environment>
+
       <Interaction />
-      <Stage />
       <Candles />
-      <Shards />
+      <Baseline />
+      <CrashShards />
       <FloorSlab />
-      <PrintLight />
-      {/* A little dust in the key light, so the stage has air. */}
-      <Dust seed={11} count={220} area={[70, 16, 14]} center={[SPAN / 2, 7, 0]} color="#8f9bff" size={0.03} speed={0.08} react={0.6} />
+      <PrintHead />
+      <ClickFX />
+      {/* z-ranges stay well in front of the camera (z≈11+) — no giant near-plane dots */}
+      {/* The air is the brand ramp (violet, blue, a little mint); the candles
+          keep mint and red, because up and down are data. */}
+      <Dust seed={11} count={420} area={[70, 16, 14]} center={[SPAN / 2, 7, 0]} color="#8f9bff" size={0.055} speed={0.11} react={1} />
+      <Dust seed={23} count={320} area={[80, 20, 16]} center={[SPAN / 2, 9, -4]} color="#4d93ff" size={0.045} speed={0.07} react={0.5} />
+      <Dust seed={37} count={260} area={[60, 10, 10]} center={[SPAN / 2, 2.5, 1]} color="#9dffcf" size={0.04} speed={0.16} react={1.3} />
+
+      {/* Polished black-glass floor — deliberately NOT a render-to-texture
+          reflector. With this rig (~20° pitch, the chart towering ~12 units
+          above FLOOR_Y) a true plane-mirrored image projects below the frustum
+          for nearly the whole act, so a MeshReflectorMaterial shows nothing
+          until the end pull-back (and its extra 1024² scene pass would double
+          again through the glass bodies' transmission pass). This plane is
+          near-black glass with tight clearcoat highlights under the
+          print-head/flare lights and the Lightformers (the wet sheen),
+          slightly translucent so it dies softly into the fog. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SPAN / 2, FLOOR_Y, 0]}>
+        <planeGeometry args={[SPAN * 3, 90]} />
+        <meshPhysicalMaterial
+          color="#030605"
+          roughness={0.08}
+          metalness={0.5}
+          clearcoat={1}
+          clearcoatRoughness={0.15}
+          transparent
+          opacity={0.62}
+        />
+      </mesh>
+      {/* faint grid floats on the glass */}
+      <Grid
+        position={[SPAN / 2, -0.5, 0]}
+        args={[SPAN * 2.5, 60]}
+        cellSize={1.05}
+        cellThickness={0.35}
+        cellColor="#0a0d1c"
+        sectionSize={SP * 6}
+        sectionThickness={0.6}
+        sectionColor="#161c3e"
+        fadeDistance={70}
+        fadeStrength={2}
+        infiniteGrid
+      />
 
       <Rig />
       <FilmDriver active={active} />
@@ -772,11 +1085,10 @@ export default function CandleField3D({
           has a .parent) throws "Converting circular structure to JSON" and takes
           the whole page down. Ref the composer instead and read its passes. */}
       <EffectComposer ref={composerRef} multisampling={0}>
-        {/* Focus rides the printing edge (the Colourist writes it each frame). */}
-        <DepthOfField focusDistance={12} focusRange={9} bokehScale={2.2} resolutionScale={0.5} />
-        {/* Half resolution: a glow is the one thing that loses nothing to it.
-            Five levels keep it round the filaments instead of washing the frame. */}
-        <Bloom mipmapBlur levels={3} radius={0.5} resolutionScale={0.5} luminanceThreshold={1.05} luminanceSmoothing={0.3} intensity={0.3} />
+        {/* Half resolution (Gate A4 #2): a glow is the one thing that loses
+            nothing to it, and the bloom chain was the act's second cost. */}
+        <Bloom mipmapBlur resolutionScale={0.5} luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
+        <ChromaticAberration offset={[0.0005, 0.0009]} />
         {/* TONE MAPPING, which is not the grade. A composer renders into a float target, and three only
             tone-maps on the way to the screen, so this layer had none: every
             emissive over 1.0 clipped flat (the 2026-11 re-tribunal measured

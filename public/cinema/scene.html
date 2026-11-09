@@ -234,6 +234,10 @@ window.ringRect = () => {
   const { W, H } = MARK_STAGE;
   return RING ? { cx: RING.cx / W, cy: RING.cy / H, rx: RING.r / W, ry: RING.r / H } : null;
 };
+window.payoffLine = () => {
+  const { W, H } = MARK_STAGE;
+  return PAYOFF ? { pts: PAYOFF.pts.map((p) => [p.x / W, p.y / H]), zero: PAYOFF.zeroY / H } : null;
+};
 window.floorLine = () => {
   const { W, H } = MARK_STAGE;
   return PAYOFF ? { x0: PAYOFF.floorX0 / W, y0: PAYOFF.lossY / H, x1: PAYOFF.floorX1 / W, y1: PAYOFF.lossY / H } : null;

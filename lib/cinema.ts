@@ -69,8 +69,9 @@ export type CopyBeat = {
   /** "top" lifts the beat into the upper third so it clears the feature-act
    *  charts; "left" sets it in the left third, beside a subject framed on the
    *  right (the bull); "right" in the right third, the side a fall leaves
-   *  empty; default (undefined) centers it. */
-  pos?: "top" | "left" | "right";
+   *  empty; "bottom" under the last shot's horizon; default (undefined)
+   *  centers it. */
+  pos?: "top" | "left" | "right" | "bottom";
   /** Fade width in progress (default 0.02). A short beat needs a short fade
    *  or it never holds at full strength (Gate A3 #7). */
   fade?: number;
@@ -141,11 +142,9 @@ export const COPY_BEATS: CopyBeat[] = [
   // lunges through the left third the copy would otherwise still be in.
   // Held at full strength for ~320px and gone before the charge (Gate A3 #7).
   { id: "bull", from: 0.736, to: 0.78, pos: "left", fade: 0.008, heading: TAGLINE_LEAD, sub: TAGLINE },
-  // Beside the mark the film ends on (M25), and held through the end: it is
-  // still up when the hold begins, and dissolves with the stage.
-  // In as the mark completes (Gate A4 #5): at 0.9 it arrived after a long
-  // stretch of nothing but the mark, and the act read as an empty screen.
-  { id: "welcome", from: 0.85, to: 1.04, pos: "left", heading: "Welcome in." },
+  // Under the last shot's horizon, and held through the end: it is still up
+  // when the hold begins, and dissolves with the stage.
+  { id: "welcome", from: 0.85, to: 1.04, pos: "bottom", heading: "Welcome in." },
 ];
 
 export function clamp01(v: number): number {
@@ -297,15 +296,17 @@ export type MatterFrame = {
   swarm: number;
   /** How long the bull has held the stage. */
   hold: number;
-  charge: number;
-  mark: number;
-  fade: number;
+  /** The last shot coming together: the sphere, the horizon, the bull centred. */
+  poster: number;
 };
 
 const ramp01 = (a: number, b: number, p: number) => ss01((p - a) / (b - a));
 
 /** Where the bull's last lunge lands (the score's hit keys to it). */
 export const CHARGE_AT = 0.806;
+
+/** The film's last horizon, in the stage's clip space (y up). */
+export const POSTER_GROUND_NDC = -0.4;
 
 export function matterAt(progress: number): MatterFrame {
   const p = clamp01(progress);
@@ -314,22 +315,20 @@ export function matterAt(progress: number): MatterFrame {
     birth: ramp01(0.151, 0.18, p),
     glide: ramp01(0.176, 0.204, p) * (1 - ramp01(0.222, 0.256, p)),
     curtain: ramp01(0.165, 0.2, p) * (1 - ramp01(0.312, 0.33, p)),
-    deep: p < 0.5 ? ramp01(0.155, 0.185, p) * (1 - ramp01(0.318, 0.342, p)) : ramp01(0.585, 0.615, p) * (1 - ramp01(0.84, 0.89, p)),
-    cloud: p < 0.5 ? ramp01(0.155, 0.185, p) * (1 - ramp01(0.318, 0.342, p)) : ramp01(0.725, 0.75, p) * (1 - ramp01(0.84, 0.89, p)),
+    deep: p < 0.5 ? ramp01(0.155, 0.185, p) * (1 - ramp01(0.318, 0.342, p)) : ramp01(0.585, 0.615, p),
+    cloud: p < 0.5 ? ramp01(0.155, 0.185, p) * (1 - ramp01(0.318, 0.342, p)) : ramp01(0.725, 0.75, p),
     chop: ramp01(0.232, 0.262, p),
     trend: ramp01(0.274, 0.314, p),
     pour: ramp01(0.318, 0.35, p),
     ringOn: ramp01(0.716, 0.732, p),
     swarm: ramp01(0.728, 0.768, p),
     hold: ramp01(0.75, 0.79, p),
-    charge: ramp01(0.776, CHARGE_AT, p),
-    mark: ramp01(0.792, 0.872, p),
-    fade: 1 - ramp01(0.872, 0.905, p),
+    poster: ramp01(0.792, 0.872, p),
   };
 }
 
 /** The matter layer is drawn only near the passages it owns. */
-export const matterNear = (progress: number) => (progress > 0.13 && progress < 0.37) || progress > 0.57;
+export const matterNear = (progress: number) => (progress > 0.13 && progress < 0.355) || progress > 0.57;
 
 /** The market's mood under the regime act: how far each word is on screen. */
 export const MOODS = [
@@ -347,9 +346,26 @@ export function moodOpacity(progress: number, m: { from: number; to: number }): 
 export const floorHandoff = (progress: number) => ramp01(0.53, 0.588, clamp01(progress));
 
 /**
- * The candle act's post chain: lerped per frame onto the live Bloom and fog.
- * Lit, not glowing: the candles are glass with a warm core on a black stage,
- * and only the print head's speculars reach the bloom at all.
+ * THE COLOUR SCRIPT — three rooms inside the candle act.
+ *
+ * One Bloom at threshold 0.35 used to run the entire act, which is exactly why
+ * a frame at its midpoint reads as a single undifferentiated green wash: every
+ * emissive in the scene crossed the same threshold at the same strength for
+ * ~27% of the film's runtime. A film with nine acts and one grade is nine acts
+ * of the same room.
+ *
+ * The three rooms, and why each is where it is:
+ *
+ *   COLD      the chart prints. Threshold is HIGH so only the wick tips and the
+ *             print head bloom — the glass candles stay glass instead of neon.
+ *   HOT       the crash. Threshold drops and the aberration widens, so the red
+ *             detonates. Red is deliberately WITHHELD until this moment: it is
+ *             the first red in ~14,000px of scroll, which is what makes it land.
+ *   CLINICAL  the floor line's passage. Bloom near-off, aberration near-zero — the scene stops
+ *             being weather and becomes an instrument being read.
+ *
+ * Returned values are lerped per frame onto the live Bloom / ChromaticAberration
+ * / fog, so the transitions between rooms ARE the act's gear changes.
  */
 export type Grade = {
   bloomIntensity: number;
@@ -359,16 +375,20 @@ export type Grade = {
   fogFar: number;
 };
 
-// Bloom round what is genuinely hot: the filaments and the strip-light flashes
-// on the glass. Everything else stays under the threshold, so the frame never
-// washes. No colour fringing.
 const GRADE_ROOMS: { at: number; g: Grade }[] = [
-  { at: 0.24, g: { bloomIntensity: 0.32, bloomThreshold: 1.05, caOffset: 0, fogNear: 22, fogFar: 60 } },
-  { at: 0.42, g: { bloomIntensity: 0.36, bloomThreshold: 1.0, caOffset: 0, fogNear: 19, fogFar: 56 } },
-  // The fog moves out with the pull-back, which ends ~40 units off the chart.
-  { at: 0.47, g: { bloomIntensity: 0.4, bloomThreshold: 0.95, caOffset: 0, fogNear: 34, fogFar: 74 } },
-  { at: 0.5, g: { bloomIntensity: 0.4, bloomThreshold: 0.95, caOffset: 0, fogNear: 44, fogFar: 96 } },
-  { at: 0.6, g: { bloomIntensity: 0.32, bloomThreshold: 1.05, caOffset: 0, fogNear: 44, fogFar: 96 } },
+  // before the act: whatever the neighbours were doing, held steady
+  { at: 0.24, g: { bloomIntensity: 0.95, bloomThreshold: 0.5, caOffset: 0.0005, fogNear: 22, fogFar: 60 } },
+  // COLD — glass, not neon
+  { at: 0.34, g: { bloomIntensity: 0.8, bloomThreshold: 0.55, caOffset: 0.0004, fogNear: 20, fogFar: 58 } },
+  { at: 0.42, g: { bloomIntensity: 0.85, bloomThreshold: 0.52, caOffset: 0.0005, fogNear: 19, fogFar: 56 } },
+  // HOT — the crash detonates
+  // The fog moves out with the pull-back, which now ends ~32 units off the
+  // chart (Gate A4 #3): at 15/48 it greyed the whole revealed crash by half.
+  { at: 0.47, g: { bloomIntensity: 1.25, bloomThreshold: 0.28, caOffset: 0.0016, fogNear: 22, fogFar: 58 } },
+  { at: 0.5, g: { bloomIntensity: 1.15, bloomThreshold: 0.3, caOffset: 0.0012, fogNear: 30, fogFar: 68 } },
+  // CLINICAL — the lab reads the instrument
+  { at: 0.55, g: { bloomIntensity: 0.42, bloomThreshold: 0.72, caOffset: 0.0002, fogNear: 26, fogFar: 70 } },
+  { at: 0.6, g: { bloomIntensity: 0.5, bloomThreshold: 0.68, caOffset: 0.0003, fogNear: 24, fogFar: 66 } },
 ];
 
 /** The grade at a given scroll position — linear between the keyed rooms. */

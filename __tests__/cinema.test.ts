@@ -3,7 +3,6 @@ import {
   ACTS,
   ACT_ORDER,
   CANDLE3D,
-  CHARGE_AT,
   COPY_BEATS,
   beatOpacity,
   candle3dOpacity,
@@ -134,19 +133,19 @@ describe("the one take (matterAt)", () => {
     expect(matterAt(ACTS.consensus.to - 0.016).ringOn).toBe(0);
     const beat = COPY_BEATS.find((b) => b.id === "bull")!;
     expect(matterAt(beat.to).swarm).toBe(1);
-    // the words have started to leave before the lunge
-    expect(matterAt(beat.to - (beat.fade ?? 0)).charge).toBe(0);
-    expect(matterAt(CHARGE_AT).charge).toBe(1);
+    // the words have started to leave before the last shot starts to form
+    expect(matterAt(beat.to - (beat.fade ?? 0)).poster).toBe(0);
   });
-  it("is off the screen once the mark's own line has taken over", () => {
-    expect(matterAt(0.86).fade).toBe(1);
-    expect(matterAt(0.92).fade).toBe(0);
+  it("has the last shot standing before its words are read", () => {
+    const welcome = COPY_BEATS.find((b) => b.id === "welcome")!;
+    expect(matterAt(welcome.from + 0.022).poster).toBe(1);
+    expect(matterAt(0.79).poster).toBe(0);
   });
   it("scrubs: every ramp only ever rises with progress", () => {
     let last = matterAt(0);
     for (let p = 0.001; p <= 1; p += 0.001) {
       const f = matterAt(p);
-      for (const k of ["birth", "chop", "trend", "pour", "ringOn", "swarm", "charge", "mark"] as const) {
+      for (const k of ["birth", "chop", "trend", "pour", "ringOn", "swarm", "poster"] as const) {
         expect(f[k]).toBeGreaterThanOrEqual(last[k]);
       }
       last = f;
