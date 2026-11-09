@@ -8,23 +8,32 @@
  * level moment — the beat where the whole desk commits. This is that beat,
  * in four acts:
  *
- *   idle       "Run the tape." over 10px chrome; metrics read "—" until earned
- *   lockdown   amber hazard strip, inputs frozen, the phosphor rail ignites
+ *   idle       "Run the tape." over its status strip; metrics read "—" until earned
+ *   lockdown   the lock notice, inputs frozen, the rail ignites
  *   streaming  the run log types; one tally cell arms per bot that lands
- *   verdict    the four consensus figures scramble once and resolve; the
+ *   verdict    the consensus figures scramble once and resolve; the
  *              headline rewrites to the aggregate side, counts matching
  *
  * EVERY NUMBER HERE IS REAL. The kit is a static preview and hard-codes its
  * outcome (19 buy · 4 hold · 4 sell, 74% confidence, +18.4% CAGR). Shipping
  * those literals would put invented performance figures on a page whose whole
  * argument is that it tells you what is real — so the tally counts actual
- * verdicts, confidence is the mean of the bots' own confidences, drawdown is
- * computed from the equity curves that bots actually returned (and reads "—"
- * when none did), and runtime is measured, not asserted.
+ * verdicts, agreement is the largest bloc of them, drawdown is computed from
+ * the equity curves that bots actually returned (and reads "—" when none
+ * did), and runtime is measured, not asserted.
+ *
+ * There is no confidence figure (Gate A3, 2026-11). "Mean confidence" was the
+ * mean of the bots' verdict.confidence, real arithmetic over numbers that are
+ * not odds: each bot scales its own signal into 0-1, and the consensus card
+ * mapped its agreement tier to 95%. Set in 30px mono over a hit-rate band, it
+ * read as the chance the read was right.
  */
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import { Chip, ToolButton } from "@/components/calm/kit";
+import { BullMark } from "@/components/BullMark";
 import { DecimatedNumber } from "./DecimatedNumber";
+import { sentence } from "./sentence";
 import type { ActiveBot, BotDef, BotResult, Verdict } from "@/lib/quant/types";
 import { AGGREGATE_READ, HOLDOUT, READ } from "@/lib/quant/reads";
 
@@ -66,8 +75,7 @@ const HEADLINE = "font-display text-[clamp(3rem,8vw,6rem)] leading-[0.87] tracki
 function RunTheTape() {
   return (
     <>
-      Run the <span className="t-accent">tape</span>
-      <span className="text-bull">.</span>
+      Run the <span className="t-accent">tape</span>.
     </>
   );
 }
@@ -80,20 +88,6 @@ function sideColor(side: Verdict["side"]) {
       : side === "warn"
         ? "var(--amber)"
         : "var(--fg-faint)";
-}
-
-/** The phosphor glow behind the read, in that read's own colour — a green
-    halo behind a red "leaned down." would say the opposite of the words. */
-function sideGlow(side: Verdict["side"]) {
-  const rgb =
-    side === "buy"
-      ? "0, 255, 135"
-      : side === "sell"
-        ? "255, 46, 99"
-        : side === "warn"
-          ? "255, 184, 0"
-          : "138, 138, 130";
-  return `0 0 30px rgba(${rgb}, 0.45), 0 0 80px rgba(${rgb}, 0.2)`;
 }
 
 export function RunRitual({
@@ -130,13 +124,6 @@ export function RunRitual({
         : counts.warn > 0 && counts.buy === 0
           ? "warn"
           : "hold";
-
-  const confidences = done
-    .map((r) => r.result!.verdict.confidence)
-    .filter((c): c is number => typeof c === "number");
-  const meanConf = confidences.length
-    ? confidences.reduce((a, b) => a + b, 0) / confidences.length
-    : null;
 
   // How much the bots agree = the largest bloc, NOT the votes for `aggregate`.
   // Those differ: 2 buy / 1 hold / 1 sell scores 0.25, which fails the >0.25
@@ -215,18 +202,13 @@ export function RunRitual({
   }, [phase, lines, settled]);
 
   // "— until earned". A consensus figure is only meaningful once every staged
-  // bot has landed: at 2 of 4 in, a mean confidence is a real number computed
+  // bot has landed: at 2 of 4 in, an agreement count is a real number computed
   // over half the evidence, and set in 30px tabular mono it reads as the
   // answer. So the figures stay "—" for the whole run and arrive with the
   // decimation, which is what that beat is FOR.
   const revealed = phase === "decimating" || phase === "verdict";
 
   const METRICS: { label: string; value: string; tone: "bull" | "bear" | "fg" }[] = [
-    {
-      label: "mean confidence",
-      value: meanConf === null ? "—" : `${Math.round(meanConf * 100)}%`,
-      tone: "bull",
-    },
     {
       label: "agreement",
       value: done.length === 0 ? "—" : `${largestBloc}/${done.length}`,
@@ -254,19 +236,16 @@ export function RunRitual({
   if (settled && folded) {
     return (
       <section aria-label="Run the workbench" className="shell shell-wide relative mt-4">
-        <div className="surface-card relative flex flex-wrap items-center gap-3 border border-border bg-bg px-4 py-2.5">
-          <span className="relative inline-flex size-5 shrink-0 items-center justify-center border border-fg/40">
-            <span aria-hidden className="absolute inset-0.5 bg-bull" />
-            <span className="relative font-mono text-[0.5625rem] font-bold text-bg">LB</span>
-          </span>
-          <span className="t-chrome text-fg">consensus engine</span>
+        <div className="surface-instrument flex flex-wrap items-center gap-3 border border-border bg-surface px-4 py-2.5">
+          <BullMark className="h-4 w-6 shrink-0" />
+          <span className="t-label text-fg">Consensus engine</span>
           <span
             className="font-display text-lg leading-none tracking-tightest"
             style={{ color: sideColor(aggregate) }}
           >
-            {AGGREGATE_READ[aggregate]}.
+            {sentence(AGGREGATE_READ[aggregate])}.
           </span>
-          <span className="t-chrome text-fg-faint">
+          <span className="t-label text-fg-faint">
             <span className="text-bull">{counts.buy} {READ.buy}</span> · {counts.hold} {READ.hold} ·{" "}
             <span className="text-bear">{counts.sell} {READ.sell}</span>
             {counts.warn > 0 && (
@@ -276,21 +255,17 @@ export function RunRitual({
               </>
             )}
           </span>
-          <span className="hidden t-chrome text-fg-faint sm:inline">{tapeLabel}</span>
+          <span className="t-label hidden text-fg-faint sm:inline">{tapeLabel}</span>
           <div className="flex-1" />
           <button
             onClick={() => setFolded(false)}
-            className="t-chrome text-fg-faint transition-colors hover:text-fg"
+            className="t-label text-fg-faint transition-colors hover:text-fg"
           >
-            ↻ replay ritual
+            ↻ Replay ritual
           </button>
-          <button
-            onClick={onRunAll}
-            disabled={total === 0}
-            className="inline-flex h-7 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-fg-faint"
-          >
-            ↻ run again
-          </button>
+          <ToolButton onClick={onRunAll} disabled={total === 0}>
+            ↻ Run again
+          </ToolButton>
         </div>
       </section>
     );
@@ -302,54 +277,32 @@ export function RunRitual({
       aria-label="Run the workbench"
       className="shell shell-wide relative mt-4"
     >
-      <div className="surface-card relative overflow-hidden border border-border bg-bg">
-        {/* one background texture — the fine grid, masked. No orbs, no noise. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-grid-fine"
-          style={{
-            maskImage: "radial-gradient(75% 65% at 50% 42%, #000 20%, transparent 100%)",
-            WebkitMaskImage:
-              "radial-gradient(75% 65% at 50% 42%, #000 20%, transparent 100%)",
-          }}
-        />
-
-        {/* ── chrome strip — the whisper altitude ─────────────────────────── */}
-        <div className="relative flex flex-wrap items-center gap-3 border-b border-border bg-bg-soft px-4 py-2.5">
-          <span className="relative inline-flex size-5 shrink-0 items-center justify-center border border-fg/40">
-            <span aria-hidden className="absolute inset-0.5 bg-bull" />
-            <span className="relative font-mono text-[0.5625rem] font-bold text-bg">LB</span>
-          </span>
-          <span className="t-chrome text-fg">consensus engine</span>
-          <span className="t-chrome text-fg-faint">{tapeLabel}</span>
+      <div className="surface-instrument border border-border bg-surface">
+        {/* ── status strip ────────────────────────────────────────────────── */}
+        <div className="relative flex flex-wrap items-center gap-3 rounded-t-[inherit] border-b border-border bg-bg-soft px-4 py-2.5">
+          <BullMark className="h-4 w-6 shrink-0" />
+          <span className="t-label text-fg">Consensus engine</span>
+          <span className="t-label text-fg-faint">{tapeLabel}</span>
           {dataSource !== "live" && (
-            <span className="flex items-center gap-1.5 t-chrome text-amber">
-              <span aria-hidden className="size-1.5 rounded-full bg-amber" /> SIM
-            </span>
+            <Chip tone="warn" dot>
+              SIM
+            </Chip>
           )}
           <div className="flex-1" />
           {/* Both held at their widest state (2026-11-06). The label goes
               run all (N) → running… → ↻ run again, and at its natural width
               the button, and this count beside it, slid 39px along the strip
               at every change. */}
-          <span className={`t-data min-w-[5ch] text-right text-[0.625rem] ${locked ? "text-bull" : "text-fg-faint"}`}>
+          <span className={`t-data min-w-[5ch] text-right text-[0.625rem] ${locked ? "text-brand-ink" : "text-fg-faint"}`}>
             {armed}/{total}
           </span>
-          <button
-            onClick={onRunAll}
-            disabled={locked || total === 0}
-            className={`inline-flex h-7 min-w-[8.5rem] items-center justify-center gap-2 border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors ${
-              locked || total === 0
-                ? "cursor-not-allowed border-border text-fg-faint"
-                : "border-bull bg-bull/10 text-bull hover:bg-bull hover:text-bg"
-            }`}
-          >
-            {!locked && <span aria-hidden className="size-1.5 rounded-full bg-current" />}
-            {phase === "idle" ? `run all (${total})` : settled ? "↻ run again" : "running…"}
-          </button>
+          {/* Not `primary`: the page's one gradient is the same action in the hero. */}
+          <ToolButton onClick={onRunAll} disabled={locked || total === 0} className="min-w-[8.5rem]">
+            {phase === "idle" ? `Run all (${total})` : settled ? "↻ Run again" : "Running…"}
+          </ToolButton>
         </div>
 
-        {/* the phosphor rail — the machine's pulse while it holds the lock.
+        {/* the rail — the machine's pulse while it holds the lock.
             One 2px element in every phase: the idle spacer used to be h-0.5,
             2.2px at the 110% root, a hair off the rail it stood in for. */}
         <div className={`relative h-[2px] ${locked ? "dc-rail" : ""}`} />
@@ -364,21 +317,15 @@ export function RunRitual({
               padding has room for it at every width (pt-9 below lg, where it
               was p-6) and a phone gets the short copy, not a second line. */}
           {locked && (
-            <div className="dc-line absolute inset-x-0 top-0 flex items-stretch border-b border-amber/30 bg-amber/6">
-              <span aria-hidden className="dc-hazard w-1.5 shrink-0" />
-              <span className="t-chrome min-w-0 truncate px-3 py-1.5 text-amber">
-                workspace locked · <span className="hidden sm:inline">run in progress · </span>inputs frozen
+            <div className="dc-line absolute inset-x-0 top-0 flex items-stretch border-b border-border-soft bg-bg-soft">
+              <span className="t-label min-w-0 truncate px-4 py-1.5 text-fg-dim">
+                Workspace locked · <span className="hidden sm:inline">run in progress · </span>inputs frozen
               </span>
             </div>
           )}
 
           <div className="min-w-0">
-            <div className="flex items-center gap-2.5 t-eyebrow text-fg-faint">
-              <span aria-hidden className="text-bull">
-                ⟢
-              </span>
-              <span className="whitespace-nowrap">the workbench</span>
-            </div>
+            <div className="t-eyebrow whitespace-nowrap text-brand-ink">The workbench</div>
 
             {/* Every headline this band can print, stacked in one grid cell
                 (2026-11-06). The cell takes the tallest, so the verdict cannot
@@ -389,13 +336,9 @@ export function RunRitual({
               {settled ? (
                 <h2
                   className={`dc-verdict col-start-1 row-start-1 ${HEADLINE}`}
-                  style={{
-                    color: sideColor(aggregate),
-                    textShadow: sideGlow(aggregate),
-                  }}
+                  style={{ color: sideColor(aggregate) }}
                 >
-                  {AGGREGATE_READ[aggregate]}
-                  <span className="crt-flicker">.</span>
+                  {sentence(AGGREGATE_READ[aggregate])}.
                 </h2>
               ) : (
                 <h2
@@ -410,7 +353,7 @@ export function RunRitual({
               </div>
               {Object.values(AGGREGATE_READ).map((read) => (
                 <div key={read} aria-hidden className={`invisible col-start-1 row-start-1 ${HEADLINE}`}>
-                  {read}.
+                  {sentence(read)}.
                 </div>
               ))}
             </div>
@@ -422,7 +365,7 @@ export function RunRitual({
                 height it will need from the first frame; content-start packs
                 the live rows at the top instead of spreading them over it. */}
             <div className="mt-2 grid">
-              <div className="col-start-1 row-start-1 flex flex-wrap content-start gap-x-3.5 gap-y-1 t-chrome text-fg-faint">
+              <div className="t-label col-start-1 row-start-1 flex flex-wrap content-start gap-x-3.5 gap-y-1 text-fg-faint">
                 {settled ? (
                   <>
                     <span className="text-bull">{counts.buy} {READ.buy}</span>
@@ -455,7 +398,7 @@ export function RunRitual({
                       : "seed tape · not advice"}
                 </span>
               </div>
-              <div aria-hidden className="invisible col-start-1 row-start-1 flex flex-wrap gap-x-3.5 gap-y-1 t-chrome">
+              <div aria-hidden className="t-label invisible col-start-1 row-start-1 flex flex-wrap gap-x-3.5 gap-y-1">
                 {(["buy", "hold", "sell", "warn"] as const).map((side) => (
                   <Fragment key={side}>
                     <span>{total} {READ[side]}</span>
@@ -471,7 +414,8 @@ export function RunRitual({
             <div className="mt-8 flex flex-wrap gap-x-11 gap-y-7">
               {METRICS.map((m) => (
                 <div key={m.label}>
-                  <div className="t-chrome text-fg-faint">{m.label}</div>
+                  {/* Sentence case by CSS: __tests__/quant-rendered-copy pins "agreement". */}
+                  <div className="t-label text-fg-faint first-letter:uppercase">{m.label}</div>
                   <div
                     className={`t-data mt-1 text-[1.875rem] tracking-[-0.02em] ${
                       m.tone === "bull"
@@ -500,12 +444,12 @@ export function RunRitual({
           <div className="relative self-center surface-instrument border border-border bg-surface">
             {locked && <div className="dc-rail absolute inset-x-0 top-0" />}
             <div
-              className={`flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-eyebrow ${
-                locked ? "text-bull" : "text-fg-dim"
+              className={`t-label flex items-center justify-between rounded-t-[inherit] border-b border-border bg-bg-soft px-3 py-2 ${
+                locked ? "text-brand-ink" : "text-fg-dim"
               }`}
             >
-              <span>run stream</span>
-              <span className="t-chrome text-fg-faint">
+              <span>Run stream</span>
+              <span className="tabular-nums text-fg-faint">
                 {armed}/{total}
               </span>
             </div>
@@ -524,11 +468,7 @@ export function RunRitual({
                   >
                     <span
                       className={
-                        i === LOG.length - 1
-                          ? "text-bull"
-                          : i === 0
-                            ? "text-amber"
-                            : "text-fg-dim"
+                        i === LOG.length - 1 ? "text-fg" : "text-fg-dim"
                       }
                     >
                       {l}
@@ -536,7 +476,7 @@ export function RunRitual({
                   </div>
                 ))
               )}
-              {locked && <span className="blink text-bull">▌</span>}
+              {locked && <span className="blink text-brand-ink">▌</span>}
             </div>
 
             {/* one cell per staged bot, armed in the order they land and
@@ -562,25 +502,23 @@ export function RunRitual({
               })}
             </div>
 
-            <div className="flex items-center justify-between border-t border-border bg-bg-soft px-3 py-1.5 t-chrome text-fg-faint">
+            <div className="t-label flex items-center justify-between rounded-b-[inherit] border-t border-border bg-bg-soft px-3 py-1.5 text-fg-faint">
               <span>
                 <span className="text-bull">{counts.buy} {READ.buy}</span> · {counts.hold} {READ.hold} ·{" "}
                 <span className="text-bear">{counts.sell} {READ.sell}</span>
               </span>
-              <span>in-process</span>
+              <span>In-process</span>
             </div>
           </div>
         </div>
 
         {/* ── the standing disclaimer — on screen at all times ─────────────── */}
-        <div className="relative flex flex-wrap items-center justify-between gap-2 border-t border-border bg-bg-soft px-4 py-2">
-          <span className="flex gap-3 t-chrome text-fg-faint">
-            <span className={settled ? "text-bull" : locked ? "text-amber" : "text-fg-dim"}>
-              ● {settled ? "lock released" : locked ? "lockdown" : "standing by"}
-            </span>
-          </span>
-          <span className="t-chrome text-fg-faint">
-            backtests are teaching instruments, not track records · never investment advice
+        <div className="relative flex flex-wrap items-center justify-between gap-2 rounded-b-[inherit] border-t border-border bg-bg-soft px-4 py-2">
+          <Chip tone={settled ? "brand" : "neutral"} dot>
+            {settled ? "Lock released" : locked ? "Lockdown" : "Standing by"}
+          </Chip>
+          <span className="t-label text-fg-faint">
+            Backtests are teaching instruments, not track records · never investment advice
           </span>
         </div>
       </div>
@@ -607,7 +545,7 @@ export function useRunRitual(completedCount: number, stagedCount: number) {
     setPhase("lockdown");
   };
 
-  // lockdown → streaming: a 700ms beat so the hazard strip and the rail are
+  // lockdown → streaming: a 700ms beat so the lock notice and the rail are
   // seen before the log starts moving.
   useEffect(() => {
     if (phase !== "lockdown") return;

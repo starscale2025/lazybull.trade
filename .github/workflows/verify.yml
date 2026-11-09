@@ -18,6 +18,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # The lockfile is written by npm 11; Node 22 ships npm 10, whose ci
+      # rejected it over optional wasm entries (run 42365089288, step 4).
+      # The lock now satisfies both; the runner matches the writer anyway.
+      - run: npm install -g npm@11
       - run: npm ci
       - run: npm run verify
       - run: npx playwright install --with-deps chromium

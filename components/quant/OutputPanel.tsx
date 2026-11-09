@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { BotDef, BotResult, ActiveBot, Verdict } from "@/lib/quant/types";
 import { AGGREGATE_READ, READ, type Outcome } from "@/lib/quant/reads";
 import { EquitySpark } from "./MiniViz";
+import { sentence } from "./sentence";
 
 export type RunRow = {
   active: ActiveBot;
@@ -39,10 +40,11 @@ export function OutputPanel({
   const score = (counts.buy - counts.sell) / Math.max(1, verdicts.length);
   const aggregate: Verdict["side"] = score > 0.25 ? "buy" : score < -0.25 ? "sell" : counts.warn > 0 && counts.buy === 0 ? "warn" : "hold";
 
-  const conf =
-    verdicts.length === 0
-      ? 0
-      : verdicts.reduce((a, b) => a + (b.confidence ?? 0), 0) / verdicts.length;
+  // No mean of the bots' verdict.confidence here any more (Gate A3,
+  // 2026-11). It filled the bar under the meter and printed as a percentage
+  // beside a hit-rate band, so it read as odds, and it was not: each bot
+  // scales its own signal into 0-1 its own way. The bar shows how many
+  // models agree, which AggregateVerdict counts from `counts`.
 
   const allSignals = completed.flatMap((r) =>
     r.result!.signals.map((s) => ({ bot: r.def.name, sig: s }))
@@ -56,12 +58,12 @@ export function OutputPanel({
       <div className="border-b border-border bg-bg-soft px-3 py-2">
         <div className="flex items-baseline justify-between">
           <span className="font-display text-base tracking-tightest text-fg">Output</span>
-          <span className="t-chrome text-fg-faint">
+          <span className="t-label tabular-nums text-fg-faint">
             {completed.length}/{runs.length} ran
           </span>
         </div>
-        <div className="mt-1 t-chrome text-fg-faint">
-          how the models read {symbol}
+        <div className="t-label mt-1 text-fg-faint">
+          How the models read {symbol}
           {outcome ? `, ${outcome.sessions} sessions back` : ""}
           {ranAt != null && completed.length > 0 && (
             <>
@@ -79,7 +81,6 @@ export function OutputPanel({
           <AggregateVerdict
             side={aggregate}
             counts={counts}
-            confidence={conf}
             then={outcome?.then}
           />
         </div>
@@ -88,7 +89,7 @@ export function OutputPanel({
             already played out, so the page can show what came next. */}
         {completed.length > 0 && outcome && (
           <div className="border-b border-border p-3">
-            <div className="t-chrome text-fg-faint">what the tape did next</div>
+            <div className="t-label text-fg-faint">What the tape did next</div>
             <p className="mt-1 text-[0.75rem] leading-relaxed text-fg">
               The models read {symbol} up to {outcome.sessions} sessions ago, at ${outcome.then.toFixed(2)}.
               {outcome.after20 != null && (
@@ -98,19 +99,19 @@ export function OutputPanel({
               )}
               {" "}On the last bar, ${outcome.now.toFixed(2)} (<Move from={outcome.then} to={outcome.now} />).
             </p>
-            <p className="mt-1 t-chrome text-fg-faint">one window, one outcome · it says nothing about the next one</p>
+            <p className="t-label mt-1 text-fg-faint">One window, one outcome · it says nothing about the next one</p>
           </div>
         )}
 
         {/* Per-bot verdicts */}
         <div className="border-b border-border p-3">
-          <div className="mb-2 flex items-center justify-between t-chrome text-fg-faint">
-            <span>per bot</span>
+          <div className="t-label mb-2 flex items-center justify-between text-fg-faint">
+            <span>Per bot</span>
             <span>{completed.length} reads</span>
           </div>
           {completed.length === 0 && (
-            <div className="grid h-16 place-items-center t-chrome text-fg-faint">
-              run bots to see their reads
+            <div className="t-label grid h-16 place-items-center text-fg-faint">
+              Run bots to see their reads
             </div>
           )}
           <div className="space-y-1.5">
@@ -124,7 +125,7 @@ export function OutputPanel({
                   <div className="min-w-0">
                     <div className="truncate font-mono text-[0.6875rem] text-fg">{r.def.name}</div>
                   </div>
-                  <span className={`t-chrome ${tone}`}>{READ[v.side]}</span>
+                  <span className={`t-label ${tone}`}>{sentence(READ[v.side])}</span>
                 </div>
               );
             })}
@@ -134,8 +135,8 @@ export function OutputPanel({
         {/* Combined signal stream — behind a disclosure: the verdicts above are
             the payload, the raw stream is reference material (Q7) */}
         <details className="group/sec border-b border-border">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 t-chrome text-fg-faint transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
-            <span>recent signals</span>
+          <summary className="t-label flex cursor-pointer list-none items-center justify-between px-3 py-2 text-fg-faint transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
+            <span>Recent signals</span>
             <span className="flex items-center gap-2">
               <span>{recent.length}</span>
               <span className="transition-transform group-open/sec:rotate-180">▾</span>
@@ -143,8 +144,8 @@ export function OutputPanel({
           </summary>
           <div className="px-3 pb-3">
           {recent.length === 0 ? (
-            <div className="grid h-16 place-items-center t-chrome text-fg-faint">
-              no signals yet
+            <div className="t-label grid h-16 place-items-center text-fg-faint">
+              No signals yet
             </div>
           ) : (
             <div className="space-y-1 t-data text-[0.625rem]">
@@ -167,8 +168,8 @@ export function OutputPanel({
         {/* Equity leaderboard */}
         {equityRuns.length > 0 && (
           <details className="group/sec border-b border-border">
-            <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 t-chrome text-fg-faint transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
-              <span>backtest leaderboard</span>
+            <summary className="t-label flex cursor-pointer list-none items-center justify-between px-3 py-2 text-fg-faint transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
+              <span>Backtest leaderboard</span>
               <span className="flex items-center gap-2">
                 <span>{equityRuns.length}</span>
                 <span className="transition-transform group-open/sec:rotate-180">▾</span>
@@ -185,7 +186,7 @@ export function OutputPanel({
                 .map((row) => (
                   <div key={row.def.id} className="border border-border-soft bg-bg p-2">
                     <div className="flex items-center justify-between">
-                      <span className="t-chrome text-fg-dim">
+                      <span className="t-label text-fg-dim">
                         {row.def.name}
                       </span>
                       <span className={`t-data text-[0.6875rem] ${row.ret >= 0 ? "text-bull" : "text-bear"}`}>
@@ -204,11 +205,8 @@ export function OutputPanel({
 
         {/* Teacher card */}
         {beginner && completed.length > 0 && (
-          <div className="border-b border-border bg-bull/5 p-3">
-            <div className="mb-1 flex items-center gap-1.5 t-chrome text-bull">
-              <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-              teacher note
-            </div>
+          <div className="border-b border-border p-3">
+            <div className="t-label mb-1 font-medium text-brand-ink">Teacher note</div>
             <p className="text-[0.75rem] leading-relaxed text-fg">
               {teacherNote(aggregate, counts, equityRuns.length)}
             </p>
@@ -223,23 +221,13 @@ export function OutputPanel({
 function AggregateVerdict({
   side,
   counts,
-  confidence,
   then,
 }: {
   side: Verdict["side"];
   counts: { buy: number; sell: number; hold: number; warn: number };
-  confidence: number;
   /** Close on the last bar the models saw. */
   then?: number;
 }) {
-  const bg =
-    side === "buy"
-      ? "bg-bull/15 border-bull/30"
-      : side === "sell"
-      ? "bg-bear/15 border-bear/30"
-      : side === "warn"
-      ? "bg-amber/15 border-amber/30"
-      : "bg-fg/5 border-border";
   const text =
     side === "buy"
       ? "text-bull"
@@ -261,10 +249,10 @@ function AggregateVerdict({
     side === "buy" ? "var(--bull)" : side === "sell" ? "var(--bear)" : side === "warn" ? "var(--amber)" : "var(--fg-dim)";
 
   return (
-    <div className={`border ${bg} p-3`}>
-      <div className="flex items-center justify-between t-chrome text-fg-faint">
-        <span>consensus meter</span>
-        {then != null && <span>close then ${then.toFixed(2)}</span>}
+    <div>
+      <div className="t-label flex items-center justify-between text-fg-faint">
+        <span>Consensus meter</span>
+        {then != null && <span className="tabular-nums">Close then ${then.toFixed(2)}</span>}
       </div>
 
       {/* segmented agreement arc — one segment per completed bot, lit = the
@@ -301,8 +289,8 @@ function AggregateVerdict({
             <div className="font-display text-2xl tracking-tightest text-fg">
               {agreeing} <span className="text-fg-faint">of</span> {total}
             </div>
-            <div className="t-eyebrow text-fg-faint">
-              models agree
+            <div className="t-label text-fg-faint">
+              Models agree
             </div>
           </div>
         </div>
@@ -310,7 +298,7 @@ function AggregateVerdict({
 
       {/* A read of a past window, never a trade action: no BUY or SELL here. */}
       <div className="mt-2 flex items-center justify-center">
-        <span className={`font-display text-xl tracking-tightest ${text}`}>{AGGREGATE_READ[side]}</span>
+        <span className={`font-display text-xl tracking-tightest ${text}`}>{sentence(AGGREGATE_READ[side])}</span>
       </div>
 
       <div className="mt-2 grid grid-cols-4 gap-px overflow-hidden border border-border bg-border">
@@ -327,18 +315,21 @@ function AggregateVerdict({
         ))}
       </div>
       <div className="mt-2">
-        <div className="flex items-center justify-between t-chrome text-fg-faint">
-          {/* "conviction" is the workbench sounding sure. The bar is an
-              average of the staged bots' own readings — how much they line
-              up — so it says that instead. Same vocabulary as BAND_LABEL in
-              lib/quant/ai-bots.ts. */}
-          <span>model agreement</span>
-          <span>{Math.min(100, Math.max(0, confidence * 100)).toFixed(0)}%</span>
+        <div className="t-label flex items-center justify-between text-fg-faint">
+          {/* The share of models in the largest bloc, the same count as the
+              arc above: 2 of 4 fills half the bar. It was labelled "model
+              agreement" but filled with the mean of the bots' own
+              verdict.confidence and printed as a percentage (Gate A3): an
+              odds figure the page does not have. The count is printed as a
+              count, so nothing here reads as a probability. */}
+          {/* Sentence case by CSS: __tests__/quant-rendered-copy pins this string. */}
+          <span className="first-letter:uppercase">models agreeing</span>
+          <span>{total === 0 ? "—" : `${agreeing} of ${total}`}</span>
         </div>
         <div className="mt-1 h-1.5 w-full bg-bg">
           <div
-            className="h-full bg-bull transition-[width] duration-500"
-            style={{ width: `${Math.min(100, Math.max(0, confidence * 100)).toFixed(1)}%` }}
+            className="h-full bg-brand-ink transition-[width] duration-500"
+            style={{ width: `${total === 0 ? 0 : ((agreeing / total) * 100).toFixed(1)}%` }}
           />
         </div>
       </div>
@@ -369,13 +360,16 @@ function dotBg(side: Verdict["side"]) {
 
 function teacherNote(side: Verdict["side"], counts: ReturnType<typeof countSides>, btCount: number) {
   if (counts.buy + counts.sell + counts.hold + counts.warn === 0) {
-    return "Add a bot or two from the library, then press RUN ALL. The agreement between bots is more interesting than any single one.";
+    return "Add a bot or two from the library, then press Run all. The agreement between bots is more interesting than any single one.";
   }
+  // These two said agreement "was historically more informative" and "the
+  // strongest evidence this workbench produces": a full vote as better odds,
+  // the claim Gate A3 removed from the consensus card. Agreement is a count.
   if (side === "buy" && counts.buy >= 2) {
-    return `${counts.buy} bots read the window as up. Independent methods landing on the same read was historically more informative than any single model. Check it against what the tape did next, just below the meter.`;
+    return `${counts.buy} bots read the window as up. That means the methods lined up on these bars; it is not better odds. Check it against what the tape did next, just below the meter.`;
   }
   if (side === "sell" && counts.sell >= 2) {
-    return `${counts.sell} bots read the window as down. Several methods agreeing was historically the strongest evidence this workbench produces. Check it against what the tape did next, just below the meter.`;
+    return `${counts.sell} bots read the window as down. That means the methods lined up on these bars; it is not better odds. Check it against what the tape did next, just below the meter.`;
   }
   if (counts.buy > 0 && counts.sell > 0) {
     // "Wait for confirmation" was an instruction — the one thing these notes

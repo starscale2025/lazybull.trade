@@ -9,8 +9,10 @@ import { track } from "@/lib/track";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
 import { HOLDOUT, READ, modelWindow, outcomeOf } from "@/lib/quant/reads";
+import { Chip, PillButton, PillLink } from "@/components/calm/kit";
 import { QuantHero } from "./QuantHero";
 import { useRetryCountdown } from "./RetryCountdown";
+import { sentence } from "./sentence";
 import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
 import { SetupsBar, type QuantSetupState } from "./SetupsBar";
 import { BotLibrary } from "./BotLibrary";
@@ -515,68 +517,56 @@ export function QuantPage() {
   // hydration nor one swapping for the other moves the page (2026-11-06: the
   // in-flow banners cost /quant 0.06 of its desktop CLS). Never two at once:
   // the reconnect notice outranks the first-visit tip. Each is one row of a
-  // fixed h-12, on an opaque base because the hero's grid and video now sit
-  // behind it. On a phone the labels shorten and the sentence waits for lg,
+  // fixed h-12. On a phone the labels shorten and the sentence waits for lg,
   // rather than wrapping the row taller than the slot.
   const notice =
     mode === "live" && status === "synthetic" ? (
-      <div key="reconnect" className="h-12 border-b border-border-soft bg-bg">
-        <div className="h-full bg-bg-soft">
-          <div className="shell shell-wide flex h-full items-center gap-3 font-mono text-[0.6875rem]">
-            {/* sm:shrink-0: from sm up the title always fits, so only the
-                sentence gives way when the row runs short (lg, ~1024-1070px). */}
-            <span className="flex min-w-0 items-center gap-1.5 uppercase tracking-wider text-cyan/90 sm:shrink-0">
-              <span className="size-1.5 shrink-0 rounded-full bg-cyan/80" />
-              <span className="truncate">
-                Live data <span className="hidden sm:inline">temporarily </span>unavailable
-              </span>
+      <div key="reconnect" className="h-12">
+        <div className="shell shell-wide flex h-full items-center gap-3">
+          {/* sm:shrink-0: from sm up the title always fits, so only the
+              sentence gives way when the row runs short (lg, ~1024-1070px). */}
+          <Chip tone="warn" dot className="min-w-0 sm:shrink-0">
+            <span className="truncate">
+              Live data <span className="hidden sm:inline">temporarily </span>unavailable
             </span>
-            {/* Calm + self-healing: the tape reconnects on its own (countdown),
-                so this reads as a graceful degrade, not a breakage. Never say the
-                market is "delayed" — it's our connection that dropped, not the
-                market. Verdicts run on a safe practice tape meanwhile. Below lg
-                the hero's OFFLINE badge and source line, right under this row,
-                carry the same practice-tape and live-in-Ns facts. */}
-            <span className="hidden min-w-0 truncate normal-case tracking-normal text-fg-dim lg:block">
-              Showing a practice tape while we reconnect — <LiveReturnsIn retryAt={retryAt} />
-            </span>
-            <button
-              onClick={() => setMode("seed")}
-              className="ml-auto shrink-0 border border-border px-3 py-1 uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
-            >
-              <span className="hidden sm:inline">use </span>seed mode →
-            </button>
-          </div>
+          </Chip>
+          {/* Calm + self-healing: the tape reconnects on its own (countdown),
+              so this reads as a graceful degrade, not a breakage. Never say the
+              market is "delayed" — it's our connection that dropped, not the
+              market. Verdicts run on a safe practice tape meanwhile. Below lg
+              the hero's Offline chip and source line, right under this row,
+              carry the same practice-tape and live-in-Ns facts. */}
+          <span className="t-label hidden min-w-0 truncate text-fg-dim lg:block">
+            Showing a practice tape while we reconnect — <LiveReturnsIn retryAt={retryAt} />
+          </span>
+          <PillButton size="sm" onClick={() => setMode("seed")} className="ml-auto">
+            <span className="hidden sm:inline">Use seed</span>
+            <span className="sm:hidden">Seed</span> mode
+          </PillButton>
         </div>
       </div>
     ) : showLearnBanner ? (
-      <div key="first-visit" className="h-12 border-b border-bull/30 bg-bg">
-        <div className="h-full bg-bull/5">
-          <div className="shell shell-wide flex h-full items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-wider">
-            <span className="flex min-w-0 items-center gap-1.5 text-bull sm:shrink-0">
-              <span className="size-1.5 shrink-0 rounded-full bg-bull pulse-dot" />
-              <span className="truncate">First time here?</span>
+      <div key="first-visit" className="h-12">
+        <div className="shell shell-wide flex h-full items-center gap-3">
+          <Chip tone="brand" className="min-w-0 sm:shrink-0">
+            <span className="truncate">First time here?</span>
+          </Chip>
+          <span className="t-label hidden min-w-0 truncate text-fg-dim lg:block">
+            Stack bots like Lego blocks. The Learn page walks through it in 3 minutes.
+          </span>
+          <PillLink href="/learn" size="sm" className="ml-auto">
+            <span>
+              <span className="hidden sm:inline">See how</span>
+              <span className="sm:hidden">How</span> it works
             </span>
-            <span className="hidden min-w-0 truncate normal-case tracking-normal text-fg-dim lg:block">
-              Stack bots like Lego blocks. The Learn page walks through it in 3 minutes.
-            </span>
-            <a
-              href="/learn"
-              className="ml-auto inline-flex shrink-0 items-center gap-2 border border-bull bg-bull/10 px-3 py-1 text-bull hover:bg-bull/20"
-            >
-              <span>
-                <span className="hidden sm:inline">See how</span>
-                <span className="sm:hidden">How</span> it works →
-              </span>
-            </a>
-            <button
-              onClick={dismissLearnBanner}
-              className="shrink-0 text-fg-faint hover:text-fg"
-              aria-label="Dismiss"
-            >
-              ✕
-            </button>
-          </div>
+          </PillLink>
+          <button
+            onClick={dismissLearnBanner}
+            className="shrink-0 text-fg-faint transition-colors hover:text-fg"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       </div>
     ) : null;
@@ -632,35 +622,29 @@ export function QuantPage() {
         const showPresetCards = !presetApplied || presetExpanded;
         return (
         <section className="shell shell-wide pt-4">
-          <div className="surface-instrument border border-border bg-surface">
-            <div className={`flex flex-wrap items-center gap-2 px-3 py-2 ${showPresetCards ? "border-b border-border-soft" : ""}`}>
-              <span className="t-eyebrow text-bull">
-                ★ starting stack for this tape
-              </span>
-              <span className="t-chrome text-fg-faint">
-                {symbolPreset.character}
-              </span>
+          <div className="calm-panel">
+            <i aria-hidden className="lit-aura" />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3.5">
+              <span className="t-eyebrow text-brand-ink">Starting stack for this tape</span>
+              <span className="t-label text-fg-faint">{sentence(symbolPreset.character)}</span>
               {presetApplied ? (
                 <>
-                  <span className="t-chrome text-bull/80">applied ✓</span>
+                  <Chip tone="brand">Applied ✓</Chip>
                   <button
                     onClick={() => setPresetExpanded((v) => !v)}
-                    className="ml-auto font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
+                    className="ml-auto text-[0.8125rem] text-fg-faint transition-colors hover:text-fg"
                   >
-                    {presetExpanded ? "hide ▴" : "view ▾"}
+                    {presetExpanded ? "Hide ▴" : "View ▾"}
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => applyPreset(symbol)}
-                  className="ml-auto border border-bull/50 bg-bull/10 px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
-                >
-                  apply this stack
-                </button>
+                <PillButton size="sm" onClick={() => applyPreset(symbol)} className="ml-auto">
+                  Apply this stack
+                </PillButton>
               )}
             </div>
             {showPresetCards && (
-            <div className="grid grid-cols-1 gap-px bg-border-soft sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-1 px-2 pb-2 sm:grid-cols-2 lg:grid-cols-4">
               {symbolPreset.bots.map((b) => {
                 const def = getBot(b.defId);
                 if (!def) return null;
@@ -672,14 +656,14 @@ export function QuantPage() {
                       if (!isActive) addBot(def);
                     }}
                     title={isActive ? "already in the workspace" : "add to workspace"}
-                    className="group bg-bg p-3 text-left transition-colors hover:bg-surface-2"
+                    className="group rounded-[14px] p-3 text-left transition-colors hover:bg-fg/5"
                   >
-                    <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg">
-                      <span className={`size-1.5 shrink-0 rounded-full ${isActive ? "bg-bull" : "bg-border"}`} />
+                    <div className="flex items-center gap-2 text-[0.875rem] font-medium tracking-[-0.01em] text-fg">
+                      <span className={`size-1.5 shrink-0 rounded-full ${isActive ? "bg-brand-ink" : "bg-border"}`} />
                       <span className="truncate">{def.name}</span>
-                      {!isActive && <span className="ml-auto shrink-0 text-fg-faint group-hover:text-bull">+ add</span>}
+                      {!isActive && <span className="t-label ml-auto shrink-0 text-fg-faint group-hover:text-brand-ink">+ Add</span>}
                     </div>
-                    <div className="mt-1 font-mono text-[0.625rem] normal-case leading-relaxed text-fg-dim">{b.why}</div>
+                    <div className="mt-1 text-[0.8125rem] leading-snug text-fg-dim">{sentence(b.why)}</div>
                   </button>
                 );
               })}
@@ -698,7 +682,7 @@ export function QuantPage() {
           vh units, so the raw value renders ~10% too tall and clips (S1). */}
       <section className="shell shell-wide pt-2">
         <div className="grid min-h-[calc(100vh/var(--ui-zoom)-80px)] grid-cols-12 gap-4">
-          <div ref={libraryRef} className={`col-span-12 h-[calc(100vh/var(--ui-zoom)-2rem)] lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh/var(--ui-zoom)-2rem)] transition-shadow duration-700 ${librarySpotlight ? "shadow-[0_0_0_2px_var(--bull),0_0_60px_-10px_var(--bull)]" : ""}`}>
+          <div ref={libraryRef} className={`col-span-12 h-[calc(100vh/var(--ui-zoom)-2rem)] rounded-[22px] lg:col-span-3 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh/var(--ui-zoom)-2rem)] transition-shadow duration-700 ${librarySpotlight ? "shadow-[0_0_0_2px_var(--brand-ink),0_0_60px_-10px_var(--brand-ink)]" : ""}`}>
             <BotLibrary
               bots={BOT_REGISTRY}
               customBots={customBots}
@@ -752,13 +736,13 @@ export function QuantPage() {
       </section>
 
       {/* Bottom tape */}
-      <section className="mt-8 overflow-hidden border-y border-border bg-bg-soft py-3 t-chrome">
+      <section className="t-label mt-8 overflow-hidden py-3">
         <div className="flex marquee-slow gap-10 whitespace-nowrap text-fg-faint">
           {Array.from({ length: 2 }).map((_, k) => (
             <div key={k} className="flex shrink-0 gap-10">
               {tape.map((t, i) => (
                 <span key={i} className="flex items-center gap-3">
-                  <span className={t.tone === "buy" ? "text-bull" : t.tone === "sell" ? "text-bear" : t.tone === "warn" ? "text-amber" : "text-cyan"}>
+                  <span className={t.tone === "buy" ? "text-bull" : t.tone === "sell" ? "text-bear" : t.tone === "warn" ? "text-amber" : "text-brand-ink"}>
                     ⌖
                   </span>
                   <span>{t.text}</span>
@@ -818,15 +802,15 @@ function buildTape(rows: { def: BotDef; result: BotResult | null }[]): { text: s
   const items: { text: string; tone: string }[] = [];
   for (const r of rows) {
     if (!r.result) continue;
-    items.push({ text: `${r.def.name.toUpperCase()} · READ ${READ[r.result.verdict.side].toUpperCase()}`, tone: r.result.verdict.side });
+    items.push({ text: `${r.def.name} · read ${READ[r.result.verdict.side]}`, tone: r.result.verdict.side });
   }
   if (items.length === 0) {
     return [
-      { text: "STACK BOTS LIKE JUPYTER CELLS", tone: "info" },
-      { text: "BRING YOUR OWN BOT", tone: "info" },
-      { text: "PLAIN-ENGLISH MODE FOR BEGINNERS", tone: "info" },
-      { text: "DETERMINISTIC · CLIENT-SIDE", tone: "info" },
-      { text: "15+ STRATEGIES TO CHOOSE FROM", tone: "info" },
+      { text: "Stack bots like Jupyter cells", tone: "info" },
+      { text: "Bring your own bot", tone: "info" },
+      { text: "Plain-English mode for beginners", tone: "info" },
+      { text: "Deterministic · client-side", tone: "info" },
+      { text: "15+ strategies to choose from", tone: "info" },
     ];
   }
   return items;

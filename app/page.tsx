@@ -5,8 +5,6 @@ import { CinemaGate } from "@/components/scrollstory/CinemaGate";
 import { Footer } from "@/components/Footer";
 import { MarketingSections } from "@/components/marketing/MarketingSections";
 import { AmbientOrbs } from "@/components/atmosphere/AmbientOrbs";
-import { CursorSpotlight } from "@/components/atmosphere/CursorSpotlight";
-import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ScrollReveal } from "@/components/atmosphere/ScrollReveal";
 
 // The homepage's own canonical. It used to inherit this from the root layout,
@@ -25,10 +23,11 @@ export const metadata = {
 export default function Home() {
   return (
     <main className="tap-floor relative flex min-h-screen flex-col bg-bg text-fg">
-      {/* Atmosphere — fixed background layers */}
+      {/* Atmosphere: the soft orbs only. The cursor spotlight and the top
+          progress bar went in the calm pass (M33, 2026-11-09): one followed
+          the pointer for its own sake, and the film's rail already shows
+          where you are. */}
       <AmbientOrbs />
-      <CursorSpotlight />
-      <ScrollProgress />
 
       <div className="relative z-10 flex flex-col">
         <TickerBar />

@@ -13,10 +13,12 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
-import { cinemaClock } from "@/lib/cinema-clock";
+import { cinemaClock, damp } from "@/lib/cinema-clock";
 import { COPY_BEATS, DIVE3D, beatOpacity } from "@/lib/cinema";
 import { watchContext } from "./gl-context";
 import { Grade } from "./Grade";
+import { FilmDriver } from "./FilmDriver";
+import { FILM_DPR_MAX, FilmDpr } from "./FilmDpr";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -310,9 +312,11 @@ function EndLight() {
     const t = diveT(cinemaClock.progress);
     const s = ref.current;
     if (!s) return;
-    const sc = lerp(8, 26, t);
+    // Smaller and dimmer under the line than it was (Gate A3, d03): at full
+    // size it grew into a white disc that ate "No trade here uses real money."
+    const sc = lerp(8, 17, t);
     s.scale.set(sc, sc, 1);
-    mat.opacity = (0.5 + 0.5 * t) * (1 - 0.5 * beatOpacity(cinemaClock.progress, DIVE_BEAT));
+    mat.opacity = (0.42 + 0.33 * t) * (1 - 0.8 * beatOpacity(cinemaClock.progress, DIVE_BEAT));
   });
   return <sprite ref={ref} material={mat} position={[0, 0, -62]} scale={[8, 8, 1]} />;
 }
@@ -365,15 +369,17 @@ function Rig() {
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     const t = diveT(cinemaClock.progress);
-    pxs.current += (cinemaClock.px - pxs.current) * 0.05;
-    pys.current += (cinemaClock.py - pys.current) * 0.05;
+    // dt-correct followers (M31)
+    const dt = cinemaClock.dt;
+    pxs.current += (cinemaClock.px - pxs.current) * damp(0.05, dt);
+    pys.current += (cinemaClock.py - pys.current) * damp(0.05, dt);
     const cam = state.camera as THREE.PerspectiveCamera;
     cam.position.set(pxs.current * 1.6, -pys.current * 1.0, camZAt(cinemaClock.progress));
     cam.rotation.set(0, 0, Math.sin(time * 0.4) * 0.03 + pxs.current * 0.06);
     // rush peaks mid-tunnel (sin hump) and scroll speed stretches the world
     const targetFov = 58 + cinemaClock.vel * 14 + 10 * Math.sin(t * Math.PI);
     if (Math.abs(cam.fov - targetFov) > 0.01) {
-      cam.fov += (targetFov - cam.fov) * 0.1;
+      cam.fov += (targetFov - cam.fov) * damp(0.1, dt);
       cam.updateProjectionMatrix();
     }
   });
@@ -392,8 +398,9 @@ export default function Tunnel3D({
   return (
     <Canvas
       className="h-full w-full"
-      dpr={[1, 2]}
-      frameloop={active ? "always" : "never"}
+      dpr={[1, FILM_DPR_MAX]}
+      // On the film's one clock (M31): drawn by ScrollCinema's tick, never by a loop of its own.
+      frameloop="never"
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 58, position: [0, 0, CAM_Z0], near: 0.1, far: 160 }}
       onCreated={({ gl }) => {
@@ -412,6 +419,8 @@ export default function Tunnel3D({
       <Dust />
       <Rig />
 
+      <FilmDriver active={active} />
+      <FilmDpr />
       <EffectComposer multisampling={0}>
         <Bloom mipmapBlur luminanceThreshold={0.4} luminanceSmoothing={0.3} intensity={1.0} />
         {/* subtle only — a stronger offset split the additive dust motes into

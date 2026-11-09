@@ -90,7 +90,11 @@ export type Metric = {
 export type Verdict = {
   side: "buy" | "sell" | "hold" | "warn";
   text: string;
-  confidence?: number; // 0-1
+  /** 0-1, the bot's own scaling of its signal. Not odds and never rendered on
+      /quant (Gate A3, 2026-11): a "CONF 95%" chip beside the one hit-rate band
+      read as the chance a read was right. __tests__/quant-rendered-copy.test.ts
+      fails if what /quant renders depends on it. */
+  confidence?: number;
 };
 
 export type Pane = {

@@ -1,9 +1,8 @@
 "use client";
 
-// The practice certificate — the paper diploma from components/learn/Diploma.tsx
-// (lines 88-141) pointed at a track: the `border-bull/50` card with the soft
-// glow, the giant ✓ watermark, the italic display name, the 3-up hairline stat
-// block. It shows the track you are nearest to finishing. It is MINTED only by
+// The practice certificate — the diploma of components/learn/Diploma.tsx pointed
+// at a track, on a calm panel: the name large, the three figures in the kit's
+// stat row. It shows the track you are nearest to finishing. It is MINTED only by
 // the server — POST /api/practice/certificate checks its own rows for an
 // accepted submit on every problem in the track, writes one row per (user,
 // track), and the row's id becomes the public record at
@@ -13,8 +12,8 @@
 // PROPS IN. The profile board owns the session, the ledger and the list of
 // minted certificates and hands them down; this stays free of storage.
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Chip, PillButton, PillLink, Stats } from "@/components/calm/kit";
 import { mintCertificate } from "@/lib/practice/client";
 import { TRACK_META, TRACK_ORDER } from "@/lib/practice/tracks";
 import type { CertificateRecord, ProgressSummary, TrackId } from "@/lib/practice/types";
@@ -74,12 +73,12 @@ export function Certificate({
   const url = minted ? `/practice/certificate/${minted.id}` : null;
 
   const line = minted
-    ? `minted — every ${label} problem accepted.`
+    ? `Minted — every ${label} problem accepted.`
     : complete
       ? signedIn
-        ? `every ${label} problem accepted — mint it and it gets a public record.`
-        : `every ${label} problem accepted on this device — sign in to mint it under your name.`
-      : `mints when every ${label} problem is accepted — ${solved}/${total} so far.`;
+        ? `Every ${label} problem accepted — mint it and it gets a public record.`
+        : `Every ${label} problem accepted on this device — sign in to mint it under your name.`
+      : `Mints when every ${label} problem is accepted — ${solved}/${total} so far.`;
 
   const mint = async () => {
     setMinting(true);
@@ -92,9 +91,9 @@ export function Certificate({
     }
     setMintError(
       r.status === 409
-        ? `the server has not seen an accepted submit for ${r.missing?.length ?? "some"} ${label.toLowerCase()} problem${(r.missing?.length ?? 2) === 1 ? "" : "s"} yet`
+        ? `The server has not seen an accepted submit for ${r.missing?.length ?? "some"} ${label.toLowerCase()} problem${(r.missing?.length ?? 2) === 1 ? "" : "s"} yet`
         : r.status === 401
-          ? "sign in to mint"
+          ? "Sign in to mint"
           : r.error
     );
   };
@@ -112,96 +111,75 @@ export function Certificate({
   };
 
   return (
-    <div
-      className="relative overflow-hidden border border-bull/50 bg-bg p-8 sm:p-10"
-      style={{ boxShadow: "0 0 60px -20px rgba(82,255,165,0.4)" }}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-6 -top-10 select-none font-display text-[16rem] leading-none text-bull/[0.05]"
-      >
-        ✓
+    <div className="calm-panel p-8 sm:p-10">
+      <i aria-hidden className="lit-aura" />
+      <div className="flex flex-wrap items-center gap-2.5">
+        <div className="t-eyebrow text-brand-ink">lazybull · practice certificate · {label}</div>
+        {minted && <Chip tone="brand">Minted</Chip>}
       </div>
-      <div className="relative">
-        <div className="flex flex-wrap items-center gap-2 t-eyebrow text-bull">
-          <span aria-hidden className="size-1.5 rounded-full bg-bull pulse-dot" />
-          lazybull · practice certificate · {label}
-          {minted && <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 t-chrome text-bull">minted</span>}
-        </div>
-        <div className="mt-6 font-display text-[clamp(2rem,5vw,3.5rem)] font-light italic leading-[0.9] tracking-tightest text-fg">
-          {minted ? minted.displayName : name}
-        </div>
-        <p className="mt-3 t-body-sm text-fg-dim">{line}</p>
+      <div className="mt-6 font-display text-[clamp(2rem,5vw,3.5rem)] leading-[0.98] tracking-[-0.04em] text-fg">
+        {minted ? minted.displayName : name}
+      </div>
+      <p className="mt-3 t-body-sm text-fg-dim">{line}</p>
 
-        <div className="mt-6 grid max-w-[35rem] grid-cols-3 gap-px border border-border bg-border">
-          <div className="bg-bg p-4">
-            <div className="t-data text-2xl text-bull">
-              {solved}
-              <span className="text-fg-faint">/{total}</span>
-            </div>
-            <div className="mt-1 t-chrome text-fg-faint">{label.toLowerCase()} solved</div>
-          </div>
-          <div className="bg-bg p-4">
-            <div className="t-data text-2xl text-fg">
-              {summary.solvedCount}
-              <span className="text-fg-faint">/{summary.total}</span>
-            </div>
-            <div className="mt-1 t-chrome text-fg-faint">all tracks</div>
-          </div>
-          <div className="bg-bg p-4">
-            <div className="t-data text-2xl text-fg">$0</div>
-            <div className="mt-1 t-chrome text-fg-faint">real risk</div>
-          </div>
-        </div>
+      <Stats
+        className="mt-8"
+        items={[
+          {
+            value: (
+              <>
+                {solved}
+                <span className="text-fg-faint">/{total}</span>
+              </>
+            ),
+            label: `${label.toLowerCase()} solved`,
+          },
+          {
+            value: (
+              <>
+                {summary.solvedCount}
+                <span className="text-fg-faint">/{summary.total}</span>
+              </>
+            ),
+            label: "all tracks",
+          },
+          { value: "$0", label: "real risk" },
+        ]}
+      />
 
-        <div className="mt-5 t-chrome text-fg-faint">
-          {minted ? `record ${minted.id} · minted ${minted.mintedAt.slice(0, 10)} · ` : ""}a completion record, not a professional credential · paper only ·
-          educational · not advice
-        </div>
+      <p className="mt-6 t-label text-fg-faint">
+        {minted ? `Record ${minted.id} · minted ${minted.mintedAt.slice(0, 10)} · a` : "A"} completion record, not a professional credential · paper
+        only · educational · not advice
+      </p>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {minted && url && (
-            <>
-              <Link
-                href={url}
-                className="h-9 inline-flex items-center border border-bull bg-bull/10 px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
-              >
-                verify →
-              </Link>
-              <button
-                type="button"
-                onClick={copy}
-                className="h-9 border border-border bg-bg px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
-              >
-                {copied ? "✓ copied" : "copy link"}
-              </button>
-            </>
-          )}
-          {!minted && complete && signedIn && (
-            <button
-              type="button"
-              onClick={mint}
-              disabled={minting}
-              className="h-9 btn-grad px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors disabled:opacity-50"
-            >
-              {minting ? "minting…" : "mint certificate"}
-            </button>
-          )}
-          {!minted && complete && !signedIn && (
-            <Link
-              href="/auth/signin"
-              className="h-9 inline-flex items-center border border-bull bg-bull/10 px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg"
-            >
-              sign in to mint →
-            </Link>
-          )}
-          {!minted && !complete && (
-            <span className="t-chrome text-fg-faint">
-              {total - solved} {label.toLowerCase()} problem{total - solved === 1 ? "" : "s"} left
-            </span>
-          )}
-          {mintError && <span className="t-chrome text-bear">{mintError}</span>}
-        </div>
+      {/* Whichever state this is, it has one primary: the page's one. */}
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        {minted && url && (
+          <>
+            <PillLink href={url} kind="primary" size="sm">
+              Verify
+            </PillLink>
+            <PillButton size="sm" onClick={copy}>
+              {copied ? "✓ Copied" : "Copy link"}
+            </PillButton>
+          </>
+        )}
+        {!minted && complete && signedIn && (
+          <PillButton kind="primary" size="sm" onClick={mint} disabled={minting}>
+            {minting ? "Minting…" : "Mint certificate"}
+          </PillButton>
+        )}
+        {!minted && complete && !signedIn && (
+          <PillLink href="/auth/signin" kind="primary" size="sm">
+            Sign in to mint
+          </PillLink>
+        )}
+        {!minted && !complete && (
+          <span className="t-label text-fg-faint">
+            {total - solved} {label.toLowerCase()} problem{total - solved === 1 ? "" : "s"} left
+          </span>
+        )}
+        {mintError && <span className="t-label text-fg">{mintError}</span>}
       </div>
     </div>
   );

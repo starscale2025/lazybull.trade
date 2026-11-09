@@ -20,12 +20,12 @@ export function MotionToggle() {
           ? "Motion is paused: loops and drifts stop and scrolling is 1:1. Click to let the page move again."
           : "Pause the motion that runs by itself: loops, drifts and smooth scrolling."
       }
-      className={`inline-flex items-center gap-1.5 border px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider transition-colors hover:border-fg-dim hover:text-fg ${
-        paused ? "border-amber/60 text-fg" : "border-border text-fg-dim"
+      className={`inline-flex items-center gap-1.5 rounded-full px-1.5 py-0.5 text-[0.75rem] transition-colors hover:text-fg ${
+        paused ? "bg-amber/15 text-fg" : "text-fg-dim"
       }`}
     >
       <span className={`size-1 rounded-full ${paused ? "bg-amber" : "bg-bull"}`} />
-      pause motion
+      Pause motion
     </button>
   );
 }

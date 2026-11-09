@@ -10,11 +10,11 @@ import {
   beatOpacity,
   bull3dOpacity,
   candle3dOpacity,
-  canvasOpacity,
+  handoffOpacity,
   clamp01,
   dive3dOpacity,
-  flashOpacity,
 } from "@/lib/cinema";
+import { FILM_SPAN, holdOf } from "@/components/scrollstory/cinema-metrics";
 
 describe("ACTS", () => {
   it("covers [0,1] contiguously in ACT_ORDER", () => {
@@ -31,18 +31,23 @@ describe("ACTS", () => {
 });
 
 describe("COPY_BEATS", () => {
-  it("has unique ids and windows inside [0,1]", () => {
+  it("has unique ids and windows inside [0,1], bar the last one", () => {
     const ids = COPY_BEATS.map((b) => b.id);
     expect(new Set(ids).size).toBe(ids.length);
+    const last = COPY_BEATS[COPY_BEATS.length - 1];
     for (const b of COPY_BEATS) {
       expect(b.from).toBeGreaterThanOrEqual(0);
-      expect(b.to).toBeLessThanOrEqual(1);
+      // The film's last line is held past 1 on purpose (M25): it is still up
+      // when the hold begins and dissolves with the stage.
+      expect(b.to).toBeLessThanOrEqual(b === last ? 1.05 : 1);
       expect(b.to).toBeGreaterThan(b.from);
     }
   });
   it("each beat sits within some act window", () => {
     for (const b of COPY_BEATS) {
-      const inside = ACT_ORDER.some((a) => b.from >= ACTS[a].from - 1e-9 && b.to <= ACTS[a].to + 1e-9);
+      // the last act runs on through the hold, so its end is open
+      const end = (a: (typeof ACT_ORDER)[number]) => (a === ACT_ORDER[ACT_ORDER.length - 1] ? Infinity : ACTS[a].to);
+      const inside = ACT_ORDER.some((a) => b.from >= ACTS[a].from - 1e-9 && b.to <= end(a) + 1e-9);
       expect(inside, `beat ${b.id} spans an act boundary`).toBe(true);
     }
   });
@@ -74,32 +79,38 @@ describe("beatOpacity", () => {
   });
 });
 
-describe("flashOpacity", () => {
-  it("is a faint triangle over the start of the matrix act", () => {
-    expect(flashOpacity(0.5)).toBe(0);
-    expect(flashOpacity(ACTS.matrix.from)).toBe(0); // 0.84 edge
-    expect(flashOpacity(0.872)).toBeCloseTo(1, 5); // mid of [0.84, 0.904]
-    expect(flashOpacity(0.905)).toBe(0);
-    expect(flashOpacity(1)).toBe(0);
+describe("handoffOpacity (the hold is the hand-off, Gate A3 #3)", () => {
+  it("holds, then dissolves across the hold, then leaves only the landing", () => {
+    expect(handoffOpacity(0)).toBe(1);
+    expect(handoffOpacity(0.08)).toBe(1);
+    expect(handoffOpacity(0.5)).toBeCloseTo(0.5, 5);
+    expect(handoffOpacity(0.92)).toBe(0);
+    expect(handoffOpacity(1)).toBe(0);
+  });
+  it("only ever goes down as the hold is scrolled", () => {
+    let last = 1;
+    for (let h = 0; h <= 1; h += 0.01) {
+      const o = handoffOpacity(h);
+      expect(o).toBeLessThanOrEqual(last + 1e-12);
+      last = o;
+    }
+  });
+  it("takes the film's last line with it", () => {
+    // The dissolve runs over the hold, which starts at film progress 1; the
+    // last line ("Welcome in.", beside the mark) is still fully up there, so
+    // it leaves with the stage rather than before it.
+    const welcome = COPY_BEATS.find((b) => b.id === "welcome")!;
+    expect(beatOpacity(1, welcome, welcome.fade)).toBe(1);
   });
 });
 
-describe("canvasOpacity", () => {
-  it("holds 1 through the welcome beat, then dissolves over the rain to 0", () => {
-    expect(canvasOpacity(0)).toBe(1);
-    expect(canvasOpacity(0.9)).toBe(1);
-    expect(canvasOpacity(0.975)).toBe(1);
-    expect(canvasOpacity(0.9875)).toBeCloseTo(0.5, 5);
-    expect(canvasOpacity(1)).toBe(0);
-  });
-  it("is a dissolve, not a cut: the last 2.5% of the film, not 0.2%", () => {
-    // re-tribunal regression 6: a 0.2% crossfade from black read as a hard cut
-    let first = 1;
-    for (let p = 0.9; p <= 1; p += 0.0005) if (canvasOpacity(p) < 1) { first = p; break; }
-    expect(1 - first).toBeGreaterThanOrEqual(0.02);
-    // and the welcome beat has finished before the frame starts to go
-    const welcome = COPY_BEATS.find((b) => b.id === "welcome")!;
-    expect(welcome.to).toBeLessThanOrEqual(first);
+describe("holdOf", () => {
+  it("is 0 through the film and runs 0 → 1 over the hold", () => {
+    expect(holdOf(0)).toBe(0);
+    expect(holdOf(FILM_SPAN)).toBe(0);
+    expect(holdOf(1)).toBe(1);
+    expect(holdOf((FILM_SPAN + 1) / 2)).toBeCloseTo(0.5, 9);
+    expect(holdOf(Number.NaN)).toBe(0);
   });
 });
 

@@ -127,7 +127,7 @@ children without verifiable parental consent.
   this state distinct from "undecided" so the gate shows the blocked state
   rather than re-prompting.
 - **Purpose-separated consent.** `ConsentRecord` is `{ v, adult, analytics,
-  training, at, text }`. Analytics (default on) and AI-training use (default
+  training, at, text }`. Analytics (default off) and AI-training use (default
   off) are separate booleans, because bundling them into one "accept" is exactly
   the consent the DPDP rules do not recognise. `analyticsAllowed()` gates
   `lib/track.ts`; `trainingAllowed()` gates any use of decision traces for
@@ -189,7 +189,7 @@ verify`. **It is a lint, not a lawyer** — a clean run means no banned phrase w
 found, never that a page is lawful.
 
 Run `node scripts/check-compliance.mjs --list` for the live list. As of this
-writing, twelve rules:
+writing, eighteen rules:
 
 | id | what it catches |
 | --- | --- |

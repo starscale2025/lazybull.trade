@@ -51,31 +51,31 @@ export function PlainGreeks({
     ? [
         {
           key: "delta",
-          name: "delta",
+          name: "Delta",
           value: net.delta,
           meaning: `${net.delta >= 0 ? "Gains" : "Loses"} ${usd(net.delta)} per $1 move up in the stock`,
         },
         {
           key: "theta",
-          name: "theta",
+          name: "Theta",
           value: net.theta,
           meaning: `${net.theta >= 0 ? "Earns" : "Loses"} ${usd(net.theta)} per day from time decay`,
         },
         {
           key: "gamma",
-          name: "gamma",
+          name: "Gamma",
           value: net.gamma,
           meaning: `Delta changes ${usd(net.gamma)} for each $1 move`,
         },
         {
           key: "vega",
-          name: "vega",
+          name: "Vega",
           value: net.vega,
           meaning: `${net.vega >= 0 ? "Gains" : "Loses"} ${usd(net.vega)} per 1% rise in implied vol`,
         },
         {
           key: "rho",
-          name: "rho",
+          name: "Rho",
           value: net.rho,
           meaning: `${net.rho >= 0 ? "Gains" : "Loses"} ${usd(net.rho)} per 1% rise in rates`,
         },
@@ -85,23 +85,20 @@ export function PlainGreeks({
   return (
     <section className="surface-instrument border border-border bg-surface lg:shrink-0">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-        <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
-          <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-          plain english greeks
-        </span>
+        <span className="t-eyebrow text-fg-dim">Plain English greeks</span>
         {onDetails && (
           <button
             type="button"
             onClick={onDetails}
-            className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:text-bull"
+            className="calm-link !text-[0.75rem]"
           >
-            details →
+            Details <span aria-hidden>›</span>
           </button>
         )}
       </div>
 
       {!s ? (
-        <div className="p-4 font-mono text-[0.6875rem] text-fg-faint">
+        <div className="p-4 t-label text-fg-faint">
           Pick a strategy to see plain-English greeks.
         </div>
       ) : (
@@ -119,7 +116,7 @@ export function PlainGreeks({
                   >
                     <Icon size={16} color={meta.color} />
                   </span>
-                  <span className="w-12 shrink-0 t-chrome text-fg">
+                  <span className="w-12 shrink-0 t-label text-fg">
                     {r.name}
                   </span>
                   <span
@@ -135,8 +132,8 @@ export function PlainGreeks({
               );
             })}
           </ul>
-          <div className="border-t border-border-soft px-3 py-1.5 t-eyebrow text-fg-faint">
-            net across {s.legs.length} leg{s.legs.length > 1 ? "s" : ""} · black-scholes · live
+          <div className="border-t border-border-soft px-3 py-1.5 t-label text-fg-faint">
+            Net across {s.legs.length} leg{s.legs.length > 1 ? "s" : ""} · Black-Scholes · live
           </div>
         </>
       )}

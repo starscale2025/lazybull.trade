@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { generateCandles, type Candle } from "@/lib/candles";
 import { getBot } from "@/lib/quant/bots";
 import type { BotResult, Signal } from "@/lib/quant/types";
+import { PillButton } from "@/components/calm/kit";
 
 const PRESET_BOTS = [
   { id: "sma-cross",    label: "SMA Crossover",  blurb: "Trend follower. Buys golden crosses." },
@@ -148,85 +149,77 @@ export function LearnBacktestBuilder() {
   }, [visibleEquity, visibleSignals, candles]);
 
   if (!def) {
-    return <div className="grid h-32 place-items-center surface-card border border-border bg-surface text-fg-faint font-mono text-[0.6875rem]">bot not found</div>;
+    return <div className="grid h-32 place-items-center rounded-xl bg-fg/[0.05] t-label text-fg-faint">Bot not found</div>;
   }
 
   return (
     <div className="space-y-4">
       {/* Top: bot picker + scenario picker */}
       <div className="grid grid-cols-1 gap-3 @2xl:grid-cols-12">
-        <div className="@2xl:col-span-7 surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            pick a bot
-          </div>
-          {/* Segmented radio strip — glyph + name per bot; the tagline shows
-              once, for the selected bot, instead of six card blurbs. */}
-          <div className="flex flex-wrap gap-px bg-border">
+        <div className="@2xl:col-span-7">
+          <div className="t-label text-fg-dim">Pick a bot</div>
+          {/* Segmented strip — glyph + name per bot; the tagline shows once,
+              for the selected bot, instead of six card blurbs. The kit's
+              toggle shape by hand, because each one keeps its tooltip. */}
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {PRESET_BOTS.map((b) => (
               <button
                 key={b.id}
                 onClick={() => setBotId(b.id)}
                 title={b.blurb}
-                className={`flex grow items-center justify-center gap-1.5 bg-bg px-2.5 py-2 font-mono text-[0.625rem] tracking-wide transition-colors ${
-                  b.id === botId ? "bg-bull/[0.06] text-bull" : "text-fg-dim hover:bg-bg-soft hover:text-fg"
-                }`}
+                aria-pressed={b.id === botId}
+                className="calm-toggle gap-1.5"
               >
-                <span className={b.id === botId ? "text-bull" : "text-fg-faint"}>{getBot(b.id)?.glyph ?? "·"}</span>
+                <span aria-hidden>{getBot(b.id)?.glyph ?? "·"}</span>
                 {b.label}
               </button>
             ))}
           </div>
-          <div className="border-t border-border-soft px-3 py-2 font-mono text-[0.625rem] text-fg-dim">
+          <div className="mt-2 text-[0.8125rem] text-fg-dim">
             <span className="text-fg-faint">{def.name} → </span>
             {PRESET_BOTS.find((b) => b.id === botId)?.blurb}
           </div>
         </div>
 
-        <div className="@2xl:col-span-5 surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            market scenario
-          </div>
-          <div className="grid grid-cols-3 gap-px bg-border">
+        <div className="@2xl:col-span-5">
+          <div className="t-label text-fg-dim">Market scenario</div>
+          {/* Two lines each (the name and its μ/σ), so these are soft tiles
+              that fill like the kit's toggle when chosen, not pills. */}
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
             {SCENARIOS.map((s) => (
               <button
                 key={s.key}
                 onClick={() => setScenarioKey(s.key)}
-                className={`bg-bg p-3 text-center transition-colors ${s.key === scenarioKey ? "bg-bull/[0.06]" : "hover:bg-bg-soft"}`}
+                aria-pressed={s.key === scenarioKey}
+                className={`rounded-xl p-2.5 text-center transition-colors ${
+                  s.key === scenarioKey ? "bg-fg text-bg" : "bg-fg/[0.05] text-fg-dim hover:bg-fg/[0.1] hover:text-fg"
+                }`}
               >
-                <div className={`font-mono text-[0.6875rem] uppercase tracking-wider ${s.key === scenarioKey ? "text-bull" : "text-fg-dim"}`}>
-                  {s.label}
-                </div>
-                <div className="mt-1 font-mono text-[0.625rem] text-fg-faint">
+                <div className="text-[0.8125rem] font-medium leading-tight">{s.label}</div>
+                <div className="mt-1 font-mono text-[0.625rem] opacity-70">
                   μ={s.drift.toFixed(2)} · σ={s.vol.toFixed(1)}
                 </div>
               </button>
             ))}
           </div>
-          <div className="border-t border-border-soft p-2 flex gap-2">
-            <button
-              onClick={start}
-              disabled={running || !result}
-              className="flex-1 h-8 border border-bull bg-bull text-bg font-mono text-[0.6875rem] uppercase tracking-wider hover:bg-bull-dim disabled:opacity-50 disabled:bg-bg disabled:text-fg-faint disabled:border-border"
-            >
-              {running ? "▶ running…" : progress >= 1 ? "↻ replay" : "▶ run backtest"}
-            </button>
+          <div className="mt-2 flex gap-2">
+            <PillButton kind="primary" size="sm" onClick={start} disabled={running || !result} className="flex-1">
+              {running ? "Running…" : progress >= 1 ? "Replay" : "Run backtest"}
+            </PillButton>
             {progress > 0 && (
-              <button
-                onClick={reset}
-                className="h-8 border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg"
-              >
-                reset
-              </button>
+              <PillButton size="sm" onClick={reset}>
+                Reset
+              </PillButton>
             )}
           </div>
         </div>
       </div>
 
       {/* Chart with price + equity overlaid + signals */}
-      <div className="surface-card border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
+      <div className="rounded-xl bg-fg/[0.05]">
+        <div className="flex items-center justify-between px-3.5 pt-3 t-label text-fg-dim">
           <span>{def.name} on {scenario.label}</span>
-          <span>bar {cutoff} / {candles.length}</span>
+          <span>Bar {cutoff} / {candles.length}</span>
         </div>
         <BacktestChart
           key={`${botId}-${scenarioKey}-${token}`}
@@ -238,7 +231,7 @@ export function LearnBacktestBuilder() {
       </div>
 
       {/* Live stats */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border @md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 @md:grid-cols-5">
         <Stat label="Total return" value={`${stats.ret >= 0 ? "+" : ""}${(stats.ret * 100).toFixed(1)}%`} tone={stats.ret >= 0 ? "var(--bull)" : "var(--bear)"} />
         <Stat label="Sharpe" value={stats.sharpe.toFixed(2)} tone={stats.sharpe > 1 ? "var(--bull)" : stats.sharpe > 0 ? "var(--cyan)" : "var(--bear)"} />
         <Stat label="Max DD" value={`${(stats.maxDD * 100).toFixed(1)}%`} tone="var(--bear)" />
@@ -253,11 +246,11 @@ export function LearnBacktestBuilder() {
       {/* Only worth reading once there are numbers to read — before a run its
           Sharpe/MaxDD references point at 0.00 tiles. */}
       {hasRun && (
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim leading-relaxed">
-        <span className="text-fg-faint">read this →</span> a high return doesn&apos;t mean a good bot.
+      <div className="text-[0.8125rem] leading-relaxed text-fg-dim">
+        <span className="text-fg-faint">Read this →</span> a high return doesn’t mean a good bot.
         Look at <span className="text-fg">Sharpe</span> (return per unit of bumpy ride — &gt;1 is good)
         and <span className="text-fg">Max DD</span> (the worst peak-to-trough drop the bot put you
-        through). The same bot wins big in one regime and loses in another. That&apos;s why stacking
+        through). The same bot wins big in one regime and loses in another. That’s why stacking
         multiple bots matters.
       </div>
       )}
@@ -267,8 +260,8 @@ export function LearnBacktestBuilder() {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="bg-bg p-3">
-      <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
+    <div className="rounded-xl bg-fg/[0.05] p-3">
+      <div className="t-label text-fg-faint">{label}</div>
       <div className="mt-1 font-mono text-[0.875rem] tabular-nums" style={{ color: tone }}>{value}</div>
     </div>
   );
@@ -303,7 +296,7 @@ function BacktestChart({
     <svg viewBox={`0 0 ${W} ${H}`} className="block w-full">
       {/* gridlines */}
       {[0.25, 0.5, 0.75].map((t) => (
-        <line key={t} x1={padL} x2={W - padR} y1={padT + t * innerH} y2={padT + t * innerH} stroke="rgba(245,245,240,0.04)" />
+        <line key={t} x1={padL} x2={W - padR} y1={padT + t * innerH} y2={padT + t * innerH} stroke="var(--fg)" strokeOpacity="0.04" />
       ))}
 
       {/* equity curve gradient fill */}
@@ -323,7 +316,7 @@ function BacktestChart({
       )}
 
       {/* price (background) */}
-      <path d={pricePath} fill="none" stroke="rgba(245,245,240,0.5)" strokeWidth="1" />
+      <path d={pricePath} fill="none" stroke="var(--fg)" strokeOpacity="0.5" strokeWidth="1" />
 
       {/* equity (foreground) */}
       <path d={equityPath} fill="none" stroke={lastEq >= 1 ? "var(--bull)" : "var(--bear)"} strokeWidth="1.6" />
@@ -354,8 +347,8 @@ function BacktestChart({
 
       {/* legend */}
       <g transform={`translate(${padL + 8}, ${padT + 6})`}>
-        <rect width="200" height="36" fill="rgba(0,0,0,0.4)" />
-        <line x1={6} x2={20} y1={12} y2={12} stroke="rgba(245,245,240,0.5)" strokeWidth="1" />
+        <rect width="200" height="36" fill="var(--bg)" fillOpacity="0.4" />
+        <line x1={6} x2={20} y1={12} y2={12} stroke="var(--fg)" strokeOpacity="0.5" strokeWidth="1" />
         <text x={26} y={15} fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-dim)">price</text>
         <line x1={6} x2={20} y1={26} y2={26} stroke={lastEq >= 1 ? "var(--bull)" : "var(--bear)"} strokeWidth="1.6" />
         <text x={26} y={29} fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-dim)">equity ({lastEq >= 1 ? "+" : ""}{((lastEq - 1) * 100).toFixed(1)}%)</text>

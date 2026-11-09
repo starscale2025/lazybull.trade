@@ -8,9 +8,9 @@
 // Design ref: docs/design-refs/05-learn-greeks.png. Educational — not advice.
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { CalmLink, CalmPanel, PageHeader } from "@/components/calm/kit";
 import { priceOption } from "@/lib/pricing";
 
 // ── Model params (house defaults; strike range is spot-relative) ─────────────
@@ -359,14 +359,15 @@ function GreekStatCard({
     .join(" ");
 
   return (
-    <div className="surface-card border border-border bg-surface p-2 md:p-4">
-      <div className="t-chrome flex items-baseline gap-1.5 text-fg-dim md:text-[0.625rem]">
+    <div className="calm-panel p-3 md:p-4">
+      <i aria-hidden className="lit-aura" />
+      <div className="t-label flex items-baseline gap-1.5 text-fg-dim">
         {/* The words used to be replaced by bare Greek letters below md, because
             five cards across 375px left no room for them — so the page that
             teaches the Greeks stopped naming them on the device most people
             read it on. The grid reflows to 2-up now, so the name always fits
             and the letter rides alongside it as the glyph, not as a substitute. */}
-        <span className="text-bull/70">{GREEK_COPY[greek].letter}</span>
+        <span className="text-brand-ink">{GREEK_COPY[greek].letter}</span>
         <span>{GREEK_COPY[greek].label}</span>
       </div>
       <div className="mt-1 flex items-end justify-between gap-2 md:mt-2">
@@ -378,7 +379,7 @@ function GreekStatCard({
         </div>
         {/* The sparkline and the teacher line are the two things that push a
             card past ~55px; both are detail, so they wait for the wider grid. */}
-        <svg viewBox="0 0 90 20" className="mb-1 hidden h-4 w-[4.5rem] shrink-0 text-bull md:block" fill="none" aria-hidden>
+        <svg viewBox="0 0 90 20" className="mb-1 hidden h-4 w-[4.5rem] shrink-0 text-brand-ink md:block" fill="none" aria-hidden>
           <polyline points={points} stroke="currentColor" strokeWidth="1.2" />
         </svg>
       </div>
@@ -532,264 +533,241 @@ export default function GreeksLabPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="page-aura min-h-screen bg-bg">
       <Nav />
-      <main className="shell pb-16 pt-10 lg:pt-14">
-        {/* header row: kicker · symbol selector · teacher-mode switch */}
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-          <div className="t-eyebrow text-bull">
-            The Greek surface · lab
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <label
-                htmlFor="symbol-select"
-                className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint"
-              >
-                Symbol
-              </label>
-              <div className="relative">
-                <select
-                  id="symbol-select"
-                  aria-label="Symbol"
-                  value={symbol}
-                  onChange={(e) => setSymbol(e.target.value as (typeof SYMBOLS)[number])}
-                  className="h-10 appearance-none surface-card border border-border bg-surface pl-3 pr-8 font-mono text-[0.6875rem] uppercase tracking-wider text-fg transition-colors hover:border-fg-faint focus:border-bull focus:outline-none md:h-8"
-                >
-                  {SYMBOLS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  width="8"
-                  height="6"
-                  viewBox="0 0 8 6"
-                  fill="none"
-                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-dim"
-                >
-                  <path d="M1 1l3 3.5L7 1" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint">Surface</span>
-              <div className="flex surface-card border border-border bg-surface">
-                {SURFACE_ORDER.map((k, i) => (
-                  <button
-                    key={k}
-                    data-surface-btn={k}
-                    aria-pressed={surfaceKey === k}
-                    onClick={() => setSurfaceKey(k)}
-                    className={`h-10 px-2.5 font-mono text-[0.625rem] uppercase tracking-wider transition-colors md:h-8 ${
-                      i > 0 ? "border-l border-border-soft" : ""
-                    } ${surfaceKey === k ? "bg-bull/10 text-bull" : "text-fg-dim hover:bg-bg hover:text-fg"}`}
+      <main>
+        {/* The header's padding is cut from PageHeader's default: this is a lab,
+            and the headline asks you to drag something that sits below it. */}
+        <PageHeader
+          className="!pb-6 !pt-[clamp(2rem,4vw,3.25rem)]"
+          eyebrow="The Greek surface · lab"
+          title="Drag the strike."
+          accent="Watch all five Greeks move."
+          actions={
+            <>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <label htmlFor="symbol-select" className="t-label text-fg-faint">
+                  Symbol
+                </label>
+                <div className="relative">
+                  <select
+                    id="symbol-select"
+                    aria-label="Symbol"
+                    value={symbol}
+                    onChange={(e) => setSymbol(e.target.value as (typeof SYMBOLS)[number])}
+                    className="calm-input appearance-none !pr-8"
                   >
-                    {SURFACE_DEFS[k].label}
-                  </button>
-                ))}
+                    {SYMBOLS.map((s) => (
+                      <option key={s} value={s} className="bg-bg text-fg">
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    width="8"
+                    height="6"
+                    viewBox="0 0 8 6"
+                    fill="none"
+                    className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-fg-dim"
+                  >
+                    <path d="M1 1l3 3.5L7 1" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </div>
               </div>
-            </div>
-            <button
-              role="switch"
-              aria-checked={teacher}
-              aria-label="Teacher mode"
-              onClick={() => setTeacher((t) => !t)}
-              className={`inline-flex h-10 items-center gap-3 rounded-full border px-4 transition-colors md:h-8 ${
-                teacher
-                  ? "border-bull/60 bg-bull/10 shadow-[0_0_28px_-10px_var(--bull)]"
-                  : "border-border bg-surface hover:border-fg-faint"
-              }`}
-            >
-              <span
-                className={`font-mono text-[0.625rem] uppercase tracking-[0.25em] ${teacher ? "text-bull" : "text-fg-dim"}`}
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="t-label text-fg-faint">Surface</span>
+                {/* By hand, not TogglePill: the kit's pill takes no data attributes. */}
+                <div className="flex flex-wrap gap-1.5">
+                  {SURFACE_ORDER.map((k) => (
+                    <button
+                      key={k}
+                      data-surface-btn={k}
+                      aria-pressed={surfaceKey === k}
+                      onClick={() => setSurfaceKey(k)}
+                      className="calm-toggle !h-10 md:!h-8"
+                    >
+                      {SURFACE_DEFS[k].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                role="switch"
+                aria-checked={teacher}
+                aria-label="Teacher mode"
+                onClick={() => setTeacher((t) => !t)}
+                className="calm-pill-secondary inline-flex h-10 items-center gap-2.5 rounded-full pl-3.5 pr-2.5 text-[0.8125rem] font-medium tracking-[-0.005em] transition-colors md:h-8"
               >
-                Teacher mode {teacher ? "on" : "off"}
-              </span>
-              <span
-                className={`relative h-4 w-8 rounded-full border transition-colors ${
-                  teacher ? "border-bull/60 bg-bull/20" : "border-border bg-bg"
-                }`}
-              >
-                <span
-                  className={`absolute top-1/2 size-3 -translate-y-1/2 rounded-full transition-all ${
-                    teacher ? "left-[1.125rem] bg-bull shadow-[0_0_8px_var(--bull)]" : "left-0.5 bg-fg-dim"
-                  }`}
-                />
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* headline + what-am-i-seeing card */}
-        <div className="mt-8 flex flex-col items-start justify-between gap-8 lg:flex-row">
-          <h1 className="t-title text-fg">
-            Drag the strike.
-            <br />
-            Watch all five Greeks move.
-          </h1>
+                <span className={teacher ? "text-fg" : "text-fg-dim"}>Teacher mode {teacher ? "on" : "off"}</span>
+                <span className={`relative h-4 w-7 rounded-full transition-colors ${teacher ? "bg-brand-ink" : "bg-fg/15"}`}>
+                  <span
+                    className={`absolute top-1/2 size-3 -translate-y-1/2 rounded-full transition-all ${
+                      teacher ? "left-3.5 bg-bg" : "left-0.5 bg-fg-dim"
+                    }`}
+                  />
+                </span>
+              </button>
+            </>
+          }
+        >
           {teacher && (
-            <aside className="w-full max-w-sm shrink-0 surface-card border border-border bg-surface p-5 lg:w-[20rem]">
-              <div className="t-eyebrow text-bull">What am I seeing?</div>
-              <p className="mt-3 text-[0.75rem] leading-relaxed text-fg-dim">
+            <CalmPanel as="aside" title="What am I seeing?" className="mt-6">
+              <p className="max-w-[90ch] text-[0.875rem] leading-relaxed text-fg-dim">
                 This is an option pricing surface. Drag the glowing handle to explore how the
                 price changes — and watch all five Greeks update in real time. Strike runs
                 along one edge, days to expiry along the other; height is whichever surface
-                you select — Gamma&apos;s wave crests at the money.
+                you select — Gamma’s wave crests at the money.
               </p>
-            </aside>
+            </CalmPanel>
           )}
-        </div>
+        </PageHeader>
 
-        {/* the surface */}
-        <div className="mt-6">
-          <svg
-            id="surface-svg"
-            viewBox={`0 0 ${VB_W} ${VB_H}`}
-            className={`mx-auto block h-auto max-h-[66vh] w-full select-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
-            style={{ touchAction: "none" }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerEnd}
-            onPointerCancel={onPointerEnd}
-            aria-label="Black-Scholes call price surface. Drag the handle across the floor to change strike and days to expiry; use the sliders below for precise values."
-          >
-            <title>Black-Scholes call price surface</title>
-            <defs>
-              <filter id="meshGlow" x="-8%" y="-8%" width="116%" height="116%">
-                <feGaussianBlur stdDeviation="3.4" />
-              </filter>
-              <radialGradient id="floorGlow">
-                <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.1" />
-                <stop offset="60%" stopColor="var(--bull)" stopOpacity="0.04" />
-                <stop offset="100%" stopColor="var(--bull)" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="handleHalo">
-                <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.55" />
-                <stop offset="45%" stopColor="var(--bull)" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="var(--bull)" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <Wireframe surface={surface} />
-            {/* handle: floor shadow + dotted drop-line + glowing ring on the surface */}
-            <g>
-              <ellipse cx={mBase.x} cy={mBase.y} rx={20} ry={6} fill="url(#handleHalo)" />
-              <line
-                x1={mBase.x}
-                y1={mBase.y}
-                x2={mTop.x}
-                y2={mTop.y + 13}
-                stroke="var(--bull)"
-                strokeWidth="1.6"
-                strokeDasharray="3 5"
-                opacity="0.9"
-              />
-              <circle cx={mBase.x} cy={mBase.y} r="2.6" fill="var(--bull)" />
-              <circle cx={mTop.x} cy={mTop.y} r="34" fill="url(#handleHalo)" />
-              <circle
-                cx={mTop.x}
-                cy={mTop.y}
-                r="10.5"
-                fill="var(--bg)"
-                stroke="var(--bull)"
-                strokeWidth="2.6"
-                style={{ filter: "drop-shadow(0 0 8px var(--bull))" }}
-              />
-              <circle cx={mTop.x} cy={mTop.y} r="4" fill="var(--bull)" />
-              <circle cx={mTop.x} cy={mTop.y} r="1.5" fill="var(--fg)" />
-            </g>
-          </svg>
-        </div>
+        <div className="shell pb-16">
+          {/* the surface */}
+          <div>
+            <svg
+              id="surface-svg"
+              viewBox={`0 0 ${VB_W} ${VB_H}`}
+              className={`mx-auto block h-auto max-h-[66vh] w-full select-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+              style={{ touchAction: "none" }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerEnd}
+              onPointerCancel={onPointerEnd}
+              aria-label="Black-Scholes call price surface. Drag the handle across the floor to change strike and days to expiry; use the sliders below for precise values."
+            >
+              <title>Black-Scholes call price surface</title>
+              <defs>
+                <filter id="meshGlow" x="-8%" y="-8%" width="116%" height="116%">
+                  <feGaussianBlur stdDeviation="3.4" />
+                </filter>
+                <radialGradient id="floorGlow">
+                  <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.1" />
+                  <stop offset="60%" stopColor="var(--bull)" stopOpacity="0.04" />
+                  <stop offset="100%" stopColor="var(--bull)" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="handleHalo">
+                  <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.55" />
+                  <stop offset="45%" stopColor="var(--bull)" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="var(--bull)" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <Wireframe surface={surface} />
+              {/* handle: floor shadow + dotted drop-line + glowing ring on the surface */}
+              <g>
+                <ellipse cx={mBase.x} cy={mBase.y} rx={20} ry={6} fill="url(#handleHalo)" />
+                <line
+                  x1={mBase.x}
+                  y1={mBase.y}
+                  x2={mTop.x}
+                  y2={mTop.y + 13}
+                  stroke="var(--bull)"
+                  strokeWidth="1.6"
+                  strokeDasharray="3 5"
+                  opacity="0.9"
+                />
+                <circle cx={mBase.x} cy={mBase.y} r="2.6" fill="var(--bull)" />
+                <circle cx={mTop.x} cy={mTop.y} r="34" fill="url(#handleHalo)" />
+                <circle
+                  cx={mTop.x}
+                  cy={mTop.y}
+                  r="10.5"
+                  fill="var(--bg)"
+                  stroke="var(--bull)"
+                  strokeWidth="2.6"
+                  style={{ filter: "drop-shadow(0 0 8px var(--bull))" }}
+                />
+                <circle cx={mTop.x} cy={mTop.y} r="4" fill="var(--bull)" />
+                <circle cx={mTop.x} cy={mTop.y} r="1.5" fill="var(--fg)" />
+              </g>
+            </svg>
+          </div>
 
-        {/* sliders — accessible fallback for the same state */}
-        <div className="mt-6 grid items-center gap-x-8 gap-y-5 surface-card border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto]">
-          <div>
-            <div className="flex items-center justify-between t-chrome text-fg-dim">
-              <span>Strike</span>
-              <span className="tabular-nums text-fg">${fmtStrike(strike, spot)}</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={STRIKE_TICKS}
-              step={1}
-              value={strikeTick}
-              aria-label="Strike"
-              aria-valuetext={`$${fmtStrike(strike, spot)}`}
-              onChange={(e) =>
-                setM(clamp(M_LO + (Number(e.target.value) / STRIKE_TICKS) * (M_HI - M_LO), M_LO, M_HI))
-              }
-              className="mt-2 h-1 w-full accent-bull"
-            />
-          </div>
-          <div>
-            <div className="flex items-center justify-between t-chrome text-fg-dim">
-              <span>Days to expiry</span>
-              <span className="tabular-nums text-fg">{days}d</span>
-            </div>
-            <input
-              type="range"
-              min={D_MIN}
-              max={D_MAX}
-              step={1}
-              value={days}
-              aria-label="Days to expiry"
-              onChange={(e) => setDays(clamp(parseInt(e.target.value), D_MIN, D_MAX))}
-              className="mt-2 h-1 w-full accent-bull"
-            />
-          </div>
-          <div className="flex items-center gap-5 md:border-l md:border-border-soft md:pl-4">
+          {/* sliders — accessible fallback for the same state */}
+          <div className="calm-panel mt-6 grid items-center gap-x-8 gap-y-5 p-5 md:grid-cols-[1fr_1fr_auto]">
+            <i aria-hidden className="lit-aura" />
             <div>
-              <div className="t-chrome text-fg-dim">Call price</div>
-              <div className="mt-1 font-display text-2xl tracking-tightest tabular-nums text-fg">
-                ${price.toFixed(2)}
+              <div className="flex items-center justify-between t-label text-fg-dim">
+                <span>Strike</span>
+                <span className="tabular-nums text-fg">${fmtStrike(strike, spot)}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={STRIKE_TICKS}
+                step={1}
+                value={strikeTick}
+                aria-label="Strike"
+                aria-valuetext={`$${fmtStrike(strike, spot)}`}
+                onChange={(e) =>
+                  setM(clamp(M_LO + (Number(e.target.value) / STRIKE_TICKS) * (M_HI - M_LO), M_LO, M_HI))
+                }
+                className="mt-2 h-1 w-full accent-brand-ink"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between t-label text-fg-dim">
+                <span>Days to expiry</span>
+                <span className="tabular-nums text-fg">{days}d</span>
+              </div>
+              <input
+                type="range"
+                min={D_MIN}
+                max={D_MAX}
+                step={1}
+                value={days}
+                aria-label="Days to expiry"
+                onChange={(e) => setDays(clamp(parseInt(e.target.value), D_MIN, D_MAX))}
+                className="mt-2 h-1 w-full accent-brand-ink"
+              />
+            </div>
+            <div className="flex items-center gap-5 md:border-l md:border-border-soft md:pl-4">
+              <div>
+                <div className="t-label text-fg-dim">Call price</div>
+                <div className="mt-1 font-display text-2xl tracking-tightest tabular-nums text-fg">
+                  ${price.toFixed(2)}
+                </div>
+              </div>
+              <div className="t-label text-fg-faint">
+                <span className="text-fg-dim">{symbol}</span> spot{" "}
+                <span data-spot-strip className="tabular-nums text-fg-dim">${spot.toFixed(2)}</span>
+                <br />
+                IV {(vol * 100).toFixed(1)}%{volSource === "realized" ? " (realized 60d)" : " (synthetic)"} · R 4.5%
               </div>
             </div>
-            <div className="t-chrome leading-relaxed text-fg-faint">
-              <span className="text-fg-dim">{symbol}</span> spot{" "}
-              <span data-spot-strip className="tabular-nums text-fg-dim">${spot.toFixed(2)}</span>
-              <br />
-              IV {(vol * 100).toFixed(1)}%{volSource === "realized" ? " (realized 60d)" : " (synthetic)"} · R 4.5%
+          </div>
+
+          {/* five live Greek cards */}
+          {/* Was grid-cols-2 on mobile: five cards wrapped to three rows (~400px),
+              so the drag surface and the readouts could never be on screen
+              together at 375x812 — the exact thing the headline asks you to do.
+              One compact row on mobile, full cards from md up. */}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+            {GREEK_ORDER.map((g) => (
+              <GreekStatCard
+                key={g}
+                greek={g}
+                value={greeks[g].toFixed(g === "gamma" ? 4 : 3)}
+                series={sparks[g]}
+                // one sentence at a time: only the Greek matching the selected surface teaches
+                showLine={teacher && g === surfaceKey}
+              />
+            ))}
+          </div>
+
+          {/* provenance strip */}
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
+            <div className="t-label text-fg-faint">
+              Black-Scholes · Computed live in your browser ·{" "}
+              {source === "live"
+                ? volSource === "realized"
+                  ? "Live spot · Realized 60d vol as IV"
+                  : "Live spot · Synthetic IV"
+                : "Synthetic data"}{" "}
+              · Educational — not advice
             </div>
+            <CalmLink href="/learn#greeks">Part of §06 in the primer</CalmLink>
           </div>
-        </div>
-
-        {/* five live Greek cards */}
-        {/* Was grid-cols-2 on mobile: five cards wrapped to three rows (~400px),
-            so the drag surface and the readouts could never be on screen
-            together at 375x812 — the exact thing the headline asks you to do.
-            One compact row on mobile, full cards from md up. */}
-        <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-3">
-          {GREEK_ORDER.map((g) => (
-            <GreekStatCard
-              key={g}
-              greek={g}
-              value={greeks[g].toFixed(g === "gamma" ? 4 : 3)}
-              series={sparks[g]}
-              // one sentence at a time: only the Greek matching the selected surface teaches
-              showLine={teacher && g === surfaceKey}
-            />
-          ))}
-        </div>
-
-        {/* provenance strip */}
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border-soft pt-4">
-          <div className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-faint">
-            Black-Scholes · Computed live in your browser ·{" "}
-            {source === "live"
-              ? volSource === "realized"
-                ? "Live spot · Realized 60d vol as IV"
-                : "Live spot · Synthetic IV"
-              : "Synthetic data"}{" "}
-            · Educational — not advice
-          </div>
-          <Link
-            href="/learn#greeks"
-            className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-fg-dim transition-colors hover:text-bull"
-          >
-            part of §06 in the primer →
-          </Link>
         </div>
       </main>
       <Footer />

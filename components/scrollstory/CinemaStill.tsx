@@ -32,7 +32,7 @@
  * is a few hundred bytes of geometry rather than a second scene.
  */
 
-import { TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
+import { SAFETY_LINES, TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
 
 const W = 640;
 const H = 300;
@@ -90,7 +90,9 @@ const INDEX = [
   { n: "01", h: "A desk that shows its work.", s: "Every number here can be opened." },
   { n: "02", h: "No trade here uses real money.", s: "Paper only — so you can afford to be wrong on purpose." },
   { n: "03", h: "Markets have moods.", s: "Trending, reverting, or noise — named before you commit to anything." },
-  { n: "04", h: "Your worst case is a number you chose.", s: "Not a number you find out afterwards." },
+  // The still knows nothing about the visitor's spread, so it never claims
+  // they chose one (lib/cinema.ts SAFETY_LINES).
+  { n: "04", h: SAFETY_LINES.example.heading, s: SAFETY_LINES.example.sub },
   { n: "05", h: "They vote. They disagree.", s: "You see the split, not just the answer." },
   { n: "06", h: TAGLINE_LEAD, s: TAGLINE },
 ];

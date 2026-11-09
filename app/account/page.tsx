@@ -22,6 +22,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { CalmPanel, PageHeader, PillLink } from "@/components/calm/kit";
 import { limitsFor } from "@/lib/billing/entitlements";
 import { fmtMinor } from "@/lib/billing/prices";
 import { currentSubscription, subscriptionsFor } from "@/lib/billing/subscriptions";
@@ -46,12 +47,12 @@ const PROVIDER_NAME: Record<BillingProvider, string> = {
   manual: "manual grant",
 };
 const STATUS_LABEL: Record<SubscriptionStatus, string> = {
-  trialing: "authorised · first charge pending",
-  active: "active",
-  past_due: "payment past due · access continues while the provider retries",
-  paused: "paused",
-  cancelled: "cancelled · access runs to the period end",
-  expired: "expired",
+  trialing: "Authorised · first charge pending",
+  active: "Active",
+  past_due: "Payment past due · access continues while the provider retries",
+  paused: "Paused",
+  cancelled: "Cancelled · access runs to the period end",
+  expired: "Expired",
 };
 /** What app/api/billing/portal redirects back with when it cannot forward. */
 const NOTICES: Record<string, string> = {
@@ -95,170 +96,147 @@ export default async function AccountPage({
   const noticeText = notice ? NOTICES[notice] : null;
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="page-aura min-h-screen bg-bg">
       <Nav />
-      <main className="tap-floor shell section-y">
-        <div className="mx-auto max-w-4xl">
-          <div className="t-eyebrow text-fg-faint">Account &amp; plan</div>
-          <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] tracking-tightest text-fg">
-            {session.user.name ?? email ?? "You"}
-            <span className="t-accent">.</span>
-          </h1>
-          <p className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
-            {email ?? "no email on file"} · {PLAN_NAME[plan]} plan
-          </p>
+      <main className="tap-floor">
+        <PageHeader
+          eyebrow="Account & plan"
+          title={<span className="[overflow-wrap:anywhere]">{session.user.name ?? email ?? "You"}</span>}
+          lede={`${email ?? "No email on file"} · ${PLAN_NAME[plan]} plan`}
+        />
 
+        <div className="shell pb-[clamp(4rem,9vw,6rem)]">
           {noticeText && (
-            <div
-              role="status"
-              className="mt-6 border border-amber/60 bg-amber/10 px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-amber"
-            >
+            <div role="status" className="mb-4 rounded-[14px] bg-fg/5 px-4 py-3 text-[0.875rem] leading-snug text-fg">
               {noticeText}
             </div>
           )}
 
-          <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {/* plan */}
-            <section className="surface-card border border-border bg-surface">
-              <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">plan</div>
-              <div className="p-5">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display text-4xl tracking-tightest text-fg">{PLAN_NAME[plan]}</span>
-                  {sub && (
-                    <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
-                      {fmtMinor(sub.amountMinor, sub.currency)} / {sub.interval}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-3 t-body-sm text-fg-dim">
-                  {plan === "free"
-                    ? "Free forever. The primer, paper trades and the daily allowance below."
-                    : sub
-                      ? `Conferred by your ${PROVIDER_NAME[sub.provider]} subscription.`
-                      : "Granted without a subscription — a manual plan."}
-                </p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <Link
-                    href={plan === "free" ? "/pricing#plus" : "/pricing"}
-                    className="inline-flex h-9 items-center gap-2 border border-border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
-                  >
-                    {plan === "free" ? "See plans" : "All plans"}
-                  </Link>
-                  {sub?.provider === "lemonsqueezy" && (
-                    <a
-                      href="/api/billing/portal"
-                      className="inline-flex h-9 items-center gap-2 btn-grad px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
-                    >
-                      Manage subscription →
-                    </a>
-                  )}
-                </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CalmPanel as="section" title="Plan">
+              <div className="flex items-baseline gap-2">
+                <span className="font-display text-4xl tracking-tightest text-fg">{PLAN_NAME[plan]}</span>
+                {sub && (
+                  <span className="t-label tabular-nums text-fg-dim">
+                    {fmtMinor(sub.amountMinor, sub.currency)} / {sub.interval}
+                  </span>
+                )}
               </div>
-            </section>
+              <p className="mt-3 t-body-sm text-fg-dim">
+                {plan === "free"
+                  ? "Free forever. The primer, paper trades and the daily allowance below."
+                  : sub
+                    ? `Conferred by your ${PROVIDER_NAME[sub.provider]} subscription.`
+                    : "Granted without a subscription — a manual plan."}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <PillLink href={plan === "free" ? "/pricing#plus" : "/pricing"} size="sm">
+                  {plan === "free" ? "See plans" : "All plans"}
+                </PillLink>
+                {sub?.provider === "lemonsqueezy" && (
+                  // The header comment's plain anchor, spelling out the kit's
+                  // primary pill: PillLink is a <Link>, and its prefetch would
+                  // call the provider on hover.
+                  <a
+                    href="/api/billing/portal"
+                    className="btn-grad inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 text-[0.875rem] font-semibold tracking-[-0.01em] shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] transition-[transform,box-shadow,background-color,color] duration-300 [transition-timing-function:var(--ease-settle)] hover:-translate-y-px"
+                  >
+                    Manage subscription
+                  </a>
+                )}
+              </div>
+            </CalmPanel>
 
-            {/* usage */}
-            <section className="surface-card border border-border bg-surface">
-              <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">usage · today</div>
-              <div className="space-y-5 p-5">
+            <CalmPanel as="section" title="Usage · today">
+              <div className="space-y-5">
                 <div>
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="t-chrome text-fg-dim">AI-teacher explains</span>
+                    <span className="t-label text-fg-dim">AI-teacher explains</span>
                     <span className="t-data text-sm text-fg">
                       {usage.count} <span className="text-fg-faint">/ {capLabel(limits.explainsPerDay)}</span>
                     </span>
                   </div>
-                  <div className="mt-2 h-1 bg-border-soft">
-                    <div className="h-1 bg-bull" style={{ width: `${explainPct}%` }} />
+                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-border-soft">
+                    <div className="h-1 rounded-full bg-brand-ink" style={{ width: `${explainPct}%` }} />
                   </div>
-                  <div className="mt-1.5 t-chrome text-fg-faint">resets at midnight UTC</div>
+                  <div className="mt-1.5 t-label text-fg-faint">Resets at midnight UTC</div>
                 </div>
                 <div>
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="t-chrome text-fg-dim">Saved workspaces</span>
+                    <span className="t-label text-fg-dim">Saved workspaces</span>
                     <span className="t-data text-sm text-fg">
                       {workspaces} <span className="text-fg-faint">/ {capLabel(limits.workspaces)}</span>
                     </span>
                   </div>
-                  <div className="mt-2 h-1 bg-border-soft">
-                    <div className="h-1 bg-bull" style={{ width: `${workspacePct}%` }} />
+                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-border-soft">
+                    <div className="h-1 rounded-full bg-brand-ink" style={{ width: `${workspacePct}%` }} />
                   </div>
-                  <div className="mt-1.5 t-chrome text-fg-faint">pro layouts + quant setups · the cap applies to new saves only</div>
+                  <div className="mt-1.5 t-label text-fg-faint">Pro layouts + quant setups · the cap applies to new saves only</div>
                 </div>
               </div>
-            </section>
+            </CalmPanel>
 
-            {/* subscription */}
-            <section className="surface-card border border-border bg-surface">
-              <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">subscription</div>
-              <div className="p-5">
-                {sub ? (
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 font-mono text-[0.6875rem] uppercase tracking-wider">
-                    <dt className="text-fg-faint">provider</dt>
-                    <dd className="text-fg">{PROVIDER_NAME[sub.provider]}</dd>
-                    <dt className="text-fg-faint">status</dt>
-                    <dd className="text-fg">{STATUS_LABEL[sub.status]}</dd>
-                    <dt className="text-fg-faint">{sub.status === "cancelled" || sub.status === "expired" ? "ends" : "renews"}</dt>
-                    <dd className="text-fg">{fmtDate(sub.currentPeriodEnd)}</dd>
-                    <dt className="text-fg-faint">amount</dt>
-                    <dd className="text-fg">
-                      {fmtMinor(sub.amountMinor, sub.currency)} {sub.currency} / {sub.interval}
-                    </dd>
-                    {sub.cancelledAt && (
-                      <>
-                        <dt className="text-fg-faint">cancelled</dt>
-                        <dd className="text-fg">{fmtDate(sub.cancelledAt)}</dd>
-                      </>
-                    )}
-                  </dl>
-                ) : (
-                  <p className="t-body-sm text-fg-dim">No subscription. Nothing is charged on the free plan.</p>
-                )}
-                <p className="mt-4 t-body-sm text-fg-dim">
-                  {sub?.provider === "razorpay"
-                    ? `Razorpay has no self-serve portal. Cancel the mandate from the UPI app or bank that holds it, or email ${SUPPORT} from this address and it is cancelled the same day.`
-                    : sub?.provider === "lemonsqueezy"
-                      ? "Change the card, download invoices or cancel from the customer portal."
-                      : sub
-                        ? `A manual grant — email ${SUPPORT} to change it.`
-                        : "A subscription bought on /pricing appears here once the provider confirms it."}
+            <CalmPanel as="section" title="Subscription">
+              {sub ? (
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[0.875rem]">
+                  <dt className="text-fg-faint">Provider</dt>
+                  <dd className="text-fg first-letter:uppercase">{PROVIDER_NAME[sub.provider]}</dd>
+                  <dt className="text-fg-faint">Status</dt>
+                  <dd className="text-fg">{STATUS_LABEL[sub.status]}</dd>
+                  <dt className="text-fg-faint">{sub.status === "cancelled" || sub.status === "expired" ? "Ends" : "Renews"}</dt>
+                  <dd className="text-fg">{fmtDate(sub.currentPeriodEnd)}</dd>
+                  <dt className="text-fg-faint">Amount</dt>
+                  <dd className="text-fg">
+                    {fmtMinor(sub.amountMinor, sub.currency)} {sub.currency} / {sub.interval}
+                  </dd>
+                  {sub.cancelledAt && (
+                    <>
+                      <dt className="text-fg-faint">Cancelled</dt>
+                      <dd className="text-fg">{fmtDate(sub.cancelledAt)}</dd>
+                    </>
+                  )}
+                </dl>
+              ) : (
+                <p className="t-body-sm text-fg-dim">No subscription. Nothing is charged on the free plan.</p>
+              )}
+              <p className="mt-4 t-body-sm text-fg-dim">
+                {sub?.provider === "razorpay"
+                  ? `Razorpay has no self-serve portal. Cancel the mandate from the UPI app or bank that holds it, or email ${SUPPORT} from this address and it is cancelled the same day.`
+                  : sub?.provider === "lemonsqueezy"
+                    ? "Change the card, download invoices or cancel from the customer portal."
+                    : sub
+                      ? `A manual grant — email ${SUPPORT} to change it.`
+                      : "A subscription bought on /pricing appears here once the provider confirms it."}
+              </p>
+              <p className="mt-2 t-label text-fg-faint">Cancelling keeps access until the period end · no refunds are needed for unused days</p>
+            </CalmPanel>
+
+            <CalmPanel as="section" title="Waitlist">
+              {waiting.length === 0 ? (
+                <p className="t-body-sm text-fg-dim">
+                  Not on any list. A tier whose checkout is not open yet takes names on{" "}
+                  <Link href="/pricing" className="text-brand-ink underline underline-offset-4">
+                    /pricing
+                  </Link>
+                  .
                 </p>
-                <p className="mt-2 t-chrome text-fg-faint">cancelling keeps access until the period end · no refunds are needed for unused days</p>
-              </div>
-            </section>
-
-            {/* waitlist */}
-            <section className="surface-card border border-border bg-surface">
-              <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">waitlist</div>
-              <div className="p-5">
-                {waiting.length === 0 ? (
-                  <p className="t-body-sm text-fg-dim">
-                    Not on any list. A tier whose checkout is not open yet takes names on{" "}
-                    <Link href="/pricing" className="text-bull underline underline-offset-4">
-                      /pricing
-                    </Link>
-                    .
-                  </p>
-                ) : (
-                  <ul className="space-y-2 font-mono text-[0.6875rem] uppercase tracking-wider">
-                    {waiting.map((w) => (
-                      <li key={`${w.tier}:${w.currency}`} className="flex items-center justify-between gap-3 border-b border-border-soft pb-2 last:border-b-0 last:pb-0">
-                        <span className="text-fg">
-                          {PLAN_NAME[w.tier]} · {w.currency}
-                        </span>
-                        <span className="text-fg-faint">joined {fmtDate(w.createdAt)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="mt-4 t-chrome text-fg-faint">we email this address when that checkout opens · nothing is charged</p>
-              </div>
-            </section>
+              ) : (
+                <ul className="space-y-2 text-[0.875rem]">
+                  {waiting.map((w) => (
+                    <li key={`${w.tier}:${w.currency}`} className="flex items-center justify-between gap-3 border-b border-border-soft pb-2 last:border-b-0 last:pb-0">
+                      <span className="text-fg">
+                        {PLAN_NAME[w.tier]} · {w.currency}
+                      </span>
+                      <span className="text-fg-faint">Joined {fmtDate(w.createdAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-4 t-label text-fg-faint">We email this address when that checkout opens · nothing is charged</p>
+            </CalmPanel>
           </div>
 
-          <div className="mt-10 inline-flex items-center gap-3 surface-card border border-border bg-surface px-5 py-3 font-mono text-[0.6875rem] uppercase tracking-[0.25em] text-fg-dim">
-            <span className="size-1.5 rounded-full bg-bull" />
-            Paper only · Educational · Not advice
-          </div>
+          <p className="mt-8 text-[0.8125rem] text-fg-faint">Paper only · Educational · Not advice</p>
         </div>
       </main>
       <Footer />

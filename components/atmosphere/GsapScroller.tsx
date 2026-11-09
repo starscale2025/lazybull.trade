@@ -3,9 +3,11 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { isMotionPaused } from "@/lib/motion/bus";
 
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, SplitText);
 }
 
 /**
@@ -171,6 +173,29 @@ export function GsapScroller() {
               { autoAlpha: 0, x: -48 },
               { autoAlpha: 1, x: 0, duration, delay, scrollTrigger: baseTrigger }
             );
+            break;
+          }
+          // M5: a heading's lines rise out of their own masks, one after
+          // another. SplitText re-splits when the web font lands (autoSplit),
+          // so the lines are the real ones. Skipped outright under reduced
+          // motion or the site's pause: the heading simply stands there.
+          case "split-lines": {
+            if (reduced || isMotionPaused()) break;
+            SplitText.create(el, {
+              type: "lines",
+              mask: "lines",
+              autoSplit: true,
+              onSplit(self) {
+                return gsap.from(self.lines, {
+                  yPercent: 108,
+                  duration: duration * 0.95,
+                  ease: "expo.out",
+                  stagger: 0.09,
+                  delay,
+                  scrollTrigger: baseTrigger,
+                });
+              },
+            });
             break;
           }
           case "reveal-clip": {

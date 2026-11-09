@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { MODEL_META, probAll, spreadBetween, type ModelKey } from "@/lib/models";
+import { Chip, ToolButton } from "@/components/calm/kit";
 
 type Props = { spot: number; low: number; high: number; daysToExpiry: number; iv: number };
 
@@ -42,22 +43,15 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
     <div className="bg-bg">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-3 py-2">
         <div className="flex items-center gap-3">
-          <span className="t-chrome text-fg-dim">Model spread</span>
-          <span className="surface-instrument border border-border bg-surface px-2 py-0.5 t-chrome text-fg">consensus {(consensus * 100).toFixed(0)}%</span>
-          <span
-            className={`border px-2 py-0.5 t-chrome ${
-              spread > 0.12 ? "border-amber/50 bg-amber/10 text-amber" : "border-bull/50 bg-bull/10 text-bull"
-            }`}
-          >
-            spread {(spread * 100).toFixed(0)} pts {spread > 0.12 ? "· high uncertainty" : "· tight"}
-          </span>
+          <span className="t-label text-fg-dim">Model spread</span>
+          <Chip>Consensus {(consensus * 100).toFixed(0)}%</Chip>
+          <Chip tone={spread > 0.12 ? "warn" : "neutral"}>
+            Spread {(spread * 100).toFixed(0)} pts {spread > 0.12 ? "· high uncertainty" : "· tight"}
+          </Chip>
         </div>
-        <button
-          onClick={() => setByoOpen((v) => !v)}
-          className="border border-border bg-bg px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg"
-        >
-          + bring your own model
-        </button>
+        <ToolButton onClick={() => setByoOpen((v) => !v)} className="!h-6 !px-2.5 !text-[0.75rem]">
+          + Bring your own model
+        </ToolButton>
       </div>
 
       <div className="space-y-1 p-3">
@@ -92,12 +86,12 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                     style={{ background: meta.tone, opacity: disabled ? 0.3 : 1 }}
                   />
                 </div>
-                <div className="mt-0.5 font-mono text-[0.625rem] tracking-normal text-fg-faint">{meta.explain}</div>
+                <div className="mt-0.5 text-[0.6875rem] text-fg-faint">{meta.explain}</div>
               </div>
               <div className="col-span-2 flex items-center justify-end gap-1.5 t-data">
                 <span className="text-base text-fg">{v != null ? `${(v * 100).toFixed(0)}%` : "—"}</span>
-                {winner && <span className="text-bull text-[0.625rem]">↑</span>}
-                {loser && <span className="text-bear text-[0.625rem]">↓</span>}
+                {winner && <span className="text-fg-dim text-[0.625rem]">↑</span>}
+                {loser && <span className="text-fg-dim text-[0.625rem]">↓</span>}
               </div>
             </motion.div>
           );
@@ -114,10 +108,10 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
           >
             <div className="p-3">
               <div className="mb-2 flex items-center justify-between">
-                <div className="t-chrome text-fg-dim">
+                <div className="t-label text-fg-dim">
                   Your model · runs in a sandboxed Function constructor
                 </div>
-                {running && <span className="font-mono text-[0.625rem] text-cyan animate-pulse">re-evaluating…</span>}
+                {running && <span className="t-label text-fg-faint">Re-evaluating…</span>}
               </div>
               <textarea
                 value={userCode}
@@ -126,9 +120,9 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                 rows={12}
                 className="w-full resize-y border border-border bg-bg p-3 font-mono text-[0.6875rem] text-fg outline-none focus:border-cyan"
               />
-              <div className="mt-2 flex items-center justify-between font-mono text-[0.625rem] tracking-wider text-fg-faint">
-                <span>output: <span className={probs.user != null ? "text-bull" : "text-bear"}>{probs.user != null ? `${(probs.user * 100).toFixed(2)}%` : "error / not a number"}</span></span>
-                <span>roadmap: marketplace + accuracy leaderboard</span>
+              <div className="mt-2 flex items-center justify-between t-label text-fg-faint">
+                <span>Output: <span className={probs.user != null ? "text-bull" : "text-bear"}>{probs.user != null ? `${(probs.user * 100).toFixed(2)}%` : "error / not a number"}</span></span>
+                <span>Roadmap: marketplace + accuracy leaderboard</span>
               </div>
             </div>
           </motion.div>

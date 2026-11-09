@@ -14,7 +14,7 @@ export function PnLDiagram({ legs, spot, height = 220 }: Props) {
   const data = useMemo(() => pnlCurve(legs, spot, 0.4, 121), [legs, spot]);
   if (legs.length === 0) {
     return (
-      <div className="flex h-[13.75rem] items-center justify-center border border-dashed border-border-soft text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
+      <div className="flex h-[13.75rem] items-center justify-center border border-dashed border-border-soft text-center t-label text-fg-faint">
         Select strikes from the chain<br />to see the P&L diagram
       </div>
     );

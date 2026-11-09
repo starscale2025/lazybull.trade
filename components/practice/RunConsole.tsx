@@ -16,10 +16,11 @@
  * with the server away, this device against the visible cases.
  *
  * Copied chrome: the lockdown strip (components/quant/RunRitual.tsx:313-320),
- * the verdict headline + glow (RunRitual.tsx:333-342, 73-81), the streaming
- * block (components/quant/RunStream.tsx:60-100), the metric tiles
- * (components/quant/BotCell.tsx:366-383), the footer buttons
- * (components/quant/ImportBotModal.tsx:179-191).
+ * the verdict headline (RunRitual.tsx:333-342), the streaming block
+ * (components/quant/RunStream.tsx:60-100), the metric tiles
+ * (components/quant/BotCell.tsx:366-383). Mint and red here say one thing only:
+ * pass or fail. Links take the kit's square .tool-btn by hand; Submit, in the
+ * editor, is the workspace's one primary.
  */
 
 import Link from "next/link";
@@ -29,10 +30,12 @@ import { LANG_META } from "@/lib/practice/types";
 import type { Judge } from "@/lib/practice/use-judge";
 import type { PlanNeed } from "@/lib/practice/client";
 import { track } from "@/lib/track";
+import { Chip, TogglePill, ToolButton } from "@/components/calm/kit";
 import { DecimatedNumber } from "@/components/quant/DecimatedNumber";
+import { VerdictChip } from "./Badges";
 import { Panel } from "./Panel";
-import { Kbd, LockPill, VerdictPill } from "./Chips";
-import { UnderlineTabs, type TabDef } from "./ProblemTabs";
+import { Kbd, LockPill } from "./Chips";
+import { PaneTabs, type TabDef } from "./ProblemTabs";
 
 export type ConsoleTab = "testcases" | "result";
 export type Neighbour = { id: string; title: string } | null;
@@ -63,8 +66,13 @@ export function RunConsole({
 }) {
   return (
     <Panel
-      title={<UnderlineTabs tabs={TABS} value={tab} onChange={onTab} label="Console tabs" />}
-      right={<span className="text-fg-faint">{LANG_META.python.runtime}</span>}
+      title={<PaneTabs tabs={TABS} value={tab} onChange={onTab} label="Console tabs" />}
+      right={
+        // normal-case: the frame's right slot is t-chrome, and uppercase inherits.
+        <span className="t-label normal-case text-fg-faint">
+          {LANG_META.python.runtime.charAt(0).toUpperCase() + LANG_META.python.runtime.slice(1)}
+        </span>
+      }
       className={className}
       bodyClassName="flex flex-col"
     >
@@ -87,7 +95,7 @@ function Testcases({ problem, judge }: { problem: ClientProblem; judge: Judge })
   const active = visible.find((c) => c.id === activeId) ?? visible[0];
 
   if (!active) {
-    return <div className="grid flex-1 place-items-center p-3 t-chrome text-fg-faint">no visible cases</div>;
+    return <div className="grid flex-1 place-items-center p-3 t-label text-fg-faint">No visible cases</div>;
   }
 
   const judged = judge.report?.cases.find((x) => x.id === active.id) ?? null;
@@ -100,45 +108,34 @@ function Testcases({ problem, judge }: { problem: ClientProblem; judge: Judge })
           const r = judge.report?.cases.find((x) => x.id === c.id) ?? null;
           const on = c.id === active.id;
           return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setActiveId(c.id)}
-              aria-pressed={on}
-              className={`inline-flex h-7 items-center gap-1.5 border px-2.5 font-mono text-[0.6875rem] transition-colors ${
-                on ? "border-bull bg-bull/5 text-fg" : "border-border bg-bg text-fg-faint hover:text-fg-dim"
-              }`}
-            >
+            <TogglePill key={c.id} on={on} onClick={() => setActiveId(c.id)}>
               {r && (
-                <span role="img" aria-label={r.pass ? "passed" : "failed"} className={r.pass ? "text-bull" : "text-bear"}>
+                // The pill inverts when on; the mark takes its ink then.
+                <span role="img" aria-label={r.pass ? "passed" : "failed"} className={`mr-1.5 ${on ? "" : r.pass ? "text-bull" : "text-bear"}`}>
                   {r.pass ? "✓" : "✕"}
                 </span>
               )}
               Case {i + 1}
-            </button>
+            </TogglePill>
           );
         })}
-        {problem.hiddenCount > 0 && (
-          <span className="inline-flex h-7 items-center border border-dashed border-border px-2.5 font-mono text-[0.6875rem] text-fg-faint">
-            + {problem.hiddenCount} hidden on submit
-          </span>
-        )}
+        {problem.hiddenCount > 0 && <Chip>+ {problem.hiddenCount} hidden on submit</Chip>}
       </div>
 
       <div>
-        <div className="t-chrome text-fg-faint">input · keyword arguments to {problem.entry}()</div>
+        <div className="t-label text-fg-faint">Input · keyword arguments to {problem.entry}()</div>
         <pre className={PRE_CLS}>{active.input}</pre>
       </div>
 
       <div>
-        <div className="t-chrome text-fg-faint">expected</div>
+        <div className="t-label text-fg-faint">Expected</div>
         <pre className={PRE_CLS}>{active.expected}</pre>
       </div>
 
       {(judged || running) && (
         <div>
-          <div className="t-chrome text-fg-faint">
-            got{judged ? ` · ${judged.pass ? "match" : "mismatch"} · ${judged.ms} ms` : running ? ` · ${running.ms} ms` : ""}
+          <div className="t-label text-fg-faint">
+            Got{judged ? ` · ${judged.pass ? "match" : "mismatch"} · ${judged.ms} ms` : running ? ` · ${running.ms} ms` : ""}
           </div>
           <pre className={`${PRE_CLS} ${judged ? (judged.pass ? "text-bull" : "text-bear") : ""}`}>
             {(judged ?? running)!.error ? `${(judged ?? running)!.got}\n${(judged ?? running)!.error}` : (judged ?? running)!.got}
@@ -146,8 +143,8 @@ function Testcases({ problem, judge }: { problem: ClientProblem; judge: Judge })
         </div>
       )}
 
-      <p className="t-chrome text-fg-faint">
-        the judge calls {problem.entry}() with exactly these inputs · outputs are compared to 6 decimal places
+      <p className="t-label text-fg-faint">
+        The judge calls {problem.entry}() with exactly these inputs · outputs are compared to 6 decimal places
       </p>
     </div>
   );
@@ -157,20 +154,12 @@ function Testcases({ problem, judge }: { problem: ClientProblem; judge: Judge })
 
 const TONE_CLS: Record<LogTone, string> = {
   ok: "text-bull",
-  warn: "text-amber",
+  warn: "text-fg",
   err: "text-bear",
-  info: "text-cyan",
+  info: "text-brand-ink",
 };
 
-// sideGlow() from RunRitual.tsx, for the two sides the judge can land on.
-const BULL_GLOW = "0 0 30px rgba(82,255,165,.45), 0 0 80px rgba(82,255,165,.2)";
-const BEAR_GLOW = "0 0 30px rgba(255,46,99,.45), 0 0 80px rgba(255,46,99,.2)";
 const HEADLINE = "dc-verdict font-display text-[clamp(2rem,4vw,3rem)] leading-[0.9] tracking-[-0.04em]";
-
-const BTN_PRIMARY =
-  "inline-flex h-9 items-center bg-bull px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bg transition-colors hover:bg-bull-dim";
-const BTN_SECONDARY =
-  "inline-flex h-9 items-center border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:text-fg";
 
 function Result({
   problem,
@@ -189,7 +178,7 @@ function Result({
 
   if (phase === "idle" || (!locked && !report)) {
     return (
-      <div className="grid flex-1 place-items-center p-3 t-chrome text-fg-faint">▸ run the tests to see output</div>
+      <div className="grid flex-1 place-items-center p-3 t-label text-fg-faint">▸ Run the tests to see output</div>
     );
   }
 
@@ -198,16 +187,15 @@ function Result({
       {/* the lockdown notice — RunRitual.tsx:313-320; stays up for as long
           as the judge holds the file */}
       {locked && (
-        <div className="dc-line relative flex items-stretch border-b border-amber/30 bg-amber/6">
-          <span aria-hidden className="dc-hazard w-1.5 shrink-0" />
-          <span className="t-chrome px-3 py-1.5 text-amber">
+        <div className="dc-line relative flex items-stretch border-b border-border bg-bg-soft">
+          <span className="t-label px-3 py-1.5 text-fg-dim">
             {phase === "loading"
-              ? "editor locked · loading the python runtime"
+              ? "Editor locked · loading the python runtime"
               : phase === "judging"
-                ? `editor locked · ${mode === "submit" ? "the server is judging" : "judging"}`
+                ? `Editor locked · ${mode === "submit" ? "the server is judging" : "judging"}`
                 : mode === "submit"
-                  ? `editor locked · running ${problem.cases.length + problem.hiddenCount} cases`
-                  : "editor locked · running the visible cases"}
+                  ? `Editor locked · running ${problem.cases.length + problem.hiddenCount} cases`
+                  : "Editor locked · running the visible cases"}
           </span>
         </div>
       )}
@@ -233,11 +221,11 @@ function Wall({ need, slug }: { need: PlanNeed; slug: string }) {
       <div className="border border-dashed border-border bg-bg p-6 text-center">
         <LockPill lock={need === "power" ? "power" : "pro"} />
         <div className="mt-3 font-display text-lg tracking-tightest text-fg">Submitting this one ships with {label}.</div>
-        <p className="mx-auto mt-1 max-w-[38ch] t-chrome text-fg-faint">
-          running the visible cases is free for everyone — the hidden set and the verdict are on the plan
+        <p className="mx-auto mt-1 max-w-[38ch] t-label text-fg-faint">
+          Running the visible cases is free for everyone — the hidden set and the verdict are on the plan
         </p>
-        <Link href={`/pricing#${need}`} className={`mt-4 ${BTN_SECONDARY} hover:border-bull hover:text-bull`}>
-          see the plans →
+        <Link href={`/pricing#${need}`} className="tool-btn mt-4">
+          See the plans →
         </Link>
       </div>
     </div>
@@ -252,9 +240,9 @@ function Stream({ judge }: { judge: Judge }) {
       <div className="relative overflow-hidden border border-border-soft bg-bg p-3 font-mono text-[0.6875rem] leading-[1.55]">
         <div className="cell-running-rail" aria-hidden />
         <div className="mb-2 flex items-center justify-between t-eyebrow text-fg-faint">
-          <span className="flex items-center gap-2 text-bull">
-            <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            {judge.phase === "loading" ? "loading runtime" : judge.phase === "judging" ? "judging" : "running"}
+          <span className="flex items-center gap-2 text-brand-ink">
+            <span className="size-1.5 rounded-full bg-brand-ink pulse-dot" />
+            {judge.phase === "loading" ? "Loading runtime" : judge.phase === "judging" ? "Judging" : "Running"}
           </span>
           <span>{LANG_META[judge.lang].file}</span>
         </div>
@@ -266,7 +254,7 @@ function Stream({ judge }: { judge: Judge }) {
             </div>
           ))}
           <div className="inline-flex items-center gap-1">
-            <span aria-hidden className="text-bull pulse-dot">
+            <span aria-hidden className="text-brand-ink pulse-dot">
               ▌
             </span>
           </div>
@@ -299,28 +287,26 @@ function Verdict({
   return (
     <div className="cell-result-in space-y-3 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <VerdictPill verdict={report.verdict} />
-        <span className="t-chrome text-fg-faint">
-          {judged ? `${report.passed}/${report.total} cases` : "nothing judged"} · {mode} · judged by {judgeLabel}
+        <VerdictChip verdict={report.verdict} />
+        <span className="t-label text-fg-faint">
+          {judged ? `${report.passed}/${report.total} cases` : "Nothing judged"} · {mode} · judged by {judgeLabel}
         </span>
       </div>
 
       {acceptedSubmit && (
         <div className="border border-bull/30 bg-bull/5 p-4">
-          <h2 className={HEADLINE} style={{ color: "var(--bull)", textShadow: BULL_GLOW }}>
-            Accepted.
-          </h2>
-          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 t-chrome text-fg-dim">
+          <h2 className={`${HEADLINE} text-bull`}>Accepted.</h2>
+          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 t-label text-fg-dim">
             {report.beats !== null ? (
               <span>
-                faster than{" "}
+                Faster than{" "}
                 <span className="t-data text-[0.8125rem] text-fg">
                   <DecimatedNumber value={`${report.beats}%`} active />
                 </span>{" "}
                 of accepted submissions
               </span>
             ) : (
-              <span>no speed ladder yet — it appears once five submissions are accepted</span>
+              <span>No speed ladder yet — it appears once five submissions are accepted</span>
             )}
             <span className="text-fg-faint">
               {report.passed}/{report.total} cases · {report.runtimeMs} ms
@@ -330,33 +316,31 @@ function Verdict({
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {next ? (
               <>
-                <Link href={`/practice/${next.id}`} className={BTN_PRIMARY}>
-                  next problem →
+                <Link href={`/practice/${next.id}`} className="tool-btn">
+                  Next problem →
                 </Link>
-                <Link href="/practice" className={BTN_SECONDARY}>
-                  back to the set
+                <Link href="/practice" className="tool-btn">
+                  Back to the set
                 </Link>
               </>
             ) : (
-              <Link href="/practice" className={BTN_PRIMARY}>
-                back to the set →
+              <Link href="/practice" className="tool-btn">
+                Back to the set →
               </Link>
             )}
-            <button type="button" onClick={onRunAgain} className="ml-auto t-chrome text-fg-faint transition-colors hover:text-fg">
-              ↻ run again
-            </button>
+            <ToolButton onClick={onRunAgain} className="ml-auto">
+              ↻ Run again
+            </ToolButton>
           </div>
         </div>
       )}
 
       {failedSubmit && (
         <div className="border border-bear/30 bg-bear/5 p-4">
-          <h2 className={HEADLINE} style={{ color: "var(--bear)", textShadow: BEAR_GLOW }}>
-            {report.verdict === "error" ? "Did not run." : "Wrong answer."}
-          </h2>
-          <p className="mt-2 t-chrome text-fg-dim">
+          <h2 className={`${HEADLINE} text-bear`}>{report.verdict === "error" ? "Did not run." : "Wrong answer."}</h2>
+          <p className="mt-2 t-label text-fg-dim">
             {report.verdict === "error"
-              ? "nothing was judged — see the error below"
+              ? "Nothing was judged — see the error below"
               : report.cases.some((c) => c.hidden && !c.pass) && report.cases.every((c) => c.hidden || c.pass)
                 ? `${report.passed}/${report.total} cases · the hidden set found the gap the visible ones missed`
                 : `${report.passed}/${report.total} cases`}
@@ -366,7 +350,7 @@ function Verdict({
 
       {report.error && (
         <div className="border-l-2 border-bear bg-bear/5 px-3 py-2 font-mono text-[0.75rem] leading-relaxed text-fg">
-          <span className="mr-2 t-chrome text-bear">{report.error.title}</span>
+          <span className="mr-2 t-label text-bear">{report.error.title}</span>
           <span className="whitespace-pre-wrap break-words">{report.error.detail}</span>
         </div>
       )}
@@ -379,8 +363,8 @@ function Verdict({
                 {c.pass ? "✓" : "✕"}
               </span>
               <span className="font-mono text-[0.75rem] text-fg">
-                case {c.id}
-                {c.hidden && <span className="ml-2 border border-border px-1 py-px t-chrome text-fg-faint">hidden</span>}
+                Case {c.id}
+                {c.hidden && <Chip className="ml-2">Hidden</Chip>}
               </span>
               <span className={`t-data text-[0.6875rem] ${c.pass ? "text-fg-faint" : "text-bear"}`}>
                 {c.pass ? "ok" : c.error ? "raised" : "mismatch"} · {c.ms} ms
@@ -394,7 +378,7 @@ function Verdict({
 
       {report.stdout && (
         <div>
-          <div className="t-chrome text-fg-faint">stdout</div>
+          <div className="t-label text-fg-faint">stdout</div>
           <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words border border-border bg-bg p-2 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
             {report.stdout}
           </pre>
@@ -402,7 +386,7 @@ function Verdict({
       )}
       {report.stderr && (
         <div>
-          <div className="t-chrome text-fg-faint">stderr</div>
+          <div className="t-label text-fg-faint">stderr</div>
           <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words border border-bear/30 bg-bg p-2 font-mono text-[0.6875rem] leading-relaxed text-bear">
             {report.stderr}
           </pre>
@@ -412,23 +396,21 @@ function Verdict({
       {/* metric tiles — BotCell.tsx:366. Every figure is measured or aggregated;
           the ones that do not exist yet read "—" and say why in the label. */}
       <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4">
-        <Tile label="passed" value={judged ? <DecimatedNumber value={`${report.passed}/${report.total}`} active /> : "—"} />
-        <Tile label="runtime · your browser" value={judged ? <DecimatedNumber value={`${report.runtimeMs} ms`} active /> : "—"} />
+        <Tile label="Passed" value={judged ? <DecimatedNumber value={`${report.passed}/${report.total}`} active /> : "—"} />
+        <Tile label="Runtime · your browser" value={judged ? <DecimatedNumber value={`${report.runtimeMs} ms`} active /> : "—"} />
         <Tile
-          label={report.beats !== null ? "faster than" : "faster than · needs 5 accepted"}
+          label={report.beats !== null ? "Faster than" : "Faster than · needs 5 accepted"}
           value={report.beats !== null ? <DecimatedNumber value={`${report.beats}%`} active /> : "—"}
         />
-        <Tile label="judge" value={<span className="text-[0.8125rem]">{judgeLabel}</span>} />
+        <Tile label="Judge" value={<span className="text-[0.8125rem]">{judgeLabel}</span>} />
       </div>
 
       {!acceptedSubmit && (
-        <div className="flex flex-wrap items-center gap-3 t-chrome text-fg-faint">
-          <button type="button" onClick={onRunAgain} className="transition-colors hover:text-fg">
-            ↻ run again
-          </button>
+        <div className="flex flex-wrap items-center gap-3 t-label text-fg-faint">
+          <ToolButton onClick={onRunAgain}>↻ Run again</ToolButton>
           {mode === "run" && report.verdict === "accepted" && (
             <span className="flex items-center gap-1.5">
-              all visible cases pass · <Kbd>⌘⇧↵</Kbd> to submit against the {problem.hiddenCount} hidden ones
+              All visible cases pass · <Kbd>⌘⇧↵</Kbd> to submit against the {problem.hiddenCount} hidden ones
             </span>
           )}
         </div>
@@ -443,8 +425,8 @@ function Verdict({
 function Diff({ c }: { c: CaseResult }) {
   return (
     <div className="border-l-2 border-bear bg-bear/5 px-3 py-2 font-mono text-[0.75rem] leading-relaxed">
-      <div className="t-chrome text-fg-faint">
-        case {c.id}
+      <div className="t-label text-fg-faint">
+        Case {c.id}
         {c.hidden ? " · hidden" : ""} · first failure
       </div>
       {c.expected !== undefined ? (
@@ -467,7 +449,7 @@ function Diff({ c }: { c: CaseResult }) {
 function Tile({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="bg-bg p-2.5">
-      <div className="t-chrome text-fg-faint">{label}</div>
+      <div className="t-label text-fg-faint">{label}</div>
       <div className="mt-1 t-data text-base text-fg">{value}</div>
     </div>
   );
@@ -500,7 +482,7 @@ function BeatsBar({ pct }: { pct: number }) {
       className="mt-2 h-1 bg-border-soft"
     >
       <div
-        className={`h-full bg-bull ${reduce ? "" : "transition-[width] duration-700 [transition-timing-function:var(--ease-settle)]"}`}
+        className={`h-full bg-brand-ink ${reduce ? "" : "transition-[width] duration-700 [transition-timing-function:var(--ease-settle)]"}`}
         style={{ width: `${width}%` }}
       />
     </div>

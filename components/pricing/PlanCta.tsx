@@ -22,8 +22,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import type { Currency, Interval, PaidPlan } from "@/lib/billing/config";
-import { ctaClass } from "./tiers";
+import { PillButton } from "@/components/calm/kit";
 import { WaitlistForm } from "./WaitlistForm";
+
+// The kit's PillLink, spelled out: this one link needs aria-disabled while the
+// session loads, and PillLink takes no extra attributes.
+const SIGN_IN_PILL =
+  "inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-[0.9375rem] tracking-[-0.01em] transition-[transform,box-shadow,background-color,color] duration-300 [transition-timing-function:var(--ease-settle)] hover:-translate-y-px";
 
 export function PlanCta({
   plan,
@@ -61,8 +66,8 @@ export function PlanCta({
         soon={soon}
         reason={
           soon
-            ? "coming soon · ships with a licensed IV feed"
-            : `${currency === "INR" ? "₹" : "$"} checkout is not open yet · nothing charged`
+            ? "Coming soon · ships with a licensed IV feed"
+            : "Checkout is not open yet · nothing is charged"
         }
       />
     );
@@ -71,13 +76,14 @@ export function PlanCta({
   if (status !== "authenticated") {
     return (
       <div className="mt-6">
-        <Link href="/auth/signin?callbackUrl=/pricing" className={ctaClass({ primary })} aria-disabled={status === "loading"}>
+        <Link
+          href="/auth/signin?callbackUrl=/pricing"
+          className={`${SIGN_IN_PILL} ${primary ? "btn-grad font-semibold" : "calm-pill-secondary font-medium text-fg"}`}
+          aria-disabled={status === "loading"}
+        >
           {status === "loading" ? "…" : "Sign in to subscribe"}
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-            <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
         </Link>
-        <div className="mt-2 t-chrome text-fg-faint">free account first · {priceLabel} after</div>
+        <div className="mt-2 t-label text-fg-faint">Free account first · {priceLabel} after</div>
       </div>
     );
   }
@@ -103,13 +109,13 @@ export function PlanCta({
       }
       setError(
         r.status === 401
-          ? "session expired — sign in again"
+          ? "Session expired — sign in again"
           : r.status === 429
-            ? "too many attempts — wait a minute"
-            : "checkout could not start — try again",
+            ? "Too many attempts — wait a minute"
+            : "Checkout could not start — try again",
       );
     } catch {
-      setError("offline — try again");
+      setError("Offline — try again");
     } finally {
       setBusy(false);
     }
@@ -117,17 +123,14 @@ export function PlanCta({
 
   return (
     <div className="mt-6">
-      <button type="button" onClick={buy} disabled={busy} className={ctaClass({ primary })}>
-        {busy ? "opening checkout…" : `Subscribe · ${priceLabel}`}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-          <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      </button>
-      <div className="mt-2 t-chrome text-fg-faint">
-        {currency === "INR" ? "UPI autopay or card · via Razorpay" : "card · via Lemon Squeezy"} · cancel any time
+      <PillButton kind={primary ? "primary" : "secondary"} onClick={buy} disabled={busy} className="w-full">
+        {busy ? "Opening checkout…" : `Subscribe · ${priceLabel}`}
+      </PillButton>
+      <div className="mt-2 t-label text-fg-faint">
+        {currency === "INR" ? "UPI autopay or card · via Razorpay" : "Card · via Lemon Squeezy"} · cancel any time
       </div>
       {error && (
-        <div className="mt-1 t-chrome text-bear" role="alert">
+        <div className="mt-1 t-label text-fg" role="alert">
           {error}
         </div>
       )}

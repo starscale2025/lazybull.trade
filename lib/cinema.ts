@@ -12,10 +12,12 @@ export type Act =
   | "safety"
   | "consensus"
   | "bull"
-  | "matrix";
+  | "mark";
 
 // Contiguous, covers [0,1]. The candle act (climb → crash → AI prediction) is
-// the long signature beat. `matrix` folds the old flash+handoff+reveal.
+// the long signature beat. `mark` is the ending: the bull's particles settle
+// onto the bull mark (lib/bull-mark.ts). It was `matrix`, the code rain, which
+// Phase 4 retired (M25).
 export const ACTS: Record<Act, { from: number; to: number }> = {
   boot: { from: 0.0, to: 0.05 },
   assembly: { from: 0.05, to: 0.15 },
@@ -23,7 +25,7 @@ export const ACTS: Record<Act, { from: number; to: number }> = {
   regime: { from: 0.24, to: 0.32 },
   // candle's tail was widened (0.56 → 0.59) to give the ICE-LAB finale ~1.8×
   // longer felt duration (see CANDLE_LAB). safety + consensus are shifted LATER
-  // to absorb it while bull/matrix (and the fragile end handoff near 1.0) stay
+  // to absorb it while bull/mark (and the fragile end handoff near 1.0) stay
   // EXACTLY fixed; the mild progress-compression on safety/consensus is offset
   // by the longer scroll section (SCROLL_LENGTH_VH), so their felt pace barely
   // changes. Contiguous, still covers [0,1].
@@ -31,17 +33,17 @@ export const ACTS: Record<Act, { from: number; to: number }> = {
   // safety widened 0.075 -> 0.10 at consensus's expense. The single line that
   // speaks to the viewer ("your worst case is a number you chose") had less
   // scroll than the film's exit transition. The width comes ONLY from its
-  // adjacent neighbour: bull/matrix and the fragile end handoff near 1.0 stay
+  // adjacent neighbour: bull/mark and the fragile end handoff near 1.0 stay
   // exactly fixed, and safety still opens after the ice-candle fade tail
   // (CANDLE3D.out1 = 0.605), so no scene overlaps another.
   safety: { from: 0.59, to: 0.69 },
   consensus: { from: 0.69, to: 0.73 },
   bull: { from: 0.73, to: 0.84 },
-  matrix: { from: 0.84, to: 1.0 },
+  mark: { from: 0.84, to: 1.0 },
 };
 
 export const ACT_ORDER: Act[] = [
-  "boot", "assembly", "dive", "regime", "candle", "safety", "consensus", "bull", "matrix",
+  "boot", "assembly", "dive", "regime", "candle", "safety", "consensus", "bull", "mark",
 ];
 
 /**
@@ -71,9 +73,29 @@ export type CopyBeat = {
    *  charts; "left" sets it in the left third, beside a subject framed on the
    *  right (the bull); default (undefined) centers it. */
   pos?: "top" | "left";
+  /** Fade width in progress (default 0.02). A short beat needs a short fade
+   *  or it never holds at full strength (Gate A3 #7). */
+  fade?: number;
 };
 
 // DOM overlays synced to scroll progress (crisp text, not baked into the scene).
+/**
+ * The safety act's line speaks to the reader's own position, so it has two
+ * versions. "A number you chose" is only true once they have set one
+ * (lib/hero-position.ts `chosen`); until then it says the floor CAN be chosen,
+ * which is what the example spread on screen shows. Gate A3 #2a.
+ */
+export const SAFETY_LINES = {
+  example: {
+    heading: "Your worst case can be a number you choose.",
+    sub: "Set before the trade, not found out afterwards.",
+  },
+  chosen: {
+    heading: "Your worst case is a number you chose.",
+    sub: "Not a number you find out afterwards.",
+  },
+} as const;
+
 export const COPY_BEATS: CopyBeat[] = [
   // THE COPY IS THE VIEWER'S STORY, NOT THE PRODUCT'S SPEC SHEET.
   //
@@ -112,13 +134,22 @@ export const COPY_BEATS: CopyBeat[] = [
   // The one line in the film that always spoke to the reader. It used to get
   // less scroll than the exit transition; the safety act is wider now and the
   // sub-line no longer reverts to a feature triad under it.
-  { id: "safety", from: 0.61, to: 0.685, pos: "top", heading: "Your worst case is a number you chose.", sub: "Not a number you find out afterwards." },
-  { id: "consensus", from: 0.697, to: 0.727, pos: "top", heading: "They vote. They disagree.", sub: "You see the split, not just the answer." },
+  // Until the visitor has set a spread (the instrument sits below the film),
+  // the line cannot claim they chose one: SAFETY_LINES below, Gate A3 #2a.
+  { id: "safety", from: 0.61, to: 0.685, pos: "top", ...SAFETY_LINES.example },
+  // A real plateau (Gate A3 #7): with the default 0.02 fades a 0.03 beat was
+  // all fade and never held. Short fades, and the act's whole width.
+  { id: "consensus", from: 0.694, to: 0.729, pos: "top", fade: 0.006, heading: "They vote. They disagree.", sub: "You see the split, not just the answer." },
   // Beside the bull, not across it (Gate A2, d12: the headline sat on the
   // bull), and over before the charge, which runs ~0.782 → 0.805: the bull
   // lunges through the left third the copy would otherwise still be in.
-  { id: "bull", from: 0.738, to: 0.786, pos: "left", heading: TAGLINE_LEAD, sub: TAGLINE },
-  { id: "welcome", from: 0.9, to: 0.965, heading: "Welcome in." },
+  // Held at full strength for ~320px and gone before the charge (Gate A3 #7).
+  { id: "bull", from: 0.736, to: 0.78, pos: "left", fade: 0.008, heading: TAGLINE_LEAD, sub: TAGLINE },
+  // Beside the mark the film ends on (M25), and held through the end: it is
+  // still up when the hold begins, and dissolves with the stage.
+  // In as the mark completes (Gate A4 #5): at 0.9 it arrived after a long
+  // stretch of nothing but the mark, and the act read as an empty screen.
+  { id: "welcome", from: 0.85, to: 1.04, pos: "left", heading: "Welcome in." },
 ];
 
 export function clamp01(v: number): number {
@@ -177,39 +208,28 @@ export function beatCharT(
   return ss01(clamp01((clamp01(progress) - beat.from) / (span * resolveAt)));
 }
 
-/**
- * A triangle over the first third of the matrix act (the bull → code
- * transition). It drives the frame's glitch-shake. It used to also drive a flat
- * `bg-bull` wash over the whole stage, which the 2026-11 re-tribunal graded as
- * the green fog it was (d13); the scene's own rain is the green now.
- */
-export function flashOpacity(progress: number): number {
-  const from = ACTS.matrix.from; // 0.84
-  const to = ACTS.matrix.from + (ACTS.matrix.to - ACTS.matrix.from) * 0.4; // ~0.904
-  const p = clamp01(progress);
-  if (p <= from || p >= to) return 0;
-  const mid = (from + to) / 2;
-  return p < mid ? (p - from) / (mid - from) : (to - p) / (to - mid);
-}
 
-// THE LAST FRAME IS RAIN, NOT BLACK. The rain used to clear by 0.955 and an
-// outro then dipped the frame to black, so the film ended on ~400-570px of
-// empty screen and a 0.2% crossfade, a hard cut to the eye band (re-tribunal
-// regression 6, d14 → d15). Now the rain thins all the way to the end while the
-// whole stage dissolves over the last 2.5%, and the landing's first section,
-// which sits under the stage's last viewport, rises through it.
-const HANDOFF_FADE = { from: 0.975, to: 1.0 };
+// THE HOLD IS THE HAND-OFF (Gate A3 #3). The stage used to dissolve over the
+// last 2.5% of the FILM, which was over before the hold began, and the film
+// collapsed the moment the hold started, with the landing still 80vh below
+// the fold: the collapse kept that offset, so the page showed frame zero
+// again, the film appearing to rewind. Now the film plays to its last frame
+// at the start of the hold (rain still falling), and the stage dissolves over
+// the hold itself, in scroll, while the landing's first section rises under
+// it through the section's -100vh overlap. ScrollCinema collapses only once
+// the hold is scrolled through and the scroll has come to rest, with the
+// landing already at the top of the screen.
+const HANDOFF_FADE = { from: 0.08, to: 0.92 };
 
-/** Whole-cinema opacity: ~1 throughout, a short crossfade to 0 at the very end.
- *  Smoothstep, not linear, so the dissolve eases in and settles (Gate A2); it
- *  plays pinned, over the hold the section keeps after the film reaches 1
- *  (HANDOFF_HOLD_VH in cinema-metrics.ts). */
-export function canvasOpacity(progress: number): number {
+/** The stage's opacity across the hold, `hold` 0 → 1 (holdOf in
+ *  cinema-metrics.ts): a breath at full strength, a smoothstep dissolve, and
+ *  a moment of nothing but the landing before the collapse. */
+export function handoffOpacity(hold: number): number {
   const { from, to } = HANDOFF_FADE;
-  const p = clamp01(progress);
-  if (p <= from) return 1;
-  if (p >= to) return 0;
-  return 1 - ss01((p - from) / (to - from));
+  const h = clamp01(hold);
+  if (h <= from) return 1;
+  if (h >= to) return 0;
+  return 1 - ss01((h - from) / (to - from));
 }
 
 // Real-3D (R3F) layers crossfade OVER the 2D scene across their act, holding
@@ -247,12 +267,13 @@ export const CANDLE3D: Fade4 = { in0: 0.32, in1: 0.355, out0: 0.585, out1: 0.605
 // breathe. Pure f(progress) — scrub-reversible by construction.
 export const CANDLE_BUILD_END = 0.5;
 /**
- * Where the climb gives way to the crash: the colour script's HOT room starts
- * ramping here (GRADE_ROOMS). The film's act rail names the candle act's three
- * parts (climb · crash · lab) instead of calling all of it "the crash", which
- * labelled a rising market a crash for a third of the act (Gate A2).
+ * Where "Then the floor goes." comes up and the colour script leaves the
+ * climb's room: a beat BEFORE the crash, a deliberate pre-lap. It is not the
+ * first red print. That is CANDLE_CRASH_AT (≈0.404, lib/candle-series.ts),
+ * taken from the candle series, and the rail's crash row, the sound's hit
+ * and the camera's trauma all key to it (Gate A4 #3).
  */
-export const CANDLE_CRASH_FROM = 0.42;
+export const CANDLE_CRASH_FROM = 0.385;
 
 /**
  * How far the frame is IN the safety act, 0..1, on the scene's own envelope
@@ -331,8 +352,10 @@ const GRADE_ROOMS: { at: number; g: Grade }[] = [
   { at: 0.34, g: { bloomIntensity: 0.8, bloomThreshold: 0.55, caOffset: 0.0004, fogNear: 20, fogFar: 58 } },
   { at: 0.42, g: { bloomIntensity: 0.85, bloomThreshold: 0.52, caOffset: 0.0005, fogNear: 19, fogFar: 56 } },
   // HOT — the crash detonates
-  { at: 0.47, g: { bloomIntensity: 1.25, bloomThreshold: 0.28, caOffset: 0.0016, fogNear: 15, fogFar: 48 } },
-  { at: 0.5, g: { bloomIntensity: 1.15, bloomThreshold: 0.3, caOffset: 0.0012, fogNear: 16, fogFar: 50 } },
+  // The fog moves out with the pull-back, which now ends ~32 units off the
+  // chart (Gate A4 #3): at 15/48 it greyed the whole revealed crash by half.
+  { at: 0.47, g: { bloomIntensity: 1.25, bloomThreshold: 0.28, caOffset: 0.0016, fogNear: 22, fogFar: 58 } },
+  { at: 0.5, g: { bloomIntensity: 1.15, bloomThreshold: 0.3, caOffset: 0.0012, fogNear: 30, fogFar: 68 } },
   // CLINICAL — the lab reads the instrument
   { at: 0.55, g: { bloomIntensity: 0.42, bloomThreshold: 0.72, caOffset: 0.0002, fogNear: 26, fogFar: 70 } },
   { at: 0.6, g: { bloomIntensity: 0.5, bloomThreshold: 0.68, caOffset: 0.0003, fogNear: 24, fogFar: 66 } },
@@ -355,6 +378,106 @@ export function grade(progress: number): Grade {
     caOffset: mix(a.g.caOffset, b.g.caOffset),
     fogNear: mix(a.g.fogNear, b.g.fogNear),
     fogFar: mix(a.g.fogFar, b.g.fogFar),
+  };
+}
+
+/**
+ * ONE WORLD, ONE GRADE (Phase 4, M27). The colour grade a 3D layer's frame
+ * gets, after tone mapping (components/scrollstory/Grade.tsx reads it off the
+ * cinema clock). Rooms, keyed like GRADE_ROOMS above and eased between, as
+ * they are SET (the split tones are set too weakly to see; Grade.tsx says by
+ * how much):
+ *
+ *   COLD GLASS  the dive: saturation down, the darks lifted (the toe) so the
+ *               corridor never crushes under the headline (the panel's d04)
+ *   NEUTRAL     regime and the climb: nothing to say yet
+ *   HOT         the crash: saturation and exposure up
+ *   CLINICAL    the lab: saturation down
+ *   CLEAN       the worst case and the vote: ungraded
+ *   WARM        the bull: exposure and saturation up a little
+ *   COOL        after the bull; no 3D layer is on screen there, so unseen
+ *
+ * Only the 3D layers are graded: the 2D scene's acts (regime, the worst
+ * case, the vote, the mark) are drawn as they are. The semantic colours (loss
+ * red, gain mint) are exempt: the shader keeps pixels near either token out
+ * of the grade, so the 3D's red and mint stay the UI's red and mint whatever
+ * room the act is in. The exposure dip at a seam shows only where a 3D layer
+ * is on screen.
+ */
+export type ColorGrade = {
+  exposure: number;
+  saturation: number;
+  /** Split tone, as sRGB tints (0.5 is no shift) and its strength. */
+  shadow: [number, number, number];
+  high: [number, number, number];
+  split: number;
+  /** The darks' gamma lift, 0..~0.3. */
+  toe: number;
+  /** Animated grain amplitude in the midtones (0.02 = 2%). */
+  grain: number;
+};
+
+const NEUTRAL: ColorGrade = { exposure: 1, saturation: 1, shadow: [0.5, 0.5, 0.55], high: [0.5, 0.5, 0.5], split: 0.06, toe: 0.12, grain: 0.02 };
+const COLD: ColorGrade = { exposure: 1, saturation: 0.9, shadow: [0.38, 0.5, 0.68], high: [0.46, 0.52, 0.6], split: 0.5, toe: 0.3, grain: 0.022 };
+const HOT: ColorGrade = { exposure: 1.06, saturation: 1.15, shadow: [0.62, 0.42, 0.52], high: [0.62, 0.52, 0.42], split: 0.45, toe: 0.08, grain: 0.03 };
+const CLINICAL: ColorGrade = { exposure: 0.98, saturation: 0.72, shadow: [0.44, 0.5, 0.58], high: [0.48, 0.5, 0.54], split: 0.35, toe: 0.1, grain: 0.015 };
+const CLEAN: ColorGrade = { exposure: 1, saturation: 1, shadow: [0.5, 0.5, 0.5], high: [0.5, 0.5, 0.5], split: 0, toe: 0.08, grain: 0.015 };
+const WARM: ColorGrade = { exposure: 1.04, saturation: 1.05, shadow: [0.52, 0.44, 0.64], high: [0.62, 0.54, 0.44], split: 0.42, toe: 0.06, grain: 0.024 };
+const COOL: ColorGrade = { exposure: 1, saturation: 0.95, shadow: [0.46, 0.48, 0.62], high: [0.5, 0.52, 0.56], split: 0.3, toe: 0.1, grain: 0.02 };
+
+const COLOR_ROOMS: { at: number; g: ColorGrade }[] = [
+  { at: 0.17, g: COLD },
+  { at: 0.245, g: COLD },
+  { at: 0.27, g: NEUTRAL },
+  { at: CANDLE_CRASH_FROM, g: NEUTRAL },
+  { at: 0.42, g: HOT },
+  { at: 0.49, g: HOT },
+  { at: 0.53, g: CLINICAL },
+  { at: 0.585, g: CLINICAL },
+  { at: 0.61, g: CLEAN },
+  { at: 0.725, g: CLEAN },
+  { at: 0.75, g: WARM },
+  { at: 0.82, g: WARM },
+  { at: 0.86, g: COOL },
+];
+
+/** Where one act gives way to the next: the grade dips exposure here, which
+ *  shows only where a 3D layer is on screen (most seams fall on the 2D scene). */
+const ACT_SEAMS = [ACTS.dive.to, ACTS.regime.to, ACTS.candle.to, ACTS.safety.to, ACTS.consensus.to, ACTS.bull.to];
+const DIP_DEPTH = 0.35;
+const DIP_WIDTH = 0.006;
+
+/** How far exposure dips at `progress` (0 = none), from the nearest act seam. */
+export function seamDip(progress: number): number {
+  const p = clamp01(progress);
+  let d = 0;
+  for (const s of ACT_SEAMS) d = Math.max(d, Math.exp(-(((p - s) / DIP_WIDTH) ** 2)));
+  return DIP_DEPTH * d;
+}
+
+/** The colour grade at a scroll position: eased between the rooms, with the seam dips. */
+export function colorGrade(progress: number): ColorGrade {
+  const p = clamp01(progress);
+  const rooms = COLOR_ROOMS;
+  let a = rooms[0], b = rooms[0], t = 0;
+  if (p >= rooms[rooms.length - 1].at) a = b = rooms[rooms.length - 1];
+  else if (p > rooms[0].at) {
+    let i = 0;
+    while (i < rooms.length - 2 && p > rooms[i + 1].at) i++;
+    a = rooms[i];
+    b = rooms[i + 1];
+    t = ss01((p - a.at) / Math.max(1e-6, b.at - a.at));
+  }
+  const m = (x: number, y: number) => x + (y - x) * t;
+  const m3 = (x: [number, number, number], y: [number, number, number]): [number, number, number] => [m(x[0], y[0]), m(x[1], y[1]), m(x[2], y[2])];
+  return {
+    exposure: m(a.g.exposure, b.g.exposure) * (1 - seamDip(p)),
+    saturation: m(a.g.saturation, b.g.saturation),
+    shadow: m3(a.g.shadow, b.g.shadow),
+    high: m3(a.g.high, b.g.high),
+    split: m(a.g.split, b.g.split),
+    toe: m(a.g.toe, b.g.toe),
+    grain: m(a.g.grain, b.g.grain),
   };
 }
 

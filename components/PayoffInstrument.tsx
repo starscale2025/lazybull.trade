@@ -35,22 +35,15 @@
 
 import Link from "next/link";
 import { useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
-import { payoff, priceOption, type Leg } from "@/lib/pricing";
-import { setHeroPosition } from "@/lib/hero-position";
-
-// ── the synthetic underlying, stated in the caption ─────────────────────────
-const SPOT = 100;
-const DAYS = 30;
-const IV = 0.22;
-const RATE = 0.045;
-const T = DAYS / 365;
+import { payoff, type Leg } from "@/lib/pricing";
+import { DAYS, GAP, IV, K_MAX, K_MIN, SPOT, S_MAX, S_MIN, START_STRIKES, call, clamp, figures, money } from "@/lib/hero-spread";
+import { getHeroPosition, onHeroPosition, setHeroPosition } from "@/lib/hero-position";
+import { setIsland } from "@/lib/island";
+import { RollingNumber } from "./motion/RollingNumber";
 
 // ── geometry, in viewBox units. ZERO is the axis the H1 sits on. ─────────────
-const S_MIN = 76;
-const S_MAX = 116;
-const K_MIN = 80;
-const K_MAX = 114;
-const GAP = 2; // narrowest spread the handles allow
+// The synthetic underlying and the strikes' bounds are lib/hero-spread.ts,
+// shared with the touchable payoff under frame zero's headline.
 const VW = 1000;
 const VH = 400;
 const ZERO = 250;
@@ -63,24 +56,10 @@ const SCALE = (ZERO - 20) / PNL_TOP;
 // one move. A drag's release and a tap are described at once.
 const SETTLE_MS = 600;
 
-const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const xOf = (s: number) => ((s - S_MIN) / (S_MAX - S_MIN)) * VW;
 const yOf = (pnl: number) => clamp(ZERO - pnl * SCALE, 6, VH - 6);
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
 const pts = (a: Array<[number, number]>) => a.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-const money = (v: number) => `$${Math.round(Math.abs(v)).toLocaleString("en-US")}`;
-
-const call = (s: number, k: number, t = T) => priceOption(s, k, t, RATE, IV, "C").price;
-
-// The three numbers the decision turns on. spread() adds the curves to them;
-// the live region needs only these.
-function figures(k1: number, k2: number) {
-  const c1 = call(SPOT, k1);
-  const c2 = call(SPOT, k2);
-  const debit = c1 - c2;
-  return { c1, c2, debit, maxLoss: debit * 100, maxProfit: (k2 - k1 - debit) * 100, breakeven: k1 + debit };
-}
-
 function spread(k1: number, k2: number) {
   const { c1, c2, debit, maxLoss, maxProfit, breakeven } = figures(k1, k2);
   const legs: Leg[] = [
@@ -121,11 +100,17 @@ type Move =
   | { t: "to"; h: Handle; v: number } // to a price: a drag, Home / End
   | { t: "near"; v: number } // the nearer strike to a price: a tap
   | { t: "by"; h: Handle; d: number } // by whole strikes: the arrows, the steppers
-  | { t: "say" }; // a gesture ended: describe the position it left
+  | { t: "say" } // a gesture ended: describe the position it left
+  | { t: "sync"; k1: number; k2: number }; // set elsewhere (frame zero's payoff), taken over quietly
 
-const START: State = { k1: 100, k2: 108, touched: false, said: { k1: 100, k2: 108 } };
+const START: State = { ...START_STRIKES, touched: false, said: { ...START_STRIKES } };
 
 function reshape(st: State, m: Move): State {
+  if (m.t === "sync") {
+    if (st.touched && st.k1 === m.k1 && st.k2 === m.k2) return st;
+    // Already described where it was set, so the live region stays quiet.
+    return { k1: m.k1, k2: m.k2, touched: true, said: { k1: m.k1, k2: m.k2 } };
+  }
   if (m.t === "say") {
     return st.said.k1 === st.k1 && st.said.k2 === st.k2 ? st : { ...st, said: { k1: st.k1, k2: st.k2 } };
   }
@@ -164,6 +149,43 @@ export function PayoffInstrument() {
       chosen: touched,
     });
   }, [k1, k2, s, touched]);
+
+  // The Island (M32) carries the visitor's own spread once they have made
+  // one, so it stays with them down the page. The example spread is ours and
+  // stays off it. The arc is the price axis; the lit segment holds the
+  // breakeven. One fixed announcement: the plot's own live region already
+  // describes each move, and the Island must not talk over it.
+  useEffect(() => {
+    if (!touched) return;
+    const SEGS = 8;
+    setIsland({
+      id: "home-spread",
+      label: "Your spread · paper",
+      value: `−${money(s.maxLoss)}`,
+      caption: `the most it can lose · breakeven ${s.breakeven.toFixed(2)}`,
+      segments: SEGS,
+      active: Math.floor(clamp((s.breakeven - S_MIN) / (S_MAX - S_MIN), 0, 0.999) * SEGS),
+      glyph: "payoff",
+      href: "/trade",
+      // Not "Open in builder": /trade cannot draw this spread yet (Phase 5,
+      // Gate A4 #6), so the link promises the builder, not the spread.
+      hrefLabel: "Open the builder",
+      announce: "Your spread is pinned at the top of the page, with the most it can lose.",
+    });
+  }, [touched, s]);
+  // Not cleared on unmount: the visitor's spread goes with them to the next
+  // page. /trade's own position replaces it there ("trade-build").
+
+  // A spread the visitor set under frame zero's headline (HeroPosition) is
+  // this spread too: one position, wherever it was shaped.
+  useEffect(() => {
+    const take = () => {
+      const p = getHeroPosition();
+      if (p?.chosen) dispatch({ t: "sync", k1: p.k1, k2: p.k2 });
+    };
+    take();
+    return onHeroPosition(take);
+  }, []);
 
   // Let the live region speak: now (a drag's release, a tap), or once a run of
   // keys or stepper clicks has paused for `after` ms. The Gate A2 tribunal
@@ -336,11 +358,12 @@ export function PayoffInstrument() {
       aria-labelledby="pi-title"
       className="relative overflow-hidden bg-bg py-20 md:py-28"
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
+      {/* No grid under the plot any more (M33, calm): the axis and the two
+          curves are the only lines this section needs. */}
 
       <div className="shell relative flex flex-col gap-6">
-        <span className="inline-flex w-fit items-center gap-2 border border-cyan/40 bg-cyan/5 px-3 py-1 t-chrome text-cyan">
-          <span className="size-1.5 rounded-full bg-cyan" /> try it · drag either strike
+        <span className="t-eyebrow inline-flex w-fit items-center gap-2 text-cyan">
+          <span aria-hidden className="size-1.5 rounded-full bg-cyan" /> Try it: drag either strike
         </span>
 
         {/* THE INSTRUMENT. The plot is one box: the SVG stretches to it, the H1
@@ -375,8 +398,10 @@ export function PayoffInstrument() {
             <line x1="0" x2={VW} y1={ZERO} y2={ZERO} stroke="var(--fg-faint)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
             {/* today, with the time value still in it */}
             <polyline points={pts(s.today)} fill="none" stroke="var(--fg-dim)" strokeWidth="1.25" strokeDasharray="5 6" vectorEffect="non-scaling-stroke" />
-            {/* at expiry: green above zero, red below */}
-            <polyline points={pts(s.expiry)} fill="none" stroke="var(--bull)" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" clipPath={`url(#${clipId}-up)`} />
+            {/* at expiry: green above zero, red below. data-payoff-line is the
+                film's landing mark: its last line bends into this one
+                (ScrollCinema, the match-cut), so the two must stay one shape. */}
+            <polyline data-payoff-line data-zero={ZERO} points={pts(s.expiry)} fill="none" stroke="var(--bull)" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" clipPath={`url(#${clipId}-up)`} />
             <polyline points={pts(s.expiry)} fill="none" stroke="var(--bear)" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" clipPath={`url(#${clipId}-dn)`} />
             {/* breakeven */}
             <line x1={beX.toFixed(1)} x2={beX.toFixed(1)} y1={ZERO - 10} y2={ZERO + 10} stroke="var(--fg)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
@@ -438,7 +463,7 @@ export function PayoffInstrument() {
             className="pointer-events-none absolute left-0 z-10 flex flex-col"
             style={{ top: `calc(${pct(yOf(-s.maxLoss), VH)} + 0.6rem)` }}
           >
-            <span className="t-figure text-bear">−{money(s.maxLoss)}</span>
+            <RollingNumber className="t-figure text-bear" value={`−${money(s.maxLoss)}`} />
             <span className="t-chrome text-fg-dim">
               most it can lose · {touched ? "you set it before the trade" : "an example spread"}
             </span>
@@ -448,7 +473,7 @@ export function PayoffInstrument() {
             style={{ bottom: `calc(${pct(VH - yOf(s.maxProfit), VH)} + 0.6rem)` }}
           >
             <span className="t-chrome text-fg-faint">most it can make</span>
-            <span className="t-data text-lg text-fg-dim">+{money(s.maxProfit)}</span>
+            <RollingNumber className="t-data text-lg text-fg-dim" value={`+${money(s.maxProfit)}`} />
             <span className="t-chrome text-fg-faint">{upside}</span>
           </div>
         </div>
@@ -474,17 +499,13 @@ export function PayoffInstrument() {
         </p>
 
         <div className="mt-1 flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
-          <p className="max-w-xl font-mono text-sm leading-relaxed text-fg-dim md:text-base">
+          <p className="max-w-xl text-[0.9375rem] leading-relaxed text-fg-dim md:text-base">
             Drag either strike and the payoff, the breakeven and the most it can
             lose redraw as you move. The builder does the same for any position,
             with the Greeks and an AI teacher explaining it in plain English.
           </p>
-          <Link
-            href="/trade"
-            className="group inline-flex shrink-0 items-center gap-2 py-2 font-mono text-sm uppercase tracking-wider text-brand-ink underline decoration-brand-ink/40 underline-offset-4 transition-[color,text-decoration-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:text-fg hover:decoration-fg"
-          >
-            open the strategy builder
-            <span aria-hidden className="transition-transform duration-300 [transition-timing-function:var(--ease-settle)] group-hover:translate-x-1">→</span>
+          <Link href="/trade" className="calm-link shrink-0 py-2">
+            Open the strategy builder <span aria-hidden>›</span>
           </Link>
         </div>
       </div>

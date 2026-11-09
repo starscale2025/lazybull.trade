@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import gsap from "gsap";
+import { motion as bus } from "@/lib/motion/bus";
 import { applyWonk, wonkFromVix } from "@/lib/wonk";
 import { useLiveQuotes } from "@/lib/streaming/useLiveQuotes";
 import { syntheticQuotes } from "@/lib/live-bars";
@@ -22,6 +24,55 @@ function fmtPct(p: number): string {
 }
 function fmtClock(d: Date): string {
   return d.toUTCString().split(" ")[4]; // HH:MM:SS
+}
+
+export type FeedState = "connecting" | "live" | "sim";
+
+/** Real quotes win; the simulated tape only after the grace period; before that, connecting. */
+export function feedState(haveLive: boolean, feedDead: boolean): FeedState {
+  return haveLive ? "live" : feedDead ? "sim" : "connecting";
+}
+
+/**
+ * THE LAMP, three states (Gate A4 #1). The one lie this rail could tell is
+ * "LIVE" over prices that are not, so the word appears only over real quotes:
+ *
+ *   connecting  grey dot, "connecting", before any quote has arrived
+ *   live        green pulsing dot, "LIVE" and the market's state
+ *   sim         amber dot and VISIBLE words: "SIM tape · not real quotes"
+ *               ("SIM" on a phone). The tape prints named securities, so its
+ *               provenance cannot live only in a tooltip or an sr-only span.
+ *
+ * Exported for the render test that holds this (__tests__/ticker-lamp.test.ts).
+ */
+export function TickerLamp({ state, stateLabel }: { state: FeedState; stateLabel: string }) {
+  if (state === "live") {
+    return (
+      <>
+        <span aria-hidden className="size-1.5 rounded-full bg-bull pulse-dot" />
+        <span className="text-bull">LIVE</span>
+        <span className="hidden text-fg-faint sm:inline">·</span>
+        <span className="hidden text-fg-dim sm:inline">{stateLabel}</span>
+      </>
+    );
+  }
+  if (state === "sim") {
+    return (
+      <>
+        <span aria-hidden className="size-1.5 rounded-full bg-amber" />
+        <span className="text-amber">
+          SIM<span className="hidden sm:inline"> tape · not real quotes</span>
+        </span>
+        <span className="sr-only sm:hidden">: simulated tape, not real quotes</span>
+      </>
+    );
+  }
+  return (
+    <>
+      <span aria-hidden className="size-1.5 rounded-full bg-fg-faint" />
+      <span className="text-fg-dim">connecting</span>
+    </>
+  );
 }
 
 export function TickerBar() {
@@ -95,6 +146,36 @@ export function TickerBar() {
   }, []);
 
   const [paused, setPaused] = useState(false);
+
+  // Velocity tape (M9): scroll fast and the tape runs faster and leans into
+  // the scroll, then settles back within a second. Read from the motion bus
+  // on GSAP's ticker, the same clock Lenis runs on; nothing re-renders. Off
+  // under reduced motion (the marquee is not animating then anyway).
+  const tapeRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const tape = tapeRef.current;
+    if (!tape || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const frame = tape.parentElement;
+    let rate = 1;
+    let lean = 0;
+    const tick = (_t: number, dtMs: number) => {
+      const anim = tape.getAnimations()[0];
+      if (!anim) return;
+      const v = bus.velocity;
+      const k = 1 - Math.exp(-(dtMs / 1000) * 5);
+      rate += (1 + Math.min(4, Math.abs(v) * 0.22) - rate) * k;
+      lean += (Math.max(-4, Math.min(4, -v * 0.18)) - lean) * k;
+      anim.playbackRate = rate;
+      // The lean goes on the window, not the tape: the tape's own transform
+      // belongs to the marquee animation, which would override it.
+      if (frame) frame.style.transform = Math.abs(lean) > 0.05 ? `skewX(${lean.toFixed(2)}deg)` : "";
+    };
+    gsap.ticker.add(tick);
+    return () => {
+      gsap.ticker.remove(tick);
+      if (frame) frame.style.transform = "";
+    };
+  }, []);
   const items = quotes.length > 0 ? [...quotes, ...quotes] : [];
   const marketState = live["SPY"]?.marketState ?? "";
   const stateLabel =
@@ -107,6 +188,7 @@ export function TickerBar() {
 
   return (
     <div
+      data-island-anchor
       className={`flex items-stretch overflow-hidden border-b border-border bg-bg font-mono text-[0.6875rem] uppercase tracking-wider ${paused ? "marquee-paused" : ""}`}
     >
       {/* WONK legend — the headline serif warps with the VIX; this makes that
@@ -122,24 +204,10 @@ export function TickerBar() {
       {/* Static shrink-0 sibling (not an overlay): the tape track starts AFTER
           this pill whatever the label width, so no quote ever hides under it. */}
       <div className="flex shrink-0 items-center gap-2 border-r border-border pl-3 pr-4">
-        {/* The lamp must never say LIVE over simulated prices — that's the one
-            lie this rail could tell. When the feed is down the whole claim is
-            just the amber lamp (title + sr-only carry the words) — the Nav
-            Truth badge is the canonical SYNTHETIC indicator, so the rail
-            doesn't repeat it in text. Green pulsing LIVE only over real quotes. */}
-        <span
-          className={`size-1.5 rounded-full ${usingSim ? "bg-amber" : "bg-bull pulse-dot"}`}
-          title={usingSim ? "No live feed — showing a deterministic simulated tape, not real quotes." : undefined}
-        />
-        {usingSim ? (
-          <span className="sr-only">Simulated tape — not real quotes.</span>
-        ) : (
-          <>
-            <span className="text-bull">LIVE</span>
-            <span className="hidden text-fg-faint sm:inline">·</span>
-            <span className="hidden text-fg-dim sm:inline">{stateLabel}</span>
-          </>
-        )}
+        {/* Three states, and the words are on the rail itself (TickerLamp
+            above): this rail runs on the marketing routes, where no other
+            badge vouches for the data. */}
+        <TickerLamp state={feedState(haveLive, feedDead)} stateLabel={stateLabel} />
         {/* WCAG 2.2.2 — an auto-moving ticker on every page must be pausable */}
         <button
           onClick={() => setPaused((v) => !v)}
@@ -166,7 +234,7 @@ export function TickerBar() {
             "linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
         }}
       >
-        <div className="flex marquee gap-8 py-2">
+        <div ref={tapeRef} className="flex marquee gap-8 py-2">
           {items.length === 0 ? (
             <span className="flex items-center gap-2 whitespace-nowrap shrink-0 text-fg-faint">
               connecting to the live quote stream…

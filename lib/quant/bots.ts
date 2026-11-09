@@ -695,7 +695,11 @@ const varBot: BotDef = {
         { key: "exp", label: `${horizon}d expected`, value: fmtMoney(expRet * notional), tone: expRet > 0 ? "bull" : "bear" },
         { key: "vol", label: "Daily vol", value: `${(sd * 100).toFixed(2)}%`, tone: "info" },
       ],
-      summary: `${(conf * 100).toFixed(0)}% confident the ${horizon}-day loss won't exceed ${fmtMoney(varRet * notional)} on ${fmtMoney(notional)} notional.`,
+      // What the simulation did, not how sure anyone is (Gate A3, 2026-11):
+      // "95% confident the 10-day loss won't exceed…" put a confidence figure
+      // on what a named stock would do next. The 95 is the quantile the
+      // reader picked, and the sentence now says so.
+      summary: `In ${(conf * 100).toFixed(0)}% of ${sims} simulated ${horizon}-day paths, the P&L on ${fmtMoney(notional)} notional stayed above ${fmtMoney(varRet * notional)}.`,
       beginner:
         "Run thousands of simulated 'next 10 days'. The 5th-worst outcome out of 100 is your Value-at-Risk — the bad day you should plan to survive. CVaR is the average of the days worse than that.",
       verdict: {

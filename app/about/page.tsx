@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-bg text-fg">
+    <main className="page-aura flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
       <About />
       <Footer marketing />

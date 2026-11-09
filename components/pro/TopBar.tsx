@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { TogglePill, ToolButton } from "@/components/calm/kit";
 
 export type SymbolDef = { sym: string; name: string; exch: string };
 
@@ -96,16 +97,13 @@ export function TopBar({
   // at exactly xl/1280) Save, the only way to persist the workspace, was
   // clipped off the right edge. Below the threshold the bar wraps instead.
   return (
-    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 font-mono text-[0.6875rem] uppercase tracking-wider min-[1350px]:h-11 min-[1350px]:flex-nowrap min-[1350px]:py-0">
+    <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 t-label min-[1350px]:h-11 min-[1350px]:flex-nowrap min-[1350px]:py-0">
       <div className="relative">
-        <button
-          onClick={() => setSymOpen((o) => !o)}
-          className="flex h-8 items-center gap-2 border border-border bg-bg px-2 hover:border-fg-dim"
-        >
+        <ToolButton onClick={() => setSymOpen((o) => !o)} className="!px-2">
           <SymGlyph sym={symbol.sym} />
-          <span className="text-fg">{symbol.sym}</span>
+          <span className="t-data">{symbol.sym}</span>
           <Caret />
-        </button>
+        </ToolButton>
         <AnimatePresence>
           {symOpen && (
             <motion.div
@@ -122,10 +120,10 @@ export function TopBar({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search Yahoo Finance — AAPL, NIFTY, BTC, RELIANCE.NS…"
-                  className="flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:text-fg-faint"
+                  className="flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:font-sans placeholder:normal-case placeholder:text-fg-faint"
                   onKeyDown={(e) => e.key === "Escape" && setSymOpen(false)}
                 />
-                {searching && <span className="text-cyan">…</span>}
+                {searching && <span className="text-fg-faint">…</span>}
               </div>
               <ul className="max-h-[22.5rem] overflow-y-auto">
                 {list.map((s) => (
@@ -133,26 +131,26 @@ export function TopBar({
                     <button
                       onClick={() => { setSymbol(s); setSymOpen(false); setQuery(""); setSearchResults([]); }}
                       className={`flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left transition-colors ${
-                        s.sym === symbol.sym ? "bg-[#582eff]/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"
+                        s.sym === symbol.sym ? "bg-brand-ink/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <SymGlyph sym={s.sym} />
                         <div className="flex flex-col">
-                          <span className="text-fg leading-tight">{s.sym}</span>
-                          <span className="text-[0.625rem] text-fg-faint normal-case tracking-normal">{s.name}</span>
+                          <span className="t-data leading-tight text-fg">{s.sym}</span>
+                          <span className="text-[0.6875rem] text-fg-faint">{s.name}</span>
                         </div>
                       </div>
-                      <span className="text-[0.625rem] text-fg-faint">{s.exch}</span>
+                      <span className="t-chrome text-fg-faint">{s.exch}</span>
                     </button>
                   </li>
                 ))}
                 {!list.length && !searching && (
-                  <li className="px-3 py-4 text-center t-chrome text-fg-faint">no matches</li>
+                  <li className="px-3 py-4 text-center t-label text-fg-faint">No matches</li>
                 )}
               </ul>
-              <div className="border-t border-border-soft px-3 py-1.5 font-mono text-[0.625rem] text-fg-faint">
-                live data via Yahoo Finance
+              <div className="border-t border-border-soft px-3 py-1.5 t-label text-fg-faint">
+                Live data via Yahoo Finance
               </div>
             </motion.div>
           )}
@@ -163,15 +161,14 @@ export function TopBar({
 
       <div className="flex items-center gap-1">
         {TIMEFRAMES.map((t) => (
-          <button
+          <TogglePill
             key={t}
+            on={t === timeframe}
             onClick={() => setTimeframe(t)}
-            className={`h-8 min-w-7 border px-1.5 transition-colors ${
-              t === timeframe ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink" : "border-transparent bg-bg text-fg-dim hover:border-border hover:text-fg"
-            }`}
+            className="!h-7 !px-1.5 !text-[0.75rem] min-w-7 justify-center"
           >
             {t}
-          </button>
+          </TogglePill>
         ))}
       </div>
 
@@ -179,21 +176,21 @@ export function TopBar({
 
       {/* chart type */}
       <div className="relative">
-        <button onClick={() => setChartOpen((o) => !o)} title="Chart type" className="flex h-8 items-center gap-1 border border-border bg-bg px-2 text-fg hover:border-fg-dim">
+        <ToolButton onClick={() => setChartOpen((o) => !o)} title="Chart type" className="!px-2">
           <ChartTypeIcon type={chart} />
           <Caret />
-        </button>
+        </ToolButton>
         <AnimatePresence>
           {chartOpen && (
-            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute left-0 top-9 z-40 w-44 max-w-[calc(100vw/var(--ui-zoom)-1rem)] border border-border bg-bg shadow-2xl">
+            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute left-0 top-9 z-40 w-44 max-w-[calc(100vw/var(--ui-zoom)-1rem)] surface-instrument border border-border bg-bg shadow-2xl">
               {(["candles", "line", "area", "bars"] as Chart[]).map((c) => (
                 <button
                   key={c}
                   onClick={() => { setChart(c); setChartOpen(false); }}
-                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left ${c === chart ? "bg-[#582eff]/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"}`}
+                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left ${c === chart ? "bg-brand-ink/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"}`}
                 >
                   <ChartTypeIcon type={c} />
-                  <span className="text-fg">{c}</span>
+                  <span className="capitalize text-fg">{c}</span>
                 </button>
               ))}
             </motion.div>
@@ -204,16 +201,13 @@ export function TopBar({
       <Sep />
 
       <div className="relative">
-        <button
-          onClick={() => setIndOpen((o) => !o)}
-          className="flex h-8 items-center gap-2 border border-transparent bg-bg px-2 text-fg-dim hover:border-border hover:text-fg"
-        >
+        <ToolButton onClick={() => setIndOpen((o) => !o)} className="!px-2">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 17l4-4 4 4 4-8 6 8" />
           </svg>
           Indicators
           {indicators.length > 0 && <span className="text-brand-ink">{indicators.length}</span>}
-        </button>
+        </ToolButton>
         <AnimatePresence>
           {indOpen && (
             <motion.div
@@ -221,9 +215,9 @@ export function TopBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 top-9 z-40 w-72 max-w-[calc(100vw/var(--ui-zoom)-1rem)] border border-border bg-bg shadow-2xl"
+              className="absolute left-0 top-9 z-40 w-72 max-w-[calc(100vw/var(--ui-zoom)-1rem)] surface-instrument border border-border bg-bg shadow-2xl"
             >
-              <div className="border-b border-border-soft px-3 py-2 text-[0.625rem] text-fg-dim normal-case tracking-normal">
+              <div className="border-b border-border-soft px-3 py-2 text-fg-dim">
                 Built-in studies — toggle to layer on the chart
               </div>
               <ul>
@@ -234,17 +228,17 @@ export function TopBar({
                       <button
                         onClick={() => toggleIndicator(i.id)}
                         className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors ${
-                          on ? "bg-[#582eff]/12" : "hover:bg-surface"
+                          on ? "bg-brand-ink/12" : "hover:bg-surface"
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="size-2.5" style={{ background: i.color }} />
+                          <span className="size-2.5 rounded-full" style={{ background: i.color }} />
                           <div className="flex flex-col">
                             <span className="text-fg leading-tight">{i.label}</span>
-                            <span className="text-[0.625rem] text-fg-faint normal-case tracking-normal">{i.desc}</span>
+                            <span className="text-[0.6875rem] text-fg-faint">{i.desc}</span>
                           </div>
                         </div>
-                        <span className={`size-3 border ${on ? "border-[#7b5cff] bg-[image:var(--grad-fill)]" : "border-fg-faint"}`} aria-hidden />
+                        <span className={`size-3 rounded-[3px] border ${on ? "border-brand-ink bg-brand-ink" : "border-fg-faint"}`} aria-hidden />
                       </button>
                     </li>
                   );
@@ -264,11 +258,7 @@ export function TopBar({
 
       <div className="ml-auto flex items-center gap-1">
         <div className="relative">
-          <button
-            onClick={() => setLayoutOpen((o) => !o)}
-            className="flex h-8 items-center gap-1 border border-border bg-bg px-2 text-fg-dim hover:text-fg"
-            title="Multi-pane layout"
-          >
+          <ToolButton onClick={() => setLayoutOpen((o) => !o)} title="Multi-pane layout" className="!px-2">
             <span className="grid grid-cols-2 gap-px">
               <span className="size-1.5 bg-current" />
               <span className="size-1.5 bg-current" />
@@ -276,15 +266,15 @@ export function TopBar({
               <span className="size-1.5 bg-current" />
             </span>
             <span>×{layout}</span>
-          </button>
+          </ToolButton>
           <AnimatePresence>
             {layoutOpen && (
-              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute right-0 top-9 z-40 grid w-48 max-w-[calc(100vw/var(--ui-zoom)-1rem)] grid-cols-2 gap-1 border border-border bg-bg p-2 shadow-2xl">
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute right-0 top-9 z-40 grid w-48 max-w-[calc(100vw/var(--ui-zoom)-1rem)] grid-cols-2 gap-1 surface-instrument border border-border bg-bg p-2 shadow-2xl">
                 {[1, 2, 3, 4].map((n) => (
                   <button
                     key={n}
                     onClick={() => { setLayout(n); setLayoutOpen(false); }}
-                    className={`flex h-12 items-center justify-center border ${n === layout ? "border-[#7b5cff] text-brand-ink" : "border-border text-fg-dim hover:text-fg"}`}
+                    className={`flex h-12 items-center justify-center rounded-[var(--r-instrument)] border ${n === layout ? "border-brand-ink text-brand-ink" : "border-border text-fg-dim hover:text-fg"}`}
                   >
                     <span className="grid grid-cols-2 gap-0.5">
                       {Array.from({ length: n }).map((_, i) => (
@@ -301,21 +291,15 @@ export function TopBar({
         <ToolbarBtn icon={<IconFullscreen />} label="Full" onClick={onFullscreen} />
         <ToolbarBtn icon={<IconCamera />} label="Snap" onClick={onSnapshot} />
 
-        <button
-          onClick={onTrade}
-          className="ml-1 flex h-8 items-center gap-2 border border-border bg-bg px-3 text-fg-dim hover:border-fg-dim hover:text-fg"
-        >
+        <ToolButton onClick={onTrade} className="ml-1">
           Trade
-        </button>
+        </ToolButton>
         {/* "Save", not "Publish". The handler POSTs isPublic:false — nothing is
             published, and on a 401 it falls back to copying a share link. A
             control has to say what it does. */}
-        <button
-          onClick={onPublish}
-          className="btn-grad flex h-8 items-center gap-2 px-3 font-semibold"
-        >
+        <ToolButton primary onClick={onPublish}>
           Save
-        </button>
+        </ToolButton>
       </div>
     </div>
   );
@@ -323,10 +307,10 @@ export function TopBar({
 
 function ToolbarBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
-    <button onClick={onClick} title={label} className="flex h-8 items-center gap-1.5 border border-transparent bg-bg px-2 text-fg-dim hover:border-border hover:text-fg">
+    <ToolButton onClick={onClick} title={label} className="!px-2">
       {icon}
       <span className="hidden md:inline">{label}</span>
-    </button>
+    </ToolButton>
   );
 }
 
@@ -348,11 +332,9 @@ function ChartTypeIcon({ type }: { type: Chart }) {
 }
 
 function SymGlyph({ sym }: { sym: string }) {
-  const palette = ["#52ffa5", "#3884ff", "#ffb800", "#ff2e63", "#8f73ff", "#8f73ff"];
-  const c = palette[sym.charCodeAt(0) % palette.length];
   return (
-    <span className="flex size-5 items-center justify-center border" style={{ borderColor: c, color: c }}>
-      <span className="text-[0.625rem] font-bold">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
+    <span className="flex size-5 items-center justify-center rounded bg-fg/10 text-fg-dim">
+      <span className="font-mono text-[0.625rem] font-bold">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
     </span>
   );
 }

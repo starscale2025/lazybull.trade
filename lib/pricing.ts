@@ -128,7 +128,9 @@ export function priceChain({
   spread = 0.02,
 }: {
   spot: number;
-  expiries: { iso: string; daysToExpiry: number }[];
+  /** `seed`, when given, keys the quote noise instead of the date, so a
+   *  chain prerendered on one day hydrates on the next (Gate A4 #2, #418). */
+  expiries: { iso: string; daysToExpiry: number; seed?: string }[];
   strikes: number[];
   baseIv?: number;
   rate?: number;
@@ -142,7 +144,7 @@ export function priceChain({
         const sigma = skewedIv(baseIv, moneyness, type);
         const { price, greeks } = priceOption(spot, K, t, rate, sigma, type);
         const half = (price * spread) / 2 + 0.02;
-        const seed = hash(`${e.iso}|${K}|${type}`);
+        const seed = hash(`${e.seed ?? e.iso}|${K}|${type}`);
         return {
           strike: K,
           type,

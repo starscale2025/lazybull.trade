@@ -15,6 +15,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import type { BotDef } from "@/lib/quant/types";
+import { Chip } from "@/components/calm/kit";
 
 type Line = { text: string; tone?: "info" | "ok" | "warn" };
 
@@ -58,15 +59,15 @@ export function RunStream({
   const perLineDelay = Math.max(60, (durationMs - 180) / Math.max(lines.length, 1));
 
   return (
-    <div className="relative overflow-hidden border border-border-soft bg-bg p-3 font-mono text-[0.6875rem] leading-[1.55]">
+    <div className="relative overflow-hidden rounded-[var(--r-instrument)] border border-border-soft bg-bg p-3 font-mono text-[0.6875rem] leading-[1.55]">
       <div className="cell-running-rail" aria-hidden />
 
-      <div className="mb-2 flex items-center justify-between t-eyebrow text-fg-faint">
-        <span className="flex items-center gap-2 text-bull">
-          <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-          running
-        </span>
-        <span>{def.id}</span>
+      <div className="mb-2 flex items-center justify-between">
+        <Chip tone="brand">
+          <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current pulse-dot" />
+          Running
+        </Chip>
+        <span className="t-label text-fg-faint">{def.id}</span>
       </div>
 
       <div className="space-y-0.5 text-fg-dim">
@@ -80,7 +81,7 @@ export function RunStream({
             <span
               className={
                 ln.tone === "ok"
-                  ? "text-bull"
+                  ? "text-fg"
                   : ln.tone === "warn"
                     ? "text-amber"
                     : "text-fg-dim"
@@ -94,7 +95,7 @@ export function RunStream({
           className="run-stream-line inline-flex items-center gap-1"
           style={{ animationDelay: `${lines.length * perLineDelay}ms` }}
         >
-          <span className="text-bull">▌</span>
+          <span className="text-brand-ink">▌</span>
           <span className="text-fg-faint">resolving…</span>
         </div>
       </div>

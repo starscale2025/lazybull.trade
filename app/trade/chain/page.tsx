@@ -3,6 +3,7 @@
 import { RegulatoryLine } from "@/components/RegulatoryLine";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
+import { TruthBadge } from "@/components/pro/TruthBadge";
 import { TickerBar } from "@/components/TickerBar";
 import { OptionsChain } from "@/components/options-chain/OptionsChain";
 import { StrategyCard } from "@/components/options-chain/StrategyCard";
@@ -12,6 +13,7 @@ import { RiskWizard } from "@/components/safety/RiskWizard";
 import { SafetySettingsButton } from "@/components/safety/KillSwitch";
 import { useTeacher } from "@/lib/stores";
 import { QuickBet } from "@/components/bet/QuickBet";
+import { Chip, TogglePill, ToolButton } from "@/components/calm/kit";
 
 const SYMBOLS = [
   { sym: "AMZN", name: "Amazon.com", spot: 226.45 },
@@ -60,19 +62,21 @@ export default function TradePage() {
       <Nav />
 
       {/* page header — one compact row; the tool is the hero here */}
-      <section className="relative border-b border-border bg-bg">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-25" />
-        <div className="relative shell flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+      <section className="border-b border-border bg-bg">
+        <div className="shell flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
           <div className="t-eyebrow flex flex-wrap items-center gap-3">
-            <span className="text-fg-faint">⟢ advanced view · raw chain</span>
+            <span className="text-fg-faint">Advanced view · raw chain</span>
             <h1 className="t-eyebrow text-fg">
               Drag across strikes. <span className="t-accent">Build</span> a strategy.
             </h1>
-            <a href="/trade" className="text-bull hover:underline">← back to strategy builder</a>
+            <a href="/trade" className="calm-link !text-[0.875rem]"><span aria-hidden>‹</span> Back to strategy builder</a>
           </div>
           <div className="flex items-center gap-2">
+            {/* Provenance where the data is (it left the site-wide nav in the
+                calm pass, M33): this chain is synthetic, and says so here. */}
+            <TruthBadge />
             <SafetySettingsButton />
-            <button
+            <ToolButton
               onClick={() =>
                 setBubble({
                   title: "Hi, I'm your teacher",
@@ -80,35 +84,26 @@ export default function TradePage() {
                   icon: "delta",
                 })
               }
-              className="inline-flex h-9 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-bull hover:bg-bull/20"
             >
-              <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-              ask teacher
-            </button>
+              Ask teacher
+            </ToolButton>
           </div>
         </div>
       </section>
 
       {/* Symbol switcher */}
       <section className="border-b border-border bg-bg-soft">
-        <div className="shell flex items-center gap-3 overflow-x-auto py-3 font-mono text-[0.6875rem] uppercase tracking-wider">
-          <span className="text-fg-faint shrink-0">underlying</span>
+        <div className="shell flex items-center gap-3 overflow-x-auto py-3 t-label">
+          <span className="text-fg-faint shrink-0">Underlying</span>
           {SYMBOLS.map((s, i) => (
-            <button
-              key={s.sym}
-              onClick={() => setSymIdx(i)}
-              className={`shrink-0 border px-3 py-1 transition-colors ${
-                i === symIdx
-                  ? "border-bull bg-bull/10 text-bull"
-                  : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
-              }`}
-            >
+            <TogglePill key={s.sym} on={i === symIdx} onClick={() => setSymIdx(i)} className="shrink-0">
               {s.sym}
-              <span className="ml-2 text-fg-faint">${s.spot.toFixed(2)}</span>
-            </button>
+              <span className="ml-2 opacity-60">${s.spot.toFixed(2)}</span>
+            </TogglePill>
           ))}
           <span className="ml-auto shrink-0 text-fg-dim flex items-center gap-2">
-            <span className="size-1.5 rounded-full bg-bull pulse-dot" /> live spot{" "}
+            {/* "live" only over a real quote; the seed price says what it is (Gate A4 #1). */}
+            {liveSpots[sym.sym] != null ? <Chip dot>Live spot</Chip> : <Chip dot tone="warn">Spot · SIM</Chip>}
             <span className="t-data text-fg">${spot.toFixed(2)}</span>
           </span>
         </div>

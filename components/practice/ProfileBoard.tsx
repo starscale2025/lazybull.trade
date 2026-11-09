@@ -16,12 +16,13 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { CalmLink, PageHeader, Stats } from "@/components/calm/kit";
 import { Panel } from "@/components/practice/Panel";
-import { Eyebrow, TrackChip, VerdictPill } from "@/components/practice/Chips";
-import { Empty, Stat, Td, Th, Tr } from "@/components/practice/Table";
+import { TrackChip } from "@/components/practice/Chips";
+import { Empty, Td, Th, Tr } from "@/components/practice/Table";
 import { SolvedRing } from "@/components/practice/SolvedRing";
 import { Heatmap } from "@/components/practice/Heatmap";
-import { BadgeGrid } from "@/components/practice/Badges";
+import { BadgeGrid, VerdictChip } from "@/components/practice/Badges";
 import { ProgressBar } from "@/components/practice/ProgressBar";
 import { Certificate } from "@/components/practice/Certificate";
 import { titleFor } from "@/lib/practice/problems";
@@ -60,152 +61,158 @@ export function ProfileBoard() {
   };
 
   const sourceLine = !signedIn
-    ? "this device's ledger · sign in to keep it across devices"
+    ? "This device’s ledger · sign in to keep it across devices"
     : source === "server"
-      ? "your ledger, from the server"
+      ? "Your ledger, from the server"
       : me && !me.anonymous && !me.dbOk
-        ? "the server could not be reached — showing this device's ledger"
-        : "reading this device's ledger while the server answers";
+        ? "The server could not be reached — showing this device’s ledger"
+        : "Reading this device’s ledger while the server answers";
 
   return (
-    <section className="shell section-y-sm">
-      {/* header */}
-      <Eyebrow>practice · profile</Eyebrow>
-      <h1 className="mt-3 t-title">
-        Your <span className="t-accent">practice</span> ledger.
-      </h1>
-      <div className="mt-3 t-chrome text-fg-faint">{sourceLine}</div>
-
-      {/* identity */}
-      <div className="mt-6 flex flex-wrap items-center gap-4">
-        <span aria-hidden className="grid size-12 place-items-center border border-border bg-bg font-mono text-bull">
-          {initialsFor(name)}
-        </span>
-        <div>
-          <div className="font-display text-xl tracking-tightest text-fg">{name}</div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 t-chrome text-fg-faint">
-            <span>{signedIn ? "signed in" : "not signed in"}</span>
-            <span aria-hidden>·</span>
-            <span>{me ? `${me.plan} plan` : "free plan"}</span>
-            <span aria-hidden>·</span>
-            <span>paper only · educational · not advice</span>
+    <>
+      <PageHeader
+        eyebrow="Practice profile"
+        title={
+          <>
+            Your <span className="t-accent">practice</span> ledger.
+          </>
+        }
+        lede={sourceLine}
+      >
+        {/* identity */}
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <span aria-hidden className="grid size-12 place-items-center rounded-full bg-brand-ink/14 font-display text-[1.0625rem] text-brand-ink">
+            {initialsFor(name)}
+          </span>
+          <div>
+            <div className="font-display text-xl tracking-tightest text-fg">{name}</div>
+            <div className="mt-0.5 t-label text-fg-faint">
+              {signedIn ? "Signed in" : "Not signed in"} · {me ? `${me.plan} plan` : "free plan"}
+            </div>
           </div>
         </div>
-      </div>
+        {/* The compliance line: one per page, visible without scrolling. */}
+        <p className="mt-6 text-[0.8125rem] text-fg-faint">Paper only · educational · not advice</p>
+      </PageHeader>
 
-      <div className="mt-8 grid grid-cols-12 gap-4">
-        <div className="col-span-12 lg:col-span-4">
-          <Panel title="Solved" bodyClassName="p-4">
-            <SolvedRing solved={solved} total={total} size={160} caption="all tracks" />
-          </Panel>
-        </div>
+      <section className="shell pb-16">
+        <div className="mt-8 grid grid-cols-12 gap-4">
+          <div className="col-span-12 lg:col-span-4">
+            <Panel calm title="Solved" bodyClassName="px-5 pb-5 pt-4">
+              <SolvedRing solved={solved} total={total} size={160} caption="all tracks" />
+            </Panel>
+          </div>
 
-        <div className="col-span-12 lg:col-span-8">
-          <Panel title="Activity" sub="one cell per day · problems first solved that day" bodyClassName="p-4">
-            <Heatmap activity={activity} endDay={today} weeks={52} showMonths />
-            <div className="mt-4 grid grid-cols-3 gap-px border border-border bg-border">
-              <Stat label="current streak" value={`${summary.streak.current}d`} />
-              <Stat label="longest streak" value={`${summary.streak.longest}d`} />
-              <Stat label="active days" value={summary.activeDays.length} />
-            </div>
-          </Panel>
-        </div>
+          <div className="col-span-12 lg:col-span-8">
+            <Panel calm title="Activity" sub="One cell per day · problems first solved that day" bodyClassName="px-5 pb-5 pt-4">
+              <Heatmap activity={activity} endDay={today} weeks={52} showMonths />
+              <Stats
+                className="mt-5"
+                items={[
+                  { value: `${summary.streak.current} d`, label: "current streak" },
+                  { value: `${summary.streak.longest} d`, label: "longest streak" },
+                  { value: summary.activeDays.length, label: "active days" },
+                ]}
+              />
+            </Panel>
+          </div>
 
-        <div className="col-span-12">
-          <Panel title="Badges" sub="mastery and streaks only — never returns" bodyClassName="p-4">
-            <BadgeGrid badges={badges} cols={6} className="max-md:grid-cols-3" />
-          </Panel>
-        </div>
+          <div className="col-span-12">
+            <Panel calm title="Badges" sub="Mastery and streaks only — never returns" bodyClassName="px-5 pb-5 pt-4">
+              <BadgeGrid badges={badges} cols={6} className="max-md:grid-cols-3" />
+            </Panel>
+          </div>
 
-        <div className="col-span-12 lg:col-span-7">
-          <Panel title="Recent submissions" right={source === "server" ? "server" : "this device"} bodyClassName="overflow-x-auto p-2">
-            {recent.length === 0 ? (
-              <Empty>no submissions yet — open a problem and press ▶ run</Empty>
-            ) : (
-              <table className="w-full t-data text-[0.6875rem]">
-                <thead>
-                  <Tr head>
-                    <Th left>when</Th>
-                    <Th left>problem</Th>
-                    <Th left>mode</Th>
-                    <Th left>lang</Th>
-                    <Th left>verdict</Th>
-                    <Th>runtime</Th>
-                  </Tr>
-                </thead>
-                <tbody>
-                  {recent.map((s) => (
-                    <Tr key={`${s.id}-${s.at}`}>
-                      <Td left>
-                        <span className="whitespace-nowrap">
-                          {mounted ? new Date(s.at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
-                        </span>
-                      </Td>
-                      <Td left strong>
-                        <Link href={`/practice/${s.slug}`} className="text-fg hover:text-bull">
-                          {titleFor(s.slug)}
-                        </Link>
-                      </Td>
-                      <Td left>{s.mode}</Td>
-                      <Td left>{LANG_META[s.lang].short}</Td>
-                      <Td left>
-                        <VerdictPill verdict={s.verdict} />
-                      </Td>
-                      <Td>{s.total > 0 ? `${s.runtimeMs} ms` : "—"}</Td>
+          <div className="col-span-12 lg:col-span-7">
+            <Panel calm title="Recent submissions" right={source === "server" ? "Server" : "This device"} bodyClassName="overflow-x-auto px-3 pb-2 pt-2">
+              {recent.length === 0 ? (
+                <Empty>No submissions yet — open a problem and press ▶ Run</Empty>
+              ) : (
+                <table className="w-full t-data text-[0.6875rem]">
+                  <thead>
+                    <Tr head>
+                      <Th left>When</Th>
+                      <Th left>Problem</Th>
+                      <Th left>Mode</Th>
+                      <Th left>Lang</Th>
+                      <Th left>Verdict</Th>
+                      <Th>Runtime</Th>
                     </Tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </Panel>
-        </div>
+                  </thead>
+                  <tbody>
+                    {recent.map((s) => (
+                      <Tr key={`${s.id}-${s.at}`}>
+                        <Td left>
+                          <span className="whitespace-nowrap">
+                            {mounted ? new Date(s.at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
+                          </span>
+                        </Td>
+                        <Td left strong>
+                          <Link href={`/practice/${s.slug}`} className="text-fg hover:text-brand-ink">
+                            {titleFor(s.slug)}
+                          </Link>
+                        </Td>
+                        <Td left>{s.mode}</Td>
+                        <Td left>{LANG_META[s.lang].short}</Td>
+                        <Td left>
+                          <VerdictChip verdict={s.verdict} />
+                        </Td>
+                        <Td>{s.total > 0 ? `${s.runtimeMs} ms` : "—"}</Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </Panel>
+          </div>
 
-        <div className="col-span-12 lg:col-span-5">
-          <Panel title="Tracks" bodyClassName="p-3">
-            <ul>
-              {TRACK_ORDER.map((t) => {
-                const row = summary.byTrack[t];
-                return (
-                  <li key={t} className="border-b border-border-soft py-2 last:border-b-0">
-                    <Link href={`/practice/tracks/${t}`} className="flex items-center gap-3 hover:text-bull">
-                      <TrackChip track={t} className="w-20 justify-center" />
-                      <ProgressBar
-                        value={row.total > 0 ? row.solved / row.total : 0}
-                        color={TRACK_META[t].color}
-                        className="flex-1"
-                      />
-                      <span className="w-10 text-right t-data text-[0.6875rem] text-fg-dim">
-                        {row.solved}/{row.total}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </Panel>
-          {certificates.length > 0 && (
-            <Panel title="Minted" sub="one per track, public by id" bodyClassName="p-3" className="mt-4">
+          {/* A flex column, so the two h-full panels share the cell instead of
+              the second one spilling out of it. */}
+          <div className="col-span-12 flex flex-col gap-4 lg:col-span-5">
+            <Panel calm title="Tracks" bodyClassName="px-5 pb-4 pt-3">
               <ul>
-                {certificates.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between gap-3 border-b border-border-soft py-2 last:border-b-0">
-                    <span className="flex items-center gap-2">
-                      <TrackChip track={c.track} />
-                      <span className="t-chrome text-fg-faint">{c.mintedAt.slice(0, 10)}</span>
-                    </span>
-                    <Link href={`/practice/certificate/${c.id}`} className="t-chrome text-fg-faint hover:text-bull">
-                      verify →
-                    </Link>
-                  </li>
-                ))}
+                {TRACK_ORDER.map((t) => {
+                  const row = summary.byTrack[t];
+                  return (
+                    <li key={t} className="border-b border-[color-mix(in_srgb,var(--fg)_6%,transparent)] py-2 last:border-b-0">
+                      <Link href={`/practice/tracks/${t}`} className="flex items-center gap-3 hover:text-brand-ink">
+                        <TrackChip track={t} className="w-20 justify-center" />
+                        <ProgressBar
+                          value={row.total > 0 ? row.solved / row.total : 0}
+                          color={TRACK_META[t].color}
+                          className="flex-1"
+                        />
+                        <span className="w-10 text-right t-data text-[0.6875rem] text-fg-dim">
+                          {row.solved}/{row.total}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </Panel>
-          )}
-        </div>
+            {certificates.length > 0 && (
+              <Panel calm title="Minted" sub="One per track, public by id" bodyClassName="px-5 pb-4 pt-3">
+                <ul>
+                  {certificates.map((c) => (
+                    <li key={c.id} className="flex items-center justify-between gap-3 border-b border-[color-mix(in_srgb,var(--fg)_6%,transparent)] py-2 last:border-b-0">
+                      <span className="flex items-center gap-2">
+                        <TrackChip track={c.track} />
+                        <span className="t-label text-fg-faint">{c.mintedAt.slice(0, 10)}</span>
+                      </span>
+                      <CalmLink href={`/practice/certificate/${c.id}`}>Verify</CalmLink>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            )}
+          </div>
 
-        <div className="col-span-12">
-          <Certificate name={name} summary={summary} signedIn={signedIn} certificates={certificates} onMinted={() => refresh()} />
+          <div className="col-span-12">
+            <Certificate name={name} summary={summary} signedIn={signedIn} certificates={certificates} onMinted={() => refresh()} />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { priceOption, type Greeks } from "@/lib/pricing";
 import { subscribeFrame, useInView } from "@/lib/ambient-clock";
+import { TogglePill } from "@/components/calm/kit";
 
 type GreekKey = "delta" | "gamma" | "theta" | "vega";
 
@@ -183,21 +184,13 @@ export function GreekSurface3D() {
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Choose a greek">
           {GREEKS.map((g) => (
-            <button
-              key={g.key}
-              onClick={() => setGreek(g.key)}
-              aria-pressed={greek === g.key}
-              className={`flex h-7 items-center gap-1.5 border px-2.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
-                greek === g.key ? "border-transparent text-bg" : "border-border bg-bg text-fg-dim hover:text-fg"
-              }`}
-              style={greek === g.key ? { background: `rgb(${g.accent})` } : undefined}
-            >
-              <span className="text-[0.8125rem] not-italic">{g.sym}</span>
+            <TogglePill key={g.key} on={greek === g.key} onClick={() => setGreek(g.key)} className="gap-1.5">
+              <span>{g.sym}</span>
               {g.label}
-            </button>
+            </TogglePill>
           ))}
         </div>
-        <span className="hidden font-mono text-[0.625rem] uppercase tracking-[0.25em] text-fg-faint sm:block">drag to orbit</span>
+        <span className="hidden t-label text-fg-faint sm:block">Drag to orbit</span>
       </div>
 
       <canvas
@@ -211,8 +204,8 @@ export function GreekSurface3D() {
         aria-label={`3D surface of ${active.label} across strike and time to expiry. ${active.blurb}`}
       />
 
-      <p className="mt-3 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
-        <span className="font-semibold" style={{ color: `rgb(${accent})` }}>
+      <p className="mt-3 text-[0.8125rem] leading-relaxed text-fg-dim">
+        <span className="font-semibold text-fg">
           {active.sym} {active.label} —{" "}
         </span>
         {active.blurb}

@@ -17,6 +17,12 @@ import { unrealizedPnl } from "@/lib/paper-shares";
 import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { fmt } from "@/components/pro/chartCore";
+import { CalmPanel, PageHeader, PillButton, PillLink, Stats, ToolButton } from "@/components/calm/kit";
+
+/** An inline link inside an empty state or a note. */
+const INLINE_LINK = "text-brand-ink underline decoration-brand-ink/40 underline-offset-2 transition-colors hover:text-fg";
+/** A ToolButton at table-row height. */
+const IN_ROW = "!h-5 !px-2 !text-[0.6875rem]";
 
 type QuoteRow = { sym: string; last?: number; chgPct?: number };
 
@@ -209,51 +215,44 @@ export default function PortfolioPage() {
   };
 
   return (
-    <div className="pro-theme min-h-screen bg-bg text-fg">
+    // No .pro-theme here: it pins the dark ramp, and a calm panel under it goes
+    // white in the light theme with the ramp's pale type still on top.
+    <div className="page-aura min-h-screen bg-bg text-fg">
       <Nav />
 
-      <main className="shell pb-24 pt-8">
-        {/* ── header ── */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 t-eyebrow text-fg-faint">
-              <span className="border border-bull/40 bg-bull/10 px-1.5 py-0.5 font-semibold text-bull">paper</span>
-              <span>one account · /pro · /trade · /quant</span>
-            </div>
-            <h1 className="mt-2 t-subtitle">Portfolio</h1>
-            <div className="mt-1.5 t-eyebrow text-fg-faint">
+      <main className="pb-24">
+        <PageHeader
+          eyebrow="Paper · one account · /pro · /trade · /quant"
+          title="Portfolio"
+          lede={
+            <>
               {startedAt ? (
                 <>
-                  started{" "}
-                  <span className="text-fg-dim">
+                  Started{" "}
+                  <span className="text-fg">
                     {new Date(startedAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
                   </span>
                 </>
               ) : (
-                "no activity yet"
+                "No activity yet"
               )}
               {" · "}
-              <span className="text-fg-dim">{resetCount}</span> reset{resetCount === 1 ? "" : "s"}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider">
-            <button
-              onClick={() => setResetOpen(true)}
-              className="h-8 surface-instrument border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
-            >
-              ↺ reset funds
-            </button>
-            <Link
-              href="/pro"
-              className="flex h-8 items-center surface-instrument border border-border bg-surface px-3 text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
-            >
-              open charts →
-            </Link>
-          </div>
-        </div>
+              <span className="text-fg">{resetCount}</span> reset{resetCount === 1 ? "" : "s"}
+            </>
+          }
+          actions={
+            <>
+              <PillLink href="/pro" kind="primary">
+                Open charts
+              </PillLink>
+              <PillButton onClick={() => setResetOpen(true)}>↺ Reset funds</PillButton>
+            </>
+          }
+        />
 
+        <div className="shell">
         {/* ── hero: account value ── */}
-        <section className="mt-6 surface-instrument border border-border bg-surface p-5">
+        <CalmPanel as="section">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <div className="t-eyebrow text-fg-faint">Account value</div>
@@ -262,36 +261,42 @@ export default function PortfolioPage() {
               </div>
               <div className={`mt-2 t-data text-[0.8125rem] ${netPnl >= 0 ? "text-bull" : "text-bear"}`}>
                 {signedMoney(netPnl)} · {netPnl >= 0 ? "+" : "−"}
-                {fmt(Math.abs(netPct), 2)}% <span className="text-fg-faint">since start</span>
+                {fmt(Math.abs(netPct), 2)}% <span className="font-sans text-fg-faint">since start</span>
               </div>
             </div>
             <EquityCurve startingCash={startingCash} trades={trades} />
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-px border border-border-soft bg-border-soft sm:grid-cols-4">
-            <Stat label="Balance" value={money(metrics.balance)} />
-            <Stat label="Unrealized P&L" value={signedMoney(metrics.unrealizedPnl)} tone={metrics.unrealizedPnl} />
-            <Stat label="Realized today" value={signedMoney(metrics.realizedPnl)} tone={metrics.realizedPnl} />
-            <Stat label="Available funds" value={money(metrics.availableFunds)} />
-          </div>
-          <details className="mt-2 group">
-            <summary className="cursor-pointer list-none t-chrome text-fg-faint transition-colors hover:text-fg-dim [&::-webkit-details-marker]:hidden">
-              <span className="inline-block transition-transform group-open:rotate-90">▸</span> margin detail
+          <Stats
+            className="mt-8"
+            items={[
+              { label: "Balance", value: <Figure>{money(metrics.balance)}</Figure> },
+              { label: "Unrealized P&L", value: <Figure tone={metrics.unrealizedPnl}>{signedMoney(metrics.unrealizedPnl)}</Figure> },
+              { label: "Realized today", value: <Figure tone={metrics.realizedPnl}>{signedMoney(metrics.realizedPnl)}</Figure> },
+              { label: "Available funds", value: <Figure>{money(metrics.availableFunds)}</Figure> },
+            ]}
+          />
+          <details className="mt-6 group">
+            <summary className="cursor-pointer list-none t-label text-fg-faint transition-colors hover:text-fg-dim [&::-webkit-details-marker]:hidden">
+              <span className="inline-block transition-transform group-open:rotate-90">▸</span> Margin detail
             </summary>
-            <div className="mt-2 grid grid-cols-2 gap-px border border-border-soft bg-border-soft sm:grid-cols-4">
-              <Stat label="Positions margin" value={money(metrics.accountMargin)} />
-              <Stat label="Orders reserved" value={money(metrics.ordersMargin)} />
-              <Stat label="Margin buffer" value={`${fmt(metrics.marginBuffer * 100, 1)}%`} />
-              <Stat label="Starting capital" value={money(startingCash)} />
-            </div>
+            <Stats
+              className="mt-4"
+              items={[
+                { label: "Positions margin", value: <Figure>{money(metrics.accountMargin)}</Figure> },
+                { label: "Orders reserved", value: <Figure>{money(metrics.ordersMargin)}</Figure> },
+                { label: "Margin buffer", value: <Figure>{`${fmt(metrics.marginBuffer * 100, 1)}%`}</Figure> },
+                { label: "Starting capital", value: <Figure>{money(startingCash)}</Figure> },
+              ]}
+            />
           </details>
           {metrics.unmarkedCount > 0 && (
-            <div className="mt-2 t-chrome text-amber">
+            <div className="mt-3 t-label text-amber">
               {metrics.unmarkedCount} position{metrics.unmarkedCount > 1 ? "s" : ""} carried at cost — no live
               price yet
             </div>
           )}
-        </section>
+        </CalmPanel>
 
         {/* ── open positions ── */}
         <Section
@@ -321,8 +326,8 @@ export default function PortfolioPage() {
         >
           {positionRows.length === 0 ? (
             <Empty>
-              No open positions. Place a paper trade on <Link className="text-bull underline" href="/pro">/pro</Link> or try
-              a paper option position on <Link className="text-bull underline" href="/quant">/quant</Link>.
+              No open positions. Place a paper trade on <Link className={INLINE_LINK} href="/pro">/pro</Link> or try
+              a paper option position on <Link className={INLINE_LINK} href="/quant">/quant</Link>.
             </Empty>
           ) : (
             <table className="w-full t-data text-[0.6875rem]">
@@ -372,12 +377,9 @@ export default function PortfolioPage() {
                       <span className="text-bear">{r.stopLoss != null ? fmt(r.stopLoss, 2) : "—"}</span>
                     </Td>
                     <Td>
-                      <button
-                        onClick={() => closePosition(r.pos.sym)}
-                        className="border border-border px-2 py-0.5 uppercase tracking-wider text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
-                      >
-                        close
-                      </button>
+                      <ToolButton onClick={() => closePosition(r.pos.sym)} className={IN_ROW}>
+                        Close
+                      </ToolButton>
                     </Td>
                   </Tr>
                 ))}
@@ -390,7 +392,7 @@ export default function PortfolioPage() {
         <Section
           title={`Option positions · ${betStats.openBets.length} open`}
           headerExtra={
-            <span className="hidden t-chrome text-fg-faint sm:inline">
+            <span className="hidden t-label text-fg-faint sm:inline">
               {money(betStats.wageredOpen)} at risk
               {" · "}
               {betStats.closedBets.length
@@ -401,8 +403,8 @@ export default function PortfolioPage() {
         >
           {bets.length === 0 ? (
             <Empty>
-              No option positions yet. Paper trades placed on <Link className="text-bull underline" href="/quant">/quant</Link> and{" "}
-              <Link className="text-bull underline" href="/trade/chain">the chain</Link> books here.
+              No option positions yet. Paper trades placed on <Link className={INLINE_LINK} href="/quant">/quant</Link> and{" "}
+              <Link className={INLINE_LINK} href="/trade/chain">the chain</Link> books here.
             </Empty>
           ) : (
             <table className="w-full t-data text-[0.6875rem]">
@@ -447,8 +449,8 @@ export default function PortfolioPage() {
             </table>
           )}
           {bets.length > 0 && (
-            <div className="mt-2 t-chrome text-fg-faint">
-              settle or manage positions on <Link className="text-bull underline" href="/trade">/trade</Link>
+            <div className="mt-2 t-label text-fg-faint">
+              Settle or manage positions on <Link className={INLINE_LINK} href="/trade">/trade</Link>
             </div>
           )}
         </Section>
@@ -491,12 +493,9 @@ export default function PortfolioPage() {
                       <span className="text-fg-faint">{o.note ?? ""}</span>
                     </Td>
                     <Td>
-                      <button
-                        onClick={() => cancelOrder(o.id)}
-                        className="border border-border px-2 py-0.5 uppercase tracking-wider text-fg-dim transition-colors hover:border-bear/60 hover:text-bear"
-                      >
-                        cancel
-                      </button>
+                      <ToolButton onClick={() => cancelOrder(o.id)} className={IN_ROW}>
+                        Cancel
+                      </ToolButton>
                     </Td>
                   </Tr>
                 ))}
@@ -506,34 +505,32 @@ export default function PortfolioPage() {
         </Section>
 
         {/* ── record: the archival group — settled, reconciled, collapsed ── */}
-        <div className="mt-10 t-eyebrow text-fg-faint">record</div>
-        <Section className="mt-2" title="Performance · realized round-trips">
+        <div className="mt-10 t-eyebrow text-brand-ink">Record</div>
+        <CalmPanel as="section" className="mt-3" title="Performance · realized round-trips">
           {!perf ? (
             <Empty>Close a trade and the win rate, profit factor and expectancy appear here.</Empty>
           ) : (
-            <div className="grid grid-cols-2 gap-px border border-border-soft bg-border-soft sm:grid-cols-4 lg:grid-cols-8">
-              <Stat label="Round-trips" value={String(perf.n)} />
-              <Stat label="Win rate" value={`${fmt(perf.winRate * 100, 1)}%`} />
-              <Stat
-                label="Profit factor"
-                value={perf.profitFactor != null ? fmt(perf.profitFactor, 2) : "∞"}
-              />
-              <Stat
-                label="Expectancy"
-                value={
-                  <>
-                    {signedMoney(perf.expectancy)} <span className="t-chrome text-fg-faint">/ trade</span>
-                  </>
-                }
-                tone={perf.expectancy}
-              />
-              <Stat label="Avg win" value={signedMoney(perf.avgWin)} tone={1} />
-              <Stat label="Avg loss" value={signedMoney(perf.avgLoss)} tone={-1} />
-              <Stat label="Best trade" value={signedMoney(perf.best)} tone={perf.best} />
-              <Stat label="Worst trade" value={signedMoney(perf.worst)} tone={perf.worst} />
-            </div>
+            <Stats
+              items={[
+                { label: "Round-trips", value: <Figure>{String(perf.n)}</Figure> },
+                { label: "Win rate", value: <Figure>{`${fmt(perf.winRate * 100, 1)}%`}</Figure> },
+                { label: "Profit factor", value: <Figure>{perf.profitFactor != null ? fmt(perf.profitFactor, 2) : "∞"}</Figure> },
+                {
+                  label: "Expectancy",
+                  value: (
+                    <Figure tone={perf.expectancy}>
+                      {signedMoney(perf.expectancy)} <span className="t-chrome text-fg-faint">/ trade</span>
+                    </Figure>
+                  ),
+                },
+                { label: "Avg win", value: <Figure tone={1}>{signedMoney(perf.avgWin)}</Figure> },
+                { label: "Avg loss", value: <Figure tone={-1}>{signedMoney(perf.avgLoss)}</Figure> },
+                { label: "Best trade", value: <Figure tone={perf.best}>{signedMoney(perf.best)}</Figure> },
+                { label: "Worst trade", value: <Figure tone={perf.worst}>{signedMoney(perf.worst)}</Figure> },
+              ]}
+            />
           )}
-        </Section>
+        </CalmPanel>
 
         {/* ── trade history ── */}
         <Section
@@ -593,7 +590,7 @@ export default function PortfolioPage() {
                       <input
                         defaultValue={journal[t.id] ?? ""}
                         onBlur={(e) => setJournalNote(t.id, e.target.value)}
-                        placeholder="why did you take it?"
+                        placeholder="Why did you take it?"
                         aria-label={`Journal note for ${t.sym} trade`}
                         title={journal[t.id] ?? undefined}
                         className="w-full min-w-[28ch] border-b border-transparent bg-transparent text-fg-dim outline-none placeholder:text-fg-faint focus:border-border"
@@ -605,8 +602,8 @@ export default function PortfolioPage() {
             </table>
           )}
           {trades.length >= 100 && (
-            <div className="mt-2 t-chrome text-fg-faint">
-              showing 100 — export for the full record (history caps at 200 round-trips)
+            <div className="mt-2 t-label text-fg-faint">
+              Showing 100 — export for the full record (history caps at 200 round-trips)
             </div>
           )}
         </Section>
@@ -616,7 +613,7 @@ export default function PortfolioPage() {
           collapsible
           title={`Cash ledger · ${balanceLog.length}`}
           headerExtra={
-            <span className="hidden t-chrome text-fg-faint sm:inline">
+            <span className="hidden t-label text-fg-faint sm:inline">
               {money(wagered.out)} deployed · {money(wagered.back)} returned
             </span>
           }
@@ -658,7 +655,7 @@ export default function PortfolioPage() {
                   <Tr key={b.id}>
                     <Td left>{stamp(b.ts)}</Td>
                     <Td left>
-                      <span className={b.kind === "trade" ? "text-fg-dim" : "text-amber"}>{b.kind}</span>
+                      <span className={b.kind === "trade" ? "text-fg-dim" : "text-fg"}>{b.kind}</span>
                     </Td>
                     <Td left>
                       <span className="text-fg-dim">{b.note}</span>
@@ -673,10 +670,11 @@ export default function PortfolioPage() {
         </Section>
 
         <RegulatoryLine className="mt-10" extra="history and ledger keep the last 200 entries" />
+        </div>
       </main>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-[var(--z-toast)] -translate-x-1/2 surface-instrument border border-border bg-surface px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-[var(--z-toast)] -translate-x-1/2 surface-instrument border border-border bg-bg px-4 py-2 t-label text-fg shadow-2xl">
           {toast}
         </div>
       )}
@@ -688,28 +686,10 @@ export default function PortfolioPage() {
 
 /* ───────────────────────── pieces ───────────────────────── */
 
-function Stat({
-  label,
-  value,
-  sub,
-  tone,
-  big,
-}: {
-  label: string;
-  value: React.ReactNode;
-  sub?: string;
-  tone?: number;
-  big?: boolean;
-}) {
-  const color =
-    tone == null || tone === 0 ? "text-fg" : tone > 0 ? "text-bull" : "text-bear";
-  return (
-    <div className="bg-surface p-3">
-      <div className="t-chrome text-fg-faint">{label}</div>
-      <div className={`mt-1 t-data ${big ? "text-[1rem]" : "text-[0.8125rem]"} ${color}`}>{value}</div>
-      {sub && <div className="mt-0.5 t-chrome text-fg-faint">{sub}</div>}
-    </div>
-  );
+/** A figure for the kit's Stats: tabular, and in the P&L colour when signed. */
+function Figure({ children, tone }: { children: React.ReactNode; tone?: number }) {
+  const color = tone == null || tone === 0 ? "" : tone > 0 ? "text-bull" : "text-bear";
+  return <span className={`tabular-nums ${color}`}>{children}</span>;
 }
 
 function Section({
@@ -733,20 +713,20 @@ function Section({
       <div className="flex items-center gap-4">
         {headerExtra}
         {onExport && (
-          <button
+          <ToolButton
             onClick={(e) => {
               // inside a <summary> a plain click would also toggle the disclosure
               e.preventDefault();
               e.stopPropagation();
               onExport();
             }}
-            className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint transition-colors hover:text-fg"
+            className="!h-6 !px-2 !text-[0.6875rem]"
           >
-            ⤓ csv
-          </button>
+            ⤓ CSV
+          </ToolButton>
         )}
         {collapsible && (
-          <span className="t-chrome text-fg-faint transition-transform group-open:rotate-90">▸</span>
+          <span className="t-label text-fg-faint transition-transform group-open:rotate-90">▸</span>
         )}
       </div>
     </>
@@ -770,7 +750,7 @@ function Section({
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="py-6 text-center font-mono text-[0.6875rem] text-fg-faint">{children}</div>;
+  return <div className="py-6 text-center text-[0.875rem] text-fg-dim">{children}</div>;
 }
 
 function Tr({ children, head }: { children: React.ReactNode; head?: boolean }) {
@@ -783,7 +763,7 @@ function Tr({ children, head }: { children: React.ReactNode; head?: boolean }) {
 
 function Th({ children, left }: { children: React.ReactNode; left?: boolean }) {
   return (
-    <th className={`px-2 pb-2 font-normal uppercase tracking-wider ${left ? "text-left" : "text-right"}`}>
+    <th className={`t-chrome px-2 pb-2 font-normal ${left ? "text-left" : "text-right"}`}>
       {children}
     </th>
   );
@@ -819,8 +799,8 @@ function EquityCurve({ startingCash, trades }: { startingCash: number; trades: C
 
   if (pts.length < 2) {
     return (
-      <div className="hidden h-[6rem] w-[22.5rem] items-center justify-center border border-border-soft t-chrome text-fg-faint sm:flex">
-        equity curve appears after your first close
+      <div className="hidden h-[6rem] w-[22.5rem] items-center justify-center rounded-[var(--r-instrument)] border border-border-soft t-label text-fg-faint sm:flex">
+        Equity curve appears after your first close
       </div>
     );
   }

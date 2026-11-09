@@ -13,6 +13,10 @@ import { PERSONAS, DEFAULT_PERSONA, type PersonaId } from "@/lib/pro/voice/perso
 import { useVoiceAgent, type VoiceActions, type VoiceSnapshot } from "@/lib/pro/voice/useVoiceAgent";
 import { useFreeVoiceAgent } from "@/lib/pro/voice/useFreeVoiceAgent";
 import { DockSlot } from "@/components/Dock";
+import { ToolButton } from "@/components/calm/kit";
+
+/** A ToolButton at the panel's row height. */
+const SMALL = "!h-6 !px-2 !text-[0.6875rem]";
 
 // "free" (default) = browser speech + OpenRouter free model, $0.
 // "openai"        = paid OpenAI Realtime voice. Set NEXT_PUBLIC_VOICE_PROVIDER=openai to switch.
@@ -138,7 +142,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
 
   return (
     <DockSlot order={30}>
-    <div className="flex flex-col items-end gap-2 font-mono">
+    <div className="flex flex-col items-end gap-2">
       {/* Panel */}
       <AnimatePresence>
         {open && (status === "live" || status === "connecting" || status === "error") && (
@@ -147,12 +151,12 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 340, damping: 30 }}
-            className="w-[21.25rem] overflow-hidden border border-[#7b5cff]/40 bg-bg shadow-2xl"
+            className="w-[21.25rem] overflow-hidden surface-instrument border border-border bg-surface shadow-2xl"
           >
             {/* header */}
-            <div className="flex items-center gap-2 border-b border-border bg-bg-soft px-3 py-2 text-[0.625rem] uppercase tracking-[0.2em]">
-              <span className={`size-2 rounded-full ${live ? "bg-bull animate-pulse" : connecting ? "bg-cyan animate-pulse" : "bg-bear"}`} />
-              <span className="text-grad">LazyBull</span>
+            <div className="flex items-center gap-2 border-b border-border bg-bg-soft px-3 py-2 t-label">
+              <span className={`size-2 rounded-full ${live ? "bg-brand-ink animate-pulse" : connecting ? "bg-fg-faint animate-pulse" : "bg-fg-dim"}`} />
+              <span className="font-medium text-fg">LazyBull</span>
               <span className="text-fg-faint">· {statusLabel}</span>
               <button onClick={() => setOpen(false)} className="ml-auto text-fg-faint hover:text-fg" aria-label="Collapse">✕</button>
             </div>
@@ -162,64 +166,56 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
               <select
                 value={persona}
                 onChange={(e) => changePersona(e.target.value as PersonaId)}
-                className="flex-1 border border-border bg-bg px-1.5 py-1 text-[0.625rem] uppercase tracking-wider text-fg-dim outline-none hover:text-fg"
+                className="h-6 flex-1 rounded-[var(--r-instrument)] border border-border bg-bg px-1.5 t-label text-fg-dim outline-none hover:text-fg"
                 aria-label="Personality"
               >
                 {Object.values(PERSONAS).map((p) => (
                   <option key={p.id} value={p.id}>{p.label}</option>
                 ))}
               </select>
-              <button
-                onClick={voice.toggleMute}
-                className={`border px-2 py-1 text-[0.625rem] uppercase tracking-wider ${muted ? "border-bear/60 text-bear" : "border-border text-fg-dim hover:text-fg"}`}
-                title={muted ? "Unmute mic" : "Mute mic"}
-              >
-                {muted ? "mic off" : "mic on"}
-              </button>
-              <button
-                onClick={voice.disconnect}
-                className="border border-border px-2 py-1 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-bear"
-                title="End session"
-              >
-                end
-              </button>
+              <ToolButton onClick={voice.toggleMute} className={SMALL} title={muted ? "Unmute mic" : "Mute mic"}>
+                {muted ? "Mic off" : "Mic on"}
+              </ToolButton>
+              <ToolButton onClick={voice.disconnect} className={SMALL} title="End session">
+                End
+              </ToolButton>
             </div>
 
             {/* mic problem — always visible, never silently swallowed */}
             {micError && (
-              <div className="border-b border-amber/40 bg-amber/10 px-3 py-1.5 text-[0.625rem] leading-snug text-amber">
+              <div className="border-b border-border-soft px-3 py-1.5 t-label text-fg">
                 🎙 {micError}
-                <a href="/pro/mic-check" target="_blank" rel="noreferrer" className="ml-1 underline hover:text-fg">run mic check</a>
+                <a href="/pro/mic-check" target="_blank" rel="noreferrer" className="ml-1 text-brand-ink underline hover:text-fg">Run mic check</a>
               </div>
             )}
 
             {/* tap-to-hear banner (autoplay blocked) */}
             {needsTap && (
-              <button onClick={voice.tapToHear} className="w-full border-b border-amber/40 bg-amber/10 px-3 py-1.5 text-left text-[0.625rem] uppercase tracking-wider text-amber">
-                🔊 tap to enable audio
+              <button onClick={voice.tapToHear} className="w-full border-b border-border-soft px-3 py-1.5 text-left t-label text-fg">
+                🔊 Tap to enable audio
               </button>
             )}
 
             {/* error */}
             {status === "error" && (
-              <div className="border-b border-bear/40 bg-bear/10 px-3 py-2 text-[0.625rem] text-bear">
+              <div className="border-b border-border-soft px-3 py-2 t-label text-fg">
                 {error}
-                <button onClick={() => connect()} className="ml-2 underline hover:text-fg">retry</button>
+                <button onClick={() => connect()} className="ml-2 text-brand-ink underline hover:text-fg">Retry</button>
               </div>
             )}
 
             {/* transcript */}
             <div ref={transcriptRef} className="max-h-64 min-h-24 space-y-2 overflow-y-auto px-3 py-3">
               {transcript.length === 0 && (
-                <div className="py-6 text-center text-[0.625rem] lowercase tracking-wide text-fg-faint">
-                  {connecting ? "waking up…" : "say something — “what’s the market doing?”"}
+                <div className="py-6 text-center t-label text-fg-faint">
+                  {connecting ? "Waking up…" : "Say something — “what’s the market doing?”"}
                 </div>
               )}
               {transcript.map((t) => (
                 <div key={t.id} className={`flex ${t.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[85%] px-2.5 py-1.5 text-[0.6875rem] leading-snug ${
-                      t.role === "user" ? "bg-[#582eff]/20 text-fg" : "bg-surface text-fg-dim"
+                    className={`max-w-[85%] rounded-[var(--r-instrument)] px-2.5 py-1.5 t-label ${
+                      t.role === "user" ? "bg-brand-ink/20 text-fg" : "bg-surface-2 text-fg-dim"
                     }`}
                   >
                     {t.text || "…"}
@@ -229,7 +225,7 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
               {/* live interim — proof the mic is picking you up as you speak */}
               {interim && (
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] border border-dashed border-[#7b5cff]/50 px-2.5 py-1.5 text-[0.6875rem] italic leading-snug text-fg-dim">
+                  <div className="max-w-[85%] rounded-[var(--r-instrument)] border border-dashed border-brand-ink/50 px-2.5 py-1.5 t-label italic text-fg-dim">
                     {interim}…
                   </div>
                 </div>
@@ -243,23 +239,23 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="border-t border-amber/50 bg-amber/10 px-3 py-2.5"
+                  className="border-t border-border bg-amber/5 px-3 py-2.5"
                 >
-                  <div className="mb-2 text-[0.625rem] uppercase tracking-[0.2em] text-amber">⚡ confirm paper order</div>
-                  <div className="mb-2.5 text-[0.6875rem] leading-snug text-fg">
+                  <div className="mb-2 t-label font-medium text-amber">Confirm paper order</div>
+                  <div className="mb-2.5 t-data text-[0.6875rem] leading-snug text-fg">
                     <span className={stagedTrade.side === "buy" ? "text-bull" : "text-bear"}>{stagedTrade.side.toUpperCase()}</span>{" "}
                     {stagedTrade.qty} {stagedTrade.sym} · {stagedTrade.orderType}
                     {stagedTrade.orderType === "limit" ? ` @ $${stagedTrade.estPrice.toFixed(2)}` : " @ market"} · ~${stagedTrade.estValue.toFixed(2)}
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={voice.confirmStagedFromUI} className="btn-grad flex-1 py-1.5 text-[0.625rem] font-semibold uppercase tracking-wider">
-                      confirm
-                    </button>
-                    <button onClick={voice.cancelStagedFromUI} className="flex-1 border border-border py-1.5 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-bear">
-                      cancel
-                    </button>
+                    <ToolButton primary onClick={voice.confirmStagedFromUI} className="flex-1">
+                      Confirm
+                    </ToolButton>
+                    <ToolButton onClick={voice.cancelStagedFromUI} className="flex-1">
+                      Cancel
+                    </ToolButton>
                   </div>
-                  <div className="mt-1.5 text-[0.625rem] lowercase text-fg-faint">simulated · stored locally · reversible</div>
+                  <div className="mt-1.5 t-label text-fg-faint">Simulated · stored locally · reversible</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -273,14 +269,14 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
                 <input
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
-                  placeholder={live ? "type instead of talking…" : "connect to chat"}
+                  placeholder={live ? "Type instead of talking…" : "Connect to chat"}
                   disabled={!live}
-                  className="flex-1 border border-border bg-bg px-2 py-1 text-[0.6875rem] text-fg outline-none placeholder:text-fg-faint disabled:opacity-50"
+                  className="h-6 flex-1 rounded-[var(--r-instrument)] border border-border bg-bg px-2 t-label text-fg outline-none placeholder:text-fg-faint disabled:opacity-50"
                 />
-                <button type="submit" disabled={!live || !draft.trim()} className="border border-border px-2 py-1 text-[0.6875rem] text-fg-dim hover:text-fg disabled:opacity-40">↵</button>
+                <ToolButton type="submit" disabled={!live || !draft.trim()} className={SMALL}>↵</ToolButton>
               </form>
-              <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left text-[0.625rem] uppercase tracking-wider text-fg-faint hover:text-fg-dim">
-                auto-greet on open: <span className={autoGreet ? "text-brand-ink" : "text-fg-faint"}>{autoGreet ? "on" : "off"}</span>
+              <button onClick={toggleAuto} className="w-full px-3 pb-1.5 text-left t-label text-fg-faint hover:text-fg-dim">
+                Auto-greet on open: <span className={autoGreet ? "text-brand-ink" : "text-fg-faint"}>{autoGreet ? "on" : "off"}</span>
               </button>
             </div>
           </motion.div>
@@ -291,19 +287,19 @@ export function VoiceAgent({ symbol, timeframe, bars, meta, indicators, actions 
       <button
         onClick={onOrbClick}
         aria-label="LazyBull voice co-pilot"
-        className="group relative flex size-14 items-center justify-center rounded-full border border-[#7b5cff]/50 bg-bg-soft shadow-xl transition-transform hover:scale-105 active:scale-95"
+        className="group relative flex size-14 items-center justify-center rounded-full border border-brand-ink/50 bg-bg-soft shadow-xl transition-transform hover:scale-105 active:scale-95"
       >
         {/* pulse rings when live/speaking */}
         {live && (
           <>
-            <span className={`absolute inset-0 rounded-full border border-[#7b5cff]/40 ${speaking ? "animate-ping" : "animate-pulse"}`} />
-            {speaking && <span className="absolute -inset-1 rounded-full border border-[#7b5cff]/20 animate-ping" style={{ animationDelay: "150ms" }} />}
+            <span className={`absolute inset-0 rounded-full border border-brand-ink/40 ${speaking ? "animate-ping" : "animate-pulse"}`} />
+            {speaking && <span className="absolute -inset-1 rounded-full border border-brand-ink/20 animate-ping" style={{ animationDelay: "150ms" }} />}
           </>
         )}
-        {connecting && <span className="absolute inset-0 rounded-full border-2 border-cyan/40 border-t-cyan animate-spin" />}
+        {connecting && <span className="absolute inset-0 rounded-full border-2 border-brand-ink/30 border-t-brand-ink animate-spin" />}
 
         {/* mic glyph */}
-        <span className={`relative flex size-9 items-center justify-center rounded-full ${live ? "bg-[image:var(--grad-fill)] text-[var(--grad-on)]" : status === "error" ? "bg-bear/20 text-bear" : "bg-[#582eff]/20 text-brand-ink"}`}>
+        <span className={`relative flex size-9 items-center justify-center rounded-full ${live ? "bg-[image:var(--grad-fill)] text-[var(--grad-on)]" : status === "error" ? "bg-fg/10 text-fg-dim" : "bg-brand-ink/20 text-brand-ink"}`}>
           {muted ? (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="2" y1="2" x2="22" y2="22" /><path d="M18.9 13.4A7 7 0 0 0 19 12v-1" /><path d="M9 5a3 3 0 0 1 6 0v5" /><path d="M12 19v3" /><path d="M5 11a7 7 0 0 0 10.3 6.2" />

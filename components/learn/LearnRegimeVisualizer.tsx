@@ -44,16 +44,16 @@ function generateRegimeSeries(hurst: number) {
 function regimeLabel(h: number) {
   // The descriptions say what the SERIES did, not what to do about it — an
   // H reading is a description of a window that has already happened.
-  if (h > 0.6) return { kind: "TRENDING", color: "var(--bull)", desc: "Moves kept going. Trend rules scored better here." };
-  if (h > 0.55) return { kind: "WEAK TREND", color: "var(--bull)", desc: "Mild momentum. Trend rules scored a little better." };
+  if (h > 0.6) return { kind: "Trending", color: "var(--bull)", desc: "Moves kept going. Trend rules scored better here." };
+  if (h > 0.55) return { kind: "Weak trend", color: "var(--bull)", desc: "Mild momentum. Trend rules scored a little better." };
   // --fg-dim, not --fg-faint. H opens at 0.50, so RANDOM is the DEFAULT state of
   // the flagship chart on a page titled "Trading, visualized." — and --fg-faint
   // is the site's lowest ink, measured near-invisible against the panel. Three
   // other surfaces already draw the random regime in --fg-dim; this was the
   // outlier.
-  if (h > 0.45) return { kind: "RANDOM", color: "var(--fg-dim)", desc: "Coin flip. No rule showed measurable predictive lift historically." };
-  if (h > 0.4) return { kind: "WEAK REVERSION", color: "var(--cyan)", desc: "Mild snap-back. Reversion rules scored a little better." };
-  return { kind: "MEAN-REVERTING", color: "var(--cyan)", desc: "Prices snapped back. Reversion rules scored better here." };
+  if (h > 0.45) return { kind: "Random", color: "var(--fg-dim)", desc: "Coin flip. No rule showed measurable predictive lift historically." };
+  if (h > 0.4) return { kind: "Weak reversion", color: "var(--cyan)", desc: "Mild snap-back. Reversion rules scored a little better." };
+  return { kind: "Mean-reverting", color: "var(--cyan)", desc: "Prices snapped back. Reversion rules scored better here." };
 }
 
 // Which teaching instrument is worth OPENING for a series shaped like this —
@@ -85,9 +85,9 @@ export function LearnRegimeVisualizer() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-12">
         {/* Chart */}
-        <div className="@2xl:col-span-8 surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            <span>simulated · {BARS} bars</span>
+        <div className="@2xl:col-span-8 rounded-xl bg-fg/[0.05]">
+          <div className="flex items-center justify-between px-3.5 pt-3 t-label text-fg-dim">
+            <span>Simulated · {BARS} bars</span>
             <span style={{ color: label.color }}>● {label.kind}</span>
           </div>
           <svg viewBox={`0 0 ${W} ${H}`} className="block w-full">
@@ -99,7 +99,7 @@ export function LearnRegimeVisualizer() {
             </defs>
             {/* gridlines */}
             {[0.25, 0.5, 0.75].map((t) => (
-              <line key={t} x1={padL} x2={W - padR} y1={padT + t * innerH} y2={padT + t * innerH} stroke="rgba(245,245,240,0.05)" />
+              <line key={t} x1={padL} x2={W - padR} y1={padT + t * innerH} y2={padT + t * innerH} stroke="var(--fg)" strokeOpacity="0.05" />
             ))}
             {/* fill */}
             <path
@@ -125,17 +125,17 @@ export function LearnRegimeVisualizer() {
             {/* end cap */}
             <circle cx={xOf(BARS - 1)} cy={yOf(series[series.length - 1].c)} r={4} fill={label.color} />
           </svg>
-          <div className="grid grid-cols-3 gap-px border-t border-border bg-border">
-            <Stat label="hurst" value={h.toFixed(2)} tone={label.color} />
-            <Stat label="net move" value={`${ret >= 0 ? "+" : ""}${(ret * 100).toFixed(1)}%`} tone={ret >= 0 ? "var(--bull)" : "var(--bear)"} />
-            <Stat label="regime" value={label.kind} tone={label.color} />
+          <div className="grid grid-cols-3 gap-3 px-3.5 pb-3.5 pt-1">
+            <Stat label="Hurst" value={h.toFixed(2)} tone={label.color} />
+            <Stat label="Net move" value={`${ret >= 0 ? "+" : ""}${(ret * 100).toFixed(1)}%`} tone={ret >= 0 ? "var(--bull)" : "var(--bear)"} />
+            <Stat label="Regime" value={label.kind} tone={label.color} />
           </div>
         </div>
 
         {/* Slider + recommendation */}
         <div className="@2xl:col-span-4 flex flex-col gap-3">
-          <div className="surface-card border border-border bg-surface p-4">
-            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">drag the regime knob</div>
+          <div className="rounded-xl bg-fg/[0.05] p-4">
+            <div className="t-label text-fg-faint">Drag the regime knob</div>
             <div className="mt-3 font-display text-3xl tracking-tightest tabular-nums" style={{ color: label.color }}>
               H = {h.toFixed(2)}
             </div>
@@ -147,9 +147,9 @@ export function LearnRegimeVisualizer() {
               step={0.01}
               value={h}
               onChange={(e) => setH(parseFloat(e.target.value))}
-              className="mt-4 h-1 w-full accent-bull"
+              className="mt-4 h-1 w-full accent-brand-ink"
             />
-            <div className="mt-1 flex justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
+            <div className="mt-1 flex justify-between t-label text-fg-faint">
               <span>0.3 reverting</span>
               <span>0.5 random</span>
               <span>0.7 trending</span>
@@ -158,24 +158,24 @@ export function LearnRegimeVisualizer() {
 
           <a
             href={`/learn/bots/${bot.id}`}
-            className="group block border border-border bg-bg p-4 hover:border-bull hover:bg-bull/[0.04]"
+            className="group block rounded-xl bg-fg/[0.05] p-4 transition-colors hover:bg-fg/[0.08]"
           >
-            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">recommended bot</div>
-            <div className="mt-2 font-display text-xl tracking-tightest text-fg group-hover:text-bull">
+            <div className="t-label text-fg-faint">Recommended bot</div>
+            <div className="mt-2 font-display text-xl tracking-tightest text-fg group-hover:text-brand-ink">
               {bot.name}
             </div>
             <p className="mt-2 text-[0.75rem] leading-relaxed text-fg-dim">{bot.reason}</p>
-            <div className="mt-3 inline-flex items-center gap-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint group-hover:text-bull">
-              learn this bot →
+            <div className="mt-3 inline-flex items-center gap-1 t-label text-fg-faint group-hover:text-brand-ink">
+              Learn this bot ›
             </div>
           </a>
         </div>
       </div>
 
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim">
-        <span className="text-fg-faint">how it works →</span> we synthesize a price path with controllable
-        autocorrelation. Hurst &gt; 0.5 means today&apos;s up-move makes tomorrow&apos;s up-move more likely
-        (trending). Hurst &lt; 0.5 means it makes tomorrow&apos;s down-move more likely (mean-reverting).
+      <div className="text-[0.8125rem] leading-relaxed text-fg-dim">
+        <span className="text-fg-faint">How it works →</span> we synthesize a price path with controllable
+        autocorrelation. Hurst &gt; 0.5 means today’s up-move makes tomorrow’s up-move more likely
+        (trending). Hurst &lt; 0.5 means it makes tomorrow’s down-move more likely (mean-reverting).
         The Lazybull <span className="text-fg">Hurst Exponent</span> bot reads this number off real markets.
       </div>
     </div>
@@ -184,9 +184,9 @@ export function LearnRegimeVisualizer() {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="bg-bg p-2.5">
-      <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
-      <div className="mt-1 font-mono text-base tabular-nums" style={{ color: tone }}>{value}</div>
+    <div>
+      <div className="t-label text-fg-faint">{label}</div>
+      <div className="mt-0.5 font-mono text-base tabular-nums" style={{ color: tone }}>{value}</div>
     </div>
   );
 }

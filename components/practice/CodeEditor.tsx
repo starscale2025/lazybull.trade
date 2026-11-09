@@ -15,7 +15,7 @@
  * Why each odd class is there:
  *   border-0            the UA sheet gives textareas a 1px border + 2px
  *                       padding that would shift every glyph off the pre
- *   caret-bull          text-transparent also hides the caret in Safari
+ *   caret-brand-ink     text-transparent also hides the caret in Safari
  *                       unless caret-color is explicit
  *   selection:…         app/layout.tsx paints `selection:bg-bull
  *                       selection:text-bg` on the body, which would render
@@ -27,11 +27,12 @@
  * to the run button — the keyboard-trap exit, spelled out in the footer.
  * ⌘/Ctrl+↵ is left to bubble: the workspace root owns run / submit.
  *
- * Frame: the DeskFrame corner ticks from components/learn/SplitDesk.tsx
- * (lines 268-271). Buttons: the run button from components/quant/RunRitual.tsx
- * (line 252) and the footer primary from components/quant/ImportBotModal.tsx
- * (line 186). Segmented control: the aria-pressed pattern of
- * components/pro/OrderPanel.tsx (lines 164-196).
+ * Frame: the tools' surface-instrument panel. Buttons: the kit's square tool
+ * shape, Submit the one primary. Language: pills on the aria-pressed pattern of
+ * components/pro/OrderPanel.tsx (lines 164-196). Run and the language pills are
+ * the kit's classes by hand: Run carries the ref Escape hands focus to, and a
+ * pill here can be disabled and titled, which ToolButton and TogglePill's props
+ * do not cover (ToolButton has no ref; TogglePill has neither).
  */
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
@@ -39,6 +40,7 @@ import type { ClientProblem, Lang } from "@/lib/practice/types";
 import { LANG_META } from "@/lib/practice/types";
 import { isEdited } from "@/lib/practice/judge";
 import { TOKEN_CLASS, tokenize } from "@/lib/practice/tokenize";
+import { Chip, ToolButton } from "@/components/calm/kit";
 import { Kbd } from "./Chips";
 
 /** The one metrics class every layer wears. Change it here or nowhere. */
@@ -46,7 +48,6 @@ const METRICS =
   "m-0 p-3 font-mono text-[0.8125rem] leading-[1.6] tracking-normal whitespace-pre [tab-size:4] [font-variant-ligatures:none]";
 
 const LANGS: Lang[] = ["python", "typescript"];
-const TICK = "pointer-events-none absolute z-10 size-3 border-bull";
 
 /* ── pure edits on the textarea ──────────────────────────────────────────── */
 
@@ -199,29 +200,17 @@ export function CodeEditor({
   };
 
   return (
-    <div className={`relative flex flex-col border border-border bg-bg ${className}`}>
-      {/* DeskFrame corner ticks — components/learn/SplitDesk.tsx */}
-      <span aria-hidden className={`${TICK} -left-px -top-px border-l border-t`} />
-      <span aria-hidden className={`${TICK} -right-px -top-px border-r border-t`} />
-      <span aria-hidden className={`${TICK} -left-px -bottom-px border-l border-b`} />
-      <span aria-hidden className={`${TICK} -right-px -bottom-px border-r border-b`} />
-
+    <div className={`relative flex flex-col surface-instrument border border-border bg-bg ${className}`}>
       {/* ── header strip ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 t-chrome">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-[var(--r-instrument)] border-b border-border bg-bg-soft px-3 py-2 t-label">
         <div className="flex min-w-0 flex-wrap items-center gap-2 text-fg-dim">
-          <span className="text-bull">●</span>
-          <span>{meta.file}</span>
-          <span className="text-fg-faint">· utf-8 · spaces:{meta.indent}</span>
-          {edited && (
-            <span className="flex items-center gap-1.5 text-amber">
-              <span aria-hidden className="size-1.5 rounded-full bg-amber" />
-              edited
-            </span>
-          )}
+          <span className="font-mono">{meta.file}</span>
+          <span className="text-fg-faint">· UTF-8 · spaces: {meta.indent}</span>
+          {edited && <Chip dot>Edited</Chip>}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div role="group" aria-label="Language" className="grid grid-cols-2 gap-px bg-border p-px">
+          <div role="group" aria-label="Language" className="flex items-center gap-1">
             {LANGS.map((l) => {
               const available = l === "python" || hasTs;
               const on = l === lang;
@@ -233,9 +222,7 @@ export function CodeEditor({
                   aria-pressed={on}
                   disabled={!available || locked}
                   title={available ? (l === "typescript" ? "editor only — TypeScript judging ships next" : undefined) : "typescript stub coming soon"}
-                  className={`h-6 px-2 font-mono text-[0.625rem] uppercase tracking-wider transition-colors ${
-                    on ? "bg-bull text-bg" : "bg-bg text-fg-dim hover:text-fg"
-                  } disabled:cursor-not-allowed disabled:bg-bg disabled:text-fg-faint`}
+                  className="calm-toggle disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {LANG_META[l].label}
                   {!available && " · soon"}
@@ -244,14 +231,9 @@ export function CodeEditor({
             })}
           </div>
 
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={locked}
-            className="t-chrome text-fg-faint transition-colors hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            ↺ reset
-          </button>
+          <ToolButton onClick={onReset} disabled={locked}>
+            ↺ Reset
+          </ToolButton>
 
           <button
             ref={runRef}
@@ -259,23 +241,22 @@ export function CodeEditor({
             onClick={onRun}
             disabled={locked || !runnable}
             title={runnable ? undefined : "TypeScript judging ships next — Python runs for real today"}
-            className="inline-flex h-7 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull transition-colors hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-fg-faint"
+            className="tool-btn"
           >
-            ▶ run
+            ▶ Run
           </button>
-          <button
-            type="button"
+          <ToolButton
+            primary
             onClick={onSubmit}
             disabled={locked || !runnable}
             title={runnable ? undefined : "TypeScript judging ships next — Python runs for real today"}
-            className="h-7 btn-grad px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            submit
-          </button>
+            Submit
+          </ToolButton>
         </div>
       </div>
 
-      {/* the phosphor rail — the judge's pulse while it holds the file */}
+      {/* the rail — the judge's pulse while it holds the file */}
       {locked ? <div className="dc-rail relative" /> : <div className="h-0.5" />}
 
       {/* ── the three layers ─────────────────────────────────────────────────
@@ -283,7 +264,7 @@ export function CodeEditor({
           on the wrapper, via :has(:focus-visible) — inset, so no ancestor
           can clip it. */}
       <div
-        className={`relative flex min-h-0 flex-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bull has-[:focus-visible]:-outline-offset-2 ${
+        className={`relative flex min-h-0 flex-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-ink has-[:focus-visible]:-outline-offset-2 ${
           locked ? "pointer-events-none opacity-70" : ""
         }`}
       >
@@ -338,18 +319,18 @@ export function CodeEditor({
             autoComplete="off"
             wrap="off"
             enterKeyHint="done"
-            className={`${METRICS} absolute inset-0 h-full w-full resize-none overflow-auto border-0 bg-transparent text-transparent caret-bull outline-none selection:bg-bull/30 selection:text-transparent`}
+            className={`${METRICS} absolute inset-0 h-full w-full resize-none overflow-auto border-0 bg-transparent text-transparent caret-brand-ink outline-none selection:bg-brand-ink/30 selection:text-transparent`}
           />
         </div>
       </div>
 
       {/* ── footer strip ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-bg-soft px-3 py-1.5 t-chrome text-fg-faint">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-b-[var(--r-instrument)] border-t border-border bg-bg-soft px-3 py-1.5 t-label text-fg-faint">
         <span className="tabular-nums">
-          ln {caret.line}, col {caret.col}
+          Ln {caret.line}, col {caret.col}
         </span>
         <span className="flex items-center gap-1.5">
-          {!runnable && <span className="text-amber">TypeScript judging ships next — Python runs for real today ·</span>}
+          {!runnable && <span className="text-fg-dim">TypeScript judging ships next — Python runs for real today ·</span>}
           <Kbd>tab</Kbd> indent · <Kbd>esc</Kbd> leave editor
         </span>
       </div>

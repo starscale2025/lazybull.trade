@@ -99,6 +99,8 @@ describe("teaching copy is left alone", () => {
     "No trade here uses real money.",
     "confirm paper trade · AMZN",
     "Your worst case is a number you chose.",
+    "Your worst case can be a number you choose.",
+    "Set before the trade, not found out afterwards.",
     "in-range odds · BS model",
     "Option positions · 2 open",
     "Defined-risk credit",

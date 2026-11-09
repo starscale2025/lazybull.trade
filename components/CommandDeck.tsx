@@ -15,6 +15,20 @@ function useDeckCommands(): DeckCommand[] {
   return useSyncExternalStore(subscribeDeck, deckSnapshot, deckSnapshot);
 }
 
+// The /learn chapters a visitor can jump to, as the footer names them.
+const LESSONS: ReadonlyArray<readonly [string, string]> = [
+  ["The three pieces", "three-pieces"],
+  ["Greeks 101", "greeks"],
+  ["The vol smile", "volsmile"],
+  ["Probability, three ways", "probability"],
+  ["The five families", "families"],
+  ["Backtest in motion", "backtest"],
+  ["Teacher mode", "teacher"],
+  ["Bring your own bot", "byob"],
+  ["The AI quants", "ai-quants"],
+  ["Now go", "now-go"],
+];
+
 export function CommandDeck() {
   const router = useRouter();
   const pathname = usePathname();
@@ -59,6 +73,14 @@ export function CommandDeck() {
         group: "view",
         run: () => setMotionPaused(!isMotionPaused()),
       },
+      // M8: every lesson by name, so "vol smile" or "byob" in the deck
+      // lands on that chapter.
+      ...LESSONS.map(([label, hash]) => ({
+        id: `learn-${hash}`,
+        label: `Lesson: ${label}`,
+        group: "learn",
+        run: go(`/learn#${hash}`),
+      })),
       {
         id: "replay-film",
         label: "Replay the landing film",

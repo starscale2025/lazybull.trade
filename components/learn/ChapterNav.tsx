@@ -2,8 +2,10 @@
 
 // CHAPTER NAV (/learn redesign L4) — one navigator to replace the pile. It
 // supersedes SectionIndex's 14 anonymous ticks with NAMED chapters + jump,
-// folds in the top scroll bar and the LIVE pill, and draws the learning
-// progress as a little equity curve that climbs as you call your shots.
+// folds in the top scroll bar, and draws the learning progress as a little
+// curve that climbs as you call your shots. Calm (S1, 2026-11-09): sentence
+// case in the reading type, the brand ink for the active chapter and the curve.
+// The pulsing "live" at its top went: nothing live was behind it.
 //
 // Left gutter on lg+; on mobile it collapses to a single thin top progress
 // bar. Active chapter and scroll fraction come from one passive scroll read
@@ -91,7 +93,7 @@ export function ChapterNav() {
     <>
       {/* mobile: one thin progress bar (folds ScrollProgressBar) */}
       <div
-        className="fixed left-0 top-0 z-[60] h-0.5 bg-bull transition-[width] duration-150 lg:hidden"
+        className="fixed left-0 top-0 z-[60] h-0.5 bg-brand-ink transition-[width] duration-150 lg:hidden"
         style={{ width: `${(progress * 100).toFixed(1)}%` }}
         aria-hidden
       />
@@ -101,11 +103,7 @@ export function ChapterNav() {
         aria-label="Chapters"
         className="chapter-rail fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 px-[0.5625rem] py-3.5 lg:block"
       >
-        <div className="rail-fade mb-2 flex items-center gap-2 whitespace-nowrap font-mono text-[0.5625rem] uppercase tracking-[0.3em] text-fg-faint">
-          <span className="size-1 rounded-full bg-bull pulse-dot" />
-          <span className="text-bull">live</span>
-          <span>· learn</span>
-        </div>
+        <div className="rail-fade mb-2 whitespace-nowrap t-label text-fg-faint">Learn</div>
 
         {/* Equity curve of concepts unlocked — omitted entirely until there is
             something to plot. With nothing earned it drew one baseline rule and
@@ -115,13 +113,13 @@ export function ChapterNav() {
         {earned.length > 0 && (
           <svg viewBox="0 0 100 40" className="rail-fade mb-1 h-9 w-[11.125rem]" aria-hidden preserveAspectRatio="none">
             <line x1="0" y1="34" x2="100" y2="34" stroke="var(--border)" strokeWidth="0.5" />
-            <path d={curveD} fill="none" stroke="var(--bull)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+            <path d={curveD} fill="none" stroke="var(--brand-ink)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             {earned.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r="1.6" fill="var(--bull)" />
+              <circle key={i} cx={p.x} cy={p.y} r="1.6" fill="var(--brand-ink)" />
             ))}
           </svg>
         )}
-        <div className="rail-fade mb-3 font-mono text-[0.5625rem] uppercase leading-[1.5] tracking-[0.2em] text-fg-faint">
+        <div className="rail-fade mb-3 t-label text-fg-faint">
           <div className="whitespace-nowrap">
             <span className="text-fg-dim">{correctCount}</span>/{total} called right
           </div>
@@ -140,20 +138,20 @@ export function ChapterNav() {
                 <button
                   onClick={() => jump(c.id)}
                   aria-current={isActive ? "true" : undefined}
-                  className={`group flex w-full items-center gap-2 py-0.5 text-left font-mono text-[0.625rem] uppercase tracking-wider transition-colors ${
-                    isActive ? "text-bull" : "text-fg-faint hover:text-fg-dim"
+                  className={`group flex w-full items-center gap-2 py-0.5 text-left t-label transition-colors ${
+                    isActive ? "text-brand-ink" : "text-fg-faint hover:text-fg-dim"
                   }`}
                 >
                   {/* The tick is the rail's resting state — never faded. */}
                   <span
                     className={`h-px shrink-0 transition-all ${
-                      isActive ? "w-4 bg-bull" : "w-2.5 bg-fg-faint/45 group-hover:w-3.5 group-hover:bg-fg-dim"
+                      isActive ? "w-4 bg-brand-ink" : "w-2.5 bg-fg-faint/45 group-hover:w-3.5 group-hover:bg-fg-dim"
                     }`}
                   />
                   <span className="rail-fade tabular-nums">{c.num}</span>
                   <span className="rail-fade truncate">{c.short}</span>
                   {isConcept && (
-                    <span className={`rail-fade ml-auto text-[0.5625rem] ${p ? (p.correct ? "text-bull" : "text-amber") : "text-fg-faint/40"}`}>
+                    <span className={`rail-fade ml-auto text-[0.5625rem] ${p ? (p.correct ? "text-brand-ink" : "text-fg-dim") : "text-fg-faint/40"}`}>
                       {p ? (p.correct ? "✓" : "•") : "◦"}
                     </span>
                   )}

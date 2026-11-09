@@ -7,7 +7,7 @@ import { Nav } from "@/components/Nav";
 import { TickerBar } from "@/components/TickerBar";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
-import { StrategyCards, PnlSparkline, EmptyPnlSparkline, STRATEGY_TONE } from "@/components/wedge/StrategyCards";
+import { StrategyCards, PnlSparkline, EmptyPnlSparkline } from "@/components/wedge/StrategyCards";
 import { PlainGreeks } from "@/components/wedge/PlainGreeks";
 import { TimeMachine } from "@/components/wedge/TimeMachine";
 import { EventTimeline } from "@/components/wedge/EventTimeline";
@@ -29,6 +29,9 @@ import { detect } from "@/lib/detector";
 import { pnlSummary, type Leg } from "@/lib/pricing";
 import { noteBuilderAbandon, noteExplainRequest, tradeFingerprint } from "@/lib/confusion";
 import { flushEvents, track } from "@/lib/track";
+import { clearIsland, setIsland } from "@/lib/island";
+import { TruthBadge } from "@/components/pro/TruthBadge";
+import { CalmLink, Chip, TogglePill, ToolButton } from "@/components/calm/kit";
 
 // IV is still synthetic (no free options-IV feed); spot is now live.
 const SYMBOLS = [
@@ -60,6 +63,13 @@ const TABS = [
   { id: "manage", label: "Positions" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
+
+// The kit's controls stand 32px tall. This page fits one screen and its toolbars
+// and panel headers are thin strips, so here they take a compact size; touch
+// still gets 44px from the tap-floor on <main>.
+const DENSE = "!h-6 !px-2.5 !text-[0.75rem]";
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * The strategy builder. Rendered by app/trade/page.tsx, which is a server component
@@ -176,12 +186,17 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
     end.setDate(end.getDate() + 120);
     return eventsFor(sym.sym, start, end).find((e) => e.kind === "earnings") ?? null;
   }, [sym]);
-  const earnDays = nextEarnings
-    ? Math.max(0, Math.ceil((new Date(nextEarnings.date).getTime() - Date.now()) / 86_400_000))
-    : null;
-  const earnLabel = nextEarnings
-    ? new Date(nextEarnings.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()
-    : "—";
+  // Calendar text waits for the browser's clock (Gate A4 #2, React #418): the
+  // server's day is not the reader's near midnight, east of UTC, and a page
+  // that printed the server's date failed to hydrate.
+  const earnDays =
+    nextEarnings && mounted
+      ? Math.max(0, Math.ceil((new Date(nextEarnings.date).getTime() - Date.now()) / 86_400_000))
+      : null;
+  const earnLabel =
+    nextEarnings && mounted
+      ? new Date(nextEarnings.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : "—";
 
   // The band a shared trade implies: its own strikes, with a little air. Null
   // unless the link names a symbol this page can chart.
@@ -261,6 +276,28 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   // debounced: it is a cursor, and a cursor that lags its pointer reads broken.
   const [hoverStrike, setHoverStrike] = useState<number | null>(null);
   const selected = strategies.find((s) => s.id === selectedId) ?? null;
+
+  // The Island (M32): the position being built, while there is one. The arc
+  // is the weeks to expiry with this week lit; the number is the floor.
+  useEffect(() => {
+    if (!selected) {
+      clearIsland("trade-build");
+      return;
+    }
+    const defined = Number.isFinite(selected.maxLoss);
+    const floor = `−$${Math.abs(selected.maxLoss).toFixed(0)}`;
+    setIsland({
+      id: "trade-build",
+      label: `${selected.kind} · paper`,
+      value: defined ? floor : "No floor",
+      caption: `${defined ? "the most it can lose" : "the loss is unbounded"} · ${sym.sym}, ${days} days to expiry`,
+      segments: Math.max(2, Math.min(10, Math.ceil(days / 7))),
+      active: 0,
+      glyph: "clock",
+      announce: `${selected.kind} on ${sym.sym}, on paper: ${defined ? `the most it can lose is ${floor}` : "the loss has no floor"}.`,
+    });
+  }, [selected, days, sym.sym]);
+  useEffect(() => () => clearIsland("trade-build"), []);
 
   // events
   const events = useMemo(() => {
@@ -480,13 +517,6 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           atmosphere is marketing language, and on a route that is nothing but
           live numbers it reads as movement the data did not ask for. */}
       <ScrollProgress />
-      {/* decoration sits below the chrome (panels at z-30) so it can never film over data */}
-      <div className="pointer-events-none fixed inset-0 z-10 scanlines opacity-[0.09]" aria-hidden />
-      <div
-        className="pointer-events-none fixed inset-0 z-10"
-        aria-hidden
-        style={{ background: "radial-gradient(ellipse at center, transparent 80%, rgba(0,0,0,0.2) 100%)" }}
-      />
       <TickerBar />
       <Nav wide />
 
@@ -506,27 +536,23 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-[0.18]"
           style={{ maskImage: "linear-gradient(to left, black 30%, transparent 78%)" }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
         <div className="relative shell shell-wide py-4 lg:py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-2">
             <div className="flex items-center gap-3 t-eyebrow text-fg-faint" data-gsap="fade-up">
-              ⟢ strategy builder
-              <Link href="/trade/chain" className="text-bull hover:underline">advanced view: see the chain →</Link>
+              Strategy builder
+              <CalmLink href="/trade/chain" className="!text-[0.875rem]">Advanced view: see the chain</CalmLink>
             </div>
-            <span className="inline-flex items-center gap-2 border border-bull/40 bg-bull/10 px-2.5 py-1 t-eyebrow text-bull">
-              <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-              paper only · $5k practice account
-            </span>
+            <Chip tone="warn">Paper only · $5k practice account</Chip>
           </div>
 
           <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:mt-3 lg:items-center">
             {/* symbol block — one dense baseline row on lg */}
             <div className="lg:flex lg:flex-wrap lg:items-baseline lg:gap-x-4" data-gsap="fade-up">
               <div className="flex flex-wrap items-baseline gap-3">
-                <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]" style={{ textShadow: "0 0 32px rgba(82,255,165,0.12)" }}>
+                <h1 className="font-display text-[clamp(1.9rem,3vw,2.6rem)] leading-none tracking-tightest text-fg lg:text-[1.7rem]">
                   {sym.sym}
                 </h1>
-                <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">{quote?.name ?? sym.name}</span>
+                <span className="t-label text-fg-dim">{quote?.name ?? sym.name}</span>
               </div>
               <div className="mt-1.5 flex flex-wrap items-baseline gap-3 t-data lg:mt-0">
                 <span className="text-2xl text-fg lg:text-xl">${spot.toFixed(2)}</span>
@@ -534,9 +560,16 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                   {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
                 </span>
               </div>
-              <div className="mt-1 flex items-center gap-2 t-eyebrow text-fg-faint lg:mt-0">
-                <span className={`size-1.5 rounded-full ${quote ? "bg-bull pulse-dot" : "bg-amber"}`} />
-                {quote ? `live price · ${quote.exch ?? "us market"}` : "seed price · connecting"}
+              <div className="mt-1 lg:mt-0">
+                <Chip dot tone={quote ? "neutral" : "warn"}>
+                  {quote ? `Live price · ${quote.exch ?? "US market"}` : "Seed price · connecting"}
+                </Chip>
+              </div>
+              {/* Provenance where the data is (M33): the chain behind this
+                  builder is synthetic and the badge says so, here rather than
+                  on the nav of every page. */}
+              <div className="mt-2">
+                <TruthBadge />
               </div>
             </div>
 
@@ -546,29 +579,25 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               className="flex items-center gap-2.5 lg:gap-3"
               data-gsap="fade-up"
               data-gsap-delay="0.08"
-              title="illustrative · synthetic iv (no real options-iv feed)"
+              title="Illustrative · synthetic IV (no real options-IV feed)"
             >
               <span className="size-1.5 shrink-0 rounded-full bg-amber" aria-hidden />
               <div className="flex divide-x divide-border t-data">
                 {[
-                  { k: "iv rank", v: String(ivRank) },
-                  { k: "iv percentile", v: `${ivPctile}%` },
-                  { k: "iv", v: `${(sym.iv * 100).toFixed(1)}%` },
+                  { k: "IV rank", v: String(ivRank) },
+                  { k: "IV percentile", v: `${ivPctile}%` },
+                  { k: "IV", v: `${(sym.iv * 100).toFixed(1)}%` },
                 ].map((s) => (
                   <div key={s.k} className="px-4 text-right first:pl-0">
-                    <div className="t-chrome text-fg-faint">{s.k}</div>
+                    <div className="t-label text-fg-faint">{s.k}</div>
                     <div className="mt-1 text-lg tabular-nums text-fg lg:mt-0.5 lg:text-base">{s.v}</div>
                   </div>
                 ))}
                 <div className="px-4 pr-0 text-right">
-                  <div className="t-chrome text-fg-faint">earnings</div>
+                  <div className="t-label text-fg-faint">Earnings</div>
                   <div className="mt-1 flex items-baseline justify-end gap-1.5 lg:mt-0.5">
                     <span className="text-lg tabular-nums text-fg lg:text-base">{earnLabel}</span>
-                    {earnDays != null && (
-                      <span className="border border-bull/40 bg-bull/10 px-1 py-px t-chrome text-bull">
-                        {earnDays}d
-                      </span>
-                    )}
+                    {earnDays != null && <Chip>{earnDays}d</Chip>}
                   </div>
                 </div>
               </div>
@@ -584,28 +613,22 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           {/* toolbar strip — live controls only */}
           {/* wraps at every width — clipping "reset view" behind an invisible
               x-scroll is worse than a second toolbar row */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-chrome lg:shrink-0 lg:gap-x-3">
-            <span className="text-fg-faint">underlying</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 surface-instrument border border-border bg-surface px-3 py-2 t-label lg:shrink-0 lg:gap-x-3">
+            <span className="text-fg-faint">Underlying</span>
             <div className="flex items-center gap-1">
               {SYMBOLS.map((s, i) => (
-                <button
-                  key={s.sym}
-                  onClick={() => setSymIdx(i)}
-                  className={`border px-2 py-0.5 transition-colors ${
-                    i === symIdx ? "border-bull/60 bg-bull/10 text-bull" : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
-                  }`}
-                >
+                <TogglePill key={s.sym} on={i === symIdx} onClick={() => setSymIdx(i)} className={DENSE}>
                   {s.sym}
-                </button>
+                </TogglePill>
               ))}
             </div>
             <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
             <label className="flex items-center gap-2 text-fg-faint">
-              strikes
+              Strikes
               <select
                 value={chainDepth}
                 onChange={(e) => setChainDepth(Number(e.target.value))}
-                className="border border-border bg-bg px-1.5 py-0.5 font-mono text-[0.625rem] uppercase text-fg-dim outline-none focus:border-bull/50"
+                className="rounded-[var(--r-instrument)] border border-border bg-bg px-1.5 py-0.5 t-data text-[0.6875rem] text-fg-dim outline-none focus:border-brand-ink/60"
               >
                 <option value={4}>±4</option>
                 <option value={5}>±5</option>
@@ -615,7 +638,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
             <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
             {/* days-from-now slider — drives the same `days` state as the cone drag + chain stepper */}
             <label className="flex shrink-0 items-center gap-2 text-fg-faint">
-              days from now
+              Days from now
               <input
                 type="range"
                 min={1}
@@ -623,30 +646,27 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                 step={1}
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                className="h-1 w-24 accent-bull xl:w-32"
+                className="h-1 w-24 accent-brand-ink xl:w-32"
                 aria-label="days from now"
               />
               <span className="text-amber tabular-nums">
-                {days}d<span className="lg:hidden"> · {expiryStr}</span>
+                {days}d{mounted && <span className="lg:hidden"> · {expiryStr}</span>}
               </span>
             </label>
-            <button
-              onClick={resetView}
-              className="ml-auto shrink-0 border border-border px-2 py-0.5 text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
-            >
-              reset view ⟲
-            </button>
+            <ToolButton onClick={resetView} className={`ml-auto shrink-0 ${DENSE}`}>
+              Reset view ⟲
+            </ToolButton>
           </div>
 
           {/* chart + draggable probability cone — ≈55% of the column on lg */}
-          <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface transition-shadow duration-500 hover:shadow-[0_0_60px_-18px_rgba(82,255,165,0.35)] lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
+          <section id="thesis" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:flex lg:min-h-0 lg:shrink-0 lg:grow-0 lg:basis-[55%] lg:flex-col">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 lg:shrink-0">
-              <span className="t-eyebrow text-bull">⟢ implied range · Black-Scholes · {sym.sym}</span>
+              <span className="t-eyebrow text-fg-dim">Implied range · Black-Scholes · {sym.sym}</span>
               {/* the expiry date is the decision token — keep it shrink-0 so
                   mid-width truncation eats the prose, never the date */}
               <span
                 title={touched ? thesisSentence : undefined}
-                className="hidden min-w-0 max-w-[62%] items-baseline gap-1 font-mono text-[0.625rem] text-fg-dim md:flex"
+                className="hidden min-w-0 max-w-[62%] items-baseline gap-1 t-label text-fg-dim md:flex"
               >
                 {touched ? (
                   <>
@@ -680,7 +700,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
                   hoverStrike={hoverStrike}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">loading implied range…</div>
+                <div className="flex h-full items-center justify-center t-label text-fg-faint">Loading implied range…</div>
               )}
               {/* in-band probability ring — same number the strategy panel prices
                   from. Owns the top-left corner: the HI/LO inputs moved into the
@@ -720,12 +740,9 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           {/* strategy panel — picker + legs + payoff/stat rail + place CTA, all inside */}
           <section id="pick" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
             <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-              <span className="t-eyebrow text-fg-dim">examples that fit this range</span>
-              <Link
-                href="/trade/chain"
-                className="border border-border px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
-              >
-                edit legs ✎
+              <span className="t-eyebrow text-fg-dim">Examples that fit this range</span>
+              <Link href="/trade/chain" className={`tool-btn ${DENSE}`}>
+                Edit legs ✎
               </Link>
             </div>
             <StrategyCards
@@ -769,18 +786,10 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           <section id="detail" className="scroll-mt-16 surface-instrument border border-border bg-surface lg:shrink-0">
             <div className="flex items-center gap-1 overflow-x-auto border-b border-border bg-bg-soft px-2 py-1.5">
               {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`shrink-0 border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-[0.15em] transition-colors ${
-                    tab === t.id
-                      ? "border-bull/60 bg-bull/10 text-bull"
-                      : "border-border text-fg-dim hover:border-fg-dim hover:text-fg"
-                  }`}
-                >
+                <TogglePill key={t.id} on={tab === t.id} onClick={() => setTab(t.id)} className={`shrink-0 ${DENSE}`}>
                   {t.label}
                   {t.id === "manage" ? ` (${openCount})` : ""}
-                </button>
+                </TogglePill>
               ))}
             </div>
             <div id="manage" className="scroll-mt-16">
@@ -832,34 +841,34 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               exit={{ scale: 0.96, y: 12 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(82,255,165,0.5)] outline-none"
+              className="surface-instrument w-full max-w-xl border border-border bg-bg shadow-2xl outline-none"
             >
-              <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-bull">
-                confirm paper trade · {sym.sym}
+              <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-fg-dim">
+                Confirm paper trade · {sym.sym}
               </div>
               <div className="p-6">
                 <div id="confirm-trade-title" className="font-display text-2xl tracking-tightest text-fg">{confirm.strategy.kind}</div>
                 <p className="mt-3 text-[0.9375rem] leading-relaxed text-fg">{storySentence(confirm)}</p>
                 <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
                   {[
-                    { k: "max profit", v: Number.isFinite(confirm.strategy.maxProfit) ? `+$${confirm.strategy.maxProfit.toFixed(0)}` : "uncapped", c: "text-bull" },
-                    { k: "max loss", v: Number.isFinite(confirm.strategy.maxLoss) ? `−$${Math.abs(confirm.strategy.maxLoss).toFixed(0)}` : "unbounded", c: "text-bear" },
-                    { k: "in-range probability · BS model", v: `${(confirm.strategy.prob * 100).toFixed(0)}%`, c: "text-fg" },
+                    { k: "Max profit", v: Number.isFinite(confirm.strategy.maxProfit) ? `+$${confirm.strategy.maxProfit.toFixed(0)}` : "uncapped", c: "text-bull" },
+                    { k: "Max loss", v: Number.isFinite(confirm.strategy.maxLoss) ? `−$${Math.abs(confirm.strategy.maxLoss).toFixed(0)}` : "unbounded", c: "text-bear" },
+                    { k: "In-range probability · BS model", v: `${(confirm.strategy.prob * 100).toFixed(0)}%`, c: "text-fg" },
                   ].map((s) => (
                     <div key={s.k} className="bg-bg p-3">
-                      <div className="t-chrome text-fg-faint">{s.k}</div>
+                      <div className="t-label text-fg-faint">{s.k}</div>
                       <div className={`mt-1 t-data text-base ${s.c}`}>{s.v}</div>
                     </div>
                   ))}
                 </div>
                 {confirmRefusal && (
-                  <p role="alert" className="mt-4 border border-bear/50 bg-bear/10 px-3 py-2 t-body-sm text-bear">
+                  <p role="alert" className="mt-4 rounded-[var(--r-instrument)] bg-amber/10 px-3 py-2 t-body-sm text-amber">
                     {confirmRefusal}
                   </p>
                 )}
                 <div className="mt-5 flex items-center justify-end gap-2">
-                  <button type="button" onClick={() => setConfirm(null)} className="border border-border bg-bg px-4 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg lg:py-2">cancel</button>
-                  <button type="button" onClick={confirmBet} disabled={!!confirmRefusal} className="btn-grad px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider disabled:opacity-40 lg:py-2">place paper trade</button>
+                  <ToolButton onClick={() => setConfirm(null)}>Cancel</ToolButton>
+                  <ToolButton primary onClick={confirmBet} disabled={!!confirmRefusal}>Place paper trade</ToolButton>
                 </div>
               </div>
             </motion.div>
@@ -874,9 +883,9 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
-            className="fixed bottom-5 left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-bull/60 bg-bull/10 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bull shadow-2xl"
+            className="surface-instrument fixed bottom-5 left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-border bg-bg px-4 py-2 t-label text-fg shadow-2xl"
           >
-            ✓ paper trade placed · see the positions tab
+            ✓ Paper trade placed · see the positions tab
           </motion.div>
         )}
       </AnimatePresence>
@@ -908,7 +917,7 @@ function ThesisLine({ sentence }: { sentence: string }) {
   );
 }
 
-/** Ring gauge overlaid on the chart — "N% IN BAND · PROBABILITY @ EXPIRATION". */
+/** Ring gauge overlaid on the chart — "N% in band · probability @ expiration". */
 function InBandRing({ prob }: { prob: number }) {
   const r = 44;
   const c = 2 * Math.PI * r;
@@ -924,7 +933,7 @@ function InBandRing({ prob }: { prob: number }) {
     <div className="flex flex-col items-start gap-2">
       <div className="relative">
         <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden>
-          <circle cx="52" cy="52" r={r} stroke="var(--border)" strokeWidth="6" fill="rgba(5,5,5,0.55)" />
+          <circle cx="52" cy="52" r={r} stroke="var(--border)" strokeWidth="6" fill="var(--bg)" fillOpacity="0.55" />
           <circle
             cx="52"
             cy="52"
@@ -936,22 +945,19 @@ function InBandRing({ prob }: { prob: number }) {
             strokeDasharray={dash}
             strokeDashoffset={dashOffset}
             transform="rotate(-90 52 52)"
-            style={{
-              filter: "drop-shadow(0 0 6px rgba(82,255,165,0.45))",
-              transition: "stroke-dashoffset 0.5s cubic-bezier(.22,.68,.26,1), stroke 0.3s",
-            }}
+            style={{ transition: "stroke-dashoffset 0.5s cubic-bezier(.22,.68,.26,1), stroke 0.3s" }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-display text-2xl leading-none tracking-tightest tabular-nums" style={{ color: tone }}>
             {Math.round(prob * 100)}%
           </span>
-          <span className="mt-1 t-eyebrow text-fg-dim">in band</span>
+          <span className="mt-1 t-label text-fg-dim">In band</span>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 t-eyebrow text-fg-faint">
+      <div className="flex items-center gap-1.5 t-label text-fg-faint">
         <span className="size-2 shrink-0 border border-bull/60 bg-bull/20" aria-hidden />
-        <span className="leading-tight">probability<br />@ expiration</span>
+        <span>Probability<br />@ expiration</span>
       </div>
     </div>
   );
@@ -968,10 +974,10 @@ function LegsList({ s }: { s: Strategy }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between bg-bg-soft px-3 py-1.5 t-eyebrow text-fg-faint transition-colors hover:text-fg"
+        className="flex w-full items-center justify-between bg-bg-soft px-3 py-1.5 t-label text-fg-faint transition-colors hover:text-fg"
       >
-        <span>legs ({s.legs.length}) {open ? "▾" : "▸"}</span>
-        <span>{open ? "mid px" : ""}</span>
+        <span>Legs ({s.legs.length}) {open ? "▾" : "▸"}</span>
+        <span>{open ? "Mid px" : ""}</span>
       </button>
       {open && (
         <ul className="divide-y divide-border-soft border-t border-border-soft">
@@ -991,7 +997,7 @@ function LegsList({ s }: { s: Strategy }) {
           number a beginner is most likely to be looking for. It used to sit
           at 12px, identical to the chrome around it. */}
       <div className="flex items-baseline justify-between border-t border-border-soft bg-bg px-3 py-2.5">
-        <span className="t-chrome text-fg-dim">{s.cost > 0 ? "net debit" : "net credit"}</span>
+        <span className="t-label text-fg-dim">{s.cost > 0 ? "Net debit" : "Net credit"}</span>
         <span className={`t-figure ${s.cost > 0 ? "text-fg" : "text-bull"}`}>
           {Math.abs(s.cost / 100).toFixed(2)}
         </span>
@@ -1011,17 +1017,17 @@ function EmptyStrategyDetail({ spot }: { spot: number }) {
     <div className="@container border-t border-border p-3">
       <div className="flex items-stretch gap-4">
         <div className="flex min-w-0 flex-1 flex-col">
-          <EmptyPnlSparkline spot={spot} note="pick an example to draw it" />
-          <div className="mt-1 text-center t-eyebrow text-fg-faint">p/l @ expiration</div>
+          <EmptyPnlSparkline spot={spot} note="Pick an example to draw it" />
+          <div className="mt-1 text-center t-label text-fg-faint">P/L @ expiration</div>
         </div>
         {/* the rail StrategyDetail fills in, unfilled. Beside a 12.5rem rail a
             narrow panel leaves the frame too thin for its note (phones, and the
             desktop rail below ~1360px), so it waits on the panel's own width:
             a container query, not a viewport breakpoint. */}
         <div aria-hidden className="hidden w-[12.5rem] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5 @md:grid">
-          {["max profit", "max loss", "breakeven", "pop"].map((k) => (
+          {["Max profit", "Max loss", "Breakeven", "POP"].map((k) => (
             <div key={k} className="contents">
-              <span className="t-chrome text-fg-faint">{k}</span>
+              <span className="t-label text-fg-faint">{k}</span>
               <span className="text-right t-data text-[0.75rem] text-fg-faint">—</span>
             </div>
           ))}
@@ -1048,7 +1054,6 @@ function StrategyDetail({
   prob: number;
   onPlace: () => void;
 }) {
-  const tone = STRATEGY_TONE[s.id];
   // NaN is not Infinity: `Number.isFinite(NaN)` is false and `NaN > 0` is false,
   // so a failed computation used to print the confident-sounding "unbounded".
   // Show an em-dash instead — never dress a broken number as a risk statement.
@@ -1062,40 +1067,33 @@ function StrategyDetail({
           : "unbounded";
   const definedRisk = Number.isFinite(s.maxLoss);
   const chips: string[] = [
-    ...(Number.isFinite(s.cost) ? [s.cost > 0 ? "debit" : "credit"] : []),
-    s.bias,
-    ...(definedRisk ? ["defined risk"] : []),
+    ...(Number.isFinite(s.cost) ? [s.cost > 0 ? "Debit" : "Credit"] : []),
+    cap(s.bias),
+    ...(definedRisk ? ["Defined risk"] : []),
   ];
   const rr =
     Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0 ? s.maxProfit / Math.abs(s.maxLoss) : null;
   // `lead` marks the figures the decision actually turns on. They get the
   // decision tier; the rest stay chrome-sized so the promotion means something.
   const rail: { k: string; v: string; c: string; lead?: boolean }[] = [
-    { k: "max profit", v: fmt(s.maxProfit), c: "text-bull", lead: true },
-    { k: "max loss", v: fmt(s.maxLoss), c: "text-bear", lead: true },
+    { k: "Max profit", v: fmt(s.maxProfit), c: "text-bull", lead: true },
+    { k: "Max loss", v: fmt(s.maxLoss), c: "text-bear", lead: true },
     ...(s.breakevens.length
-      ? [{ k: "breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / "), c: "text-fg" }]
+      ? [{ k: "Breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / "), c: "text-fg" }]
       : []),
-    { k: "pop", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull", lead: true },
-    ...(rr != null ? [{ k: "r:r", v: rr.toFixed(2), c: "text-fg" }] : []),
+    { k: "POP", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull", lead: true },
+    ...(rr != null ? [{ k: "R:R", v: rr.toFixed(2), c: "text-fg" }] : []),
   ];
 
   return (
     <div className="border-t border-border p-3">
       {/* fact chips — derived from the strategy, never invented */}
       <div className="flex flex-wrap items-center gap-1">
-        {chips.map((c, i) => (
-          <span
-            key={c}
-            className={`border px-1.5 py-0.5 t-chrome ${
-              i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
-            }`}
-          >
-            {c}
-          </span>
+        {chips.map((c) => (
+          <Chip key={c}>{c}</Chip>
         ))}
-        <span className="ml-auto t-chrome text-fg-faint tabular-nums">
-          {s.cost > 0 ? "you pay" : "you collect"} ${Math.abs(s.cost).toFixed(0)}
+        <span className="ml-auto t-label text-fg-faint tabular-nums">
+          {s.cost > 0 ? "You pay" : "You collect"} ${Math.abs(s.cost).toFixed(0)}
         </span>
       </div>
 
@@ -1103,39 +1101,31 @@ function StrategyDetail({
       <div className="mt-3 flex items-stretch gap-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <PnlSparkline s={s} spot={spot} className="w-full min-h-16 flex-1" />
-          <div className="mt-1 text-center t-eyebrow text-fg-faint">
-            p/l @ expiration
+          <div className="mt-1 text-center t-label text-fg-faint">
+            P/L @ expiration
           </div>
         </div>
         <div className="grid w-[12.5rem] shrink-0 grid-cols-[auto_1fr] content-start gap-x-3 gap-y-1.5">
           {rail.map((it) => (
             <div key={it.k} className="contents">
-              <span className={`t-chrome ${it.lead ? "self-center text-fg-dim" : "text-fg-faint"}`}>{it.k}</span>
+              <span className={`t-label ${it.lead ? "self-center text-fg-dim" : "text-fg-faint"}`}>{it.k}</span>
               <span className={`text-right ${it.lead ? "t-figure" : "t-data text-[0.75rem]"} ${it.c}`}>{it.v}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* place CTA — bordered, inside the panel, tone-coloured like the cards */}
-      <button
-        type="button"
-        onClick={onPlace}
-        className="mt-3 flex w-full items-center justify-between border px-3 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-opacity hover:opacity-85 lg:py-2.5"
-        style={{ borderColor: tone.color, color: tone.color, background: tone.pillBg }}
-      >
-        <span className="inline-flex items-center gap-2">
-          <span className="size-1.5 rounded-full pulse-dot" style={{ background: tone.color }} />
-          place this trade on {symbol}
-        </span>
+      {/* place CTA — the page's one main action, inside the panel */}
+      <ToolButton primary onClick={onPlace} className="mt-3 w-full !h-9 !justify-between">
+        <span>Place this trade on {symbol}</span>
         <span>→</span>
-      </button>
+      </ToolButton>
       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
         <CopyLinkButton
           trade={{ underlying: symbol, spot, daysToExpiry, legs: s.legs }}
         />
-        <span className="ml-auto t-eyebrow text-fg-faint">
-          {Math.round(prob * 100)}% in band · black-scholes · paper only
+        <span className="ml-auto t-label text-fg-faint">
+          {Math.round(prob * 100)}% in band · Black-Scholes · paper only
         </span>
       </div>
     </div>
@@ -1161,14 +1151,9 @@ function CopyLinkButton({ trade }: { trade: SharedTradeInput }) {
     setTimeout(() => setState("idle"), 2200);
   };
   return (
-    <button
-      type="button"
-      onClick={copy}
-      title={url}
-      className="border border-border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
-    >
-      {state === "copied" ? "✓ link copied" : state === "failed" ? "copy failed" : "copy link ⧉"}
-    </button>
+    <ToolButton onClick={copy} title={url} className={DENSE}>
+      {state === "copied" ? "✓ Link copied" : state === "failed" ? "Copy failed" : "Copy link ⧉"}
+    </ToolButton>
   );
 }
 
@@ -1198,9 +1183,9 @@ function SharedTradePanel({
   const fmt = (n: number) =>
     Number.isNaN(n) ? "—" : `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}`;
   return (
-    <section className="surface-instrument border border-amber/40 bg-surface lg:shrink-0">
+    <section className="surface-instrument border border-border bg-surface lg:shrink-0">
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-bg-soft px-3 py-2">
-        <span className="t-eyebrow text-amber">⟢ shared trade · rebuilt in your builder · paper only</span>
+        <span className="t-eyebrow text-amber">Shared trade · rebuilt in your builder · paper only</span>
       </div>
       <div className="p-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -1225,28 +1210,23 @@ function SharedTradePanel({
         </ul>
         <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1">
           {[
-            { k: "max profit", v: fmt(sum.maxProfit), c: "text-bull" },
-            { k: "max loss", v: sum.unboundedRisk ? "unbounded" : fmt(sum.maxLoss), c: "text-bear" },
-            { k: sum.breakevens.length === 1 ? "breakeven" : "breakevens", v: sum.breakevens.length ? sum.breakevens.map((b) => b.toFixed(2)).join(" / ") : "—", c: "text-fg" },
+            { k: "Max profit", v: fmt(sum.maxProfit), c: "text-bull" },
+            { k: "Max loss", v: sum.unboundedRisk ? "unbounded" : fmt(sum.maxLoss), c: "text-bear" },
+            { k: sum.breakevens.length === 1 ? "Breakeven" : "Breakevens", v: sum.breakevens.length ? sum.breakevens.map((b) => b.toFixed(2)).join(" / ") : "—", c: "text-fg" },
           ].map((it) => (
             <div key={it.k}>
-              <div className="t-chrome text-fg-faint">{it.k}</div>
+              <div className="t-label text-fg-faint">{it.k}</div>
               <div className={`t-data text-[0.8125rem] ${it.c}`}>{it.v}</div>
             </div>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={onPlace}
-          disabled={placed || !!refusal}
-          className="mt-3 flex w-full items-center justify-between border border-amber/60 bg-amber/10 px-3 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-amber transition-opacity hover:opacity-85 disabled:opacity-40"
-        >
-          <span>{placed ? "✓ booked to your paper account" : `open this on paper · ${cost > 0 ? "you pay" : "you collect"} $${Math.abs(cost).toFixed(0)}`}</span>
+        <ToolButton onClick={onPlace} disabled={placed || !!refusal} className="mt-3 w-full !h-9 !justify-between">
+          <span>{placed ? "✓ Booked to your paper account" : `Open this on paper · ${cost > 0 ? "you pay" : "you collect"} $${Math.abs(cost).toFixed(0)}`}</span>
           <span>{placed ? "" : "→"}</span>
-        </button>
-        {refusal && !placed && <p className="mt-2 t-body-sm text-bear">{refusal}</p>}
-        <div className="mt-1.5 t-eyebrow text-fg-faint">
-          someone else built this · prices are yours, not theirs · nothing here is advice
+        </ToolButton>
+        {refusal && !placed && <p className="mt-2 t-body-sm text-amber">{refusal}</p>}
+        <div className="mt-1.5 t-label text-fg-faint">
+          Someone else built this · prices are yours, not theirs · nothing here is advice
         </div>
       </div>
     </section>
@@ -1312,20 +1292,19 @@ function TeacherPanel({
     <section className="flex flex-col surface-instrument border border-border bg-surface lg:shrink-0">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
         <span className="flex items-center gap-2 t-eyebrow text-fg-dim">
-          ai teacher
-          <span className="border border-bull/40 bg-bull/10 px-1 py-px t-eyebrow text-bull">beta</span>
+          AI teacher
+          <Chip>Beta</Chip>
         </span>
-        <button
-          type="button"
+        <ToolButton
           onClick={() => {
             setOpen(true);
             onExplain();
           }}
           disabled={!selected || narrating}
-          className="border border-bull/40 bg-bull/10 px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-bull transition-colors hover:bg-bull/20 disabled:cursor-not-allowed disabled:opacity-40"
+          className={DENSE}
         >
-          explain this position
-        </button>
+          Explain this position
+        </ToolButton>
       </div>
 
       {open && (
@@ -1336,7 +1315,7 @@ function TeacherPanel({
             speaker="teacher"
             text={
               selected
-                ? `This panel describes the ${selected.kind} you built — max profit, max loss, breakevens, and what can go wrong. Press "explain this position", or type a question below.`
+                ? `This panel describes the ${selected.kind} you built — max profit, max loss, breakevens, and what can go wrong. Press “Explain this position”, or type a question below.`
                 : "Pick an example strategy to get a plain-English read of the position."
             }
           />
@@ -1344,7 +1323,7 @@ function TeacherPanel({
         {thread.map((m, i) => (
           <TeacherBubble key={i} speaker={m.role} text={m.text} />
         ))}
-        {narrating && <TeacherBubble speaker="teacher" text="teacher is thinking…" thinking />}
+        {narrating && <TeacherBubble speaker="teacher" text="Teacher is thinking…" thinking />}
         {paywall && !narrating && <UpgradeNudge paywall={paywall} onClose={onDismissPaywall} />}
         <div ref={endRef} />
       </div>
@@ -1355,23 +1334,23 @@ function TeacherPanel({
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask anything about this trade..."
           disabled={!selected}
-          className="min-w-0 flex-1 border border-border bg-bg px-3 py-2 font-mono text-[0.75rem] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-bull/50 disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-[var(--r-instrument)] border border-border bg-bg px-3 py-2 text-[0.8125rem] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-brand-ink/60 disabled:opacity-50"
         />
-        <button
+        <ToolButton
           type="submit"
           disabled={!selected || narrating || !q.trim()}
           aria-label="ask the teacher"
-          className="flex size-9 shrink-0 items-center justify-center btn-grad transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+          className="!size-9 shrink-0 !p-0"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M5 12h14M13 5l7 7-7 7" />
           </svg>
-        </button>
+        </ToolButton>
       </form>
       {/* The server's disclosure string once an answer has arrived
           (lib/billing/explain-policy.ts); the house line before that. */}
-      <div className="border-t border-border-soft px-3 py-1.5 t-eyebrow text-fg-faint">
-        {disclosure ?? "describes the position you built · education, not advice"}
+      <div className="border-t border-border-soft px-3 py-1.5 t-label text-fg-faint">
+        {disclosure ?? "Describes the position you built · education, not advice"}
       </div>
       </>
       )}
@@ -1391,12 +1370,12 @@ function TeacherBubble({ speaker, text, thinking }: { speaker: "user" | "teacher
   }
   return (
     <div className="flex items-end gap-2">
-      <span className="flex size-8 shrink-0 select-none items-center justify-center border border-bull/40 bg-bg font-mono text-[0.75rem] text-bull" aria-hidden>
+      <span className="flex size-8 shrink-0 select-none items-center justify-center rounded-[var(--r-instrument)] border border-border bg-bg font-mono text-[0.75rem] text-brand-ink" aria-hidden>
         :]
       </span>
       <div
-        className={`relative max-w-[85%] whitespace-pre-line border border-bull/40 bg-surface px-3 py-2 leading-relaxed ${
-          thinking ? "font-mono text-[0.6875rem] text-fg-faint" : "text-[0.75rem] text-fg"
+        className={`relative max-w-[85%] whitespace-pre-line border border-border bg-surface px-3 py-2 leading-relaxed ${
+          thinking ? "text-[0.75rem] text-fg-faint" : "text-[0.75rem] text-fg"
         }`}
       >
         {text}

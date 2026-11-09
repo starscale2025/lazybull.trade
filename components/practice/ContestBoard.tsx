@@ -18,9 +18,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Chip, PageHeader, Stats } from "@/components/calm/kit";
 import { RollingNumber } from "@/components/pro/RollingNumber";
 import { Panel } from "@/components/practice/Panel";
-import { DifficultyPill, Eyebrow, TrackChip } from "@/components/practice/Chips";
+import { DifficultyPill, TrackChip } from "@/components/practice/Chips";
 import { Empty, Td, Th, Tr } from "@/components/practice/Table";
 import { fetchContest, type ContestResponse } from "@/lib/practice/client";
 import { WEEKLY_SET, editionAt, formatCountdown, formatDuration, nextStart, type Edition } from "@/lib/practice/contest";
@@ -93,96 +94,156 @@ export function ContestBoard() {
   }, [board, state, mounted]);
 
   return (
-    <section className="shell section-y-sm">
-      {/* header */}
-      <Eyebrow tone="cyan">weekly set · timed practice</Eyebrow>
-      <h1 className="mt-3 t-title">
-        Weekly set <span className="t-accent">№{edition ? edition.num : " —"}.</span>
-      </h1>
-      <p className="mt-4 max-w-[60ch] t-body text-fg-dim">
-        Four problems, ninety minutes, Sunday 20:00 IST. Ranked on solves and time — never on money. No sign-up: an
-        accepted submit on any of the four inside the window puts you on the board.
-      </p>
-
-      {/* countdown — four Stat-style tiles in the hairline grid */}
-      <div className="mt-6 t-chrome text-fg-faint">{edition?.open ? "closes in" : "next set in"}</div>
-      <div
-        role="timer"
-        aria-live="off"
-        aria-label={left ? `${edition?.open ? "closes" : "next set"} in ${left.d} days ${left.h} hours ${left.m} minutes` : "countdown loading"}
-        className="mt-2 grid max-w-md grid-cols-4 gap-px border border-border bg-border"
+    <>
+      <PageHeader
+        eyebrow="Timed practice"
+        title="Weekly set"
+        accent={`№${edition ? edition.num : " —"}.`}
+        lede="Four problems, ninety minutes, Sunday 20:00 IST. Ranked on solves and time — never on money. No sign-up: an accepted submit on any of the four inside the window puts you on the board."
       >
-        {UNITS.map((u) => (
-          <div key={u.key} className="bg-bg p-3">
-            <div className="t-figure text-fg">
-              {left ? <RollingNumber value={Number(left[u.key])} format={pad2} /> : "--"}
-            </div>
-            <div className="mt-1 t-chrome text-fg-faint">{u.label}</div>
-          </div>
-        ))}
-      </div>
+        {/* The countdown: the four figures of the kit's stat row. */}
+        <div className="mt-10 t-label text-fg-faint">{edition?.open ? "Closes in" : "Next set in"}</div>
+        <div
+          role="timer"
+          aria-live="off"
+          aria-label={left ? `${edition?.open ? "closes" : "next set"} in ${left.d} days ${left.h} hours ${left.m} minutes` : "countdown loading"}
+          className="mt-3"
+        >
+          <Stats
+            className="max-sm:gap-x-6"
+            items={UNITS.map((u) => ({
+              label: u.label,
+              value: left ? <RollingNumber value={Number(left[u.key])} format={pad2} /> : "--",
+            }))}
+          />
+        </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 t-chrome text-fg-faint">
-        {edition?.open ? <span className="text-bull">● open now — solve any of the four</span> : <span>problems stay solvable between editions; only the window counts</span>}
-        <span>paper only · educational · not advice</span>
-      </div>
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.8125rem] text-fg-faint">
+          {edition?.open ? (
+            <Chip tone="brand" dot>
+              Open now — solve any of the four
+            </Chip>
+          ) : (
+            <span>Problems stay solvable between editions; only the window counts</span>
+          )}
+          <span>Paper only · educational · not advice</span>
+        </div>
+      </PageHeader>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0 space-y-6">
-          <Panel
-            title="The set"
-            sub={`${set.length} problems · ${WEEKLY_SET.durationMin} minutes · sunday 20:00 ist`}
-            footer={<span className="t-chrome text-fg-faint">the same four every week for now — the set rotates once the board has a history</span>}
-          >
-            <ol>
-              {set.map((p, i) => (
-                <li
-                  key={p.id}
-                  className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-3 border-b border-border-soft px-3 py-3 last:border-b-0"
-                >
-                  <span className="t-data t-chrome text-fg-faint">{String(i + 1).padStart(2, "0")}</span>
-                  <div className="min-w-0">
-                    <Link
-                      href={`/practice/${p.id}`}
-                      className="font-display text-[0.9375rem] tracking-tightest text-fg hover:text-bull"
-                    >
-                      {p.title}
-                    </Link>
-                    <div className="mt-1">
-                      <TrackChip track={p.track} />
+      <section className="shell pb-16">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="min-w-0 space-y-6">
+            <Panel
+              calm
+              title="The set"
+              sub={`${set.length} problems · ${WEEKLY_SET.durationMin} minutes · Sunday 20:00 IST`}
+              bodyClassName="px-3 pt-2"
+              footer={<span className="t-label text-fg-faint">The same four every week for now — the set rotates once the board has a history</span>}
+            >
+              <ol>
+                {set.map((p, i) => (
+                  <li
+                    key={p.id}
+                    className="grid grid-cols-[1.5rem_1fr] items-center gap-3 border-b border-[color-mix(in_srgb,var(--fg)_6%,transparent)] px-2 py-3 last:border-b-0 sm:grid-cols-[1.5rem_1fr_auto]"
+                  >
+                    <span className="t-data text-[0.75rem] text-fg-faint">{String(i + 1).padStart(2, "0")}</span>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/practice/${p.id}`}
+                        className="font-sans text-[0.9375rem] font-medium tracking-[-0.01em] text-fg hover:text-brand-ink"
+                      >
+                        {p.title}
+                      </Link>
+                      <div className="mt-1">
+                        <TrackChip track={p.track} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DifficultyPill difficulty={p.difficulty} />
-                    <span className="whitespace-nowrap t-chrome text-fg-faint">{p.minutes} min</span>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </Panel>
+                    <div className="col-start-2 flex items-center gap-2 sm:col-start-3">
+                      <DifficultyPill difficulty={p.difficulty} />
+                      <span className="whitespace-nowrap t-label text-fg-faint">{p.minutes} min</span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </Panel>
 
-          <Panel title="Past sets" right={board ? "from real submissions" : data === "error" ? "unavailable" : "loading"} bodyClassName="overflow-x-auto p-2">
-            {past.length === 0 ? (
-              <Empty>{data === null ? "loading…" : data === "error" ? "the board could not be reached" : "no past editions yet — this is the first"}</Empty>
+            <Panel
+              calm
+              title="Past sets"
+              right={board ? "From real submissions" : data === "error" ? "Unavailable" : "Loading"}
+              bodyClassName="overflow-x-auto px-3 pb-2 pt-2"
+            >
+              {past.length === 0 ? (
+                <Empty>{data === null ? "Loading…" : data === "error" ? "The board could not be reached" : "No past editions yet — this is the first"}</Empty>
+              ) : (
+                <table className="w-full t-data text-[0.6875rem]">
+                  <thead>
+                    <Tr head>
+                      <Th left>№</Th>
+                      <Th left>Date</Th>
+                      <Th>Solvers</Th>
+                      <Th>You</Th>
+                    </Tr>
+                  </thead>
+                  <tbody>
+                    {past.map((s) => (
+                      <Tr key={s.num}>
+                        <Td left strong>
+                          №{s.num}
+                        </Td>
+                        <Td left>{mounted ? new Date(s.start).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}</Td>
+                        <Td>{s.solvers}</Td>
+                        <Td>{s.you === null ? "—" : `${s.you}/${s.total}`}</Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </Panel>
+          </div>
+
+          <Panel
+            calm
+            title="Board"
+            sub="Ranked on solves, then time — never P&L"
+            right={board ? (board.dbOk ? `№${board.set.num}` : "Unavailable") : data === "error" ? "Unavailable" : "Loading"}
+            bodyClassName="overflow-x-auto px-3 pb-2 pt-2"
+            footer={<span className="t-label text-fg-faint">No prizes, no cash, no returns — a practice set</span>}
+          >
+            {rows.length === 0 ? (
+              <Empty>
+                {data === null
+                  ? "Loading…"
+                  : data === "error" || !board?.dbOk
+                    ? "The board could not be reached"
+                    : board.set.upcoming
+                      ? "The first edition has not started yet"
+                      : "No accepted submits in this window yet"}
+              </Empty>
             ) : (
               <table className="w-full t-data text-[0.6875rem]">
                 <thead>
                   <Tr head>
-                    <Th left>№</Th>
-                    <Th left>date</Th>
-                    <Th>solvers</Th>
-                    <Th>you</Th>
+                    <Th>#</Th>
+                    <Th left>Solver</Th>
+                    <Th>Solved</Th>
+                    <Th>Time</Th>
                   </Tr>
                 </thead>
                 <tbody>
-                  {past.map((s) => (
-                    <Tr key={s.num}>
-                      <Td left strong>
-                        №{s.num}
+                  {rows.map((r) => (
+                    <Tr key={r.rank}>
+                      <Td>
+                        <span className={r.rank <= 3 ? "text-brand-ink" : "text-fg-faint"}>{r.rank}</span>
                       </Td>
-                      <Td left>{mounted ? new Date(s.start).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}</Td>
-                      <Td>{s.solvers}</Td>
-                      <Td>{s.you === null ? "—" : `${s.you}/${s.total}`}</Td>
+                      <Td left strong>
+                        {r.name}
+                      </Td>
+                      <Td>
+                        {r.solved}
+                        <span className="text-fg-faint">/{r.total}</span>
+                      </Td>
+                      <Td>{formatDuration(r.timeMs)}</Td>
                     </Tr>
                   ))}
                 </tbody>
@@ -190,55 +251,7 @@ export function ContestBoard() {
             )}
           </Panel>
         </div>
-
-        <Panel
-          title="Board"
-          sub="ranked on solves, then time — never P&L"
-          right={board ? (board.dbOk ? `№${board.set.num}` : "unavailable") : data === "error" ? "unavailable" : "loading"}
-          bodyClassName="overflow-x-auto p-2"
-          footer={<span className="t-chrome text-fg-faint">no prizes, no cash, no returns — a practice set</span>}
-        >
-          {rows.length === 0 ? (
-            <Empty>
-              {data === null
-                ? "loading…"
-                : data === "error" || !board?.dbOk
-                  ? "the board could not be reached"
-                  : board.set.upcoming
-                    ? "the first edition has not started yet"
-                    : "no accepted submits in this window yet"}
-            </Empty>
-          ) : (
-            <table className="w-full t-data text-[0.6875rem]">
-              <thead>
-                <Tr head>
-                  <Th>#</Th>
-                  <Th left>solver</Th>
-                  <Th>solved</Th>
-                  <Th>time</Th>
-                </Tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <Tr key={r.rank}>
-                    <Td>
-                      <span className={r.rank <= 3 ? "text-bull" : "text-fg-faint"}>{r.rank}</span>
-                    </Td>
-                    <Td left strong>
-                      {r.name}
-                    </Td>
-                    <Td>
-                      {r.solved}
-                      <span className="text-fg-faint">/{r.total}</span>
-                    </Td>
-                    <Td>{formatDuration(r.timeMs)}</Td>
-                  </Tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Panel>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

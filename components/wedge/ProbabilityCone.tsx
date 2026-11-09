@@ -16,7 +16,7 @@ export type Cone = {
   onChangeHigh: (v: number) => void;
   onChangeDays?: (v: number) => void;
   events?: MarketEvent[];
-  /** When provided, labels the draggable band "N% PROBABILITY RANGE" (ref terminal look). */
+  /** When provided, labels the draggable band "N% probability range". */
   bandProb?: number;
   /**
    * THE POSITION, PROJECTED ONTO THE FORECAST.
@@ -271,9 +271,9 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           priced off a default band the user never chose.
           IN THE HEADER STRIP, not floating over the plot — the top-left corner
           belongs to the in-band ring, and the inputs were flush against it. */}
-      <div className="flex shrink-0 items-center justify-end gap-3 px-2 pb-1 pt-2 t-chrome text-fg-faint">
+      <div className="flex shrink-0 items-center justify-end gap-3 px-2 pb-1 pt-2 t-label text-fg-faint">
         <label className="flex items-center gap-1">
-          hi
+          Hi
           <input
             type="number"
             value={Number(high.toFixed(2))}
@@ -283,11 +283,11 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeHigh(clampPrice(Math.max(low + 0.5, v)));
             }}
             aria-label="Band high price"
-            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[0.6875rem] normal-case text-bull outline-none [appearance:textfield] focus:border-bull [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[9ch] rounded-[var(--r-instrument)] border border-border bg-bg px-1 py-0.5 t-data text-[0.6875rem] text-bull outline-none [appearance:textfield] focus:border-brand-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
         <label className="flex items-center gap-1">
-          lo
+          Lo
           <input
             type="number"
             value={Number(low.toFixed(2))}
@@ -297,7 +297,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               if (Number.isFinite(v)) onChangeLow(clampPrice(Math.min(high - 0.5, v)));
             }}
             aria-label="Band low price"
-            className="w-[9ch] border border-border bg-bg px-1 py-0.5 text-[0.6875rem] normal-case text-bear outline-none [appearance:textfield] focus:border-bear [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-[9ch] rounded-[var(--r-instrument)] border border-border bg-bg px-1 py-0.5 t-data text-[0.6875rem] text-bear outline-none [appearance:textfield] focus:border-brand-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </label>
       </div>
@@ -323,7 +323,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           const covered = pillYs.some((py) => Math.abs(y - py) < 12);
           return (
             <g key={i}>
-              <line x1={PAD.L} x2={size.w - PAD.R} y1={y} y2={y} stroke="rgba(245,245,240,0.05)" />
+              <line x1={PAD.L} x2={size.w - PAD.R} y1={y} y2={y} stroke="var(--fg)" strokeOpacity="0.05" />
               {!covered && (
                 <text x={size.w - PAD.R + 8} y={y + 3} fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
                   {p.toFixed(2)}
@@ -345,14 +345,14 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
             "L" (no moveto) and threw an SVG error on every page load. */}
         {histPath && (
           <>
-            <path d={`${histPath} L${xOf(histN - 1)},${size.h - PAD.B} L${xOf(0)},${size.h - PAD.B} Z`} fill="rgba(245,245,240,0.04)" className="svg-fade-in" />
+            <path d={`${histPath} L${xOf(histN - 1)},${size.h - PAD.B} L${xOf(0)},${size.h - PAD.B} Z`} fill="var(--fg)" fillOpacity="0.04" className="svg-fade-in" />
             <path d={histPath} fill="none" stroke="var(--fg)" strokeWidth="1.4" pathLength={1} className="svg-draw-in" />
           </>
         )}
 
         {/* "now" line */}
         <line x1={xOf(histN - 1)} x2={xOf(histN - 1)} y1={PAD.T} y2={size.h - PAD.B} stroke="var(--fg-faint)" strokeDasharray="2 4" />
-        <text x={xOf(histN - 1) + 4} y={PAD.T + 12} fontFamily="var(--font-jetbrains)" fontSize="9" fill="var(--fg-faint)">NOW</text>
+        <text x={xOf(histN - 1) + 4} y={PAD.T + 12} fontFamily="var(--font-sans)" fontSize="10" fill="var(--fg-faint)">Now</text>
 
         {/* User band */}
         <rect
@@ -500,7 +500,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           );
         })()}
 
-        {/* Band label + handle squares — "N% PROBABILITY RANGE" (ref terminal look) */}
+        {/* Band label + handle squares — "N% probability range" */}
         {bandProb != null && (() => {
           const xs = xOf(histN - 1);
           const bandTop = Math.min(yLow, yHigh);
@@ -518,12 +518,11 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
               <text
                 x={xs + 8}
                 y={labelY}
-                fontFamily="var(--font-jetbrains)"
-                fontSize="9"
-                letterSpacing="1.5"
+                fontFamily="var(--font-sans)"
+                fontSize="10"
                 fill="var(--bull)"
               >
-                {Math.round(bandProb * 100)}% PROBABILITY RANGE
+                {Math.round(bandProb * 100)}% probability range
               </text>
               <rect x={xs + (xExpiry - xs) * 0.3 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--bull)" strokeWidth="1.2" />
               <rect x={xs + (xExpiry - xs) * 0.7 - 3} y={bandTop - 3} width="6" height="6" fill="var(--bg)" stroke="var(--bull)" strokeWidth="1.2" />
@@ -577,7 +576,7 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
             already names Black-Scholes, and the longer label ran back across
             the NOW line. */}
         <g pointerEvents="none">
-          <text x={xExpiry - 6} y={PAD.T + 32} textAnchor="end" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
+          <text x={xExpiry - 6} y={PAD.T + 32} textAnchor="end" fontFamily="var(--font-sans)" fontSize="10" fill="var(--fg-faint)">
             ◐ 50% / 68% / 95% implied range
           </text>
         </g>
@@ -597,9 +596,9 @@ export function ProbabilityCone({ bars, spot, iv, daysToExpiry, low, high, onCha
           for good after the first drag — an instruction already followed is
           just noise on the plot. */}
       <div
-        className={`pointer-events-none absolute bottom-9 left-4 t-chrome text-fg-faint transition-opacity duration-700 ${touched ? "opacity-0" : "opacity-100"}`}
+        className={`pointer-events-none absolute bottom-9 left-4 t-label text-fg-faint transition-opacity duration-700 ${touched ? "opacity-0" : "opacity-100"}`}
       >
-        <span className="text-bull">drag bands</span> · <span className="text-amber">drag exp line</span> ⟷
+        Drag bands · drag exp line ⟷
       </div>
       </div>
     </div>

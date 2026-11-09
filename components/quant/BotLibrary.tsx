@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { BotDef, BotCategory } from "@/lib/quant/types";
 import { CATEGORY_META } from "@/lib/quant/types";
+import { Chip, TogglePill } from "@/components/calm/kit";
 
 export function BotLibrary({
   bots,
@@ -41,55 +42,45 @@ export function BotLibrary({
   const categories: (BotCategory | "all")[] = ["all", "ai", "trend", "stats", "risk", "options", "custom"];
 
   return (
-    <aside className="flex h-full flex-col surface-instrument border border-border bg-surface">
+    <aside className="calm-panel flex h-full flex-col">
+      <i aria-hidden className="lit-aura" />
       {/* header */}
-      <div className="border-b border-border bg-bg-soft px-3 py-2">
+      <div className="px-4 pb-2.5 pt-4">
         <div className="flex items-baseline justify-between">
-          <span className="font-display text-base tracking-tightest text-fg">Bot library</span>
-          <span className="t-chrome text-fg-faint">
+          <span className="text-[0.9375rem] font-semibold tracking-[-0.01em] text-fg">Bot library</span>
+          <span className="t-label text-fg-faint">
             {bots.length + customBots.length} loaded
           </span>
         </div>
-        <div className="mt-1 t-chrome text-fg-faint">
-          click → add to workspace
+        <div className="mt-1 t-label text-fg-faint">
+          Click → add to workspace
         </div>
       </div>
 
       {/* search */}
-      <div className="border-b border-border-soft p-2">
+      <div className="px-3 pb-2.5">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="search bots…"
-          className="h-8 w-full border border-border bg-bg px-2 font-mono text-[0.6875rem] text-fg placeholder:text-fg-faint focus:border-bull focus:outline-none"
+          placeholder="Search bots…"
+          className="calm-input w-full"
         />
       </div>
 
-      {/* filter chips */}
-      <div className="flex flex-wrap gap-1 border-b border-border-soft p-2">
-        {categories.map((c) => {
-          const meta = c === "all" ? null : CATEGORY_META[c];
-          const isOn = filter === c;
-          return (
-            <button
-              key={c}
-              onClick={() => setFilter(c)}
-              className={`h-7 border px-2 font-mono text-[0.625rem] uppercase tracking-wider ${
-                isOn ? "border-bull bg-bull text-bg" : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
-              }`}
-              style={!isOn && meta ? { color: meta.color } : undefined}
-            >
-              {c === "all" ? "all" : meta?.label.split(" ")[0]}
-            </button>
-          );
-        })}
+      {/* filters */}
+      <div className="flex flex-wrap gap-1.5 px-3 pb-3">
+        {categories.map((c) => (
+          <TogglePill key={c} on={filter === c} onClick={() => setFilter(c)}>
+            {c === "all" ? "All" : CATEGORY_META[c].label.split(" ")[0]}
+          </TogglePill>
+        ))}
       </div>
 
       {/* list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto border-t border-border-soft">
         {visible.length === 0 && (
-          <div className="grid h-32 place-items-center t-chrome text-fg-faint">
-            no bots match
+          <div className="grid h-32 place-items-center t-label text-fg-faint">
+            No bots match
           </div>
         )}
         {visible.map((b) => {
@@ -99,59 +90,54 @@ export function BotLibrary({
             <div
               key={b.id}
               className={`group relative border-b border-border-soft transition-colors ${
-                isActive ? "bg-bull/[0.06]" : ""
+                isActive ? "bg-brand-ink/[0.07]" : ""
               }`}
             >
               <button
                 onClick={() => (isActive ? onRemove(b.id) : onAdd(b))}
                 title={isActive ? "click to remove from workspace" : "click to add to workspace"}
-                className={`block w-full px-3 py-2.5 pb-7 pr-9 text-left transition-colors ${
-                  isActive ? "hover:bg-bear/10" : "hover:bg-bg"
-                }`}
+                className="block w-full px-4 py-2.5 pb-7 pr-9 text-left transition-colors hover:bg-fg/5"
               >
                 <div className="flex items-start gap-3">
-                  <span
-                    className="grid size-7 shrink-0 place-items-center border border-border bg-bg font-mono text-[0.75rem]"
-                    style={{ color: cat.color }}
-                  >
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-[0.75rem] text-brand-ink">
                     {b.glyph}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="line-clamp-2 font-display text-[0.875rem] leading-tight tracking-tightest text-fg">
+                      <span className="line-clamp-2 text-[0.875rem] font-medium leading-tight tracking-[-0.01em] text-fg">
                         {b.name}
                       </span>
                       {b.category === "ai" && (
-                        <span className="border border-bear/50 bg-bear/10 px-1 t-chrome text-bear" title={b.endpoint ?? "ai quants"}>
-                          AI
+                        <span className="inline-flex" title={b.endpoint ?? "ai quants"}>
+                          <Chip tone="brand">AI</Chip>
                         </span>
                       )}
                       {isActive && (
-                        <span className="size-1.5 rounded-full bg-bull pulse-dot" title="in workspace" />
+                        <span className="size-1.5 shrink-0 rounded-full bg-brand-ink" title="in workspace" />
                       )}
                     </div>
-                    <div className="mt-0.5 t-chrome" style={{ color: cat.color }}>
+                    <div className="mt-0.5 t-label text-fg-faint">
                       {cat.label}
                     </div>
-                    <div className="mt-1 line-clamp-2 text-[0.6875rem] text-fg-dim">{b.tagline}</div>
+                    <div className="mt-1 line-clamp-2 text-[0.75rem] leading-snug text-fg-dim">{b.tagline}</div>
                   </div>
                   <span
-                    className={`shrink-0 font-mono text-[0.625rem] uppercase tracking-wider ${
+                    className={`t-label shrink-0 ${
                       isActive
-                        ? "text-bull group-hover:text-bear"
-                        : "text-fg-faint group-hover:text-bull"
+                        ? "text-brand-ink group-hover:text-fg"
+                        : "text-fg-faint group-hover:text-brand-ink"
                     }`}
                   >
                     {isActive ? (
                       <>
-                        <span className="group-hover:hidden">✓ added</span>
-                        <span className="hidden group-hover:inline">− remove</span>
+                        <span className="group-hover:hidden">✓ Added</span>
+                        <span className="hidden group-hover:inline">− Remove</span>
                       </>
                     ) : (
                       /* only surfaces on hover/focus — an always-on label in
                          every row stole ~50px from the bot name (Q5) */
                       <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                        + add
+                        + Add
                       </span>
                     )}
                   </span>
@@ -163,7 +149,7 @@ export function BotLibrary({
                 rel="noopener noreferrer"
                 title={`Read about ${b.name} — math, code, when it works, when it fails`}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-1.5 right-2 z-10 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint hover:border-cyan hover:text-cyan"
+                className="t-label absolute bottom-1.5 right-3 z-10 inline-flex items-center gap-1 text-fg-faint transition-colors hover:text-brand-ink"
               >
                 ⓘ About
               </a>
@@ -173,18 +159,18 @@ export function BotLibrary({
       </div>
 
       {/* footer: import */}
-      <div className="border-t border-border bg-bg-soft p-2">
+      <div className="p-3">
         <button
           onClick={onImport}
-          className="group flex w-full items-center justify-between border border-dashed border-border bg-bg px-3 py-3 transition-colors hover:border-bull hover:bg-bull/5"
+          className="calm-pill-secondary group flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-left transition-colors"
         >
           <div>
-            <div className="font-display text-sm tracking-tightest text-fg">+ Import your bot</div>
-            <div className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
+            <div className="text-[0.875rem] font-medium tracking-[-0.01em] text-fg">+ Import your bot</div>
+            <div className="mt-0.5 t-label text-fg-faint">
               .ts · .js · paste code
             </div>
           </div>
-          <span className="font-mono text-base text-fg-dim group-hover:text-bull">↗</span>
+          <span className="text-base text-fg-dim group-hover:text-brand-ink">↗</span>
         </button>
       </div>
     </aside>

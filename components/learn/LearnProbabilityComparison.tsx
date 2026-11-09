@@ -90,21 +90,21 @@ export function LearnProbabilityComparison() {
 
   return (
     <div className="space-y-4">
-      <div className="surface-card border border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-          <span>price distribution at expiry · spot ${SPOT}</span>
-          <span>iv {(iv * 100).toFixed(0)}% · {days}d</span>
+      <div className="rounded-xl bg-fg/[0.05]">
+        <div className="flex items-center justify-between px-3.5 pt-3 t-label text-fg-dim">
+          <span>Price distribution at expiry · spot ${SPOT}</span>
+          <span>IV {(iv * 100).toFixed(0)}% · {days}d</span>
         </div>
         <svg viewBox={`0 0 ${W} ${H}`} className="block w-full">
           {/* x-axis ticks */}
           {[70, 80, 90, 100, 110, 120, 130, 140].map((p) => (
             <g key={p}>
-              <line x1={xOf(p)} x2={xOf(p)} y1={padT + innerH} y2={padT + innerH + 4} stroke="rgba(245,245,240,0.2)" />
+              <line x1={xOf(p)} x2={xOf(p)} y1={padT + innerH} y2={padT + innerH + 4} stroke="var(--fg)" strokeOpacity="0.2" />
               <text x={xOf(p)} y={padT + innerH + 16} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">${p}</text>
             </g>
           ))}
           {/* spot reference */}
-          <line x1={xOf(SPOT)} x2={xOf(SPOT)} y1={padT} y2={padT + innerH} stroke="rgba(245,245,240,0.25)" strokeDasharray="3 3" />
+          <line x1={xOf(SPOT)} x2={xOf(SPOT)} y1={padT} y2={padT + innerH} stroke="var(--fg)" strokeOpacity="0.25" strokeDasharray="3 3" />
 
           {/* Band shaded green */}
           <rect x={bandLeft} y={padT} width={Math.max(0, bandRight - bandLeft)} height={innerH} fill="var(--bull)" fillOpacity="0.12" />
@@ -123,7 +123,7 @@ export function LearnProbabilityComparison() {
       <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-12">
         {/* Sliders */}
         <div className="@2xl:col-span-5 space-y-3">
-          <div className="surface-card border border-border bg-surface p-4">
+          <div className="rounded-xl bg-fg/[0.05] p-4">
             <Slider label="Low strike" value={low} setValue={(v) => setLow(Math.min(v, high - 1))} min={70} max={130} step={0.5} suffix="" prefix="$" />
             <Slider label="High strike" value={high} setValue={(v) => setHigh(Math.max(v, low + 1))} min={70} max={140} step={0.5} suffix="" prefix="$" />
             <Slider label="Days to expiry" value={days} setValue={setDays} min={5} max={120} step={1} suffix="d" />
@@ -136,31 +136,28 @@ export function LearnProbabilityComparison() {
           <ProbCard
             label="Black-Scholes"
             value={bs}
-            tone="bull"
-            subtitle="closed-form analytical"
+            subtitle="Closed-form analytical"
             note="Assumes returns are perfectly lognormal. Fast, deterministic, ignores fat tails."
           />
           <ProbCard
             label="Monte Carlo"
             value={mc}
-            tone="cyan"
             subtitle="4,000 simulated paths"
             note="Same lognormal assumption as BS but via simulation. Will eventually converge to BS at infinite paths."
           />
           <ProbCard
             label="Empirical"
             value={emp}
-            tone="amber"
-            subtitle="fat-tailed mixture"
+            subtitle="Fat-tailed mixture"
             note="85% Gaussian + 15% Cauchy — simulates real-market kurtosis. Disagrees with BS at the wings."
           />
         </div>
       </div>
 
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim leading-relaxed">
-        <span className="text-fg-faint">read this →</span> the three numbers should be close near the
-        center, but as you push the band into the wings (deep OTM), <span className="text-amber">empirical</span> tends to
-        give a higher probability than <span className="text-bull">BS</span> because real markets have
+      <div className="text-[0.8125rem] leading-relaxed text-fg-dim">
+        <span className="text-fg-faint">Read this →</span> the three numbers should be close near the
+        center, but as you push the band into the wings (deep OTM), <span className="text-fg">empirical</span> tends to
+        give a higher probability than <span className="text-fg">BS</span> because real markets have
         fatter tails than lognormal admits. Stack <span className="text-fg">probAll()</span> in the
         Wedge tools to see all three at once on real positions.
       </div>
@@ -168,15 +165,14 @@ export function LearnProbabilityComparison() {
   );
 }
 
-function ProbCard({ label, value, tone, subtitle, note }: { label: string; value: number; tone: "bull" | "cyan" | "amber"; subtitle: string; note: string }) {
-  const color = tone === "bull" ? "var(--bull)" : tone === "cyan" ? "var(--cyan)" : "var(--amber)";
+function ProbCard({ label, value, subtitle, note }: { label: string; value: number; subtitle: string; note: string }) {
   return (
-    <div className="surface-card border border-border bg-surface p-4 flex flex-col">
-      <div className="flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider" style={{ color }}>
-        <span>{label}</span>
-        <span className="text-fg-faint">{subtitle}</span>
+    <div className="rounded-xl bg-fg/[0.05] p-4 flex flex-col">
+      <div className="t-label">
+        <div className="font-medium text-fg">{label}</div>
+        <div className="text-fg-faint">{subtitle}</div>
       </div>
-      <div className="mt-3 font-display text-4xl tabular-nums" style={{ color }}>
+      <div className="mt-3 font-display text-4xl tabular-nums text-fg">
         {(value * 100).toFixed(1)}%
       </div>
       <p className="mt-2 text-[0.6875rem] leading-relaxed text-fg-dim">{note}</p>
@@ -189,11 +185,11 @@ function ProbCard({ label, value, tone, subtitle, note }: { label: string; value
 function Slider({ label, value, setValue, min, max, step, suffix, prefix = "" }: { label: string; value: number; setValue: (n: number) => void; min: number; max: number; step: number; suffix: string; prefix?: string }) {
   return (
     <label className="flex flex-col gap-1 mb-3 last:mb-0">
-      <span className="flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
+      <span className="flex items-center justify-between t-label text-fg-dim">
         <span>{label}</span>
         <span className="font-mono text-[0.75rem] tabular-nums text-fg">{prefix}{typeof value === "number" ? value.toFixed(step < 1 ? 1 : 0) : value}{suffix}</span>
       </span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => setValue(parseFloat(e.target.value))} className="h-1 w-full accent-bull" />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => setValue(parseFloat(e.target.value))} className="h-1 w-full accent-brand-ink" />
     </label>
   );
 }

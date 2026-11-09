@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { getLenis, registerLenis } from "@/lib/motion/scroll";
 import { initMotionPause, isMotionPaused, motion, onMotionPausedChange } from "@/lib/motion/bus";
+import { isToolRoute } from "@/lib/motion/routes";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -43,7 +44,6 @@ if (typeof window !== "undefined") {
  * window.scrollTo: Lenis rewrites the position on its next frame. Each tick
  * also writes the page's scroll state onto the motion bus.
  */
-const TOOLS = /^\/(?:pro|trade|portfolio|admin)(?:\/|$)|^\/practice\/(?!tracks\/|certificate\/|contest$|profile$)[^/]+$/;
 
 /** Wheel smoothing, per frame at 60fps. Tuned against the film's settle time (see ScrollCinema). */
 export const LENIS_LERP = 0.12;
@@ -54,7 +54,7 @@ export function LenisRoot() {
 
   // Read by the pause listener too, which outlives any one route.
   const smooth = (lenis: Lenis) => {
-    lenis.options.smoothWheel = !TOOLS.test(path.current) && !isMotionPaused();
+    lenis.options.smoothWheel = !isToolRoute(path.current) && !isMotionPaused();
   };
 
   useEffect(() => {

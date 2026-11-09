@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Strategy } from "@/lib/models";
 import { priceOption } from "@/lib/pricing";
+import { ToolButton } from "@/components/calm/kit";
 
 // At a given (spot, daysFromNow), value the strategy by re-pricing each option leg
 function valueStrategy(s: Strategy, spotAt: number, daysFromNowToExpiry: number, iv: number) {
@@ -29,7 +30,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
   if (!s) {
     return (
-      <div className="bg-bg p-3 font-mono text-[0.6875rem] text-fg-faint">
+      <div className="bg-bg p-3 t-label text-fg-faint">
         Pick a strategy to time-machine its P&L.
       </div>
     );
@@ -38,27 +39,21 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
   return (
     <div className="bg-bg p-3">
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 t-chrome text-fg-dim">
-          <span className="size-1.5 rounded-full bg-cyan" />
-          time machine · what-if simulator
-        </div>
-        <button
-          onClick={() => { setSpotAt(spot); setDaysGone(0); }}
-          className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint hover:text-fg"
-        >
-          ↺ reset
-        </button>
+        <div className="t-label text-fg-dim">Time machine · what-if simulator</div>
+        <ToolButton onClick={() => { setSpotAt(spot); setDaysGone(0); }} className="!h-6 !px-2.5 !text-[0.75rem]">
+          ↺ Reset
+        </ToolButton>
       </div>
 
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <div className="t-chrome text-fg-faint">scenario value</div>
+          <div className="t-label text-fg-faint">Scenario value</div>
           <div className={`font-display text-3xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
             {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
           </div>
         </div>
         <div className="text-right">
-          <div className="t-chrome text-fg-faint">vs entry</div>
+          <div className="t-label text-fg-faint">Vs entry</div>
           <div className={`t-data text-base ${change >= 0 ? "text-bull" : "text-bear"}`}>
             {change >= 0 ? "+" : "−"}${Math.abs(change).toFixed(0)}
           </div>
@@ -67,8 +62,8 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
       <div className="space-y-4">
         <div>
-          <div className="mb-1 flex items-center justify-between t-chrome text-fg-dim">
-            <span>stock price</span>
+          <div className="mb-1 flex items-center justify-between t-label text-fg-dim">
+            <span>Stock price</span>
             <span className="t-data text-fg">${spotAt.toFixed(2)}</span>
           </div>
           <input
@@ -78,18 +73,18 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             step={0.5}
             value={spotAt}
             onChange={(e) => setSpotAt(parseFloat(e.target.value))}
-            className="w-full accent-bull"
+            className="w-full accent-brand-ink"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[0.625rem] text-fg-faint">
+          <div className="mt-1 flex items-center justify-between t-label text-fg-faint">
             <span>${range.lo.toFixed(0)}</span>
-            <span>spot ${spot.toFixed(2)}</span>
+            <span>Spot ${spot.toFixed(2)}</span>
             <span>${range.hi.toFixed(0)}</span>
           </div>
         </div>
 
         <div>
-          <div className="mb-1 flex items-center justify-between t-chrome text-fg-dim">
-            <span>days from now</span>
+          <div className="mb-1 flex items-center justify-between t-label text-fg-dim">
+            <span>Days from now</span>
             <span className="t-data text-fg">{daysGone}d / {daysToExpiry}d</span>
           </div>
           <input
@@ -99,12 +94,12 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             step={1}
             value={daysGone}
             onChange={(e) => setDaysGone(parseInt(e.target.value))}
-            className="w-full accent-amber"
+            className="w-full accent-brand-ink"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[0.625rem] text-fg-faint">
-            <span>now</span>
+          <div className="mt-1 flex items-center justify-between t-label text-fg-faint">
+            <span>Now</span>
             <span>{remaining}d to expiry</span>
-            <span>expiry</span>
+            <span>Expiry</span>
           </div>
         </div>
       </div>

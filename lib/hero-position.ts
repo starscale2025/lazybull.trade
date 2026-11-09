@@ -13,6 +13,8 @@
 // must not re-render to do so. No pricing in here; the instrument owns the
 // maths.
 
+import { useSyncExternalStore } from "react";
+
 export type HeroPosition = {
   /** The strikes. */
   k1: number;
@@ -53,4 +55,10 @@ export function onHeroPosition(fn: () => void): () => void {
   return () => {
     subs.delete(fn);
   };
+}
+
+/** Whether the visitor has set the spread themselves, as React state: the
+    film's safety line may only say "a number you chose" once they have. */
+export function useHeroChosen(): boolean {
+  return useSyncExternalStore(onHeroPosition, () => getHeroPosition()?.chosen ?? false, () => false);
 }

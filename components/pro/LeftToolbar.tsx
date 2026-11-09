@@ -1,7 +1,11 @@
 "use client";
 
 import { motion } from "motion/react";
+import { ToolButton } from "@/components/calm/kit";
 import type { ToolKind } from "./chartCore";
+
+/** The rail is 48px wide: a ToolButton as a 32px square icon. */
+const ICON = "!size-8 !p-0";
 
 type Tool = {
   id: ToolKind | "divider";
@@ -180,12 +184,9 @@ export function LeftToolbar({
 
       {/* color picker */}
       <div className="group relative">
-        <button
-          aria-label="Color"
-          className="flex size-8 items-center justify-center border border-border bg-bg transition-colors hover:border-fg-dim"
-        >
-          <span className="size-4" style={{ background: color }} />
-        </button>
+        <ToolButton aria-label="Color" className={ICON}>
+          <span className="size-4 rounded-sm" style={{ background: color }} />
+        </ToolButton>
         <div className="absolute left-10 top-0 z-30 hidden flex-col gap-1 surface-instrument border border-border bg-surface p-1 shadow-2xl group-hover:flex">
           {COLORS.map((c) => (
             <button
@@ -208,15 +209,11 @@ export function LeftToolbar({
       </div>
 
       {/* clear */}
-      <button
-        aria-label="Clear all"
-        onClick={onClear}
-        className="flex size-8 items-center justify-center text-fg-faint transition-colors hover:text-bear"
-      >
+      <ToolButton aria-label="Clear all" onClick={onClear} className={ICON}>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 6h18M8 6V4h8v2M6 6v14h12V6" />
         </svg>
-      </button>
+      </ToolButton>
     </aside>
   );
 }
@@ -227,16 +224,16 @@ function ToolBtn({ t, active, onClick }: { t: Tool; active: boolean; onClick: ()
       <motion.button
         onClick={onClick}
         whileTap={{ scale: 0.92 }}
-        className={`flex size-8 items-center justify-center border transition-colors ${
-          active ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink" : "border-transparent bg-bg text-fg-dim hover:border-border hover:text-fg"
+        className={`tool-btn ${ICON} !shadow-none ${
+          active ? "!bg-brand-ink/15 !text-brand-ink" : "!bg-transparent !text-fg-dim hover:!bg-fg/10 hover:!text-fg"
         }`}
         aria-label={t.label}
       >
         {t.icon}
       </motion.button>
-      <div className="pointer-events-none absolute left-10 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 t-chrome text-fg shadow-xl group-hover:block">
+      <div className="pointer-events-none absolute left-10 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 t-label text-fg shadow-xl group-hover:block">
         <div>{t.label}</div>
-        {t.hint && <div className="text-fg-faint normal-case tracking-normal">{t.hint}</div>}
+        {t.hint && <div className="text-fg-faint">{t.hint}</div>}
       </div>
     </div>
   );

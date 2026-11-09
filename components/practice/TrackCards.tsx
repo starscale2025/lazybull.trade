@@ -1,11 +1,12 @@
 "use client";
 
-// The five track cards on /practice. The hairline `gap-px bg-border` grid and
-// the bull underline that sweeps in from the left on hover are copied from the
-// site index in components/GetStarted.tsx (lines 425-470); the glyph tile is
-// TrackGlyph. A client component because every card reads solved/total from
-// the progress hook — its first render is the empty ledger, identical on the
-// server and the client, so nothing hydrates differently.
+// The five track cards on /practice, on the calm kit (S1, 2026-11-09): soft
+// panels that brighten under the pointer, the glyph on a round tile, the hint
+// in sentence case and the reading colour. They were a hairline grid with each
+// hint in its track's colour and mono caps, ML's in loss red. A client
+// component because every card reads solved/total from the progress hook —
+// its first render is the empty ledger, identical on the server and the
+// client, so nothing hydrates differently.
 
 import Link from "next/link";
 import { TrackGlyph } from "@/components/practice/Chips";
@@ -18,7 +19,7 @@ export function TrackCards() {
   const { summary } = usePracticeProgress();
 
   return (
-    <nav aria-label="Tracks" className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-5">
+    <nav id="tracks" aria-label="Tracks" className="grid scroll-mt-24 grid-cols-2 gap-3 md:grid-cols-5">
       {TRACK_ORDER.map((t) => {
         const meta = TRACK_META[t];
         const { solved, total } = summary.byTrack[t];
@@ -30,23 +31,18 @@ export function TrackCards() {
           <Link
             key={t}
             href={`/practice/tracks/${t}`}
-            className="group relative bg-bg p-4 hover:bg-surface-2 last:col-span-2 md:last:col-span-1"
+            className="calm-panel calm-card group relative p-5 last:col-span-2 md:last:col-span-1"
           >
+            <i aria-hidden className="lit-aura" />
             <TrackGlyph track={t} size="sm" />
-            <div className="mt-3 font-display text-[0.9375rem] tracking-tightest text-fg group-hover:text-bull">
-              {meta.label}
+            <div className="mt-4 text-[1rem] font-semibold tracking-[-0.01em] text-fg">{meta.label}</div>
+            <div className="mt-0.5 text-[0.8125rem] leading-snug text-fg-dim">
+              {meta.hint.charAt(0).toUpperCase() + meta.hint.slice(1)}
             </div>
-            <div className="mt-0.5 t-chrome" style={{ color: meta.color }}>
-              {meta.hint}
+            <ProgressBar value={total > 0 ? solved / total : 0} color={meta.color} className="mt-4" />
+            <div className="mt-2 text-[0.75rem] tabular-nums text-fg-faint">
+              {solved} of {total} · about {hours} h
             </div>
-            <ProgressBar value={total > 0 ? solved / total : 0} color={meta.color} className="mt-3" />
-            <div className="mt-1.5 t-data t-chrome text-fg-faint">
-              {solved}/{total} · ~{hours}h
-            </div>
-            <span
-              aria-hidden
-              className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-bull transition-transform duration-300 group-hover:scale-x-100"
-            />
           </Link>
         );
       })}

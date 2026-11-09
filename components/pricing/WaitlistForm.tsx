@@ -14,7 +14,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import type { Currency } from "@/lib/billing/config";
-import { ctaClass } from "./tiers";
+import { Chip, PillButton } from "@/components/calm/kit";
 
 export type WaitlistTier = "plus" | "pro" | "power";
 
@@ -73,25 +73,26 @@ export function WaitlistForm({
           kind: "error",
           message:
             r.status === 429
-              ? "too many tries — wait a minute"
+              ? "Too many tries — wait a minute"
               : typeof j?.error === "string"
                 ? j.error
-                : "could not save — try again",
+                : "Could not save — try again",
         });
       }
     } catch {
-      setState({ kind: "error", message: "offline — try again" });
+      setState({ kind: "error", message: "Offline — try again" });
     }
   };
 
   if (state.kind === "joined") {
     return (
       <div className="mt-6">
-        <div className="flex h-10 items-center justify-center gap-2 border border-bull/40 bg-bull/10 px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull">
-          <span className="size-1.5 rounded-full bg-bull" />
-          {state.already ? "already on the list" : "on the list"} · {TIER_NAME[tier]} · {currency}
+        <div className="flex h-11 items-center justify-center">
+          <Chip tone="brand" dot>
+            {state.already ? "Already on the list" : "On the list"} · {TIER_NAME[tier]} · {currency}
+          </Chip>
         </div>
-        <div className="mt-2 t-chrome text-fg-faint">we email when checkout opens · nothing is charged</div>
+        <div className="mt-2 t-label text-fg-faint">We email when checkout opens · nothing is charged</div>
       </div>
     );
   }
@@ -107,20 +108,22 @@ export function WaitlistForm({
         placeholder={status === "loading" ? "…" : "you@example.com"}
         aria-label={`Email for the ${TIER_NAME[tier]} waitlist`}
         autoComplete="email"
-        className="h-10 border border-border bg-bg px-3 font-mono text-[0.75rem] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-bull"
+        className="calm-input w-full"
       />
-      <button type="submit" disabled={state.kind === "busy"} className={ctaClass({ primary, soon })}>
-        {state.kind === "busy" ? "saving…" : "Join the waitlist"}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-          <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      </button>
-      <div className="t-chrome text-fg-faint">
-        {reason ?? "no card · nothing charged"}
+      <PillButton
+        type="submit"
+        kind={primary ? "primary" : "secondary"}
+        disabled={state.kind === "busy"}
+        className={`w-full ${soon ? "text-fg-dim!" : ""}`}
+      >
+        {state.kind === "busy" ? "Saving…" : "Join the waitlist"}
+      </PillButton>
+      <div className="t-label text-fg-faint">
+        {reason ?? "No card · nothing charged"}
         {count >= SHOW_COUNT_FROM ? ` · ${count.toLocaleString("en-US")} waiting` : ""}
       </div>
       {state.kind === "error" && (
-        <div className="t-chrome text-bear" role="alert">
+        <div className="t-label text-fg first-letter:uppercase" role="alert">
           {state.message}
         </div>
       )}

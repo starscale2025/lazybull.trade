@@ -100,7 +100,7 @@
 let PHASES = {
   boot: [0.00, 0.05], assembly: [0.05, 0.15], dive: [0.15, 0.24], regime: [0.24, 0.32],
   candle: [0.32, 0.59], safety: [0.59, 0.69], consensus: [0.69, 0.73], bull: [0.73, 0.84],
-  matrix: [0.84, 1.00],
+  mark: [0.84, 1.00],
 };
 
 // ---- tiny deterministic helpers ------------------------------------------
@@ -195,14 +195,37 @@ function bullOutline() {
   return right.concat(left);
 }
 
-// The rain speaks the product's own language. This used to be the mirrored
-// half-width katakana set from a 1997 film — the single most exhausted visual
-// in the genre, and an odd thing for a site that renders its own live cinema to
-// borrow. Greeks, strikes, calls and puts are what this instrument is actually
-// made of, and they are glyphs a reader can half-recognise rather than set
-// dressing. Count is kept in the same 40-60 band so the fall maths is untouched.
-const MATRIX_CHARS =
-  "ΔΓΘΛΣΩνρσμβα0123456789.+-=<>/|$%CPKS∂π".split("");
+// THE MARK (Phase 4, M25): lazybull's bull drawn as a payoff, a long strangle
+// at expiry read as a head (the floor is the jaw, the rising legs the horns).
+// The film ends on it. A unit box, y down. KEEP IN STEP WITH lib/bull-mark.ts,
+// which the nav's logo and the phone film draw from.
+const BULL_MARK = [[0.0, 0.0], [0.09, 0.27], [0.29, 0.31], [0.4, 0.86], [0.6, 0.86], [0.71, 0.31], [0.91, 0.27], [1.0, 0.0]];
+function markSamples(n) {
+  const segs = BULL_MARK.slice(1).map((p, i) => ({ a: BULL_MARK[i], b: p, len: Math.hypot(p[0] - BULL_MARK[i][0], p[1] - BULL_MARK[i][1]) }));
+  const total = segs.reduce((s, x) => s + x.len, 0);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    let d = (i / Math.max(1, n - 1)) * total;
+    for (const sg of segs) {
+      if (d <= sg.len || sg === segs[segs.length - 1]) {
+        const t = sg.len ? Math.min(1, d / sg.len) : 0;
+        out.push([sg.a[0] + (sg.b[0] - sg.a[0]) * t, sg.a[1] + (sg.b[1] - sg.a[1]) * t]);
+        break;
+      }
+      d -= sg.len;
+    }
+  }
+  return out;
+}
+// Where the mark sits: right of centre, so "Welcome in." stands to its left.
+let MARK_BOX = { x: 0, y: 0, w: 0, h: 0 };
+let MARK_STAGE = { W: 1, H: 1 };
+// The mark's box as shares of the scene, for the page that draws the mark's
+// line over the stage (ScrollCinema's match-cut) and must put it exactly here.
+window.markRect = () => {
+  const { W, H } = MARK_STAGE;
+  return { x: MARK_BOX.x / W, y: MARK_BOX.y / H, w: MARK_BOX.w / W, h: MARK_BOX.h / H, lw: Math.max(2, MARK_BOX.w / 90) / W };
+};
 
 // 12 bots for the consensus ring — real families/verdicts from the app.
 // 10 agree (up>0.6), 2 dissent — a realistic strong majority, not unanimity.
@@ -217,7 +240,7 @@ const BOTS = [
 const FAM_COLOR = { trend: GREEN, stats: CYAN, ai: RED };
 
 // ---- scene state -----------------------------------------------------------
-let CFG = null, PARTICLES = [], BULL_IMGS = [], MATRIX = [], MATRIX_CELL = 16;
+let CFG = null, PARTICLES = [], BULL_IMGS = [];
 let NOW = 0; // ambient time (seconds) set by renderAt — drives always-on motion
 let DRAW_T0 = null; // when the loader revealed → the laptop draw-on starts
 let CHART = null;      // shared chart rect { x, y, w, h }
@@ -396,7 +419,15 @@ window.initScene = async function initScene(cfg) {
   // Bull particles.
   const rnd = mulberry32(1337);
   const outline = bullOutline();
-  const cx = W / 2, cy = H * 0.5, scale = Math.min(W, H) * 0.36;
+  // Where the 3D bull stands as it dissolves (Bull3D frames it right of
+  // centre), so its particles leave from it rather than from a second bull.
+  const cx = W * 0.62, cy = H * 0.56, scale = Math.min(W, H) * 0.46;
+  const mw = Math.min(W * 0.34, H * 0.5);
+  MARK_BOX = { x: W * 0.64 - mw / 2, y: H * 0.5 - mw * 0.36, w: mw, h: mw * 0.72 };
+  MARK_STAGE = { W, H };
+  // Every particle has a place on the mark too, spread by arc length, so the
+  // bull's particles can settle onto it (M25).
+  const markPts = markSamples(1200);
   PARTICLES = [];
   for (let i = 0; i < 1200; i++) {
     const u = i / 1200, fi = u * (outline.length - 1), k = Math.floor(fi), fr = fi - k;
@@ -407,22 +438,14 @@ window.initScene = async function initScene(cfg) {
       tx: cx + (lerp(a[0], b[0], fr) + jx) * scale,
       ty: cy + (lerp(a[1], b[1], fr) + jy - 0.5) * scale * 1.15,
       tint: rnd(), size: rnd() < 0.25 ? 3 : 2, glow: i % 4 === 0,
+      mx: MARK_BOX.x + markPts[i][0] * MARK_BOX.w + (rnd() - 0.5) * 3,
+      my: MARK_BOX.y + markPts[i][1] * MARK_BOX.h + (rnd() - 0.5) * 3,
+      mt: markPts[i][0],
     });
   }
   const bullCanvas = document.getElementById("bull");
   bullCanvas.width = W; bullCanvas.height = H;
 
-  // Matrix rain columns.
-  MATRIX_CELL = Math.max(13, Math.round(W / 96));
-  const cols = Math.floor(W / MATRIX_CELL);
-  const rnd2 = mulberry32(90210);
-  MATRIX = [];
-  for (let c = 0; c < cols; c++) {
-    MATRIX.push({
-      x: c * MATRIX_CELL + MATRIX_CELL * 0.1, phase: rnd2(),
-      speed: 0.55 + rnd2() * 1.1, len: 9 + Math.floor(rnd2() * 18), lead: Math.floor(rnd2() * 9973),
-    });
-  }
 
   // Precompute feature-act geometry (size dependent → recomputed on resize).
   computeChart(W, H);
@@ -682,7 +705,7 @@ function drawSafety(ctx, q, env, W, H) {
     const figure = "−" + money(pos.maxLoss);
     ctx.fillText(figure, ch.x, P.lossY + 12);
     ctx.font = SMALL; ctx.fillStyle = GRAY;
-    const why = "most it can lose · " + (pos.chosen ? "you set it before the trade" : "an example spread");
+    const why = "most it can lose · " + (pos.chosen ? "you set it before the trade" : "an example spread · set your own below");
     ctx.fillText(why, ch.x, P.lossY + 16 + big);
     ctx.globalAlpha = alpha;
   }
@@ -969,70 +992,69 @@ window.renderAt = function renderAt(t, hideBull, hideCandle, now, cx, cy, hideDi
     if (eCon > 0.001) drawConsensus(ctx, seg(t, ...P.consensus), eCon, W, H);
   }
 
-  // ---- bull (particle logo) ----------------------------------------------
-  // The real-3D bull (R3F, parent doc) owns ~0.71–0.80. The classic particle-bull
-  // LOGO takes over as that bull STARTS clearing: particles assemble (converge) →
-  // hold → scatter into the Matrix rain. Absolute "logo phase" timings, not
-  // derived from the bull act.
-  // LOGO0 starts at the bull's out0, not its out1. Starting at 0.8 meant the
-  // converge ramp began from zero at the exact progress the 3D bull, the grid
-  // and the consensus ring had all already reached zero — a black frame at the
-  // charge. Beginning at 0.775 puts real particles on screen through the
-  // handoff, under the charge's impact flash. Keep in step with BULL3D.out0 in
-  // lib/cinema.ts and with `hideBull` in ScrollCinema.tsx.
-  const LOGO0 = 0.80, CONV_END = 0.855, DIS0 = 0.87, DIS1 = 0.925;
-  const dissolve = 1 - seg(t, DIS0, DIS1);
-  const bullOn = t >= LOGO0 - 0.01 && t < DIS1 + 0.02;
+  // ---- bull (particle logo) → THE MARK ----------------------------------
+  // The real-3D bull (R3F, parent doc) owns ~0.71–0.80. As it STARTS clearing,
+  // its particles stand where it stood (the bull's outline) and go straight
+  // onto the bull mark, the payoff drawn as a head, where the film ends
+  // (Phase 4, M25). Gate A4 #5 cut what stood between: a 2D bull assembling
+  // out of scattered dots (0.80–0.855) and holding there, which was the dead
+  // tail. LOGO0 starts at the bull's out0, not its out1: starting later left a
+  // black frame at the charge. Keep in step with BULL3D.out0 in lib/cinema.ts,
+  // with `hideBull` in ScrollCinema.tsx and MARK_REST in cinema-metrics.ts.
+  const LOGO0 = 0.80, MARK0 = 0.815, MARK1 = 0.865;
+  const bullOn = t >= LOGO0 - 0.01;
   // `hideBull` (per frame) keeps the particle logo hidden while the 3D bull is up.
   if (bullOn && !hideBull) {
-    const conv = easeOut(seg(t, LOGO0, CONV_END));
-    const brightness = 0.5 + 0.5 * seg(t, LOGO0, CONV_END);
+    const conv = 1;
+    // markFade (set by the page over the hold): the line leaves the mark for
+    // the instrument, so the particles that drew the mark go with it rather
+    // than stand behind as a second mark.
+    const brightness = (0.35 + 0.65 * easeOut(seg(t, LOGO0, MARK0))) * (1 - (window.markFade || 0));
     for (const pt of PARTICLES) {
-      const x = lerp(pt.sx, pt.tx, conv), y = lerp(pt.sy, pt.ty, conv);
-      ctx.globalAlpha = (0.35 + 0.65 * conv) * brightness * dissolve;
+      // Each particle leaves the bull on its own beat, in order along the
+      // mark, so the mark draws itself left horn to right horn.
+      const m = easeIO(seg(t, MARK0 + pt.mt * 0.025, MARK1 - 0.025 + pt.mt * 0.025));
+      const bx = pt.tx, by = pt.ty;
+      const x = lerp(bx, pt.mx, m), y = lerp(by, pt.my, m) - Math.sin(m * Math.PI) * 26;
+      ctx.globalAlpha = (0.35 + 0.65 * conv) * brightness;
       ctx.shadowBlur = pt.glow ? 10 : 0; ctx.shadowColor = "#7b8cff";
-      ctx.fillStyle = pt.tint < 0.6 ? `rgb(${rampAt(pt.tint / 0.6).join(",")})` : INK;
+      // On the mark the particles take the ramp across it, violet to mint.
+      ctx.fillStyle = m > 0.5 ? `rgb(${rampAt(pt.mt).join(",")})` : pt.tint < 0.6 ? `rgb(${rampAt(pt.tint / 0.6).join(",")})` : INK;
       ctx.fillRect(x, y, pt.size, pt.size);
     }
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-    const g = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, W * 0.3);
-    g.addColorStop(0, `rgba(110,120,255,${0.16 * conv * brightness * dissolve})`);
+    // Once the particles are home, the mark's own line comes up under them:
+    // a crisp monoline in the brand ramp, so the last frame reads as the logo.
+    // On the desktop film the parent page draws this line instead, over the
+    // stage, because over the hold it leaves the stage: it bends into the
+    // visitor's payoff and lands on the instrument (ScrollCinema, the match-
+    // cut). The phone film and any other host leave it to the scene.
+    const line = window.markLineExternal ? 0 : seg(t, MARK1 - 0.01, MARK1 + 0.03);
+    if (line > 0.002) {
+      const g = ctx.createLinearGradient(MARK_BOX.x, 0, MARK_BOX.x + MARK_BOX.w, 0);
+      g.addColorStop(0, `rgb(${rampAt(0).join(",")})`);
+      g.addColorStop(0.5, `rgb(${rampAt(0.5).join(",")})`);
+      g.addColorStop(1, `rgb(${rampAt(1).join(",")})`);
+      ctx.save();
+      ctx.globalAlpha = line;
+      ctx.strokeStyle = g; ctx.lineWidth = Math.max(2, MARK_BOX.w / 90);
+      ctx.lineJoin = "round"; ctx.lineCap = "round";
+      ctx.shadowBlur = 18; ctx.shadowColor = "rgba(110,120,255,0.55)";
+      ctx.beginPath();
+      BULL_MARK.forEach(([mx, my], i) => {
+        const X = MARK_BOX.x + mx * MARK_BOX.w, Y = MARK_BOX.y + my * MARK_BOX.h;
+        if (i) ctx.lineTo(X, Y); else ctx.moveTo(X, Y);
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
+    const glowX = lerp(W / 2, MARK_BOX.x + MARK_BOX.w / 2, seg(t, MARK0, MARK1));
+    const g = ctx.createRadialGradient(glowX, H * 0.58, 10, glowX, H * 0.58, W * 0.3);
+    g.addColorStop(0, `rgba(110,120,255,${0.16 * conv * brightness})`);
     g.addColorStop(1, "rgba(110,120,255,0)");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   bullR.style.opacity = "0";
-
-  // ---- matrix rain --------------------------------------------------------
-  // The rain used to resolve into a baked screenshot of the hero (#homepage).
-  // That plate went stale silently and carried copy the film had banned, so it
-  // is gone (2026-11). The rain then cleared by 0.955 and an outro dipped the
-  // frame to black, which left the film ending on empty screen. Now it thins
-  // right up to the hand-off and the parent dissolves the whole stage over it
-  // (HANDOFF_FADE in lib/cinema.ts), so the last frame has rain in it.
-  // It thins WITH the stage's dissolve (0.975), not 0.02 ahead of it (Gate A2).
-  const rainStart = 0.9, rainPeakEnd = 0.925, rainThin = 0.975, rainEnd = 1.0;
-  const rainAmt = seg(t, rainStart, rainPeakEnd) * (1 - seg(t, rainThin, rainEnd));
-  if (rainAmt > 0.002) {
-    const cell = MATRIX_CELL, rows = Math.ceil(H / cell) + 2;
-    ctx.font = `${Math.round(cell * 0.92)}px ${MONO}`;
-    ctx.textBaseline = "top";
-    const fall = (t - LOGO0) + NOW * 0.1; // rain keeps falling even at rest
-    for (const col of MATRIX) {
-      const period = rows + col.len;
-      const head = ((col.phase * period) + fall * col.speed * rows * 4.5) % period;
-      for (let k = 0; k < col.len; k++) {
-        const row = Math.floor((((head - k) % period) + period) % period);
-        const y = row * cell;
-        if (y > H) continue;
-        const chc = MATRIX_CHARS[(col.lead + row * 3 + Math.floor(fall * 26)) % MATRIX_CHARS.length];
-        const rc = col.rgb || (col.rgb = rampAt(col.x / Math.max(1, W)));
-        if (k === 0) { ctx.fillStyle = `rgba(${rc.map((v) => Math.round(v + (255 - v) * 0.7)).join(",")},${rainAmt})`; ctx.shadowBlur = 8; ctx.shadowColor = `rgb(${rc.join(",")})`; }
-        else { ctx.fillStyle = `rgba(${rc.join(",")},${rainAmt * (1 - k / col.len) * 0.82})`; ctx.shadowBlur = 0; }
-        ctx.fillText(chc, col.x, y);
-      }
-    }
-    ctx.shadowBlur = 0;
-  }
 
   // ---- cursor spotlight: the pointer carries a soft torch through the 2D acts
   if (cx !== undefined && cy !== undefined) {

@@ -4,6 +4,8 @@ import { signIn } from "next-auth/react";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { BullMark } from "@/components/BullMark";
+import { CalmLink, Chip, PillButton } from "@/components/calm/kit";
 
 export default function SignInPage() {
   return (
@@ -19,67 +21,48 @@ function SignInPanel() {
   const error = params.get("error");
 
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-x-clip bg-bg px-5 text-fg">
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
-      <div className="pointer-events-none absolute -top-20 left-1/2 h-[26.25rem] w-[26.25rem] -translate-x-1/2 rounded-full bg-bull/15 blur-[160px]" />
-
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-8">
+    <main className="page-aura grid min-h-screen place-items-center overflow-x-clip bg-bg px-5 text-fg">
+      <div className="flex w-full max-w-md flex-col items-center gap-8">
         <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-tightest">
-          <div className="relative flex size-8 items-center justify-center border border-fg/40 bg-bg">
-            <div className="absolute inset-1 bg-bull" />
-            <span className="relative font-mono text-[0.625rem] font-bold text-bg">LB</span>
-          </div>
-          lazybull<span className="text-bull">.</span>
+          <BullMark className="h-6 w-8" />
+          lazybull<span className="text-fg-dim">.</span>
         </Link>
 
-        <div className="w-full surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-5 py-3 t-eyebrow text-fg-faint">
-            ⟢ sign in
-          </div>
-          <div className="p-8">
-            <h1 className="font-display text-3xl tracking-tightest leading-[1.05] text-fg">
-              Welcome back.
-              <br />
-              <span className="t-accent">Pick where to leave off.</span>
-            </h1>
-            <p className="mt-3 max-w-prose t-body-sm text-fg-dim">
-              Signing in saves your workspaces, watchlists, custom bots, and paper-trading
-              positions across devices. Free, no card.
-            </p>
+        <div className="calm-panel w-full p-8">
+          <i aria-hidden className="lit-aura" />
+          <div className="t-eyebrow text-brand-ink">Sign in</div>
+          <h1 className="mt-3 font-display text-3xl tracking-tightest leading-[1.05] text-fg">
+            Welcome back.
+            <br />
+            <span className="t-accent">Pick where to leave off.</span>
+          </h1>
+          <p className="mt-3 max-w-prose t-body-sm text-fg-dim">
+            Signing in saves your workspaces, watchlists, custom bots, and paper-trading
+            positions across devices. Free, no card.
+          </p>
 
-            {error && (
-              <div className="mt-6 border border-bear/40 bg-bear/10 px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bear">
-                ⚠ {decodeURIComponent(error)}
-              </div>
-            )}
-
-            <button
-              onClick={() => signIn("google", { callbackUrl })}
-              className="mt-8 group flex w-full items-center justify-center gap-3 border border-border bg-bg px-4 py-3 font-mono text-[0.75rem] uppercase tracking-wider text-fg transition-colors hover:border-bull hover:bg-bull/5"
-            >
-              <GoogleG />
-              Continue with Google
-              <span className="ml-2 text-fg-faint group-hover:text-bull">→</span>
-            </button>
-
-            <div className="mt-6 flex items-center gap-3 t-chrome text-fg-faint">
-              <span className="h-px flex-1 bg-border" />
-              more soon
-              <span className="h-px flex-1 bg-border" />
+          {error && (
+            <div className="mt-6 rounded-[14px] bg-fg/5 px-4 py-3 text-[0.875rem] leading-snug text-fg">
+              {decodeURIComponent(error)}
             </div>
+          )}
 
-            <div className="mt-2 grid grid-cols-2 gap-2 t-chrome text-fg-faint">
-              <div className="border border-border bg-bg/50 px-3 py-2 text-center opacity-60">GitHub</div>
-              <div className="border border-border bg-bg/50 px-3 py-2 text-center opacity-60">Email link</div>
-            </div>
+          {/* Secondary on purpose: Google's four-colour G sits on a neutral
+              button, and the gradient would fight it. */}
+          <PillButton size="lg" onClick={() => signIn("google", { callbackUrl })} className="mt-8 w-full">
+            <GoogleG />
+            Continue with Google
+          </PillButton>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <span className="t-label text-fg-faint">More soon</span>
+            <Chip>GitHub</Chip>
+            <Chip>Email link</Chip>
           </div>
         </div>
 
-        <p className="text-center font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
-          Don't want to sign in?{" "}
-          <Link href="/quant" className="text-fg-dim hover:text-bull">
-            Try the workbench anonymously →
-          </Link>
+        <p className="text-center text-[0.8125rem] text-fg-faint">
+          Don’t want to sign in? <CalmLink href="/quant">Try the workbench anonymously</CalmLink>
         </p>
       </div>
     </main>

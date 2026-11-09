@@ -31,7 +31,7 @@ export function AuthButtons() {
     return (
       <span
         aria-hidden
-        className="invisible hidden h-9 items-center gap-2 rounded-full px-3 font-mono text-[0.6875rem] uppercase tracking-wider sm:inline-flex"
+        className="invisible hidden h-9 items-center gap-2 rounded-full px-3 text-[0.875rem] tracking-[-0.005em] sm:inline-flex"
       >
         Sign in
       </span>
@@ -42,7 +42,7 @@ export function AuthButtons() {
     return (
       <button
         onClick={() => signIn("google", { callbackUrl: "/quant" })}
-        className="hidden h-9 items-center gap-2 rounded-full px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg sm:inline-flex"
+        className="hidden h-9 items-center gap-2 rounded-full px-3 text-[0.875rem] tracking-[-0.005em] text-fg-dim transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg sm:inline-flex"
       >
         Sign in
       </button>
@@ -62,7 +62,7 @@ export function AuthButtons() {
     <div ref={wrapRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/60 hover:text-fg"
+        className="flex h-9 items-center gap-2 rounded-full bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] px-2 text-[0.875rem] text-fg-dim transition-colors hover:border-bull/60 hover:text-fg"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -94,7 +94,7 @@ export function AuthButtons() {
               <div className="mt-0.5 truncate font-mono text-[0.625rem] text-fg-faint">{u.email}</div>
             )}
           </div>
-          <div className="py-1 font-mono text-[0.6875rem] uppercase tracking-wider">
+          <div className="py-1 text-[0.875rem]">
             <Link
               href="/quant"
               onClick={() => setOpen(false)}
@@ -131,7 +131,7 @@ export function AuthButtons() {
           <div className="border-t border-border">
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="block w-full px-3 py-2 text-left font-mono text-[0.6875rem] uppercase tracking-wider text-bear hover:bg-bear/10"
+              className="block w-full px-3 py-2 text-left text-[0.875rem] text-bear hover:bg-bear/10"
             >
               Sign out
             </button>

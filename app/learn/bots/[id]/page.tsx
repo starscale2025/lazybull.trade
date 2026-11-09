@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/Nav";
-import { TickerBar } from "@/components/TickerBar";
 import { Footer } from "@/components/Footer";
+import { CalmLink, CalmPanel, Chip, PageHeader, PillLink } from "@/components/calm/kit";
 import { BOT_REGISTRY, getBot } from "@/lib/quant/bots";
 import { CATEGORY_META } from "@/lib/quant/types";
 import { BOT_CONTENT, BOT_SIMPLE } from "@/lib/quant/bot-content";
@@ -46,114 +46,73 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
     .slice(0, 6);
 
   return (
-    <main className="flex min-h-screen flex-col bg-bg text-fg">
-      <TickerBar />
+    <main className="page-aura flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
 
-      {/* Breadcrumb */}
-      <section className="bg-bg">
-        <div className="shell flex items-center gap-2 py-2 t-chrome text-fg-faint">
-          <Link href="/learn" className="hover:text-fg">Learn</Link>
-          <span>/</span>
-          <Link href="/learn/bots" className="hover:text-fg">Bots</Link>
-          <span>/</span>
-          <span className="text-fg">{bot.name}</span>
+      <PageHeader
+        eyebrow={
+          <>
+            <Link href="/learn" className="hover:text-fg">
+              Learn
+            </Link>
+            {" · "}
+            <Link href="/learn/bots" className="hover:text-fg">
+              Bots
+            </Link>
+          </>
+        }
+        title={bot.name}
+        lede={bot.tagline}
+        actions={
+          <>
+            <PillLink href={`/quant?add=${bot.id}`} kind="primary">
+              Try it now
+            </PillLink>
+            <CalmLink href="/learn/bots">Browse all 27</CalmLink>
+          </>
+        }
+      >
+        <div className="mt-8 flex flex-wrap items-center gap-2.5">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-fg/[0.07] font-display text-xl text-fg-dim">
+            {bot.glyph}
+          </span>
+          <Chip>{cat.label}</Chip>
+          {isAi && <Chip>AI</Chip>}
         </div>
-      </section>
+      </PageHeader>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
-        <div
-          className="pointer-events-none absolute -left-40 top-0 h-[26.25rem] w-[26.25rem] rounded-full blur-[160px]"
-          style={{ background: `${cat.color}33` }}
-        />
-        <div className="relative shell section-y-sm">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3 t-chrome">
-              <span
-                className="inline-flex items-center gap-2 border px-2 py-1"
-                style={{ borderColor: `${cat.color}66`, color: cat.color, background: `${cat.color}10` }}
-              >
-                <span className="size-1.5" style={{ background: cat.color }} />
-                {cat.label}
-              </span>
-              {isAi && (
-                <span className="border border-bear/50 bg-bear/10 px-2 py-1 text-bear">AI</span>
-              )}
-            </div>
-
-            <div className="flex items-end gap-5">
-              <span
-                className="grid size-20 shrink-0 place-items-center border-2 bg-bg font-display text-4xl"
-                style={{ borderColor: cat.color, color: cat.color }}
-              >
-                {bot.glyph}
-              </span>
-              <div>
-                <h1 className="t-title text-fg">
-                  {bot.name}
-                </h1>
-                <p className="mt-2 max-w-[58ch] t-body text-fg-dim">
-                  {bot.tagline}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/quant?add=${bot.id}`}
-                className="inline-flex items-center gap-2 btn-grad px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
-              >
-                ▶ Try it now
-              </Link>
-              <Link
-                href="/learn/bots"
-                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
-              >
-                ↗ Browse all 27
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* In plain English — simple lead, technical follow-on, one band. */}
-      <section className="border-b border-border bg-bull/[0.04]">
-        <div className="shell section-y-sm">
-          <div className="flex items-center gap-3 t-eyebrow text-bull">
-            <span>⟢</span>
-            <span className="h-px w-12 bg-bull/40" />
-            <span>In plain English</span>
-          </div>
-          {simple && (
-            <p className="mt-4 max-w-[68ch] text-balance text-[1.35rem] leading-relaxed text-fg md:text-2xl">
-              {simple}
+      {/* In plain English — simple lead, technical follow-on, one panel. */}
+      <section>
+        <div className="shell pb-[clamp(2.5rem,6vw,3.5rem)]">
+          <div className="calm-panel p-6 md:p-8">
+            <i aria-hidden className="lit-aura" />
+            <div className="t-eyebrow text-brand-ink">In plain English</div>
+            {simple && (
+              <p className="mt-4 max-w-[68ch] text-balance text-[1.35rem] leading-relaxed text-fg md:text-2xl">
+                {simple}
+              </p>
+            )}
+            <p className="mt-4 max-w-[68ch] t-body-sm leading-relaxed text-fg-dim">
+              {content.intro ?? defaultIntro(bot.name, bot.tagline)}
             </p>
-          )}
-          <p className="mt-4 max-w-[68ch] t-body-sm leading-relaxed text-fg-dim">
-            {content.intro ?? defaultIntro(bot.name, bot.tagline)}
-          </p>
+          </div>
         </div>
       </section>
 
       {/* The math */}
       {bot.formula && (
-        <section className="border-b border-border">
+        <section>
           <div className="shell section-y-sm">
             <SectionLabel>The math</SectionLabel>
-            <div className="mt-4 border border-border bg-bg p-6">
-              <div className="t-chrome text-fg-faint mb-3">formula</div>
+            <CalmPanel className="mt-4">
+              <div className="t-label text-fg-faint mb-3">Formula</div>
               <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-base leading-relaxed text-fg">{bot.formula}</pre>
-            </div>
+            </CalmPanel>
             {bot.params.length > 0 && (
-              <div className="mt-6 surface-card border border-border bg-surface">
-                <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-                  parameters
-                </div>
+              <CalmPanel title="Parameters" className="mt-3">
                 <div className="divide-y divide-border-soft">
                   {bot.params.map((p) => (
-                    <div key={p.key} className="grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-3 text-[0.75rem] md:grid-cols-12 md:gap-3">
+                    <div key={p.key} className="grid grid-cols-2 gap-x-3 gap-y-1 py-3 text-[0.75rem] first:pt-0 last:pb-0 md:grid-cols-12 md:gap-3">
                       <span className="font-mono text-fg md:col-span-3">{p.key}</span>
                       <span className="text-fg-dim md:col-span-3">{p.label}</span>
                       <span className="font-mono text-fg-faint md:col-span-3">
@@ -167,14 +126,14 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                     </div>
                   ))}
                 </div>
-              </div>
+              </CalmPanel>
             )}
           </div>
         </section>
       )}
 
       {/* Live demo */}
-      <section className="border-b border-border bg-bg-soft">
+      <section>
         <div className="shell section-y-sm">
           <SectionLabel>Live demo</SectionLabel>
           <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
@@ -190,7 +149,7 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       {/* Source code — the actual code that runs in your browser. Read at
           build time from lib/quant/bots.ts or lib/quant/ai-bots.ts. */}
       {source && (
-        <section className="border-b border-border">
+        <section>
           <div className="shell section-y-sm">
             <SectionLabel>Source code · public</SectionLabel>
             <p className="mt-3 max-w-[68ch] t-body text-fg-dim">
@@ -200,89 +159,79 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               better one.
             </p>
 
-            <div className="mt-6 border border-border bg-bg">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-soft px-3 py-2 t-chrome">
-                <div className="flex items-center gap-3 text-fg-dim">
-                  <span className="text-bull">●</span>
-                  <span>{source.filename}</span>
-                  <span className="text-fg-faint">·</span>
-                  <span className="text-fg-faint">
-                    lines {source.startLine}–{source.endLine}
+            <div className="calm-panel mt-6">
+              <i aria-hidden className="lit-aura" />
+              <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4 text-[0.8125rem] text-fg-faint">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <span className="font-mono text-[0.75rem] text-fg-dim">{source.filename}</span>
+                  <span>·</span>
+                  <span>
+                    Lines {source.startLine}–{source.endLine}
                   </span>
                 </div>
-                <span className="shrink-0 text-fg-faint">TypeScript · MIT-licensed</span>
+                <span className="shrink-0">TypeScript · MIT-licensed</span>
               </div>
               <pre className="overflow-x-auto p-5 font-mono text-[0.75rem] leading-relaxed text-fg">
                 <code>{source.code}</code>
               </pre>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 text-[0.75rem] text-fg-dim md:grid-cols-2">
-              <div className="surface-card border border-border bg-surface p-3">
-                <div className="t-chrome text-fg-faint mb-1">
-                  what each piece means
-                </div>
-                <ul className="space-y-1.5 text-[0.75rem] leading-relaxed">
-                  <li><code className="text-cyan">id</code> — unique key the workbench uses to find the bot.</li>
-                  <li><code className="text-cyan">params</code> — the sliders + inputs you see on the cell.</li>
-                  <li><code className="text-cyan">run(ctx, p)</code> — the function that gets called with candles + your params and returns the verdict.</li>
-                  <li><code className="text-cyan">verdict</code> — the read pill at the top of the cell (up, down, flat or caution).</li>
-                  <li><code className="text-cyan">metrics</code> — the small stat boxes shown in the cell body.</li>
+            <div className="mt-3 grid grid-cols-1 gap-3 text-[0.8125rem] text-fg-dim md:grid-cols-2">
+              <CalmPanel title="What each piece means">
+                <ul className="space-y-1.5 leading-relaxed">
+                  <li><code className="text-fg">id</code> — unique key the workbench uses to find the bot.</li>
+                  <li><code className="text-fg">params</code> — the sliders + inputs you see on the cell.</li>
+                  <li><code className="text-fg">run(ctx, p)</code> — the function that gets called with candles + your params and returns the verdict.</li>
+                  <li><code className="text-fg">verdict</code> — the read pill at the top of the cell (up, down, flat or caution).</li>
+                  <li><code className="text-fg">metrics</code> — the small stat boxes shown in the cell body.</li>
                 </ul>
-              </div>
-              <div className="surface-card border border-border bg-surface p-3">
-                <div className="t-chrome text-fg-faint mb-1">
-                  use this code yourself
-                </div>
-                <ol className="space-y-1.5 text-[0.75rem] leading-relaxed list-decimal pl-4">
+              </CalmPanel>
+              <CalmPanel title="Use this code yourself">
+                <ol className="space-y-1.5 leading-relaxed list-decimal pl-4">
                   <li>Copy the whole block above.</li>
-                  <li>On <a href="/quant" className="text-bull hover:underline">/quant</a>, click <span className="border border-dashed border-border px-1">+ Import your bot</span> in the bot library.</li>
+                  <li>On <a href="/quant" className="text-brand-ink hover:underline">/quant</a>, click <Chip>+ Import your bot</Chip> in the bot library.</li>
                   <li>Paste, hit save. It hot-loads into your workspace.</li>
-                  <li>Edit any param defaults or logic to your taste — it&apos;s now yours.</li>
+                  <li>Edit any param defaults or logic to your taste — it’s now yours.</li>
                 </ol>
-              </div>
+              </CalmPanel>
             </div>
           </div>
         </section>
       )}
 
       {/* Specialty */}
-      <section className="border-b border-border">
+      <section>
         <div className="shell section-y-sm">
           <SectionLabel>Specialty · when it shines, when it fails</SectionLabel>
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="border-l-2 border-bull bg-bull/5 p-5">
-              <div className="t-chrome text-bull mb-3">
-                ✓ Shines when
-              </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <CalmPanel>
+              <div className="t-eyebrow text-brand-ink mb-3">✓ Shines when</div>
               <ul className="space-y-3 t-body-sm text-fg">
                 {(content.shines ?? defaultShines(bot.category)).map((s, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="text-bull">·</span>
+                    <span className="text-fg-faint">·</span>
                     <span>{s}</span>
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="border-l-2 border-bear bg-bear/5 p-5">
-              <div className="t-chrome text-bear mb-3">
-                ✗ Fails when
-              </div>
+            </CalmPanel>
+            <CalmPanel>
+              <div className="t-eyebrow text-fg-dim mb-3">✗ Fails when</div>
               <ul className="space-y-3 t-body-sm text-fg">
                 {(content.fails ?? defaultFails(bot.category)).map((s, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="text-bear">·</span>
+                    <span className="text-fg-faint">·</span>
                     <span>{s}</span>
                   </li>
                 ))}
               </ul>
-            </div>
+            </CalmPanel>
           </div>
         </div>
       </section>
 
       {/* How to read the verdict */}
-      <section className="border-b border-border bg-bg-soft">
+      <section>
         <div className="shell section-y-sm">
           <SectionLabel>How to read its verdict</SectionLabel>
           <p className="mt-4 max-w-[68ch] text-[0.9375rem] leading-relaxed text-fg">
@@ -293,28 +242,28 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 
       {/* AI-only: service status + flow diagram */}
       {isAi && (
-        <section className="border-b border-border">
+        <section>
           <div className="shell section-y-sm">
             <SectionLabel>Python service</SectionLabel>
             <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
-              This bot tries to call the FastAPI service first. When it's up,
-              you get real model output. When it's down, the bot transparently
+              This bot tries to call the FastAPI service first. When it’s up,
+              you get real model output. When it’s down, the bot transparently
               falls back to a deterministic TS surrogate.
             </p>
 
             {/* Dev-metadata chips, demoted here from the hero */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {bot.module && (
-                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[0.6875rem] tracking-wider text-fg-dim">
-                  <span className="text-fg-faint uppercase mr-1">src</span>
-                  <span className="text-fg">{bot.module}</span>
-                </span>
+                <Chip className="max-w-full">
+                  <span className="text-fg-faint">Src</span>
+                  <span className="min-w-0 truncate font-mono text-[0.6875rem] text-fg">{bot.module}</span>
+                </Chip>
               )}
               {bot.endpoint && (
-                <span className="inline-flex items-center gap-2 border border-border bg-bg px-3 py-2 font-mono text-[0.6875rem] tracking-wider text-fg-dim">
-                  <span className="text-fg-faint uppercase mr-1">api</span>
-                  <span className="text-cyan">{bot.endpoint}</span>
-                </span>
+                <Chip className="max-w-full">
+                  <span className="text-fg-faint">API</span>
+                  <span className="min-w-0 truncate font-mono text-[0.6875rem] text-fg">{bot.endpoint}</span>
+                </Chip>
               )}
             </div>
 
@@ -322,85 +271,89 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
               <LearnApiStatus endpoint={bot.endpoint ?? "/health"} />
             </div>
 
-            <details className="group mt-6 surface-card border border-border bg-surface">
-              <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 hover:bg-bg-soft">
-                <span className="font-display text-base tracking-tightest text-fg">How the request flows</span>
-                <span className="font-mono text-fg-faint group-open:hidden">+</span>
-                <span className="font-mono text-fg-faint hidden group-open:inline">−</span>
-              </summary>
-              <div className="grid grid-cols-1 gap-px border-t border-border bg-border md:grid-cols-5">
-                {[
-                  { step: "01", title: "BotCell.run()", body: "User clicks Run on this bot in /quant" },
-                  { step: "02", title: "callApi()", body: "POST to " + (process.env.NEXT_PUBLIC_QUANTAI_URL || "localhost:8000") + (bot.endpoint ?? "") },
-                  { step: "03", title: "load_surrogate()", body: bot.module ?? "Python service loads the trained model" },
-                  { step: "04", title: "predict()", body: "Forward pass on the inputs you provided" },
-                  { step: "05", title: "BotResult", body: "JSON returned, card flips green Source: Python NN" },
-                ].map((s) => (
-                  <div key={s.step} className="bg-bg p-4">
-                    <div className="t-chrome text-fg-faint">{s.step}</div>
-                    <div className="mt-2 font-mono text-[0.75rem] tracking-wide text-fg">{s.title}</div>
-                    <div className="mt-1 text-[0.6875rem] leading-relaxed text-fg-dim">{s.body}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wider text-fg-dim">
-                <span className="text-fg-faint uppercase mr-2">spin it up</span>
-                <code className="text-fg">cd "ai quants" && uvicorn serve:app --reload --port 8000</code>
-              </div>
-            </details>
+            {/* The panel wraps the <details>: a closed <details> hides every
+                child but its summary, and the aura has to stay painted. */}
+            <div className="calm-panel mt-3">
+              <i aria-hidden className="lit-aura" />
+              <details className="group">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-fg transition-colors hover:text-brand-ink">
+                  <span className="font-display text-base tracking-tightest">How the request flows</span>
+                  <span className="font-mono text-fg-faint group-open:hidden">+</span>
+                  <span className="font-mono text-fg-faint hidden group-open:inline">−</span>
+                </summary>
+                <div className="grid grid-cols-1 gap-4 px-5 pb-4 md:grid-cols-5">
+                  {[
+                    { step: "01", title: "BotCell.run()", body: "User clicks Run on this bot in /quant" },
+                    { step: "02", title: "callApi()", body: "POST to " + (process.env.NEXT_PUBLIC_QUANTAI_URL || "localhost:8000") + (bot.endpoint ?? "") },
+                    { step: "03", title: "load_surrogate()", body: bot.module ?? "Python service loads the trained model" },
+                    { step: "04", title: "predict()", body: "Forward pass on the inputs you provided" },
+                    { step: "05", title: "BotResult", body: "JSON returned, card flips green Source: Python NN" },
+                  ].map((s) => (
+                    <div key={s.step}>
+                      <div className="t-label text-fg-faint">{s.step}</div>
+                      <div className="mt-2 font-mono text-[0.75rem] tracking-wide text-fg">{s.title}</div>
+                      <div className="mt-1 text-[0.75rem] leading-relaxed text-fg-dim">{s.body}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 pb-5">
+                  <span className="t-label text-fg-faint">Spin it up</span>
+                  <code className="font-mono text-[0.6875rem] text-fg">cd "ai quants" && uvicorn serve:app --reload --port 8000</code>
+                </div>
+              </details>
+            </div>
           </div>
         </section>
       )}
 
       {/* FAQ */}
       {(content.faq && content.faq.length > 0) && (
-        <section className="border-b border-border bg-bg-soft">
+        <section>
           <div className="shell section-y-sm">
             <SectionLabel>FAQ</SectionLabel>
-            <div className="mt-6 divide-y divide-border-soft surface-card border border-border bg-surface">
-              {content.faq.map((q, i) => (
-                <details key={i} className="group">
-                  <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 hover:bg-bg-soft">
-                    <span className="font-display text-base tracking-tightest text-fg">{q.q}</span>
-                    <span className="font-mono text-fg-faint group-open:hidden">+</span>
-                    <span className="font-mono text-fg-faint hidden group-open:inline">−</span>
-                  </summary>
-                  <div className="border-t border-border-soft bg-bg px-5 py-4 t-body-sm text-fg-dim">
-                    {q.a}
-                  </div>
-                </details>
-              ))}
+            <div className="calm-panel mt-4">
+              <i aria-hidden className="lit-aura" />
+              <div className="divide-y divide-border-soft">
+                {content.faq.map((q, i) => (
+                  <details key={i} className="group">
+                    <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-fg transition-colors hover:text-brand-ink">
+                      <span className="font-display text-base tracking-tightest">{q.q}</span>
+                      <span className="font-mono text-fg-faint group-open:hidden">+</span>
+                      <span className="font-mono text-fg-faint hidden group-open:inline">−</span>
+                    </summary>
+                    <div className="px-5 pb-4 t-body-sm text-fg-dim">
+                      {q.a}
+                    </div>
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* Related */}
-      <section className="border-b border-border">
+      <section>
         <div className="shell section-y-sm">
           <SectionLabel>Related bots</SectionLabel>
-          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
             {related.map((r) => {
               const rcat = CATEGORY_META[r.category];
               return (
                 <Link
                   key={r.id}
                   href={`/learn/bots/${r.id}`}
-                  className="group flex items-start gap-3 surface-card border border-border bg-surface p-4 hover:border-bull/50 hover:bg-bull/[0.03]"
+                  className="calm-panel calm-card flex items-start gap-3 p-4"
                 >
-                  <span
-                    className="grid size-8 shrink-0 place-items-center border border-border bg-bg font-mono text-[0.75rem]"
-                    style={{ color: rcat.color }}
-                  >
+                  <i aria-hidden className="lit-aura" />
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fg/[0.07] font-mono text-[0.75rem] text-fg-dim">
                     {r.glyph}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-display text-[0.9375rem] tracking-tightest text-fg">
                       {r.name}
                     </div>
-                    <div className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-wider" style={{ color: rcat.color }}>
-                      {rcat.label}
-                    </div>
+                    <div className="mt-0.5 t-label text-fg-faint">{rcat.label}</div>
                     <p className="mt-2 line-clamp-2 text-[0.75rem] text-fg-dim">{r.tagline}</p>
                   </div>
                 </Link>
@@ -411,27 +364,15 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
       </section>
 
       {/* Footer CTAs */}
-      <section className="border-b border-border bg-bg-soft">
+      <section>
         <div className="shell section-y-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <Link href="/learn" className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-bull">
-                ← Back to Learn
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href="/learn/bots"
-                className="inline-flex items-center gap-2 border border-border bg-bg px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
-              >
-                Browse all bots
-              </Link>
-              <Link
-                href={`/quant?add=${bot.id}`}
-                className="inline-flex items-center gap-2 btn-grad px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
-              >
-                Try {bot.name} →
-              </Link>
+            <CalmLink href="/learn">Back to Learn</CalmLink>
+            <div className="flex flex-wrap items-center gap-2">
+              <PillLink href="/learn/bots">Browse all bots</PillLink>
+              <PillLink href={`/quant?add=${bot.id}`} kind="primary">
+                Try {bot.name}
+              </PillLink>
             </div>
           </div>
         </div>
@@ -442,14 +383,9 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
   );
 }
 
+// Calm (S1, 2026-11-09): one plain eyebrow. It carried a ⟢, a rule and mint.
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 t-eyebrow text-fg-faint">
-      <span>⟢</span>
-      <span className="h-px w-12 bg-border" />
-      <span className="text-bull">{children}</span>
-    </div>
-  );
+  return <div className="t-eyebrow text-brand-ink">{children}</div>;
 }
 
 function defaultIntro(name: string, tagline: string): string {
@@ -472,7 +408,7 @@ function defaultShines(category: string): string[] {
     "Combined with a directional bot to give it something to size.",
   ];
   if (category === "options") return [
-    "European-style equity options inside the model's training distribution.",
+    "European-style equity options inside the model’s training distribution.",
     "When you need Greeks alongside price, not just price.",
     "Sanity-checking live chain quotes against fair value.",
   ];
@@ -504,7 +440,7 @@ function defaultFails(category: string): string[] {
   ];
   if (category === "options") return [
     "Exotic options or any contract style outside the training distribution.",
-    "Extreme IV regimes (>200%) where the surrogate hasn't seen examples.",
+    "Extreme IV regimes (>200%) where the surrogate hasn’t seen examples.",
     "Live-chain decisioning when the chain feed itself is stale or partial.",
   ];
   if (category === "ai") return [
@@ -513,10 +449,10 @@ function defaultFails(category: string): string[] {
     "Out-of-distribution tickers (illiquid small caps, FX, crypto).",
   ];
   return [
-    "When the dataset violates the bot's underlying assumptions.",
-    "When you treat the bot's verdict as a single source of truth without checking the consensus.",
+    "When the dataset violates the bot’s underlying assumptions.",
+    "When you treat the bot’s verdict as a single source of truth without checking the consensus.",
   ];
 }
 function defaultVerdict(name: string): string {
-  return `The read pill summarises ${name}'s output as UP, DOWN, FLAT or CAUTION, a read of the window it was shown, with a confidence score from 0 to 1. Each bot computes that confidence from its own internal signal — for a trend bot it's typically the gap between the indicator lines, for a probabilistic bot it's the deviation from the noise floor. Use it to weight ensemble votes, not as a hard threshold.`;
+  return `The read pill summarises ${name}’s output as UP, DOWN, FLAT or CAUTION: a read of the window it was shown, not a forecast and not odds. /quant prints no confidence beside it, because a bot's internal signal strength is not a probability anyone has checked. What carries information is whether independent models line up on the same window, and even a full vote sits inside the same historical band as a split one.`;
 }

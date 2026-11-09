@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { useMemo } from "react";
 import type { Strategy } from "@/lib/models";
 import { pnlCurve, type Leg } from "@/lib/pricing";
+import { Chip, ToolButton, type ChipTone } from "@/components/calm/kit";
 
 type Props = {
   strategies: Strategy[];
@@ -18,21 +19,21 @@ type Props = {
   compact?: boolean;
 };
 
-const TONE: Record<Strategy["id"], { label: string; color: string; pillBg: string }> = {
-  cheap: { label: "Cheap & risky", color: "var(--plasma)", pillBg: "rgba(143,115,255,0.12)" },
-  income: { label: "Defined-risk credit", color: "var(--bull)", pillBg: "rgba(82,255,165,0.12)" },
+// `color` strokes the payoff line. The label is the one Chip, and only the label
+// that names a risk takes a tone.
+const TONE: Record<Strategy["id"], { label: string; color: string; chip: ChipTone }> = {
+  cheap: { label: "Cheap & risky", color: "var(--plasma)", chip: "warn" },
+  income: { label: "Defined-risk credit", color: "var(--bull)", chip: "neutral" },
   // This pill read "Aggressive" in --bear. Red means loss on this site, so it
   // coloured a judgement as an outcome, on a spread whose loss is capped at the
   // debit. It is named for what it is now: a debit spread that takes a side.
   // --cyan is the palette's data colour (spot, strikes, data strokes), never
-  // gain or loss. --fg-dim was the other neutral, but a grey pill, selection
-  // bar and place button read as disabled, which is a verdict of its own.
+  // gain or loss.
   // The `aggressive` key stays: it is an id, never shown.
-  aggressive: { label: "Directional debit", color: "var(--cyan)", pillBg: "rgba(56,132,255,0.12)" },
+  aggressive: { label: "Directional debit", color: "var(--cyan)", chip: "neutral" },
 };
 
-/** Shared tone map so the strategy panel (page shell) can color its detail block consistently. */
-export const STRATEGY_TONE = TONE;
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot, symbol, columns = 3, compact = false }: Props) {
   if (compact) {
@@ -46,27 +47,21 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
               key={s.id}
               type="button"
               onClick={() => onSelect(s)}
-              className={`relative flex flex-col gap-1 px-3 py-2 text-left font-mono transition-colors ${
+              className={`relative flex flex-col gap-1 px-3 py-2 text-left transition-colors ${
                 selected ? "bg-surface" : "bg-bg hover:bg-surface"
               }`}
             >
               {selected && (
-                <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5" style={{ background: tone.color }} aria-hidden />
+                <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-brand-ink" aria-hidden />
               )}
               {/* line 1: the fixed-width chrome. Price and odds travel as one
                   group and drop under the pill when a narrow phone has no room
                   for all three, instead of running out past the panel edge. */}
               <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span
-                  className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-0.5 t-chrome"
-                  style={{ color: tone.color, background: tone.pillBg }}
-                >
-                  <span className="size-1 rounded-full" style={{ background: tone.color }} />
-                  {tone.label}
-                </span>
+                <Chip tone={tone.chip} className="shrink-0">{tone.label}</Chip>
                 <span className="ml-auto flex shrink-0 items-center gap-2">
-                  <span className="t-chrome text-fg-faint tabular-nums">
-                    {s.cost > 0 ? "pay" : "collect"} ${Math.abs(s.cost).toFixed(0)}
+                  <span className="t-label text-fg-faint tabular-nums">
+                    {s.cost > 0 ? "Pay" : "Collect"} ${Math.abs(s.cost).toFixed(0)}
                   </span>
                   <span className="w-9 text-right t-data text-[0.6875rem] text-bull">{(s.prob * 100).toFixed(0)}%</span>
                 </span>
@@ -108,20 +103,20 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
 
   // factual chips, all derived from the strategy itself (never invented)
   const definedRisk = Number.isFinite(s.maxLoss);
-  const chips: string[] = [s.cost > 0 ? "debit" : "credit", s.bias, ...(definedRisk ? ["defined risk"] : [])];
+  const chips: string[] = [s.cost > 0 ? "Debit" : "Credit", cap(s.bias), ...(definedRisk ? ["Defined risk"] : [])];
   // R:R only when both sides are finite and the loss side is non-zero
   const rr =
     Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0
       ? s.maxProfit / Math.abs(s.maxLoss)
       : null;
   const rail: { k: string; v: string; c?: string }[] = [
-    { k: "max profit", v: fmt(s.maxProfit) },
-    { k: "max loss", v: fmt(s.maxLoss) },
+    { k: "Max profit", v: fmt(s.maxProfit) },
+    { k: "Max loss", v: fmt(s.maxLoss) },
     ...(s.breakevens.length
-      ? [{ k: "breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / ") }]
+      ? [{ k: "Breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / ") }]
       : []),
-    { k: "pop", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull" },
-    ...(rr != null ? [{ k: "r:r", v: rr.toFixed(2) }] : []),
+    { k: "POP", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-bull" },
+    ...(rr != null ? [{ k: "R:R", v: rr.toFixed(2) }] : []),
   ];
 
   return (
@@ -140,33 +135,23 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
     >
       {/* selection ring */}
       {selected && (
-        <span className="pointer-events-none absolute inset-0 border-2" style={{ borderColor: tone.color }} />
+        <span className="pointer-events-none absolute inset-0 border-2 border-brand-ink" />
       )}
 
       {/* header */}
       <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 px-2 py-1 t-chrome" style={{ color: tone.color, background: tone.pillBg }}>
-          <span className="size-1.5 rounded-full" style={{ background: tone.color }} />
-          {tone.label}
-        </div>
-        <span className="t-chrome text-fg-faint tabular-nums">
-          {s.cost > 0 ? "you pay" : "you collect"} ${Math.abs(s.cost).toFixed(0)}
+        <Chip tone={tone.chip}>{tone.label}</Chip>
+        <span className="t-label text-fg-faint tabular-nums">
+          {s.cost > 0 ? "You pay" : "You collect"} ${Math.abs(s.cost).toFixed(0)}
         </span>
       </div>
 
       {/* strategy title + fact chips */}
       <div>
-        <div className="font-display text-2xl uppercase tracking-tightest leading-[1.05] text-fg">{s.kind}</div>
+        <div className="font-display text-2xl tracking-tightest leading-[1.05] text-fg">{s.kind}</div>
         <div className="mt-2 flex flex-wrap items-center gap-1">
-          {chips.map((c, i) => (
-            <span
-              key={c}
-              className={`border px-1.5 py-0.5 t-chrome ${
-                i === 0 ? "border-bull/60 text-bull" : "border-border text-fg-dim"
-              }`}
-            >
-              {c}
-            </span>
+          {chips.map((c) => (
+            <Chip key={c}>{c}</Chip>
           ))}
         </div>
       </div>
@@ -179,7 +164,7 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
       <div className="flex flex-col gap-1.5">
         {rail.map((it) => (
           <div key={it.k} className="flex items-baseline justify-between gap-3">
-            <span className="t-chrome text-fg-faint">{it.k}</span>
+            <span className="t-label text-fg-faint">{it.k}</span>
             <span className={`text-right t-data text-sm ${it.c ?? "text-fg"}`}>{it.v}</span>
           </div>
         ))}
@@ -190,18 +175,14 @@ function Card({ s, spot, symbol, selected, onSelect, onPlace, delay }: { s: Stra
 
       {/* place button */}
       <div className="mt-auto pt-2">
-        <button
-          type="button"
+        <ToolButton
+          primary={selected}
           onClick={(e) => { e.stopPropagation(); onPlace(); }}
-          className="inline-flex w-full items-center justify-between border px-4 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors lg:py-2.5"
-          style={{ borderColor: tone.color, color: tone.color, background: selected ? tone.pillBg : "transparent" }}
+          className="w-full !h-11 !justify-between lg:!h-9"
         >
-          <span className="inline-flex items-center gap-2">
-            <span className="size-1.5 rounded-full pulse-dot" style={{ background: tone.color }} />
-            place paper trade on {symbol}
-          </span>
+          <span>Place paper trade on {symbol}</span>
           <span>→</span>
-        </button>
+        </ToolButton>
       </div>
     </motion.div>
   );
@@ -235,10 +216,10 @@ export function EmptyPnlSparkline({ spot, note, className = "h-20 w-full" }: { s
         <line x1={w / 2} x2={w / 2} y1={h / 2} y2={h} stroke="var(--cyan)" strokeOpacity="0.4" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
       </svg>
       <span aria-hidden className="absolute left-0 top-1/2 -translate-y-full whitespace-nowrap pb-0.5 t-chrome text-fg-faint">$0</span>
-      <span aria-hidden className="absolute bottom-0 left-1/2 whitespace-nowrap pl-1.5 t-chrome tabular-nums text-fg-faint">
-        spot ${spot.toFixed(2)}
+      <span aria-hidden className="absolute bottom-0 left-1/2 whitespace-nowrap pl-1.5 t-label tabular-nums text-fg-faint">
+        Spot ${spot.toFixed(2)}
       </span>
-      <p className="absolute inset-x-3 top-1/4 -translate-y-1/2 text-balance text-center t-chrome text-fg-dim">{note}</p>
+      <p className="absolute inset-x-3 top-1/4 -translate-y-1/2 text-balance text-center t-label text-fg-dim">{note}</p>
     </div>
   );
 }

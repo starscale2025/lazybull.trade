@@ -12,7 +12,7 @@ export function Tr({ children, head, className = "" }: { children: ReactNode; he
   return (
     <tr
       className={`${
-        head ? "text-fg-faint" : "border-t border-border-soft transition-colors hover:bg-surface-2/50"
+        head ? "text-fg-faint" : "border-t border-[color-mix(in_srgb,var(--fg)_6%,transparent)] transition-colors hover:bg-[color-mix(in_srgb,var(--fg)_4%,transparent)]"
       } ${className}`}
     >
       {children}
@@ -22,7 +22,8 @@ export function Tr({ children, head, className = "" }: { children: ReactNode; he
 
 export function Th({ children, left, className = "" }: { children?: ReactNode; left?: boolean; className?: string }) {
   return (
-    <th className={`px-2 pb-2 font-normal uppercase tracking-wider ${left ? "text-left" : "text-right"} ${className}`}>
+    // Calm (S1): sentence case in the reading sans; the numbers below stay mono.
+    <th className={`px-2 pb-2 font-sans text-[0.75rem] font-normal ${left ? "text-left" : "text-right"} ${className}`}>
       {children}
     </th>
   );
@@ -48,7 +49,7 @@ export function Td({
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="py-6 text-center font-mono text-[0.6875rem] text-fg-faint">{children}</div>;
+  return <div className="py-6 text-center text-[0.875rem] text-fg-faint">{children}</div>;
 }
 
 /** A labelled figure tile — `bg-surface p-3`, chrome label, tabular value. */

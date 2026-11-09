@@ -10,9 +10,15 @@ import { PreTradeModal } from "@/components/safety/PreTradeModal";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 import { noteExplainRequest, tradeFingerprint } from "@/lib/confusion";
+import { Chip, ToolButton } from "@/components/calm/kit";
 
 const fmt = (n: number) =>
   Number.isFinite(n) ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}` : "unbounded";
+
+// The panel's header is a thin strip: the kit's control, compact.
+const DENSE = "!h-6 !px-2.5 !text-[0.75rem]";
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function StrategyCard({ underlying, spot }: { underlying: string; spot: number }) {
   const legs = useStrategy((s) => s.legs);
@@ -102,26 +108,19 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
   };
 
   return (
-    <div className="border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome">
-        <div className="flex items-center gap-2">
-          <span className="text-bull">●</span>
-          <span className="text-fg">strategy builder</span>
-        </div>
+    <div className="surface-instrument border border-border bg-bg">
+      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-label">
+        <span className="text-fg">Strategy builder</span>
         <div className="flex items-center gap-3 text-fg-dim">
           <span>{legs.length} leg{legs.length === 1 ? "" : "s"}</span>
           {legs.length > 0 && (
             <>
-              <button
-                onClick={explain}
-                className="inline-flex items-center gap-1.5 text-bull transition-colors hover:text-fg"
-              >
-                <span className="size-1 rounded-full bg-bull pulse-dot" />
-                explain
-              </button>
-              <button onClick={clear} className="text-fg-faint hover:text-bear transition-colors">
-                clear
-              </button>
+              <ToolButton onClick={explain} className={DENSE}>
+                Explain
+              </ToolButton>
+              <ToolButton onClick={clear} className={DENSE}>
+                Clear
+              </ToolButton>
             </>
           )}
         </div>
@@ -129,46 +128,18 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
 
       {/* Detected strategy banner */}
       <div className="px-4 pt-4">
-        <div className="t-chrome text-fg-faint">detected</div>
+        <div className="t-label text-fg-faint">Detected</div>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <div className="font-display text-2xl tracking-tightest text-fg">
             {legs.length === 0 ? "Empty" : detection.kind}
           </div>
           {legs.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 t-chrome text-fg-dim">
-              <span
-                className="inline-flex items-center gap-1.5 border px-2 py-0.5"
-                style={{
-                  borderColor:
-                    detection.bias === "bullish"
-                      ? "var(--bull)"
-                      : detection.bias === "bearish"
-                      ? "var(--bear)"
-                      : detection.bias === "volatile"
-                      ? "var(--plasma)"
-                      : "var(--cyan)",
-                  color:
-                    detection.bias === "bullish"
-                      ? "var(--bull)"
-                      : detection.bias === "bearish"
-                      ? "var(--bear)"
-                      : detection.bias === "volatile"
-                      ? "var(--plasma)"
-                      : "var(--cyan)",
-                }}
-              >
-                {detection.bias}
-              </span>
-              <span className="border border-border bg-bg px-2 py-0.5">net {detection.net}</span>
-              <span
-                className="border px-2 py-0.5"
-                style={{
-                  borderColor: detection.defined ? "var(--bull)" : "var(--bear)",
-                  color: detection.defined ? "var(--bull)" : "var(--bear)",
-                }}
-              >
-                {detection.defined ? "defined risk" : "unbounded risk"}
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Chip>{cap(detection.bias)}</Chip>
+              <Chip>Net {detection.net}</Chip>
+              <Chip tone={detection.defined ? "neutral" : "warn"}>
+                {detection.defined ? "Defined risk" : "Unbounded risk"}
+              </Chip>
             </div>
           )}
         </div>
@@ -194,7 +165,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             { k: "Net cost", v: `${cost >= 0 ? "" : "+"}$${Math.abs(cost / 100).toFixed(2)}`, c: cost >= 0 ? "text-fg-dim" : "text-bull" },
           ].map((s) => (
             <div key={s.k} className="bg-bg p-3">
-              <div className="t-chrome text-fg-faint">{s.k}</div>
+              <div className="t-label text-fg-faint">{s.k}</div>
               <div className={`mt-1 t-data text-base whitespace-nowrap ${s.c}`}>{s.v}</div>
             </div>
           ))}
@@ -214,14 +185,9 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
           </div>
           {legs.map((l) => (
             <div key={l.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[0.6875rem]">
-              <button
-                onClick={() => flipSide(l.id)}
-                className={`col-span-2 border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider transition-colors ${
-                  l.side === "long" ? "border-bull text-bull hover:bg-bull/10" : "border-bear text-bear hover:bg-bear/10"
-                }`}
-              >
-                {l.side}
-              </button>
+              <ToolButton onClick={() => flipSide(l.id)} className="col-span-2 !h-6 !px-1 !text-[0.6875rem]">
+                {cap(l.side)}
+              </ToolButton>
               <span className={`col-span-2 ${l.type === "C" ? "text-bull" : "text-bear"}`}>{l.type === "C" ? "call" : "put"}</span>
               <span className="col-span-2 text-fg">{l.strike.toFixed(l.strike < 100 ? 2 : 0)}</span>
               <span className="col-span-2 text-right text-fg-dim">${l.premium.toFixed(2)}</span>
@@ -231,7 +197,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
                   min={1}
                   value={l.qty}
                   onChange={(e) => setQty(l.id, parseInt(e.target.value) || 1)}
-                  className="w-12 border border-border bg-bg px-1 py-0.5 text-right text-fg outline-none focus:border-bull"
+                  className="w-12 border border-border bg-bg px-1 py-0.5 text-right text-fg outline-none focus:border-brand-ink"
                 />
               </span>
               <span className={`col-span-2 text-right ${l.side === "long" ? "text-bear" : "text-bull"}`}>
@@ -245,17 +211,14 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
       {/* Trade button */}
       {legs.length > 0 && (
         <div className="flex items-center justify-between gap-3 border-t border-border-soft bg-bg-soft px-4 py-3">
-          <div className="t-chrome text-fg-dim">
-            cash <span className="text-fg">${cash.toLocaleString()}</span>
+          <div className="t-label text-fg-dim">
+            Cash <span className="text-fg">${cash.toLocaleString()}</span>
             <span className="text-fg-faint mx-2">·</span>
-            cost <span className={cost > 0 ? "text-bear" : "text-bull"}>${Math.abs(cost).toFixed(0)}</span>
+            Cost <span className={cost > 0 ? "text-bear" : "text-bull"}>${Math.abs(cost).toFixed(0)}</span>
           </div>
-          <button
-            onClick={() => setTradeModal(true)}
-            className="inline-flex items-center gap-2 btn-grad px-4 py-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
-          >
-            paper trade →
-          </button>
+          <ToolButton primary onClick={() => setTradeModal(true)}>
+            Paper trade →
+          </ToolButton>
         </div>
       )}
 
@@ -274,10 +237,10 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 8 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-xl w-full border border-bull/40 bg-bg shadow-[0_30px_80px_-20px_rgba(82,255,165,0.4)]"
+              className="surface-instrument max-w-xl w-full border border-border bg-bg shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-chrome">
-                <span className="text-bull">● teacher · {paywall ? "paused" : explanation?.source ?? "..."}</span>
+              <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2 t-label">
+                <span className="text-fg-dim">Teacher · {paywall ? "paused" : explanation?.source ?? "..."}</span>
                 <button onClick={() => setExplainOpen(false)} className="text-fg-faint hover:text-fg">
                   ✕
                 </button>
@@ -286,15 +249,15 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
                 <div className="font-display text-2xl tracking-tightest text-fg">
                   {detection.kind}
                 </div>
-                <div className="mt-1 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
-                  on {underlying} · spot ${spot.toFixed(2)}
+                <div className="mt-1 t-label text-fg-dim">
+                  On {underlying} · spot ${spot.toFixed(2)}
                 </div>
                 {paywall && !explainLoading ? (
                   <UpgradeNudge paywall={paywall} className="mt-4" />
                 ) : (
                   <div className="mt-4 min-h-[7.5rem] whitespace-pre-line t-body-sm text-fg">
                     {explainLoading ? (
-                      <span className="text-fg-faint">teacher is thinking…</span>
+                      <span className="text-fg-faint">Teacher is thinking…</span>
                     ) : (
                       explanation?.text
                     )}
@@ -303,7 +266,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
                 {/* The AI-output disclosure travels with every response
                     (lib/billing/explain-policy.ts) and is rendered, not assumed. */}
                 {!explainLoading && !paywall && explanation?.disclosure && (
-                  <div className="mt-4 border-t border-border-soft pt-3 t-chrome text-fg-faint">
+                  <div className="mt-4 border-t border-border-soft pt-3 t-label text-fg-faint">
                     {explanation.disclosure}
                   </div>
                 )}

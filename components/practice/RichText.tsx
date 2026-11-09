@@ -9,7 +9,7 @@
 
 import { Fragment } from "react";
 
-const CODE_CLS = "border border-border bg-surface px-1 font-mono text-[0.6875rem] text-fg";
+const CODE_CLS = "rounded-[4px] bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] px-1 font-mono text-[0.6875rem] text-fg";
 
 type Segment = { code: boolean; text: string };
 

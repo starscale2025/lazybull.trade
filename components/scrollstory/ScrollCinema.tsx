@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, canvasOpacity, flashOpacity, safetyLight } from "@/lib/cinema";
-import { cinemaClock } from "@/lib/cinema-clock";
-import { getHeroPosition, onHeroPosition, type HeroPosition } from "@/lib/hero-position";
+import { ACTS, BULL3D, CANDLE3D, DIVE3D, COPY_BEATS, SAFETY_LINES, beatCharT, beatOpacity, bull3dOpacity, candle3dOpacity, candleLabT, clamp01, dive3dOpacity, handoffOpacity, safetyLight } from "@/lib/cinema";
+import { advanceFilm, cinemaClock, damp } from "@/lib/cinema-clock";
+import { isMotionPaused, motion as busMotion } from "@/lib/motion/bus";
+import { getHeroPosition, onHeroPosition, useHeroChosen, type HeroPosition } from "@/lib/hero-position";
 import {
   cinemaAudioFrame,
   cinemaAudioEnabled,
@@ -19,7 +20,15 @@ import { CinemaRail, type CinemaRailHandle } from "./CinemaRail";
 import { CinemaStill } from "./CinemaStill";
 // Shared with CinemaGate, which reserves exactly this height on the first paint
 // so mounting the film shifts nothing. See cinema-metrics.ts.
-import { SCROLL_LENGTH_VH, CURTAIN_VH, FILM_START, FILM_LIFT_END, scrollToFilm, filmToScroll } from "./cinema-metrics";
+import { setIslandStage } from "@/lib/island";
+import { BULL_MARK } from "@/lib/bull-mark";
+import { BullMark } from "@/components/BullMark";
+import { SCROLL_LENGTH_VH, CURTAIN_VH, FILM_START, FILM_LIFT_END, scrollToFilm, filmToScroll, holdOf } from "./cinema-metrics";
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __filmToScroll: ((p: number) => number) | undefined;
+}
 // The page scrolls through Lenis; moving it with window.scrollTo mid-glide is undone next frame.
 import { glideTo, isSmoothing, jumpBy, jumpTo } from "@/lib/motion/scroll";
 import { AUTOPLAYED_KEY, REPLAY_KEY, RESUME_KEY, cinemaResumeAt, markCinemaSeen } from "./cinema-memory";
@@ -46,6 +55,10 @@ if (typeof window !== "undefined") {
 // Film progress. Past this the follower cuts instead of gliding (see tick()),
 // and a rail seek further than this cuts behind a dip instead of gliding.
 const JUMP_CUT = 0.15;
+// The scroll must have been still this long at the end of the hold before
+// the film collapses, so a scroll still travelling through the end is never
+// cut mid-flight.
+const COLLAPSE_IDLE_MS = 160;
 
 // Distinct app-screen shots the scene composites (panels + the reveal hero).
 // "/" is now the cinema itself, so no "home" shot — panels use real product routes.
@@ -69,6 +82,12 @@ type SceneWindow = Window & {
   }) => Promise<unknown>;
   /** A new hero position after the scene is up: the visitor moved a strike. */
   setPosition?: (pos: HeroPosition) => void;
+  /** Set by this page: it draws the mark's line itself (the match-cut). */
+  markLineExternal?: boolean;
+  /** Set by this page over the hold: how far the mark's particles have faded (0..1). */
+  markFade?: number;
+  /** The mark's box as shares of the scene, and its line width as a share of its width. */
+  markRect?: () => { x: number; y: number; w: number; h: number; lw: number };
   // `hideBull` / `hideCandle` / `hideDive` (per frame) drop the matching 2D draw
   // once that 3D layer is live. `now` (seconds) drives ambient, always-on motion;
   // `cx`/`cy` (-1..1) drive the cursor spotlight.
@@ -174,9 +193,25 @@ function injectMono(doc: Document): string | null {
 // cinema-memory.ts, where CinemaGate can read it before the film loads.
 
 export function ScrollCinema() {
+  // The safety line claims "a number you chose" only once the visitor has
+  // set a spread (lib/cinema.ts SAFETY_LINES). Same windows, same order, so
+  // every per-beat ref and opacity below still lines up with COPY_BEATS.
+  const chosen = useHeroChosen();
+  const beats = useMemo(
+    () => COPY_BEATS.map((b) => (b.id === "safety" && chosen ? { ...b, ...SAFETY_LINES.chosen } : b)),
+    [chosen]
+  );
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  // The match-cut's line, drawn over the stage (see drawMatchCut).
+  const cutRef = useRef<SVGSVGElement>(null);
+  const cutRampRef = useRef<SVGPathElement>(null);
+  const cutGradRef = useRef<SVGLinearGradientElement>(null);
+  const cutUpRef = useRef<SVGPathElement>(null);
+  const cutDnRef = useRef<SVGPathElement>(null);
+  const cutClipUpRef = useRef<SVGRectElement>(null);
+  const cutClipDnRef = useRef<SVGRectElement>(null);
   const railRef = useRef<CinemaRailHandle>(null);
   // The rail seek's dip to the stage colour; see onSeek.
   const dipRef = useRef<HTMLDivElement>(null);
@@ -316,6 +351,9 @@ export function ScrollCinema() {
     // at its own pace. The page progress bar hides while the film is pinned;
     // the act rail is the film's meter (globals.css, html[data-film]).
     document.documentElement.dataset.film = "pinned";
+    // For the frame-time gate (scripts/perf/budget.mjs) and the review tools:
+    // film time → section progress, so a measured window is the act it names.
+    globalThis.__filmToScroll = filmToScroll;
 
     let disposed = false;
     let ready = false;
@@ -351,6 +389,14 @@ export function ScrollCinema() {
     };
     syncInert();
     window.addEventListener("scroll", syncInert, { passive: true });
+    // When the page last moved, for the collapse: it waits for the scroll to
+    // come to rest at the end of the hold (Lenis keeps emitting scroll while
+    // it eases, so its glide counts as moving).
+    let lastScrollAt = performance.now();
+    const markScroll = () => {
+      lastScrollAt = performance.now();
+    };
+    window.addEventListener("scroll", markScroll, { passive: true });
 
     // Normalized pointer (-1..1) shared with the 3D layers via the clock.
     const onPointer = (e: PointerEvent) => {
@@ -386,6 +432,7 @@ export function ScrollCinema() {
     const collapse = () => {
       if (collapsed || disposed) return;
       collapsed = true;
+      if (cutRef.current) cutRef.current.style.display = "none";
       // SILENCE FIRST. The next three lines slam progress to 1, and the audio
       // pass rides progress — so a skip from act five would cross the bull's
       // impact beat on the way out and detonate it into a black frame. Silence
@@ -394,8 +441,9 @@ export function ScrollCinema() {
       // behind display:none and nothing else would.
       stopCinemaAudio();
       window.removeEventListener("scroll", syncInert);
+      window.removeEventListener("scroll", markScroll);
       progress = 1;
-      renderScene();
+      renderScene(cinemaClock.time);
       applyOverlays();
       st?.kill();
       if (raf) cancelAnimationFrame(raf);
@@ -413,6 +461,9 @@ export function ScrollCinema() {
       const hadFocus = section.contains(document.activeElement);
       section.style.display = "none";
       delete document.documentElement.dataset.film;
+      setIslandStage(null);
+      // Frame zero's "or scroll for the film" is no longer true.
+      document.documentElement.dataset.filmDone = "";
       if (hadFocus && hero) {
         const h = hero.querySelector<HTMLElement>("h1, h2, [data-skip-target]");
         if (h) {
@@ -451,8 +502,89 @@ export function ScrollCinema() {
     };
     collapseRef.current = collapse; // let the Skip button trigger the same collapse
 
+    // THE MATCH-CUT (Gate A4 #5). The film used to end on the mark and then
+    // simply dissolve, a logo standing still over a screen and a half of
+    // scroll. Now the mark's line is drawn here, over the stage, from the
+    // moment it comes up (scene.html leaves it to us: markLineExternal). Over
+    // the hold it bends into the visitor's own payoff, wherever the
+    // instrument rising underneath draws it: the left horn becomes the floor,
+    // the muzzle the ramp between the strikes, the right horn the cap. Its
+    // colour turns from the brand ramp to the instrument's red below $0 and
+    // mint above, and it lands on the instrument's own line as the stage
+    // finishes dissolving, then lets that line take over. The film's last
+    // frame is the thing you can drag.
+    const MARK_LINE_IN = 0.855; // scene.html: MARK1 - 0.01
+    const drawMatchCut = () => {
+      const svg = cutRef.current;
+      const ramp = cutRampRef.current;
+      const up = cutUpRef.current;
+      const dn = cutDnRef.current;
+      if (!svg || !ramp || !up || !dn) return;
+      const hold = holdOf(scrollS);
+      const appear = clamp01((progress - MARK_LINE_IN) / 0.04);
+      const alpha = collapsed ? 0 : appear * (1 - clamp01((hold - 0.86) / 0.12));
+      const mr = alpha > 0.002 ? win()?.markRect?.() : undefined;
+      const frame = frameRef.current;
+      if (!mr || !frame) {
+        if (svg.style.display !== "none") svg.style.display = "none";
+        return;
+      }
+      svg.style.display = "";
+      const r = frame.getBoundingClientRect();
+      const mark = BULL_MARK.map(([x, y]) => [r.left + (mr.x + x * mr.w) * r.width, r.top + (mr.y + y * mr.h) * r.height]);
+      let pts = mark;
+      let k = 0;
+      let zeroY = -1e5;
+      if (hold > 0) {
+        const poly = document.querySelector<SVGPolylineElement>("[data-payoff-line]");
+        const m = poly?.getScreenCTM();
+        if (poly && m && poly.points.numberOfItems >= 4) {
+          // [S_MIN, K1, K2, S_MAX] on the instrument, in client pixels.
+          const P = [0, 1, 2, 3].map((i) => {
+            const q = poly.points.getItem(i);
+            return new DOMPoint(q.x, q.y).matrixTransform(m);
+          });
+          zeroY = new DOMPoint(0, Number(poly.dataset.zero)).matrixTransform(m).y;
+          const half = mark.length / 2;
+          const target = mark.map((_, i) => {
+            const [a, b, t] = i < half ? [P[0], P[1], i / (half - 1)] : [P[2], P[3], (i - half) / (half - 1)];
+            return [a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t];
+          });
+          const u = clamp01((hold - 0.06) / 0.72);
+          k = u * u * (3 - 2 * u);
+          pts = mark.map(([x, y], i) => [x + (target[i][0] - x) * k, y + (target[i][1] - y) * k]);
+        }
+      }
+      const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("");
+      const width = (mr.lw * r.width + (2.5 - mr.lw * r.width) * k).toFixed(2);
+      ramp.setAttribute("d", d);
+      ramp.style.strokeWidth = width;
+      ramp.style.opacity = (alpha * (1 - k)).toFixed(3);
+      const g = cutGradRef.current;
+      if (g) {
+        g.setAttribute("x1", pts[0][0].toFixed(1));
+        g.setAttribute("x2", pts[pts.length - 1][0].toFixed(1));
+      }
+      for (const p of [up, dn]) {
+        p.setAttribute("d", d);
+        p.style.strokeWidth = width;
+        p.style.opacity = (alpha * k).toFixed(3);
+      }
+      cutClipUpRef.current?.setAttribute("height", String(Math.max(0, zeroY + 1e5)));
+      cutClipDnRef.current?.setAttribute("y", zeroY.toFixed(1));
+    };
+
     const applyOverlays = (now = 0) => {
-      if (stickyRef.current) stickyRef.current.style.opacity = String(canvasOpacity(progress));
+      // The stage dissolves across the hold, in scroll (lib/cinema.ts, THE
+      // HOLD IS THE HAND-OFF), while the landing rises under it.
+      if (stickyRef.current) stickyRef.current.style.opacity = String(handoffOpacity(holdOf(scrollS)));
+      drawMatchCut();
+      // The Island (M32) recedes to its dot while the film is pinned, and
+      // comes back as the pill, signed, where the film speaks of the visitor's
+      // own position: the safety act, and the hold that hands off to the
+      // landing (Gate A4 #4). A no-op unless the stage changes.
+      const greet = (progress >= ACTS.safety.from && progress < ACTS.safety.to) || holdOf(scrollS) > 0;
+      setIslandStage(scrollS > 0 && scrollS < 1 ? (greet ? "pill" : "dot") : null);
       // The act rail rides this same pass — no second rAF, no per-frame React
       // state next to three WebGL contexts. It writes styles directly and only
       // announces on an act CHANGE.
@@ -490,7 +622,7 @@ export function ScrollCinema() {
       COPY_BEATS.forEach((beat, i) => {
         const el = copyRefs.current[i];
         if (!el) return;
-        const o = beatOpacity(progress, beat);
+        const o = beatOpacity(progress, beat, beat.fade);
         el.style.opacity = String(o);
         // The per-character stagger is now a NUMBER written every frame, not a
         // class flip: the CSS below derives each glyph's own 0→1 from this and
@@ -584,12 +716,10 @@ export function ScrollCinema() {
         }
       }
       // Layered cursor parallax: the whole composited scene drifts gently against
-      // the pointer (scaled up a hair so edges never peek in). During the matrix
-      // burst the whole frame GLITCH-SHAKES (deterministic sin jitter × flash).
-      const fl = flashOpacity(progress);
-      const jx = Math.sin(now * 67) * 5 * fl;
-      const jy = Math.cos(now * 53) * 4 * fl;
-      const t3 = `translate3d(${(pxS * -7 + jx).toFixed(2)}px, ${(pyS * -5 + jy).toFixed(2)}px, 0) scale(1.015)`;
+      // the pointer (scaled up a hair so edges never peek in). The glitch-shake
+      // that rattled the whole frame through the matrix burst is gone (Gate A3
+      // #7): it shook the picture, not anything in it.
+      const t3 = `translate3d(${(pxS * -7).toFixed(2)}px, ${(pyS * -5).toFixed(2)}px, 0) scale(1.015)`;
       if (frameRef.current) frameRef.current.style.transform = t3;
       if (candle3dWrapRef.current) candle3dWrapRef.current.style.transform = t3;
       if (bull3dWrapRef.current) bull3dWrapRef.current.style.transform = t3;
@@ -618,6 +748,11 @@ export function ScrollCinema() {
       // read an out-of-scope canvas context on the vote act's first frame).
       if (ready) {
         try {
+          const sw = win();
+          if (sw && cutRef.current && sw.markRect) {
+            if (!sw.markLineExternal) sw.markLineExternal = true;
+            sw.markFade = clamp01(holdOf(scrollS) / 0.15);
+          }
           win()?.renderAt?.(
             progress,
             hideBull,
@@ -703,13 +838,21 @@ export function ScrollCinema() {
         warm += dive3dReadyRef.current ? 1 : 0.25;
       }
       parked = false;
+      // THE FILM'S OWN TIME (M31): it runs only while the film plays and the
+      // site is not paused, and every layer's ambient motion (the 2D scene's
+      // and, through advanceFilm below, the 3D layers') reads it. Scroll still
+      // moves the picture while paused; only what moves by itself stops.
+      cinemaClock.dt = dt;
+      if (!isMotionPaused()) cinemaClock.time += dt;
       // THE END IS WHERE THE PICTURE ENDS. Collapsing on ScrollTrigger's raw
       // onLeave cut the film off wherever the smoothed follower happened to
       // be, up to a few percent short, so the last frames never played and
-      // the hand-off read as a hard cut (re-tribunal regression 6). Collapse
-      // here instead, once the scroll is past the end AND the picture has
-      // caught up with it.
-      if (targetProgress >= 1 && progress >= 0.999) {
+      // the hand-off read as a hard cut (re-tribunal regression 6). Collapsing
+      // as the hold BEGAN (Gate A3 #3) left the landing 80vh down, so the
+      // page showed frame zero again. Collapse once the whole hold has been
+      // scrolled (the landing is at the top of the screen by then), the
+      // picture has caught up, and the scroll has come to rest.
+      if (scrollS >= 1 && progress >= 0.999 && performance.now() - lastScrollAt > COLLAPSE_IDLE_MS) {
         collapse();
         return;
       }
@@ -728,12 +871,16 @@ export function ScrollCinema() {
       }
       const k = 1 - Math.exp(-(isSmoothing() ? EASE_RATE_LENIS : EASE_RATE) * dt);
       progress = Math.abs(diff) < 0.0002 ? targetProgress : progress + diff * k;
-      pxS += (cinemaClock.px - pxS) * 0.055;
-      pyS += (cinemaClock.py - pyS) * 0.055;
-      // damped scroll velocity → the 3D cameras kick their FOV when you scroll hard
-      cinemaClock.vel += (Math.min(1, Math.abs(diff) * 14) - cinemaClock.vel) * 0.08;
-      renderScene(now);
+      pxS += (cinemaClock.px - pxS) * damp(0.055, dt);
+      pyS += (cinemaClock.py - pyS) * damp(0.055, dt);
+      // Scroll velocity, from the page's own (the motion bus, written by
+      // Lenis) rather than from how far the follower lags: the 3D cameras
+      // kick their FOV when you scroll hard.
+      cinemaClock.vel += (Math.min(1, Math.abs(busMotion.velocity) / 45) - cinemaClock.vel) * damp(0.08, dt);
+      renderScene(cinemaClock.time);
       applyOverlays(now);
+      // ONE CLOCK (M31): the 3D layers draw here, in this frame, at film time.
+      advanceFilm(cinemaClock.time);
       // interaction chrome: candle tooltip + the lagging cursor ring
       const hov = cinemaClock.hover;
       if (tooltipRef.current) {
@@ -841,7 +988,7 @@ export function ScrollCinema() {
           // window left the safety act on a stale spread (Gate A2). Push the
           // latest one now that the scene will take it.
           syncPosition();
-          renderScene();
+          renderScene(cinemaClock.time);
           applyOverlays();
           resolve();
         } catch {
@@ -947,7 +1094,7 @@ export function ScrollCinema() {
         ScrollTrigger.update();
         targetProgress = resumeAt;
         progress = resumeAt;
-        renderScene();
+        renderScene(cinemaClock.time);
         applyOverlays();
       }
       setReveal(true); // fade the loading screen out
@@ -961,6 +1108,7 @@ export function ScrollCinema() {
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
       delete document.documentElement.dataset.film;
+      setIslandStage(null);
       markCinemaSeen(); // a chosen exit counts as seen — do not re-gate them
       stopCinemaAudio();
       setMode("static");
@@ -971,6 +1119,7 @@ export function ScrollCinema() {
       window.clearInterval(creep);
       window.clearTimeout(slowTimer);
       delete document.documentElement.dataset.film;
+      setIslandStage(null);
       setMode("static");
     });
 
@@ -991,7 +1140,7 @@ export function ScrollCinema() {
         }).then(() => {
           // Same race on every re-init: the snapshot above lands late.
           syncPosition();
-          renderScene();
+          renderScene(cinemaClock.time);
         });
       }, 160);
     };
@@ -1010,9 +1159,12 @@ export function ScrollCinema() {
       window.clearInterval(creep);
       window.clearTimeout(sceneTimeout);
       delete document.documentElement.dataset.film;
+      setIslandStage(null);
+      delete globalThis.__filmToScroll;
       if (onSceneLoad) iframe.removeEventListener("load", onSceneLoad);
       if (onSceneError) iframe.removeEventListener("error", onSceneError);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", markScroll);
       window.removeEventListener("scroll", syncInert);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("pointerdown", onDown);
@@ -1072,7 +1224,7 @@ export function ScrollCinema() {
           marginBottom: "calc(-100vh / var(--ui-zoom))",
         }}
       >
-      {/* Backdrop lives on the sticky wrapper (which fades via canvasOpacity), NOT
+      {/* Backdrop lives on the sticky wrapper (which fades via handoffOpacity), NOT
           the section — otherwise the section's opaque bg stays over the real Hero
           in the -100vh overlap and the handoff reveals black instead of the page. */}
       {/* --rail-w reserves the act rail's column (rail at left-[2.5vw] + its
@@ -1104,9 +1256,7 @@ export function ScrollCinema() {
             style={{ background: "radial-gradient(ellipse at center, rgba(110,120,255,0.08), transparent 62%)" }}
           />
           <div aria-hidden className="relative flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center bg-[image:var(--grad-fill)] font-mono text-[0.8125rem] font-bold tracking-tight text-[var(--grad-on)]">
-              LB
-            </span>
+            <BullMark className="h-7 w-10" />
             <span className="font-display text-3xl tracking-tight text-fg">
               lazybull<span className="text-bull">.</span>
             </span>
@@ -1197,11 +1347,11 @@ export function ScrollCinema() {
             native `translate` property, which would STACK with the imperative
             style.transform (-50% again) set every frame in applyOverlays and
             shove each beat half its width off-center. JS owns the transform. */}
-        {COPY_BEATS.map((b, i) => (
+        {beats.map((b, i) => (
           <div
             key={b.id}
             ref={(el) => { copyRefs.current[i] = el; }}
-            className={b.pos === "left" ? "absolute text-left" : "absolute left-1/2 text-center"}
+            className={`${b.pos === "left" ? "absolute text-left" : "absolute left-1/2 text-center"}${b.id.startsWith("candle") ? " beat-scrim" : ""}`}
             style={{
               // "top" beats: viewport-aware — 14% of a 720px viewport bottomed
               // the heading out into the rail's top rows, so the anchor stops
@@ -1408,6 +1558,42 @@ export function ScrollCinema() {
       </div>
       </section>
       {shatter && typeof document !== "undefined" && createPortal(<ShatterOverlay />, document.body)}
+      {/* The match-cut's line (drawMatchCut): over the stage and the landing
+          both, because it travels from one to the other. */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <svg
+            ref={cutRef}
+            aria-hidden
+            className="pointer-events-none fixed inset-0 z-[var(--z-dialog)]"
+            style={{ display: "none", width: "100vw", height: "100vh" }}
+          >
+            <defs>
+              <linearGradient ref={cutGradRef} id="lb-cut-ramp" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#7b5cff" />
+                <stop offset="0.52" stopColor="#4d8dff" />
+                <stop offset="1" stopColor="#6dffc0" />
+              </linearGradient>
+              <clipPath id="lb-cut-up" clipPathUnits="userSpaceOnUse">
+                <rect ref={cutClipUpRef} x="-100000" y="-100000" width="300000" height="0" />
+              </clipPath>
+              <clipPath id="lb-cut-dn" clipPathUnits="userSpaceOnUse">
+                <rect ref={cutClipDnRef} x="-100000" y="0" width="300000" height="300000" />
+              </clipPath>
+            </defs>
+            <path
+              ref={cutRampRef}
+              fill="none"
+              stroke="url(#lb-cut-ramp)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: "drop-shadow(0 0 9px rgba(110,120,255,0.55))" }}
+            />
+            <path ref={cutUpRef} fill="none" stroke="var(--bull)" strokeLinejoin="round" clipPath="url(#lb-cut-up)" />
+            <path ref={cutDnRef} fill="none" stroke="var(--bear)" strokeLinejoin="round" clipPath="url(#lb-cut-dn)" />
+          </svg>,
+          document.body
+        )}
     </>
   );
 }

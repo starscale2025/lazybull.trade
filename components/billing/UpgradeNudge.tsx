@@ -12,10 +12,14 @@
 // upgrade: their allowance is counted per network address (app/api/explain),
 // so a shared office or campus address exhausts it for everyone behind it,
 // and a free account — its own counter — is the fix for that, not a paid plan.
+//
+// Calm (S1, 2026-11-09): the kit's pills and a sentence-case label, no mint.
+// The frame stays surface-instrument on purpose. This floats over the /pro
+// chart and the /quant setups bar, and a glass .calm-panel is see-through.
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { PillLink } from "@/components/calm/kit";
 import type { PaywallBody } from "@/lib/billing/gate";
 import { PLAN_LIMITS, type Plan } from "@/lib/billing/types";
 
@@ -36,7 +40,7 @@ export function paywallCopy(p: PaywallBody): { title: string; body: string; cta:
     case "explain_cap": {
       const n = p.limit ?? PLAN_LIMITS[p.plan].explainsPerDay ?? 0;
       return {
-        title: "Today's explains are used up",
+        title: "Today’s explains are used up",
         body: `${tier} includes ${n} AI-teacher explain${n === 1 ? "" : "s"} per day; the count resets at midnight UTC. ${next} has no daily cap.`,
         cta: `See ${next}`,
       };
@@ -74,16 +78,16 @@ export function UpgradeNudge({
   const signInHref = `/auth/signin?callbackUrl=${encodeURIComponent(pathname || "/")}`;
 
   return (
-    <div role="status" className={`surface-instrument border border-bull/40 bg-surface ${className}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-1.5">
-        <span className="t-eyebrow text-bull">{copy.title}</span>
+    <div role="status" className={`surface-instrument border border-border bg-surface ${className}`}>
+      <div className="flex items-center justify-between gap-3 px-4 pt-3">
+        <span className="text-[0.875rem] font-semibold tracking-[-0.01em] text-fg">{copy.title}</span>
         {onClose && (
           <button type="button" onClick={onClose} aria-label="Dismiss" className="text-fg-faint transition-colors hover:text-fg">
             ✕
           </button>
         )}
       </div>
-      <div className="px-3 py-2.5">
+      <div className="px-4 pb-3 pt-1.5">
         <p className="t-body-sm text-fg-dim">{copy.body}</p>
         {anonymous && (
           <p className="mt-1.5 t-body-sm text-fg-dim">
@@ -92,24 +96,15 @@ export function UpgradeNudge({
         )}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {anonymous && (
-            <Link
-              href={signInHref}
-              className="inline-flex h-8 items-center border border-border px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
-            >
+            <PillLink href={signInHref} size="sm">
               Sign in · free
-            </Link>
+            </PillLink>
           )}
-          <Link
-            href={paywall.upgrade}
-            className="inline-flex h-8 items-center gap-2 btn-grad px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
-          >
+          <PillLink href={paywall.upgrade} kind="primary" size="sm">
             {copy.cta}
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-              <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </Link>
+          </PillLink>
         </div>
-        <div className="mt-2 t-chrome text-fg-faint">paper only · educational · not advice</div>
+        <div className="mt-2 t-label text-fg-faint">Paper only · educational · not advice</div>
       </div>
     </div>
   );

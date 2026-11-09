@@ -27,14 +27,14 @@ export function ConsentLink() {
     <button
       type="button"
       onClick={openConsentSettings}
-      className="inline-flex items-center gap-1.5 border border-border px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
+      className="inline-flex items-center gap-1.5 rounded-full px-1.5 py-0.5 text-[0.75rem] text-fg-dim transition-colors hover:text-fg"
       title="Review what lazybull records, and change it"
     >
       <span
         aria-hidden
         className={`size-1 rounded-full ${decided && analytics ? "bg-bull" : "bg-fg-faint"}`}
       />
-      consent
+      Consent
     </button>
   );
 }

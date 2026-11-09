@@ -16,6 +16,11 @@ export type CinemaHover = {
 
 type CinemaClock = {
   progress: number;
+  /** The film's own time, in seconds: advances only while the film is
+   *  playing (not parked) and the site is not paused. Ambient motion reads it. */
+  time: number;
+  /** Real seconds since the film's last frame, for dt-correct followers. */
+  dt: number;
   px: number; // pointer, -1..1 (x: right positive)
   py: number; // pointer, -1..1 (y: down positive)
   vel: number; // damped |scroll velocity|, 0..1
@@ -26,10 +31,14 @@ type CinemaClock = {
 declare global {
   // eslint-disable-next-line no-var
   var __cinemaClock: CinemaClock | undefined;
+  // eslint-disable-next-line no-var
+  var __cinemaFrames: Set<(time: number) => void> | undefined;
 }
 
 const clock = (globalThis.__cinemaClock ??= {
   progress: 0,
+  time: 0,
+  dt: 1 / 60,
   px: 0,
   py: 0,
   vel: 0,
@@ -37,6 +46,8 @@ const clock = (globalThis.__cinemaClock ??= {
   click: null,
 });
 // Older HMR instances may predate newer fields.
+clock.time ??= 0;
+clock.dt ??= 1 / 60;
 clock.px ??= 0;
 clock.py ??= 0;
 clock.vel ??= 0;
@@ -44,3 +55,34 @@ clock.hover ??= null;
 clock.click ??= null;
 
 export const cinemaClock: CinemaClock = clock;
+
+// ── ONE CLOCK (Phase 4, M31) ────────────────────────────────────────────────
+// The film's 3D layers no longer run render loops of their own. Each one, while
+// it is live, registers its root's `advance` here, and the film's single tick
+// (ScrollCinema) advances every layer in the same frame as the 2D scene, the
+// overlays and the sound, with the film's own time.
+// On globalThis for the same reason as the clock: one registry, however the
+// bundler splits this module.
+const frames: Set<(time: number) => void> = (globalThis.__cinemaFrames ??= new Set());
+
+/** Register a layer's frame; returns the unregister. */
+export function registerFilmFrame(fn: (time: number) => void): () => void {
+  frames.add(fn);
+  return () => {
+    frames.delete(fn);
+  };
+}
+
+/** Draw every live layer at film time `time` (seconds). */
+export function advanceFilm(time: number) {
+  for (const fn of frames) fn(time);
+}
+
+/**
+ * A per-frame follower factor made frame-rate independent: `k60` is what the
+ * old code used per frame at 60fps; at 120fps the same glide now takes the
+ * same time instead of half of it.
+ */
+export function damp(k60: number, dt: number): number {
+  return 1 - Math.pow(1 - k60, dt * 60);
+}

@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Panel } from "@/components/practice/Panel";
+import { TogglePill } from "@/components/calm/kit";
 import { DifficultyPill, LockPill, StatusGlyph, TrackChip } from "@/components/practice/Chips";
 import { Empty, Td, Th, Tr } from "@/components/practice/Table";
 import { registerCommands } from "@/lib/command-deck";
@@ -40,32 +41,12 @@ const STATUSES: { id: ProblemStatus; label: string }[] = [
   { id: "todo", label: "todo" },
 ];
 
-/** One filter chip — the BotLibrary chip, with aria-pressed so the on state
-    is announced and not just painted. */
-function Chip({
-  on,
-  onClick,
-  color,
-  children,
-}: {
-  on: boolean;
-  onClick: () => void;
-  /** Off-state ink for a track or difficulty chip; a CSS var. */
-  color?: string;
-  children: string;
-}) {
+/** One filter: the kit's TogglePill (calm, S1), labelled in sentence case. */
+function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: string }) {
   return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      className={`h-7 border px-2 font-mono text-[0.625rem] uppercase tracking-wider ${
-        on ? "border-bull bg-bull text-bg" : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
-      }`}
-      style={!on && color ? { color } : undefined}
-    >
-      {children}
-    </button>
+    <TogglePill on={on} onClick={onClick}>
+      {children.charAt(0).toUpperCase() + children.slice(1)}
+    </TogglePill>
   );
 }
 
@@ -81,7 +62,7 @@ function Acceptance({ rate, count, loaded, min }: { rate: number | null; count: 
 
 function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div role="group" aria-label={label} className="flex flex-wrap items-center gap-1">
+    <div role="group" aria-label={label} className="flex flex-wrap items-center gap-1.5">
       {children}
     </div>
   );
@@ -150,40 +131,41 @@ export function ProblemBoard() {
 
   return (
     <Panel
+      calm
       title="Problems"
       right={`${visible.length} of ${PROBLEMS.length}`}
       footer={
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="t-chrome text-fg-faint">
-            acceptance = accepted ÷ submitted, from real submissions · "—" until a problem has {minSubmissions}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[0.75rem] text-fg-faint">
+          <span>
+            Acceptance is accepted ÷ submitted, from real submissions; “—” until a problem has {minSubmissions}.
           </span>
-          <span className="t-chrome text-fg-faint">paper only · educational · not advice</span>
+          <span>Paper only · educational · not advice</span>
         </div>
       }
     >
       {/* filter strip */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border-soft p-2">
+      <div className="flex flex-wrap items-center gap-2.5 px-5 pb-2 pt-4">
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="search problems…"
+          placeholder="Search problems"
           aria-label="search problems"
-          className="h-8 w-full max-w-xs border border-border bg-bg px-2 font-mono text-[0.6875rem] text-fg placeholder:text-fg-faint focus:border-bull focus:outline-none"
+          className="calm-input w-full max-w-xs"
         />
         <ChipGroup label="track">
           <Chip on={track === "all"} onClick={() => setTrack("all")}>
             all
           </Chip>
           {TRACK_ORDER.map((t) => (
-            <Chip key={t} on={track === t} onClick={() => setTrack(t)} color={TRACK_META[t].color}>
+            <Chip key={t} on={track === t} onClick={() => setTrack(t)}>
               {TRACK_META[t].label}
             </Chip>
           ))}
         </ChipGroup>
         <ChipGroup label="difficulty">
           {DIFFICULTIES.map((d) => (
-            <Chip key={d} on={difficulty === d} onClick={() => setDifficulty(difficulty === d ? "all" : d)} color={DIFFICULTY_META[d].color}>
+            <Chip key={d} on={difficulty === d} onClick={() => setDifficulty(difficulty === d ? "all" : d)}>
               {DIFFICULTY_META[d].label}
             </Chip>
           ))}
@@ -198,7 +180,7 @@ export function ProblemBoard() {
       </div>
 
       {/* the table */}
-      <div className="overflow-x-auto p-2">
+      <div className="overflow-x-auto px-3 pb-2 pt-2">
         <table className="w-full t-data text-[0.6875rem]">
           <thead>
             <Tr head>
@@ -207,12 +189,12 @@ export function ProblemBoard() {
               </Th>
               <Th>#</Th>
               <Th left className="min-w-[14rem]">
-                title
+                Title
               </Th>
-              <Th left>track</Th>
-              <Th left>difficulty</Th>
-              <Th>acceptance</Th>
-              <Th>est</Th>
+              <Th left>Track</Th>
+              <Th left>Difficulty</Th>
+              <Th>Acceptance</Th>
+              <Th>Time</Th>
               <Th>
                 <span className="sr-only">open</span>
               </Th>
@@ -229,7 +211,7 @@ export function ProblemBoard() {
                 </Td>
                 <Td left strong>
                   <span className="flex flex-wrap items-center gap-2">
-                    <Link href={`/practice/${p.id}`} className="text-fg hover:text-bull">
+                    <Link href={`/practice/${p.id}`} className="font-sans text-[0.875rem] text-fg hover:text-brand-ink">
                       {p.title}
                     </Link>
                     {p.lock && <LockPill lock={p.lock} />}
@@ -251,8 +233,8 @@ export function ProblemBoard() {
                 </Td>
                 <Td>{p.minutes} min</Td>
                 <Td>
-                  <Link href={`/practice/${p.id}`} className="t-chrome text-fg-faint hover:text-bull">
-                    solve →
+                  <Link href={`/practice/${p.id}`} className="font-sans text-[0.8125rem] text-fg-faint hover:text-brand-ink">
+                    Solve ›
                   </Link>
                 </Td>
               </Tr>

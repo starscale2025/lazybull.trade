@@ -1,8 +1,10 @@
+import { BullMark } from "@/components/BullMark";
 import Link from "next/link";
 import pkg from "../package.json";
 import { ContrastToggle } from "./ContrastToggle";
 import { MotionToggle } from "./MotionToggle";
 import { ConsentLink } from "./ConsentLink";
+import { MatterSlot } from "./matter/MatterSlot";
 
 // Every entry here used to be href="#" — 32 links plus the three legal ones,
 // all of which looked clickable and went nowhere. Unshipped items now collapse
@@ -103,7 +105,6 @@ const SOCIALS = (
 export function Footer({ marketing = false }: { marketing?: boolean }) {
   return (
     <footer className="relative overflow-hidden border-t border-border bg-[color-mix(in_srgb,var(--bg)_72%,transparent)] backdrop-blur-[26px]">
-      <div className="pointer-events-none absolute -bottom-40 left-1/2 h-96 w-[120%] -translate-x-1/2 rounded-full bg-bull/8 blur-[160px]" />
 
       {/* Top callout — marketing routes only; app routes start at the wordmark. */}
       {marketing && (
@@ -111,7 +112,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
         <div className="grid grid-cols-12 items-end gap-x-5 gap-y-8">
           <div className="col-span-12 lg:col-span-7">
             <p className="t-eyebrow text-fg-faint mb-4">
-              ⟢ Last call
+              Last call
             </p>
             {/* h2, not h3: this is the first heading under the page h1, and every page on
                 the site rendered h1 -> h3 -> h2 because of this pair. */}
@@ -131,12 +132,12 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             <div className="flex flex-col gap-2">
               <Link
                 href="/trade"
-                className="btn-primary-glass inline-flex w-fit items-center gap-2 px-6 py-3.5 font-mono text-xs font-semibold uppercase tracking-wider"
+                className="btn-primary-glass tracking-[-0.01em] inline-flex w-fit items-center gap-2 px-6 py-3.5 text-sm font-semibold"
               >
-                Open the strategy builder →
+                Open the strategy builder
               </Link>
-              <p className="font-mono text-[0.625rem] text-fg-faint">
-                paper-only · $0 real money, ever
+              <p className="text-[0.8125rem] text-fg-faint">
+                Paper only · $0 real money, ever
               </p>
             </div>
           </div>
@@ -173,8 +174,9 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
         className="relative shell grid grid-cols-2 gap-x-5 gap-y-10 py-10 md:grid-cols-6"
       >
         <div className="col-span-2">
-          <div className="font-display text-3xl leading-none tracking-[-0.02em] text-fg">
-            lazy<span className="italic">bull</span>
+          <div className="flex items-center gap-2.5">
+            <BullMark className="h-6 w-8" />
+            <span className="font-display text-3xl leading-none tracking-[-0.02em] text-fg">lazybull</span>
           </div>
           <p className="mt-3 font-display text-base leading-snug text-fg-dim">
             Options you can see.
@@ -198,10 +200,16 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
               ))}
             </div>
           )}
+          {/* THE CURTAIN CALL (M18): the film's bull returns as matter and
+              turns to follow the cursor. Loaded only if the visitor comes this
+              far down (components/matter/MatterRoot.tsx). */}
+          <div className="relative mt-2 hidden h-56 md:block">
+            <MatterSlot shape="bull" />
+          </div>
         </div>
         {COLS.map((col) => (
           <div key={col.title}>
-            <div className="t-chrome text-fg-faint mb-4">
+            <div className="mb-4 text-[0.8125rem] font-semibold text-fg">
               {col.title}
             </div>
             <ul className="space-y-2.5">
@@ -209,16 +217,15 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="group inline-flex items-center gap-2 font-mono text-sm text-fg-dim transition-colors hover:text-fg"
+                    className="text-[0.875rem] text-fg-dim transition-colors hover:text-fg"
                   >
-                    <span className="text-fg-faint group-hover:text-bull">›</span>
                     {l.label}
                   </Link>
                 </li>
               ))}
             </ul>
             {col.roadmap && (
-              <p className="mt-4 cursor-default font-mono text-[0.6875rem] leading-relaxed text-fg-faint/70" title="Coming soon">
+              <p className="mt-4 cursor-default text-[0.8125rem] leading-relaxed text-fg-faint/70" title="Coming soon">
                 {col.roadmap}
               </p>
             )}
@@ -228,10 +235,10 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
 
       {/* Status bar */}
       <div className="relative border-t border-border bg-bg-soft">
-        <div className="shell flex flex-wrap items-center justify-between gap-3 py-3 t-chrome text-fg-faint">
+        <div className="shell flex flex-wrap items-center justify-between gap-3 py-3 text-[0.75rem] text-fg-faint">
           <div className="flex items-center gap-3">
-            <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-            <span className="text-bull">paper-only · pre-soft-launch</span>
+            <span aria-hidden className="size-1.5 rounded-full bg-bull" />
+            <span className="text-fg-dim">Paper only · pre-soft-launch</span>
             <span className="text-fg-faint">·</span>
             <span>v{pkg.version}</span>
             <span className="text-fg-faint">·</span>
@@ -239,15 +246,15 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             <MotionToggle />
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span>© 2026 lazybull labs</span>
+            <span>© 2026 lazybull</span>
             <span className="text-fg-faint">·</span>
             {/* Real pages now — the Honesty Ledger (plain-English clauses, each
                 with a what-this-means note). */}
-            <Link href="/privacy" className="hover:text-fg">privacy</Link>
+            <Link href="/privacy" className="hover:text-fg">Privacy</Link>
             <span className="text-fg-faint">·</span>
-            <Link href="/terms" className="hover:text-fg">terms</Link>
+            <Link href="/terms" className="hover:text-fg">Terms</Link>
             <span className="text-fg-faint">·</span>
-            <Link href="/safety" className="hover:text-fg">safety</Link>
+            <Link href="/safety" className="hover:text-fg">Safety</Link>
             <span className="text-fg-faint">·</span>
             {/* The withdrawal path. /privacy promises consent can be changed
                 at any time, and DPDP requires it — a promise with no control
@@ -263,8 +270,8 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
           Capped at a readable measure (was a 150-char full-width line) and given
           right-side clearance so no floating control ever sits on legal text. */}
       <div className="relative border-t border-border bg-bg">
-        <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 font-mono text-[0.6875rem] leading-relaxed text-fg-dim sm:pr-5">
-          LAZYBULL is an educational platform for learning about options. We do
+        <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 text-[0.75rem] leading-relaxed text-fg-dim sm:pr-5">
+          lazybull is an educational platform for learning about options. We do
           not accept real funds, are not a registered broker-dealer, and are not
           registered with SEBI as an investment adviser or research analyst. Nothing
           here is investment advice or a recommendation to trade. Paper-trading

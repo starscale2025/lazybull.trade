@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/Nav";
-import { TickerBar } from "@/components/TickerBar";
 import { Workspace, type Neighbour } from "@/components/practice/Workspace";
 import { allProblems, forClient, getProblem } from "@/lib/practice/content";
 
@@ -57,7 +56,6 @@ export default async function ProblemPage({ params }: { params: Params }) {
   // and the panes scroll inside themselves. No Footer on purpose.
   return (
     <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
-      <TickerBar />
       <Nav wide />
       <Workspace key={problem.id} problem={forClient(problem)} prev={prev} next={next} />
     </main>

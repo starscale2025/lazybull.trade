@@ -79,25 +79,27 @@ export function ResetFundsModal({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div ref={dialogRef} className="w-[27.5rem] max-w-full border border-bear/50 bg-surface shadow-2xl">
-        <div className="flex items-center gap-2 border-b border-bear/30 bg-bear/10 px-4 py-2.5">
-          <span className="font-mono text-[0.8125rem] text-bear">⚠</span>
-          <h2 id="reset-funds-title" className="t-eyebrow font-semibold text-bear">
-            reset funds — this wipes the entire portfolio
+      {/* bg-bg, not bg-surface: the surface ramp is translucent outside
+          .pro-theme, and this sheet sits over a dimmed page. */}
+      <div ref={dialogRef} className="w-[27.5rem] max-w-full surface-instrument border border-border bg-bg shadow-2xl">
+        <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+          <span className="t-label text-amber">⚠</span>
+          <h2 id="reset-funds-title" className="t-eyebrow font-semibold text-amber">
+            Reset funds — this wipes the entire portfolio
           </h2>
         </div>
 
-        <div className="space-y-3 p-4 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
+        <div className="space-y-3 p-4 text-[0.8125rem] leading-relaxed text-fg-dim">
           <p className="text-fg">
             This is not just a balance top-up. Confirming destroys everything this
             account has ever done and starts a brand-new portfolio at{" "}
-            <span className="text-bull">${fmt(target, 2)}</span>
+            <span className="t-data">${fmt(target, 2)}</span>
             {startingCash !== target && (
               <> (the standard starter stake — your current ${fmt(startingCash, 0)} capital does not carry over)</>
             )}
             :
           </p>
-          <ul className="space-y-1.5 border border-border-soft bg-bg/60 p-3">
+          <ul className="space-y-1.5 rounded-[var(--r-instrument)] border border-border-soft bg-fg/[0.04] p-3">
             <li>
               ✕ <span className="text-fg">{openPositions}</span> open position{openPositions === 1 ? "" : "s"} — erased
               without closing (no P&L is realized)
@@ -116,8 +118,8 @@ export function ResetFundsModal({
             <li>✕ the cash ledger, the equity curve, deployed totals and all performance stats</li>
           </ul>
           <p>
-            If you're signed in, the wipe syncs to your profile — your other devices
-            get the fresh account too. There is <span className="text-bear">no undo</span> and no
+            If you’re signed in, the wipe syncs to your profile — your other devices
+            get the fresh account too. There is <span className="text-amber">no undo</span> and no
             export after the fact: download any CSVs you want to keep BEFORE confirming.
           </p>
           <p className="text-fg-faint">
@@ -126,19 +128,20 @@ export function ResetFundsModal({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-px border-t border-border bg-border">
+        {/* tool-btn by hand: Cancel takes the ref that lands focus on it. */}
+        <div className="grid grid-cols-2 gap-2 border-t border-border p-3">
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="bg-surface px-3 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg transition-colors hover:bg-surface-2"
+            className="tool-btn !h-auto min-h-9 !whitespace-normal !py-2 text-center"
           >
-            keep my portfolio
+            Keep my portfolio
           </button>
           <button
             onClick={onConfirm}
-            className="bg-surface px-3 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bear transition-colors hover:bg-bear hover:text-bg"
+            className="tool-btn !h-auto min-h-9 !whitespace-normal !py-2 text-center !font-semibold !text-amber"
           >
-            wipe it all — restart at ${fmt(target, 0)}
+            Wipe it all — restart at ${fmt(target, 0)}
           </button>
         </div>
       </div>

@@ -7,6 +7,7 @@
 
 import { MagneticCTA } from "@/components/atmosphere/MagneticCTA";
 import type { Strategy } from "@/lib/models";
+import { Chip, ToolButton } from "@/components/calm/kit";
 
 type Props = {
   sym: string;
@@ -50,7 +51,7 @@ function OddsRing({ prob }: { prob: number }) {
         <div className="font-display text-2xl tracking-tightest tabular-nums" style={{ color: tone }}>
           {(prob * 100).toFixed(0)}%
         </div>
-        <div className="t-chrome text-fg-faint">odds in band · BS</div>
+        <div className="t-label text-fg-faint">Odds in band · BS</div>
       </div>
     </div>
   );
@@ -58,18 +59,16 @@ function OddsRing({ prob }: { prob: number }) {
 
 export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCount, onPlace, onJump }: Props) {
   return (
-    <div className="surface-instrument border border-border bg-surface/80 backdrop-blur-sm shadow-[0_24px_90px_-40px_rgba(82,255,165,0.35)]">
+    <div className="surface-instrument border border-border bg-surface/80 backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-2.5">
-        <span className="t-eyebrow text-bull">⟢ your position</span>
-        <span className="flex items-center gap-1.5 t-chrome text-fg-dim">
-          <span className="size-1.5 rounded-full bg-bull pulse-dot" /> live ${spot.toFixed(2)}
-        </span>
+        <span className="t-eyebrow text-fg-dim">Your position</span>
+        <Chip dot>Live ${spot.toFixed(2)}</Chip>
       </div>
 
       <div className="flex flex-col gap-4 p-4">
         {/* the thesis, compact — mirrors the sentence up top */}
         <div>
-          <div className="t-chrome text-fg-faint">thesis</div>
+          <div className="t-label text-fg-faint">Thesis</div>
           <div className="mt-1 font-display text-lg leading-snug tracking-tightest text-fg">
             {sym} closes <span className="text-bull">${low.toFixed(2)}–${high.toFixed(2)}</span>
             <span className="text-fg-dim"> by </span>
@@ -85,40 +84,40 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
         {selected ? (
           <div>
             <div className="flex items-baseline justify-between">
-              <div className="t-chrome text-fg-faint">strategy</div>
+              <div className="t-label text-fg-faint">Strategy</div>
               <button
                 onClick={() => onJump("pick")}
-                className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim underline-offset-2 hover:text-bull hover:underline"
+                className="t-label text-fg-dim underline-offset-2 hover:text-fg hover:underline"
               >
-                change
+                Change
               </button>
             </div>
             <div className="mt-1 font-display text-xl tracking-tightest text-fg">{selected.kind}</div>
             <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden border border-border bg-border">
               {[
                 {
-                  k: "max profit",
+                  k: "Max profit",
                   v: Number.isFinite(selected.maxProfit) ? money(selected.maxProfit, true) : "uncapped",
                   c: "text-bull",
                 },
                 {
-                  k: "max loss",
+                  k: "Max loss",
                   v: Number.isFinite(selected.maxLoss) ? `−${money(selected.maxLoss)}` : "unbounded",
                   c: "text-bear",
                 },
                 {
-                  k: selected.cost > 0 ? "you pay" : "you collect",
+                  k: selected.cost > 0 ? "You pay" : "You collect",
                   v: money(selected.cost),
                   c: "text-fg",
                 },
                 {
-                  k: "in-range odds · BS model",
+                  k: "In-range odds · BS model",
                   v: `${(selected.prob * 100).toFixed(0)}%`,
                   c: "text-fg",
                 },
               ].map((s) => (
                 <div key={s.k} className="bg-bg p-2.5">
-                  <div className="t-chrome text-fg-faint">{s.k}</div>
+                  <div className="t-label text-fg-faint">{s.k}</div>
                   <div className={`mt-0.5 t-data text-sm ${s.c}`}>{s.v}</div>
                 </div>
               ))}
@@ -127,28 +126,24 @@ export function BetSlip({ sym, spot, low, high, expiry, prob, selected, openCoun
         ) : (
           <button
             onClick={() => onJump("pick")}
-            className="border border-dashed border-border px-3 py-4 text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
+            className="border border-dashed border-border px-3 py-4 text-center t-label text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
           >
-            pick a strategy in step 02 →
+            Pick a strategy in step 02 →
           </button>
         )}
 
         <MagneticCTA className="w-full">
-          <button
-            onClick={onPlace}
-            disabled={!selected}
-            className="w-full bg-bull px-4 py-3 font-mono text-[0.75rem] font-semibold uppercase tracking-wider text-bg transition-opacity hover:bg-bull-dim disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            place paper trade →
-          </button>
+          <ToolButton primary onClick={onPlace} disabled={!selected} className="w-full !h-11">
+            Place paper trade →
+          </ToolButton>
         </MagneticCTA>
 
         <button
           onClick={() => onJump("manage")}
-          className="flex items-center justify-between font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim hover:text-fg"
+          className="flex items-center justify-between t-label text-fg-dim hover:text-fg"
         >
-          <span>open positions</span>
-          <span className={openCount > 0 ? "text-bull" : "text-fg-faint"}>{openCount} open ↓</span>
+          <span>Open positions</span>
+          <span className={openCount > 0 ? "text-fg" : "text-fg-faint"}>{openCount} open ↓</span>
         </button>
       </div>
     </div>
@@ -162,19 +157,15 @@ export function BetBar({ prob, selected, onPlace }: Pick<Props, "prob" | "select
     <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-border bg-bg/95 px-4 py-3 pr-[calc(var(--dock-gutter)+1rem)] backdrop-blur-md lg:hidden">
       <div className="min-w-0">
         <div className={`t-data text-sm font-semibold ${tone}`}>{(prob * 100).toFixed(0)}% in band</div>
-        <div className="truncate t-chrome text-fg-dim">
-          {selected ? selected.kind : "pick a strategy"}
+        <div className="truncate t-label text-fg-dim">
+          {selected ? selected.kind : "Pick a strategy"}
         </div>
       </div>
       {/* Says what it does, as the desktop slip does (Gate A2, m60): a bare
           "place" on a paper-only product read like the real thing. */}
-      <button
-        onClick={onPlace}
-        disabled={!selected}
-        className="btn-grad shrink-0 px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider disabled:opacity-30"
-      >
-        place paper trade →
-      </button>
+      <ToolButton primary onClick={onPlace} disabled={!selected} className="shrink-0 !h-11 !px-5">
+        Place paper trade →
+      </ToolButton>
     </div>
   );
 }

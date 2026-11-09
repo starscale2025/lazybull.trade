@@ -144,13 +144,13 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
     >
       <div ref={boxRef} className="w-[27.5rem] max-w-[calc(92vw/var(--ui-zoom))] surface-instrument border border-border bg-surface shadow-2xl">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-          <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">Symbol search</span>
+          <span className="t-label text-fg-faint">Symbol search</span>
           <button
             onClick={onClose}
             aria-label="Close symbol search"
-            className="ml-auto font-mono text-xs text-fg-faint hover:text-fg"
+            className="ml-auto t-label text-fg-faint hover:text-fg"
           >
-            esc
+            Esc
           </button>
         </div>
         <input
@@ -173,10 +173,10 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
                 highlight === 0 ? "bg-surface-2 text-fg" : "text-fg-dim"
               }`}
             >
-              <span>
-                Change interval → <span className="text-bull">{interval.label}</span>
+              <span className="t-label">
+                Change interval → <span className="text-brand-ink">{interval.label}</span>
               </span>
-              <span className="text-[0.625rem] uppercase tracking-wider text-fg-faint">↵</span>
+              <span className="text-[0.625rem] text-fg-faint">↵</span>
             </button>
           )}
           {symbols.map((s, i) => {
@@ -194,12 +194,12 @@ export function SymbolSearch({ open, seed, onClose, onPickSymbol, onPickInterval
               >
                 <span className="w-16 shrink-0 text-left text-fg">{s.sym}</span>
                 <span className="flex-1 truncate text-left text-[0.6875rem]">{s.name}</span>
-                <span className="shrink-0 text-[0.625rem] uppercase tracking-wider text-fg-faint">{s.exch}</span>
+                <span className="shrink-0 t-chrome text-fg-faint">{s.exch}</span>
               </button>
             );
           })}
           {!symbols.length && !interval && (
-            <div className="px-3 py-4 font-mono text-[0.6875rem] text-fg-faint">No matches.</div>
+            <div className="px-3 py-4 t-label text-fg-faint">No matches.</div>
           )}
         </div>
       </div>

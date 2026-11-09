@@ -2,13 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { LAG_DAYS } from "@/lib/region";
-import { PayoffSpine } from "./PayoffSpine";
 import { TAGLINE, TAGLINE_LEAD } from "@/lib/cinema";
 import { buildTiers } from "@/components/pricing/tiers";
+import { DeadCalm } from "./DeadCalm";
 import { fmtMoney, monthlyPrice } from "@/lib/billing/prices";
 import {
   GlassButton,
-  GlassChip,
   GlassEyebrow,
   GlassHeading,
   GlassPoints,
@@ -23,9 +22,15 @@ import {
  * order, identical copy. `site-redesign` is the flat cut and `site-glass` the
  * frosted evolution of it, so they are merged here rather than chosen
  * between. Where the glass pass had trimmed something the flat pass carried —
- * the per-step CTA, the third bullet on each feature, the chrome strip over
- * each screenshot — the flat version wins, because dropping those was
- * compression for a static preview, not a design decision.
+ * the per-step CTA, the third bullet on each feature — the flat version wins,
+ * because dropping those was compression for a static preview, not a design
+ * decision.
+ *
+ * CALM (M33, 2026-11-09). The glass cards, chips, badges, chrome strips, the
+ * P&L spine behind the sections and the grid under them are gone. Panels are
+ * glass with a lit edge (.calm-panel), links are one quiet style
+ * (.calm-link), and each section keeps exactly one gradient: its heading's
+ * accent phrase.
  *
  * WHAT THIS DELIBERATELY DOES NOT TOUCH: the scroll cinema and the payoff
  * instrument it hands off to (app/page.tsx). These sections mount BELOW it,
@@ -52,21 +57,21 @@ const STEPS = [
     n: "01",
     title: "Learn",
     copy: "Zero to your first spread, in plain English. Fourteen chapters, eight live demos, one AI teacher over every Greek.",
-    cta: "learn the greeks",
+    cta: "Learn the Greeks",
     href: "/learn#greeks",
   },
   {
     n: "02",
     title: "See & build",
     copy: "Drag strikes on the chain and the payoff, the Greeks and the worst case draw themselves. Ask the teacher what you just built.",
-    cta: "open the chain",
+    cta: "Open the chain",
     href: "/trade/chain",
   },
   {
     n: "03",
     title: "Paper trade",
     copy: "Place it on $5,000 of paper. Training wheels block unbounded risk until you say otherwise, and a kill switch sits under the lot.",
-    cta: "open the strategy builder",
+    cta: "Open the strategy builder",
     href: "/trade",
   },
 ] as const;
@@ -74,38 +79,16 @@ const STEPS = [
 function Workflow() {
   return (
     <GlassSection id="workflow">
-      <div className="flex flex-col items-center text-center" data-gsap="fade-up">
+      <div className="flex flex-col items-center text-center">
         <GlassEyebrow>The workflow</GlassEyebrow>
         {/* The one phrasing the film, the phone film and this heading share (lib/cinema.ts). */}
         <GlassHeading accent={TAGLINE}>{TAGLINE_LEAD}</GlassHeading>
       </div>
 
+      {/* Calm (M33): the rule that threaded the three steps, the glass
+          badges and the card outlines are gone. Three quiet panels in a row;
+          the numerals are enough to say "in order". */}
       <div className="relative mt-14">
-        {/* The rule that threads the three step badges together. Decorative,
-            and only drawn once the steps actually sit in a row. It wipes in
-            left → right on scroll (two segments, staggered in reading order),
-            so the spine of the argument is literally drawn before the three
-            steps land on it — the section's one piece of choreography.
-            Sibling of the grid rather than a child of it, so the stagger below
-            cannot also grab it.
-            TWO SEGMENTS, clipped to the inter-card gutters: the cards' glass
-            fill is translucent, so one continuous rule stayed faintly visible
-            crossing the card interiors and the 01/02/03 badges. The offsets
-            derive from the grid: col = (100% - 2×1.125rem)/3, gap = 1.125rem
-            (gap-4). */}
-        <span
-          aria-hidden
-          data-gsap="reveal-clip"
-          data-gsap-duration="0.55"
-          className="absolute left-[calc(33.333%-0.75rem)] top-[3.3125rem] hidden h-px w-[1.125rem] rule-grad md:block"
-        />
-        <span
-          aria-hidden
-          data-gsap="reveal-clip"
-          data-gsap-duration="0.55"
-          data-gsap-delay="0.55"
-          className="absolute left-[calc(66.667%-0.375rem)] top-[3.3125rem] hidden h-px w-[1.125rem] rule-grad md:block"
-        />
         <div
           className="grid grid-cols-1 gap-4 md:grid-cols-3"
           data-gsap="stagger"
@@ -114,22 +97,18 @@ function Workflow() {
           {STEPS.map((s) => (
             <div
               key={s.n}
-              className="glass glass-hover specular relative flex flex-col gap-3.5 rounded-[var(--r-panel)] p-[30px_26px]"
+              className="calm-panel relative flex flex-col gap-3 p-8"
             >
-              <span className="glass inline-flex size-[2.875rem] items-center justify-center rounded-[14px] font-mono text-[0.8125rem]">
-                <span className="text-grad [filter:drop-shadow(0_0_10px_rgba(110,90,255,0.45))]">{s.n}</span>
-              </span>
-              <span className="font-display text-[1.5625rem] tracking-[-0.03em] text-fg">
+              <i aria-hidden className="lit-aura" />
+              <span className="t-data text-sm text-fg-faint">{s.n}</span>
+              <span className="font-display text-[1.75rem] tracking-[-0.03em] text-fg">
                 {s.title}
               </span>
-              <p className="m-0 flex-1 text-[0.8125rem] leading-[1.65] text-fg-dim">
+              <p className="m-0 flex-1 text-[0.9375rem] leading-[1.6] text-fg-dim">
                 {s.copy}
               </p>
-              <Link
-                href={s.href}
-                className="link-draw text-grad relative self-start t-eyebrow no-underline"
-              >
-                {s.cta} →
+              <Link href={s.href} className="calm-link mt-2 self-start">
+                {s.cta} <span aria-hidden>›</span>
               </Link>
             </div>
           ))}
@@ -143,7 +122,6 @@ function Workflow() {
 
 type Feature = {
   shot: string;
-  strip: string;
   tag: string;
   href: string;
   title: string;
@@ -157,7 +135,6 @@ type Feature = {
 const FEATURES: readonly Feature[] = [
   {
     shot: "/cinema/plates/trade.svg",
-    strip: "02 · strategy builder",
     tag: "strategy builder",
     href: "/trade",
     title: "Drag a strike.",
@@ -171,13 +148,12 @@ const FEATURES: readonly Feature[] = [
   },
   {
     shot: "/cinema/plates/pro.svg",
-    strip: "03 · pro terminal",
     tag: "pro terminal",
     href: "/pro",
     title: "A real desk,",
     accent: "minus the danger.",
     flip: true,
-    copy: "Drawing tools, indicators, replay and alerts on live tape — every fill routed to the same paper account, never a broker.",
+    copy: "Drawing tools, indicators, replay and alerts on a delayed tape, with every fill booked to the same paper account, never a broker.",
     points: [
       "Twelve drawing tools with shortcuts",
       "EMA · VWAP · Bollinger · RSI · MACD",
@@ -186,7 +162,6 @@ const FEATURES: readonly Feature[] = [
   },
   {
     shot: "/cinema/plates/quant.svg",
-    strip: "04 · quant workbench",
     tag: "quant workbench",
     href: "/quant",
     // "27 bots. Verdicts in English." read as a product that hands down
@@ -209,7 +184,7 @@ const FEATURES: readonly Feature[] = [
 function Features() {
   return (
     <GlassSection id="product">
-      <div className="flex flex-col items-center text-center" data-gsap="fade-up">
+      <div className="flex flex-col items-center text-center">
         <GlassEyebrow>The product</GlassEyebrow>
         <GlassHeading accent="one terminal.">Three rooms,</GlassHeading>
       </div>
@@ -221,28 +196,21 @@ function Features() {
           <div
             key={f.tag}
             data-gsap={f.flip ? "slide-left" : "slide-right"}
-            className={`glass glass-hover specular grid items-center gap-8 rounded-[var(--r-panel)] p-6 lg:gap-8 ${
+            className={`grid items-center gap-8 lg:gap-16 ${
               f.flip ? "lg:grid-cols-[1fr_1.25fr]" : "lg:grid-cols-[1.25fr_1fr]"
             }`}
           >
-            {/* The screenshot, framed like an instrument: a chrome strip that
-                names the room, then the shot. Kept from the flat kit — an
-                unlabelled screenshot on a marketing page is a stock photo.
-                It also drifts ±20px against the copy column on scroll, which
-                is what stops three full-width stills from reading as flat art
-                pasted onto the page: the frame sits at its own depth. Travel is
-                capped under the row's 26px padding so the frame can drift
-                inside the card without ever touching its border. */}
+            {/* The plate, on its own: no chrome strip naming the room any
+                more (M33, calm); the eyebrow beside it does that. It still
+                drifts ±20px against the copy column on scroll, so the three
+                stills sit at their own depth instead of reading as flat art. */}
             <div
               data-gsap="parallax"
               data-gsap-amount="40"
-              className={`overflow-hidden rounded-[14px] border border-[var(--glass-border)] shadow-[0_30px_70px_-30px_rgba(0,0,0,0.7)] ${
+              className={`overflow-hidden rounded-[20px] bg-surface shadow-[0_30px_70px_-30px_rgba(0,0,0,0.7)] ${
                 f.flip ? "lg:order-2" : "lg:order-1"
               }`}
             >
-              <div className="flex items-center gap-2 border-b border-[var(--glass-border)] bg-[rgba(255,255,255,0.03)] px-3 py-[0.4375rem]">
-                <span className="t-chrome text-fg-faint">{f.strip}</span>
-              </div>
               {/* A plate drawn from code (scripts/cinema/plates.mjs), labelled
                   illustrative, never a screenshot: the screenshots here kept
                   showing a builder header and a forecast cone months after both
@@ -262,17 +230,14 @@ function Features() {
                 f.flip ? "lg:order-1" : "lg:order-2"
               }`}
             >
-              <GlassChip className="self-start">{f.tag}</GlassChip>
+              <div className="t-eyebrow text-brand-ink">{f.tag[0].toUpperCase() + f.tag.slice(1)}</div>
               <h3 className="m-0 font-display text-[clamp(1.5rem,2.4vw,2.1rem)] leading-[1.02] tracking-[-0.03em] text-fg">
                 {f.title} <span className="t-accent">{f.accent}</span>
               </h3>
-              <p className="m-0 text-sm leading-[1.7] text-fg-dim">{f.copy}</p>
+              <p className="m-0 text-[0.9375rem] leading-[1.65] text-fg-dim">{f.copy}</p>
               <GlassPoints points={f.points} />
-              <Link
-                href={f.href}
-                className="link-draw text-grad relative mt-1 self-start t-eyebrow no-underline"
-              >
-                open {f.tag} →
+              <Link href={f.href} className="calm-link mt-1 self-start">
+                Open the {f.tag} <span aria-hidden>›</span>
               </Link>
             </div>
           </div>
@@ -306,8 +271,9 @@ const SAFETY = [
 function Safety() {
   return (
     <GlassSection id="safety">
-      <div className="glass-strong specular grid items-center gap-10 rounded-[var(--r-panel)] p-8 lg:grid-cols-[5fr_7fr] lg:gap-14 lg:p-[56px_52px]">
-        <div data-gsap="fade-up">
+      <div className="calm-panel grid items-center gap-10 p-8 lg:grid-cols-[5fr_7fr] lg:gap-14 lg:p-[56px_52px]">
+        <i aria-hidden className="lit-aura" />
+        <div>
           <GlassEyebrow>Safety is the product</GlassEyebrow>
           <GlassHeading accent="by design.">Boring,</GlassHeading>
           {/* The four cards say what we refuse to do with money. This adds the
@@ -317,14 +283,11 @@ function Safety() {
               imported rather than typed out so this sentence cannot drift from
               the rule lib/region.ts actually enforces. */}
           <p className="measure mt-[1.125rem] mb-6 t-body-sm text-fg-dim">
-            LAZYBULL is an educational platform. Not a broker, not advice — a
+            lazybull is an educational platform. Not a broker, not advice — a
             place to get fluent before a single real dollar moves. Indian
             securities are shown delayed by at least {LAG_DAYS} days, as SEBI&apos;s
             education-data norms require of an unregistered teacher.
           </p>
-          <GlassChip dot pulse>
-            kill switch armed · paper-only
-          </GlassChip>
 
           {/* The section asserts defined risk; this draws it. A capped payoff —
               flat at a loss you chose, up through zero, flat at a capped gain —
@@ -383,10 +346,7 @@ function Safety() {
           data-gsap-delay="0.15"
         >
           {SAFETY.map(([t, d]) => (
-            <div
-              key={t}
-              className="glass glass-hover rounded-[var(--r-cell)] p-[22px_20px]"
-            >
+            <div key={t} className="p-[6px_4px]">
               <div className="font-display text-[1.125rem] tracking-[-0.02em] text-fg">
                 {t}
               </div>
@@ -396,6 +356,8 @@ function Safety() {
             </div>
           ))}
         </div>
+        {/* Dead calm (M15) and the kill switch for the page (M17). */}
+        <DeadCalm />
       </div>
     </GlassSection>
   );
@@ -445,7 +407,7 @@ const TIERS: readonly Tier[] = [
     unit: "/forever",
     blurb: BUILT[0].blurb,
     feats: tierLines("free"),
-    cta: "start for free",
+    cta: "Start for free",
     href: "/learn",
     kind: "glass",
   },
@@ -459,8 +421,8 @@ const TIERS: readonly Tier[] = [
     // a stranger to hand over an identity before they have been told what the
     // tier costs or contains; the price page is where that decision belongs,
     // and #pro scrolls to this exact card's fuller twin.
-    cta: "see what pro includes",
-    terms: `billed annually · ${usd("month")} monthly · India ${inr("year")} / ${inr("month")}`,
+    cta: "See what Pro includes",
+    terms: `Billed annually · ${usd("month")} monthly · India ${inr("year")} / ${inr("month")}`,
     href: "/pricing#pro",
     kind: "primary",
     hot: true,
@@ -470,7 +432,7 @@ const TIERS: readonly Tier[] = [
 function Pricing() {
   return (
     <GlassSection id="pricing">
-      <div className="flex flex-col items-center text-center" data-gsap="fade-up">
+      <div className="flex flex-col items-center text-center">
         <GlassEyebrow>Pricing</GlassEyebrow>
         <GlassHeading accent="Upgrade when it clicks.">Start free.</GlassHeading>
       </div>
@@ -483,33 +445,32 @@ function Pricing() {
         {TIERS.map((t) => (
           <div
             key={t.name}
-            className={`specular glass-hover relative flex flex-col gap-4 rounded-[var(--r-panel)] p-[32px_30px] ${
-              t.hot ? "glass-strong border-[var(--glass-border-hot)]" : "glass"
-            }`}
+            className="calm-panel relative flex flex-col gap-4 p-[32px_30px]"
           >
+            <i aria-hidden className="lit-aura" />
             <div
-              className={`t-eyebrow ${t.hot ? "text-grad" : "text-fg-faint"}`}
+              className={`t-eyebrow ${t.hot ? "text-brand-ink" : "text-fg-dim"}`}
             >
               {t.name}
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="t-data text-[2.875rem] leading-none tracking-[-0.03em] text-fg">
+              <span className="text-[2.875rem] font-semibold leading-none tracking-[-0.03em] tabular-nums text-fg">
                 {t.price}
               </span>
-              <span className="t-chrome text-fg-faint">{t.unit}</span>
+              <span className="text-[0.9375rem] text-fg-faint">{t.unit}</span>
             </div>
             {/* The condition sits ON the number it qualifies. It used to be
                 headered over BOTH cards, which put "billed annually · $39
                 monthly" above a card that reads "$0 /forever" — a qualifier
                 attached to the one price it cannot possibly describe. */}
-            {t.terms && <div className="t-chrome text-fg-faint">{t.terms}</div>}
+            {t.terms && <div className="text-[0.8125rem] text-fg-faint">{t.terms}</div>}
             <div className="font-display text-[1rem] text-fg-dim">
               {t.blurb}
             </div>
             <div className="flex-1">
               <GlassPoints points={t.feats} />
             </div>
-            <GlassButton href={t.href} kind={t.kind} arrow>
+            <GlassButton href={t.href} kind={t.kind}>
               {t.cta}
             </GlassButton>
           </div>
@@ -517,11 +478,8 @@ function Pricing() {
       </div>
 
       <div className="mt-8 text-center">
-        <Link
-          href="/pricing"
-          className="link-draw relative t-eyebrow text-fg-dim no-underline hover:text-fg"
-        >
-          compare all four tiers →
+        <Link href="/pricing" className="calm-link">
+          Compare all four tiers <span aria-hidden>›</span>
         </Link>
       </div>
     </GlassSection>
@@ -536,15 +494,9 @@ export function MarketingSections() {
     // bottom edge, and a 1px rule sitting on that ramp reinstated exactly the
     // hard line the ramp removes.
     <div className="relative isolate" data-payoff-track>
-      {/* The one background the glass refracts: two phosphor orbs, one plasma,
-          behind a masked grid. Scoped to this region rather than fixed to the
-          viewport — the landing already runs a fixed orb layer above. */}
-      {/* THE P&L SPINE. Sits above the aurora (z-0) and below every section
-          (relative z-10), so it runs behind the whole region and the four
-          sections read as four states of ONE curve rather than four unrelated
-          layouts. Server component; the morph is a data attribute the global
-          GsapScroller consumes, so this region still ships no client JS. */}
-      <PayoffSpine />
+      {/* The one background: two phosphor orbs and one plasma, soft light
+          and no grid (M33). Scoped to this region rather than fixed to the
+          viewport. */}
       <div className="glass-aurora glass-aurora--melt-top" aria-hidden>
         <i className="a1" />
         <i className="a2" />

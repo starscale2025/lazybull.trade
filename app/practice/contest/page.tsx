@@ -1,5 +1,4 @@
 import { Nav } from "@/components/Nav";
-import { TickerBar } from "@/components/TickerBar";
 import { Footer } from "@/components/Footer";
 import { ContestBoard } from "@/components/practice/ContestBoard";
 
@@ -13,8 +12,7 @@ export const metadata = {
 
 export default function PracticeContestPage() {
   return (
-    <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg">
-      <TickerBar />
+    <main className="page-aura tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
       <ContestBoard />
       <Footer />

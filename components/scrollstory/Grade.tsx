@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { BlendFunction, Effect } from "postprocessing";
+import { colorGrade } from "@/lib/cinema";
+import { cinemaClock } from "@/lib/cinema-clock";
 
 /**
  * THE GRADE, the first real one (2026-11, Gate A2). Runs after ToneMapping in
@@ -22,7 +24,18 @@ import { BlendFunction, Effect } from "postprocessing";
  *   black stays the page's black and the 3D never reads as a grey veil over
  *   the 2D scene it crossfades with.
  *
- * THE MATTER plan's M27 grows this into the per-act grade on the cinema clock.
+ * PER ACT (Phase 4, M27): on top of those, every frame reads the act's room
+ * off the cinema clock (colorGrade in lib/cinema.ts): exposure, saturation, a
+ * split tone, the toe, and grain in the midtones (2–3%, which also ends the
+ * banding). Pixels near the loss red or the gain mint are kept OUT of the
+ * grade, so the 3D's semantic colours match the UI's tokens in every room.
+ *
+ * What it does NOT do yet (Gate A4 #10, measured): it runs only inside the
+ * three 3D layers' composers, so the 2D scene's acts and seams are ungraded,
+ * and a seam dip shows only where a 3D layer is on screen. The split tone, at
+ * `* 0.35` and tints within 0.12 of neutral, moves a pixel by at most about
+ * 4.5/255: it is there, not seen. The grain advances per rendered frame, so
+ * it keeps moving under the site's pause.
  */
 
 const fragmentShader = /* glsl */ `
@@ -30,6 +43,12 @@ uniform vec3 uBear;   // linear-space HSV of the --bear token
 uniform vec3 uBull;   // linear-space HSV of the --bull token
 uniform float uToe;
 uniform float uFrame;
+uniform float uExposure;
+uniform float uSat;
+uniform float uSplit;
+uniform float uGrain;
+uniform vec3 uShadowTint;
+uniform vec3 uHighTint;
 
 vec3 rgb2hsv(vec3 c) {
   vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -54,9 +73,13 @@ float hueStep(float a, float b) {
   float d = b - a;
   return d - floor(d + 0.5);
 }
+float anchorWeight(vec3 hsv, vec3 token) {
+  float d = hueStep(hsv.x, token.x);
+  return (1.0 - smoothstep(0.035, 0.085, abs(d))) * smoothstep(0.18, 0.4, hsv.y);
+}
 vec3 anchor(vec3 hsv, vec3 token) {
   float d = hueStep(hsv.x, token.x);
-  float w = (1.0 - smoothstep(0.035, 0.085, abs(d))) * smoothstep(0.18, 0.4, hsv.y);
+  float w = anchorWeight(hsv, token);
   hsv.x = fract(hsv.x + d * w);
   hsv.y = mix(hsv.y, max(hsv.y, token.y * 0.94), w);
   return hsv;
@@ -68,13 +91,27 @@ float ign(vec2 p) {
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   vec3 c = clamp(inputColor.rgb, 0.0, 1.0);
   vec3 hsv = rgb2hsv(c);
+  // How much of this pixel is a semantic colour: those stay out of the grade.
+  float sem = max(anchorWeight(hsv, uBear), anchorWeight(hsv, uBull));
   hsv = anchor(hsv, uBear);
   hsv = anchor(hsv, uBull);
-  c = hsv2rgb(hsv);
-  vec3 s = toSRGB(c);
+  vec3 anchored = hsv2rgb(hsv);
+  // The act's room: exposure, then saturation around the luminance.
+  vec3 g = anchored * uExposure;
+  float lin = dot(g, vec3(0.2126, 0.7152, 0.0722));
+  g = mix(vec3(lin), g, uSat);
+  c = mix(g, anchored, sem);
+  vec3 s = toSRGB(clamp(c, 0.0, 1.0));
   float luma = dot(s, vec3(0.2126, 0.7152, 0.0722));
-  s = mix(s, pow(s, vec3(1.0 - uToe)), 1.0 - smoothstep(0.0, 0.4, luma));
-  s += (ign(gl_FragCoord.xy + vec2(uFrame * 5.588, uFrame * 9.237)) - 0.5) / 255.0;
+  // Split tone: shadows toward one tint, highlights toward another. The
+  // shadow tint fades out toward black, so pure black stays the page's black
+  // and the 3D never lays a coloured veil over the 2D scene it crossfades with.
+  vec3 split = (1.0 - luma) * smoothstep(0.0, 0.2, luma) * (uShadowTint - 0.5) + luma * (uHighTint - 0.5);
+  s += split * uSplit * 0.35 * (1.0 - sem);
+  s = mix(s, pow(max(s, 0.0), vec3(1.0 - uToe)), 1.0 - smoothstep(0.0, 0.4, luma));
+  // Grain: animated, strongest in the midtones, never on pure black or white.
+  float n = ign(gl_FragCoord.xy + vec2(uFrame * 5.588, uFrame * 9.237)) - 0.5;
+  s += n * (1.0 / 255.0 + uGrain * 4.0 * luma * (1.0 - luma));
   outputColor = vec4(toLinear(clamp(s, 0.0, 1.0)), inputColor.a);
 }
 `;
@@ -116,17 +153,34 @@ class GradeEffect extends Effect {
         ["uBull", new THREE.Uniform(tokenHSV("--bull", "#52ffa5"))],
         ["uToe", new THREE.Uniform(toe)],
         ["uFrame", new THREE.Uniform(0)],
+        ["uExposure", new THREE.Uniform(1)],
+        ["uSat", new THREE.Uniform(1)],
+        ["uSplit", new THREE.Uniform(0)],
+        ["uGrain", new THREE.Uniform(0.02)],
+        ["uShadowTint", new THREE.Uniform(new THREE.Vector3(0.5, 0.5, 0.5))],
+        ["uHighTint", new THREE.Uniform(new THREE.Vector3(0.5, 0.5, 0.5))],
       ]),
     });
+    this.minToe = toe;
   }
+  private minToe: number;
   update() {
-    const u = this.uniforms.get("uFrame")!;
-    u.value = (u.value + 1) % 64;
+    const u = this.uniforms;
+    const f = u.get("uFrame")!;
+    f.value = (f.value + 1) % 64;
+    const g = colorGrade(cinemaClock.progress);
+    u.get("uExposure")!.value = g.exposure;
+    u.get("uSat")!.value = g.saturation;
+    u.get("uSplit")!.value = g.split;
+    u.get("uGrain")!.value = g.grain;
+    u.get("uToe")!.value = Math.max(this.minToe, g.toe);
+    (u.get("uShadowTint")!.value as THREE.Vector3).set(...g.shadow);
+    (u.get("uHighTint")!.value as THREE.Vector3).set(...g.high);
   }
 }
 
 /** The film's grade; put it after <ToneMapping /> and before <SMAA />. `toe`
- *  0..~0.25 bends the darks up (0 = none). */
+ *  is a floor under the act's own toe (0..~0.3). */
 export function Grade({ toe = 0 }: { toe?: number }) {
   const effect = useMemo(() => new GradeEffect(toe), [toe]);
   return <primitive object={effect} dispose={null} />;

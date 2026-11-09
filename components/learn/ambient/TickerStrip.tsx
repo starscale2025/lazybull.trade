@@ -1,8 +1,7 @@
-// Inter-section marquee of jargon. Colored diamonds in trader colors. Pure
-// CSS marquee, infinite. The page has multiple of these scrolling in
-// alternating directions to create rhythm.
-
-const TONE_COLORS = ["var(--bull)", "var(--bear)", "var(--cyan)", "var(--amber)", "var(--plasma)"];
+// A quiet marquee of terms (calm, S1, 2026-11-09): the reading type, a dot
+// between items, faded out at both edges by a mask so the strip needs no
+// background of its own. It was a soft band over a grid wash, in mono caps,
+// with a diamond per item in the trader colours.
 
 export function TickerStrip({
   items,
@@ -17,22 +16,19 @@ export function TickerStrip({
   const animationClass = reverse ? "marquee-reverse" : speed === "slow" ? "marquee-slow" : "marquee";
 
   return (
-    <div className="relative overflow-hidden border-y border-border bg-bg-soft">
-      <div className="pointer-events-none absolute inset-0 bg-grid-fine opacity-10" />
-      <div className={`relative flex ${animationClass} gap-12 py-3 font-mono text-[0.625rem] uppercase tracking-[0.3em] whitespace-nowrap`}>
+    // The left fade widens to 15rem at lg so the words clear the chapter rail
+    // (ChapterNav's geometry contract).
+    <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_6rem,#000_calc(100%-6rem),transparent)] lg:[mask-image:linear-gradient(90deg,transparent,#000_15rem,#000_calc(100%-6rem),transparent)]">
+      <div className={`relative flex ${animationClass} gap-12 py-3 t-label whitespace-nowrap`}>
         {repeated.map((item, i) => (
-          <span key={i} className="flex items-center gap-3 shrink-0">
-            <span style={{ color: TONE_COLORS[i % TONE_COLORS.length] }} className="text-[0.625rem]">
-              ◆
+          <span key={i} className="flex items-center gap-12 shrink-0">
+            <span className="text-fg-dim">{item}</span>
+            <span aria-hidden className="text-fg-faint">
+              ·
             </span>
-            <span className="text-fg">{item}</span>
-            <span className="text-fg-faint">·</span>
           </span>
         ))}
       </div>
-      {/* Edge fade masks */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 lg:w-[15rem] bg-gradient-to-r from-bg-soft to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-bg-soft to-transparent" />
     </div>
   );
 }

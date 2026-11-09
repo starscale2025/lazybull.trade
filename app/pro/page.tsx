@@ -25,6 +25,7 @@ import { patchLastBar, reconcileBars, syntheticBars } from "@/lib/live-bars";
 import { registerCommands } from "@/lib/command-deck";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
+import { Chip } from "@/components/calm/kit";
 
 const PRESET_TO_LASTN: Record<string, number> = {
   "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
@@ -308,7 +309,7 @@ export default function ProPage() {
   const moveOrder = useCallback(
     (id: string, price: number) => {
       const res = moveOrderRaw(id, price, lastPriceRef.current ?? undefined);
-      if (!res.ok) showToast(res.error ?? "could not move order", "warn");
+      if (!res.ok) showToast(res.error ?? "Could not move order", "warn");
       return res;
     },
     [moveOrderRaw]
@@ -328,7 +329,7 @@ export default function ProPage() {
         marketPrice: lastPriceRef.current ?? undefined,
       });
       if (!res.ok) showToast(`Rejected: ${res.error}`, "warn");
-      else showToast(`LIMIT ${side} 100 ${symbol.sym} @ ${price.toFixed(2)} is working`, "ok");
+      else showToast(`Limit ${side} 100 ${symbol.sym} @ ${price.toFixed(2)} is working`, "ok");
     },
     [submitOrderStore, symbol.sym]
   );
@@ -839,25 +840,24 @@ export default function ProPage() {
             identifies itself with a badge and a workspace strip — so the
             heading is screen-reader-only rather than invented chrome. */}
         <h1 className="sr-only">Pro terminal — charting, indicators and paper trading</h1>
-        <span className="border-grad bg-[#582eff]/12 px-1.5 py-0.5 t-chrome font-semibold">
-          <span className="text-grad">pro</span>
-        </span>
-        <div className="ml-1 hidden items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim md:flex">
-          <span>workspace · "godmode"</span>
-          {loading && <span className="text-cyan animate-pulse">· loading bars…</span>}
-          {fetchErr && <span className="text-bear">· error · {fetchErr}</span>}
+        <Chip tone="brand">Pro</Chip>
+        <div className="ml-1 hidden items-center gap-2 t-label text-fg-dim md:flex">
+          <span>Workspace · “godmode”</span>
+          {loading && <span className="animate-pulse text-fg-faint">· Loading bars…</span>}
+          {fetchErr && <span className="text-amber">· Error · {fetchErr}</span>}
         </div>
-        {/* Provenance is NOT gated by width. The Nav's TruthBadge only appears
-            at min-[1360px] and the workspace cluster above starts at md, which
-            between them left a phone showing synthetic prices with nothing
-            saying so. Disclosure is not a thing that should respond to a
+        {/* Provenance is NOT gated by width. The Nav's TruthBadge used to
+            appear only at min-[1360px] (it has since moved off the nav, onto
+            /trade and /trade/chain) and the workspace cluster above starts at
+            md, which between them left a phone showing synthetic prices with
+            nothing saying so. Disclosure is not a thing that should respond to a
             breakpoint. */}
         {synthetic && !loading && (
           <span
-            className="ml-1 font-mono text-[0.6875rem] uppercase tracking-wider text-amber"
+            className="ml-1"
             title="Live feed unavailable — showing a deterministic synthetic tape, not real quotes. Add a data key to go live."
           >
-            · synthetic tape
+            <Chip tone="warn">Synthetic tape</Chip>
           </span>
         )}
         {/* The action cluster that used to sit here is gone. Every one of its
@@ -967,8 +967,8 @@ export default function ProPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 12 }}
-                className={`absolute inset-x-0 bottom-3 mx-auto w-fit border px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider ${
-                  toast.tone === "warn" ? "border-amber/60 bg-amber/10 text-amber" : "border-bull/60 bg-bull/10 text-bull"
+                className={`absolute inset-x-0 bottom-3 mx-auto w-fit surface-instrument border border-border bg-surface px-3 py-1.5 t-label ${
+                  toast.tone === "warn" ? "text-amber" : "text-fg"
                 }`}
               >
                 {toast.text}
@@ -998,7 +998,7 @@ export default function ProPage() {
                     lazybull<span className="t-accent">.pro</span>
                   </motion.div>
                   <motion.div initial={{ width: 0 }} animate={{ width: "200px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="h-px rule-grad" />
-                  <div className="t-eyebrow text-fg-faint">connecting to the market feed</div>
+                  <div className="t-eyebrow text-fg-faint">Connecting to the market feed</div>
                 </div>
               </motion.div>
             )}
@@ -1058,7 +1058,7 @@ export default function ProPage() {
           // Position first — it is the only line here that is about the user's
           // money rather than the workspace.
           position
-            ? `${position.qty > 0 ? "long" : "short"} ${Math.abs(position.qty)} @ ${position.avgPrice.toFixed(2)} · ` +
+            ? `${position.qty > 0 ? "Long" : "Short"} ${Math.abs(position.qty)} @ ${position.avgPrice.toFixed(2)} · ` +
               `${livePnl >= 0 ? "+" : "−"}$${Math.abs(livePnl).toFixed(2)}`
             : null,
           `${visibleDrawings.length} drawing`,

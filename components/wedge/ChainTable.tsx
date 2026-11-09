@@ -7,8 +7,9 @@
 // page's `days` state, so the cone and the chain always agree.
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { priceChain, type ChainCell } from "@/lib/pricing";
+import { expiryOn, useToday } from "@/lib/expiry";
+import { CalmLink, Chip, ToolButton } from "@/components/calm/kit";
 
 type Props = {
   symbol: string;
@@ -27,18 +28,15 @@ type Props = {
   onHoverStrike?: (strike: number | null) => void;
 };
 
+// The expiry stepper sits in a thin header strip: the kit's control, compact.
+const STEP = "!h-5 !w-6 !px-0";
+
 const kFmt = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : `${v}`);
 
 export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHoverStrike }: Props) {
-  const expiry = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    return {
-      iso: d.toISOString().slice(0, 10),
-      label: d.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase(),
-      daysToExpiry: days,
-    };
-  }, [days]);
+  // Days-out on the server, the calendar label after hydration (lib/expiry.ts).
+  const today = useToday();
+  const expiry = useMemo(() => expiryOn(today, days), [today, days]);
 
   const strikes = useMemo(() => {
     const step = spot < 50 ? 1 : spot < 200 ? 2.5 : spot < 500 ? 5 : 10;
@@ -80,29 +78,20 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHove
     >
       {/* header — CALLS | expiry stepper | PUTS */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-bg-soft px-3 py-2 t-eyebrow lg:shrink-0">
-        <span className="text-bull">calls</span>
+        <span className="text-bull">Calls</span>
         <div className="flex items-center gap-2 text-fg">
-          <button
-            type="button"
-            onClick={() => onStepDays?.(-7)}
-            aria-label="earlier expiry"
-            className="border border-border px-1.5 leading-4 text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
-          >
+          <ToolButton onClick={() => onStepDays?.(-7)} aria-label="earlier expiry" className={STEP}>
             ‹
-          </button>
-          <span className="tabular-nums tracking-[0.15em]">
-            {expiry.label} <span className="text-fg-dim">({days}d)</span>
+          </ToolButton>
+          <span className="tabular-nums">
+            {expiry.label && <>{expiry.label} </>}
+            <span className="text-fg-dim">({days}d)</span>
           </span>
-          <button
-            type="button"
-            onClick={() => onStepDays?.(7)}
-            aria-label="later expiry"
-            className="border border-border px-1.5 leading-4 text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
-          >
+          <ToolButton onClick={() => onStepDays?.(7)} aria-label="later expiry" className={STEP}>
             ›
-          </button>
+          </ToolButton>
         </div>
-        <span className="text-right text-bear">puts</span>
+        <span className="text-right text-bear">Puts</span>
       </div>
 
       {/* body — internal scroll inside the app shell; the footer below stays pinned */}
@@ -141,7 +130,7 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHove
                 {/* nearest-the-money row ring, ref-style */}
                 {atm && (
                   <span
-                    className="pointer-events-none absolute inset-0 z-10 border border-bull/60 !py-0"
+                    className="pointer-events-none absolute inset-0 z-10 border border-fg-faint !py-0"
                     aria-hidden
                   />
                 )}
@@ -172,20 +161,17 @@ export function ChainTable({ symbol, spot, iv, days, perSide, onStepDays, onHove
       </div>
 
       {/* footer — provenance + link to the full builder; pinned to the column bottom on lg */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-bg-soft px-3 py-2 t-chrome lg:shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-bg-soft px-3 py-2 t-label lg:shrink-0">
         <div className="flex items-center gap-2 text-fg-dim">
-          <span>mark mid · black-scholes · in-process</span>
+          <span>Mark mid · Black-Scholes · in-process</span>
           <span className="text-fg-faint">·</span>
           <span className="text-fg-faint">{strikes.length} strikes</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1 border border-amber/30 bg-amber/10 px-1.5 py-0.5 t-eyebrow text-amber">
-            <span className="size-1 rounded-full bg-amber" />
-            synthetic chain · illustrative
-          </span>
-          <Link href="/trade/chain" className="text-bull hover:underline">
-            configure chain →
-          </Link>
+          <Chip tone="warn">Synthetic chain · illustrative</Chip>
+          <CalmLink href="/trade/chain" className="!text-[0.75rem]">
+            Configure chain
+          </CalmLink>
         </div>
       </div>
     </section>

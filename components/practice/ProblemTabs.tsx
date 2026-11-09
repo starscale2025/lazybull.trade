@@ -1,10 +1,8 @@
 "use client";
 
 // The three tab bodies of the problem pane — Description, Editorial,
-// Submissions — plus the underline tab strip the pane and the run console
-// share. Class strings are lifted, not invented: the tabs are the
-// Market | Limit | Stop strip in components/pro/OrderPanel.tsx (lines 189-201),
-// the teacher callout is components/quant/BotCell.tsx (line 450), the related
+// Submissions — plus the tab pills the pane and the run console share. The
+// teacher callout is components/quant/BotCell.tsx (line 450), the related
 // cards are app/learn/bots/[id]/page.tsx (lines 386-406).
 //
 // What is real here, and where it comes from. Acceptance is accepted ÷
@@ -23,17 +21,18 @@ import { LANG_META } from "@/lib/practice/types";
 import { fetchEditorial, useAcceptance, type PlanNeed } from "@/lib/practice/client";
 import { usePracticeProgress } from "@/lib/practice/progress";
 import { track } from "@/lib/track";
-import { DifficultyPill, Eyebrow, LockPill, TrackChip, VERDICT_LABEL } from "./Chips";
+import { TogglePill, ToolButton } from "@/components/calm/kit";
+import { DifficultyPill, LockPill, TrackChip, VERDICT_LABEL } from "./Chips";
 import { Paragraphs, RichText } from "./RichText";
 import { Empty, Td, Th, Tr } from "./Table";
 
-/* ── underline tabs ──────────────────────────────────────────────────────── */
+/* ── tab pills ───────────────────────────────────────────────────────────── */
 
 export type TabDef<T extends string> = { id: T; label: ReactNode };
 
-/** Underline tabs for a Panel title row. Phrasing content only (a span and
-    buttons) because Panel renders its title inside a <span>. */
-export function UnderlineTabs<T extends string>({
+/** Tabs for a Panel title row, as the kit's pills. Phrasing content only (a
+    span and buttons) because Panel renders its title inside a <span>. */
+export function PaneTabs<T extends string>({
   tabs,
   value,
   onChange,
@@ -45,19 +44,11 @@ export function UnderlineTabs<T extends string>({
   label: string;
 }) {
   return (
-    <span role="group" aria-label={label} className="inline-flex flex-wrap gap-x-3 gap-y-1">
+    <span role="group" aria-label={label} className="inline-flex flex-wrap gap-1.5">
       {tabs.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          onClick={() => onChange(t.id)}
-          aria-pressed={value === t.id}
-          className={`border-b-2 pb-1 font-mono text-[0.6875rem] tracking-normal transition-colors ${
-            value === t.id ? "border-bull text-fg" : "border-transparent text-fg-faint hover:text-fg-dim"
-          }`}
-        >
+        <TogglePill key={t.id} on={value === t.id} onClick={() => onChange(t.id)}>
           {t.label}
-        </button>
+        </TogglePill>
       ))}
     </span>
   );
@@ -114,14 +105,11 @@ function LockPanel({ need, what }: { need: PlanNeed; what: string }) {
     <div className="border border-dashed border-border bg-bg p-6 text-center">
       <LockPill lock={need === "power" ? "power" : "pro"} />
       <div className="mt-3 font-display text-lg tracking-tightest text-fg">{what} ships with {need === "power" ? "Power" : "Plus"}.</div>
-      <p className="mx-auto mt-1 max-w-[38ch] t-chrome text-fg-faint">
-        the reference solution, the complexity, and the three ways people get it wrong
+      <p className="mx-auto mt-1 max-w-[38ch] t-label text-fg-faint">
+        The reference solution, the complexity, and the three ways people get it wrong
       </p>
-      <Link
-        href={`/pricing#${need}`}
-        className="mt-4 inline-flex surface-card border border-border bg-surface px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
-      >
-        see the plans →
+      <Link href={`/pricing#${need}`} className="tool-btn mt-4">
+        See the plans →
       </Link>
     </div>
   );
@@ -131,7 +119,7 @@ function LockPanel({ need, what }: { need: PlanNeed; what: string }) {
 
 const PRE_CLS = "whitespace-pre-wrap font-mono text-[0.75rem] leading-relaxed text-fg";
 const CARD_CLS =
-  "surface-card border border-border bg-surface p-3 transition-colors hover:border-bull/50 hover:bg-bull/[0.03]";
+  "surface-card border border-border bg-surface p-3 transition-colors hover:border-brand-ink/50 hover:bg-brand-ink/[0.04]";
 
 export function DescriptionTab({ problem }: { problem: ClientProblem }) {
   const [revealed, setRevealed] = useState(0);
@@ -165,13 +153,13 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
   return (
     <div className="space-y-6 p-4">
       <header>
-        <div className="t-chrome text-fg-faint">#{String(problem.num).padStart(2, "0")}</div>
+        <div className="t-data text-[0.75rem] text-fg-faint">#{String(problem.num).padStart(2, "0")}</div>
         <h1 className="mt-1 font-display text-2xl tracking-tightest text-fg">{problem.title}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <DifficultyPill difficulty={problem.difficulty} />
           <TrackChip track={problem.track} showGlyph />
           <span
-            className="t-chrome text-fg-faint"
+            className="t-label text-fg-faint"
             title={
               rate === null
                 ? loaded
@@ -180,9 +168,9 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
                 : `${countFor(problem.id)} submitted · accepted ÷ submitted`
             }
           >
-            acceptance {rate === null ? "—" : `${(rate * 100).toFixed(1)}%`}
+            Acceptance {rate === null ? "—" : `${(rate * 100).toFixed(1)}%`}
           </span>
-          <span className="t-chrome text-fg-faint">~{problem.minutes} min</span>
+          <span className="t-label text-fg-faint">~{problem.minutes} min</span>
         </div>
       </header>
 
@@ -192,15 +180,15 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
         <div className="space-y-3">
           {problem.examples.map((ex, i) => (
             <div key={i} className="border border-border bg-bg">
-              <div className="border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">example {i + 1}</div>
+              <div className="border-b border-border bg-bg-soft px-3 py-2 t-label text-fg-dim">Example {i + 1}</div>
               <div className="grid gap-x-3 gap-y-2 p-3 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-                <div className="t-chrome text-fg-faint sm:pt-0.5">input</div>
+                <div className="t-label text-fg-faint sm:pt-0.5">Input</div>
                 <pre className={PRE_CLS}>{ex.input}</pre>
-                <div className="t-chrome text-fg-faint sm:pt-0.5">output</div>
+                <div className="t-label text-fg-faint sm:pt-0.5">Output</div>
                 <pre className={PRE_CLS}>{ex.output}</pre>
                 {ex.note && (
                   <>
-                    <div className="t-chrome text-fg-faint sm:pt-0.5">note</div>
+                    <div className="t-label text-fg-faint sm:pt-0.5">Note</div>
                     <p className="text-[0.75rem] leading-relaxed text-fg-dim">
                       <RichText text={ex.note} />
                     </p>
@@ -214,11 +202,11 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
 
       {problem.constraints.length > 0 && (
         <section>
-          <div className="t-chrome text-fg-faint">constraints</div>
+          <div className="t-label text-fg-faint">Constraints</div>
           <ul className="mt-2 space-y-1.5 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             {problem.constraints.map((c, i) => (
               <li key={i} className="flex gap-2">
-                <span aria-hidden className="text-bull">
+                <span aria-hidden className="text-brand-ink">
                   ›
                 </span>
                 <span className="min-w-0">
@@ -232,28 +220,23 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
 
       {problem.hintCount > 0 && (
         <section>
-          <Eyebrow tone="amber">
-            teacher · {problem.hintCount} hint{problem.hintCount === 1 ? "" : "s"}
+          <div className="t-eyebrow text-brand-ink">
+            Teacher · {problem.hintCount} hint{problem.hintCount === 1 ? "" : "s"}
             {problem.hintCount > 1 ? " · the first is free" : ""}
-          </Eyebrow>
+          </div>
           <div className="mt-3 space-y-2">
             {shown.map((h, i) => (
-              <div key={i} className="border-l-2 border-bull bg-bull/5 px-3 py-2 text-[0.75rem] leading-relaxed text-fg">
-                <span className="mr-2 t-chrome text-bull">teacher</span>
+              <div key={i} className="border-l-2 border-brand-ink bg-brand-ink/5 px-3 py-2 text-[0.75rem] leading-relaxed text-fg">
+                <span className="mr-2 t-label text-brand-ink">Teacher</span>
                 <RichText text={h} />
               </div>
             ))}
             {teacher.status === "locked" && revealed >= 1 && <LockPanel need={teacher.need} what={`Hints ${revealed + 1}–${problem.hintCount}`} />}
-            {teacher.status === "error" && <p className="t-chrome text-bear">{teacher.error}</p>}
+            {teacher.status === "error" && <p className="t-label text-fg">{teacher.error}</p>}
             {(canRevealNext || (moreBehindWall && teacher.status !== "locked")) && revealed < problem.hintCount && (
-              <button
-                type="button"
-                onClick={revealNext}
-                disabled={teacher.status === "loading"}
-                className="h-8 border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-amber hover:text-fg disabled:opacity-50"
-              >
-                {teacher.status === "loading" ? "…" : `▸ reveal hint ${revealed + 1}${!canRevealNext && moreBehindWall ? " · plus" : ""}`}
-              </button>
+              <ToolButton onClick={revealNext} disabled={teacher.status === "loading"}>
+                {teacher.status === "loading" ? "…" : `▸ Reveal hint ${revealed + 1}${!canRevealNext && moreBehindWall ? " · Plus" : ""}`}
+              </ToolButton>
             )}
           </div>
         </section>
@@ -263,14 +246,14 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
         <section className="grid gap-2 sm:grid-cols-2">
           {learnHref && (
             <Link href={learnHref} className={CARD_CLS}>
-              <div className="t-chrome text-bull">↗ read the theory</div>
-              <div className="mt-1 text-[0.75rem] text-fg-dim">the chapter this problem is cut from</div>
+              <div className="t-label text-brand-ink">↗ Read the theory</div>
+              <div className="mt-1 text-[0.75rem] text-fg-dim">The chapter this problem is cut from</div>
             </Link>
           )}
           {botHref && (
             <Link href={botHref} className={CARD_CLS}>
-              <div className="t-chrome text-cyan">▶ open in the workbench</div>
-              <div className="mt-1 text-[0.75rem] text-fg-dim">run the same math on a real tape</div>
+              <div className="t-label text-brand-ink">▶ Open in the workbench</div>
+              <div className="mt-1 text-[0.75rem] text-fg-dim">Run the same math on a real tape</div>
             </Link>
           )}
         </section>
@@ -291,14 +274,14 @@ export function EditorialTab({ problem }: { problem: ClientProblem }) {
   if (!problem.hasEditorial) {
     return (
       <div className="p-4">
-        <Empty>no editorial for this problem yet — the five featured problems (★) have one; the rest are being written</Empty>
+        <Empty>No editorial for this problem yet — the five featured problems (★) have one; the rest are being written</Empty>
       </div>
     );
   }
   if (teacher.status === "idle" || teacher.status === "loading") {
     return (
       <div className="p-4">
-        <Empty>loading…</Empty>
+        <Empty>Loading…</Empty>
       </div>
     );
   }
@@ -319,13 +302,13 @@ export function EditorialTab({ problem }: { problem: ClientProblem }) {
   if (!teacher.editorial || teacher.editorial.length === 0) {
     return (
       <div className="p-4">
-        <Empty>no editorial for this problem yet</Empty>
+        <Empty>No editorial for this problem yet</Empty>
       </div>
     );
   }
   return (
     <div className="space-y-4 p-4">
-      <Eyebrow tone="amber">editorial · the walkthrough</Eyebrow>
+      <div className="t-eyebrow text-brand-ink">Editorial · the walkthrough</div>
       <Paragraphs paragraphs={teacher.editorial} className="t-body-sm text-fg-dim" />
     </div>
   );
@@ -336,7 +319,7 @@ export function EditorialTab({ problem }: { problem: ClientProblem }) {
 const VERDICT_TONE: Record<Verdict, string> = {
   accepted: "text-bull",
   "wrong-answer": "text-bear",
-  error: "text-amber",
+  error: "text-bear",
 };
 
 /** Only ever called after mount — toLocaleString depends on the viewer's
@@ -357,13 +340,13 @@ export function SubmissionsTab({ problem }: { problem: ClientProblem }) {
     [state.submissions, problem.id]
   );
 
-  const where = source === "server" ? "from the server" : signedIn ? "this device, while the server answers" : "this device · sign in to keep them across devices";
+  const where = source === "server" ? "From the server" : signedIn ? "This device, while the server answers" : "This device · sign in to keep them across devices";
 
   if (rows.length === 0) {
     return (
       <div className="p-3">
-        <Empty>no submissions yet — press ▶ run</Empty>
-        <p className="mt-2 text-center t-chrome text-fg-faint">{where}</p>
+        <Empty>No submissions yet — press ▶ Run</Empty>
+        <p className="mt-2 text-center t-label text-fg-faint">{where}</p>
       </div>
     );
   }
@@ -373,11 +356,11 @@ export function SubmissionsTab({ problem }: { problem: ClientProblem }) {
       <table className="w-full t-data text-[0.6875rem]">
         <thead>
           <Tr head>
-            <Th left>when</Th>
-            <Th left>mode</Th>
-            <Th left>lang</Th>
-            <Th left>verdict</Th>
-            <Th>runtime</Th>
+            <Th left>When</Th>
+            <Th left>Mode</Th>
+            <Th left>Lang</Th>
+            <Th left>Verdict</Th>
+            <Th>Runtime</Th>
           </Tr>
         </thead>
         <tbody>
@@ -403,7 +386,7 @@ export function SubmissionsTab({ problem }: { problem: ClientProblem }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-2 t-chrome text-fg-faint">{where}</p>
+      <p className="mt-2 t-label text-fg-faint">{where}</p>
     </div>
   );
 }

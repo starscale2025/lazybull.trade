@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/Nav";
-import { TickerBar } from "@/components/TickerBar";
 import { Footer } from "@/components/Footer";
+import { CalmLink, PageHeader, Stats } from "@/components/calm/kit";
 import { TrackGlyph } from "@/components/practice/Chips";
 import { TrackAside, TrackPath, TrackStartLink } from "@/components/practice/TrackPath";
 import { problemsByTrack, trackStats } from "@/lib/practice/problems";
@@ -43,79 +43,48 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
   const first = problems[0];
 
   return (
-    <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg">
-      <TickerBar />
+    <main className="page-aura tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
 
-      {/* Breadcrumb — app/learn/bots/[id]/page.tsx lines 54-62 */}
-      <section className="bg-bg">
-        <div className="shell flex items-center gap-2 py-2 t-chrome text-fg-faint">
-          <Link href="/practice" className="hover:text-fg">
-            Practice
-          </Link>
-          <span>/</span>
-          <span className="text-fg">{meta.label}</span>
-        </div>
-      </section>
-
-      {/* Hero — the tinted blur-circle hero from app/learn/bots/[id]/page.tsx
-          lines 64-119. The track colour is a CSS var, so the tint goes through
-          color-mix rather than the hex-suffix trick the bot page uses. */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-30" />
-        <div
-          className="pointer-events-none absolute -left-40 top-0 h-[26.25rem] w-[26.25rem] rounded-full blur-[160px]"
-          style={{ background: `color-mix(in srgb, ${meta.color} 20%, transparent)` }}
+      {/* The eyebrow is the way back to the set, and carries the track's glyph. */}
+      <PageHeader
+        eyebrow={
+          <span className="flex items-center gap-2.5">
+            <TrackGlyph track={track} size="sm" />
+            <Link href="/practice" className="transition-colors hover:text-fg">
+              Practice
+            </Link>
+          </span>
+        }
+        title={`${meta.label}.`}
+        accent="In order."
+        lede={meta.blurb}
+        actions={
+          <>
+            {first && (
+              <TrackStartLink track={track} fallback={first.id}>
+                Start next
+              </TrackStartLink>
+            )}
+            <CalmLink href="/learn">Read the theory</CalmLink>
+          </>
+        }
+      >
+        <Stats
+          className="mt-12"
+          items={[
+            { value: String(stats.total), label: "problems" },
+            { value: `~${stats.hours} h`, label: "estimated" },
+            { value: String(stats.byDifficulty.easy), label: "easy" },
+            { value: String(stats.byDifficulty.medium), label: "medium" },
+            { value: String(stats.byDifficulty.hard), label: "hard" },
+          ]}
         />
-        <div className="relative shell section-y-sm">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-end gap-5">
-              <TrackGlyph track={track} size="lg" />
-              <div>
-                <h1 className="t-title text-fg">
-                  {meta.label}. <span className="t-accent">In order.</span>
-                </h1>
-                <p className="mt-2 max-w-[58ch] t-body text-fg-dim">{meta.blurb}</p>
-              </div>
-            </div>
+        <p className="mt-6 text-[0.8125rem] text-fg-faint">Paper only · educational · not advice</p>
+      </PageHeader>
 
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 t-data t-chrome text-fg-faint">
-              <span>{stats.total} problems</span>
-              <span aria-hidden>·</span>
-              <span>~{stats.hours}h</span>
-              <span aria-hidden>·</span>
-              <span className="text-bull">{stats.byDifficulty.easy} easy</span>
-              <span aria-hidden>·</span>
-              <span className="text-amber">{stats.byDifficulty.medium} medium</span>
-              <span aria-hidden>·</span>
-              <span className="text-bear">{stats.byDifficulty.hard} hard</span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {first && (
-                <TrackStartLink
-                  track={track}
-                  fallback={first.id}
-                  className="inline-flex items-center gap-2 btn-grad px-4 py-2.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
-                >
-                  start next →
-                </TrackStartLink>
-              )}
-              <Link
-                href="/learn"
-                className="inline-flex items-center gap-2 surface-card border border-border bg-surface px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bull hover:text-bull"
-              >
-                ↗ read the theory
-              </Link>
-            </div>
-
-            <div className="t-chrome text-fg-faint">paper only · educational · not advice</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="shell section-y-sm">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <section className="shell pb-16">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <TrackPath track={track} problems={problems} />
           <TrackAside track={track} />
         </div>

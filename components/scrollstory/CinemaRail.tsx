@@ -1,7 +1,8 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { ACTS, CANDLE_CRASH_FROM, CANDLE_LAB } from "@/lib/cinema";
+import { ACTS, CANDLE_LAB } from "@/lib/cinema";
+import { CANDLE_CRASH_AT } from "@/lib/candle-series";
 import { FILM_LIFT_END } from "./cinema-metrics";
 
 /**
@@ -49,14 +50,19 @@ import { FILM_LIFT_END } from "./cinema-metrics";
 const RAIL = [
   { key: "dive", label: "the dive", ...ACTS.dive },
   { key: "regime", label: "regime", ...ACTS.regime },
-  { key: "climb", label: "the climb", from: ACTS.candle.from, to: CANDLE_CRASH_FROM },
-  { key: "crash", label: "the crash", from: CANDLE_CRASH_FROM, to: CANDLE_LAB.from },
+  // The crash row turns at the first red print, the frame the sound and the
+  // camera hit too (lib/candle-series.ts), not at the copy's pre-lap.
+  { key: "climb", label: "the climb", from: ACTS.candle.from, to: CANDLE_CRASH_AT },
+  { key: "crash", label: "the crash", from: CANDLE_CRASH_AT, to: CANDLE_LAB.from },
   { key: "lab", label: "the lab", from: CANDLE_LAB.from, to: ACTS.candle.to },
   { key: "safety", label: "your worst case", ...ACTS.safety },
   { key: "consensus", label: "the vote", ...ACTS.consensus },
   { key: "bull", label: "conviction", ...ACTS.bull },
-  { key: "matrix", label: "welcome in", ...ACTS.matrix },
+  { key: "mark", label: "welcome in", ...ACTS.mark },
 ] as const;
+
+/** Rows that begin mid-shot (a cut inside the candle act, not a new act). */
+const IN_SHOT = new Set<string>(["crash", "lab"]);
 
 export type CinemaRailHandle = {
   /** Called from the cinema's existing per-frame pass. No rAF of its own. */
@@ -112,27 +118,19 @@ export const CinemaRail = forwardRef<
       // Which act is the viewer actually LOOKING at?
       //
       // Not simply which ACTS window progress falls in. The scene crossfades
-      // neighbours by ±0.02 (see actEnv in scene.html), so for the first ~0.02
-      // of a new act the previous one is still the picture on screen. Switching
-      // on the raw boundary made the rail read "05 the crash" over a regime
-      // frame. Biasing by the same crossfade width makes the label agree with
-      // the pixels, which is the entire job of an act rail.
+      // neighbouring ACTS by ±0.02 (see actEnv in scene.html), so for the first
+      // ~0.02 of a new act the previous one is still the picture on screen.
+      // Switching on the raw boundary made the rail read "05 the crash" over a
+      // regime frame, so those boundaries are pushed back by the crossfade.
+      // The candle act's own splits (climb · crash · lab) are cuts inside one
+      // shot, with no crossfade: biasing them too kept "the climb" up over the
+      // first red candles (Gate A3 #5), so they switch exactly where they are.
       const CROSSFADE = 0.02;
-      const seen = progress - CROSSFADE;
+      const starts = RAIL.map((r) => r.from + (IN_SHOT.has(r.key) ? 0 : CROSSFADE));
       let act = 0;
-      let frac = 0; // how far through that act
-      for (let i = 0; i < RAIL.length; i++) {
-        const a = RAIL[i];
-        if (seen >= a.from && seen < a.to) {
-          act = i;
-          frac = (seen - a.from) / (a.to - a.from);
-          break;
-        }
-        if (seen >= a.to) {
-          act = i;
-          frac = 1;
-        }
-      }
+      for (let i = 0; i < RAIL.length; i++) if (progress >= starts[i]) act = i;
+      const end = act + 1 < RAIL.length ? starts[act + 1] : RAIL[act].to + CROSSFADE;
+      const frac = Math.max(0, Math.min(1, (progress - starts[act]) / Math.max(1e-6, end - starts[act])));
       // THE FILL TELLS THE TRUTH ABOUT THE ROWS. It used to be raw film
       // progress, which is already 0.15 when the film starts (boot and the
       // desk are retired) and is linear in progress while the rows are evenly
@@ -215,6 +213,14 @@ export const CinemaRail = forwardRef<
           className="rail-row rail-skip mt-1 flex items-center gap-2 text-left"
         >
           <span className="rail-tick block h-px w-3 bg-fg-dim" aria-hidden />
+          {/* A speaker and its level (Gate A3 #10): the row reads as sound at
+              a glance, and the bars stand up when it is on. */}
+          <svg aria-hidden viewBox="0 0 16 12" className={`h-2.5 w-3.5 ${sound ? "text-bull" : "text-fg-dim"}`} fill="none">
+            <path d="M1 4.2h2.6L7 1.5v9L3.6 7.8H1z" fill="currentColor" />
+            <path d="M10 4.6v2.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity={sound ? 1 : 0.35} />
+            <path d="M12.4 3.2v5.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity={sound ? 1 : 0.35} />
+            <path d="M14.8 1.8v8.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity={sound ? 1 : 0.35} />
+          </svg>
           <span className="t-chrome text-fg-dim">
             sound <span aria-hidden className={sound ? "text-bull" : undefined}>{sound ? "on" : "off"}</span>
           </span>

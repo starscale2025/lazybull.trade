@@ -1,3 +1,4 @@
+import { ACTS } from "@/lib/cinema";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FILM_LIFT_END, FILM_SPAN, FILM_START, HANDOFF_HOLD_VH, SCROLL_LENGTH_VH, filmToScroll, scrollToFilm } from "@/components/scrollstory/cinema-metrics";
 
@@ -16,8 +17,19 @@ describe("scroll ↔ film mapping", () => {
       expect(scrollToFilm(s)).toBe(1);
     }
     expect(filmToScroll(1)).toBe(FILM_SPAN);
-    // the film itself keeps the pace it had before the hold existed (1270vh)
-    expect((SCROLL_LENGTH_VH - 100) * FILM_SPAN).toBeCloseTo(1270, 9);
+    // The film itself plays over 1160vh: 1270 until Gate A4 #5 cut the mark's
+    // dead tail (ACT_TEMPO in cinema-metrics) and gave the scroll back.
+    expect((SCROLL_LENGTH_VH - 100) * FILM_SPAN).toBeCloseTo(1160, 9);
+  });
+
+  it("gives the mark's act under 1,000 px and the vote more road (Gate A4 #5)", () => {
+    // At a 900 px viewport, as the gate measures.
+    const px = (a: number, b: number) => (filmToScroll(b) - filmToScroll(a)) * (SCROLL_LENGTH_VH - 100) * 9;
+    expect(px(ACTS.mark.from, 1)).toBeLessThan(1000);
+    expect(px(ACTS.consensus.from, ACTS.consensus.to)).toBeGreaterThan(700);
+    // ...while the long acts keep their pace (Gate A4 lengths, within 4%).
+    expect(px(ACTS.candle.from, ACTS.candle.to) / 3224).toBeGreaterThan(0.96);
+    expect(px(ACTS.candle.from, ACTS.candle.to) / 3224).toBeLessThan(1.04);
   });
 
   it("round-trips film → scroll → film from the curtain to the end", () => {

@@ -9,7 +9,7 @@
 // and the client render the same grid and nothing hydrates differently.
 
 const DAY_MS = 86_400_000;
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** `yyyy-mm-dd` → UTC midnight epoch ms. */
 function parseDay(day: string): number {
@@ -30,12 +30,13 @@ function weekday(day: string): number {
   return (new Date(parseDay(day)).getUTCDay() + 6) % 7;
 }
 
+/** The reading colour, four strengths: a solve is not a gain, so no mint. */
 function fillFor(n: number): string {
-  if (n <= 0) return "var(--surface-2)";
-  if (n === 1) return "color-mix(in srgb, var(--bull) 30%, transparent)";
-  if (n === 2) return "color-mix(in srgb, var(--bull) 55%, transparent)";
-  if (n === 3) return "color-mix(in srgb, var(--bull) 80%, transparent)";
-  return "var(--bull)";
+  if (n <= 0) return "color-mix(in srgb, var(--fg) 7%, transparent)";
+  if (n === 1) return "color-mix(in srgb, var(--brand-ink) 35%, transparent)";
+  if (n === 2) return "color-mix(in srgb, var(--brand-ink) 58%, transparent)";
+  if (n === 3) return "color-mix(in srgb, var(--brand-ink) 80%, transparent)";
+  return "var(--brand-ink)";
 }
 
 export type HeatmapProps = {
@@ -91,7 +92,7 @@ export function Heatmap({ activity, endDay, weeks = 52, cell = 10, showMonths = 
         aria-hidden
       >
         {labels.map((l) => (
-          <text key={l.x} x={l.x} y={9} fontSize={9} fill="var(--fg-faint)" className="font-mono">
+          <text key={l.x} x={l.x} y={9} fontSize={9} fill="var(--fg-faint)" className="font-sans">
             {l.text}
           </text>
         ))}

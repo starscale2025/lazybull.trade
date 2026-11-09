@@ -44,18 +44,12 @@ export function GlassSection({
   );
 }
 
-/* ── Eyebrow — a rule that bleeds out of the bull green, then the label ──── */
+/* ── Eyebrow — a quiet label over the heading ─────────────────────────────
+   Calm (M33): no leading rule and no gradient. The heading's accent phrase is
+   the section's one gradient; the eyebrow is a single soft violet line. */
 
 export function GlassEyebrow({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-2.5 t-eyebrow">
-      <span
-        aria-hidden
-        className="h-px w-[1.375rem] bg-[linear-gradient(90deg,#8f73ff,#5c9aff_60%,transparent)]"
-      />
-      <span className="text-grad">{children}</span>
-    </div>
-  );
+  return <div className="t-eyebrow text-brand-ink">{children}</div>;
 }
 
 /* ── Section heading — roman serif, then exactly one italic gradient phrase ─ */
@@ -68,7 +62,10 @@ export function GlassHeading({
   accent?: string;
 }) {
   return (
-    <h2 className="mt-4 font-display text-[clamp(2.1rem,4.2vw,3.4rem)] leading-[0.98] tracking-[-0.04em] text-fg text-balance">
+    <h2
+      data-gsap="split-lines"
+      className="mt-4 font-display text-[clamp(2.1rem,4.2vw,3.4rem)] leading-[0.98] tracking-[-0.04em] text-fg text-balance"
+    >
       {children}
       {accent && (
         <>
@@ -134,15 +131,15 @@ export function GlassChip({
    nothing in /pro, /trade or /quant picks it up.                            */
 
 const BTN_SIZE = {
-  lg: "h-[3.375rem] px-[1.875rem] text-[0.8125rem]",
-  md: "h-[2.625rem] px-5 text-[0.6875rem]",
+  lg: "h-12 px-7 text-base",
+  md: "h-11 px-5 text-[0.9375rem]",
 } as const;
 
 const BTN_KIND = {
   // The brand gradient (globals.css THE BRAND GRADIENT), dark type on it.
   primary:
-    "btn-grad font-bold border border-white/20 " +
-    "shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.42),0_14px_44px_-12px_rgba(88,46,255,0.7)]",
+    "btn-grad font-semibold " +
+    "shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_10px_30px_-14px_rgba(88,46,255,0.6)]",
   glass:
     "glass font-medium text-fg hover:bg-[rgba(245,245,240,0.1)] hover:border-[rgba(245,245,240,0.22)]",
   ghost:
@@ -151,7 +148,8 @@ const BTN_KIND = {
 
 const BTN_BASE =
   "group/btn inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap " +
-  "rounded-[var(--r-btn)] font-mono uppercase tracking-[0.08em] " +
+  // Calm (M33): the reading sans, in sentence case, on a full pill.
+  "rounded-full tracking-[-0.01em] " +
   "transition-[transform,box-shadow,background-color,border-color,color] duration-350 " +
   "[transition-timing-function:var(--ease-settle)] hover:-translate-y-px";
 
@@ -196,9 +194,9 @@ export function GlassPoints({ points }: { points: readonly string[] }) {
       {points.map((p) => (
         <li
           key={p}
-          className="flex gap-2.5 font-mono text-[0.6875rem] leading-[1.5] text-fg-dim"
+          className="flex gap-2.5 text-[0.875rem] leading-[1.5] text-fg-dim"
         >
-          <span aria-hidden className="text-bull">
+          <span aria-hidden className="text-fg-faint">
             ›
           </span>
           {p}

@@ -16,15 +16,12 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
   return (
     <div className="bg-bg p-3">
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 t-chrome text-fg-dim">
-          <span className="size-1.5 rounded-full bg-amber" />
-          event horizon · next {daysToExpiry}d
-        </div>
-        <div className="flex items-center gap-3 t-chrome text-fg-faint">
-          <Legend tone="var(--bear)" label="earnings" />
-          <Legend tone="var(--amber)" label="fed" />
-          <Legend tone="var(--cyan)" label="cpi" />
-          <Legend tone="var(--bull)" label="div" />
+        <div className="t-label text-fg-dim">Event horizon · next {daysToExpiry}d</div>
+        <div className="flex items-center gap-3 t-label text-fg-faint">
+          <Legend tone="var(--bear)" label="Earnings" />
+          <Legend tone="var(--amber)" label="Fed" />
+          <Legend tone="var(--cyan)" label="CPI" />
+          <Legend tone="var(--bull)" label="Div" />
         </div>
       </div>
 
@@ -33,8 +30,8 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
         <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
         <div className="absolute left-0 top-1/2 -translate-y-1/2 size-2 rounded-full bg-cyan" title="now" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 size-2 rounded-full bg-amber" title="expiry" />
-        <div className="absolute -top-1 left-2 t-chrome text-cyan">now</div>
-        <div className="absolute -top-1 right-2 t-chrome text-amber">exp</div>
+        <div className="absolute -top-1 left-2 t-label text-fg-faint">Now</div>
+        <div className="absolute -top-1 right-2 t-label text-fg-faint">Exp</div>
 
         {within.map((e, i) => {
           const day = (new Date(e.date).getTime() - baseDate.getTime()) / 86_400_000;
@@ -49,10 +46,10 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
               style={{ left: `${pct}%` }}
             >
               <div className="flex h-8 w-2 items-center justify-center" style={{ background: eventTone(e.kind) }} title={`${e.title} · ${e.date}`} />
-              <div className="absolute left-1/2 top-9 hidden -translate-x-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[0.625rem] text-fg shadow-xl group-hover:block z-10">
+              <div className="absolute left-1/2 top-9 hidden -translate-x-1/2 whitespace-nowrap surface-instrument border border-border bg-surface px-2 py-1 t-label text-fg shadow-xl group-hover:block z-10">
                 <div className="text-fg">{e.title}</div>
-                <div className="text-fg-faint normal-case">{e.date} · {e.vol} vol expected</div>
-                <div className="mt-1 max-w-[13.75rem] whitespace-normal text-[0.625rem] text-fg-dim normal-case tracking-normal">{e.blurb}</div>
+                <div className="text-fg-faint">{e.date} · {e.vol} vol expected</div>
+                <div className="mt-1 max-w-[13.75rem] whitespace-normal text-fg-dim">{e.blurb}</div>
               </div>
             </motion.div>
           );
@@ -60,8 +57,8 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
       </div>
 
       {within.length === 0 && (
-        <div className="mt-2 text-center t-chrome text-fg-faint">
-          no scheduled events in your window
+        <div className="mt-2 text-center t-label text-fg-faint">
+          No scheduled events in your window
         </div>
       )}
 
@@ -72,7 +69,7 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
             <li key={e.id} className="flex items-start gap-2 border border-border-soft bg-surface px-2 py-1.5">
               <span className="mt-1 inline-block size-2 shrink-0" style={{ background: eventTone(e.kind) }} />
               <div className="flex-1 text-[0.6875rem] leading-snug">
-                <div className="font-mono text-fg">{e.title}</div>
+                <div className="text-fg">{e.title}</div>
                 <div className="text-fg-faint">{e.date} · {e.vol} vol</div>
               </div>
             </li>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { track } from "@/lib/track";
+import { Chip, ToolButton } from "@/components/calm/kit";
 import { fmt } from "./chartCore";
 import type { SymbolDef } from "./TopBar";
 const DEFAULT_LIST: { sym: string }[] = [
@@ -244,26 +245,26 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   return (
     <aside className="flex w-full flex-col border-t border-border bg-surface lg:w-[18.75rem] lg:shrink-0 lg:border-l lg:border-t-0">
       {/* Watchlist header */}
-      <div className="flex items-center justify-between border-b border-border px-3 py-2 t-chrome text-fg-dim">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2 t-label text-fg-dim">
         {/* A real heading, not a styled span: /pro shipped with ZERO headings, so a
             screen reader got no document outline for the whole terminal. Tailwind
             preflight zeroes heading margin/size/weight, so this renders
             byte-identically to the span it replaces. */}
         <h2 className="text-fg">Watchlist</h2>
         <div className="flex items-center gap-1">
-          <button title="Reset to default" onClick={() => setList(DEFAULT_LIST.map((d) => d.sym))} className="size-5 border border-border text-fg-dim hover:border-fg-dim hover:text-fg">⟳</button>
+          <ToolButton title="Reset to default" onClick={() => setList(DEFAULT_LIST.map((d) => d.sym))} className="!size-5 !p-0 !text-[0.6875rem]">⟳</ToolButton>
         </div>
       </div>
 
       {/* Search/add */}
       <div className="relative border-b border-border-soft p-2">
-        <div className="flex items-center gap-2 border border-border bg-bg px-2">
+        <div className="flex items-center gap-2 rounded-[var(--r-instrument)] border border-border bg-bg px-2">
           <span className="text-fg-faint">+</span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Add symbol — AAPL, NIFTY, BTC…"
-            className="h-7 flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:text-fg-faint"
+            className="h-7 flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:font-sans placeholder:normal-case placeholder:text-fg-faint"
             onKeyDown={(e) => {
               if (e.key === "Enter" && results[0]) {
                 addSym(results[0].sym);
@@ -310,7 +311,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           const q = quotes[sym];
           const active = sym === symbol.sym;
           return (
-            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-[#582eff]/12" : "hover:bg-surface"}`}>
+            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-brand-ink/12" : "hover:bg-surface"}`}>
               <button
                 className="col-span-5 flex items-center gap-1.5 text-left text-fg"
                 onClick={() => onPickSymbol({ sym, name: q?.name || sym, exch: q?.exch || "" })}
@@ -327,34 +328,34 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
               </span>
               {/* Hover ✕ floats over the row's right padding rather than inside
                   the ~39px Chg% cell, where it crowded the number with no gap. */}
-              <button onClick={() => removeSym(sym)} title="Remove" className="absolute right-1 top-1/2 hidden size-4 -translate-y-1/2 items-center justify-center bg-surface text-fg-faint group-hover:flex hover:text-bear">×</button>
+              <button onClick={() => removeSym(sym)} title="Remove" className="absolute right-1 top-1/2 hidden size-4 -translate-y-1/2 items-center justify-center bg-surface text-fg-faint group-hover:flex hover:text-fg">×</button>
             </div>
           );
         })}
-        {!list.length && <div className="px-3 py-4 text-center font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">empty list — add a symbol above</div>}
+        {!list.length && <div className="px-3 py-4 text-center t-label text-fg-faint">Empty list — add a symbol above</div>}
       </div>
 
       {/* Symbol details — collapsible: with Performance below it, the pair ate
           ~250px of the 300px column and left the watchlist a few cut rows. */}
       <div className={`border-t border-border bg-bg px-3 py-2 ${detailsOpen ? "pb-3" : ""}`}>
-        <div className="flex items-center justify-between t-chrome text-fg-dim">
+        <div className="flex items-center justify-between t-label text-fg-dim">
           <button
             onClick={() => toggleSection("details")}
             aria-expanded={detailsOpen}
             className="flex items-center gap-2 text-left transition-colors hover:text-fg"
           >
             <SymBadge sym={symMeta.sym} />
-            <span className="text-fg">{symMeta.sym}</span>
+            <span className="t-data text-fg">{symMeta.sym}</span>
             <span className={`text-fg-faint transition-transform ${detailsOpen ? "" : "rotate-180"}`}>⌄</span>
           </button>
           <div className="flex items-center gap-1">
-            <span className={`px-1.5 py-0.5 text-[0.625rem] ${live?.marketState === "REGULAR" ? "border border-bull/40 text-bull" : "border border-border text-fg-faint"}`}>
-              {live?.marketState || "—"}
-            </span>
+            <Chip tone={live?.marketState === "REGULAR" ? "brand" : "neutral"} className="!py-0">
+              {live?.marketState ? live.marketState.charAt(0) + live.marketState.slice(1).toLowerCase() : "—"}
+            </Chip>
           </div>
         </div>
         {detailsOpen && (<>
-        <div className="mt-1 text-[0.625rem] tracking-wider text-fg-faint">
+        <div className="mt-1 t-label text-fg-faint">
           {symMeta.name} <span className="text-fg-faint">·</span> {symMeta.exch}
         </div>
 
@@ -373,16 +374,18 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           </svg>
         )}
 
-        <div className="mt-2 flex items-center gap-2 font-mono text-[0.625rem] text-fg-faint">
-          <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-          live · refreshing every 15s
+        <div className="mt-2">
+          {/* Driven by the quote, not printed unconditionally (Gate A4 #1). */}
+          <Chip tone={live ? "neutral" : "warn"} dot>
+            {live ? "Live · refreshing every 15s" : "SIM tape · not real quotes"}
+          </Chip>
         </div>
         </>)}
       </div>
 
       {/* Performance grid — collapsible, same reason as Symbol details. */}
       <div className={`border-t border-border bg-bg px-3 py-2 ${perfOpen ? "pb-3" : ""}`}>
-        <div className="flex items-center justify-between t-chrome text-fg-dim">
+        <div className="flex items-center justify-between t-label text-fg-dim">
           <button
             onClick={() => toggleSection("perf")}
             aria-expanded={perfOpen}
@@ -391,7 +394,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             <h2 className="text-fg">Performance</h2>
             <span className={`text-fg-faint transition-transform ${perfOpen ? "" : "rotate-180"}`}>⌄</span>
           </button>
-          {perfOpen && <span className="text-fg-faint">vs prev close</span>}
+          {perfOpen && <span className="text-fg-faint">Vs prev close</span>}
         </div>
         {perfOpen && (
         <div className="mt-2 grid grid-cols-3 gap-px bg-border-soft">
@@ -415,11 +418,9 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
 }
 
 function SymBadge({ sym }: { sym: string }) {
-  const palette = ["#52ffa5", "#3884ff", "#ffb800", "#ff2e63", "#8f73ff", "#8f73ff", "#2f6fe0"];
-  const c = palette[sym.charCodeAt(0) % palette.length];
   return (
-    <span className="flex size-4 items-center justify-center" style={{ borderColor: c, color: c, border: `1px solid ${c}` }}>
-      <span className="text-[0.625rem] font-bold leading-none">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
+    <span className="flex size-4 items-center justify-center rounded-[3px] bg-fg/10 text-fg-dim">
+      <span className="font-mono text-[0.625rem] font-bold leading-none">{sym.replace(/^[\^]/, "").slice(0, 2)}</span>
     </span>
   );
 }

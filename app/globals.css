@@ -64,6 +64,10 @@
   --grad-on: #07060f;
   --grad-line: linear-gradient(90deg, transparent, #8f73ff 18%, #5c9aff 50%, #52ffa5 82%, transparent);
   --grad-glow: 0 10px 30px -12px rgba(88, 46, 255, 0.6), 0 18px 56px -26px rgba(56, 132, 255, 0.5);
+  /* The three stops of a lit edge (LIT EDGES, below). */
+  --edge-a: #8f73ff;
+  --edge-b: #5c9aff;
+  --edge-c: #52ffa5;
   --bull: #52ffa5;
   /* INK vs FILL. The vivid accents are for fills, strokes and 3D emissives; the
      -ink pair is for TYPE. On #050505 they are the same colour, because the
@@ -139,6 +143,9 @@
   --grad-ink: linear-gradient(100deg, #582eff 0%, #1f5fd6 50%, #00875a 100%);
   --grad-line: linear-gradient(90deg, transparent, #582eff 18%, #1f5fd6 50%, #00a85a 82%, transparent);
   --grad-glow: 0 10px 30px -14px rgba(88, 46, 255, 0.35), 0 18px 56px -28px rgba(31, 95, 214, 0.3);
+  --edge-a: #582eff;
+  --edge-b: #1f5fd6;
+  --edge-c: #00a85a;
   --bull: #00a85a;
   /* Measured against --bg #f7f6f0: 4.66, 5.3 and 5.27 : 1. The fills above
      stay vivid; only type reads these. */
@@ -361,6 +368,8 @@ html, body { overflow-x: clip; }
    because the root is the scroll container. */
 :root { --nav-h: 68px; }
 html { scroll-padding-top: calc(var(--nav-h) + 12px); }
+/* And the Island's pill under it, while one is mounted (components/island). */
+html[data-island] { scroll-padding-top: calc(var(--nav-h) + 12px + 46px); }
 
 html, body {
   background: var(--bg);
@@ -448,6 +457,41 @@ nav[aria-label="Site pages"] a:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   .route-veil { display: none; }
+}
+
+/* ── ROUTE TRANSITIONS (M3) ───────────────────────────────────────────────
+   app/template.tsx wraps each route in a <ViewTransition>. The old page goes
+   quickly, the new one arrives a beat later with a small rise: asymmetric, so
+   the two never compete. Where the browser has view transitions the veil
+   above stands down. */
+@supports (view-transition-name: none) {
+  .route-veil { display: none; }
+}
+::view-transition-old(.route-out) {
+  animation: 140ms cubic-bezier(0.4, 0, 1, 1) both route-fade reverse;
+}
+::view-transition-new(.route-in) {
+  animation:
+    220ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both route-fade,
+    420ms cubic-bezier(0.22, 1, 0.36, 1) both route-rise;
+}
+@keyframes route-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes route-rise {
+  from { translate: 0 8px; }
+  to { translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+}
+html[data-motion="paused"]::view-transition-group(*),
+html[data-motion="paused"]::view-transition-old(*),
+html[data-motion="paused"]::view-transition-new(*) {
+  animation: none !important;
 }
 
 /* ── Route loading: the PENDING half of a navigation (RouteLoader.tsx). ──
@@ -1625,10 +1669,10 @@ html[data-motion="paused"] *::after {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--bull) 50%, transparent);
+  background: linear-gradient(90deg, transparent, var(--brand-ink) 50%, transparent);
   background-size: 200% 100%;
   animation: progress-shimmer 1.4s linear infinite;
-  box-shadow: 0 0 12px rgba(82, 255, 165, 0.55);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--brand-ink) 55%, transparent);
   pointer-events: none;
   z-index: 1;
 }
@@ -1816,12 +1860,16 @@ html[data-motion="paused"] *::after {
      NEITHER is for buttons or body copy. A control keeps its own size — the
      first pass shrank primary CTAs from 12px to 10px by treating them as
      chrome, which is exactly the failure these names exist to prevent. */
+  /* Calm (M33, 2026-11-09): the eyebrow is set in the reading sans, as
+     written, medium weight, no tracking: a quiet label over the heading,
+     the way Apple sets one. Wide-tracked mono caps were the loudest texture
+     on every marketing page; they stay only in t-chrome, on data. */
   .t-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
     line-height: 1.4;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: -0.005em;
   }
 
   .t-chrome {
@@ -2290,18 +2338,9 @@ html[data-motion="paused"] *::after {
   background: radial-gradient(circle, rgba(82, 255, 165, 0.07), transparent 65%);
   animation: drift 30s ease-in-out infinite;
 }
-/* The masked 72px grid the orbs sit behind — content never sits on bare black. */
-.glass-aurora::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, var(--grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: radial-gradient(80% 60% at 50% 30%, #000 30%, transparent 100%);
-  -webkit-mask-image: radial-gradient(80% 60% at 50% 30%, #000 30%, transparent 100%);
-}
+/* The 72px grid that used to sit behind the orbs is gone (M33, calm): the
+   orbs' soft light is enough for the glass to refract, and the grid was
+   texture on top of texture. */
 @media (prefers-reduced-motion: reduce) {
   .glass-aurora i { animation: none; }
 }
@@ -2325,7 +2364,7 @@ html[data-motion="paused"] *::after {
 }
 .dc-rail {
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--bull) 50%, transparent);
+  background: linear-gradient(90deg, transparent, var(--brand-ink) 50%, transparent);
   background-size: 200% 100%;
   animation: rail-shimmer 1.4s linear infinite;
   box-shadow: var(--glow-rail);
@@ -2452,9 +2491,9 @@ html[data-motion="paused"] *::after {
     background-repeat: no-repeat;
     color: var(--grad-on);
     border-radius: var(--r-btn);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.35),
-      var(--grad-glow);
+    /* Calm (M33): a faint top light and no glow at rest; the glow is the
+       hover's answer, not the button's resting state. */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
     transition:
       box-shadow 0.3s var(--ease-settle),
       transform 0.3s var(--ease-settle),
@@ -2466,9 +2505,8 @@ html[data-motion="paused"] *::after {
     filter: brightness(1.05);
     background-position: 100% 50%;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.42),
-      0 12px 34px -10px rgba(88, 46, 255, 0.75),
-      0 20px 60px -24px rgba(82, 255, 165, 0.35);
+      inset 0 1px 0 rgba(255, 255, 255, 0.36),
+      0 10px 30px -14px rgba(88, 46, 255, 0.6);
   }
   .btn-primary-glass:active {
     transform: translateY(0);
@@ -2522,6 +2560,344 @@ html[data-motion="paused"] *::after {
     border-radius: var(--r-cell);
   }
 }
+
+/* ── NAV AUTO-HIDE (M10) ────────────────────────────────────────────────────
+   components/NavAutoHide.tsx flags the sticky wrapper; the bar slides up out
+   of view and comes back on any scroll up. Under reduced motion or the pause
+   it simply appears and disappears. */
+.nav-bar {
+  transition: transform 0.42s var(--ease-settle), opacity 0.3s var(--ease-settle);
+}
+.nav-bar[data-nav-hidden] {
+  transform: translateY(calc(-100% - 6px));
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-bar { transition: none; }
+}
+html[data-motion="paused"] .nav-bar { transition: none; }
+
+/* Press (M10): controls give a little under the finger, then spring back. */
+.btn-primary-glass:active,
+.btn-grad:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+
+/* ── ROLLING NUMBERS (M4, components/motion/RollingNumber.tsx) ───────────────
+   Each digit is a ten-line strip in a one-line window. The ghost "0" gives the
+   window its width and height in the surrounding font, so the strip can be
+   absolutely positioned without measuring anything. */
+.roll {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.roll-col {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  /* the clip gets a little air so descenders and the italic never shear */
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+}
+.roll-ghost { visibility: hidden; }
+.roll-strip {
+  position: absolute;
+  inset-inline: 0;
+  top: 0.08em;
+  line-height: inherit;
+  text-align: center;
+  transition: transform 0.55s cubic-bezier(0.22, 1.2, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .roll-strip { transition: none; }
+}
+html[data-motion="paused"] .roll-strip { transition: none; }
+
+html[data-film-done] .fz-film-cue { display: none; }
+/* Frame zero's position (components/HeroPosition.tsx): the handle's diamond
+   takes the focus ring, and grows a little under the pointer. */
+.hp-handle:focus-visible > span:first-child { outline: 2px solid var(--cyan); outline-offset: 4px; }
+.hp-handle:hover > span:first-child,
+.hp-handle:active > span:first-child { scale: 1.25; }
+
+/* ── CALM (M33, 2026-11-09) ─────────────────────────────────────────────────
+   Clean, uncluttered, Apple-like. A panel is glass with a lit edge (LIT
+   EDGES, below) and continuous-looking corners; a link is one quiet style, the
+   brand's soft violet, sentence case, with a chevron that moves on hover.
+   Glass stays for what floats (the nav, the island, sheets). */
+.calm-panel {
+  position: relative;
+  border-radius: 22px;
+  /* Glass: a translucent fill with a sheen at the top, over the page's aura.
+     No backdrop-filter on purpose. What sits behind an in-flow panel is
+     already a soft gradient, so blurring it changes nothing you can see and
+     costs a GPU pass per panel per scrolled frame. Real frost stays on what
+     floats over moving content: the nav, the Island, sheets. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--fg) 8%, transparent),
+    color-mix(in srgb, var(--fg) 3.5%, transparent) 62%
+  );
+  box-shadow: 0 22px 50px -40px color-mix(in srgb, var(--edge-a) 34%, transparent);
+}
+
+/* On paper, glass is white: the page's dark ink as a fill turned it grey. */
+[data-theme="light"] .calm-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.5) 62%);
+}
+
+/* ── LIT EDGES (owner, 2026-11-09) ──────────────────────────────────────────
+   Every panel carries a one-pixel edge in the brand ramp, brightest at two
+   opposite corners. A translucent fill cannot share a box with a gradient
+   border (the gradient shows through it), so the edge is its own ring: a
+   pseudo-element whose content box is cut out by the mask. */
+.calm-panel::before,
+.calm-panel::after,
+.lit-aura::before,
+.surface-instrument::after,
+.glass-strong.nav-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.calm-panel::before,
+.glass-strong.nav-pill::after {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--edge-a) 94%, transparent),
+    color-mix(in srgb, var(--edge-b) 31%, transparent) 46%,
+    color-mix(in srgb, var(--edge-c) 70%, transparent)
+  );
+}
+.glass-strong.nav-pill::after { inset: -1px; }
+
+/* The terminal tools (/trade, /pro, the practice workspace): a quieter edge
+   and no aura. A travelling light round a chart competes with the data, and
+   these pages already spend their frames on it. */
+.surface-instrument:not(.absolute):not(.fixed):not(.sticky) { position: relative; }
+.surface-instrument::after {
+  inset: -1px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--edge-a) 55%, transparent),
+    color-mix(in srgb, var(--edge-b) 16%, transparent) 46%,
+    color-mix(in srgb, var(--edge-c) 38%, transparent)
+  );
+}
+
+/* THE AURA: one arc of the ramp travelling round every panel's edge (the
+   owner's setting). Animating a registered angle repaints the ring on the
+   main thread, so it steps 60 times a second (420 steps over the 7 s lap) even
+   on a 120 Hz screen, which does not show on a soft arc and halves the
+   repainting, and it holds still while the film plays. */
+@property --edge-flow {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes edge-flow {
+  to { --edge-flow: 360deg; }
+}
+.calm-panel::after,
+.lit-aura::before {
+  background: conic-gradient(
+    from var(--edge-flow),
+    transparent 0 56%,
+    var(--edge-a) 70%,
+    var(--edge-b) 82%,
+    var(--edge-c) 93%,
+    transparent 100%
+  );
+}
+.calm-panel::after {
+  padding: 1.5px;
+  animation: edge-flow 7s steps(420) infinite;
+}
+/* Its soft half: the same arc, wider and blurred, so the light has a bloom.
+   A real element (<i class="lit-aura">), because a filter runs before a mask
+   on one box and would be cut away by it: the blur lives on the parent. */
+.lit-aura {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  filter: blur(9px);
+}
+.lit-aura::before {
+  padding: 3px;
+  animation: edge-flow 7s steps(420) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .calm-panel::after,
+  .lit-aura::before { animation: none; }
+}
+html[data-motion="paused"] .calm-panel::after,
+html[data-motion="paused"] .lit-aura::before,
+html[data-film="pinned"] .calm-panel::after,
+html[data-film="pinned"] .lit-aura::before { animation-play-state: paused; }
+
+/* What the glass sits over: a soft light at the top of a route, on the page's
+   own background (a class on <main>, so no extra layer and no stacking). */
+.page-aura {
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(max(60%, 620px) 540px at 10% -60px, color-mix(in srgb, var(--edge-a) 36%, transparent), transparent 72%),
+    radial-gradient(max(52%, 560px) 480px at 90% 40px, color-mix(in srgb, var(--edge-b) 26%, transparent), transparent 72%);
+}
+.calm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--brand-ink);
+  transition: color 0.25s var(--ease-settle);
+}
+.calm-link > span[aria-hidden] {
+  transition: transform 0.3s var(--ease-settle);
+}
+.calm-link:hover { color: var(--fg); }
+.calm-link:hover > span[aria-hidden] { transform: translateX(3px); }
+.calm-link:focus-visible {
+  outline: 2px solid var(--brand-ink);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+/* The one chip (components/calm/kit.tsx): sentence case on a soft fill, no
+   outline. Its colour is the caller's, and only when it means something. */
+.calm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  padding: 0.1875rem 0.625rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent);
+}
+/* A label outside a data table: the reading sans, as written. t-chrome (mono
+   caps) stays for column heads and figures' units in the terminal tools. */
+.t-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: -0.003em;
+}
+/* The second button shape: compact and square-cornered, for the terminal
+   tools (ToolButton). Sentence case, like everything else. */
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: var(--r-instrument, 8px);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 12%, transparent);
+  transition: background-color 0.2s var(--ease-settle), color 0.2s var(--ease-settle);
+}
+.tool-btn:hover { background: color-mix(in srgb, var(--fg) 13%, transparent); }
+.tool-btn:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
+.tool-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.tool-btn-primary {
+  font-weight: 600;
+  color: var(--grad-on);
+  background-image: var(--grad-fill);
+  box-shadow: none;
+}
+.tool-btn-primary:hover { background-image: var(--grad-fill); filter: brightness(1.08); }
+.tool-btn-sm { height: 1.5rem; padding: 0 0.5rem; font-size: 0.75rem; }
+/* A filter or a choice that stays on (TogglePill). */
+.calm-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  border-radius: 999px;
+  padding: 0 0.875rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--fg-dim);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  transition: background-color 0.2s var(--ease-settle), color 0.2s var(--ease-settle);
+}
+.calm-toggle:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 10%, transparent); }
+.calm-toggle[aria-pressed="true"] { color: var(--bg); background: var(--fg); }
+.calm-toggle:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
+/* A search field on the calm surfaces. */
+.calm-input {
+  height: 2.25rem;
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border: 1px solid transparent;
+}
+.calm-input::placeholder { color: var(--fg-faint); }
+.calm-input:focus { outline: none; border-color: color-mix(in srgb, var(--brand-ink) 60%, transparent); }
+/* The quiet pill (PillLink "secondary"): the same fill step as a panel. */
+.calm-pill-secondary {
+  background: color-mix(in srgb, var(--fg) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 14%, transparent), inset 0 1px 0 color-mix(in srgb, var(--fg) 12%, transparent);
+}
+.calm-pill-secondary:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); }
+/* A panel that is a link: one step brighter under the pointer. */
+.calm-card { transition: background-color 0.25s var(--ease-settle); }
+.calm-card:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+
+/* The candle act's lines sit over the crash, and the falling red crossed
+   them (Gate A4 #3, d08 and d10): a feathered pool of the film's black behind
+   the type. The beat's own per-frame transform makes it a stacking context,
+   so -1 lands behind its text and nowhere else. */
+.beat-scrim::before {
+  content: "";
+  position: absolute;
+  inset: -40px -14%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(5, 5, 5, 0.8), rgba(5, 5, 5, 0.55) 55%, transparent);
+}
+
+/* The Island (components/island/Island.tsx, M32): pure black, a hair of top
+   light and a soft drop, so it reads as an object over the page rather than
+   a hole in it. */
+.island {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 18px 50px -18px rgba(0, 0, 0, 0.9);
+}
+@media print {
+  .island-root { display: none; }
+}
+.island-dial { transition: transform 0.7s cubic-bezier(0.22, 1.15, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .island-dial { transition: none; }
+}
+html[data-motion="paused"] .island-dial { transition: none; }
 
 /* ── FRAME ZERO: the matter (components/ui/anomalous-matter-hero.tsx) ───────
    The haze the sphere floats in, in the sphere's own tints (Aurora UI: large

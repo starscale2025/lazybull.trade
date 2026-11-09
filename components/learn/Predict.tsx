@@ -1,13 +1,18 @@
 "use client";
 
 // PREDICT-THEN-REVEAL (/learn redesign, phase L1). Before each demo, the copy
-// makes you call your shot — a one-tap intuition guess. The pinned terminal
-// beside it is the reveal: you commit, then watch the live demo prove you
-// right or wrong. Turns a page you read into a page that quizzes you.
+// makes you call your shot — a one-tap intuition guess. The pinned demo beside
+// it is the reveal: you commit, then watch it prove you right or wrong. Turns a
+// page you read into a page that quizzes you.
 //
 // State is remembered per chapter (one shared localStorage map, so L4's ledger
 // can read every call in one place) — scroll back and your answer stands.
 // "just show me" skips. Fully keyboard-operable; nothing here needs motion.
+//
+// Calm (S1, 2026-11-09): a calm panel with the kit's toggle shape, written by
+// hand because a committed guess also has to be disabled. The right answer
+// fills; a wrong pick is struck through. Mint, red and amber are gone: being
+// right about a quiz is not a gain, and nothing here is a warning.
 
 import { useEffect, useState } from "react";
 
@@ -62,10 +67,9 @@ export function Predict({ id, cfg }: { id: string; cfg: PredictConfig }) {
   const gotIt = guess != null && !!cfg.options[guess]?.correct;
 
   return (
-    <div className="mt-8 border-l-2 border-amber/60 bg-amber/[0.04] py-3 pl-4">
-      <div className="flex items-center gap-2 font-mono text-[0.625rem] uppercase tracking-[0.3em] text-amber">
-        <span className="size-1 rounded-full bg-amber" /> call your shot
-      </div>
+    <div className="calm-panel mt-8 p-5">
+      <i aria-hidden className="lit-aura" />
+      <div className="t-eyebrow text-brand-ink">Call your shot</div>
       <p className="mt-2 max-w-[46ch] font-display text-lg leading-snug text-fg">{cfg.question}</p>
 
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Your prediction">
@@ -78,14 +82,14 @@ export function Predict({ id, cfg }: { id: string; cfg: PredictConfig }) {
               disabled={done}
               onClick={() => commit(i)}
               aria-pressed={guess === i}
-              className={`h-8 border px-3 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
+              className={`calm-toggle disabled:pointer-events-none ${
                 isCorrect
-                  ? "border-bull/60 bg-bull/15 text-bull"
+                  ? "!bg-fg !text-bg"
                   : isWrongPick
-                    ? "border-bear/60 bg-bear/10 text-bear line-through"
+                    ? "!bg-fg/[0.06] !text-fg-dim line-through"
                     : done
-                      ? "border-border bg-bg text-fg-faint"
-                      : "border-border bg-bg text-fg-dim hover:border-amber hover:text-fg"
+                      ? "opacity-50"
+                      : ""
               }`}
             >
               {isCorrect ? "✓ " : isWrongPick ? "✕ " : ""}
@@ -96,18 +100,13 @@ export function Predict({ id, cfg }: { id: string; cfg: PredictConfig }) {
       </div>
 
       {done ? (
-        <p className="mt-3 max-w-[52ch] font-mono text-[0.75rem] leading-relaxed text-fg-dim" aria-live="polite">
-          <span className={gotIt ? "text-bull" : "text-amber"}>
-            {gotIt ? "Nailed it. " : guess == null ? "" : "Not quite. "}
-          </span>
+        <p className="mt-3 max-w-[52ch] text-[0.875rem] leading-relaxed text-fg-dim" aria-live="polite">
+          <span className="font-medium text-fg">{gotIt ? "Nailed it. " : guess == null ? "" : "Not quite. "}</span>
           {cfg.reveal} <span className="text-fg-faint">→ the terminal shows it live.</span>
         </p>
       ) : (
-        <button
-          onClick={() => commit(null)}
-          className="mt-3 font-mono text-[0.625rem] uppercase tracking-[0.25em] text-fg-faint underline underline-offset-2 hover:text-fg-dim"
-        >
-          just show me →
+        <button onClick={() => commit(null)} className="calm-link mt-3">
+          Just show me <span aria-hidden>›</span>
         </button>
       )}
     </div>

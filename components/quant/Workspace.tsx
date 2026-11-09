@@ -3,7 +3,11 @@
 import { useEffect, useRef } from "react";
 import type { Candle } from "@/lib/candles";
 import type { ActiveBot, BotDef, BotResult } from "@/lib/quant/types";
+import { Chip, PillButton, ToolButton } from "@/components/calm/kit";
 import { BotCell } from "./BotCell";
+
+/** The kit's square at the reorder rail's size. */
+const REORDER_BTN = "!size-5 !p-0 !text-[0.625rem] !bg-bg hover:!text-brand-ink";
 
 export type ResolvedRow = {
   active: ActiveBot;
@@ -77,16 +81,17 @@ export function Workspace({
   }, [rows]);
 
   return (
-    <section className="flex h-full flex-col border border-border bg-bg-soft">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
+    // No panel of its own: each cell is one, and a panel doesn't nest in a panel.
+    <section className="flex h-full flex-col">
+      <div className="flex items-center justify-between px-3 py-2">
         <div>
-          <span className="font-display text-base tracking-tightest text-fg">Workspace</span>
-          <span className="ml-2 t-chrome text-fg-faint">
+          <span className="text-[0.9375rem] font-semibold tracking-[-0.01em] text-fg">Workspace</span>
+          <span className="t-label ml-2 text-fg-faint">
             {rows.length} cell{rows.length === 1 ? "" : "s"}
           </span>
         </div>
-        <span className="t-chrome text-fg-faint">
-          jupyter-style notebook
+        <span className="t-label text-fg-faint">
+          Jupyter-style notebook
         </span>
       </div>
 
@@ -102,20 +107,12 @@ export function Workspace({
               >
                 {/* reorder rail */}
                 <div className="absolute -left-1 top-2 z-10 hidden flex-col gap-0.5 group-hover:flex">
-                  <button
-                    onClick={() => onMove(r.active.uid, -1)}
-                    disabled={i === 0}
-                    className="grid size-5 place-items-center border border-border bg-bg font-mono text-[0.625rem] text-fg-dim hover:text-bull disabled:opacity-30"
-                  >
+                  <ToolButton onClick={() => onMove(r.active.uid, -1)} disabled={i === 0} className={REORDER_BTN}>
                     ▲
-                  </button>
-                  <button
-                    onClick={() => onMove(r.active.uid, 1)}
-                    disabled={i === rows.length - 1}
-                    className="grid size-5 place-items-center border border-border bg-bg font-mono text-[0.625rem] text-fg-dim hover:text-bull disabled:opacity-30"
-                  >
+                  </ToolButton>
+                  <ToolButton onClick={() => onMove(r.active.uid, 1)} disabled={i === rows.length - 1} className={REORDER_BTN}>
                     ▼
-                  </button>
+                  </ToolButton>
                 </div>
                 <BotCell
                   index={i}
@@ -134,12 +131,9 @@ export function Workspace({
             ))}
 
             {/* add cell hint */}
-            <button
-              onClick={onAddPlaceholderClick}
-              className="flex w-full items-center justify-center gap-2 border border-dashed border-border bg-bg py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull hover:text-bull"
-            >
-              + add bot from library
-            </button>
+            <PillButton size="sm" onClick={onAddPlaceholderClick} className="w-full">
+              + Add bot from library
+            </PillButton>
           </div>
         )}
       </div>
@@ -151,28 +145,23 @@ function EmptyState({ onClick }: { onClick: () => void }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="max-w-md text-center">
-        <div className="mx-auto grid size-16 place-items-center border border-border bg-bg font-display text-3xl text-cyan">
+        <div className="mx-auto grid size-16 place-items-center rounded-full bg-fg/[0.07] font-display text-3xl text-brand-ink">
           ⌗
         </div>
         <div className="mt-4 font-display text-2xl tracking-tightest text-fg">Empty workspace</div>
         <p className="mt-2 text-balance t-body-sm text-fg-dim">
           Pick a bot from the bot library, or import your own. Then press
-          <span className="mx-1 inline-flex items-center border border-bull bg-bull/10 px-1.5 py-0.5 t-chrome text-bull">▶ run all</span>
+          <Chip tone="brand" className="mx-1">▶ Run all</Chip>
           to fire them all on the dataset above.
         </p>
-        <div className="mt-6 grid grid-cols-2 gap-2 t-chrome text-fg-dim">
-          {["sma crossover", "z-score reversion", "kelly sizer", "monte carlo var"].map((b) => (
-            <div key={b} className="border border-border bg-bg px-2 py-2">
-              {b}
-            </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {["SMA crossover", "Z-score reversion", "Kelly sizer", "Monte Carlo VaR"].map((b) => (
+            <Chip key={b}>{b}</Chip>
           ))}
         </div>
-        <button
-          onClick={onClick}
-          className="mt-6 inline-flex items-center gap-2 border border-bull bg-bull/10 px-3 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-bull hover:bg-bull hover:text-bg"
-        >
-          ↗ open library
-        </button>
+        <PillButton size="sm" onClick={onClick} className="mt-6">
+          ↗ Open library
+        </PillButton>
       </div>
     </div>
   );

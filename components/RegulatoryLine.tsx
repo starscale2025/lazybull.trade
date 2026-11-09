@@ -5,11 +5,11 @@
 // No hooks: safe in server and client trees alike.
 
 export const REGULATORY_LINE =
-  "paper only · $0 real money · education, not advice · not registered with SEBI as an investment adviser or research analyst";
+  "Paper only · $0 real money · education, not advice · not registered with SEBI as an investment adviser or research analyst";
 
 export function RegulatoryLine({ extra, className = "" }: { extra?: string; className?: string }) {
   return (
-    <p className={`t-eyebrow text-balance text-center text-fg-faint ${className}`}>
+    <p className={`t-label text-balance text-center text-fg-faint ${className}`}>
       {REGULATORY_LINE}
       {extra ? ` · ${extra}` : ""}
     </p>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { compileCustomBot, SAMPLE_CUSTOM_BOT, type CustomBotInput } from "@/lib/quant/runtime";
 import type { BotDef } from "@/lib/quant/types";
+import { ToolButton } from "@/components/calm/kit";
 
 export function ImportBotModal({
   open,
@@ -85,28 +86,25 @@ export function ImportBotModal({
         <div className="flex items-center justify-between border-b border-border bg-bg-soft px-4 py-3">
           <div>
             <div className="font-display text-2xl tracking-tightest text-fg">Import a bot</div>
-            <div className="t-chrome text-fg-dim">
-              paste code · upload .json · drop a file
+            <div className="t-label text-fg-dim">
+              Paste code · upload .json · drop a file
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <label className="cursor-pointer border border-border bg-bg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg">
+            <label className="tool-btn cursor-pointer">
               <input type="file" accept=".js,.ts,.json,.txt" className="hidden" onChange={handleFile} />
-              upload file
+              Upload file
             </label>
-            <button
-              onClick={onClose}
-              className="grid size-8 place-items-center border border-border bg-bg font-mono text-[0.75rem] text-fg-dim hover:bg-bear hover:text-bg hover:border-bear"
-            >
+            <ToolButton onClick={onClose} className="!size-8 !p-0">
               ✕
-            </button>
+            </ToolButton>
           </div>
         </div>
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[1fr_320px]">
           {/* code editor */}
           <div className="flex min-h-0 flex-col border-r border-border">
-            <div className="flex items-center justify-between border-b border-border-soft bg-bg px-3 py-2 t-chrome">
+            <div className="t-label flex items-center justify-between border-b border-border-soft bg-bg px-3 py-2">
               <span className="text-fg-dim">bot.body — JS / TS</span>
               <span className="text-fg-faint">return result;</span>
             </div>
@@ -153,7 +151,7 @@ export function ImportBotModal({
             </Field>
 
             <div className="mt-2 border border-border-soft bg-bg-soft p-3">
-              <div className="t-chrome text-bull">api</div>
+              <div className="t-label text-brand-ink">API</div>
               <ul className="mt-1.5 space-y-1 font-mono text-[0.625rem] leading-relaxed text-fg-dim">
                 <li>
                   <span className="text-fg">ctx.candles</span> — {`{o,h,l,c}[]`}
@@ -176,18 +174,10 @@ export function ImportBotModal({
         <div className="flex items-center justify-between border-t border-border bg-bg-soft px-4 py-3">
           <div className="font-mono text-[0.6875rem] text-bear">{error || " "}</div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="h-9 border border-border bg-bg px-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg"
-            >
-              cancel
-            </button>
-            <button
-              onClick={handleImport}
-              className="h-9 btn-grad px-4 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider"
-            >
-              compile & import →
-            </button>
+            <ToolButton onClick={onClose}>Cancel</ToolButton>
+            <ToolButton primary onClick={handleImport}>
+              Compile & import →
+            </ToolButton>
           </div>
         </div>
       </div>
@@ -198,7 +188,7 @@ export function ImportBotModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="mb-3 block">
-      <span className="mb-1 block t-chrome text-fg-faint">{label}</span>
+      <span className="t-label mb-1 block text-fg-faint">{label}</span>
       {children}
     </label>
   );

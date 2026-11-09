@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import { Chip, ToolButton } from "@/components/calm/kit";
+
+/** A ToolButton as the strip's 28px square transport key. */
+const KEY = "!size-7 !p-0";
 
 type Props = {
   total: number;
@@ -29,31 +33,32 @@ export function ReplayBar({ total, cursor, onChange, playing, setPlaying, speed,
   }, [playing, speed, cursor, total, onChange, setPlaying]);
 
   return (
-    <div className="flex h-11 items-center gap-3 border-t border-amber/40 bg-amber/5 px-3 font-mono text-[0.6875rem] uppercase tracking-wider">
-      <span className="text-amber">▶ replay</span>
-      <button onClick={() => onChange(Math.max(0, cursor - 10))} className="size-7 border border-amber/40 text-amber hover:bg-amber/10">⏮</button>
-      <button onClick={() => onChange(Math.max(0, cursor - 1))} className="size-7 border border-amber/40 text-amber hover:bg-amber/10">◀</button>
-      <button onClick={() => setPlaying(!playing)} className="size-7 border border-amber bg-amber text-bg hover:bg-amber-dim">
+    <div className="flex h-11 items-center gap-3 border-t border-border bg-bg-soft px-3 t-label">
+      {/* Amber on the label only: replay is the simulated state. */}
+      <Chip tone="warn">Replay</Chip>
+      <ToolButton onClick={() => onChange(Math.max(0, cursor - 10))} className={KEY}>⏮</ToolButton>
+      <ToolButton onClick={() => onChange(Math.max(0, cursor - 1))} className={KEY}>◀</ToolButton>
+      <ToolButton onClick={() => setPlaying(!playing)} className={`${KEY} !bg-fg !text-bg`}>
         {playing ? "▮▮" : "▶"}
-      </button>
-      <button onClick={() => onChange(Math.min(total - 1, cursor + 1))} className="size-7 border border-amber/40 text-amber hover:bg-amber/10">▶</button>
-      <button onClick={() => onChange(Math.min(total - 1, cursor + 10))} className="size-7 border border-amber/40 text-amber hover:bg-amber/10">⏭</button>
+      </ToolButton>
+      <ToolButton onClick={() => onChange(Math.min(total - 1, cursor + 1))} className={KEY}>▶</ToolButton>
+      <ToolButton onClick={() => onChange(Math.min(total - 1, cursor + 10))} className={KEY}>⏭</ToolButton>
       <input
         type="range"
         min={0}
         max={total - 1}
         value={cursor}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="flex-1 accent-amber"
+        className="flex-1 accent-brand-ink"
       />
-      <span className="text-fg-dim">bar</span>
-      <span className="text-fg w-16 text-right tabular-nums">{cursor + 1} / {total}</span>
+      <span className="text-fg-dim">Bar</span>
+      <span className="t-data w-16 text-right text-fg">{cursor + 1} / {total}</span>
       <span className="text-fg-faint">·</span>
-      <span className="text-fg-dim">speed</span>
+      <span className="text-fg-dim">Speed</span>
       <select
         value={speed}
         onChange={(e) => setSpeed(parseInt(e.target.value))}
-        className="h-7 border border-amber/40 bg-bg px-1 text-amber outline-none"
+        className="h-7 rounded-[var(--r-instrument)] border border-border bg-bg px-1 text-fg-dim outline-none"
       >
         <option value={1}>1×</option>
         <option value={2}>2×</option>
@@ -61,7 +66,7 @@ export function ReplayBar({ total, cursor, onChange, playing, setPlaying, speed,
         <option value={8}>8×</option>
         <option value={16}>16×</option>
       </select>
-      <button onClick={onClose} className="ml-2 h-7 border border-border bg-bg px-2 text-fg-dim hover:border-fg-dim hover:text-fg">exit</button>
+      <ToolButton onClick={onClose} className="ml-2 !h-7 !px-2">Exit</ToolButton>
     </div>
   );
 }

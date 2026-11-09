@@ -1178,6 +1178,8 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
     build: (data) => {
       const c = data.consensus;
       const side: Verdict["side"] = c.direction === "up" ? "buy" : c.direction === "down" ? "sell" : "hold";
+      // The service runs five or six models, so the teacher line counts them.
+      const n = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"][c.n_models] ?? String(c.n_models);
       return {
         signals: [],
         metrics: [
@@ -1193,14 +1195,21 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
         summary: c.direction === "split"
           ? `The ${c.n_models} models split on this window (${bandLabel(c.tier)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`
           : `${c.agree_count} of ${c.n_models} models read this window ${READ[side]} (${bandLabel(c.tier)}). Historical hit rate ${ACCURACY_BAND} · ${HYPOTHETICAL_NOTE}.`,
+        // Same teacher line as the stand-in below, counted (Gate A3, 2026-11).
+        // The facts this card has are how many models agreed and one
+        // historical band; the line must not let a full vote sound like
+        // better odds, nor a split like worse ones.
         beginner:
-          "Several different AI models read the same window and voted. When nearly all of them landed on the same side, the card called that strong agreement. When they split, models built on the same data could not agree, which is the most useful thing on this card.",
+          `${n} models read the same window. A ${c.n_models}/${c.n_models} vote means the models lined up; it is not better odds, and the same historical band covers every vote.`,
+        // No `confidence` (Gate A3). The tier used to map to 0.95 / 0.78 /
+        // 0.55 / 0.3 and the card printed it as "CONF 95%" beside the hit-rate
+        // band: an invented odds figure. And a split is not "no lift" against
+        // a full vote's lift; the same band covers both, so it is just a split.
         verdict: {
           side,
           text: c.direction === "split"
-            ? `Models split ${c.agree_count}/${c.n_models}: no measurable predictive lift historically.`
+            ? `Models split ${c.agree_count}/${c.n_models} on this window.`
             : `${bandLabel(c.tier)}: ${c.agree_count}/${c.n_models} read ${READ[side]}.`,
-          confidence: c.tier === "ultra" ? 0.95 : c.tier === "high" ? 0.78 : c.tier === "medium" ? 0.55 : 0.3,
         },
       };
     },
@@ -1252,13 +1261,17 @@ const consensus: BotDef = aiBot<DirReq, ConsRes>(
         summary:
           `${upVotes} of 6 stand-in models read this window up, ${downVotes} down (${bandLabel(tier)}). ` +
           models.map((m) => `${m.name} ${m.vote === 1 ? "up" : "down"}`).join(" · "),
-        beginner: "Six models voted on the same window. Historically, 5–6 landing on the same side was the tightest agreement the ensemble produced; a split vote showed no measurable predictive lift historically.",
+        // This used to say 5–6 on one side was the tightest agreement and a
+        // split "showed no measurable predictive lift": read together, that a
+        // full vote had the lift. Nothing measured says so; one band covers
+        // every vote.
+        beginner: "Six models read the same window. A 6/6 vote means the models lined up; it is not better odds, and the same historical band covers every vote.",
+        // No `confidence`: see the build path above (Gate A3).
         verdict: {
           side,
           text: dir === "split"
-            ? `Models split ${upVotes} up / ${downVotes} down: no measurable predictive lift historically.`
+            ? `Models split ${upVotes} up / ${downVotes} down on this window.`
             : `${bandLabel(tier)}: ${agree}/6 read ${dir}.`,
-          confidence: tier === "ultra" ? 0.95 : tier === "high" ? 0.78 : tier === "medium" ? 0.55 : 0.3,
         },
       };
     },

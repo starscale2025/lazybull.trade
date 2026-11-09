@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { generateCandles, type Candle } from "@/lib/candles";
 import { getBot } from "@/lib/quant/bots";
 import { BotCell } from "@/components/quant/BotCell";
+import { Chip, TogglePill } from "@/components/calm/kit";
 import type { ActiveBot, BotResult } from "@/lib/quant/types";
 
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY"];
@@ -73,50 +74,35 @@ export function LearnBotDemo({ botId }: { botId: string }) {
 
   if (!def) {
     return (
-      <div className="grid h-32 place-items-center surface-card border border-border bg-surface font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
-        bot not found
+      <div className="grid h-32 place-items-center rounded-xl bg-fg/[0.05] t-label text-fg-faint">
+        Bot not found
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 font-mono text-[0.625rem] uppercase tracking-wider">
-        <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-faint">symbol</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="t-label text-fg-faint">Symbol</span>
         {SYMBOLS.map((s) => (
-          <button
-            key={s}
-            onClick={() => setSymbol(s)}
-            className={`border px-2 py-1 transition-colors ${
-              s === symbol
-                ? "border-bull bg-bull/10 text-bull"
-                : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
-            }`}
-          >
+          <TogglePill key={s} on={s === symbol} onClick={() => setSymbol(s)}>
             {s}
-          </button>
+          </TogglePill>
         ))}
-        <span
-          className={`ml-2 inline-flex items-center gap-1 border px-2 py-1 ${
-            loading
-              ? "border-border bg-bg text-fg-faint"
-              : source === "live"
-              ? "border-bull/50 bg-bull/10 text-bull"
-              : "border-amber/50 bg-amber/10 text-amber"
-          }`}
-        >
+        {/* What the bars are. A real status, so a live feed still pulses;
+            synthetic data is the warning colour. */}
+        <Chip tone={loading ? "neutral" : source === "live" ? "brand" : "warn"} className="ml-2">
           <span
-            className={`size-1 rounded-full ${
-              loading ? "bg-fg-faint" : source === "live" ? "bg-bull pulse-dot" : "bg-amber"
-            }`}
+            aria-hidden
+            className={`size-1.5 shrink-0 rounded-full bg-current ${!loading && source === "live" ? "pulse-dot" : ""}`}
           />
-          {loading ? "loading…" : source === "live" ? "LIVE" : "SYNTHETIC"}
-        </span>
+          {loading ? "Loading…" : source === "live" ? "Live" : "Synthetic"}
+        </Chip>
       </div>
 
       {loading || !candles || !active ? (
-        <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
-          loading {symbol} bars…
+        <div className="grid h-64 place-items-center rounded-xl bg-fg/[0.05] t-label text-fg-faint">
+          Loading {symbol} bars…
         </div>
       ) : (
         <BotCell

@@ -12,13 +12,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration, SMAA, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { Grid } from "@react-three/drei";
+import { Environment, Grid, Html, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { cinemaClock } from "@/lib/cinema-clock";
-import { CANDLE3D, CANDLE_BUILD_END, candleLabT, grade } from "@/lib/cinema";
+import { cinemaClock, damp } from "@/lib/cinema-clock";
+import { candleLabT, grade } from "@/lib/cinema";
+import { CANDLES, CRASH_END, FIRST_RED_I, N, PEAK_Y, SP, SPAN, buildAt, floorReachF, floorY, revealF } from "@/lib/candle-series";
+import { getHeroPosition, onHeroPosition } from "@/lib/hero-position";
+import { START_STRIKES, figures, money } from "@/lib/hero-spread";
 import { watchContext } from "./gl-context";
 import { Grade } from "./Grade";
+import { FilmDriver } from "./FilmDriver";
+import { FILM_DPR_MAX, FilmDpr } from "./FilmDpr";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -117,49 +122,9 @@ function mulberry32(seed: number) {
   };
 }
 
-// --- deterministic price series: climb → crash → floor -----------------------
-const N = 48;
-const SP = 1.05; // spacing along X (time)
-const DIVERGE = 26; // peak / where the AI diverges from price
-const CRASH_END = 42;
-const SPAN = CRASH_END * SP;
-
-type Candle = { x: number; cy: number; h: number; up: boolean; wl: number; wh: number };
-const CANDLES: Candle[] = (() => {
-  const rnd = mulberry32(77);
-  const prices: number[] = [];
-  let p = 2.4;
-  for (let i = 0; i <= N; i++) {
-    if (i < DIVERGE) p += 0.46 + (rnd() - 0.5) * 0.6; // climb
-    else if (i < CRASH_END) p -= 1.2 + (rnd() - 0.5) * 0.85; // crash (steeper)
-    else p += (rnd() - 0.5) * 0.3; // floor chop
-    prices.push(Math.max(0.4, p));
-  }
-  const out: Candle[] = [];
-  for (let i = 0; i < N; i++) {
-    const o = prices[i];
-    const c = prices[i + 1];
-    const wick = 0.22 + rnd() * 0.45;
-    out.push({
-      x: i * SP,
-      cy: (o + c) / 2,
-      h: Math.max(0.22, Math.abs(c - o)),
-      up: c >= o,
-      wl: Math.min(o, c) - wick,
-      wh: Math.max(o, c) + wick,
-    });
-  }
-  return out;
-})();
-const PEAK_Y = CANDLES[DIVERGE].cy;
-
-// How far the chart has "printed" — candles form left→right as you scroll, like
-// a live market ticking in. The chart timeline deliberately completes at
-// CANDLE_BUILD_END (before the window's out0): the act's tail belongs to the
-// LAB FINALE (see IceCandle), which runs on candleLabT over CANDLE_LAB.
-const buildAt = (progress: number) =>
-  clamp((progress - CANDLE3D.in0) / (CANDLE_BUILD_END - CANDLE3D.in0), 0, 1);
-const revealF = (progress: number) => clamp(buildAt(progress) / 0.9, 0, 1) * N;
+// The deterministic price series (climb → crash → floor chop) and the print
+// head that reveals it live in lib/candle-series.ts, so the sound, the rail
+// and the tests key to the same candles this scene prints (Gate A4 #3).
 
 // The candle the AI "takes into the lab" for the finale: the last bull candle
 // of the floor chop — right where the pulled-back camera rests, cleanly
@@ -306,157 +271,11 @@ function useCrystalGeometry(fallback: THREE.BufferGeometry) {
   return geo ?? fallback;
 }
 
-// The candles' reflections, done the honest-cheat way: mirrored clones hanging
-// from each candle's OWN base (wick low). A plane-mirrored image can't carry
-// this act — the chart climbs ~12 units above the static floor while the camera
-// tracks the trend at ~20° pitch, so anything mirrored across FLOOR_Y projects
-// below the frustum (NDC y < -1) from build ~0.05 to ~0.65: no reflection until
-// the end pull-back. Anchoring per-candle keeps the reflection glued to its
-// candle — visible from the FIRST printed candle — and the vertical alpha fade
-// below makes it die with depth like polished obsidian instead of reading as an
-// upside-down twin. Pure function of rf → scrub-reversible.
+// The glass floor's height. The mirrored candle clones that hung from each
+// candle's base are gone (Gate A3, materials): they doubled the chart's draw
+// calls through the transmission pass and read as an upside-down twin. The
+// floor's clearcoat and the Lightformers now give the glass its sheen.
 const FLOOR_Y = -0.54;
-
-// Reflection fade: full strength at the contact end, gently dimming toward the
-// deep end — NEVER to zero, so body + wick outlines stay crisp and readable the
-// whole way down (true-mirror read, not a smudge). Unit-box / normalized-crystal
-// local y spans ±0.5, and after the mirror flip (scale.y<0) local +y points
-// world-DOWN, so depth = position.y + 0.5. Constant uniforms, no per-frame
-// state. If a future three renames a chunk the replace no-ops and clones just
-// render unfaded — graceful.
-function reflectionFade(mat: THREE.MeshStandardMaterial) {
-  mat.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying float vRefDepth;")
-      .replace(
-        "#include <begin_vertex>",
-        "#include <begin_vertex>\nvRefDepth = clamp(position.y + 0.5, 0.0, 1.0);"
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nvarying float vRefDepth;")
-      .replace(
-        "#include <dithering_fragment>",
-        "#include <dithering_fragment>\ngl_FragColor.a *= 1.0 - 0.6 * vRefDepth;"
-      );
-  };
-  return mat;
-}
-
-function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.BufferGeometry }) {
-  const green = useMemo(
-    () =>
-      reflectionFade(
-        new THREE.MeshStandardMaterial({
-          color: "#031a10",
-          emissive: new THREE.Color("#52ffa5"),
-          emissiveIntensity: 0.4,
-          roughness: 0.35,
-          metalness: 0.1,
-          flatShading: true,
-          transparent: true,
-          opacity: 0.5,
-          depthWrite: false,
-        })
-      ),
-    []
-  );
-  const red = useMemo(
-    () =>
-      reflectionFade(
-        new THREE.MeshStandardMaterial({
-          color: "#1d0710",
-          emissive: new THREE.Color("#ff2e63"),
-          emissiveIntensity: 0.52,
-          roughness: 0.35,
-          metalness: 0.1,
-          flatShading: true,
-          transparent: true,
-          opacity: 0.5,
-          depthWrite: false,
-        })
-      ),
-    []
-  );
-  // dimmed twins of the inner cores — a reflection of a lit heart, not a lamp
-  const coreGreen = useMemo(
-    () =>
-      reflectionFade(
-        new THREE.MeshStandardMaterial({
-          color: "#000000",
-          emissive: new THREE.Color("#7dffc9"),
-          emissiveIntensity: 0.55,
-          roughness: 0.5,
-          metalness: 0,
-          transparent: true,
-          opacity: 0.5,
-          depthWrite: false,
-        })
-      ),
-    []
-  );
-  const coreRed = useMemo(
-    () =>
-      reflectionFade(
-        new THREE.MeshStandardMaterial({
-          color: "#000000",
-          emissive: new THREE.Color("#ff5c86"),
-          emissiveIntensity: 0.65,
-          roughness: 0.5,
-          metalness: 0,
-          transparent: true,
-          opacity: 0.5,
-          depthWrite: false,
-        })
-      ),
-    []
-  );
-  const refs = useRef<(THREE.Group | null)[]>([]);
-  useFrame(() => {
-    const rf = revealF(cinemaClock.progress);
-    // the lab candle's reflection dies with its liftoff — a candle in the air
-    // has no contact point on the glass
-    const lift = 1 - smooth(0.02, 0.22, candleLabT(cinemaClock.progress));
-    for (let i = 0; i < N; i++) {
-      const g = refs.current[i];
-      if (!g) continue;
-      const grow = clamp(rf - i, 0, 1);
-      const lk = i === LAB_I ? lift : 1;
-      g.visible = grow > 0.001 && lk > 0.001;
-      const c1 = 1.70158;
-      const c3 = c1 + 1;
-      const b = grow - 1;
-      const e = 1 + c3 * b * b * b + c1 * b * b;
-      const ey = Math.max(0.0001, e * lk);
-      // slide the anchor with the pop so the clone's wick tip stays glued to the
-      // real wick tip while both grow (at e=1 this equals the true mirror pose:
-      // y' = 2*wl - cy, since cy - (wh - wl) = 2*wl - cy)
-      g.position.y = CANDLES[i].cy - ey * (CANDLES[i].wh - CANDLES[i].wl);
-      g.scale.set(lk, -ey, lk); // negative y = the mirror flip
-    }
-  });
-  return (
-    <group>
-      {CANDLES.map((c, i) => {
-        const m = c.up ? green : red;
-        return (
-          <group
-            key={i}
-            ref={(el) => {
-              refs.current[i] = el;
-            }}
-            // mirror across the candle's own base (wl): y' = cy - (wh - wl), flipped
-            position={[c.x, c.cy - (c.wh - c.wl), 0]}
-            scale={[1, -0.0001, 1]}
-          >
-            <mesh geometry={body} material={m} scale={[0.72, c.h, 0.72]} />
-            <mesh geometry={box} material={c.up ? coreGreen : coreRed} scale={[0.36, c.h * 0.66, 0.36]} />
-            <mesh geometry={box} material={m} scale={[0.11, c.wh - c.wl, 0.11]} />
-          </group>
-        );
-      })}
-    </group>
-  );
-}
 
 // THE LAB BEAT (candleLabT: progress 0.50→0.55): the AI takes ONE candle into
 // the lab. The LAB_I bull candle lifts out of the field SPINNING, freezes from
@@ -467,7 +286,7 @@ function MirrorCandles({ body, box }: { body: THREE.BufferGeometry; box: THREE.B
 // landing spot is CAMERA-RELATIVE (a fixed NDC point unprojected each frame),
 // so it sits at ~72% viewport x at any aspect ratio and keeps breathing with
 // the pointer-orbit. Every pose is a pure function of candleLabT — scrubbing
-// back re-freezes it into its slot (Candles/MirrorCandles reverse the liftoff).
+// back re-freezes it into its slot (Candles reverses the liftoff).
 // Three colour targets for the lab candle's morph. GREEN reuses the field
 // candle recipe EXACTLY (so the liftoff hand-off is seamless); ICE is the frosty
 // scan state; RED is the bear recipe borrowed from the field's crash candles —
@@ -551,7 +370,10 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
     if (!g) return;
     const lt = candleLabT(cinemaClock.progress);
     g.visible = lt > 0.001;
-    if (!g.visible) return;
+    if (!g.visible) {
+      if (light.current) light.current.intensity = 0;
+      return;
+    }
     const c = CANDLES[LAB_I];
     // landing spot: NDC (0.44, 0.06) ≈ 72% viewport x, a hair above center,
     // 11 units out along that ray — recomputed each frame so it tracks the rig
@@ -620,15 +442,23 @@ function IceCandle({ body, box }: { body: THREE.BufferGeometry; box: THREE.Buffe
       // phases; ramps on with the liftoff so it never pops.
       paint(light.current.color, G.attenuation, I.attenuation, D.attenuation);
       light.current.intensity = smooth(0.06, 0.35, lt) * chain(3.0, 2.2, 9.0);
+      // It rides the candle from outside the group (below), at the same spot.
+      g.updateMatrixWorld();
+      g.localToWorld(light.current.position.set(0.6, 0.4, 1.4));
     }
   });
   return (
-    <group ref={group} visible={false}>
-      <mesh ref={bodyRef} geometry={body} material={glass} />
-      <mesh ref={coreRef} geometry={box} material={core} />
-      <mesh ref={wickRef} geometry={box} material={wick} />
-      <pointLight ref={light} color="#bfe8ff" distance={9} decay={2} intensity={0} position={[0.6, 0.4, 1.4]} />
-    </group>
+    <>
+      <group ref={group} visible={false}>
+        <mesh ref={bodyRef} geometry={body} material={glass} />
+        <mesh ref={coreRef} geometry={box} material={core} />
+        <mesh ref={wickRef} geometry={box} material={wick} />
+      </group>
+      {/* Never hidden, only dimmed (Gate A4 #2): a light that comes and goes
+          changes the scene's light count, and every lit program recompiles
+          mid-act. So it lives outside the group whose visibility flips. */}
+      <pointLight ref={light} color="#bfe8ff" distance={9} decay={2} intensity={0} />
+    </>
   );
 }
 
@@ -774,7 +604,6 @@ function Candles() {
     const fl = flareLight.current;
     if (fl) {
       const c = CANDLES[clamp(FLARE.idx, 0, N - 1)];
-      fl.visible = FLARE.amt > 0.02;
       fl.position.set(c.x, c.cy + 0.4, 1.1);
       fl.intensity = 26 * FLARE.amt;
       fl.color.set(c.up ? "#52ffa5" : "#ff2e63");
@@ -803,7 +632,6 @@ function Candles() {
           </group>
         );
       })}
-      <MirrorCandles body={body} box={box} />
       <IceCandle body={body} box={box} />
       {/* forgiving invisible hitboxes for hover (material invisible, ray-visible) */}
       <group
@@ -822,7 +650,116 @@ function Candles() {
           />
         ))}
       </group>
-      <pointLight ref={flareLight} visible={false} distance={6} decay={2} />
+      {/* Always visible, intensity 0 when idle: see the lab's light. */}
+      <pointLight ref={flareLight} intensity={0} distance={6} decay={2} />
+    </group>
+  );
+}
+
+// THE FLOOR AT K1 (Phase 4, M26 as Gate A4 #3 corrected it). The visitor's
+// long strike, with the chart's peak as SIM 100 (lib/candle-series.ts,
+// floorY), or the example spread's 100 until they have chosen one. It fades in
+// as the falling price reaches it and flares as the red goes THROUGH it: the
+// price keeps falling, and what stops at the floor is the loss, which the
+// label says in real type (a DOM line, not a texture on the glass).
+//
+// A thin emissive sheet with a lit front edge, not transmission glass: the
+// transmission pass re-rendered the scene for one slab and cost the act its
+// frame time at 2x (Gate A4 #2). Pure function of progress and the position,
+// so scrubbing back lifts it away.
+const SLAB_X1 = N * SP + 0.6;
+const SLAB_DEPTH = 3.2;
+
+function floorLabel(): string {
+  const p = getHeroPosition();
+  if (p?.chosen) return `YOUR FLOOR · BELOW K1 ${p.k1} THE LOSS STOPS AT −${money(p.maxLoss)} · ILLUSTRATIVE · SIM`;
+  const f = figures(START_STRIKES.k1, START_STRIKES.k2);
+  return `AN EXAMPLE FLOOR · BELOW K1 ${START_STRIKES.k1} THE LOSS STOPS AT −${money(f.maxLoss)} · ILLUSTRATIVE · SIM`;
+}
+
+function FloorSlab() {
+  const group = useRef<THREE.Group>(null);
+  const tagAnchor = useRef<THREE.Group>(null);
+  const tag = useRef<HTMLDivElement>(null);
+  const [text, setText] = useState(floorLabel);
+  useEffect(() => {
+    const take = () => setText(floorLabel());
+    take();
+    return onHeroPosition(take);
+  }, []);
+  const sheet = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: "#ff2e63",
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      }),
+    []
+  );
+  const edge = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: "#ff8fa8",
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      }),
+    []
+  );
+  useFrame(() => {
+    const g = group.current;
+    if (!g) return;
+    const rf = revealF(cinemaClock.progress);
+    const k1 = getHeroPosition()?.k1 ?? START_STRIKES.k1;
+    const y = floorY(k1);
+    const reach = floorReachF(y);
+    // In over the candle before the price gets there, full as it arrives.
+    const on = smooth(reach - 1.2, reach, rf);
+    // The flare rides the red through the sheet, then settles to a held glow.
+    const flare = Math.exp(-Math.max(0, rf - reach) * 1.1) * smooth(reach - 0.3, reach, rf);
+    g.visible = on > 0.002;
+    // The sheet starts a candle before the crossing and runs to the chart's end.
+    const x0 = Math.max(0, reach - 1) * SP;
+    g.position.set((x0 + SLAB_X1) / 2, y, 0);
+    g.scale.x = SLAB_X1 - x0;
+    // The label rides a few candles past the crossing, clear of the red
+    // falling through it (in the sheet's unit width).
+    if (tagAnchor.current) tagAnchor.current.position.x = ((reach + 2.5) * SP - (x0 + SLAB_X1) / 2) / (SLAB_X1 - x0);
+    sheet.opacity = on * (0.07 + 0.22 * flare);
+    edge.opacity = on * (0.55 + 0.45 * flare);
+    // The words leave as the lab starts: its panel and the ice candle take
+    // the frame, and the sheet alone keeps the floor in it.
+    const words = 1 - smooth(0, 0.12, candleLabT(cinemaClock.progress));
+    if (tag.current) tag.current.style.opacity = (on * words * (0.6 + 0.4 * smooth(reach, reach + 0.6, rf))).toFixed(3);
+  });
+  return (
+    <group ref={group} visible={false}>
+      <mesh material={sheet} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[1, SLAB_DEPTH]} />
+      </mesh>
+      {/* The lit front edge: the line the eye reads as "the floor". */}
+      <mesh material={edge} position={[0, 0, SLAB_DEPTH / 2]}>
+        <boxGeometry args={[1, 0.035, 0.035]} />
+      </mesh>
+      {/* On the front edge. Html projects its world position, so the
+          group's x-scale moves the anchor without stretching the type. */}
+      <group ref={tagAnchor} position={[-0.5, 0, SLAB_DEPTH / 2]}>
+        <Html zIndexRange={[1, 0]} style={{ pointerEvents: "none" }}>
+          <div
+            ref={tag}
+            className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.14em] text-[#ffc4d2]"
+            style={{ opacity: 0, transform: "translate(4px, 8px)", textShadow: "0 1px 10px rgba(0,0,0,0.9)" }}
+          >
+            {text}
+          </div>
+        </Html>
+      </group>
     </group>
   );
 }
@@ -866,7 +803,7 @@ function CrashShards() {
   const crash = useMemo(
     () =>
       CANDLES.map((c, i) => ({ c, i })).filter(
-        ({ c, i }) => !c.up && i >= DIVERGE && i < CRASH_END
+        ({ c, i }) => !c.up && i >= FIRST_RED_I && i < CRASH_END
       ),
     []
   );
@@ -956,7 +893,7 @@ function PrintHead() {
     const y = lerp(CANDLES[idx].cy, CANDLES[Math.min(idx + 1, N - 1)].cy, frac);
     const flash = (1 - frac) * (1 - frac); // spikes as each candle lands
     // the head bleeds red while printing crash candles — .set() per frame is cheap
-    const crash = !CANDLES[idx].up && idx >= DIVERGE;
+    const crash = !CANDLES[idx].up && idx >= FIRST_RED_I;
     if (orb.current) {
       orb.current.visible = on;
       orb.current.position.set(x, y, 0);
@@ -966,9 +903,8 @@ function PrintHead() {
       );
     }
     if (light.current) {
-      light.current.visible = on;
       light.current.position.set(x, y + 0.5, 1.4);
-      light.current.intensity = (3 + 30 * flash) * (crash ? 1.6 : 1);
+      light.current.intensity = on ? (3 + 30 * flash) * (crash ? 1.6 : 1) : 0;
       light.current.color.set(crash ? "#ff2e63" : "#52ffa5");
     }
     if (ring.current) {
@@ -985,7 +921,7 @@ function PrintHead() {
         <sphereGeometry args={[1, 16, 16]} />
         <meshBasicMaterial color="#c8ffe4" toneMapped={false} />
       </mesh>
-      <pointLight ref={light} visible={false} color="#52ffa5" distance={8} decay={2} />
+      <pointLight ref={light} intensity={0} color="#52ffa5" distance={8} decay={2} />
       <mesh ref={ring} visible={false}>
         <ringGeometry args={[0.9, 1, 48]} />
         <meshBasicMaterial
@@ -1162,6 +1098,20 @@ function Dust({
   );
 }
 
+/** The camera's trauma at print position `rf`: the strongest live hit from the crash's red candles. */
+function traumaAt(rf: number) {
+  let t = 0;
+  // From the first red print: the crash is one frame (lib/candle-series.ts).
+  for (let i = FIRST_RED_I; i < CRASH_END; i++) {
+    const c = CANDLES[i];
+    if (c.up) continue;
+    const since = rf - i;
+    if (since < 0) break;
+    t = Math.max(t, Math.exp(-since * 2.4) * Math.min(1, c.h / 1.6));
+  }
+  return t;
+}
+
 function Rig() {
   const pos = useRef(new THREE.Vector3(-7, 7, 11));
   const look = useRef(new THREE.Vector3(0, 3, 0));
@@ -1174,20 +1124,19 @@ function Rig() {
   const pys = useRef(0);
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    // damped pointer → true ORBIT steering (the world looks around with you)
-    pxs.current += (cinemaClock.px - pxs.current) * 0.05;
-    pys.current += (cinemaClock.py - pys.current) * 0.05;
+    // damped pointer → true ORBIT steering (the world looks around with you);
+    // every follower here is dt-correct (M31), so 120Hz glides like 60Hz
+    const dt = cinemaClock.dt;
+    pxs.current += (cinemaClock.px - pxs.current) * damp(0.05, dt);
+    pys.current += (cinemaClock.py - pys.current) * damp(0.05, dt);
     const build = buildAt(cinemaClock.progress);
-    // crash candles hit like impacts: spike as each red bar lands, decay as it
-    // settles — pure function of rf so scrubbing back un-shakes cleanly
+    // TRAUMA (Gate A3, materials): every red crash candle adds a hit that
+    // decays over about a candle's print, and the strongest still alive is
+    // the camera's trauma. The shake is trauma squared over smooth noise, not
+    // a buzzing sin(time·53), so a small candle barely nudges and the big
+    // drops land. Still a pure function of rf: scrubbing back un-shakes.
     const rf = revealF(cinemaClock.progress);
-    const rIdx = Math.floor(rf);
-    const rFrac = rf - rIdx;
-    let impact = 0;
-    const rc = CANDLES[rIdx];
-    if (rc && !rc.up && rIdx >= DIVERGE) {
-      impact = (1 - rFrac) * (1 - rFrac) * Math.min(1, rc.h / 1.6);
-    }
+    const impact = traumaAt(rf);
     // The camera path is a SMOOTH function of scroll only — never the discrete
     // candle index or their noisy per-candle heights — so it glides along the
     // chart instead of snapping to each newly-printed candle.
@@ -1206,12 +1155,18 @@ function Rig() {
     // retreat earlier means the camera is already opening out as that happens,
     // instead of staying tight on the printing edge and only revealing the
     // composition once the beat naming it has passed.
+    //
+    // Wider and with the look raised (Gate A4 #3): the old pull-back framed the
+    // crash from below the peak, so the floor at K1, which sits just under the
+    // peak, was above the top of the frame. Now the peak and the floor land
+    // around y 250–285 of 900, under the act's copy, and the chop still reads
+    // at the bottom: the whole sentence, the price falling through the floor.
     const pull = smooth(0.66, 0.95, build);
-    tmpL.current.set(lerp(edgeX - 1.5, SPAN * 0.72, pull), lerp(trendY, 3, pull), 0);
+    tmpL.current.set(lerp(edgeX - 1.5, SPAN * 0.78, pull), lerp(trendY, 9, pull), 0);
     tmpP.current.set(
       lerp(edgeX - 7, SPAN * 0.5, pull) + Math.sin(time * 0.33) * 0.18,
-      lerp(trendY + 4.5, PEAK_Y * 0.5 + 9, pull) + Math.sin(time * 0.47) * 0.14,
-      lerp(11, 16.5, pull) + Math.cos(time * 0.29) * 0.16
+      lerp(trendY + 4.5, PEAK_Y * 0.5 + 5, pull) + Math.sin(time * 0.47) * 0.14,
+      lerp(11, 30, pull) + Math.cos(time * 0.29) * 0.16
     );
     // orbit the look-target by the pointer: ±12° yaw, ±6° pitch
     offset.current.copy(tmpP.current).sub(tmpL.current);
@@ -1220,18 +1175,19 @@ function Rig() {
     offset.current.applyQuaternion(quat.current);
     tmpP.current.copy(tmpL.current).add(offset.current);
     // inertia: the camera trails its target — motion has mass
-    pos.current.lerp(tmpP.current, 0.09);
-    look.current.lerp(tmpL.current, 0.09);
-    // deterministic sin shake (no Math.random — must reverse under scrub)
-    pos.current.x += Math.sin(time * 53) * 0.16 * impact;
-    pos.current.y += Math.cos(time * 44) * 0.13 * impact;
+    pos.current.lerp(tmpP.current, damp(0.09, dt));
+    look.current.lerp(tmpL.current, damp(0.09, dt));
+    // deterministic smooth noise (no Math.random: it must reverse under scrub)
+    const shake = impact * impact;
+    pos.current.x += (Math.sin(time * 23.1) + Math.sin(time * 31.7 + 1.3) + Math.sin(time * 17.9 + 2.1)) * 0.09 * shake;
+    pos.current.y += (Math.sin(time * 19.3 + 0.7) + Math.sin(time * 27.1 + 2.9)) * 0.08 * shake;
     state.camera.position.copy(pos.current);
     state.camera.lookAt(look.current);
     // scroll hard → the world stretches (FOV kick); crash impacts punch in too
     const cam = state.camera as THREE.PerspectiveCamera;
     const targetFov = 42 + cinemaClock.vel * 9 + impact * 3;
     if (Math.abs(cam.fov - targetFov) > 0.01) {
-      cam.fov += (targetFov - cam.fov) * 0.1;
+      cam.fov += (targetFov - cam.fov) * damp(0.1, dt);
       cam.updateProjectionMatrix();
     }
   });
@@ -1253,11 +1209,18 @@ export default function CandleField3D({
   return (
     <Canvas
       className="h-full w-full"
-      dpr={[1, 2]}
-      frameloop={active ? "always" : "never"}
+      dpr={[1, FILM_DPR_MAX]}
+      // On the film's one clock (M31): drawn by ScrollCinema's tick, never by a loop of its own.
+      frameloop="never"
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 42, position: [-5, 9, 12], near: 0.1, far: 200 }}
       onCreated={({ gl }) => {
+        // The glass bodies refract a second render of the scene, at full
+        // size by default: the act's single largest cost at 2x (Gate A4 #2).
+        // The bodies are frosted (roughness ≥ 0.17, read from blurred mips),
+        // so half the resolution each way, a quarter of the fill, does not
+        // show in them.
+        gl.transmissionResolutionScale = 0.5;
         onReady?.();
         watchContext(gl.domElement, onLost, onReady);
       }}
@@ -1266,13 +1229,23 @@ export default function CandleField3D({
       <color attach="background" args={["#050505"]} />
       <fog attach="fog" args={["#050505", 22, 60]} />
 
-      <ambientLight intensity={0.4} />
+      {/* Ambient down from 0.4 (Gate A3, materials): it flattened the glass.
+          A rim from behind and three Lightformers give the bodies edges and
+          something to refract instead. */}
+      <ambientLight intensity={0.1} />
       <directionalLight position={[6, 14, 8]} intensity={0.7} color="#bfe9ff" />
+      <directionalLight position={[SPAN * 0.6, 6, -12]} intensity={1.3} color="#8f73ff" />
+      <Environment resolution={128} frames={1}>
+        <Lightformer form="rect" intensity={2.2} color="#dfe8ff" position={[SPAN / 2, 9, 10]} scale={[24, 3, 1]} />
+        <Lightformer form="rect" intensity={1.4} color="#7b5cff" position={[SPAN * 0.8, 4, -10]} scale={[16, 6, 1]} />
+        <Lightformer form="ring" intensity={1.1} color="#4d8dff" position={[-6, 6, 4]} scale={4} />
+      </Environment>
 
       <Interaction />
       <Candles />
       <Baseline />
       <CrashShards />
+      <FloorSlab />
       <PrintHead />
       <ClickFX />
       {/* z-ranges stay well in front of the camera (z≈11+) — no giant near-plane dots */}
@@ -1287,11 +1260,10 @@ export default function CandleField3D({
           above FLOOR_Y) a true plane-mirrored image projects below the frustum
           for nearly the whole act, so a MeshReflectorMaterial shows nothing
           until the end pull-back (and its extra 1024² scene pass would double
-          again through the glass bodies' transmission pass). The crisp
-          candle+wick reflection is carried by MirrorCandles instead; this plane
-          is the glass those reflections appear to live in — near-black, tight
-          clearcoat highlights under the print-head/flare lights (the wet
-          sheen), slightly translucent so it dies softly into the fog. */}
+          again through the glass bodies' transmission pass). This plane is
+          near-black glass with tight clearcoat highlights under the
+          print-head/flare lights and the Lightformers (the wet sheen),
+          slightly translucent so it dies softly into the fog. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[SPAN / 2, FLOOR_Y, 0]}>
         <planeGeometry args={[SPAN * 3, 90]} />
         <meshPhysicalMaterial
@@ -1320,6 +1292,8 @@ export default function CandleField3D({
       />
 
       <Rig />
+      <FilmDriver active={active} />
+      <FilmDpr />
 
       {/* NOTE: no `ref` on the individual effects. Under React 19 `ref` is an
           ordinary prop, and @react-three/postprocessing JSON.stringify()s its
@@ -1327,7 +1301,9 @@ export default function CandleField3D({
           has a .parent) throws "Converting circular structure to JSON" and takes
           the whole page down. Ref the composer instead and read its passes. */}
       <EffectComposer ref={composerRef} multisampling={0}>
-        <Bloom mipmapBlur luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
+        {/* Half resolution (Gate A4 #2): a glow is the one thing that loses
+            nothing to it, and the bloom chain was the act's second cost. */}
+        <Bloom mipmapBlur resolutionScale={0.5} luminanceThreshold={0.35} luminanceSmoothing={0.3} intensity={0.95} />
         <ChromaticAberration offset={[0.0005, 0.0009]} />
         {/* TONE MAPPING, which is not the grade. A composer renders into a float target, and three only
             tone-maps on the way to the screen, so this layer had none: every

@@ -9,17 +9,17 @@
 // PURE. No hooks, no dates, no directive.
 
 import type { ReactNode } from "react";
+import { Chip } from "@/components/calm/kit";
 import type { Difficulty, Lock, ProblemStatus, TrackId, Verdict } from "@/lib/practice/types";
 import { DIFFICULTY_META, LOCK_META } from "@/lib/practice/types";
 import { TRACK_META } from "@/lib/practice/tracks";
 
+// Calm (S1, 2026-11-09): the kit's one chip. Difficulty is a word, not a
+// colour: red means a loss on this site, and "hard" is not one.
 export function DifficultyPill({ difficulty, className = "" }: { difficulty: Difficulty; className?: string }) {
   const meta = DIFFICULTY_META[difficulty];
   return (
-    <span className={`inline-flex items-center gap-1.5 border px-1.5 py-0.5 t-chrome ${meta.cls} ${className}`}>
-      <span aria-hidden className="size-1.5 rounded-full bg-current" />
-      {meta.label}
-    </span>
+    <Chip className={className}>{meta.label.charAt(0).toUpperCase() + meta.label.slice(1)}</Chip>
   );
 }
 
@@ -36,23 +36,16 @@ export function TrackChip({
 }) {
   const meta = TRACK_META[track];
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 border px-1.5 py-0.5 t-chrome ${className}`}
-      style={{
-        color: meta.color,
-        borderColor: `color-mix(in srgb, ${meta.color} 40%, transparent)`,
-        background: `color-mix(in srgb, ${meta.color} 10%, transparent)`,
-      }}
-    >
+    <Chip className={className}>
       {showGlyph && <span aria-hidden>{meta.glyph}</span>}
       {meta.label}
-    </span>
+    </Chip>
   );
 }
 
 const GLYPH_SIZE = {
-  sm: "size-7 font-mono text-[0.75rem]",
-  md: "size-9 font-display text-xl",
+  sm: "size-8 font-mono text-[0.8125rem]",
+  md: "size-10 font-display text-xl",
   lg: "size-16 font-display text-3xl",
 } as const;
 
@@ -61,8 +54,8 @@ export function TrackGlyph({ track, size = "sm", className = "" }: { track: Trac
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center border border-border bg-bg ${GLYPH_SIZE[size]} ${className}`}
-      style={{ color: meta.color }}
+      className={`grid shrink-0 place-items-center rounded-full ${GLYPH_SIZE[size]} ${className}`}
+      style={{ color: meta.color, background: `color-mix(in srgb, ${meta.color} 14%, transparent)` }}
     >
       {meta.glyph}
     </span>
@@ -87,10 +80,9 @@ export function StatusGlyph({ status, className = "" }: { status: ProblemStatus;
 export function LockPill({ lock, className = "" }: { lock: Lock; className?: string }) {
   const meta = LOCK_META[lock];
   return (
-    <span className={`inline-flex items-center gap-1 border px-1.5 py-0.5 t-chrome whitespace-nowrap ${meta.cls} ${className}`}>
-      {lock === "pro" && <span aria-hidden>⊘</span>}
+    <Chip tone={lock === "pro" ? "brand" : "neutral"} className={className}>
       {meta.label}
-    </span>
+    </Chip>
   );
 }
 

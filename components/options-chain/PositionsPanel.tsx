@@ -2,6 +2,7 @@
 
 import { usePaper } from "@/lib/stores";
 import { payoff } from "@/lib/pricing";
+import { ToolButton } from "@/components/calm/kit";
 
 export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string }) {
   const positions = usePaper((s) => s.positions);
@@ -33,16 +34,16 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
   const totalPnl = (cash + shareBook + open.reduce((acc, p) => acc + payoff(p.legs, spot), 0)) - startingCash;
 
   return (
-    <div className="border border-border bg-bg">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-chrome">
-        <span className="text-bull">● paper portfolio</span>
+    <div className="surface-instrument border border-border bg-bg">
+      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 t-label">
+        <span className="text-fg">Paper portfolio</span>
         <span className="text-fg-dim">
-          equity <span className="text-fg">${equity.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+          Equity <span className="text-fg">${equity.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
         </span>
       </div>
       {unmarkedSyms > 0 && (
         // Say so rather than let the number quietly disagree with /pro.
-        <div className="border-b border-border-soft px-3 py-1 t-chrome text-fg-faint">
+        <div className="border-b border-border-soft px-3 py-1 t-label text-fg-faint">
           {unmarkedSyms} stock position{unmarkedSyms > 1 ? "s" : ""} valued at cost — live marks on pro charts
         </div>
       )}
@@ -53,17 +54,17 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
           { k: "Total P&L", v: `${totalPnl >= 0 ? "+" : "−"}$${Math.abs(totalPnl).toFixed(0)}`, c: totalPnl >= 0 ? "text-bull" : "text-bear" },
         ].map((s) => (
           <div key={s.k} className="bg-bg p-2.5">
-            <div className="t-chrome text-fg-faint">{s.k}</div>
+            <div className="t-label text-fg-faint">{s.k}</div>
             <div className={`mt-0.5 t-data text-sm ${s.c}`}>{s.v}</div>
           </div>
         ))}
       </div>
 
-      <div className="px-3 py-2 t-chrome text-fg-faint border-b border-border-soft">
-        open · {open.length}
+      <div className="px-3 py-2 t-label text-fg-faint border-b border-border-soft">
+        Open · {open.length}
       </div>
       {open.length === 0 ? (
-        <div className="px-3 py-4 text-center font-mono text-[0.6875rem] text-fg-faint">no open positions</div>
+        <div className="px-3 py-4 text-center t-label text-fg-faint">No open positions</div>
       ) : (
         <div>
           {open.map((p) => {
@@ -75,19 +76,16 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
                   <div className="font-mono text-[0.625rem] text-fg-faint">{p.underlying} · {p.legs.length} leg</div>
                 </div>
                 <div className="col-span-3 text-right">
-                  <div className="text-fg-dim">cost</div>
+                  <div className="text-fg-dim">Cost</div>
                   <div className={p.cost > 0 ? "text-bear" : "text-bull"}>${Math.abs(p.cost).toFixed(0)}</div>
                 </div>
                 <div className="col-span-3 text-right">
-                  <div className="text-fg-dim">live</div>
+                  <div className="text-fg-dim">Live</div>
                   <div className={live >= 0 ? "text-bull" : "text-bear"}>{live >= 0 ? "+" : "−"}${Math.abs(live).toFixed(0)}</div>
                 </div>
-                <button
-                  onClick={() => close(p.id, live)}
-                  className="col-span-2 border border-border bg-bg px-2 py-1 text-[0.625rem] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear"
-                >
-                  close
-                </button>
+                <ToolButton onClick={() => close(p.id, live)} className="col-span-2 !h-6 !px-1 !text-[0.6875rem]">
+                  Close
+                </ToolButton>
               </div>
             );
           })}
@@ -96,8 +94,8 @@ export function PositionsPanel({ spot, symbol }: { spot: number; symbol?: string
 
       {closed.length > 0 && (
         <>
-          <div className="px-3 py-2 t-chrome text-fg-faint border-b border-border-soft">
-            recent closed
+          <div className="px-3 py-2 t-label text-fg-faint border-b border-border-soft">
+            Recent closed
           </div>
           {closed.map((p) => (
             <div key={p.id} className="grid grid-cols-12 items-center gap-2 border-b border-border-soft px-3 py-1.5 t-data text-[0.625rem] text-fg-dim">

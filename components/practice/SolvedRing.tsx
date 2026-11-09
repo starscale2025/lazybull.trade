@@ -4,7 +4,7 @@
 // so the ring follows the theme. Three arcs — easy, medium, hard — laid end
 // to end from 12 o'clock, each proportional to solved / total-of-everything,
 // so the empty remainder of the track is the work still to do. The legend
-// under it copies the 3-up hairline stat block from components/learn/Diploma.tsx.
+// under it is three plain columns, each with its arc's swatch.
 //
 // PURE — props in, markup out. The container computes the counts.
 
@@ -12,7 +12,13 @@ import { DIFFICULTY_META } from "@/lib/practice/types";
 import type { Difficulty } from "@/lib/practice/types";
 
 const ORDER: Difficulty[] = ["easy", "medium", "hard"];
-const TEXT: Record<Difficulty, string> = { easy: "text-bull", medium: "text-amber", hard: "text-bear" };
+
+/** One hue at three strengths: a difficulty is not a gain or a loss. */
+const ARC: Record<Difficulty, string> = {
+  easy: "color-mix(in srgb, var(--brand-ink) 42%, transparent)",
+  medium: "color-mix(in srgb, var(--brand-ink) 70%, transparent)",
+  hard: "var(--brand-ink)",
+};
 
 /** Stroke and centre-text geometry per size. The dy values seat the big count
     and the "/total" line either side of centre without the glyphs touching. */
@@ -25,7 +31,7 @@ export type SolvedRingProps = {
   solved: Record<Difficulty, number>;
   total: Record<Difficulty, number>;
   size?: 96 | 160;
-  /** A `t-chrome` line under the ring — "all tracks", "this week". */
+  /** A `t-label` line under the ring — "all tracks", "this week". */
   caption?: string;
   className?: string;
 };
@@ -72,7 +78,7 @@ export function SolvedRing({ solved, total, size = 160, caption, className = "" 
                 cy={c}
                 r={r}
                 fill="none"
-                stroke={DIFFICULTY_META[d].color}
+                stroke={ARC[d]}
                 strokeWidth={geo.stroke}
                 strokeLinecap="butt"
                 strokeDasharray={`${len.toFixed(2)} ${(circ - len).toFixed(2)}`}
@@ -102,13 +108,16 @@ export function SolvedRing({ solved, total, size = 160, caption, className = "" 
           /{totalAll}
         </text>
       </svg>
-      {caption && <div className="mt-2 t-chrome text-fg-faint">{caption}</div>}
+      {caption && <div className="mt-2 t-label text-fg-faint">{caption.charAt(0).toUpperCase() + caption.slice(1)}</div>}
       {showLegend && (
-        <div className="mt-3 grid w-full grid-cols-3 gap-px border border-border bg-border">
+        <div className="mt-4 grid w-full grid-cols-3 gap-3">
           {ORDER.map((d) => (
-            <div key={d} className="bg-bg p-2">
-              <div className="t-chrome text-fg-faint">{DIFFICULTY_META[d].label}</div>
-              <div className={`mt-0.5 t-data text-[0.8125rem] ${TEXT[d]}`}>
+            <div key={d}>
+              <div className="flex items-center gap-1.5 t-label text-fg-faint">
+                <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ background: ARC[d] }} />
+                {DIFFICULTY_META[d].label.charAt(0).toUpperCase() + DIFFICULTY_META[d].label.slice(1)}
+              </div>
+              <div className="mt-0.5 t-data text-[0.8125rem] text-fg">
                 {solved[d]}
                 <span className="text-fg-faint">/{total[d]}</span>
               </div>

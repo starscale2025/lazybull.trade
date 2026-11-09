@@ -1,8 +1,8 @@
 "use client";
 
 // THE LIVING PAGE (/learn L2). Sets --learn-vix (0..1) on the document root
-// from the live VIX, so the page's grain intensity breathes with real market
-// fear — serene on a calm tape, electric on a wild one, never the same twice.
+// from the live VIX. It drove the scanline grain behind the Desk; that layer
+// went in the calm pass (S1, 2026-11-09), so nothing reads the value now.
 // Reuses the same /api/quote-batch feed and the same clamp the WONK type axis
 // uses (lib/wonk). Renders nothing; polls on its own 60s interval (decoration
 // data, separate from the ambient clock by design).

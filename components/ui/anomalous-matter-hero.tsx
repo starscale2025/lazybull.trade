@@ -4,10 +4,11 @@
  * AnomalousMatterHero, from 21st.dev, adapted to lazybull.
  *
  * The original shipped as one file: the Three.js scene and the section around
- * it. Split here so the section (the copy, the h1, the actions) is
- * server-rendered and paints first, while the scene, and with it three, loads
- * as its own client-only chunk afterwards (next/dynamic, ssr: false). The
- * headline stays the LCP and three never blocks it.
+ * it. Here the section (the copy, the h1, the actions) is server-rendered and
+ * paints first; the sphere is THE MATTER (components/matter/engine.ts), the
+ * site's one particle material, which arrives in this section's slot after
+ * the page has loaded and gone idle. The headline stays the LCP and three
+ * never blocks it.
  *
  * Also changed from the original:
  *   · The big line is the <h1>. The original put the small mono overline in
@@ -22,15 +23,8 @@
  *   · Children: frame zero's actions and footnote sit under the description.
  */
 
-import dynamic from "next/dynamic";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import type { MatterPalette } from "./anomalous-matter-scene";
-
-export const GenerativeArtScene = dynamic(() => import("./anomalous-matter-scene"), { ssr: false });
-
-/** The 2026-11 palette, top to bottom: mint, blue, violet. The scene turns
-    these into one ramp of tints (anomalous-matter-scene.tsx, ramp()). */
-export const LAZYBULL_MATTER: MatterPalette = { top: "#52ffa5", mid: "#3884ff", bottom: "#582eff" };
+import { MatterSlot } from "@/components/matter/MatterSlot";
 
 type Props = Omit<ComponentPropsWithoutRef<"section">, "title"> & {
   /** The small line over the headline. */
@@ -38,9 +32,10 @@ type Props = Omit<ComponentPropsWithoutRef<"section">, "title"> & {
   /** The headline, rendered as the page's <h1>. */
   subtitle: ReactNode;
   description?: ReactNode;
+  /** Directly under the headline: frame zero's touchable position (M12). */
+  beneath?: ReactNode;
   /** Under the description: actions, footnotes. */
   children?: ReactNode;
-  palette?: MatterPalette;
   /** id for the <h1>, so the section can be labelled by it. */
   headingId?: string;
 };
@@ -49,8 +44,8 @@ export function AnomalousMatterHero({
   title,
   subtitle,
   description,
+  beneath,
   children,
-  palette = LAZYBULL_MATTER,
   headingId,
   className = "",
   ...rest
@@ -62,7 +57,10 @@ export function AnomalousMatterHero({
     >
       <div aria-hidden className="matter-glow pointer-events-none absolute inset-0" />
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <GenerativeArtScene palette={palette} />
+        {/* THE MATTER's sphere (components/matter/engine.ts), loaded after
+            load and idle; it drains into the film's seam as the curtain
+            lifts (M11). */}
+        <MatterSlot shape="sphere" drain />
       </div>
       {/* The bottom fades to the page under the copy, low and short: the
           sphere dissolves itself above the description (the scene's fade
@@ -70,6 +68,9 @@ export function AnomalousMatterHero({
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg from-5% via-bg/70 via-20% to-transparent to-40%"
+        // Steps aside as the curtain lifts, so the sphere can be seen
+        // draining into the seam (--matter-lift, written by the engine).
+        style={{ opacity: "calc(1 - var(--matter-lift, 0) * 2.2)" }}
       />
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-end px-4 pb-12 pt-32 text-center md:pb-16">
@@ -84,6 +85,7 @@ export function AnomalousMatterHero({
           >
             {subtitle}
           </h1>
+          {beneath}
           {description && (
             <p className="matter-in mt-6 max-w-xl text-pretty text-base leading-relaxed text-fg-dim [animation-delay:200ms] md:text-lg">
               {description}

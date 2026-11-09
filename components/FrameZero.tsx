@@ -19,6 +19,14 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
 import { AnomalousMatterHero } from "./ui/anomalous-matter-hero";
+import { HeroPosition } from "./HeroPosition";
+
+const FRAME_MAP = [
+  { label: "Learn", href: "/learn" },
+  { label: "Practice", href: "/practice" },
+  { label: "Builder", href: "/trade" },
+  { label: "Pricing", href: "/pricing" },
+] as const;
 
 export function FrameZero() {
   const { status } = useSession();
@@ -31,9 +39,11 @@ export function FrameZero() {
       headingId="fz-title"
       className="z-30"
       title={
-        <span className="border-grad inline-flex items-center gap-2 rounded-full bg-bg/75 px-3.5 py-1.5 t-chrome backdrop-blur-md">
-          <span aria-hidden className="size-1.5 rounded-full bg-bull pulse-dot" />
-          <span className="text-grad">paper-only · $0 at risk, ever</span>
+        // Calm (M33): one quiet pill, no gradient ring or pulse. The H1's
+        // "see." is this frame's one gradient.
+        <span className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] px-3.5 py-1.5 text-[0.8125rem] text-fg-dim backdrop-blur-md">
+          <span aria-hidden className="size-1.5 rounded-full bg-bull" />
+          Paper only · $0 at risk, ever
         </span>
       }
       subtitle={
@@ -41,6 +51,8 @@ export function FrameZero() {
           Options you can <span className="t-accent">see</span>.
         </>
       }
+      // The position, on the headline's own axis: frame zero's option (M12).
+      beneath={<HeroPosition />}
       description={
         <>
           Build a position and watch its payoff, its Greeks and its worst case draw themselves,
@@ -53,29 +65,23 @@ export function FrameZero() {
         <MagneticCTA>
           <Link
             href="/trade"
-            className="btn-primary-glass group relative inline-flex items-center gap-2 px-9 py-4 font-mono text-sm font-bold uppercase tracking-wider"
+            className="btn-primary-glass tracking-[-0.01em] group relative inline-flex h-12 items-center rounded-full px-8 text-base font-semibold"
           >
             <span className="relative z-10">{authed ? "Open the builder" : "Get started"}</span>
-            <span
-              aria-hidden
-              className="relative z-10 transition-transform duration-300 [transition-timing-function:var(--ease-settle)] group-hover:translate-x-1"
-            >
-              →
-            </span>
           </Link>
         </MagneticCTA>
         <Link
           href={authed ? "/portfolio" : "/auth/signin"}
-          className="inline-flex items-center py-3 font-mono text-sm uppercase tracking-wider text-fg-dim underline decoration-fg-faint/40 underline-offset-4 transition-[color,text-decoration-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:text-fg hover:decoration-brand-ink"
+          className="calm-link py-3"
         >
-          {authed ? "your portfolio →" : "or sign in"}
+          {authed ? "Your portfolio" : "Sign in"} <span aria-hidden>›</span>
         </Link>
       </div>
 
       {/* The problem, once, in the smallest voice. Quoted from SEBI's study
           of 20 Aug 2026 (FY26), linked, and never paired with an implied fix:
           it is the reason the product is paper-only. */}
-      <p className="matter-in mt-10 max-w-md text-balance font-mono text-[0.6875rem] leading-relaxed text-fg-faint [animation-delay:440ms] [@media(max-height:760px)]:mt-5">
+      <p className="matter-in mt-10 max-w-md text-balance text-[0.8125rem] leading-relaxed text-fg-faint [animation-delay:440ms] [@media(max-height:760px)]:mt-5">
         87.7% of India&apos;s individual F&amp;O traders lost money in FY26 — 89% of those under 30.{" "}
         <a
           href="https://www.sebi.gov.in/reports-and-statistics/research/aug-2026/study-profitability-of-individual-traders-in-the-equity-derivatives-segment-fy25-fy26-_103835.html"
@@ -87,9 +93,27 @@ export function FrameZero() {
         </a>
         .
       </p>
-      <span aria-hidden className="matter-in mt-6 t-chrome text-fg-faint [animation-delay:560ms] [@media(max-height:760px)]:mt-3">
-        scroll to watch the film ↓
-      </span>
+      {/* Frame zero is also the map (M30): the four rooms, quietly, and the
+          film as the last item, so the first screen carries the brand, the
+          way in and the way past. One line, in the footnote's voice (M33). */}
+      <nav
+        aria-label="Sections"
+        className="matter-in mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[0.8125rem] text-fg-faint [animation-delay:560ms] [@media(max-height:760px)]:mt-3"
+      >
+        {FRAME_MAP.map((m) => (
+          // No prefetch: four rooms prefetched on sight cost frame zero
+          // ~130 KB the visitor has not asked for (the budget caught it).
+          <Link key={m.href} href={m.href} prefetch={false} className="py-1 transition-colors hover:text-fg">
+            {m.label}
+          </Link>
+        ))}
+        {/* Gone once the film has played and collapsed (ScrollCinema sets
+            html[data-film-done]): there is no film below any more. */}
+        <span className="fz-film-cue contents">
+          <span aria-hidden>·</span>
+          <span>or scroll for the film ↓</span>
+        </span>
+      </nav>
     </AnomalousMatterHero>
   );
 }

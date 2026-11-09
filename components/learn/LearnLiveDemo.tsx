@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { generateCandles, type Candle } from "@/lib/candles";
 import { getBot } from "@/lib/quant/bots";
 import { BotCell } from "@/components/quant/BotCell";
+import { Chip } from "@/components/calm/kit";
 import type { ActiveBot, BotResult } from "@/lib/quant/types";
 
 const SYMBOL = "AMZN";
@@ -67,31 +68,23 @@ export function LearnLiveDemo() {
 
   if (loading || !candles) {
     return (
-      <div className="grid h-64 place-items-center surface-card border border-border bg-surface font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint">
-        loading {SYMBOL} bars from Yahoo Finance…
+      <div className="grid h-64 place-items-center rounded-xl bg-fg/[0.05] t-label text-fg-faint">
+        Loading {SYMBOL} bars from Yahoo Finance…
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 font-mono text-[0.625rem] uppercase tracking-wider">
-        <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
-          dataset · {SYMBOL}
-        </span>
-        <span
-          className={`inline-flex items-center gap-1 border px-2 py-1 ${
-            source === "live"
-              ? "border-bull/50 bg-bull/10 text-bull"
-              : "border-amber/50 bg-amber/10 text-amber"
-          }`}
-        >
-          <span className={`size-1 rounded-full ${source === "live" ? "bg-bull pulse-dot" : "bg-amber"}`} />
-          {source === "live" ? "LIVE Yahoo OHLCV" : "SYNTHETIC fallback"}
-        </span>
-        <span className="surface-card border border-border bg-surface px-2 py-1 text-fg-dim">
-          bot · SMA Crossover
-        </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <Chip>Dataset · {SYMBOL}</Chip>
+        {/* What the bars are. A real status, so a live feed still pulses;
+            synthetic data is the warning colour. */}
+        <Chip tone={source === "live" ? "brand" : "warn"}>
+          <span aria-hidden className={`size-1.5 shrink-0 rounded-full bg-current ${source === "live" ? "pulse-dot" : ""}`} />
+          {source === "live" ? "Live Yahoo OHLCV" : "Synthetic fallback"}
+        </Chip>
+        <Chip>Bot · SMA Crossover</Chip>
       </div>
       <BotCell
         index={0}
@@ -106,8 +99,8 @@ export function LearnLiveDemo() {
         onToggleCollapse={() => {}}
         onRerun={() => {}}
       />
-      <div className="border border-dashed border-border bg-bg p-3 font-mono text-[0.6875rem] tracking-wide text-fg-dim">
-        <span className="text-fg-faint">try it →</span> open the cell's <span className="text-fg">PARAMS</span>{" "}
+      <div className="text-[0.8125rem] leading-relaxed text-fg-dim">
+        <span className="text-fg-faint">Try it →</span> open the cell’s <span className="text-fg">Params</span>{" "}
         panel and drag the fast / slow period sliders. Every change re-runs the
         backtest in your browser. The verdict pill, signals on the chart, and
         equity sparkline all update.

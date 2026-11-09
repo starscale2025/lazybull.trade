@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Chip, TogglePill } from "@/components/calm/kit";
 
 const PRESETS = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
+
+/** The kit's toggle at this strip's height: nine presets have to fit a phone. */
+const COMPACT = "!h-6 !px-1.5 !text-[0.6875rem] min-w-7 justify-center";
 
 function fmtIST(d: Date): string {
   const ist = new Date(d.getTime() + (5.5 * 60 - d.getTimezoneOffset()) * 60_000);
@@ -35,45 +39,33 @@ export function BottomBar({
   // .dock-clear-x reserves the Dock's bottom-right footprint via --dock-gutter
   // — the hand-rolled pr-16 was 8px short, so the mic orb sat ON the clock.
   return (
-    <div className="dock-clear-x flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 t-chrome">
+    <div className="dock-clear-x flex h-9 items-center justify-between border-t border-border bg-bg-soft px-3 t-label">
       <div className="flex items-center gap-1">
         {PRESETS.map((p) => (
-          <button
-            key={p}
-            onClick={() => onPreset(p)}
-            className={`h-6 min-w-7 border px-1.5 transition-colors ${
-              p === preset
-                ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink"
-                : "border-transparent text-fg-dim hover:border-border hover:text-fg"
-            }`}
-          >
+          <TogglePill key={p} on={p === preset} onClick={() => onPreset(p)} className={COMPACT}>
             {p}
-          </button>
+          </TogglePill>
         ))}
-        <span
-          className="ml-2 inline-flex items-center gap-1 border border-border bg-bg px-1.5 py-0.5 text-fg-dim"
-          title="Y-axis auto-scales to the visible range."
-        >
-          <span className="size-1 rounded-full bg-[image:var(--grad-fill)]" />
-          AUTO Y
+        <span className="ml-2" title="Y-axis auto-scales to the visible range.">
+          <Chip className="!py-0">Auto Y</Chip>
         </span>
         {onToggleLog && (
+          // calm-toggle by hand: TogglePill has no title.
           <button
+            type="button"
             onClick={onToggleLog}
             aria-pressed={log}
             title={log ? "Log price scale — click for linear" : "Linear price scale — click for log"}
-            className={`inline-flex h-6 items-center border px-1.5 transition-colors ${
-              log ? "border-[#7b5cff] bg-[#582eff]/15 text-brand-ink" : "border-transparent text-fg-dim hover:border-border hover:text-fg"
-            }`}
+            className={`calm-toggle ${COMPACT}`}
           >
-            LOG
+            Log
           </button>
         )}
       </div>
       <div className="hidden items-center gap-3 text-fg-faint md:flex">
         <span>{status}</span>
         <span>·</span>
-        <span className="tabular-nums text-fg-dim">{clock || "--:--:--"} UTC+5:30</span>
+        <span className="t-data text-fg-dim">{clock || "--:--:--"} UTC+5:30</span>
       </div>
     </div>
   );

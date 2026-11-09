@@ -14,10 +14,12 @@ import { EffectComposer, Bloom, ChromaticAberration, SMAA, ToneMapping } from "@
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { cinemaClock } from "@/lib/cinema-clock";
+import { cinemaClock, damp } from "@/lib/cinema-clock";
 import { BULL3D } from "@/lib/cinema";
 import { watchContext } from "./gl-context";
 import { Grade } from "./Grade";
+import { FilmDriver } from "./FilmDriver";
+import { FILM_DPR_MAX, FilmDpr } from "./FilmDpr";
 
 // Model: Higgsfield/Meshy image_to_3d from our own faceted-obsidian bull concept
 // still — owned output, no attribution. Deliberately low-poly (~8k tri, untextured)
@@ -470,8 +472,10 @@ function Rig() {
   const pys = useRef(0);
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    pxs.current += (cinemaClock.px - pxs.current) * 0.05;
-    pys.current += (cinemaClock.py - pys.current) * 0.05;
+    // dt-correct followers (M31)
+    const dt = cinemaClock.dt;
+    pxs.current += (cinemaClock.px - pxs.current) * damp(0.05, dt);
+    pys.current += (cinemaClock.py - pys.current) * damp(0.05, dt);
     const bt = clamp(
       (cinemaClock.progress - BULL3D.in0) / (BULL3D.out1 - BULL3D.in0),
       0,
@@ -493,8 +497,8 @@ function Rig() {
     quat.current.setFromEuler(euler.current);
     offset.current.applyQuaternion(quat.current);
     tmpP.current.copy(tmpL.current).add(offset.current);
-    pos.current.lerp(tmpP.current, 0.08);
-    look.current.lerp(tmpL.current, 0.08);
+    pos.current.lerp(tmpP.current, damp(0.08, dt));
+    look.current.lerp(tmpL.current, damp(0.08, dt));
     state.camera.position.copy(pos.current);
     // impact shake, applied after the smoothed pos so it never feeds back into
     // the lerp state — sin-based = deterministic + fully reversible
@@ -532,8 +536,9 @@ export default function Bull3D({
   return (
     <Canvas
       className="h-full w-full"
-      dpr={[1, 2]}
-      frameloop={active ? "always" : "never"}
+      dpr={[1, FILM_DPR_MAX]}
+      // On the film's one clock (M31): drawn by ScrollCinema's tick, never by a loop of its own.
+      frameloop="never"
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 34, position: [2.5, 1.55, 5.3], near: 0.1, far: 60 }}
       onCreated={({ gl }) => {
@@ -547,12 +552,14 @@ export default function Bull3D({
 
       {/* Dim ambient so recesses aren't pure black */}
       <ambientLight intensity={0.12} />
-      {/* Key: soft cool-white, front-top-left */}
-      <directionalLight position={[3.5, 5, 4]} intensity={2.1} color="#e4e6f5" />
+      {/* Key: soft cool-white, front-top-left, toward camera-left so it reaches
+          the face (Gate A3 #7: at [3.5, 5, 4] the face sat in shadow). */}
+      <directionalLight position={[-3, 4, 5]} intensity={2.1} color="#e4e6f5" />
       {/* Rim: bright green from behind-right → sculptural edge glow */}
       {/* Lit in the brand ramp (2026-11-06): violet rim, blue fill, and the
           mint head light, so the bull carries the gradient itself. */}
-      <directionalLight position={[-4.5, 2.4, -3.2]} intensity={6.5} color="#7b5cff" />
+      {/* Down from 6.5: at that strength the violet rim out-lit the key. */}
+      <directionalLight position={[-4.5, 2.4, -3.2]} intensity={3.6} color="#7b5cff" />
       {/* Rim: subtle cyan accent from behind-left (kept low so the rear stays dark
           and sculptural, not flat teal) */}
       <directionalLight position={[4.8, 1.4, -4.2]} intensity={1.5} color="#3884ff" />
@@ -568,6 +575,8 @@ export default function Bull3D({
       <Rig />
       <ImpactFlash />
 
+      <FilmDriver active={active} />
+      <FilmDpr />
       <EffectComposer multisampling={0}>
         <Bloom
           mipmapBlur

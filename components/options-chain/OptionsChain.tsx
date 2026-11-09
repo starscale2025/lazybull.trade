@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { priceChain, type ChainCell } from "@/lib/pricing";
+import { expiryOn, useToday } from "@/lib/expiry";
 import { useStrategy } from "@/lib/stores";
 import { GreekChip, GreekTrigger } from "@/components/ai-teacher/SpeechBubble";
+import { TogglePill } from "@/components/calm/kit";
 
 type Props = {
   underlying: string;
@@ -13,15 +15,7 @@ type Props = {
 
 const STRIKES_NEAR_ATM = 11; // strikes either side of ATM
 
-function formatExpiry(daysOut: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + daysOut);
-  return {
-    iso: d.toISOString().slice(0, 10),
-    label: d.toLocaleDateString("en-US", { month: "short", day: "2-digit" }),
-    daysToExpiry: daysOut,
-  };
-}
+const DAYS_OUT = [7, 14, 30, 45, 90];
 
 function ivToHeat(iv: number, min: number, max: number) {
   const t = Math.max(0, Math.min(1, (iv - min) / (max - min)));
@@ -40,7 +34,9 @@ function ivToHeat(iv: number, min: number, max: number) {
 }
 
 export function OptionsChain({ underlying, spot }: Props) {
-  const expiries = useMemo(() => [7, 14, 30, 45, 90].map((d) => formatExpiry(d)), []);
+  // Days-out on the server, calendar labels after hydration (lib/expiry.ts).
+  const today = useToday();
+  const expiries = useMemo(() => DAYS_OUT.map((d) => expiryOn(today, d)), [today]);
   const [expiryIdx, setExpiryIdx] = useState(2);
   const expiry = expiries[expiryIdx];
 
@@ -234,14 +230,14 @@ export function OptionsChain({ underlying, spot }: Props) {
   const cellTouchAction = chainOverflows ? "pan-x pan-y" : "pan-y";
 
   return (
-    <div className="border border-border bg-bg">
+    <div className="surface-instrument border border-border bg-bg">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-chrome">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-label">
         <div className="flex items-center gap-3">
           {/* perf/engine telemetry lives in the dot's tooltip — spot is already
               read out in the symbol-switcher row above */}
           <span
-            className={perfMs < 100 ? "text-bull" : "text-amber"}
+            className={perfMs < 100 ? "text-fg-faint" : "text-amber"}
             title={`chain priced in ${perfMs.toFixed(1)}ms · black-scholes · in-process`}
           >
             ●
@@ -256,42 +252,23 @@ export function OptionsChain({ underlying, spot }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-soft px-3 py-2">
         <div className="flex flex-wrap items-center gap-1">
           {expiries.map((e, i) => (
-            <button
-              key={e.iso}
-              onClick={() => setExpiryIdx(i)}
-              className={`border px-2.5 py-1 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
-                i === expiryIdx
-                  ? "border-bull bg-bull/10 text-bull"
-                  : "border-border bg-bg text-fg-dim hover:border-fg-dim hover:text-fg"
-              }`}
-            >
-              {e.label} <span className="text-fg-faint ml-1">{e.daysToExpiry}d</span>
-            </button>
+            <TogglePill key={e.daysToExpiry} on={i === expiryIdx} onClick={() => setExpiryIdx(i)} className="!h-7 !px-2.5 !text-[0.75rem]">
+              {e.label && <>{e.label} </>}
+              <span className={e.label ? "ml-1 opacity-60" : undefined}>{e.daysToExpiry}d</span>
+            </TogglePill>
           ))}
         </div>
-        <div className="flex items-center gap-2 t-chrome text-fg-dim">
+        <div className="flex items-center gap-2 t-label text-fg-dim">
           {/* the ARMED side for taps/keyboard — the drag-down-to-short gesture
               is a shortcut, never the only path (WCAG 2.5.1) */}
-          <span className="text-fg-faint">tap =</span>
-          <span className="inline-flex border border-border" role="group" aria-label="Side armed for tap">
-            <button
-              onClick={() => setArmedSide("long")}
-              aria-pressed={armedSide === "long"}
-              className={`px-2 py-0.5 font-semibold transition-colors ${
-                armedSide === "long" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
-              }`}
-            >
-              LONG
-            </button>
-            <button
-              onClick={() => setArmedSide("short")}
-              aria-pressed={armedSide === "short"}
-              className={`px-2 py-0.5 font-semibold transition-colors ${
-                armedSide === "short" ? "bg-bear text-bg" : "bg-bg text-fg-faint hover:text-fg"
-              }`}
-            >
-              SHORT
-            </button>
+          <span className="text-fg-faint">Tap =</span>
+          <span className="inline-flex gap-1" role="group" aria-label="Side armed for tap">
+            <TogglePill on={armedSide === "long"} onClick={() => setArmedSide("long")} className="!h-7 !px-2.5 !text-[0.75rem]">
+              Long
+            </TogglePill>
+            <TogglePill on={armedSide === "short"} onClick={() => setArmedSide("short")} className="!h-7 !px-2.5 !text-[0.75rem]">
+              Short
+            </TogglePill>
           </span>
           {/* xl: below that the expiry tabs + toggle already fill the row */}
           <span className="hidden text-fg-faint xl:inline" title="On mouse/pen: press a cell and pull it downward past ~26px to short it directly">
@@ -339,7 +316,7 @@ export function OptionsChain({ underlying, spot }: Props) {
               <div
                 key={K}
                 className={`grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[0.6875rem] transition-colors ${
-                  atm ? "bg-bull/[0.04]" : ""
+                  atm ? "bg-fg/[0.04]" : ""
                 }`}
               >
                 {/* CALL side cell (one button covering bid/ask area for selection).
@@ -436,9 +413,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             sideways so a phone reaches every chip. h-10, not h-9: the project's
             8px scrollbar eats into the box and would clip the chips. */}
         <div
-          className={`flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t bg-surface/95 px-3 font-mono text-[0.625rem] text-fg-dim backdrop-blur ${
-            readout ? "border-bull/30" : "border-border-soft"
-          }`}
+          className="flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t border-border-soft bg-surface/95 px-3 t-label text-fg-dim backdrop-blur"
         >
           {/* no key on the readout: it must update in place. Keying it on the
               cell remounted the chips and replayed their fade on every row the
@@ -462,34 +437,34 @@ export function OptionsChain({ underlying, spot }: Props) {
               <GreekChip greek="vega" value={readout.greeks.vega.toFixed(3)} />
               <GreekChip greek="iv" value={`${(readout.iv * 100).toFixed(1)}%`} />
               <span className="text-fg-faint">·</span>
-              <span>mid ${readout.mid.toFixed(2)}</span>
+              <span>Mid ${readout.mid.toFixed(2)}</span>
             </motion.div>
           ) : (
-            <span className="whitespace-nowrap text-fg-faint">hover or tap a strike → greeks</span>
+            <span className="whitespace-nowrap text-fg-faint">Hover or tap a strike → greeks</span>
           )}
         </div>
       </div>
 
       {/* Hover-greek hint row (with hover triggers for the AI teacher) */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-        <span className="text-fg-faint">hover any greek →</span>
-        <GreekTrigger greek="delta">delta</GreekTrigger>
-        <GreekTrigger greek="gamma">gamma</GreekTrigger>
-        <GreekTrigger greek="theta">theta</GreekTrigger>
-        <GreekTrigger greek="vega">vega</GreekTrigger>
-        <GreekTrigger greek="rho">rho</GreekTrigger>
-        <GreekTrigger greek="iv">iv</GreekTrigger>
+      <div className="flex flex-wrap items-center gap-2 border-t border-border-soft bg-bg-soft px-3 py-2 t-label text-fg-dim">
+        <span className="text-fg-faint">Hover any greek →</span>
+        <GreekTrigger greek="delta">Delta</GreekTrigger>
+        <GreekTrigger greek="gamma">Gamma</GreekTrigger>
+        <GreekTrigger greek="theta">Theta</GreekTrigger>
+        <GreekTrigger greek="vega">Vega</GreekTrigger>
+        <GreekTrigger greek="rho">Rho</GreekTrigger>
+        <GreekTrigger greek="iv">IV</GreekTrigger>
         <span className="ml-auto flex items-center gap-2">
-          <span>iv heat</span>
+          <span>IV heat</span>
           <span className="flex items-center gap-1">
-            low
+            Low
             <span
               className="h-2.5 w-16"
               style={{
                 background: "linear-gradient(to right, rgba(0,255,100,0.25), rgba(255,184,30,0.4), rgba(255,46,99,0.55))",
               }}
             />
-            high
+            High
           </span>
           <span className="text-fg-faint">{(ivRange.min * 100).toFixed(0)}–{(ivRange.max * 100).toFixed(0)}%</span>
         </span>
@@ -509,9 +484,9 @@ export function OptionsChain({ underlying, spot }: Props) {
           they read as market data, and a beginner learning to read a chain
           learns to trust a number nobody measured.
           This line is the cheapest honest fix and it stays until those two
-          columns carry a real feed. Same t-chrome/text-fg-dim voice as the
-          legend above it; the table itself is untouched. */}
-      <div className="border-t border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
+          columns carry a real feed. Same t-label voice as the legend above
+          it; the table itself is untouched. */}
+      <div className="border-t border-border-soft bg-bg-soft px-3 py-2 t-label text-fg-faint">
         Chain: Black-Scholes with a modelled skew · open interest and volume are
         simulated placeholders
       </div>

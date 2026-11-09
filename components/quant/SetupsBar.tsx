@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { track } from "@/lib/track";
+import { PillButton } from "@/components/calm/kit";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 
@@ -87,15 +88,15 @@ export function SetupsBar({
       }
       if (j?.ok) {
         setName("");
-        say(`saved "${trimmed}"`);
+        say(`Saved “${trimmed}”`);
         const s = getState();
         track("setup_saved", { symbol: s.symbol, mode: s.mode, bots: s.active.length });
         void refresh();
       } else {
-        say(j?.error === "unauth" ? "sign in to save setups" : "save failed");
+        say(j?.error === "unauth" ? "Sign in to save setups" : "Save failed");
       }
     } catch {
-      say("save failed — offline?");
+      say("Save failed — offline?");
     } finally {
       setBusy(false);
     }
@@ -112,56 +113,48 @@ export function SetupsBar({
 
   if (status !== "authenticated") {
     return (
-      <button
+      <PillButton
+        size="sm"
         onClick={() => signIn("google", { callbackUrl: "/quant" })}
         title="Setups save to your profile — symbol, mode, knobs and the whole bot stack"
-        className="flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-fg-dim hover:text-fg"
       >
-        ⇪ sign in to save setups
-      </button>
+        ⇪ Sign in to save setups
+      </PillButton>
     );
   }
 
   return (
-    <div ref={boxRef} className="relative flex items-center gap-1 font-mono text-[0.625rem] uppercase tracking-wider">
+    <div ref={boxRef} className="t-label relative flex items-center gap-1.5">
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") void save();
         }}
-        placeholder="setup name…"
+        placeholder="Setup name…"
         aria-label="Setup name"
-        className="w-28 border border-border bg-bg px-2 py-1 normal-case tracking-normal text-fg outline-none placeholder:text-fg-faint focus:border-bull"
+        className="calm-input w-32"
       />
-      <button
-        onClick={() => void save()}
-        disabled={busy}
-        className="border border-bull/50 bg-bull/10 px-2 py-1 text-bull transition-colors hover:bg-bull hover:text-bg disabled:opacity-40"
-      >
-        save
-      </button>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim transition-colors hover:text-fg"
-      >
-        my setups {open ? "▴" : "▾"}
-      </button>
-      {note && <span className="ml-1 text-fg-faint normal-case tracking-normal">{note}</span>}
+      <PillButton size="sm" onClick={() => void save()} disabled={busy}>
+        Save
+      </PillButton>
+      <PillButton size="sm" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        My setups {open ? "▴" : "▾"}
+      </PillButton>
+      {note && <span className="ml-1 text-fg-faint">{note}</span>}
 
       {nudge && (
-        <div className="absolute right-0 top-8 z-40 w-80 normal-case tracking-normal">
+        <div className="absolute right-0 top-10 z-40 w-80">
           <UpgradeNudge paywall={nudge} onClose={() => setNudge(null)} />
         </div>
       )}
 
       {open && (
-        <div className="absolute right-0 top-8 z-40 w-72 surface-instrument border border-border bg-surface shadow-2xl">
+        <div className="absolute right-0 top-10 z-40 w-72 surface-instrument border border-border bg-surface shadow-2xl">
           {items === null ? (
-            <div className="px-3 py-3 text-fg-faint">loading…</div>
+            <div className="px-3 py-3 text-fg-faint">Loading…</div>
           ) : items.length === 0 ? (
-            <div className="px-3 py-3 normal-case tracking-normal text-fg-faint">
+            <div className="px-3 py-3 text-fg-faint">
               No saved setups yet — name one and hit save.
             </div>
           ) : (
@@ -171,10 +164,10 @@ export function SetupsBar({
                   onClick={() => {
                     onApply(it.state);
                     setOpen(false);
-                    say(`applied "${it.name}"`);
+                    say(`Applied “${it.name}”`);
                     track("setup_applied", { symbol: it.state?.symbol ?? null, mode: it.state?.mode ?? null });
                   }}
-                  className="flex-1 truncate text-left normal-case tracking-normal text-fg hover:text-bull"
+                  className="flex-1 truncate text-left text-fg hover:text-brand-ink"
                   title={`${it.state.symbol} · ${it.state.mode} · ${it.state.active?.length ?? 0} bots`}
                 >
                   {it.name}
@@ -185,15 +178,15 @@ export function SetupsBar({
                 <button
                   onClick={() => void remove(it._id)}
                   aria-label={`Delete setup ${it.name}`}
-                  className="shrink-0 text-fg-faint hover:text-bear"
+                  className="shrink-0 text-fg-faint hover:text-fg"
                 >
                   ✕
                 </button>
               </div>
             ))
           )}
-          <div className="border-t border-border-soft px-3 py-1.5 text-[0.625rem] normal-case tracking-normal text-fg-faint">
-            custom imported bots aren't saved — they're code, not config
+          <div className="border-t border-border-soft px-3 py-1.5 text-fg-faint">
+            Custom imported bots aren’t saved — they’re code, not config
           </div>
         </div>
       )}

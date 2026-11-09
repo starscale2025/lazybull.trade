@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { Chip, PillButton, TogglePill } from "@/components/calm/kit";
 import { useRetryCountdown } from "./RetryCountdown";
 
 const SYMBOLS = ["AMZN", "AAPL", "NVDA", "TSLA", "SPY", "QQQ", "BTC", "META", "MSFT", "GOOG"];
+
+/** Live, Seed: by hand, not TogglePill, because these two also take disabled and a title. */
+const MODE_BTN = "calm-toggle disabled:cursor-not-allowed disabled:opacity-45";
+
+/** One field's range input; the seed-only ones add their own disabled state. */
+const RANGE = "mt-3 w-full accent-brand-ink disabled:cursor-not-allowed";
 
 /** Live countdown to the next feed retry, shown when the live feed is throttled
     so the user knows the tape isn't stuck — it recovers on its own. */
 function RetryCountdown({ retryAt }: { retryAt?: number | null }) {
   const secs = useRetryCountdown(retryAt);
   if (secs == null) return null;
-  return <span className="text-amber/80">· live in {secs}s</span>;
+  return <span className="opacity-80">· live in {secs}s</span>;
 }
 
 /** "updated Ns ago" — freshness of the live tape, on its own 1s clock (isolated
@@ -45,13 +52,13 @@ function InfoTip({ text, up = false }: { text: string; up?: boolean }) {
       <span
         tabIndex={0}
         aria-label={text}
-        className="inline-flex size-3.5 cursor-help items-center justify-center border border-border font-mono text-[0.625rem] text-fg-faint transition-colors hover:border-fg-dim hover:text-fg focus:border-fg-dim focus:text-fg"
+        className="inline-flex size-3.5 cursor-help items-center justify-center rounded-full bg-fg/10 text-[0.625rem] text-fg-faint transition-colors hover:text-fg focus:text-fg"
       >
         ?
       </span>
       <span
         role="tooltip"
-        className={`pointer-events-none absolute left-1/2 z-50 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2 text-left font-mono text-[0.625rem] normal-case leading-relaxed tracking-normal text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
+        className={`t-label pointer-events-none absolute left-1/2 z-50 w-60 -translate-x-1/2 surface-instrument border border-border bg-surface p-2.5 text-left text-fg-dim opacity-0 shadow-2xl transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
           up ? "bottom-full mb-1.5" : "top-full mt-1.5"
         }`}
       >
@@ -131,18 +138,14 @@ export function QuantHero({
     ? "Frozen while the run holds the workspace lock."
     : syntheticKnobsActive
       ? "Shapes the deterministic seed tape."
-      : "Seed-mode only — switch the dataset to SEED to shape the tape.";
+      : "Seed-mode only — switch the dataset to Seed to shape the tape.";
   const knobsLive = syntheticKnobsActive && !runLocked;
   // In LIVE mode the three synthetic knobs are dead weight — collapsed behind
   // a single "tune the seed tape →" cell until asked for (Q3).
   const [seedKnobsOpen, setSeedKnobsOpen] = useState(false);
   const showSeedKnobs = syntheticKnobsActive || seedKnobsOpen;
   return (
-    <section className="relative overflow-hidden border-b border-border bg-bg">
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" />
-      <div className="pointer-events-none absolute -left-32 top-10 h-[20rem] w-[20rem] rounded-full bg-cyan/10 blur-[120px] drift" />
-      <div className="pointer-events-none absolute right-0 top-20 h-[17.5rem] w-[17.5rem] rounded-full bg-plasma/10 blur-[120px] drift" style={{ animationDelay: "-5s" }} />
-      <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
+    <section className="relative overflow-hidden">
       {/* The engine room: a brass difference-engine RUNNING — gears turn, the
           laser sweeps. muted is (re)set via ref (React omits the attribute in
           SSR markup, so autoplay would be vetoed pre-hydration). */}
@@ -171,167 +174,151 @@ export function QuantHero({
           tip only once localStorage is read), and pushed the whole page down:
           51px on a 1440 desktop, CLS 0.083 against a 0.05 budget, and 148px
           on a phone, where the notice wrapped. They now swap in place inside a
-          box the server already drew, exactly the height of what stood here
-          before (the tape row, 1.9625rem, plus the pt-8 / lg:pt-12 that opened
-          the block under it), so a notice arriving, changing or leaving moves
-          nothing. Each notice is one fixed-height row (QuantPage) that fits
+          box the server already drew, so a notice arriving, changing or
+          leaving moves nothing. With no notice the box is simply the header's
+          top space. Each notice is one fixed-height row (QuantPage) that fits
           with room to spare; overflow-hidden is only the backstop. */}
-      <div className="relative h-[3.9625rem] overflow-hidden lg:h-[4.9625rem]">
-        {notice ?? (
-          /* tape — two items max: the totals live in the library header and
-             the Run All button already, repeating them here was noise (Q3) */
-          <div className="shell shell-wide flex items-center justify-between py-2 t-eyebrow text-fg-faint">
-            <span>QUANT WORKBENCH · v0.1</span>
-            <span className="hidden md:inline">CLIENT-SIDE MATH</span>
-          </div>
-        )}
-      </div>
+      <div className="relative h-[3.9625rem] overflow-hidden lg:h-[4.9625rem]">{notice}</div>
 
       <div className="shell shell-wide relative pb-6">
         <div className="grid grid-cols-12 items-end gap-5">
           {/* Title block — on mobile it drops BELOW the workbench panel so a
-              phone user lands on the actual tool, not a full screen of copy. */}
+              phone user lands on the actual tool, not a full screen of copy.
+              PageHeader's type, by hand: the kit's header is one column and
+              this one shares its row with the dataset panel. */}
           <div className="order-2 col-span-12 flex flex-col gap-5 lg:order-1 lg:col-span-7">
-            <div className="flex flex-wrap items-center gap-2 t-chrome">
-              <span className="inline-flex items-center gap-2 border border-cyan/40 bg-cyan/5 px-2 py-1 text-cyan">
-                <span className="size-1.5 rounded-full bg-cyan pulse-dot" /> quant · for everyone
-              </span>
-              <span className="inline-flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim">
-                stack bots · tune · run
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-2 surface-instrument border border-border bg-surface px-2 py-1 text-fg-dim">
-                bring your own bot
-              </span>
+            <div>
+              <div className="t-eyebrow text-brand-ink">Quant · for everyone</div>
+              <h1 className="mt-3 font-display text-[clamp(2.5rem,5.6vw,4.75rem)] leading-[0.98] tracking-[-0.04em] text-fg text-balance">
+                Run math
+                <br />
+                <span className="t-accent">at the market.</span>
+              </h1>
             </div>
 
-            <h1 className="wonk-type font-display tracking-tightest text-[clamp(2.6rem,7.5vw,6.4rem)] leading-[0.88] text-fg">
-              run math
-              <br />
-              <span className="t-accent phosphor" style={{ textShadow: "0 0 20px rgba(56,132,255,0.4), 0 0 4px rgba(56,132,255,0.7)" }}>at the market</span>
-              <span className="text-cyan">.</span>
-            </h1>
-
-            <p className="max-w-[60ch] text-balance text-[0.9375rem] leading-relaxed text-fg-dim md:text-base">
+            <p className="measure-wide text-[1.0625rem] leading-[1.6] text-fg-dim">
               A workbench for quant traders and a class-12 math kid alike. Stack bots like
               Jupyter cells. Tune the math. See where they agree, where they fight, and read
               back what each one did — in plain English if you want, or in formulas if
-              you'd rather. Drop in your own bot in under a minute.
+              you’d rather. Drop in your own bot in under a minute.
             </p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Chip>Stack bots · tune · run</Chip>
+              {/* The wrapper hides it: .calm-chip's own display outranks a utility. */}
+              <span className="hidden sm:inline-flex">
+                <Chip>Bring your own bot</Chip>
+              </span>
+            </div>
           </div>
 
           {/* Symbol & seed controls — first on mobile (the tool), right column on desktop */}
           <div className="order-1 col-span-12 lg:order-2 lg:col-span-5">
-            <div className="surface-instrument border border-border bg-surface">
-              <div className="flex items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-chrome text-fg-dim">
-                <span className="flex min-w-0 items-center gap-2">
-                  dataset
-                  {/* the mode is a choice; the badge is the truth of what's running */}
-                  <span className="inline-flex border border-border" role="group" aria-label="Data mode">
+            <div className="calm-panel">
+              <i aria-hidden className="lit-aura" />
+              <div className="flex items-center justify-between gap-3 px-5 pt-4">
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className="t-label text-fg-dim">Dataset</span>
+                  {/* the mode is a choice; the chip under it is the truth of what's running */}
+                  <span className="inline-flex gap-1" role="group" aria-label="Data mode">
                     <button
                       onClick={() => setMode("live")}
                       aria-pressed={mode === "live"}
                       disabled={runLocked}
                       title="Real market OHLCV, ticking every ~15s (delayed feed)"
-                      className={`px-1.5 py-px text-[0.625rem] font-semibold transition-colors ${
-                        mode === "live" ? "bg-bull text-bg" : "bg-bg text-fg-faint hover:text-fg"
-                      }`}
+                      className={MODE_BTN}
                     >
-                      LIVE
+                      Live
                     </button>
                     <button
                       onClick={() => setMode("seed")}
                       aria-pressed={mode === "seed"}
                       disabled={runLocked}
                       title="Deterministic synthetic tape — same seed, same bars, every time"
-                      className={`px-1.5 py-px text-[0.625rem] font-semibold transition-colors ${
-                        mode === "seed" ? "bg-cyan text-bg" : "bg-bg text-fg-faint hover:text-fg"
-                      }`}
+                      className={MODE_BTN}
                     >
-                      SEED
+                      Seed
                     </button>
                   </span>
-                  {dataSource === "fallback" ? (
-                    <span
-                      className="inline-flex items-center gap-1 whitespace-nowrap border border-amber/50 bg-amber/10 px-1.5 py-px text-[0.625rem] text-amber"
-                      title="The free data feed got rate-limited by the provider, so the bots are on a deterministic stand-in tape. It retries automatically — the live tape returns on its own."
-                    >
-                      <span className="size-1 rounded-full bg-amber" />
-                      OFFLINE
-                      <RetryCountdown retryAt={retryAt} />
-                    </span>
-                  ) : (
-                    <span
-                      className={`inline-flex items-center gap-1 border px-1 py-px text-[0.625rem] ${
-                        dataSource === "live" ? "border-bull/50 bg-bull/10 text-bull" : "border-cyan/50 bg-cyan/10 text-cyan"
-                      }`}
-                      title={dataSource === "live" ? "Real market OHLCV from the live feed · delayed ~15s" : "deterministic seed tape"}
-                    >
-                      <span className={`size-1 rounded-full ${dataSource === "live" ? "bg-bull pulse-dot" : "bg-cyan"}`} />
-                      {dataSource === "live" ? "LIVE" : "DETERMINISTIC"}
-                    </span>
-                  )}
                 </span>
-                <span>spot ${spot.toFixed(2)}</span>
+                <span className="t-label shrink-0 tabular-nums text-fg-dim">Spot ${spot.toFixed(2)}</span>
               </div>
-              {/* Dataset provenance — one honest line. LIVE names its real feed
-                  and freshness; PRACTICE reads as an intentional, reproducible
-                  choice rather than "fake data". */}
-              <div className="border-b border-border-soft bg-bg px-3 py-1.5 font-mono text-[0.625rem] leading-relaxed text-fg-faint">
-                {mode === "seed" ? (
-                  <>
-                    <span className="uppercase tracking-wider text-cyan/80">Practice mode</span>
-                    <span> — a deterministic tape (same inputs → same candles every run), so every decision is reproducible.</span>
-                  </>
-                ) : dataSource === "fallback" ? (
-                  <>
-                    <span className="uppercase tracking-wider text-fg-dim">Source</span>
-                    <span> · practice tape while we reconnect to the live feed. </span>
-                    <a
-                      href="/pricing"
-                      className="text-amber/90 underline-offset-2 hover:text-amber hover:underline"
-                      title="Real-time, un-throttled market data — coming to Power. See the plans."
-                    >
-                      real-time →
-                    </a>
-                  </>
+              {/* Dataset provenance — one honest line beside its status chip.
+                  LIVE names its real feed and freshness; PRACTICE reads as an
+                  intentional, reproducible choice rather than "fake data". The
+                  min-height holds a wrapped line, so the live tape landing
+                  after the fallback line doesn't move the panel. */}
+              <div className="flex min-h-[3.25rem] flex-wrap items-center gap-x-2 gap-y-1 px-5 pt-3">
+                {dataSource === "fallback" ? (
+                  <span className="inline-flex" title="The free data feed got rate-limited by the provider, so the bots are on a deterministic stand-in tape. It retries automatically — the live tape returns on its own.">
+                    <Chip tone="warn" dot>
+                      Offline
+                      <RetryCountdown retryAt={retryAt} />
+                    </Chip>
+                  </span>
                 ) : (
-                  <>
-                    <span className="uppercase tracking-wider text-fg-dim">Source</span>
-                    <span>
-                      {" · live • "}
-                      {sourceLabel(liveSource)} · <UpdatedAgo since={updatedAt} />
-                    </span>
-                  </>
+                  <span className="inline-flex" title={dataSource === "live" ? "Real market OHLCV from the live feed · delayed ~15s" : "deterministic seed tape"}>
+                    <Chip tone={dataSource === "live" ? "brand" : "warn"}>
+                      <span aria-hidden className={`size-1.5 shrink-0 rounded-full bg-current ${dataSource === "live" ? "pulse-dot" : ""}`} />
+                      {dataSource === "live" ? "Live" : "Deterministic"}
+                    </Chip>
+                  </span>
                 )}
+                <div className="t-label min-w-0 flex-1 basis-56 text-fg-faint">
+                  {mode === "seed" ? (
+                    <>
+                      <span className="text-amber">Practice mode</span>
+                      <span> — a deterministic tape (same inputs → same candles every run), so every decision is reproducible.</span>
+                    </>
+                  ) : dataSource === "fallback" ? (
+                    <>
+                      <span className="text-fg-dim">Source</span>
+                      <span> · practice tape while we reconnect to the live feed. </span>
+                      <a
+                        href="/pricing"
+                        className="calm-link !text-[0.75rem]"
+                        title="Real-time, un-throttled market data — coming to Power. See the plans."
+                      >
+                        Real-time <span aria-hidden>›</span>
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-fg-dim">Source</span>
+                      <span>
+                        {" · live • "}
+                        {sourceLabel(liveSource)} · <UpdatedAgo since={updatedAt} />
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-px bg-border">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 px-5 pb-4 pt-3">
                 {/* symbol */}
-                <div className="bg-bg p-3">
-                  <div className="flex items-center gap-1.5 t-chrome text-fg-faint">
-                    symbol
-                    <InfoTip text="The instrument every bot studies. LIVE mode fetches its real daily candles from Yahoo; SEED mode deals a synthetic tape instead." />
+                <div>
+                  <div className="flex items-center gap-1.5 t-label text-fg-faint">
+                    Symbol
+                    <InfoTip text="The instrument every bot studies. Live mode fetches its real daily candles from Yahoo; Seed mode deals a synthetic tape instead." />
                   </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <select
-                      value={symbol}
-                      onChange={(e) => setSymbol(e.target.value)}
-                      disabled={runLocked}
-                      className="flex-1 border border-border bg-bg px-2 py-1 font-display text-xl tracking-tightest text-fg focus:border-bull focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      {SYMBOLS.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <select
+                    value={symbol}
+                    onChange={(e) => setSymbol(e.target.value)}
+                    disabled={runLocked}
+                    className="calm-input mt-1.5 w-full disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {SYMBOLS.map((s) => (
+                      <option key={s} value={s} className="bg-bg text-fg">{s}</option>
+                    ))}
+                  </select>
                 </div>
                 {/* bars */}
-                <div className="bg-bg p-3">
-                  <div className="flex items-center justify-between t-chrome text-fg-faint">
+                <div>
+                  <div className="flex items-center justify-between t-label text-fg-faint">
                     <span className="flex items-center gap-1.5">
-                      bars
+                      Bars
                       <InfoTip text="How many daily candles the bots see — the lookback window. 180 ≈ 9 months of trading days. More bars: steadier statistics, slower signals. Fewer: twitchier, reacts faster." />
                     </span>
-                    <span className="text-fg">{bars}</span>
+                    <span className="tabular-nums text-fg">{bars}</span>
                   </div>
                   <input
                     type="range"
@@ -340,7 +327,7 @@ export function QuantHero({
                     value={bars}
                     onChange={(e) => setBars(Number(e.target.value))}
                     disabled={runLocked}
-                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed disabled:opacity-40"
+                    className={`${RANGE} disabled:opacity-40`}
                   />
                 </div>
                 {/* seed/drift/vol — synthetic only. In LIVE mode they'd all be
@@ -349,22 +336,22 @@ export function QuantHero({
                   <button
                     onClick={() => setSeedKnobsOpen(true)}
                     title={knobTitle}
-                    className="group bg-bg p-3 text-left transition-colors hover:bg-surface-2"
+                    className="group text-left"
                   >
-                    <div className="t-chrome text-fg-faint">seed tape</div>
-                    <div className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim group-hover:text-fg">
-                      tune the seed tape →
+                    <div className="t-label text-fg-faint">Seed tape</div>
+                    <div className="mt-1.5 text-[0.8125rem] font-medium text-brand-ink transition-colors group-hover:text-fg">
+                      Tune the seed tape <span aria-hidden>›</span>
                     </div>
                   </button>
                 )}
                 {showSeedKnobs && (
-                <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
-                  <div className="flex items-center justify-between t-chrome text-fg-faint">
+                <div className={knobsLive ? "" : "opacity-40"} title={knobTitle}>
+                  <div className="flex items-center justify-between t-label text-fg-faint">
                     <span className="flex items-center gap-1.5">
-                      seed
+                      Seed
                       <InfoTip text="The random seed of the synthetic tape. Same seed = exactly the same candles, every run — that's what makes seed-mode experiments repeatable. Change it to deal a different market. (Seed mode only.)" />
                     </span>
-                    <span className="text-fg">{syntheticKnobsActive ? seed : "—"}</span>
+                    <span className="tabular-nums text-fg">{syntheticKnobsActive ? seed : "—"}</span>
                   </div>
                   <input
                     type="range"
@@ -373,19 +360,19 @@ export function QuantHero({
                     value={seed}
                     disabled={!knobsLive}
                     onChange={(e) => setSeed(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
+                    className={RANGE}
                   />
                 </div>
                 )}
                 {/* drift — synthetic only */}
                 {showSeedKnobs && (
-                <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
-                  <div className="flex items-center justify-between t-chrome text-fg-faint">
+                <div className={knobsLive ? "" : "opacity-40"} title={knobTitle}>
+                  <div className="flex items-center justify-between t-label text-fg-faint">
                     <span className="flex items-center gap-1.5">
-                      drift μ
+                      Drift μ
                       <InfoTip text="The synthetic tape's average daily push. Positive grinds the market up, negative bleeds it down, zero drifts sideways. Test a strategy in a bull tape, then flip the sign and see if it survives. (Seed mode only.)" />
                     </span>
-                    <span className="text-fg">{syntheticKnobsActive ? drift.toFixed(2) : "—"}</span>
+                    <span className="tabular-nums text-fg">{syntheticKnobsActive ? drift.toFixed(2) : "—"}</span>
                   </div>
                   <input
                     type="range"
@@ -395,19 +382,19 @@ export function QuantHero({
                     value={drift}
                     disabled={!knobsLive}
                     onChange={(e) => setDrift(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
+                    className={RANGE}
                   />
                 </div>
                 )}
                 {/* vol — synthetic only */}
                 {showSeedKnobs && (
-                <div className={`bg-bg p-3 ${knobsLive ? "" : "opacity-40"}`} title={knobTitle}>
-                  <div className="flex items-center justify-between t-chrome text-fg-faint">
+                <div className={knobsLive ? "" : "opacity-40"} title={knobTitle}>
+                  <div className="flex items-center justify-between t-label text-fg-faint">
                     <span className="flex items-center gap-1.5">
-                      vol σ
+                      Vol σ
                       <InfoTip up text="How violently the synthetic tape swings bar to bar. Low = calm index-like candles; high = crypto-like whipsaw with fat tails. Reversion bots love low σ, breakout bots need high. (Seed mode only.)" />
                     </span>
-                    <span className="text-fg">{syntheticKnobsActive ? vol.toFixed(2) : "—"}</span>
+                    <span className="tabular-nums text-fg">{syntheticKnobsActive ? vol.toFixed(2) : "—"}</span>
                   </div>
                   <input
                     type="range"
@@ -417,45 +404,31 @@ export function QuantHero({
                     value={vol}
                     disabled={!knobsLive}
                     onChange={(e) => setVol(Number(e.target.value))}
-                    className="mt-2 w-full accent-bull disabled:cursor-not-allowed"
+                    className={RANGE}
                   />
                 </div>
                 )}
                 {/* beginner */}
-                <div className="bg-bg p-3">
-                  <div className="flex items-center gap-1.5 t-chrome text-fg-faint">
-                    teacher
+                <div>
+                  <div className="flex items-center gap-1.5 t-label text-fg-faint">
+                    Teacher
                     <InfoTip up text="Plain-English mode: every bot adds a sentence explaining its verdict like a human would, instead of only formulas and numbers." />
                   </div>
-                  <button
-                    onClick={() => setBeginner(!beginner)}
-                    className={`mt-2 flex h-7 w-full items-center justify-between border px-2 font-mono text-[0.6875rem] uppercase tracking-wider ${
-                      beginner ? "border-bull bg-bull/10 text-bull" : "border-border bg-bg text-fg-dim"
-                    }`}
-                  >
-                    <span>plain english</span>
-                    <span>{beginner ? "ON" : "OFF"}</span>
-                  </button>
+                  <TogglePill on={beginner} onClick={() => setBeginner(!beginner)} className="mt-1.5 w-full justify-between">
+                    <span>Plain English</span>
+                    <span>{beginner ? "On" : "Off"}</span>
+                  </TogglePill>
                 </div>
               </div>
 
-              {/* run all */}
-              <div className="grid grid-cols-2 gap-px border-t border-border bg-border">
-                <button
-                  onClick={onRunAll}
-                  disabled={activeCount === 0 || runLocked}
-                  className="flex items-center justify-center gap-2 bg-bg px-3 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull hover:bg-bull hover:text-bg disabled:cursor-not-allowed disabled:text-fg-faint disabled:hover:bg-bg"
-                >
-                  <span className="size-1.5 rounded-full bg-current" />
-                  {runLocked ? "running…" : `▶ run all (${activeCount})`}
-                </button>
-                <button
-                  onClick={onClearAll}
-                  disabled={activeCount === 0 || runLocked}
-                  className="bg-bg px-3 py-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:text-fg disabled:cursor-not-allowed disabled:text-fg-faint"
-                >
-                  clear workspace
-                </button>
+              {/* run all: the page's one primary */}
+              <div className="grid grid-cols-2 gap-3 px-5 pb-5">
+                <PillButton kind="primary" onClick={onRunAll} disabled={activeCount === 0 || runLocked} className="w-full">
+                  {runLocked ? "Running…" : `▶ Run all (${activeCount})`}
+                </PillButton>
+                <PillButton onClick={onClearAll} disabled={activeCount === 0 || runLocked} className="w-full">
+                  Clear workspace
+                </PillButton>
               </div>
             </div>
           </div>

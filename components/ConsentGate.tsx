@@ -52,6 +52,7 @@ import {
   type ConsentRecord,
 } from "@/lib/consent";
 import { deviceId, track } from "@/lib/track";
+import { PillButton } from "@/components/calm/kit";
 
 // ── the "manage consent" entry point ────────────────────────────────────────
 // Module-level so any button anywhere can call it without prop-drilling a
@@ -234,15 +235,11 @@ export function ConsentGate() {
     if (legal && (needsGate || blocked)) {
       return (
         <div role="region" aria-label="Privacy choices" className="fixed inset-x-0 bottom-0 z-[170] border-t border-border bg-bg/95 py-3 backdrop-blur">
-          <div className="shell flex flex-wrap items-center justify-between gap-3 t-chrome text-fg-dim">
+          <div className="shell flex flex-wrap items-center justify-between gap-3 t-label text-fg-dim">
             <span>Nothing is recorded until you answer the age and privacy questions.</span>
-            <button
-              type="button"
-              onClick={openConsentSettings}
-              className="border border-bull/40 px-3 py-2 text-bull transition-colors hover:bg-bull/10"
-            >
-              answer now
-            </button>
+            <PillButton size="sm" onClick={openConsentSettings}>
+              Answer now
+            </PillButton>
           </div>
         </div>
       );
@@ -262,19 +259,19 @@ export function ConsentGate() {
         aria-labelledby="consent-title"
         aria-describedby="consent-intro"
         tabIndex={-1}
-        className="max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-xl overflow-y-auto border border-bull/40 bg-bg shadow-[0_30px_100px_-20px_rgba(82,255,165,0.45)] outline-none transition-opacity duration-200 motion-reduce:transition-none"
+        className="max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-xl overflow-y-auto rounded-[22px] border border-border bg-bg shadow-2xl outline-none transition-opacity duration-200 motion-reduce:transition-none"
       >
         {view === "blocked" ? (
           <BlockedPanel onStartOver={() => clearConsent()} />
         ) : (
           <>
-            <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-bull">
-              ⟢ {settings ? "your privacy choices" : "before you start · 1 of 1"}
-            </div>
             <div className="p-6">
+              <div className="t-eyebrow text-brand-ink">
+                {settings ? "Your privacy choices" : "Before you start · 1 of 1"}
+              </div>
               <h2
                 id="consent-title"
-                className="font-display text-3xl leading-tight tracking-tightest text-fg"
+                className="mt-2 font-display text-3xl leading-tight tracking-tightest text-fg"
               >
                 {settings ? "Your privacy choices." : "One check, two choices."}
               </h2>
@@ -285,10 +282,10 @@ export function ConsentGate() {
               </p>
 
               {/* (a) the age gate — required, no default */}
-              <label className="mt-5 flex cursor-pointer items-start gap-3 border border-border bg-bg p-3 transition-colors hover:border-bull/40">
+              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[14px] border border-border bg-bg p-3 transition-colors hover:border-fg-faint">
                 <input
                   type="checkbox"
-                  className="mt-0.5 size-4 shrink-0 accent-bull"
+                  className="mt-0.5 size-4 shrink-0 accent-brand-ink"
                   checked={adult}
                   onChange={(e) => setAdult(e.target.checked)}
                 />
@@ -303,7 +300,7 @@ export function ConsentGate() {
               </label>
 
               {/* (b) + (c) the two purposes, separately */}
-              <div className="mt-3 divide-y divide-border border border-border">
+              <div className="mt-3 divide-y divide-border overflow-hidden rounded-[14px] border border-border">
                 <Toggle
                   label="Product analytics"
                   description="What you do in the app — pages, paper trades, explanations asked — so we can improve it. Never sold, never advertising."
@@ -318,8 +315,8 @@ export function ConsentGate() {
                 />
               </div>
 
-              <p className="mt-3 t-chrome text-fg-dim">
-                saved on this device · if you are 18+ and turn either on, a copy goes to our server as
+              <p className="mt-3 t-label text-fg-dim">
+                Saved on this device · if you are 18+ and turn either on, a copy goes to our server as
                 your consent record, with a random device id, your country and browser type · if we
                 change what this dialog says, we ask again rather than assume
               </p>
@@ -330,36 +327,31 @@ export function ConsentGate() {
                     href="/privacy"
                     target="_blank"
                     rel="noopener"
-                    className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-bull hover:underline"
+                    className="text-[0.8125rem] text-fg-dim underline-offset-4 hover:text-fg hover:underline"
                   >
-                    privacy policy ↗
+                    Privacy policy ↗
                   </Link>
                   {settings ? (
                     <button
                       type="button"
                       onClick={() => setSettings(false)}
-                      className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint hover:text-fg-dim"
+                      className="text-[0.8125rem] text-fg-dim hover:text-fg"
                     >
-                      cancel
+                      Cancel
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => record(false, false, false)}
-                      className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-faint hover:text-fg-dim"
+                      className="text-[0.8125rem] text-fg-dim hover:text-fg"
                     >
                       I&rsquo;m under 18
                     </button>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => record(true, analytics, training)}
-                  disabled={!adult}
-                  className="inline-flex items-center gap-2 btn-grad px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-opacity disabled:opacity-30 lg:py-2.5"
-                >
-                  continue →
-                </button>
+                <PillButton kind="primary" onClick={() => record(true, analytics, training)} disabled={!adult}>
+                  Continue →
+                </PillButton>
               </div>
             </div>
           </>
@@ -396,13 +388,13 @@ function Toggle({
       />
       <span
         aria-hidden
-        className={`mt-0.5 inline-flex h-4 w-7 shrink-0 items-center border p-px transition-colors duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-bull motion-reduce:transition-none ${
-          checked ? "border-bull/60 bg-bull/20" : "border-border bg-bg"
+        className={`mt-0.5 inline-flex h-4 w-7 shrink-0 items-center rounded-full border p-px transition-colors duration-150 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-ink motion-reduce:transition-none ${
+          checked ? "border-brand-ink/60 bg-brand-ink/25" : "border-border bg-bg"
         }`}
       >
         <span
-          className={`size-3 transition-transform duration-150 motion-reduce:transition-none ${
-            checked ? "translate-x-3 bg-bull" : "translate-x-0 bg-fg-faint"
+          className={`size-3 rounded-full transition-transform duration-150 motion-reduce:transition-none ${
+            checked ? "translate-x-3 bg-brand-ink" : "translate-x-0 bg-fg-faint"
           }`}
         />
       </span>
@@ -420,11 +412,9 @@ function Toggle({
 function BlockedPanel({ onStartOver }: { onStartOver: () => void }) {
   return (
     <>
-      <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-amber">
-        ⟢ age gate
-      </div>
       <div className="p-6">
-        <h2 id="consent-title" className="font-display text-3xl leading-tight tracking-tightest text-fg">
+        <div className="t-eyebrow text-brand-ink">Age gate</div>
+        <h2 id="consent-title" className="mt-2 font-display text-3xl leading-tight tracking-tightest text-fg">
           Come back at 18.
         </h2>
         <p id="consent-intro" className="t-body-sm mt-3 text-fg-dim">
@@ -436,17 +426,13 @@ function BlockedPanel({ onStartOver }: { onStartOver: () => void }) {
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/privacy"
-            className="font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-bull hover:underline"
+            className="text-[0.8125rem] text-fg-dim underline-offset-4 hover:text-fg hover:underline"
           >
-            privacy policy ↗
+            Privacy policy ↗
           </Link>
-          <button
-            type="button"
-            onClick={onStartOver}
-            className="border border-border px-4 py-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:border-bull/50 hover:text-bull"
-          >
+          <PillButton size="sm" onClick={onStartOver}>
             I picked the wrong one — start over
-          </button>
+          </PillButton>
         </div>
       </div>
     </>

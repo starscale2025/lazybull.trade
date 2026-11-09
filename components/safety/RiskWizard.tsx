@@ -7,6 +7,7 @@ import { payoff } from "@/lib/pricing";
 import { consentGateNeeded } from "@/lib/consent";
 import { useConsent } from "@/components/ConsentGate";
 import { useModalFocus } from "./useModalFocus";
+import { ToolButton } from "@/components/calm/kit";
 
 // Naked short call demo: short 1 call at $100 strike, premium $3
 const NAKED_CALL = [{ id: "demo", type: "C" as const, side: "short" as const, strike: 100, qty: 1, premium: 3 }];
@@ -86,10 +87,10 @@ export function RiskWizard() {
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, y: 12 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="relative max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-2xl overflow-y-auto border border-amber/60 bg-bg shadow-[0_30px_100px_-20px_rgba(255,184,0,0.4)] outline-none"
+            className="surface-instrument max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-2xl overflow-y-auto border border-amber/60 bg-bg shadow-2xl outline-none"
           >
             <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-amber">
-              ⚠ first-visit safety briefing · 1 of 1
+              ⚠ First-visit safety briefing · 1 of 1
             </div>
             <div className="p-6">
               <h2 id="risk-title" className="font-display text-3xl tracking-tightest text-fg leading-tight">
@@ -106,8 +107,8 @@ export function RiskWizard() {
               <div className="mt-5 surface-card border border-border bg-surface p-4">
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="t-chrome text-fg-faint">
-                      account balance
+                    <div className="t-label text-fg-faint">
+                      Account balance
                     </div>
                     <motion.div
                       className="font-display text-4xl tracking-tightest tabular-nums"
@@ -121,7 +122,7 @@ export function RiskWizard() {
                     </motion.div>
                   </div>
                   <div className={`text-right font-mono text-sm ${pnl >= 0 ? "text-bull" : "text-bear"}`}>
-                    <div className="t-chrome text-fg-faint">P&L</div>
+                    <div className="t-label text-fg-faint">P&L</div>
                     <div className="t-data text-2xl">
                       {pnl >= 0 ? "+" : "−"}${fmt(pnl)}
                     </div>
@@ -143,9 +144,9 @@ export function RiskWizard() {
                   />
                 </div>
 
-                <div className="mt-4 flex items-center justify-between t-chrome text-fg-dim">
+                <div className="mt-4 flex items-center justify-between t-label text-fg-dim">
                   <span>${SPOT_MIN}</span>
-                  <span className="text-bull">strike $100</span>
+                  <span>Strike $100</span>
                   <span>${SPOT_MAX}</span>
                 </div>
                 <input
@@ -162,12 +163,12 @@ export function RiskWizard() {
                   }}
                   aria-label="stock price"
                   aria-valuetext={`$${spot}, balance ${balance < 0 ? "minus " : ""}$${fmt(balance)}`}
-                  className="mt-1 w-full accent-bull"
+                  className="mt-1 w-full accent-brand-ink"
                 />
                 {/* Where the balance crosses $0: past this tick it is debt. */}
                 <div className="relative mt-1 h-4" aria-hidden>
                   <span
-                    className="absolute top-0 flex -translate-x-1/2 flex-col items-center t-chrome text-bear"
+                    className="absolute top-0 flex -translate-x-1/2 flex-col items-center t-label text-bear"
                     style={{ left: `${zeroPct.toFixed(2)}%` }}
                   >
                     <span className="h-1.5 w-px bg-bear" />
@@ -175,7 +176,7 @@ export function RiskWizard() {
                   </span>
                 </div>
                 <div className="mt-2 text-center t-data text-[0.6875rem] text-fg">
-                  spot price ${spot}
+                  Spot price ${spot}
                 </div>
               </div>
 
@@ -189,7 +190,7 @@ export function RiskWizard() {
                   <label className={`flex items-start gap-2.5 ${sawLoss ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                     <input
                       type="checkbox"
-                      className="mt-0.5 size-4 accent-bull"
+                      className="mt-0.5 size-4 accent-brand-ink"
                       checked={accepted}
                       disabled={!sawLoss}
                       onChange={(e) => setAccepted(e.target.checked)}
@@ -197,8 +198,8 @@ export function RiskWizard() {
                     <span className="t-body-sm text-fg">I understand options can lose more than I put in.</span>
                   </label>
                   {!sawLoss && (
-                    <p className="t-chrome text-amber">
-                      first slide past ${ZERO_AT} and watch the balance go below $0
+                    <p className="t-label text-amber">
+                      First slide past ${ZERO_AT} and watch the balance go below $0
                     </p>
                   )}
                   {/* Always mounted, so the crossing is heard: the hint above
@@ -214,21 +215,17 @@ export function RiskWizard() {
                     type="button"
                     onClick={() => close(false)}
                     disabled={!sawLoss || !accepted}
-                    className="w-fit font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim underline-offset-4 hover:text-fg hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
+                    className="w-fit t-label text-fg-dim underline-offset-4 hover:text-fg hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
                   >
                     Turn training wheels off
                   </button>
                 </div>
                 {/* The safe exit is the default and is never gated. */}
                 <div className="flex flex-col items-stretch gap-1.5 md:items-end">
-                  <button
-                    type="button"
-                    onClick={() => close(true)}
-                    className="inline-flex items-center justify-center gap-2 btn-grad px-5 py-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-[filter] hover:brightness-110"
-                  >
-                    keep training wheels on →
-                  </button>
-                  <span className="t-chrome text-fg-faint md:text-right">defined-risk strategies only</span>
+                  <ToolButton primary onClick={() => close(true)} className="!h-11 !px-5">
+                    Keep training wheels on →
+                  </ToolButton>
+                  <span className="t-label text-fg-faint md:text-right">Defined-risk strategies only</span>
                 </div>
               </div>
             </div>

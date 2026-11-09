@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { type Bet, storySentence } from "./PositionStory";
 import { priceOption } from "@/lib/pricing";
+import { ToolButton } from "@/components/calm/kit";
 
 type Props = {
   bets: Bet[];
@@ -46,9 +47,9 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
 
   return (
     <div className="bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 t-chrome text-fg-dim">
-        <span>open positions · {open.length}</span>
-        <span className="text-fg-faint">live priced from /api/quote</span>
+      <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 t-label text-fg-dim">
+        <span>Open positions · {open.length}</span>
+        <span className="text-fg-faint">Live priced from /api/quote</span>
       </div>
 
       <AnimatePresence initial={false}>
@@ -57,9 +58,9 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="px-3 py-6 text-center font-mono text-[0.6875rem] text-fg-faint"
+            className="px-3 py-6 text-center t-label text-fg-faint"
           >
-            you haven't placed a bet yet — pick one of the cards above
+            You haven’t placed a bet yet — pick one of the cards above
           </motion.div>
         )}
 
@@ -78,12 +79,12 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
                   <div className="font-display text-xl tracking-tightest">{b.strategy.kind}</div>
-                  <div className="t-chrome text-fg-faint">
+                  <div className="t-label text-fg-faint">
                     {b.symbol} · expiry {b.expiry} · {daysLeft}d left
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="t-chrome text-fg-faint">live P&L</div>
+                  <div className="t-label text-fg-faint">Live P&L</div>
                   <div className={`font-display text-2xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
                     {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
                   </div>
@@ -98,18 +99,10 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => onClose(b.id, value)}
-                  className="border border-border bg-bg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-bear hover:text-bear"
-                >
-                  close · book {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
-                </button>
-                <button
-                  onClick={() => onRoll(b)}
-                  className="border border-border bg-bg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-cyan hover:text-cyan"
-                >
-                  roll to next month
-                </button>
+                <ToolButton onClick={() => onClose(b.id, value)}>
+                  Close · book {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
+                </ToolButton>
+                <ToolButton onClick={() => onRoll(b)}>Roll to next month</ToolButton>
               </div>
             </motion.div>
           );
@@ -119,7 +112,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
       {/* Closed history */}
       {bets.some((b) => b.status === "closed") && (
         <div className="border-t border-border bg-bg-soft p-3">
-          <div className="mb-2 t-chrome text-fg-faint">recent · closed</div>
+          <div className="mb-2 t-label text-fg-faint">Recent · closed</div>
           <ul className="space-y-1">
             {bets.filter((b) => b.status === "closed").slice(0, 4).map((b) => (
               <li key={b.id} className="flex items-center justify-between border-b border-border-soft py-1 t-data text-[0.6875rem]">

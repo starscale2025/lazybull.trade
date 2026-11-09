@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { AuthButtons } from "./AuthButtons";
 import { MobileMenu } from "./MobileMenu";
-import { TruthBadge } from "./pro/TruthBadge";
+import { NavAutoHide } from "./NavAutoHide";
+import { BullMark } from "./BullMark";
 import { NAV_DIRECTORY } from "@/lib/directory";
 
 // Rail links behind the MORE menu. Learn / Practice / Strategy builder / Pro
@@ -17,7 +18,7 @@ const ALWAYS_FOLDED = new Set<string>(["/greeks", "/pricing", "/about"]);
 const inMenu = (href: string) => FOLDED.has(href) || ALWAYS_FOLDED.has(href);
 
 const railLink =
-  "group relative h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-2.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3";
+  "group relative h-9 items-center whitespace-nowrap rounded-[var(--r-pill)] px-3 text-[0.875rem] tracking-[-0.005em] text-fg-dim transition-[color,background-color] duration-300 [transition-timing-function:var(--ease-settle)] hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg 2xl:px-3";
 
 /**
  * The site navbar, in glass.
@@ -51,9 +52,10 @@ const railLink =
 export function Nav({ wide = false }: { wide?: boolean }) {
   return (
     <div
-      className="pointer-events-none sticky top-0 z-50 px-3 pt-3"
+      className="nav-bar pointer-events-none sticky top-0 z-50 px-3 pt-3"
       style={{ ["--nav-h" as string]: "68px" }}
     >
+      <NavAutoHide />
       {/* Concentric geometry, the rule that keeps a pill-in-pill nav from
           looking broken: inner radius = outer radius − gap. The bar is a full
           pill (28px on h-14) with a 10px inset on every side of a control
@@ -65,13 +67,10 @@ export function Nav({ wide = false }: { wide?: boolean }) {
           wide ? "max-w-[100rem]" : "max-w-[87.5rem]"
         } items-center justify-between gap-2 rounded-full py-2.5 pl-4 pr-2.5 sm:pl-5`}
       >
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-          <span
-            aria-hidden
-            className="relative flex size-7 items-center justify-center rounded-[9px] bg-[image:var(--grad-fill)] shadow-[0_0_16px_rgba(88,46,255,0.5),inset_0_1px_0_rgba(255,255,255,0.5)]"
-          >
-            <span className="font-mono text-[0.625rem] font-bold text-[var(--grad-on)]">LB</span>
-          </span>
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5 [view-transition-name:nav-mark]">
+          {/* The bull mark, the shape the film ends on (M25). It replaced the
+              "LB" gradient tile. */}
+          <BullMark className="h-5 w-7" />
           <span className="font-display text-lg font-medium tracking-tightest text-fg">
             lazybull
             <span className="text-bull">.</span>
@@ -113,7 +112,7 @@ export function Nav({ wide = false }: { wide?: boolean }) {
                   href={item.href}
                   className={`${
                     FOLDED.has(item.href) ? "flex 2xl:hidden" : "flex"
-                  } h-9 items-center px-4 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim transition-colors hover:bg-surface hover:text-fg`}
+                  } h-9 items-center px-4 text-[0.875rem] text-fg-dim transition-colors hover:bg-surface hover:text-fg`}
                 >
                   {item.l}
                 </Link>
@@ -123,35 +122,28 @@ export function Nav({ wide = false }: { wide?: boolean }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {/* The Synthetic-Truth badge, promoted off /pro so the glitch→checkmark
-              is site-wide furniture. min-[1360px]: at exactly 1280 the badge's
-              145px was the difference between the CTA fitting and it poking
-              past the pill's rounded border. */}
-          <div className="hidden items-center min-[1360px]:flex">
-            <TruthBadge />
-          </div>
+          {/* The Synthetic-Truth badge used to sit here, site-wide. Calm
+              (M33, 2026-11-09): data provenance belongs where the data is, so
+              it lives on /pro (and on every quote it qualifies), not on the
+              bar of every page. */}
           {/* Account pages sit with the account cluster, not the destination
               rail. xl+ only — below xl it duplicated the sheet's entry while
               the bar was already over budget. */}
           <Link
             href="/portfolio"
-            className="hidden h-9 items-center whitespace-nowrap rounded-full border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--fg)_4%,transparent)] px-3.5 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim hover:border-fg-dim hover:text-fg xl:inline-flex"
+            className="hidden h-9 items-center whitespace-nowrap rounded-full px-3 text-[0.875rem] tracking-[-0.005em] text-fg-dim transition-colors hover:text-fg xl:inline-flex"
           >
             Portfolio
           </Link>
           <AuthButtons />
           <Link
             href="/trade"
-            className="btn-primary-glass group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider sm:px-4"
+            className="btn-primary-glass tracking-[-0.01em] group relative inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[0.8125rem] font-semibold sm:px-4"
           >
-            <span aria-hidden className="size-1.5 rounded-full bg-bull pulse-dot" />
             {/* Short label below sm AND in the 1024–1279 hamburger band, where
                 the audit measured the full CTA clipping off the pill's edge. */}
             <span className="sm:hidden lg:inline xl:hidden">Builder</span>
             <span className="hidden sm:inline lg:hidden xl:inline">Open the builder</span>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
-              <path d="M1 5h8M5 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
           </Link>
           {/* MobileMenu gates itself lg:hidden, but the rail now starts at xl —
               re-show the hamburger through 1024–1279 from here (it's shared

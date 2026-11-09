@@ -167,7 +167,7 @@ export default function Image() {
           }}
         >
           <div style={{ display: "flex", color: FG, letterSpacing: 1 }}>lazybull.us</div>
-          <div style={{ display: "flex" }}>max loss is a number you chose</div>
+          <div style={{ display: "flex" }}>max loss can be a number you choose</div>
         </div>
       </div>
     ),

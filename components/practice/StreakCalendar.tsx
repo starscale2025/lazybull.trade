@@ -1,5 +1,6 @@
 // One month of the streak, as a 7-column grid: weekday initials on top,
-// Monday first, a cell per day. Active days are lit bull, today is ringed.
+// Monday first, a cell per day. Active days are lit in the reading colour,
+// today is ringed.
 //
 // DATE-FREE BY DESIGN. The month is whichever contains the `today` string the
 // container passes (parsed as UTC); nothing here calls Date.now(), so server
@@ -44,7 +45,7 @@ export function StreakCalendar({ activity, today, monthLabel, className = "" }: 
     >
       <div className="grid grid-cols-7 gap-0.5">
         {WEEKDAYS.map((w, i) => (
-          <div key={i} className="grid size-7 place-items-center t-chrome text-fg-faint">
+          <div key={i} className="grid size-7 place-items-center t-label text-fg-faint">
             {w}
           </div>
         ))}
@@ -55,15 +56,15 @@ export function StreakCalendar({ activity, today, monthLabel, className = "" }: 
           <div
             key={d.day}
             title={`${d.day} · ${d.n} solved`}
-            className={`grid size-7 place-items-center font-mono text-[0.625rem] ${
-              d.n > 0 ? "bg-bull/15 text-bull" : "text-fg-faint"
-            } ${d.isToday ? "border border-bull" : ""}`}
+            className={`grid size-7 place-items-center rounded-full t-data text-[0.6875rem] ${
+              d.n > 0 ? "bg-brand-ink/15 text-brand-ink" : "text-fg-faint"
+            } ${d.isToday ? "ring-1 ring-inset ring-brand-ink" : ""}`}
           >
             {d.num}
           </div>
         ))}
       </div>
-      <div className="mt-2 t-chrome text-fg-faint">{label}</div>
+      <div className="mt-2 t-label text-fg-faint">{label}</div>
     </div>
   );
 }

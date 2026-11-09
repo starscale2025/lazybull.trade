@@ -7,7 +7,7 @@ import { CandleChart } from "@/components/CandleChart";
 const KNOBS = [
   { key: "symbol" as const, label: "Symbol", body: "Picks the baseline price the synthetic chart starts from. AMZN ≈ $226, NVDA ≈ $138, BTC ≈ $95k. Real symbols get real Yahoo bars on the workbench; synthetic is just for stress-testing." },
   { key: "bars" as const, label: "Bars", body: "How many candles the chart shows. 60 = 3 months of daily, 252 = a year, 1300 = five years. More bars give bots more history to fit." },
-  { key: "seed" as const, label: "Seed", body: "Which 'what-if' universe. Same seed → same chart, every page load. This is what makes Lazybull's results reproducible." },
+  { key: "seed" as const, label: "Seed", body: "Which ‘what-if’ universe. Same seed → same chart, every page load. This is what makes Lazybull’s results reproducible." },
   { key: "drift" as const, label: "Drift μ", body: "The trend. Positive = bullish drift up; negative = bearish drift down; zero = pure noise. Trend bots love high drift; reversion bots love drift near zero." },
   { key: "vol" as const, label: "Vol σ", body: "How jumpy the noise is. Low vol → smooth ride. High vol → wild swings. Real markets sit around σ ≈ 1.5; crypto and earnings days push past 3." },
 ];
@@ -32,18 +32,18 @@ export function LearnDatasetPlayground() {
     <div className="grid grid-cols-1 gap-5 @2xl:grid-cols-12">
       {/* Knobs */}
       <div className="@2xl:col-span-5 flex flex-col gap-3">
-        <div className="surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            dataset · synthetic mode
+        <div>
+          <div className="t-label text-fg-dim">
+            Dataset · synthetic mode
           </div>
-          <div className="grid grid-cols-2 gap-px bg-border">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <Knob label="Symbol" focused={focus === "symbol"} onFocus={() => setFocus("symbol")}>
               <select
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                className="h-8 w-full border border-border bg-bg px-2 font-mono text-[0.75rem] text-fg outline-none"
+                className="calm-input w-full"
               >
-                {Object.keys(SPOT_MAP).map((s) => <option key={s} value={s}>{s}</option>)}
+                {Object.keys(SPOT_MAP).map((s) => <option key={s} value={s} className="bg-bg text-fg">{s}</option>)}
               </select>
             </Knob>
             <Knob label="Bars" focused={focus === "bars"} onFocus={() => setFocus("bars")}>
@@ -61,24 +61,24 @@ export function LearnDatasetPlayground() {
           </div>
         </div>
 
-        <div className="border border-border bg-bg p-3 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim min-h-[6.875rem]">
+        <div className="rounded-xl bg-fg/[0.05] p-3.5 min-h-[6.875rem]">
           {focus ? (
             <>
-              <div className="text-bull">⟢ {KNOBS.find((k) => k.key === focus)?.label}</div>
-              <div className="mt-2 normal-case tracking-normal text-[0.75rem] leading-relaxed text-fg">
+              <div className="t-eyebrow text-brand-ink">{KNOBS.find((k) => k.key === focus)?.label}</div>
+              <div className="mt-2 text-[0.8125rem] leading-relaxed text-fg">
                 {KNOBS.find((k) => k.key === focus)?.body}
               </div>
             </>
           ) : (
-            <div className="text-fg-faint">click any knob to learn what it does →</div>
+            <div className="t-label text-fg-faint">Click any knob to learn what it does →</div>
           )}
         </div>
       </div>
 
       {/* Chart preview */}
       <div className="@2xl:col-span-7">
-        <div className="surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
+        <div className="rounded-xl bg-fg/[0.05]">
+          <div className="flex items-center justify-between px-3.5 pt-3 t-label text-fg-dim">
             <span>{symbol} · {bars} bars · seed {seed}</span>
             <span className={change >= 0 ? "text-bull" : "text-bear"}>
               {change >= 0 ? "+" : ""}{change.toFixed(2)}%
@@ -87,9 +87,9 @@ export function LearnDatasetPlayground() {
           <div className="p-2">
             <CandleChart candles={candles} height={320} width={720} />
           </div>
-          <div className="border-t border-border-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim flex items-center justify-between">
-            <span>spot ${last?.c.toFixed(2)}</span>
-            <span className="text-fg-faint">deterministic — same seed gives same chart, every time</span>
+          <div className="flex items-center justify-between gap-3 px-3.5 pb-3 t-label text-fg-dim">
+            <span>Spot ${last?.c.toFixed(2)}</span>
+            <span className="text-fg-faint">Deterministic — same seed gives same chart, every time</span>
           </div>
         </div>
       </div>
@@ -101,9 +101,9 @@ function Knob({ label, children, focused, onFocus, span }: { label: string; chil
   return (
     <div
       onClick={onFocus}
-      className={`bg-bg p-3 cursor-pointer transition-colors ${focused ? "bg-bull/[0.04]" : "hover:bg-bg-soft"} ${span ? "col-span-2" : ""}`}
+      className={`rounded-xl p-3 cursor-pointer transition-colors ${focused ? "bg-fg/[0.1]" : "bg-fg/[0.05] hover:bg-fg/[0.08]"} ${span ? "col-span-2" : ""}`}
     >
-      <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
+      <div className="t-label text-fg-faint">{label}</div>
       <div className="mt-2">{children}</div>
     </div>
   );
@@ -123,7 +123,7 @@ function Slider({ value, setValue, min, max, step, suffix }: { value: number; se
         step={step}
         value={value}
         onChange={(e) => setValue(parseFloat(e.target.value))}
-        className="h-1 w-full accent-bull"
+        className="h-1 w-full accent-brand-ink"
       />
     </label>
   );

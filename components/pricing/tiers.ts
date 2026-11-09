@@ -94,12 +94,3 @@ export function buildTiers(): TierDef[] {
     },
   ];
 }
-
-/** The CTA look each card uses, so the button and the link variants match. */
-export function ctaClass(t: { primary?: boolean; soon?: boolean }): string {
-  const base =
-    "inline-flex h-10 w-full items-center justify-center gap-2 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-50";
-  if (t.primary) return `${base} bg-bull text-bg hover:bg-bull-dim`;
-  if (t.soon) return `${base} border border-border text-fg-faint hover:border-fg-dim hover:text-fg-dim`;
-  return `${base} border border-border text-fg-dim hover:border-fg-dim hover:text-fg`;
-}

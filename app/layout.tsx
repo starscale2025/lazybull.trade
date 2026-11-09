@@ -17,6 +17,8 @@ import { RouteLoader } from "@/components/atmosphere/RouteLoader";
 import { ConsentGate } from "@/components/ConsentGate";
 import { MotionProvider } from "@/components/MotionProvider";
 import { SkipLink } from "@/components/SkipLink";
+import { IslandMount } from "@/components/island/IslandMount";
+import { MatterRoot } from "@/components/matter/MatterRoot";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -138,6 +140,13 @@ export default function RootLayout({
           {/* The terminal's spoken voice: fills, kill switch, resets → aria-live. */}
           <Narrator />
         </SessionProvider>
+        {/* The Island (M32): one live thing at a time, published by the
+            page that has it (lib/island.ts). Once, here, so it can stay with
+            the visitor across sections and routes. */}
+        <IslandMount />
+        {/* THE MATTER (M1): starts the site's one particle engine the first
+            time a page offers it a slot, after load and idle; never on a tool. */}
+        <MatterRoot />
         {/* The age gate + consent dialog. Last in the tree and above every
             other dialog on purpose: nothing in the app may record a product
             event before this has an answer (lib/track.ts drops what it queues

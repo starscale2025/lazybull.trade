@@ -5,7 +5,7 @@
 // right; the editorial copy for each chapter scrolls past on the left. As a
 // chapter crosses the viewport middle an IntersectionObserver flips
 // `active`, and the terminal swaps to that chapter's live demo with a
-// one-beat CRT channel-flicker. The demo is never off-screen.
+// one-beat channel-flicker. The demo is never off-screen.
 //
 // Only the ACTIVE demo is mounted (keyed remount), so heavy cells — the §06
 // 3D greek surface — cost nothing until you reach them and unmount when you
@@ -14,29 +14,23 @@
 //
 // Motion rides the shared ambient clock elsewhere; here the only animation is
 // the CSS swap, which self-limits to one shot and respects reduced-motion.
+//
+// Calm (S1, 2026-11-09): the terminal is one calm panel (a demo's inner frames
+// are soft wells, never a panel in a panel). Gone: the TERMINAL tab, the corner
+// ticks, the pulsing dots, the glow, and the two layers behind the columns, a
+// regime hue that tinted the glass mint and amber, and scanline grain.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Predict, type PredictConfig } from "./Predict";
 
 export type Regime = "trend" | "random" | "revert" | "risk" | "options";
 
-// The regime → accent used for the living-page hue. Set inline on .learn-hue
-// so the DECLARED value changes each swap and `transition: color` fires
-// (a var that mutates underneath a transition freezes — the WONK lesson).
-const ACCENT: Record<Regime, string> = {
-  trend: "var(--bull)",
-  random: "var(--fg-dim)",
-  revert: "var(--cyan)",
-  risk: "var(--amber)",
-  options: "var(--plasma)",
-};
-
 export type DeskChapter = {
   num: string;
   id: string;
   label: string;
   regime: Regime;
-  hint: string; // terminal affordance, e.g. "DRAG THE KNOB →"
+  hint: string; // terminal affordance, e.g. "Drag the knob →"
   headline: ReactNode;
   thesis: ReactNode;
   body: ReactNode;
@@ -115,16 +109,16 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
   // ── mobile / pre-mount: stacked, demo inline ─────────────────────────────
   if (isDesktop !== true) {
     return (
-      <div className="border-b border-border">
+      <div>
         {chapters.map((ch) => (
           <section
             key={ch.id}
             id={ch.id}
             data-regime={ch.regime}
-            className="relative overflow-hidden border-t border-border first:border-t-0 section-y-sm pl-5 pr-5 lg:pl-[13rem]"
+            className="relative overflow-hidden section-y-sm pl-5 pr-5 lg:pl-[13rem]"
           >
             <ChapterCopy ch={ch} />
-            <DeskFrame label={`TERMINAL §${ch.num}`} hint={ch.hint} className="mt-10">
+            <DeskFrame hint={ch.hint} className="mt-10">
               {/* Pre-mount (isDesktop === null) shows a poster; once mounted on
                   mobile the real demo renders inline. */}
               {isDesktop === false ? ch.demo : <DeskPoster label={ch.label} />}
@@ -139,14 +133,9 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
   // ── desktop: sticky terminal + scrolling copy ────────────────────────────
   return (
     <div
-      className="relative grid border-b border-border lg:grid-cols-[minmax(0,1fr)_minmax(0,46%)]"
+      className="relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,46%)]"
       data-regime={current.regime}
     >
-      {/* living-page layers: regime hue (cross-fades with the active chapter)
-          + VIX-driven grain. Behind the columns, non-interactive. */}
-      <div className="learn-hue" style={{ color: ACCENT[current.regime] }} aria-hidden />
-      <div className="learn-grain" aria-hidden />
-
       {/* LEFT — the book */}
       <div className="relative z-[1]">
         {chapters.map((ch, i) => (
@@ -157,7 +146,7 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
               sectionRefs.current[i] = el;
             }}
             data-regime={ch.regime}
-            className="relative flex min-h-screen flex-col justify-center border-t border-border first:border-t-0 section-y pl-5 pr-5 lg:pl-[13rem] xl:pr-10"
+            className="relative flex min-h-screen flex-col justify-center section-y pl-5 pr-5 lg:pl-[13rem] xl:pr-10"
           >
             <ChapterCopy ch={ch} active={i === active} />
             {ch.takeaway}
@@ -169,11 +158,11 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
           zoom inflates dvh units, and an uncompensated frame overflows the true
           viewport by ~10%. Tall demos scroll INSIDE the frame (my-auto centres
           short ones without clipping tall ones the way justify-center did), so
-          the TERMINAL header and status row stay reachable at every position. */}
-      <div className="relative z-[1] border-l border-border">
+          the panel's label row and status row stay reachable at every position. */}
+      <div className="relative z-[1]">
         <div className="sticky top-14 flex h-[calc(100dvh/var(--ui-zoom)-3.5rem)] flex-col overflow-y-auto px-5 py-8 xl:px-8 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]">
           <div className="my-auto">
-            <DeskFrame label={`TERMINAL §${current.num}`} hint={current.hint} live>
+            <DeskFrame hint={current.hint}>
               <div className="relative">
                 {swapping && <div className="desk-flicker pointer-events-none absolute inset-0 z-20 bg-bg" aria-hidden />}
                 <div key={current.id} className="desk-swap-in">
@@ -182,9 +171,9 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
               </div>
             </DeskFrame>
             {/* status — announced to AT, and the human-visible chapter marker */}
-            <div className="mt-3 flex items-center justify-between t-eyebrow text-fg-faint" aria-live="polite">
+            <div className="mt-3 flex items-center justify-between t-label text-fg-faint" aria-live="polite">
               <span>
-                ch {current.num} · <span className="text-bull">{current.label}</span>
+                Ch {current.num} · <span className="text-fg-dim">{current.label}</span>
               </span>
               <span>
                 {active + 1}/{chapters.length}
@@ -201,27 +190,17 @@ export function SplitDesk({ chapters }: { chapters: DeskChapter[] }) {
 function ChapterCopy({ ch, active }: { ch: DeskChapter; active?: boolean }) {
   return (
     <>
-      <div
-        className={`flex items-center gap-3 t-eyebrow text-fg-faint ${
-          active === false ? "opacity-45" : ""
-        } transition-opacity duration-500`}
-      >
-        <span className="size-1.5 rounded-full bg-bull pulse-dot" />
-        <span className="text-fg-dim">CHAPTER {ch.num}</span>
-        <span className="h-px w-10 bg-border" />
-        <span className="text-bull">{ch.label}</span>
+      <div className={`t-eyebrow text-brand-ink ${active === false ? "opacity-45" : ""} transition-opacity duration-500`}>
+        Chapter {ch.num} · {ch.label}
       </div>
 
-      <h2 className="mt-8 font-display tracking-tightest leading-[0.86]" style={{ fontSize: "clamp(2.6rem, 5.5vw, 5rem)" }}>
+      <h2 className="mt-3 font-display text-[clamp(2rem,4vw,3.25rem)] leading-[1] tracking-[-0.035em] text-fg text-balance">
         {ch.headline}
       </h2>
 
-      <div className="mt-6 max-w-[52ch] font-display italic font-light text-cyan text-xl md:text-2xl tracking-tight">
-        <span className="text-cyan/60 mr-2">↳</span>
-        {ch.thesis}
-      </div>
+      <div className="mt-5 max-w-[52ch] font-display text-xl tracking-tight text-fg md:text-2xl">{ch.thesis}</div>
 
-      <div className="mt-8 max-w-[54ch] font-display text-lg leading-relaxed text-fg-dim">{ch.body}</div>
+      <div className="mt-5 max-w-[54ch] text-[1.0625rem] leading-[1.6] text-fg-dim">{ch.body}</div>
 
       {ch.predict && <Predict id={ch.id} cfg={ch.predict} />}
 
@@ -230,46 +209,32 @@ function ChapterCopy({ ch, active }: { ch: DeskChapter; active?: boolean }) {
   );
 }
 
-// ── the instrument frame — bigger, louder than the old TerminalFrame ───────
+// ── the demo's frame: one calm panel with a plain label row ────────────────
 function DeskFrame({
-  label,
   hint,
-  live,
   className = "",
   children,
 }: {
-  label: string;
   hint?: string;
-  live?: boolean;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className={`relative ${className}`}>
-      <div className="absolute -top-3 left-0 right-0 z-10 flex items-center justify-between bg-bg px-2">
-        <div className="flex items-center gap-2 t-eyebrow">
-          <span className="size-1 rounded-full bg-bull pulse-dot" />
-          <span className="text-bull">{label}</span>
-          <span className="text-fg-faint">·</span>
-          <span className="text-fg-faint">{live ? "LIVE · INTERACTIVE" : "INTERACTIVE"}</span>
-        </div>
-        {hint && <div className="hidden t-eyebrow text-amber sm:block">{hint}</div>}
+    // @container: the demos inside size themselves off THIS box, not the
+    // viewport. They sit in a sticky column that is 46% of the page — about
+    // 560px on a 1440 screen, and narrower still because --ui-zoom scales
+    // the whole document — yet they were splitting into 12-column layouts on
+    // `lg:`, which fires at a 1024px VIEWPORT. The result was a chart squashed
+    // into ~370px beside a ~185px sidebar, inside a container wide enough for
+    // neither. A container query asks the only question that was ever
+    // relevant: how much room do I actually have?
+    <div className={`@container calm-panel p-4 md:p-5 ${className}`}>
+      <i aria-hidden className="lit-aura" />
+      <div className="mb-3 flex items-center justify-between gap-3 t-label text-fg-faint">
+        <span>Interactive</span>
+        {hint && <span className="hidden sm:block">{hint}</span>}
       </div>
-      {/* @container: the demos inside size themselves off THIS box, not the
-          viewport. They sit in a sticky column that is 46% of the page — about
-          560px on a 1440 screen, and narrower still because --ui-zoom scales
-          the whole document — yet they were splitting into 12-column layouts on
-          `lg:`, which fires at a 1024px VIEWPORT. The result was a chart squashed
-          into ~370px beside a ~185px sidebar, inside a container wide enough for
-          neither. A container query asks the only question that was ever
-          relevant: how much room do I actually have? */}
-      <div className="@container relative border border-border bg-bg p-4 @2xl:p-6 ambient-glow">
-        <span className="pointer-events-none absolute -left-px -top-px size-3 border-l border-t border-bull" />
-        <span className="pointer-events-none absolute -right-px -top-px size-3 border-r border-t border-bull" />
-        <span className="pointer-events-none absolute -left-px -bottom-px size-3 border-l border-b border-bull" />
-        <span className="pointer-events-none absolute -right-px -bottom-px size-3 border-r border-b border-bull" />
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
@@ -277,9 +242,5 @@ function DeskFrame({
 // Placeholder shown before the client decides desktop vs mobile (avoids
 // mounting heavy demos during that one indeterminate frame).
 function DeskPoster({ label }: { label: string }) {
-  return (
-    <div className="flex h-[20rem] items-center justify-center t-eyebrow text-fg-faint">
-      <span className="size-1 rounded-full bg-bull pulse-dot mr-2" /> loading {label}…
-    </div>
-  );
+  return <div className="flex h-[20rem] items-center justify-center t-label text-fg-faint">{label} · loading…</div>;
 }

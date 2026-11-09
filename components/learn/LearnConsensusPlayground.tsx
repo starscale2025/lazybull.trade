@@ -2,20 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { ACCURACY_BAND, HYPOTHETICAL_NOTE } from "@/lib/quant/types";
+import { Chip, TogglePill } from "@/components/calm/kit";
 
 const ALL_BOTS = [
-  { id: "sma", name: "SMA Crossover", family: "trend", color: "var(--bull)" },
-  { id: "macd", name: "MACD Histogram", family: "trend", color: "var(--bull)" },
-  { id: "rsi", name: "RSI Reversion", family: "trend", color: "var(--bull)" },
-  { id: "boll", name: "Bollinger Bands", family: "trend", color: "var(--bull)" },
-  { id: "donchian", name: "Donchian Breakout", family: "trend", color: "var(--bull)" },
-  { id: "z", name: "Z-Score Reversion", family: "stats", color: "var(--cyan)" },
-  { id: "kalman", name: "Kalman Filter", family: "stats", color: "var(--cyan)" },
-  { id: "linreg", name: "LinReg Channel", family: "stats", color: "var(--cyan)" },
-  { id: "dir", name: "Direction Ensemble", family: "ai", color: "var(--bear)" },
-  { id: "mag", name: "Magnitude Regression", family: "ai", color: "var(--bear)" },
-  { id: "cnn", name: "1D CNN", family: "ai", color: "var(--bear)" },
-  { id: "txr", name: "Transformer", family: "ai", color: "var(--bear)" },
+  { id: "sma", name: "SMA Crossover", family: "trend", color: "var(--fg)" },
+  { id: "macd", name: "MACD Histogram", family: "trend", color: "var(--fg)" },
+  { id: "rsi", name: "RSI Reversion", family: "trend", color: "var(--fg)" },
+  { id: "boll", name: "Bollinger Bands", family: "trend", color: "var(--fg)" },
+  { id: "donchian", name: "Donchian Breakout", family: "trend", color: "var(--fg)" },
+  { id: "z", name: "Z-Score Reversion", family: "stats", color: "var(--fg-faint)" },
+  { id: "kalman", name: "Kalman Filter", family: "stats", color: "var(--fg-faint)" },
+  { id: "linreg", name: "LinReg Channel", family: "stats", color: "var(--fg-faint)" },
+  { id: "dir", name: "Direction Ensemble", family: "ai", color: "var(--brand-ink)" },
+  { id: "mag", name: "Magnitude Regression", family: "ai", color: "var(--brand-ink)" },
+  { id: "cnn", name: "1D CNN", family: "ai", color: "var(--brand-ink)" },
+  { id: "txr", name: "Transformer", family: "ai", color: "var(--brand-ink)" },
 ];
 
 // Pre-baked verdicts per "scenario". Honest: this is a teaching toy, not real
@@ -64,59 +65,38 @@ export function LearnConsensusPlayground() {
     return { buy, sell, hold, total, lean, agreeCount, agreePct, tier };
   }, [active, scn]);
 
-  const tierTone = tally.tier === "very strong agreement" ? "bull" : tally.tier === "moderate agreement" ? "info" : tally.tier === "lean" ? "warn" : "neutral";
-  const TIER_BG: Record<string, string> = {
-    bull: "border-bull/50 bg-bull/10 text-bull",
-    info: "border-cyan/50 bg-cyan/10 text-cyan",
-    warn: "border-amber/50 bg-amber/10 text-amber",
-    neutral: "border-border bg-bg text-fg-dim",
-  };
-
   const toggle = (id: string) => setActive((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
 
   return (
     <div className="grid grid-cols-1 gap-5 @md:grid-cols-12">
       {/* Scenario picker + bot toggles */}
       <div className="@md:col-span-7 flex flex-col gap-4">
-        <div className="surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            scenario
-          </div>
+        <div>
+          <div className="t-label text-fg-dim">Scenario</div>
           {/* Labels only on the buttons — the selected scenario's description
-              lives once, in the footer row below, instead of three abridged
-              copies of it. Three fixed columns hyphenated "RANGE-BOUND"
-              mid-word once this half narrowed to ~290px, so stack until the
-              frame can actually carry three. */}
-          <div className="grid grid-cols-1 gap-px bg-border @lg:grid-cols-3">
+              lives once, in the line below, instead of three abridged copies
+              of it. Pills wrap, so a half that narrows to ~290px just takes a
+              second row. */}
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {(Object.keys(SCENARIOS) as Array<keyof typeof SCENARIOS>).map((k) => (
-              <button
-                key={k}
-                onClick={() => setScenario(k)}
-                className={`bg-bg px-3 py-2.5 text-left transition-colors ${
-                  k === scenario ? "bg-bull/[0.06]" : "hover:bg-bg-soft"
-                }`}
-              >
-                <div className={`font-mono text-[0.625rem] uppercase tracking-wider ${k === scenario ? "text-bull" : "text-fg-dim"}`}>
-                  {SCENARIOS[k].label}
-                </div>
-              </button>
+              <TogglePill key={k} on={k === scenario} onClick={() => setScenario(k)}>
+                {SCENARIOS[k].label}
+              </TogglePill>
             ))}
           </div>
-          <div className="border-t border-border-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">
-            <span className="normal-case tracking-normal text-fg-dim">{scn.desc}</span>
-          </div>
+          <div className="mt-2 text-[0.8125rem] leading-relaxed text-fg-dim">{scn.desc}</div>
         </div>
 
-        <div className="surface-card border border-border bg-surface">
-          <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            <span>active bots</span>
-            <span className="text-fg-faint">click to toggle · {active.length}/{ALL_BOTS.length} on</span>
+        <div>
+          <div className="flex items-center justify-between t-label text-fg-dim">
+            <span>Active bots</span>
+            <span className="text-fg-faint">Click to toggle · {active.length}/{ALL_BOTS.length} on</span>
           </div>
           {/* Compact pill grid — ticker-style code + vote, full name on the
               tooltip. The 12-row labelled list was the tallest block in the
               sticky frame; the pills carry the same interaction at a third of
               the height. */}
-          <div className="grid grid-cols-3 gap-px bg-border @lg:grid-cols-4">
+          <div className="mt-2 grid grid-cols-3 gap-1.5 @lg:grid-cols-4">
             {ALL_BOTS.map((b) => {
               const isActive = active.includes(b.id);
               const v = scn.votes[b.id];
@@ -126,7 +106,7 @@ export function LearnConsensusPlayground() {
                   key={b.id}
                   onClick={() => toggle(b.id)}
                   title={`${b.name} — ${v === "buy" ? "lean long" : v === "sell" ? "lean short" : "no lean"}`}
-                  className={`flex items-center justify-between gap-1.5 bg-bg px-2 py-1.5 text-left transition-opacity ${
+                  className={`flex items-center justify-between gap-1.5 rounded-lg bg-fg/[0.05] px-2 py-1.5 text-left transition-opacity ${
                     isActive ? "opacity-100" : "opacity-30 hover:opacity-50"
                   }`}
                 >
@@ -134,7 +114,7 @@ export function LearnConsensusPlayground() {
                     <span className="text-[0.5rem]" style={{ color: b.color }}>●</span>
                     <span className="truncate font-mono text-[0.625rem] uppercase tracking-wide text-fg">{b.id}</span>
                   </span>
-                  <span className={`font-mono text-[0.5625rem] uppercase tracking-wider ${verdictTone}`}>
+                  <span className={`font-mono text-[0.625rem] ${verdictTone}`}>
                     {v}
                   </span>
                 </button>
@@ -146,38 +126,35 @@ export function LearnConsensusPlayground() {
 
       {/* Output */}
       <div className="@md:col-span-5">
-        <div className="surface-card border border-border bg-surface">
-          <div className="border-b border-border bg-bg-soft px-3 py-2 font-mono text-[0.625rem] uppercase tracking-wider text-fg-dim">
-            consensus tally
-          </div>
-          <div className="p-5">
-            <div className={`inline-flex items-center gap-2 border px-2 py-1 font-mono text-[0.625rem] uppercase tracking-wider ${TIER_BG[tierTone]}`}>
-              <span className="size-1.5 rounded-full bg-current" />
-              {tally.tier} · {tally.lean === "buy" ? "lean long" : tally.lean === "sell" ? "lean short" : "no lean"}
-            </div>
+        <div className="rounded-xl bg-fg/[0.05]">
+          <div className="px-4 pt-3.5 t-label text-fg-dim">Consensus tally</div>
+          <div className="p-4">
+            <Chip dot>
+              {tally.tier.charAt(0).toUpperCase() + tally.tier.slice(1)} · {tally.lean === "buy" ? "lean long" : tally.lean === "sell" ? "lean short" : "no lean"}
+            </Chip>
             <div className="mt-4 font-display text-5xl tracking-tightest tabular-nums text-fg">
               {tally.agreeCount} / {tally.total}
             </div>
-            <div className="mt-1 font-mono text-[0.6875rem] uppercase tracking-wider text-fg-dim">
-              models agree ({(tally.agreePct * 100).toFixed(0)}%)
+            <div className="mt-1 t-label text-fg-dim">
+              Models agree ({(tally.agreePct * 100).toFixed(0)}%)
             </div>
           </div>
 
-          <div className="border-t border-border-soft p-5">
-            <div className="grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
+          <div className="px-4 pb-4">
+            <div className="grid grid-cols-3 gap-3">
               {/* The three buckets counted models under BUY / HOLD / SELL —
                   which reads as a desk handing down orders when it is really
                   a histogram of six opinions. Same numbers, named as leans:
                   what a model TILTED towards, not what anyone should do. */}
-              <Bucket label="lean long" value={tally.buy} tone="bull" />
-              <Bucket label="no lean" value={tally.hold} tone="neutral" />
-              <Bucket label="lean short" value={tally.sell} tone="bear" />
+              <Bucket label="Lean long" value={tally.buy} tone="bull" />
+              <Bucket label="No lean" value={tally.hold} tone="neutral" />
+              <Bucket label="Lean short" value={tally.sell} tone="bear" />
             </div>
           </div>
 
-          <div className="border-t border-border-soft p-5">
-            <div className="font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint mb-2">
-              what this means
+          <div className="px-4 pb-4">
+            <div className="t-label text-fg-faint mb-2">
+              What this means
             </div>
             <p className="text-[0.8125rem] leading-relaxed text-fg-dim">
               {tally.tier === "very strong agreement" &&
@@ -191,8 +168,8 @@ export function LearnConsensusPlayground() {
             </p>
             {/* ONE band, printed at every agreement level, with the hedge
                 attached to it rather than floating a paragraph away. */}
-            <p className="mt-2 font-mono text-[0.625rem] italic text-fg-faint">
-              measured hit rate {ACCURACY_BAND} at every agreement level · {HYPOTHETICAL_NOTE} · education only, not advice
+            <p className="mt-2 t-label text-fg-faint">
+              Measured hit rate {ACCURACY_BAND} at every agreement level · {HYPOTHETICAL_NOTE} · education only, not advice
             </p>
           </div>
         </div>
@@ -204,9 +181,9 @@ export function LearnConsensusPlayground() {
 function Bucket({ label, value, tone }: { label: string; value: number; tone: "bull" | "bear" | "neutral" }) {
   const cls = tone === "bull" ? "text-bull" : tone === "bear" ? "text-bear" : "text-fg-dim";
   return (
-    <div className="bg-bg p-3 text-center">
+    <div className="text-center">
       <div className={`font-display text-2xl tabular-nums ${cls}`}>{value}</div>
-      <div className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-fg-faint">{label}</div>
+      <div className="mt-0.5 t-label text-fg-faint">{label}</div>
     </div>
   );
 }

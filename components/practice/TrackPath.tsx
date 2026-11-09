@@ -1,10 +1,9 @@
 "use client";
 
 // The ordered path down a track: a vertical connector, one numbered row per
-// problem with its status glyph, pill and minutes, and the first unsolved row
-// lit with an inline `start →`. The numbered-steps feel is the workspace's
-// reorder rail; the row grid is the hairline `border-b border-border-soft`
-// list idiom from components/quant/BotLibrary.tsx (line 62).
+// problem with its status glyph, chip and minutes, and the first unsolved row
+// lit with an inline Start pill. The rows are plain, inside one calm panel; the
+// numbered-steps feel is the workspace's reorder rail.
 //
 // Three client exports share the progress hook so the page can stay a server
 // component: TrackPath (the list), TrackAside (the ring + outcomes) and
@@ -13,6 +12,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PillLink } from "@/components/calm/kit";
 import { Panel } from "@/components/practice/Panel";
 import { DifficultyPill, LockPill, StatusGlyph } from "@/components/practice/Chips";
 import { SolvedRing } from "@/components/practice/SolvedRing";
@@ -21,12 +21,9 @@ import { usePracticeProgress } from "@/lib/practice/progress";
 import { TRACK_META } from "@/lib/practice/tracks";
 import type { Difficulty, ProblemMeta, TrackId } from "@/lib/practice/types";
 
-/** The ▶ run button's dress from the workspace, as a link. */
-const PRIMARY =
-  "inline-flex h-7 items-center gap-2 border border-bull bg-bull/10 px-3 font-mono text-[0.6875rem] font-semibold uppercase tracking-wider text-bull hover:bg-bull hover:text-bg";
-
 /** What finishing the track leaves you able to do. Three lines each; the
-    `›` marker follows the GlassPoints rule (marker in bull, text dim). */
+    `›` marker follows the GlassPoints rule (marker in the reading colour,
+    text dim). */
 export const TRACK_OUTCOMES: Record<TrackId, string[]> = {
   finance: [
     "price a European option and say who pays the strike, and when",
@@ -60,51 +57,54 @@ export function TrackPath({ track, problems }: { track: TrackId; problems: Probl
   const nextSlug = problems.find((p) => statusOf(p.id) !== "solved")?.id ?? null;
 
   return (
-    <ol aria-label={`${TRACK_META[track].label} problems, in order`} className="relative">
-      {/* the connector — runs behind the status nodes, which mask it with bg-bg */}
-      <span aria-hidden className="absolute bottom-0 left-5 top-0 w-px bg-border" />
-      {problems.map((p) => {
-        const status = statusOf(p.id);
-        const isNext = p.id === nextSlug;
-        return (
-          <li
-            key={p.id}
-            aria-current={isNext ? "step" : undefined}
-            className={`relative grid grid-cols-[1.5rem_1fr_auto] items-center gap-3 border-b border-border-soft px-2 py-3 ${
-              isNext ? "bg-bull/[0.04]" : ""
-            }`}
-          >
-            <span className="relative grid size-6 place-items-center bg-bg">
-              <StatusGlyph status={status} />
-            </span>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="t-data t-chrome text-fg-faint">{String(p.num).padStart(2, "0")}</span>
-                <Link
-                  href={`/practice/${p.id}`}
-                  className="font-display text-[0.9375rem] tracking-tightest text-fg hover:text-bull"
-                >
-                  {p.title}
-                </Link>
-                {p.lock && <LockPill lock={p.lock} />}
+    <div className="calm-panel min-w-0 p-2 md:p-3">
+      <i aria-hidden className="lit-aura" />
+      <ol aria-label={`${TRACK_META[track].label} problems, in order`} className="relative">
+        {/* the connector — runs behind the status nodes, which mask it with
+            bg-bg; it starts and ends inside the first and last node */}
+        <span aria-hidden className="absolute bottom-7 left-5 top-7 w-px bg-border" />
+        {problems.map((p) => {
+          const status = statusOf(p.id);
+          const isNext = p.id === nextSlug;
+          return (
+            <li
+              key={p.id}
+              aria-current={isNext ? "step" : undefined}
+              className={`relative grid grid-cols-[1.5rem_1fr] items-center gap-3 border-b px-2 py-3 last:border-b-0 sm:grid-cols-[1.5rem_1fr_auto] ${
+                isNext ? "rounded-[14px] border-transparent bg-brand-ink/[0.07]" : "border-[color-mix(in_srgb,var(--fg)_6%,transparent)]"
+              }`}
+            >
+              <span className="relative grid size-6 place-items-center rounded-full bg-bg">
+                <StatusGlyph status={status} />
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="t-data text-[0.75rem] text-fg-faint">{String(p.num).padStart(2, "0")}</span>
+                  <Link
+                    href={`/practice/${p.id}`}
+                    className="font-sans text-[0.9375rem] font-medium tracking-[-0.01em] text-fg hover:text-brand-ink"
+                  >
+                    {p.title}
+                  </Link>
+                  {p.lock && <LockPill lock={p.lock} />}
+                </div>
+                <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-fg-dim">{p.blurb}</p>
               </div>
-              {/* Lowercase mono micro-copy (the GetStarted.tsx index blurb), not
-                  t-chrome: a blurb is a sentence, and t-chrome uppercases. */}
-              <p className="mt-0.5 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">{p.blurb}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <DifficultyPill difficulty={p.difficulty} />
-              <span className="whitespace-nowrap t-chrome text-fg-faint">{p.minutes} min</span>
-              {isNext && (
-                <Link href={`/practice/${p.id}`} className={PRIMARY}>
-                  start →
-                </Link>
-              )}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+              {/* Under the title on a phone, where the row has no third column. */}
+              <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-3">
+                <DifficultyPill difficulty={p.difficulty} />
+                <span className="whitespace-nowrap t-label text-fg-faint">{p.minutes} min</span>
+                {isNext && (
+                  <PillLink href={`/practice/${p.id}`} size="sm">
+                    Start
+                  </PillLink>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
@@ -121,17 +121,17 @@ export function TrackAside({ track }: { track: TrackId }) {
 
   return (
     <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-      <Panel as="div" title="Progress" bodyClassName="p-3">
+      <Panel as="div" calm title="Progress" bodyClassName="px-5 pb-5 pt-4">
         <SolvedRing solved={solved} total={total} size={96} caption={meta.label} />
       </Panel>
-      <Panel as="div" title="You leave able to" bodyClassName="p-3">
+      <Panel as="div" calm title="You leave able to" bodyClassName="px-5 pb-5 pt-3">
         <ul className="space-y-2">
           {TRACK_OUTCOMES[track].map((line) => (
-            <li key={line} className="flex gap-2 font-mono text-[0.6875rem] leading-relaxed text-fg-dim">
-              <span aria-hidden className="text-bull">
+            <li key={line} className="flex gap-2 text-[0.875rem] leading-relaxed text-fg-dim">
+              <span aria-hidden className="text-brand-ink">
                 ›
               </span>
-              <span>{line}</span>
+              <span>{line.charAt(0).toUpperCase() + line.slice(1)}</span>
             </li>
           ))}
         </ul>
@@ -140,26 +140,26 @@ export function TrackAside({ track }: { track: TrackId }) {
   );
 }
 
-/** The hero CTA — a link to the track's next unsolved problem, falling back to
-    the first row once the track is complete. Progress comes from the hook, so
-    the server and the first client render both point at the first row and the
-    effect moves it. */
+/** The hero CTA — the page's one primary pill, a link to the track's next
+    unsolved problem, falling back to the first row once the track is complete.
+    Progress comes from the hook, so the server and the first client render both
+    point at the first row and the effect moves it. */
 export function TrackStartLink({
   track,
   fallback,
-  className,
+  className = "",
   children,
 }: {
   track: TrackId;
   fallback: string;
-  className: string;
+  className?: string;
   children: ReactNode;
 }) {
   const { summary } = usePracticeProgress();
   const slug = summary.byTrack[track].nextSlug ?? fallback;
   return (
-    <Link href={`/practice/${slug}`} className={className}>
+    <PillLink href={`/practice/${slug}`} kind="primary" className={className}>
       {children}
-    </Link>
+    </PillLink>
   );
 }
