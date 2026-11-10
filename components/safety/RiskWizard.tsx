@@ -8,6 +8,7 @@ import { consentGateNeeded } from "@/lib/consent";
 import { useConsent } from "@/components/ConsentGate";
 import { useModalFocus } from "./useModalFocus";
 import { ToolButton } from "@/components/calm/kit";
+import { registerBriefing, type BriefingOutcome } from "@/lib/safety-briefing";
 
 // Naked short call demo: short 1 call at $100 strike, premium $3
 const NAKED_CALL = [{ id: "demo", type: "C" as const, side: "short" as const, strike: 100, qty: 1, premium: 3 }];
@@ -43,13 +44,18 @@ export function RiskWizard() {
   const reduce = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Only after consent is answered: two dialogs each trapping focus would fight.
+  // It opens on intent (lib/safety-briefing.ts): the first paper trade, or
+  // training wheels off. Never over the consent gate: two dialogs each
+  // trapping focus would fight, so until consent is answered the action just
+  // runs (the gate is in front of it anyway).
   const consentAnswered = ready && !!consent?.adult && !consentGateNeeded(consent);
+  const pending = useRef<((outcome: BriefingOutcome) => void) | null>(null);
   useEffect(() => {
     if (wizardSeen || !consentAnswered) return;
-    // small delay so the page paints first
-    const id = setTimeout(() => setOpen(true), 600);
-    return () => clearTimeout(id);
+    return registerBriefing((done) => {
+      pending.current = done;
+      setOpen(true);
+    });
   }, [wizardSeen, consentAnswered]);
 
   useModalFocus(panelRef, open, { initial: "#risk-spot" });
@@ -65,6 +71,9 @@ export function RiskWizard() {
     setTrainingWheels(wheels);
     setWizardSeen();
     setOpen(false);
+    const done = pending.current;
+    pending.current = null;
+    done?.(wheels ? "wheels-on" : "wheels-off");
   };
 
   return (
@@ -74,7 +83,7 @@ export function RiskWizard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+          className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/60 p-4"
         >
           <motion.div
             ref={panelRef}
@@ -90,7 +99,7 @@ export function RiskWizard() {
             className="surface-instrument max-h-[calc(100vh/var(--ui-zoom)-2rem)] w-full max-w-2xl overflow-y-auto border border-amber/60 bg-bg shadow-2xl outline-none"
           >
             <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-amber">
-              ⚠ First-visit safety briefing · 1 of 1
+              Before your first paper trade
             </div>
             <div className="p-6">
               <h2 id="risk-title" className="font-display text-3xl tracking-tightest text-fg leading-tight">

@@ -9,6 +9,7 @@ import { BOT_CONTENT, BOT_SIMPLE } from "@/lib/quant/bot-content";
 import { getBotSource } from "@/lib/quant/bot-source";
 import { LearnBotDemo } from "@/components/learn/LearnBotDemo";
 import { LearnApiStatus } from "@/components/learn/LearnApiStatus";
+import { BotIcon } from "@/components/quant/BotIcon";
 
 export function generateStaticParams() {
   return BOT_REGISTRY.map((b) => ({ id: b.id }));
@@ -37,6 +38,8 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
   const simple = content.simple ?? BOT_SIMPLE[bot.id] ?? null;
   const source = getBotSource(bot.id);
   const isAi = bot.category === "ai";
+  const intro = content.intro ?? defaultIntro(bot.name, bot.tagline);
+  const introShown = simple ? freshSentences(intro, simple) : intro;
 
   // Related: same-category siblings + curated cross-pairings.
   const sameCat = BOT_REGISTRY.filter((b) => b.category === bot.category && b.id !== bot.id).slice(0, 4);
@@ -73,8 +76,8 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
         }
       >
         <div className="mt-8 flex flex-wrap items-center gap-2.5">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-fg/[0.07] font-display text-xl text-fg-dim">
-            {bot.glyph}
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-fg-dim">
+            <BotIcon id={bot.id} className="size-6" />
           </span>
           <Chip>{cat.label}</Chip>
           {isAi && <Chip>AI</Chip>}
@@ -92,9 +95,9 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                 {simple}
               </p>
             )}
-            <p className="mt-4 max-w-[68ch] t-body-sm leading-relaxed text-fg-dim">
-              {content.intro ?? defaultIntro(bot.name, bot.tagline)}
-            </p>
+            {introShown && (
+              <p className="mt-4 max-w-[68ch] t-body-sm leading-relaxed text-fg-dim">{introShown}</p>
+            )}
           </div>
         </div>
       </section>
@@ -137,8 +140,8 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
         <div className="shell section-y-sm">
           <SectionLabel>Live demo</SectionLabel>
           <p className="mt-3 max-w-[60ch] t-body text-fg-dim">
-            Real {bot.name} bot, running on real Yahoo data when the symbol is
-            available. Drag the params — the bot re-runs instantly.
+            The real {bot.name} code, running in your browser. Change a
+            parameter below and it runs again at once.
           </p>
           <div className="mt-8">
             <LearnBotDemo botId={bot.id} />
@@ -346,8 +349,8 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
                   className="calm-panel calm-card flex items-start gap-3 p-4"
                 >
                   <i aria-hidden className="lit-aura" />
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fg/[0.07] font-mono text-[0.75rem] text-fg-dim">
-                    {r.glyph}
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-fg-dim">
+                    <BotIcon id={r.id} className="size-[1.125rem]" />
                   </span>
                   <div className="min-w-0">
                     <div className="font-display text-[0.9375rem] tracking-tightest text-fg">
@@ -386,6 +389,23 @@ export default async function BotPage({ params }: { params: Promise<{ id: string
 // Calm (S1, 2026-11-09): one plain eyebrow. It carried a ⟢, a rule and mint.
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div className="t-eyebrow text-brand-ink">{children}</div>;
+}
+
+// The two paragraphs under "In plain English" were written apart, and on some
+// bots (Heston, Bollinger, the Monte Carlo pricer) the second opened by saying
+// the first again. Keep only its sentences that mostly use words the first
+// did not.
+function freshSentences(text: string, already: string): string {
+  const words = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 3);
+  const said = new Set(words(already));
+  const sentences = text.match(/[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g) ?? [text];
+  return sentences
+    .filter((s) => {
+      const w = words(s);
+      return w.length === 0 || w.filter((x) => said.has(x)).length / w.length < 0.6;
+    })
+    .join("")
+    .trim();
 }
 
 function defaultIntro(name: string, tagline: string): string {

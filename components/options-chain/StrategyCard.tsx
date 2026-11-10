@@ -7,6 +7,7 @@ import { detect } from "@/lib/detector";
 import { pnlSummary } from "@/lib/pricing";
 import { PnLDiagram } from "./PnLDiagram";
 import { PreTradeModal } from "@/components/safety/PreTradeModal";
+import { withBriefing } from "@/lib/safety-briefing";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 import { noteExplainRequest, tradeFingerprint } from "@/lib/confusion";
@@ -273,7 +274,7 @@ export function StrategyCard({ underlying, spot }: { underlying: string; spot: n
             <span className="mx-2">·</span>
             Cost <span className={`t-data ${cost > 0 ? "text-bear" : "text-bull"}`}>${Math.abs(cost).toFixed(0)}</span>
           </div>
-          <button type="button" onClick={() => setTradeModal(true)} className="deck-btn deck-btn-primary">
+          <button type="button" onClick={() => withBriefing(() => setTradeModal(true))} className="deck-btn deck-btn-primary">
             Paper trade
             <span aria-hidden className="deck-arrow">
               →

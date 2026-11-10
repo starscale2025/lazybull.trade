@@ -34,7 +34,12 @@ const BUDGET = {
   webglContextsAtLoad: 1,
   homeCLS: 0.02,
   pageCLS: 0.05,
+  // Gate A5 1.3: a true first visit to /trade, on a throttled phone.
+  firstVisitLCPms: 2500,
+  firstVisitCLS: 0.02,
 };
+// "Slow 4G" with a 4x CPU slowdown, the Lighthouse phone preset.
+const THROTTLE = { cpu: 4, latency: 150, down: (1.6 * 1024 * 1024) / 8, up: (750 * 1024) / 8 };
 
 // A ratchet, not a pass: where a page is known to sit over budget, CI holds it
 // at today's number so it cannot get worse, until the fix lands and the line
@@ -63,10 +68,11 @@ const HYDRATION = /Minified React error #(418|419|423|425)|hydrat/i;
 
 // Runs in every frame before any page script: consent on file, and a count of
 // WebGL contexts (the film's scene is a same-origin iframe, so it counts too).
-function instrument() {
+// A true first visit leaves the safety briefing unseen, as a stranger has it.
+function instrument(firstVisit) {
   try {
     localStorage.setItem("lb-consent", JSON.stringify({ v: 1, adult: true, analytics: false, training: false, at: new Date().toISOString() }));
-    localStorage.setItem("lb-safety", JSON.stringify({ state: { wizardSeen: true, trainingWheels: true }, version: 0 }));
+    if (!firstVisit) localStorage.setItem("lb-safety", JSON.stringify({ state: { wizardSeen: true, trainingWheels: true }, version: 0 }));
   } catch {}
   const top = window.top || window;
   const getContext = HTMLCanvasElement.prototype.getContext;
@@ -81,19 +87,34 @@ function instrument() {
   if (window === top) {
     window.__budgetCLS = 0;
     window.__budgetLCP = null;
+    window.__budgetLCPms = null;
     new PerformanceObserver((list) => {
       for (const e of list.getEntries()) if (!e.hadRecentInput) window.__budgetCLS += e.value;
     }).observe({ type: "layout-shift", buffered: true });
     new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) window.__budgetLCP = e.element ? e.element.id || e.element.tagName.toLowerCase() : null;
+      for (const e of list.getEntries()) {
+        window.__budgetLCP = e.element ? e.element.id || e.element.tagName.toLowerCase() : null;
+        window.__budgetLCPms = Math.round(e.startTime);
+      }
     }).observe({ type: "largest-contentful-paint", buffered: true });
   }
 }
 
 async function visit(browser, device, path, opts = {}) {
   const context = await browser.newContext(device);
-  await context.addInitScript(instrument);
+  await context.addInitScript(instrument, !!opts.firstVisit);
   const page = await context.newPage();
+  if (opts.throttle) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE.cpu });
+    await cdp.send("Network.enable");
+    await cdp.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: THROTTLE.latency,
+      downloadThroughput: THROTTLE.down,
+      uploadThroughput: THROTTLE.up,
+    });
+  }
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e?.message || e)));
   // React reports a recoverable hydration error to the console, not as an
@@ -112,6 +133,8 @@ async function visit(browser, device, path, opts = {}) {
         gl: window.__budgetGL || 0,
         cls: Math.round(window.__budgetCLS * 1000) / 1000,
         lcp: window.__budgetLCP,
+        lcpMs: window.__budgetLCPms,
+        briefingOpen: !!document.querySelector('[role="dialog"][aria-labelledby="risk-title"]'),
         filmScene: !!document.querySelector("[data-cinema] iframe"),
       };
     });
@@ -232,6 +255,17 @@ async function main() {
     for (const path of ["/trade", "/trade/chain", "/pricing"]) {
       noteErrors(`desktop ${path}`, await visit(browser, DESKTOP, path, { idle: 3000 }));
     }
+    // Gate A5 1.3: a stranger's first visit to /trade. The safety briefing
+    // waits for intent (the first paper trade, or training wheels off), so
+    // nothing pops over the page and the page itself paints fast and holds
+    // still on a throttled phone. These rows leave the briefing unseen.
+    const first = await visit(browser, PHONE, "/trade", { firstVisit: true, throttle: true, idle: 6000 });
+    noteErrors("first visit, throttled phone /trade", first);
+    const lcpOk = first.lcpMs !== null && first.lcpMs <= BUDGET.firstVisitLCPms;
+    check("first visit · throttled phone /trade · LCP ms", first.lcpMs ?? "none", lcpOk, `≤ ${BUDGET.firstVisitLCPms}`);
+    check("first visit · throttled phone /trade · CLS", first.cls, first.cls <= BUDGET.firstVisitCLS, `≤ ${BUDGET.firstVisitCLS}`);
+    check("first visit · /trade · briefing at load", first.briefingOpen ? "open" : "none", !first.briefingOpen, "none");
+
     check("uncaught errors, every route visited", errorsOn.length, errorsOn.length === 0, "0");
     for (const e of errorsOn) console.error(`  pageerror · ${e}`);
 

@@ -232,18 +232,7 @@ export function ConsentGate() {
   );
 
   if (!open) {
-    if (legal && (needsGate || blocked)) {
-      return (
-        <div role="region" aria-label="Privacy choices" className="fixed inset-x-0 bottom-0 z-[170] border-t border-border bg-bg/95 py-3 backdrop-blur">
-          <div className="shell flex flex-wrap items-center justify-between gap-3 t-label text-fg-dim">
-            <span>Nothing is recorded until you answer the age and privacy questions.</span>
-            <PillButton size="sm" onClick={openConsentSettings}>
-              Answer now
-            </PillButton>
-          </div>
-        </div>
-      );
-    }
+    if (legal && (needsGate || blocked)) return <LegalConsentBar />;
     return null;
   }
 
@@ -356,6 +345,36 @@ export function ConsentGate() {
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** The legal pages' strip in place of the gate. It publishes its height as
+ *  --consent-bar-h so the shortcut dial lifts clear of it (on a phone it
+ *  wraps, and its button used to land exactly under the dial's puck). */
+function LegalConsentBar() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty("--consent-bar-h", `${el.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--consent-bar-h");
+    };
+  }, []);
+  return (
+    <div ref={ref} role="region" aria-label="Privacy choices" className="fixed inset-x-0 bottom-0 z-[170] border-t border-border bg-bg/95 py-3 backdrop-blur">
+      <div className="shell flex flex-wrap items-center justify-between gap-3 t-label text-fg-dim">
+        <span>Nothing is recorded until you answer the age and privacy questions.</span>
+        <PillButton size="sm" onClick={openConsentSettings}>
+          Answer now
+        </PillButton>
       </div>
     </div>
   );

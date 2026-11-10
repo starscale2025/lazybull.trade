@@ -5,10 +5,11 @@
  * every page. An arc of the visitor's own shortcuts with the page they are on
  * lit, the same object as the Island's dial in the other corner of the eye.
  *
- * At rest it is small and out of the way; the pointer or keyboard focus opens
- * it to full size with its labels. A tap on a touch screen opens it first, so
- * a shortcut is never followed by accident. The gear edits the set: for every
- * page, or for just this one (lib/shortcuts.ts).
+ * At rest it is small, out of the way and inert: one 44 px opener is its only
+ * live part (a puck under 1024 px), so it never takes a tap meant for the page
+ * under it. The pointer, keyboard focus or a tap on the opener unfolds it to
+ * full size with its labels, on the Island's spring. The gear edits the set:
+ * for every page, or for just this one (lib/shortcuts.ts).
  *
  * It recedes while the film is pinned (globals.css, THE DIAL).
  */
@@ -25,6 +26,7 @@ import {
   CandlestickChart,
   Dumbbell,
   Home,
+  LayoutGrid,
   Pause,
   Play,
   Plus,
@@ -94,7 +96,14 @@ function arcPath(mid: number, sweep: number) {
 const NO_DIAL = /^\/(admin|pro|practice|trade)(\/|$)/;
 
 /** Pages with their own bars along the bottom edge lift the dial clear of them. */
-const liftFor = (path: string) => (/^\/pro(\/|$)/.test(path) ? "pro" : path === "/trade" ? "trade" : undefined);
+const liftFor = (path: string) =>
+  /^\/pro(\/|$)/.test(path)
+    ? "pro"
+    : path === "/trade"
+      ? "trade"
+      : /^\/practice\/(?!(contest|profile|tracks|certificate)$)[^/]+$/.test(path) // a problem's workspace
+        ? "practice"
+        : undefined;
 
 export function ShortcutDial() {
   const pathname = usePathname() || "/";
@@ -249,6 +258,8 @@ export function ShortcutDial() {
           const common = {
             "aria-label": name,
             title: name,
+            // folded, the shortcuts are a picture: only the opener takes a tap or a Tab
+            tabIndex: expanded ? 0 : -1,
             className: `dial-slot ${i === lit ? "dial-slot-lit" : ""}`,
             style: { left: x - 22, top: y - 22 },
             onPointerEnter: () => setHot(name),
@@ -268,12 +279,27 @@ export function ShortcutDial() {
           );
         })}
 
+        {/* At rest this is the dial's only live part: a 44 px opener over the
+            folded arc, drawn as a puck on narrow screens where the arc folds
+            away. Everything else wakes when it opens. */}
+        <button
+          type="button"
+          className="dial-opener"
+          aria-label="Open your shortcuts"
+          aria-expanded={expanded}
+          tabIndex={expanded ? -1 : 0}
+          onClick={show}
+        >
+          <LayoutGrid size={30} aria-hidden />
+        </button>
+
         <button
           ref={gearRef}
           type="button"
           aria-label="Edit your shortcuts"
           aria-expanded={editing}
           title="Edit your shortcuts"
+          tabIndex={expanded ? 0 : -1}
           onClick={() => setEditing((v) => !v)}
           className="dial-slot dial-gear"
           style={{ left: polar(GEAR_ANGLE)[0] - 22, top: polar(GEAR_ANGLE)[1] - 22 }}

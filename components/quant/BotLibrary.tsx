@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { BotDef, BotCategory } from "@/lib/quant/types";
 import { CATEGORY_META } from "@/lib/quant/types";
 import { Chip, TogglePill } from "@/components/calm/kit";
+import { BotIcon } from "./BotIcon";
 
 export function BotLibrary({
   bots,
@@ -99,8 +100,8 @@ export function BotLibrary({
                 className="block w-full px-4 py-2.5 pb-7 pr-9 text-left transition-colors hover:bg-fg/5"
               >
                 <div className="flex items-start gap-3">
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-[0.75rem] text-brand-ink">
-                    {b.glyph}
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-brand-ink">
+                    <BotIcon id={b.id} className="size-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

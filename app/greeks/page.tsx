@@ -1,7 +1,8 @@
 "use client";
 
 // The Greek Surface lab — the product's showpiece interactive. A real
-// Black-Scholes call-price surface over strike × days-to-expiry for a chosen
+// Black-Scholes surface for a call (its price or any Greek, plotted with its
+// sign) over strike × days-to-expiry for a chosen
 // symbol (live spot via /api/quote, synthetic $100 fallback), rendered as a
 // low-camera SVG wireframe with a draggable glowing handle. Drag it (or use
 // the sliders) and all five Greeks recompute live from lib/pricing.
@@ -20,8 +21,16 @@ const M_LO = 0.8; // strike = spot × moneyness
 const M_HI = 1.2;
 const D_MIN = 0;
 const D_MAX = 90;
-const NK = 36; // strike samples
+// Near expiry gamma and theta run to infinity inside a strike band narrower
+// than a coarse grid's spacing, which drew them as needles. So strikes are
+// sampled finely (every other one is drawn as a column), expiries crowd toward
+// the front where the surface bends fastest, and the mesh stops three quarters
+// of a day before expiry.
+const NK = 73; // strike samples
+const COL_EVERY = 2;
 const ND = 27; // expiry samples
+const D_MESH = 0.75;
+const dayAt = (j: number) => D_MESH + (D_MAX - D_MESH) * Math.pow(j / (ND - 1), 1.5);
 const SYMBOLS = ["AMZN", "AAPL", "TSLA", "NVDA", "SPY", "MSFT"] as const;
 const FALLBACK_SPOT = 100;
 
@@ -55,28 +64,111 @@ function project(u: number, v: number, h: number) {
 }
 
 // ── Selectable z-axis: price or a Greek, all from the same pricing engine ────
+// Every surface plots with its sign. A call's theta is negative everywhere (it
+// is what the option loses each day), so it hangs below a zero line as a
+// valley and agrees with the Theta card instead of mirroring it.
 type SurfaceKey = "price" | "delta" | "gamma" | "theta" | "vega";
 const SURFACE_ORDER: SurfaceKey[] = ["price", "delta", "gamma", "theta", "vega"];
-const SURFACE_DEFS: Record<
-  SurfaceKey,
-  { label: string; caption: string; fmt: (v: number) => string; pick: (price: number, g: { delta: number; gamma: number; theta: number; vega: number }) => number }
-> = {
-  price: { label: "Price", caption: "OPTION PRICE", fmt: (v) => v.toFixed(2), pick: (p) => p },
-  delta: { label: "Delta", caption: "DELTA", fmt: (v) => v.toFixed(2), pick: (_, g) => g.delta },
-  gamma: { label: "Gamma", caption: "GAMMA", fmt: (v) => v.toFixed(4), pick: (_, g) => g.gamma },
-  theta: { label: "Theta", caption: "THETA (ABS)", fmt: (v) => v.toFixed(3), pick: (_, g) => Math.abs(g.theta) },
-  vega: { label: "Vega", caption: "VEGA", fmt: (v) => v.toFixed(3), pick: (_, g) => g.vega },
+type SurfaceDef = {
+  label: string;
+  /** What the surface shows, for its title, aria-label and teacher copy. */
+  name: string;
+  caption: string;
+  /** What height means on this surface, in one or two sentences. */
+  reads: string;
+  fmt: (v: number) => string;
+  pick: (price: number, g: { delta: number; gamma: number; theta: number; vega: number }) => number;
+};
+const SURFACE_DEFS: Record<SurfaceKey, SurfaceDef> = {
+  price: {
+    label: "Price",
+    name: "price",
+    caption: "CALL PRICE",
+    reads: "Height is what the call costs: it climbs toward low strikes and long expiries.",
+    fmt: (v) => v.toFixed(2),
+    pick: (p) => p,
+  },
+  delta: {
+    label: "Delta",
+    name: "delta",
+    caption: "DELTA",
+    reads: "Height is delta, how much the call moves for a $1 move in the stock: near 1 deep in the money, near 0 far out of it.",
+    fmt: (v) => v.toFixed(2),
+    pick: (_, g) => g.delta,
+  },
+  gamma: {
+    label: "Gamma",
+    name: "gamma",
+    caption: "GAMMA",
+    reads: "Height is gamma, how fast delta changes: it crests where the strike meets the stock price and sharpens as expiry gets close.",
+    fmt: (v) => v.toFixed(4),
+    pick: (_, g) => g.gamma,
+  },
+  theta: {
+    label: "Theta",
+    name: "theta",
+    caption: "THETA PER DAY",
+    reads: "Height is theta, what the call loses each day. It sits below the zero line everywhere, and the valley deepens where the strike meets the stock price as expiry gets close.",
+    fmt: (v) => v.toFixed(3),
+    pick: (_, g) => g.theta,
+  },
+  vega: {
+    label: "Vega",
+    name: "vega",
+    caption: "VEGA",
+    reads: "Height is vega, what the call gains if volatility rises one point: largest near the stock price far from expiry, fading to nothing at expiry.",
+    fmt: (v) => v.toFixed(3),
+    pick: (_, g) => g.vega,
+  },
 };
 
 // ── Surface grid — real Black-Scholes, recomputed per spot & surface ─────────
 type SurfaceData = {
   spot: number;
   surfaceKey: SurfaceKey;
-  yMax: number;
+  /** The scale's ends. It always holds zero, so a negative surface keeps its sign. */
+  lo: number;
+  hi: number;
   priceStep: number;
-  rows: { key: string; pts: string; opacity: number; width: number }[];
-  cols: { key: string; pts: string; opacity: number; width: number }[];
+  rows: { key: string; d: string; opacity: number; width: number }[];
+  cols: { key: string; d: string; opacity: number; width: number }[];
+  /** Where the expiry spike leaves the scale and is cut flat, if it does. */
+  clip: { u: number; v: number; dir: "up" | "down" } | null;
 };
+
+// Height in the box (0 floor, 1 ceiling) for a value on the scale [lo, hi].
+// Whatever leaves the scale is held at the edge and labelled "off scale".
+const heightOf = (z: number, lo: number, hi: number) => clamp((z - lo) / (hi - lo), 0, 1);
+
+// One mesh line through grid points, as an svg path. Where the surface leaves
+// the scale the line ends at the scale's edge instead of being cut flat along
+// it, and starts again where the surface comes back.
+type GridPt = { u: number; v: number; z: number };
+function lineThrough(pts: GridPt[], lo: number, hi: number) {
+  const at = (p: GridPt) => {
+    const q = project(p.u, p.v, (p.z - lo) / (hi - lo));
+    return `${q.x.toFixed(1)},${q.y.toFixed(1)}`;
+  };
+  const edgeOf = (z: number) => (z > hi ? hi : z < lo ? lo : null);
+  const cross = (a: GridPt, b: GridPt, bound: number): GridPt => {
+    const t = (bound - a.z) / (b.z - a.z);
+    return { u: a.u + (b.u - a.u) * t, v: a.v + (b.v - a.v) * t, z: bound };
+  };
+  let d = "";
+  pts.forEach((p, k) => {
+    const prev = k > 0 ? pts[k - 1] : null;
+    const pEdge = edgeOf(p.z);
+    const prevEdge = prev ? edgeOf(prev.z) : null;
+    if (pEdge === null) {
+      if (!prev) d += `M${at(p)}`;
+      else if (prevEdge !== null) d += `M${at(cross(prev, p, prevEdge))}L${at(p)}`;
+      else d += `L${at(p)}`;
+    } else if (prev && prevEdge === null) {
+      d += `L${at(cross(prev, p, pEdge))}`;
+    }
+  });
+  return d;
+}
 
 // Smallest "nice" (1/2/2.5/5 × 10^n) step ≥ raw.
 function niceStep(raw: number) {
@@ -89,60 +181,74 @@ function niceStep(raw: number) {
 function buildSurface(spot: number, surfaceKey: SurfaceKey, vol: number): SurfaceData {
   const pick = SURFACE_DEFS[surfaceKey].pick;
   const vals: number[][] = [];
-  let maxAll = 0;
-  let maxStable = 0; // max over d ≥ 7 — gamma/theta spike toward expiry at the money
+  // The scale's ends come from d ≥ 7: gamma and theta spike toward expiry at
+  // the money, and scaling to the spike would flatten everything else.
+  let loAll = 0;
+  let hiAll = 0;
+  let loStable = 0;
+  let hiStable = 0;
   for (let j = 0; j < ND; j++) {
-    const d = D_MIN + (j / (ND - 1)) * (D_MAX - D_MIN);
+    const d = dayAt(j);
     const row: number[] = [];
     for (let i = 0; i < NK; i++) {
       const k = spot * (M_LO + (i / (NK - 1)) * (M_HI - M_LO));
       const r = priceOption(spot, k, yearsOf(d), R, vol, "C");
       const z = pick(r.price, r.greeks);
       row.push(z);
-      if (z > maxAll) maxAll = z;
-      if (d >= 7 && z > maxStable) maxStable = z;
+      loAll = Math.min(loAll, z);
+      hiAll = Math.max(hiAll, z);
+      if (d >= 7) {
+        loStable = Math.min(loStable, z);
+        hiStable = Math.max(hiStable, z);
+      }
     }
     vals.push(row);
   }
-  // Normalize to the stable max so every surface fills the height; the real
-  // expiry singularity clips at the ceiling as an off-scale crest.
-  const yMax = (maxStable || maxAll || 1) * 1.02;
-  const priceStep = niceStep(yMax / 6); // ~5–6 labelled ticks at any scale
-  const h = (z: number) => Math.min(z / yMax, 1);
+  let lo = loStable * 1.02;
+  let hi = hiStable * 1.02;
+  if (hi - lo < 1e-12) [lo, hi] = [loAll * 1.02, hiAll * 1.02];
+  if (hi - lo < 1e-12) hi = lo + 1;
+  const priceStep = niceStep((hi - lo) / 6); // ~5–6 labelled ticks at any scale
+
+  // The spike near expiry leaves the scale and is cut flat: at the ceiling as
+  // a crest, at the floor as a valley. Its farthest point gets the label.
+  let clip: SurfaceData["clip"] = null;
+  let worst = 0.01; // ignore a cut too small to see
+  for (let j = 0; j < ND; j++) {
+    for (let i = 0; i < NK; i++) {
+      const z = vals[j][i];
+      const over = Math.max(z - hi, lo - z) / (hi - lo);
+      if (over > worst) {
+        worst = over;
+        clip = { u: i / (NK - 1), v: dayAt(j) / D_MAX, dir: z > hi ? "up" : "down" };
+      }
+    }
+  }
 
   // Rows (constant expiry): the wave the viewer reads. Near rows are
   // thick and bright; far rows recede hard.
   const rows = vals.map((row, j) => {
-    const v = j / (ND - 1);
+    const v = dayAt(j) / D_MAX;
     const depth = Math.pow(1 - v, 1.7);
     return {
       key: `r${j}`,
       opacity: 0.2 + 0.78 * depth,
       width: 0.7 + 1.05 * depth,
-      pts: row
-        .map((z, i) => {
-          const q = project(i / (NK - 1), v, h(z));
-          return `${q.x.toFixed(1)},${q.y.toFixed(1)}`;
-        })
-        .join(" "),
+      d: lineThrough(row.map((z, i) => ({ u: i / (NK - 1), v, z })), lo, hi),
     };
   });
-  const cols = Array.from({ length: NK }, (_, i) => {
+  const cols: SurfaceData["cols"] = [];
+  for (let i = 0; i < NK; i += COL_EVERY) {
     const u = i / (NK - 1);
-    return {
+    cols.push({
       key: `c${i}`,
       opacity: 0.24 + 0.14 * u,
       width: 0.65,
-      pts: vals
-        .map((row, j) => {
-          const q = project(u, j / (ND - 1), h(row[i]));
-          return `${q.x.toFixed(1)},${q.y.toFixed(1)}`;
-        })
-        .join(" "),
-    };
-  });
+      d: lineThrough(vals.map((row, j) => ({ u, v: dayAt(j) / D_MAX, z: row[i] })), lo, hi),
+    });
+  }
 
-  return { spot, surfaceKey, yMax, priceStep, rows, cols };
+  return { spot, surfaceKey, lo, hi, priceStep, rows, cols, clip };
 }
 
 const fmtStrike = (k: number, spot: number) => (spot < 50 ? k.toFixed(1) : Math.round(k).toString());
@@ -160,7 +266,7 @@ const GREEK_COPY: Record<GreekKey, { label: string; letter: string; line: string
 
 // ── Static-per-spot wireframe + axes: never re-renders while dragging ────────
 const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData }) {
-  const { spot, surfaceKey, yMax, priceStep, rows, cols } = surface;
+  const { spot, surfaceKey, lo, hi, priceStep, rows, cols } = surface;
   const def = SURFACE_DEFS[surfaceKey];
   const kAngle = (Math.atan2(AXIS_K.y, AXIS_K.x) * 180) / Math.PI;
   const dAngle = (Math.atan2(AXIS_D.y, AXIS_D.x) * 180) / Math.PI;
@@ -173,7 +279,11 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
   const glowMid = project(0.5, 0.5, 0);
 
   const priceTicks: number[] = [];
-  for (let i = 0; i * priceStep <= yMax; i++) priceTicks.push(i * priceStep);
+  for (let i = Math.ceil(lo / priceStep - 1e-9); i * priceStep <= hi + 1e-12; i++) priceTicks.push(i * priceStep);
+  // A surface with a sign gets its zero drawn: a dashed plane the valley hangs below.
+  const zeroH = lo < 0 ? heightOf(0, lo, hi) : null;
+  const zero =
+    zeroH === null ? null : [project(0, 0, zeroH), project(1, 0, zeroH), project(1, 1, zeroH), project(0, 1, zeroH)];
 
   const mesh = (pass: "glow" | "crisp") => (
     <g
@@ -181,9 +291,9 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
       opacity={pass === "glow" ? 0.85 : 1}
     >
       {cols.map((c) => (
-        <polyline
+        <path
           key={c.key}
-          points={c.pts}
+          d={c.d}
           fill="none"
           stroke="var(--bull)"
           strokeWidth={pass === "glow" ? c.width + 1.6 : c.width}
@@ -191,9 +301,9 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
         />
       ))}
       {[...rows].reverse().map((r) => (
-        <polyline
+        <path
           key={r.key}
-          points={r.pts}
+          d={r.d}
           fill="none"
           stroke="var(--bull)"
           strokeWidth={pass === "glow" ? r.width + 1.6 : r.width}
@@ -224,22 +334,37 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
         fill="none"
       />
 
+      {zero && (
+        <path
+          data-zero-line
+          d={`M${zero.map((p) => `${p.x},${p.y}`).join(" L")} Z`}
+          stroke="var(--fg-dim)"
+          strokeWidth="1"
+          strokeDasharray="5 5"
+          opacity="0.7"
+          fill="none"
+        />
+      )}
+
       {/* the mesh: blurred bloom pass underneath, crisp pass on top */}
       {mesh("glow")}
       {mesh("crisp")}
 
       {/* STRIKE axis ticks (front-left edge) — spot-relative */}
+      {/* The last strike and the first day share the front corner, so there the
+          strike's label leans left and the day's leans right. */}
       {[0.8, 0.9, 1.0, 1.1, 1.2].map((mm) => {
         const p = project((mm - M_LO) / (M_HI - M_LO), 0, 0);
+        const corner = mm === M_HI;
         return (
           <g key={`kt${mm}`}>
             <line x1={p.x} y1={p.y} x2={p.x - 1.3} y2={p.y + 7} stroke="var(--fg-faint)" strokeWidth="0.8" />
             <text
               data-axis="strike"
               className="hidden md:[display:unset]"
-              x={p.x - 3}
+              x={corner ? p.x - 6 : p.x - 3}
               y={p.y + 22}
-              textAnchor="middle"
+              textAnchor={corner ? "end" : "middle"}
               fontFamily="var(--font-jetbrains)"
               fontSize="11"
               fill="var(--fg-dim)"
@@ -270,10 +395,11 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
           <g key={`dt${d}`}>
             <line x1={p.x} y1={p.y} x2={p.x + 1.1} y2={p.y + 7} stroke="var(--fg-faint)" strokeWidth="0.8" />
             <text
+              data-axis="days"
               className="hidden md:[display:unset]"
-              x={p.x + 2}
+              x={d === 0 ? p.x + 6 : p.x + 2}
               y={p.y + 22}
-              textAnchor="middle"
+              textAnchor={d === 0 ? "start" : "middle"}
               fontFamily="var(--font-jetbrains)"
               fontSize="11"
               fill="var(--fg-dim)"
@@ -285,14 +411,14 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
       })}
       <text
         x={dMid.x + 10}
-        y={dMid.y + 44}
+        y={dMid.y + 56} // 12 px lower than it was: its rotated box no longer touches the "45" tick
         textAnchor="middle"
         fontFamily="var(--font-jetbrains)"
         fontSize="11"
         letterSpacing="4"
         fill="var(--bull)"
         opacity="0.85"
-        transform={`rotate(${dAngle.toFixed(1)} ${dMid.x + 10} ${dMid.y + 44})`}
+        transform={`rotate(${dAngle.toFixed(1)} ${dMid.x + 10} ${dMid.y + 56})`}
       >
         DAYS TO EXPIRY
       </text>
@@ -300,7 +426,7 @@ const Wireframe = memo(function Wireframe({ surface }: { surface: SurfaceData })
       {/* z axis (vertical, at the near-left corner) — caption follows the selected surface */}
       <line x1={O.x} y1={O.y} x2={O.x} y2={O.y - H_PX} stroke="var(--fg-faint)" strokeWidth="1" />
       {priceTicks.map((t) => {
-        const y = O.y - (t / yMax) * H_PX;
+        const y = O.y - heightOf(t, lo, hi) * H_PX;
         return (
           <g key={`pt${t}`}>
             <line x1={O.x - 5} y1={y} x2={O.x} y2={y} stroke="var(--fg-faint)" strokeWidth="0.8" />
@@ -474,8 +600,22 @@ export default function GreeksLabPage() {
   const u = (m - M_LO) / (M_HI - M_LO);
   const v = days / D_MAX;
   const zNow = SURFACE_DEFS[surfaceKey].pick(price, greeks); // handle rides the selected surface
-  const mTop = project(u, v, Math.min(zNow / surface.yMax, 1));
+  const mTop = project(u, v, heightOf(zNow, surface.lo, surface.hi));
   const mBase = project(u, v, 0);
+  const surfaceTitle = `Black-Scholes ${SURFACE_DEFS[surfaceKey].name} surface for a call`;
+
+  // Where the spike near expiry leaves the scale, a label says so: above a
+  // crest's opening, or on the clear floor to the left of a valley's, with a
+  // short leader. It gives way when the handle comes near.
+  const clip = surface.clip;
+  const clipAt = clip ? project(clip.u, clip.v, clip.dir === "up" ? 1 : 0) : null;
+  const clipLabel =
+    clip && clipAt
+      ? clip.dir === "up"
+        ? { x: clipAt.x, y: clipAt.y - 14, mid: clipAt.x, anchor: "middle" as const }
+        : { x: clipAt.x - 36, y: clipAt.y - 44, mid: clipAt.x - 110, anchor: "end" as const }
+      : null;
+  const clipShown = clipLabel !== null && Math.hypot(mTop.x - clipLabel.mid, mTop.y - clipLabel.y) > 80;
 
   // Each Greek across strikes at the current expiry — feeds the sparklines.
   const sparks = useMemo(() => {
@@ -612,12 +752,23 @@ export default function GreeksLabPage() {
         >
           {teacher && (
             <CalmPanel as="aside" title="What am I seeing?" className="mt-6">
-              <p className="max-w-[90ch] text-[0.875rem] leading-relaxed text-fg-dim">
-                This is an option pricing surface. Drag the glowing handle to explore how the
-                price changes — and watch all five Greeks update in real time. Strike runs
-                along one edge, days to expiry along the other; height is whichever surface
-                you select — Gamma’s wave crests at the money.
-              </p>
+              {/* All five readings share one grid cell, so switching the surface
+                  never changes the panel's height and the surface below stays put. */}
+              <div className="grid max-w-[90ch] text-[0.875rem] leading-relaxed text-fg-dim">
+                {SURFACE_ORDER.map((k) => (
+                  <p
+                    key={k}
+                    data-teach={k}
+                    aria-hidden={k !== surfaceKey}
+                    className={`col-start-1 row-start-1 ${k === surfaceKey ? "" : "invisible"}`}
+                  >
+                    This surface shows the {SURFACE_DEFS[k].name} of a call at every strike and every
+                    expiry up to {D_MAX} days, computed with Black-Scholes. Strike runs along one edge
+                    and days to expiry along the other. {SURFACE_DEFS[k].reads} Drag the glowing handle
+                    to move the point, and the five Greek cards below follow it.
+                  </p>
+                ))}
+              </div>
             </CalmPanel>
           )}
         </PageHeader>
@@ -634,9 +785,9 @@ export default function GreeksLabPage() {
               onPointerMove={onPointerMove}
               onPointerUp={onPointerEnd}
               onPointerCancel={onPointerEnd}
-              aria-label="Black-Scholes call price surface. Drag the handle across the floor to change strike and days to expiry; use the sliders below for precise values."
+              aria-label={`${surfaceTitle}. Drag the handle across the floor to change strike and days to expiry; use the sliders below for precise values.`}
             >
-              <title>Black-Scholes call price surface</title>
+              <title>{surfaceTitle}</title>
               <defs>
                 <filter id="meshGlow" x="-8%" y="-8%" width="116%" height="116%">
                   <feGaussianBlur stdDeviation="3.4" />
@@ -653,6 +804,24 @@ export default function GreeksLabPage() {
                 </radialGradient>
               </defs>
               <Wireframe surface={surface} />
+              {clip && clipAt && clipLabel && clipShown && (
+                <g data-off-scale={clip.dir} fontFamily="var(--font-jetbrains)" fontSize="11" fill="var(--fg-dim)">
+                  {clip.dir === "down" && (
+                    <line
+                      x1={clipLabel.x + 6}
+                      y1={clipLabel.y - 4}
+                      x2={clipAt.x - 4}
+                      y2={clipAt.y - 8}
+                      stroke="var(--fg-dim)"
+                      strokeWidth="1"
+                      opacity="0.6"
+                    />
+                  )}
+                  <text x={clipLabel.x} y={clipLabel.y} textAnchor={clipLabel.anchor}>
+                    off scale near expiry{clip.dir === "up" ? " ↑" : ""}
+                  </text>
+                </g>
+              )}
               {/* handle: floor shadow + dotted drop-line + glowing ring on the surface */}
               <g>
                 <ellipse cx={mBase.x} cy={mBase.y} rx={20} ry={6} fill="url(#handleHalo)" />

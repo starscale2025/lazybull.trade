@@ -162,7 +162,7 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
             paddingBottom: "0.08em",
           }}
         >
-          Options shouldn&apos;t be a guessing game.
+          Options shouldn’t be a guessing game.
           <br />
           <span className="italic">Make them visible. Make them safe.</span>
         </p>
@@ -177,7 +177,10 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
         <div className="col-span-2">
           <div className="flex items-center gap-2.5">
             <BullMark className="h-6 w-8" />
-            <span className="font-display text-3xl leading-none tracking-[-0.02em] text-fg">lazybull</span>
+            {/* one spelling everywhere: the nav's, with its mint full stop */}
+            <span className="font-display text-3xl leading-none tracking-[-0.02em] text-fg">
+              lazybull<span className="text-bull">.</span>
+            </span>
           </div>
           <p className="mt-3 font-display text-base leading-snug text-fg-dim">
             Options you can see.
@@ -273,7 +276,8 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
           Capped at a readable measure (was a 150-char full-width line) and given
           right-side clearance so no floating control ever sits on legal text. */}
       <div className="relative border-t border-border bg-bg">
-        <p className="mx-auto max-w-[90ch] px-5 py-5 pr-24 text-[0.75rem] leading-relaxed text-fg-dim sm:pr-5">
+        {/* bottom padding = the folded shortcut dial's footprint, so the last line clears it */}
+        <p className="mx-auto max-w-[90ch] px-5 pb-[var(--dial-clear)] pt-5 pr-24 text-[0.75rem] leading-relaxed text-fg-dim sm:pr-5">
           lazybull is an educational platform for learning about options. We do
           not accept real funds, are not a registered broker-dealer, and are not
           registered with SEBI as an investment adviser or research analyst. Nothing

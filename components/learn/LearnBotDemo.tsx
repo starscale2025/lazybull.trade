@@ -82,6 +82,15 @@ export function LearnBotDemo({ botId }: { botId: string }) {
 
   return (
     <div className="space-y-3">
+      {/* Where the bars come from, said first and plainly: the chip below
+          used to sit under copy that promised real data either way. */}
+      <p className="max-w-[68ch] t-body-sm text-fg-dim" aria-live="polite">
+        {loading
+          ? `Loading daily bars for ${symbol}…`
+          : source === "live"
+            ? `Running on ${symbol}'s last ${candles?.length ?? 0} daily bars from Yahoo Finance.`
+            : `Running on a synthetic price series: live bars for ${symbol} are not available right now, so the chip says Synthetic.`}
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <span className="t-label text-fg-faint">Symbol</span>
         {SYMBOLS.map((s) => (
@@ -113,6 +122,7 @@ export function LearnBotDemo({ botId }: { botId: string }) {
           candles={candles}
           symbol={symbol}
           beginner={true}
+          paramsOpenAtStart
           onUpdateParams={(params) => setActive((a) => (a ? { ...a, params } : a))}
           onRemove={() => {}}
           onToggleCollapse={() => {}}

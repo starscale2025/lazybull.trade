@@ -2892,19 +2892,65 @@ html[data-film="pinned"] .lit-aura::before { animation-play-state: paused; }
   background: radial-gradient(closest-side, rgba(5, 5, 5, 0.8), rgba(5, 5, 5, 0.55) 55%, transparent);
 }
 
-/* THE DIAL (components/dial/ShortcutDial.tsx): small at rest, out of the way;
-   full size under the pointer or keyboard focus. */
+/* THE DIAL (components/dial/ShortcutDial.tsx): small, out of the way and inert
+   at rest; full size under the pointer or keyboard focus. It moves on the
+   Island's springs: the bouncy one to open, the damped one to fold. */
+:root { --dial-clear: 104px; } /* the folded dial's footprint, plus air */
+@media (max-width: 1023px) { :root { --dial-clear: 76px; } }
+html { scroll-padding-bottom: var(--dial-clear); } /* focus never scrolls a field under it */
 .dial-root {
   position: fixed;
   left: 0;
-  bottom: 0;
+  bottom: var(--consent-bar-h, 0px); /* clear of the legal pages' consent strip */
   z-index: var(--z-dock);
-  pointer-events: none; /* at rest only the shortcuts themselves catch the pointer */
+  pointer-events: none; /* at rest only the opener catches the pointer */
   transform: scale(0.58);
   transform-origin: 0 100%;
-  transition: transform 0.45s cubic-bezier(0.22, 1.15, 0.36, 1), opacity 0.3s var(--ease-settle);
+  transition: transform 0.39s cubic-bezier(0.3, 1, 0.4, 1), opacity 0.3s var(--ease-settle);
+  transition-timing-function: linear(0, 0.0109, 0.0396, 0.0812, 0.1316, 0.1876, 0.2465, 0.3066, 0.3661, 0.4241, 0.4797, 0.5324, 0.5817, 0.6275, 0.6697, 0.7083, 0.7434, 0.7751, 0.8037, 0.8293, 0.852, 0.8722, 0.8901, 0.9058, 0.9196, 0.9316, 0.9421, 0.9512, 0.9591, 0.9658, 0.9716, 0.9766, 0.9808, 0.9843, 0.9873, 0.9899, 0.992, 0.9937, 0.9952, 0.9964, 0.9973, 0.9981, 0.9988, 0.9993, 1), var(--ease-settle);
 }
-.dial-root[data-open] { transform: none; pointer-events: auto; }
+.dial-root[data-open] {
+  transform: none;
+  pointer-events: auto;
+  transition-duration: 0.56s, 0.3s;
+  transition-timing-function: cubic-bezier(0.3, 1.25, 0.4, 1), var(--ease-settle);
+  transition-timing-function: linear(0, 0.0151, 0.0551, 0.1129, 0.1827, 0.2597, 0.3399, 0.4202, 0.4984, 0.5726, 0.6416, 0.7047, 0.7615, 0.8117, 0.8556, 0.8933, 0.9251, 0.9516, 0.9733, 0.9906, 1.0041, 1.0143, 1.0217, 1.0267, 1.0298, 1.0313, 1.0315, 1.0308, 1.0293, 1.0274, 1.0251, 1.0226, 1.0201, 1.0175, 1.0151, 1.0128, 1.0107, 1.0088, 1.007, 1.0055, 1.0042, 1.003, 1.0021, 1.0013, 1), var(--ease-settle);
+}
+/* The opener: 76 px drawn at the 0.58 rest scale is a 44 px target, over the
+   middle of the folded arc, which is its picture. */
+.dial-opener {
+  position: absolute;
+  left: 98px;
+  top: 0;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: transparent;
+  pointer-events: auto;
+}
+.dial-opener:focus-visible { outline: 3px solid var(--brand-ink); outline-offset: -4px; }
+.dial-root[data-open] .dial-opener { pointer-events: none; outline: none; }
+.dial-root:not([data-open]) .dial-slot { pointer-events: none; }
+/* Under 1024 px the folded dial is one puck in the corner; the arc unfolds from it. */
+@media (max-width: 1023px) {
+  .dial-root:not([data-open]) > svg,
+  .dial-root:not([data-open]) .dial-slot { opacity: 0; }
+  .dial-opener {
+    left: 28px;
+    top: auto;
+    bottom: 28px;
+    color: var(--fg-dim);
+    background: color-mix(in srgb, var(--fg) 7%, var(--bg));
+    border: 2px solid color-mix(in srgb, var(--fg) 14%, transparent);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    transition: opacity 0.2s var(--ease-settle);
+  }
+  .dial-root[data-open] .dial-opener { opacity: 0; }
+}
+/* /practice/[slug] keeps its run-and-verdict strip (46 px) along the bottom edge. */
+.dial-root[data-lift="practice"] { bottom: 50px; }
 /* Pro's status bars run along the bottom and its tools down the left. */
 @media (min-width: 1024px) {
   .dial-root[data-lift="pro"] { left: 52px; bottom: 84px; }
@@ -2928,8 +2974,6 @@ html[data-film="pinned"] .lit-aura::before { animation-play-state: paused; }
   pointer-events: auto;
   transition: color 0.2s var(--ease-settle);
 }
-/* the folded dial is drawn small; its touch targets are not */
-.dial-root:not([data-open]) .dial-slot::after { content: ""; position: absolute; inset: -12px; }
 .dial-slot:hover { color: var(--fg); }
 .dial-slot:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: -3px; }
 .dial-slot-lit, .dial-slot-lit:hover { color: var(--grad-on); }
@@ -2950,7 +2994,7 @@ html[data-film="pinned"] .lit-aura::before { animation-play-state: paused; }
 .dial-editor {
   position: fixed;
   left: 16px;
-  bottom: 176px;
+  bottom: calc(176px + var(--consent-bar-h, 0px));
   z-index: var(--z-dock);
   width: min(22rem, calc(100vw - 2rem));
 }

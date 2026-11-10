@@ -73,6 +73,7 @@ export type SourceId =
   | "device-transformer" // transformer in the browser (WASM)
   | "snapshot" // real trained-model output, daily static snapshot
   | "black-scholes" // exact closed-form options math, client-side
+  | "heston" // the Heston model itself, semi-analytic, client-side
   | "monte-carlo" // simulation-based estimate, client-side
   | "statistical" // classical statistical estimator, client-side
   | "technical" // classical technical-analysis rule, client-side

@@ -40,6 +40,12 @@ export const SOURCE_META: Record<
     tip: "Exact closed-form options mathematics, computed in your browser — the 1973 formula, not an approximation.",
     tone: "info",
   },
+  heston: {
+    label: "Heston formula",
+    short: "HSTN",
+    tip: "The Heston (1993) stochastic-volatility price, computed in your browser by integrating the model's characteristic function: the model itself, not the network trained to imitate it.",
+    tone: "info",
+  },
   "monte-carlo": {
     label: "Monte Carlo",
     short: "MC",

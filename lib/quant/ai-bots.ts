@@ -22,6 +22,7 @@ import type { BotDef, BotContext, BotResult, Signal, SourceId, Verdict } from ".
 import { ACCURACY_BAND, HYPOTHETICAL_NOTE } from "./types";
 import { closes, fmtNum } from "./series";
 import { priceOption } from "../pricing";
+import { hestonPrice } from "./heston";
 import { snapshotLookup } from "./snapshot";
 import { runSequenceCnn, runTransformer } from "./onnx";
 import { sourceForCategory } from "./provenance";
@@ -500,7 +501,7 @@ const americanSurrogate: BotDef = aiBot<BSReq, BSRes>(
     id: "ai-american",
     name: "American Pricer (NN)",
     category: "ai",
-    glyph: "🇺🇸",
+    glyph: "A", // text fallback only: the UI draws components/quant/BotIcon
     tagline: "A binomial option-price tree, distilled — prices early exercise.",
     formula: "trained vs 500-step Cox-Ross-Rubinstein",
     endpoint: "/api/american",
@@ -579,9 +580,11 @@ const hestonSurrogate: BotDef = aiBot<HestonReq, BSRes>(
     endpoint: "/api/heston",
     module: "ai quants/models/heston/train.py",
     params: [
-      { key: "type", label: "Type", kind: "select", default: "C", options: [{ value: "C", label: "Call" }, { value: "P", label: "Put" }] },
+      // An out-of-the-money put by default: at the money the smile is flat and
+      // the skew premium reads +$0.00, which shows the model's one idea as zero.
+      { key: "type", label: "Type", kind: "select", default: "P", options: [{ value: "C", label: "Call" }, { value: "P", label: "Put" }] },
       { key: "spot", label: "Spot $", kind: "number", default: 100, step: 0.5 },
-      { key: "strike", label: "Strike $", kind: "number", default: 100, step: 0.5 },
+      { key: "strike", label: "Strike $", kind: "number", default: 90, step: 0.5 },
       { key: "days", label: "Days to expiry", kind: "number", default: 60, step: 1 },
       { key: "rate", label: "Rate %", kind: "number", default: 4.5, step: 0.1 },
       { key: "v0", label: "v₀ (initial var)", kind: "number", default: 0.04, min: 0.001, max: 0.5, step: 0.005 },
@@ -626,7 +629,8 @@ const hestonSurrogate: BotDef = aiBot<HestonReq, BSRes>(
         metrics: [
           { key: "px", label: "Heston $", value: `$${data.price.toFixed(2)}`, tone: "info" },
           { key: "bs", label: "BS comparable", value: `$${bs.toFixed(2)}` },
-          { key: "skew", label: "Skew premium", value: `${skew >= 0 ? "+" : ""}$${skew.toFixed(2)}`, tone: skew < 0 ? "bear" : "bull" },
+          // a price gap, not a profit or loss: no gain/loss colour
+          { key: "skew", label: "Skew premium", value: `${skew >= 0 ? "+" : "−"}$${Math.abs(skew).toFixed(2)}` },
           { key: "vol", label: "v₀ vol-equiv", value: `${(sigEff * 100).toFixed(1)}%` },
         ],
         summary: `Heston says $${data.price.toFixed(2)} — ${skew >= 0 ? "above" : "below"} BS because ρ = ${rho.toFixed(2)} pulls implied skew the way real markets price it.`,
@@ -635,36 +639,65 @@ const hestonSurrogate: BotDef = aiBot<HestonReq, BSRes>(
         verdict: { side: "hold", text: `Heston fair value $${data.price.toFixed(2)}.`, confidence: 1 },
       };
     },
+    // Without the network, the model itself: the exact Heston price (lib/quant/heston.ts),
+    // labelled "Heston formula", next to Black-Scholes at one flat vol. This
+    // replaced a made-up bump that read +$0.00 at the default strike.
     mock: (ctx, p) => {
       const lastPx = ctx.candles[ctx.candles.length - 1]?.c ?? 100;
-      const type = (str(p, "type", "C") === "P" ? "P" : "C") as "C" | "P";
+      const type = (str(p, "type", "P") === "P" ? "P" : "C") as "C" | "P";
       const spot = num(p, "spot", lastPx);
       const strike = num(p, "strike", Math.round(lastPx));
-      const days = num(p, "days", 60);
+      const t = Math.max(0.0005, num(p, "days", 60) / 365);
       const rate = num(p, "rate", 4.5) / 100;
       const v0 = num(p, "v0", 0.04);
-      const xi = num(p, "xi", 0.5);
       const rho = num(p, "rho", -0.7);
-      const t = days / 365;
-      const sigEff = Math.sqrt(v0) * (1 + 0.3 * xi * t);
-      const bs = priceOption(spot, strike, t, rate, sigEff, type).price;
-      const skewBump = rho < 0 && type === "P" ? bs * 0.08 * Math.abs(rho) : rho > 0 && type === "C" ? bs * 0.05 * rho : 0;
-      const heston = bs + skewBump;
+      const flat = Math.sqrt(v0);
+      const heston = hestonPrice(
+        { S: spot, K: strike, T: t, r: rate, v0, kappa: num(p, "kappa", 2), theta: num(p, "theta", 0.04), xi: num(p, "xi", 0.5), rho },
+        type,
+      );
+      const bs = priceOption(spot, strike, t, rate, flat, type).price;
+      const skew = heston - bs;
+      const iv = impliedVol(heston, spot, strike, t, rate, type);
+      const kind = type === "P" ? "put" : "call";
+      const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
+      const gap = `$${Math.abs(skew).toFixed(2)}`;
       return {
         signals: [],
         metrics: [
           { key: "px", label: "Heston $", value: `$${heston.toFixed(2)}`, tone: "info" },
-          { key: "bs", label: "BS comparable", value: `$${bs.toFixed(2)}` },
-          { key: "skew", label: "Skew premium", value: `+$${skewBump.toFixed(2)}`, tone: rho < 0 ? "bear" : "bull" },
-          { key: "vol", label: "Effective vol", value: `${(sigEff * 100).toFixed(1)}%` },
+          { key: "bs", label: `BS at ${pct(flat)} flat`, value: `$${bs.toFixed(2)}` },
+          { key: "skew", label: "Skew premium", value: `${skew >= 0 ? "+" : "−"}${gap}` },
+          { key: "iv", label: "Heston implied vol", value: iv === null ? "n/a" : pct(iv) },
         ],
-        summary: `Heston says $${heston.toFixed(2)} (TS approximation).`,
-        beginner: "Real markets don't have a single fixed volatility — Heston simulates that.",
+        summary:
+          `Heston prices this ${kind} at $${heston.toFixed(2)}; Black-Scholes with one flat ${pct(flat)} volatility says $${bs.toFixed(2)}. ` +
+          (Math.abs(skew) < 0.005
+            ? "Here the two agree: move the strike away from the stock price to see them part."
+            : `With ρ = ${rho.toFixed(2)} the ${kind} is ${skew > 0 ? "dearer" : "cheaper"} by ${gap}` +
+              (iv === null ? "." : `: its implied volatility is ${pct(iv)}, not ${pct(flat)}. Across strikes, that gap is the smile.`)),
+        beginner:
+          "Real markets don't have one fixed volatility. Heston lets it move, and when it rises as the stock falls, out-of-the-money puts cost more than one flat volatility says.",
         verdict: { side: "hold", text: `Heston fair value $${heston.toFixed(2)}.`, confidence: 1 },
       };
     },
+    fallbackSource: "heston",
   },
 );
+
+// The Black-Scholes volatility that reproduces a price (bisection), or null
+// when the price is outside what any volatility can give.
+function impliedVol(price: number, S: number, K: number, t: number, r: number, type: "C" | "P") {
+  let lo = 0.0005;
+  let hi = 4;
+  if (price < priceOption(S, K, t, r, lo, type).price - 1e-9 || price > priceOption(S, K, t, r, hi, type).price) return null;
+  for (let k = 0; k < 70; k++) {
+    const mid = (lo + hi) / 2;
+    if (priceOption(S, K, t, r, mid, type).price > price) hi = mid;
+    else lo = mid;
+  }
+  return (lo + hi) / 2;
+}
 
 // ─────────────── Direction-style requests share this shape ───────────────
 // `as_of` asks the service to read the tape only up to the window's last day.

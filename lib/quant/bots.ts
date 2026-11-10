@@ -815,7 +815,7 @@ const ivCrushBot: BotDef = {
   id: "iv-crush",
   name: "IV Crush Detector",
   category: "options",
-  glyph: "💥",
+  glyph: "σ", // text fallback only: the UI draws components/quant/BotIcon
   tagline: "Quantify the post-event vol drop on long options.",
   formula: "Δprice ≈ vega · ΔIV (per 1% IV change)",
   params: [

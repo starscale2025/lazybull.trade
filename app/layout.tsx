@@ -77,7 +77,9 @@ export const metadata: Metadata = {
   // an absolute one. Without it Next warns and social crawlers get a relative
   // image path they cannot fetch.
   metadataBase: new URL(SITE_URL),
-  title: "LAZYBULL // Options You Can See",
+  // The headline strangers meet, as the page says it (it was the retired
+  // "LAZYBULL // Options You Can See" in the tab and on every share).
+  title: "Options you can see. — lazybull",
   description: DESCRIPTION,
   // NO `alternates` here on purpose. Root metadata is inherited by EVERY
   // route, so the `canonical: "/"` that used to sit on this line made
@@ -90,14 +92,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "lazybull",
-    title: "LAZYBULL // Options You Can See",
+    title: "Options you can see. — lazybull",
     description: DESCRIPTION,
     url: "/",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LAZYBULL // Options You Can See",
+    title: "Options you can see. — lazybull",
     description: DESCRIPTION,
   },
   robots: { index: true, follow: true },

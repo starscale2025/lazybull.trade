@@ -23,26 +23,44 @@ import { TogglePill } from "@/components/calm/kit";
 
 type GreekKey = "delta" | "gamma" | "theta" | "vega";
 
-const GREEKS: { key: GreekKey; label: string; sym: string; accent: string; blurb: string }[] = [
-  { key: "delta", label: "Delta", sym: "Δ", accent: "0,255,135", blurb: "Directional exposure — rises toward 1 as the call goes deep in-the-money." },
-  { key: "gamma", label: "Gamma", sym: "Γ", accent: "0,229,255", blurb: "Curvature — a sharp ridge at-the-money that spikes as expiry approaches." },
-  { key: "theta", label: "Theta", sym: "Θ", accent: "255,184,0", blurb: "Time decay — the ground falls away fastest for near-dated at-the-money options." },
-  { key: "vega", label: "Vega", sym: "ν", accent: "201,255,0", blurb: "Vol sensitivity — a broad hill, tallest for longer-dated, near-the-money strikes." },
+const GREEKS: { key: GreekKey; label: string; sym: string; blurb: string }[] = [
+  { key: "delta", label: "Delta", sym: "Δ", blurb: "Directional exposure — rises toward 1 as the call goes deep in-the-money." },
+  { key: "gamma", label: "Gamma", sym: "Γ", blurb: "Curvature — a sharp ridge at-the-money that spikes as expiry approaches." },
+  { key: "theta", label: "Theta", sym: "Θ", blurb: "Time decay — the ground falls away fastest for near-dated at-the-money options." },
+  { key: "vega", label: "Vega", sym: "ν", blurb: "Vol sensitivity — a broad hill, tallest for longer-dated, near-the-money strikes." },
 ];
 
-const NX = 22; // strikes
+// Height is coloured on the brand ramp (violet, blue, mint), the same for every
+// greek: colour says how high, the pills say which greek. One ramp per theme.
+const RAMP_DARK = [[107, 71, 255], [92, 154, 255], [82, 255, 165]];
+const RAMP_LIGHT = [[169, 150, 255], [63, 123, 224], [0, 107, 71]];
+function rampAt(ramp: number[][], h: number) {
+  const x = Math.min(1, Math.max(0, h)) * 2;
+  const k = Math.min(1, Math.floor(x));
+  const f = x - k;
+  return ramp[k].map((c, n) => Math.round(c + (ramp[k + 1][n] - c) * f)).join(",");
+}
+
+// Close to expiry gamma and theta spike inside a strike band narrower than a
+// coarse grid's spacing, which drew them as needles. So strikes are sampled
+// finely (every third is drawn as a column), expiries crowd toward the front
+// where the surface bends fastest, and the nearest expiry is a week out.
+const NX = 61; // strikes
+const COL_EVERY = 3;
 const NY = 22; // expiries
+const T_MIN = 7 / 365;
+const yOf = (j: number) => Math.pow(j / (NY - 1), 1.6); // 0 at a week, 1 at a year
 const SPOT = 100;
 const R = 0.04;
 const SIGMA = 0.25;
 
-// Build the greek grid once per greek. Strike 0.6–1.4×spot, expiry 3d–1y.
+// Build the greek grid once per greek. Strike 0.6–1.4×spot, expiry 1w–1y.
 function buildGrid(greek: GreekKey) {
   const z: number[][] = [];
   let lo = Infinity;
   let hi = -Infinity;
   for (let j = 0; j < NY; j++) {
-    const t = 0.008 + (j / (NY - 1)) * (1 - 0.008); // years
+    const t = T_MIN + yOf(j) * (1 - T_MIN); // years
     z[j] = [];
     for (let i = 0; i < NX; i++) {
       const strike = SPOT * (0.6 + (i / (NX - 1)) * 0.8);
@@ -64,7 +82,6 @@ export function GreekSurface3D() {
   const pitch = useRef(0.62);
   const dragging = useRef(false);
   const grid = useMemo(() => buildGrid(greek), [greek]);
-  const accent = GREEKS.find((g) => g.key === greek)!.accent;
   const inView = useInView(canvasRef, "100px"); // gates the idle spin (mobile mounts every demo)
 
   // Imperative draw — reads rotation refs, so idle spin and drag never
@@ -86,17 +103,19 @@ export function GreekSurface3D() {
       ctx.clearRect(0, 0, W, H);
 
       const cx = W / 2;
-      const cy = H * 0.56;
+      // Sized so the back corner of a full-height surface stays inside the
+      // canvas at the resting pitch; it used to run off the top.
+      const cy = H * 0.64;
       const sx = W * 0.34;
       const sy = W * 0.2;
-      const hz = H * 0.5;
+      const hz = H * 0.36;
       const cosY = Math.cos(yaw.current);
       const sinY = Math.sin(yaw.current);
       const depthK = Math.sin(pitch.current);
 
       const project = (i: number, j: number, h: number) => {
         const x = (i / (NX - 1) - 0.5) * 2;
-        const y = (j / (NY - 1) - 0.5) * 2;
+        const y = (yOf(j) - 0.5) * 2;
         const rx = x * cosY - y * sinY;
         const ry = x * sinY + y * cosY;
         return { X: cx + rx * sx, Y: cy + ry * sy * depthK - h * hz, depth: ry };
@@ -112,7 +131,7 @@ export function GreekSurface3D() {
           segs.push({ a: p, b: q, depth: (p.depth + q.depth) / 2, h: (grid.norm[j][i] + grid.norm[j][i + 1]) / 2 });
         }
       }
-      for (let i = 0; i < NX; i++) {
+      for (let i = 0; i < NX; i += COL_EVERY) {
         for (let j = 0; j < NY - 1; j++) {
           const p = project(i, j, grid.norm[j][i]);
           const q = project(i, j + 1, grid.norm[j + 1][i]);
@@ -123,23 +142,43 @@ export function GreekSurface3D() {
 
       // floor grid (faint)
       ctx.lineWidth = 1;
+      // the floor the surface stands on, faint, so the axis names have an edge to sit on
+      const floor = [project(0, 0, 0), project(NX - 1, 0, 0), project(NX - 1, NY - 1, 0), project(0, NY - 1, 0)];
+      ctx.strokeStyle = "rgba(150,150,140,0.22)";
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath();
+      floor.forEach((q, k) => (k ? ctx.lineTo(q.X, q.Y) : ctx.moveTo(q.X, q.Y)));
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const ramp = document.documentElement.dataset.theme === "light" ? RAMP_LIGHT : RAMP_DARK;
       for (const s of segs) {
         const fog = 0.25 + 0.55 * ((s.depth + 1.6) / 3.2); // farther = dimmer
-        const glow = 0.35 + 0.65 * s.h; // ridge brighter
-        ctx.strokeStyle = `rgba(${accent}, ${(fog * glow).toFixed(3)})`;
+        const glow = 0.45 + 0.55 * s.h; // ridge brighter
+        ctx.strokeStyle = `rgba(${rampAt(ramp, s.h)}, ${(fog * glow).toFixed(3)})`;
         ctx.beginPath();
         ctx.moveTo(s.a.X, s.a.Y);
         ctx.lineTo(s.b.X, s.b.Y);
         ctx.stroke();
       }
 
-      // axis labels
+      // Axis names ride the floor's edges, pushed outward, so they turn with
+      // the surface instead of sitting on top of it at some angles.
       ctx.font = "9px ui-monospace, monospace";
       ctx.fillStyle = "rgba(150,150,140,0.85)";
-      ctx.fillText("STRIKE →", cx + sx * 0.2, cy + sy * depthK + 22);
-      ctx.fillText("← TIME TO EXPIRY", cx - sx, cy - sy * depthK - 8);
+      ctx.textAlign = "center";
+      // Each sits a quarter of the way along its edge, away from the money,
+      // where gamma's ridge and theta's valley reach the floor.
+      const edgeLabel = (a: { X: number; Y: number }, b: { X: number; Y: number }, text: string, at: number) => {
+        const mx = a.X + (b.X - a.X) * at;
+        const my = a.Y + (b.Y - a.Y) * at;
+        const len = Math.hypot(mx - cx, my - cy) || 1;
+        ctx.fillText(text, mx + ((mx - cx) / len) * 26, my + ((my - cy) / len) * 26 + 3);
+      };
+      edgeLabel(project(0, 0, 0), project(NX - 1, 0, 0), "STRIKE", 0.25);
+      edgeLabel(project(0, 0, 0), project(0, NY - 1, 0), "TIME TO EXPIRY", 0.6);
     };
-  }, [grid, accent]);
+  }, [grid]);
 
   // Redraw on greek change / mount / resize.
   useEffect(() => {

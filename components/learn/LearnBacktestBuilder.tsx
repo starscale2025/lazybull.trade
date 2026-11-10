@@ -10,6 +10,7 @@ import { generateCandles, type Candle } from "@/lib/candles";
 import { getBot } from "@/lib/quant/bots";
 import type { BotResult, Signal } from "@/lib/quant/types";
 import { PillButton } from "@/components/calm/kit";
+import { BotIcon } from "@/components/quant/BotIcon";
 
 const PRESET_BOTS = [
   { id: "sma-cross",    label: "SMA Crossover",  blurb: "Trend follower. Buys golden crosses." },
@@ -170,7 +171,7 @@ export function LearnBacktestBuilder() {
                 aria-pressed={b.id === botId}
                 className="calm-toggle gap-1.5"
               >
-                <span aria-hidden>{getBot(b.id)?.glyph ?? "·"}</span>
+                <BotIcon id={b.id} className="size-3.5" />
                 {b.label}
               </button>
             ))}

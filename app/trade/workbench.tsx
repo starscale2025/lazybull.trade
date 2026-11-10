@@ -22,6 +22,7 @@ import { optionOpenRefusal, usePaper, useSafety } from "@/lib/stores";
 import { useModalFocus } from "@/components/safety/useModalFocus";
 import { RegulatoryLine } from "@/components/RegulatoryLine";
 import { RiskWizard } from "@/components/safety/RiskWizard";
+import { withBriefing } from "@/lib/safety-briefing";
 import { eventsFor } from "@/lib/events";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
@@ -393,7 +394,8 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
       cost: s.cost,
       status: "open",
     };
-    setConfirm(b);
+    // A stranger's first paper trade gets the risk briefing first.
+    withBriefing(() => setConfirm(b));
   };
   const confirmLegs = useMemo<Leg[]>(
     () =>

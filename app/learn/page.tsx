@@ -23,6 +23,7 @@ import { ChapterNav } from "@/components/learn/ChapterNav";
 import { Diploma } from "@/components/learn/Diploma";
 import { SplitDesk, type DeskChapter } from "@/components/learn/SplitDesk";
 import type { PredictConfig } from "@/components/learn/Predict";
+import { BotIcon } from "@/components/quant/BotIcon";
 
 export const metadata = {
   // Per-route canonical. The root layout must not set one: Next inherits
@@ -562,9 +563,7 @@ export default function LearnPage() {
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 {f.bots.slice(0, 3).map((b) => (
                   <Chip key={b.id}>
-                    <span aria-hidden className="text-fg-faint">
-                      {b.glyph}
-                    </span>
+                    <BotIcon id={b.id} className="size-3.5 text-fg-faint" />
                     {b.name}
                   </Chip>
                 ))}

@@ -138,7 +138,7 @@ const FEATURES: readonly Feature[] = [
     tag: "strategy builder",
     href: "/trade",
     title: "Drag a strike.",
-    accent: "The payoff draws itself.",
+    accent: "The payoff draws itself.", // no-break space: "itself." never sits alone on a line
     copy: "No leg tickets, no jargon wall. Click bids and asks straight off the chain; the risk curve, max loss and breakevens redraw as you go.",
     points: [
       "Black-Scholes mark, stated in the footer",
@@ -285,60 +285,9 @@ function Safety() {
           <p className="measure mt-[1.125rem] mb-6 t-body-sm text-fg-dim">
             lazybull is an educational platform. Not a broker, not advice — a
             place to get fluent before a single real dollar moves. Indian
-            securities are shown delayed by at least {LAG_DAYS} days, as SEBI&apos;s
+            securities are shown delayed by at least {LAG_DAYS} days, as SEBI’s
             education-data norms require of an unregistered teacher.
           </p>
-
-          {/* The section asserts defined risk; this draws it. A capped payoff —
-              flat at a loss you chose, up through zero, flat at a capped gain —
-              strokes itself in on scroll. Wordless and aria-hidden on purpose:
-              it is the argument as a shape, not another sentence to maintain,
-              and it is the only place on this page where "options you can see"
-              is demonstrated rather than claimed. */}
-          <svg
-            aria-hidden
-            viewBox="0 0 260 92"
-            className="mt-7 block h-auto w-full max-w-[16.25rem] overflow-visible"
-          >
-            {/* zero line */}
-            <line
-              x1="0"
-              y1="58"
-              x2="260"
-              y2="58"
-              stroke="var(--fg-faint)"
-              strokeWidth="1"
-              strokeDasharray="3 4"
-              opacity="0.5"
-            />
-            {/* the capped payoff itself */}
-            <path
-              d="M0 80 H88 L172 28 H260"
-              fill="none"
-              stroke="var(--bull)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              pathLength={1}
-              data-gsap="draw"
-              data-gsap-duration="1.2"
-              style={{ filter: "drop-shadow(0 0 8px rgba(82,255,165,0.45))" }}
-            />
-            {/* the floor you chose — the flat left leg, called out */}
-            <line
-              x1="0"
-              y1="80"
-              x2="88"
-              y2="80"
-              stroke="var(--bear)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              pathLength={1}
-              data-gsap="draw"
-              data-gsap-duration="0.7"
-              opacity="0.75"
-            />
-          </svg>
         </div>
         <div
           className="grid gap-3.5 sm:grid-cols-2"

@@ -3,6 +3,7 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { Chip, PageHeader, SectionHeading } from "@/components/calm/kit";
 import { BOT_REGISTRY } from "@/lib/quant/bots";
+import { BotIcon } from "@/components/quant/BotIcon";
 import { CATEGORY_META, type BotCategory } from "@/lib/quant/types";
 
 export const metadata = {
@@ -56,8 +57,8 @@ export default function BotsIndex() {
                   href={`/learn/bots/${b.id}`}
                   className="group flex items-start gap-3 rounded-2xl p-3 transition-colors hover:bg-fg/[0.05]"
                 >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-fg/[0.07] font-display text-lg text-fg-dim">
-                    {b.glyph}
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-fg-dim transition-colors group-hover:text-brand-ink">
+                    <BotIcon id={b.id} className="size-5" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">

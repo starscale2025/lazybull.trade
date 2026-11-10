@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useSafety, usePaper } from "@/lib/stores";
 import { useTheme } from "@/lib/stores";
 import { ToolButton } from "@/components/calm/kit";
+import { briefingPending, withBriefing } from "@/lib/safety-briefing";
 
 export function SafetySettingsButton() {
   const [open, setOpen] = useState(false);
@@ -55,7 +56,14 @@ export function SafetySettingsButton() {
                   label="Training wheels"
                   desc="Block unbounded-risk strategies (naked calls/puts, short straddles)."
                   checked={safety.trainingWheels}
-                  onChange={safety.setTrainingWheels}
+                  onChange={(on) => {
+                    // A stranger turning them off gets the risk briefing first;
+                    // its own last step is the switch, so this panel steps aside.
+                    if (!on && briefingPending()) {
+                      setOpen(false);
+                      withBriefing();
+                    } else safety.setTrainingWheels(on);
+                  }}
                 />
                 <div>
                   <div className="t-label text-fg-dim mb-2">

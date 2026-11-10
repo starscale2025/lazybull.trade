@@ -8,6 +8,7 @@ import { closes } from "@/lib/quant/series";
 import type { Candle } from "@/lib/candles";
 import { Chip, ToolButton, type ChipTone } from "@/components/calm/kit";
 import { PriceWithOverlay, PaneLine, EquitySpark } from "./MiniViz";
+import { BotIcon } from "./BotIcon";
 import { RunStream } from "./RunStream";
 import { DecimatedNumber } from "./DecimatedNumber";
 import { sentence } from "./sentence";
@@ -81,6 +82,7 @@ export function BotCell({
   onRemove,
   onToggleCollapse,
   onRerun,
+  paramsOpenAtStart = false,
 }: {
   index: number;
   active: ActiveBot;
@@ -93,8 +95,10 @@ export function BotCell({
   onRemove: () => void;
   onToggleCollapse: () => void;
   onRerun: () => void;
+  /** A bot's about page opens with its parameters showing: it invites you to change them. */
+  paramsOpenAtStart?: boolean;
 }) {
-  const [paramsOpen, setParamsOpen] = useState(false);
+  const [paramsOpen, setParamsOpen] = useState(paramsOpenAtStart);
   // Q6: '?', 'params' and '✕' live behind one '⋯' — five always-on controls
   // per header made 4+ stacked cells read as a wall of touching buttons.
   const [menuOpen, setMenuOpen] = useState(false);
@@ -162,8 +166,8 @@ export function BotCell({
           <span className="t-label tabular-nums text-fg-faint">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-[0.75rem] text-brand-ink">
-            {def.glyph}
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-fg/[0.07] text-brand-ink">
+            <BotIcon id={def.id} className="size-3.5" />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-[0.9375rem] font-semibold tracking-[-0.01em]">
