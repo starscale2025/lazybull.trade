@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
-import type { Object3D } from "three";
-import { registerFilmFrame } from "@/lib/cinema-clock";
+import { WebGLRenderTarget, type Object3D } from "three";
+import { cinemaClock, registerFilmFrame } from "@/lib/cinema-clock";
 
 /**
  * Puts a film layer's <Canvas> on the film's one clock (Phase 4, M31). The
@@ -32,19 +32,68 @@ export function FilmDriver({ active }: { active: boolean }) {
   const activeRef = useRef(active);
   activeRef.current = active;
   useEffect(() => {
-    const hidden: Object3D[] = [];
-    scene.traverse((o) => {
-      if (!o.visible) {
-        hidden.push(o);
-        o.visible = true;
-      }
-    });
-    gl.compileAsync?.(scene, camera).catch(() => {});
-    // The layer's wrapper is transparent until its window, so this draw is
-    // never seen; a layer mounted inside its window skips it.
-    if (!activeRef.current) gl.render(scene, camera);
-    for (const o of hidden) o.visible = false;
-  }, [gl, scene, camera]);
+    // three reads every shader's compile log on the spot to report errors,
+    // which forces a synchronous compile and defeats the parallel one below.
+    // Development keeps the checks; production does not pay for them (Stage 2, F2).
+    gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
+    // Everything is shown for as long as a call takes and hidden again before
+    // the browser can paint, so hidden objects compile and upload too.
+    const showAll = () => {
+      const hidden: Object3D[] = [];
+      scene.traverse((o) => {
+        if (!o.visible) {
+          hidden.push(o);
+          o.visible = true;
+        }
+      });
+      return () => {
+        for (const o of hidden) o.visible = false;
+      };
+    };
+    let cancelled = false;
+    const hide = showAll();
+    // compileAsync gathers the programs now and links them off the main
+    // thread where the driver allows (KHR_parallel_shader_compile). Twice:
+    // for the screen, and for a render target, because a layer under a
+    // post-processing chain draws into the composer's target, where three
+    // builds every material without tone mapping. Only the screen variants
+    // used to be warmed, so the candle act linked five programs (the glass
+    // among them) on its first visible frame at film 0.321, a 74 ms stall.
+    const compile = () => (gl.compileAsync ? gl.compileAsync(scene, camera) : Promise.resolve());
+    const toScreen = compile();
+    const target = new WebGLRenderTarget(1, 1);
+    const previous = gl.getRenderTarget();
+    gl.setRenderTarget(target);
+    const toTarget = compile(); // the program variants are chosen during this call
+    gl.setRenderTarget(previous);
+    target.dispose();
+    const compiled = Promise.all([toScreen, toTarget]);
+    hide();
+    // Then, once they are linked, one whole frame of the layer, post-processing
+    // included, while its wrapper is still transparent: a plain gl.render left
+    // the composer's passes to compile on the first visible frame (a 45 ms
+    // hitch at film 0.320), and drawing before the link finished forced every
+    // program to compile on the spot (F2). A layer mounted inside its window
+    // skips it.
+    // In its own idle slot: both layers' compiles finish together, and their
+    // two warm frames back to back in one task were 130 ms of frame zero not
+    // moving at the first wheel step.
+    const warm = () => {
+      if (cancelled || activeRef.current) return;
+      const hideAgain = showAll();
+      advance(cinemaClock.time);
+      hideAgain();
+    };
+    compiled
+      .catch(() => {})
+      .then(() => {
+        if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(warm, { timeout: 1500 });
+        else setTimeout(warm, 60);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [gl, scene, camera, advance]);
   useEffect(() => (active ? registerFilmFrame((t) => advance(t)) : undefined), [active, advance]);
   return null;
 }

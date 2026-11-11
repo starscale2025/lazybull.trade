@@ -16,14 +16,14 @@ import { Environment, Grid, Html, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cinemaClock, damp } from "@/lib/cinema-clock";
-import { grade } from "@/lib/cinema";
+import { CANDLE3D, grade } from "@/lib/cinema";
 import { CANDLES, CRASH_END, FIRST_RED_I, N, PEAK_Y, SP, SPAN, buildAt, floorReachF, floorY, revealF } from "@/lib/candle-series";
 import { getHeroPosition, onHeroPosition } from "@/lib/hero-position";
 import { START_STRIKES, figures, money } from "@/lib/hero-spread";
 import { watchContext } from "./gl-context";
 import { Grade } from "./Grade";
 import { FilmDriver } from "./FilmDriver";
-import { FILM_DPR_MAX, FilmDpr } from "./FilmDpr";
+import { FILM_DPR_HIGH_REFRESH, FILM_DPR_MAX, useFilmDpr } from "./FilmDpr";
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -990,10 +990,13 @@ export default function CandleField3D({
   // A handle on the live post chain so the colour script can write to it.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const composerRef = useRef<any>(null);
+  // Its pixel ratio lives here, set once by the governor (FilmDpr.tsx, Stage 2
+  // F1), with a 1.25x ceiling on screens above 90 Hz (F5).
+  const { dpr, governor } = useFilmDpr(FILM_DPR_MAX, { highRefreshMax: FILM_DPR_HIGH_REFRESH, hiddenUntil: CANDLE3D.in0 });
   return (
     <Canvas
       className="h-full w-full"
-      dpr={[1, FILM_DPR_MAX]}
+      dpr={dpr}
       // On the film's one clock (M31): drawn by ScrollCinema's tick, never by a loop of its own.
       frameloop="never"
       gl={{ alpha: false, antialias: false, powerPreference: "high-performance" }}
@@ -1077,7 +1080,7 @@ export default function CandleField3D({
 
       <Rig />
       <FilmDriver active={active} />
-      <FilmDpr />
+      {governor}
 
       {/* NOTE: no `ref` on the individual effects. Under React 19 `ref` is an
           ordinary prop, and @react-three/postprocessing JSON.stringify()s its

@@ -480,7 +480,20 @@ export function ScrollCinema() {
           // Removing ~1370vh invalidates every other ScrollTrigger's start/end
           // (e.g. the footer's data-gsap reveals) — recompute so they still fire.
           ScrollTrigger.refresh();
-          setDead(true);
+          // The teardown frees three contexts' targets and buffers on the GPU,
+          // which stalls the frames around it: 40–60 ms each when it landed
+          // mid-scroll on a first pass (Stage 2). Nothing of it shows, so it
+          // waits until the page has been still for a second.
+          let still = 0;
+          const wait = () => {
+            window.clearTimeout(still);
+            still = window.setTimeout(() => {
+              window.removeEventListener("scroll", wait);
+              if (!disposed) setDead(true);
+            }, 1000);
+          };
+          window.addEventListener("scroll", wait, { passive: true });
+          wait();
         });
       });
     };

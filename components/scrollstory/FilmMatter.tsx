@@ -33,7 +33,7 @@ import { POSTER_GROUND_NDC, matterAt } from "@/lib/cinema";
 import { BULL_LIGHT, DOT_FRAG, NOISE } from "@/components/matter/shaders";
 import { watchContext } from "./gl-context";
 import { FilmDriver } from "./FilmDriver";
-import { FilmDpr } from "./FilmDpr";
+import { useFilmDpr } from "./FilmDpr";
 
 const MODEL = "/models/bull-crystal.glb";
 /** The yaw the bull is seen at, which orders its points left to right for the mark. */
@@ -308,6 +308,15 @@ const VERT = /* glsl */ `
     a *= uAlpha;
     vAlpha = uGlow > 0.5 ? a * 0.28 : a;
     gl_PointSize = size * (uGlow > 0.5 ? 4.0 : 1.0) * uPixelRatio;
+    // A dot too faint to leave a pixel is not rasterised at all (Stage 2, F3).
+    // DOT_FRAG discards below 0.002 and its alpha is at most 1.8x vAlpha, so
+    // under 0.0011 every fragment of this dot was already thrown away, after
+    // paying for it: through the pour that was most of 300,000 dots stacked
+    // on one spot. Lossless by construction.
+    if (vAlpha < 0.0011) {
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      gl_PointSize = 0.0;
+    }
   }
 `;
 
@@ -456,7 +465,11 @@ function buildAttributes(count: number) {
   for (let i = 0; i < count; i++) {
     seed[i] = rnd();
     river[i * 2] = rnd();
-    rand.set([rnd(), rnd(), rnd()], i * 3);
+    // Written in place, in the same order: a [rnd(), rnd(), rnd()] per point
+    // was 240,000 throwaway arrays on the frame the film mounts (Stage 2).
+    rand[i * 3] = rnd();
+    rand[i * 3 + 1] = rnd();
+    rand[i * 3 + 2] = rnd();
     // Four in ten make the line, a quarter the six fine threads that wander
     // round it (each thread one curve, so it reads as a thread), a fifth the
     // curtain of dust falling from it, the rest the air around them. A few
@@ -493,7 +506,9 @@ function buildAttributes(count: number) {
     if (role[i] !== 1) continue;
     const y = 1 - ((k + 0.5) / onSphere) * 2;
     const rad = Math.sqrt(1 - y * y);
-    bull.set([Math.cos(golden * k) * rad, y, Math.sin(golden * k) * rad], i * 3);
+    bull[i * 3] = Math.cos(golden * k) * rad;
+    bull[i * 3 + 1] = y;
+    bull[i * 3 + 2] = Math.sin(golden * k) * rad;
     k++;
   }
   return { off, river, thread, rand, kindOf, seed, ring, bull, bullN, across, role };
@@ -869,7 +884,6 @@ function Matter({ active, onBull }: { active: boolean; onBull?: (ok: boolean) =>
       <points ref={(el) => void (pointsRef.current[0] = el)} geometry={glowGeo} material={glow} frustumCulled={false} />
       <points ref={(el) => void (pointsRef.current[1] = el)} geometry={dotGeo} material={dots} frustumCulled={false} />
       <FilmDriver active={active} />
-      <FilmDpr max={2} />
     </>
   );
 }
@@ -886,10 +900,12 @@ export default function FilmMatter({
   /** The model has been sampled (or could not be). */
   onBull?: (ok: boolean) => void;
 }) {
+  // Its pixel ratio lives here, set once by the governor (FilmDpr.tsx).
+  const { dpr, governor } = useFilmDpr(2);
   return (
     <Canvas
       className="h-full w-full"
-      dpr={[1, 2]}
+      dpr={dpr}
       frameloop="never"
       gl={{ alpha: true, antialias: false, powerPreference: "high-performance", premultipliedAlpha: true }}
       camera={{ fov: 34, position: [0, 0, 5], near: 0.1, far: 50 }}
@@ -901,6 +917,7 @@ export default function FilmMatter({
       fallback={null}
     >
       <Matter active={active} onBull={onBull} />
+      {governor}
     </Canvas>
   );
 }

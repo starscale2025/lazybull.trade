@@ -1966,6 +1966,20 @@ html[data-motion="paused"] *::after {
 .cinema-rail .rail-row:hover,
 .cinema-rail .rail-row:focus-visible { opacity: 1; }
 .cinema-rail .rail-row[data-on="1"] { opacity: 1; transform: translateX(3px); }
+/* The rail stands in a soft vignette off the frame's left edge (Stage 2,
+   decision 4): the near candle and the regime line printed straight through
+   the SOUND and SKIP rows (d05, d07). It falls off to the right and at both
+   ends, so it reads as the picture's own edge shade, not a panel laid on it. */
+.cinema-rail::before {
+  content: "";
+  position: absolute;
+  inset: -48px -110px -48px calc(-2.5vw - 4px);
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(5, 5, 5, 0.72), rgba(5, 5, 5, 0.38) 55%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
+}
 .cinema-rail .rail-row .rail-tick,
 .cinema-rail .rail-row .rail-num,
 .cinema-rail .rail-row .rail-label {
@@ -3030,8 +3044,13 @@ html[data-motion="paused"] .dial-root { transition: none; }
   height: 0;
   z-index: 46;
   pointer-events: none;
-  transition: transform 0.5s var(--ease-settle);
+  transition: transform 0.5s var(--ease-settle), opacity 0.3s var(--ease-settle);
 }
+/* The film folds the Island to its dot while it is pinned, and the dot sat
+   over every frame of it (d04 to d17). It steps out of the frame until the
+   film greets the visitor as the pill again (Stage 2, decision 4). Opacity
+   only: the morph stays on the compositor. */
+html[data-film="pinned"] .island-root[data-island-stage="dot"] { opacity: 0; }
 @media print {
   .island-root { display: none; }
 }

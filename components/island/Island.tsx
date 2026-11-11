@@ -299,7 +299,12 @@ export function Island() {
       <div role="status" aria-live="polite" className="sr-only">
         {said}
       </div>
-      <div className="island-root" data-island-open={open} style={{ transform: `translateY(${stage ? 12 : top}px)` }}>
+      <div
+        className="island-root"
+        data-island-open={open}
+        data-island-stage={stage ?? undefined}
+        style={{ transform: `translateY(${stage ? 12 : top}px)` }}
+      >
         <AnimatePresence>
           {state && (
             <motion.div
