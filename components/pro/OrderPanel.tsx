@@ -10,7 +10,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePaper, useSafety } from "@/lib/stores";
-import { availableFunds, ordersMargin, type OrderType, type TimeInForce } from "@/lib/paper-orders";
+import { availableFunds, maxAffordableQty, ordersMargin, type OrderType, type TimeInForce } from "@/lib/paper-orders";
 import { TogglePill } from "@/components/calm/kit";
 import { fmt } from "./chartCore";
 
@@ -37,7 +37,10 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [type, setType] = useState<OrderType>("limit");
   const [qtyMode, setQtyMode] = useState<"shares" | "usd">("shares");
-  const [qtyText, setQtyText] = useState("100");
+  // One share, not 100: at real prices 100 shares of almost anything is more
+  // than the $5,000 starter account, so the order the panel opened with was
+  // refused every time.
+  const [qtyText, setQtyText] = useState("1");
   const [priceText, setPriceText] = useState("");
   const [priceTouched, setPriceTouched] = useState(false);
   const [tpOn, setTpOn] = useState(false);
@@ -58,6 +61,8 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
   const cash = usePaper((s) => s.cash);
   const orders = usePaper((s) => s.orders);
   const killed = useSafety((s) => s.killSwitchTriggered);
+  const trainingWheels = useSafety((s) => s.trainingWheels);
+  const held = usePaper((s) => s.shares[symbol]?.qty ?? 0);
 
   const bid = price != null ? price - SPREAD / 2 : null;
   const ask = price != null ? price + SPREAD / 2 : null;
@@ -100,7 +105,13 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
   const notional = qty * refPrice;
   const free = availableFunds(cash, orders);
   const reserved = ordersMargin(orders);
-  const blocked = disabled || killed || qty <= 0 || refPrice <= 0;
+  // Say why an order cannot go before the button is pressed, not after.
+  const overBudget = side === "buy" && qty > 0 && refPrice > 0 && notional > free + 1e-9;
+  const most = maxAffordableQty(free, refPrice);
+  const wouldShort = side === "sell" && trainingWheels && held - qty < -1e-9;
+  const blocked = disabled || killed || qty <= 0 || refPrice <= 0 || overBudget || wouldShort;
+  // Whole shares read as "13"; fractions keep what they need (0.0777 of a coin).
+  const qtyStr = (n: number) => (Number.isInteger(n) ? String(n) : n >= 1 ? fmt(n, 2) : String(Number(n.toFixed(4))));
 
   const submit = () => {
     setErr(null);
@@ -120,10 +131,13 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
       setErr(res.error ?? "order rejected");
       return;
     }
+    // A limit or stop the market has already reached fills on submit.
+    const filled = res.order?.status === "filled";
+    const at = res.order?.fillPrice ?? (type === "market" ? price ?? 0 : limitOrStop);
     onResult(
-      type === "market"
-        ? `${side.toUpperCase()} ${fmt(qty, 2)} ${symbol} @ ${fmt(price ?? 0, 2)}`
-        : `${type.charAt(0).toUpperCase()}${type.slice(1)} ${side} ${fmt(qty, 2)} ${symbol} @ ${fmt(limitOrStop, 2)} is working`,
+      filled
+        ? `Filled: ${side === "buy" ? "bought" : "sold"} ${qtyStr(qty)} ${symbol} at ${fmt(at, 2)}`
+        : `${type.charAt(0).toUpperCase()}${type.slice(1)} ${side} ${qtyStr(qty)} ${symbol} @ ${fmt(limitOrStop, 2)} is working`,
       "ok"
     );
   };
@@ -314,11 +328,45 @@ export function OrderPanel({ symbol, price, disabled = false, onResult, onClose 
               </span>
               {!killed && !disabled && (
                 <span className="text-[0.625rem] tabular-nums opacity-90">
-                  {qty > 0 ? fmt(qty, 2) : "—"} {symbol} @{" "}
+                  {qty > 0 ? qtyStr(qty) : "—"} {symbol} @{" "}
                   {type === "market" ? "MKT" : `${fmt(limitOrStop || 0, 2)} ${type.toUpperCase()}`}
                 </span>
               )}
             </button>
+            {!killed && !disabled && overBudget && (
+              <div className="mt-2 rounded-[var(--r-instrument)] border border-amber/40 bg-amber/10 px-2 py-1.5 t-label text-amber">
+                Needs ${fmt(notional, 2)}, ${fmt(Math.max(0, free), 2)} is free.{" "}
+                {most > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQtyMode("shares");
+                      setQtyText(String(most));
+                    }}
+                    className="underline underline-offset-2 hover:text-fg"
+                  >
+                    Use the most you can buy: {qtyStr(most)}
+                  </button>
+                )}
+              </div>
+            )}
+            {!killed && !disabled && wouldShort && (
+              <div className="mt-2 rounded-[var(--r-instrument)] border border-amber/40 bg-amber/10 px-2 py-1.5 t-label text-amber">
+                You hold {qtyStr(Math.max(0, held))} {symbol}. Selling more would open a short, which training wheels block.{" "}
+                {held > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQtyMode("shares");
+                      setQtyText(String(held));
+                    }}
+                    className="underline underline-offset-2 hover:text-fg"
+                  >
+                    Sell all {qtyStr(held)}
+                  </button>
+                )}
+              </div>
+            )}
             {err && (
               <div role="alert" className="mt-2 rounded-[var(--r-instrument)] border border-amber/40 bg-amber/10 px-2 py-1.5 t-label text-amber">
                 {err}

@@ -75,15 +75,23 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
   // Live marks for every symbol we hold. The charted symbol is seeded from the
   // chart's own bars so its row never waits on the poll.
   const heldSyms = useMemo(() => Object.keys(shares).sort(), [shares]);
-  const heldKey = heldSyms.join(",");
+  // Poll every symbol with a working order too, and feed those prices to the
+  // book: the chart only prices the symbol on screen, so a limit on AAPL never
+  // filled while you looked at NVDA.
+  const pollKey = useMemo(
+    () => [...new Set([...heldSyms, ...book.filter((o) => o.status === "working").map((o) => o.sym)])].sort().join(","),
+    [heldSyms, book]
+  );
   useEffect(() => {
-    if (!heldKey) return;
+    if (!pollKey) return;
     let cancelled = false;
     const poll = async () => {
       try {
-        const r = await fetch(`/api/quote-batch?symbols=${encodeURIComponent(heldKey)}`);
+        const r = await fetch(`/api/quote-batch?symbols=${encodeURIComponent(pollKey)}`);
         const j = await r.json();
         if (cancelled || !j?.ok || !Array.isArray(j.quotes)) return;
+        const markPrice = usePaper.getState().markPrice;
+        for (const q of j.quotes) if (q?.sym && Number.isFinite(q.last) && q.last > 0) markPrice(q.sym, q.last);
         setMarks((prev) => {
           const next = { ...prev };
           for (const q of j.quotes) if (q?.sym && Number.isFinite(q.last)) next[q.sym] = q.last;
@@ -99,7 +107,7 @@ export function TradingPanel({ chartSymbol, chartLast, replayActive, onResult }:
       cancelled = true;
       clearInterval(id);
     };
-  }, [heldKey]);
+  }, [pollKey]);
 
   /** Marks including the chart's own symbol, which is fresher than the poll. */
   const allMarks = useMemo(() => {

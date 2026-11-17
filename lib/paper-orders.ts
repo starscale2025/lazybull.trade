@@ -243,3 +243,38 @@ export function validateMove(o: Order, price: number, marketPrice?: number): str
 export function availableFunds(cash: number, orders: Order[]): number {
   return cash - ordersMargin(orders);
 }
+
+/**
+ * Keep reduce-only exits honest against the position they exit.
+ *
+ * Closing a position by hand used to leave its take profit and stop loss
+ * working; the next tick through either one sold shares that were no longer
+ * there and opened a short nobody asked for. An exit whose position is gone, or
+ * now faces the other way, is cancelled; one larger than what is left is
+ * trimmed to it.
+ */
+export function reconcileReduceOnly(orders: Order[], shares: Record<string, { qty: number } | undefined>): Order[] {
+  let changed = false;
+  const out = orders.map((o) => {
+    if (o.status !== "working" || !o.reduceOnly) return o;
+    const held = shares[o.sym]?.qty ?? 0;
+    const closes = (o.side === "sell" && held > 1e-9) || (o.side === "buy" && held < -1e-9);
+    if (!closes) {
+      changed = true;
+      return { ...o, status: "cancelled" as const, note: "position closed, exit no longer needed" };
+    }
+    if (o.qty > Math.abs(held) + 1e-9) {
+      changed = true;
+      return { ...o, qty: Math.abs(held) };
+    }
+    return o;
+  });
+  return changed ? out : orders;
+}
+
+/** The most `price` can buy with `free` funds: whole shares when one fits, else a fraction (4 dp). */
+export function maxAffordableQty(free: number, price: number): number {
+  if (!Number.isFinite(free) || !Number.isFinite(price) || free <= 0 || price <= 0) return 0;
+  const whole = Math.floor(free / price + 1e-9);
+  return whole >= 1 ? whole : Math.floor((free / price) * 1e4) / 1e4;
+}

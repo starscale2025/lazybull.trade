@@ -8,12 +8,30 @@ import { track } from "./track";
 import {
   availableFunds as calcAvailable,
   bracketFor,
+  maxAffordableQty,
+  reconcileReduceOnly,
   sweep,
   tifExpiry,
   validateMove,
   validateOrder,
   type Order as WorkingOrder,
 } from "./paper-orders";
+
+/** The user's local calendar day, YYYY-MM-DD: the "today" of the daily loss limit. */
+export function localDay(t = Date.now()): string {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Today's realized P&L with `delta` added. The tally restarts on a new day: it
+ * used to accumulate forever, so a "daily" loss limit became a lifetime one and
+ * the kill switch locked an account for good once its losses summed to $500.
+ */
+function addRealized(s: { realizedToday: number; realizedOn?: string }, delta: number) {
+  const today = localDay();
+  return { realizedToday: (s.realizedOn === today ? s.realizedToday : 0) + delta, realizedOn: today };
+}
 
 // ─────────────── strategy store ───────────────
 type StrategyState = {
@@ -80,7 +98,7 @@ export const useStrategy = create<StrategyState>()((set) => ({
  * between losing a position and losing nothing in practice. Returns null when
  * storage is unavailable or unusable, in which case callers keep in-memory state.
  */
-function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "shares" | "positions" | "trades" | "orders" | "balanceLog" | "journal"> | null {
+function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "realizedToday" | "realizedOn" | "shares" | "positions" | "trades" | "orders" | "balanceLog" | "journal"> | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("lb-paper");
@@ -93,6 +111,7 @@ function readPersistedAccount(): Pick<PaperState, "cash" | "startingCash" | "rea
       cash: num(st.cash, DEFAULT_CAPITAL),
       startingCash: num(st.startingCash, DEFAULT_CAPITAL),
       realizedToday: num(st.realizedToday, 0),
+      realizedOn: typeof st.realizedOn === "string" ? st.realizedOn : "",
       positions: Array.isArray(st.positions) ? st.positions : [],
       trades: Array.isArray(st.trades) ? st.trades : [],
       orders: Array.isArray(st.orders) ? st.orders : [],
@@ -172,6 +191,8 @@ type PaperState = {
   /** The order book: working, filled, cancelled and expired orders. */
   orders: WorkingOrder[];
   realizedToday: number;
+  /** The local day `realizedToday` belongs to (YYYY-MM-DD); "" before the first close. */
+  realizedOn: string;
   /** When this account epoch began. 0 = untouched fresh account; the display
       falls back to the oldest ledger entry, so the date is never invented. */
   accountStartedAt: number;
@@ -194,6 +215,8 @@ type PaperState = {
   setJournalNote: (tradeId: string, note: string) => void;
   /** Advance the book against a live price. Called from the chart's quote poll. */
   markPrice: (sym: string, price: number) => void;
+  /** Start a new day's loss tally and re-arm a kill switch left up from an earlier day. */
+  rollDay: () => void;
   /** Set the paper account's starting capital and reset everything to it. */
   setStartingCash: (n: number) => void;
   reset: () => void;
@@ -217,6 +240,7 @@ export const usePaper = create<PaperState>()(
       balanceLog: [],
       journal: {},
       realizedToday: 0,
+      realizedOn: "",
       // 0, not Date.now(): create() runs during SSR too, and a nondeterministic
       // initial would hydration-mismatch anywhere the date renders.
       accountStartedAt: 0,
@@ -250,7 +274,7 @@ export const usePaper = create<PaperState>()(
       close: (id, exitPnl) =>
         set((s) => ({
           cash: s.cash + exitPnl,
-          realizedToday: s.realizedToday + exitPnl,
+          ...addRealized(s, exitPnl),
           positions: s.positions.map((p) => (p.id === id ? { ...p, status: "closed", pnl: exitPnl } : p)),
         })),
       closeAll: (reason) => {
@@ -352,12 +376,14 @@ export const usePaper = create<PaperState>()(
         set({
           ...(fresh ?? {}),
           shares,
+          // The position just changed: exits for what is no longer held go.
+          orders: reconcileReduceOnly(s.orders, shares),
           trades: trades.slice(0, MAX_TRADES),
           balanceLog,
           cash: nextCash,
           // Share P&L lands in the same realizedToday the kill switch reads, so
           // one daily loss limit governs both books.
-          realizedToday: s.realizedToday + realizedDelta,
+          ...addRealized(s, realizedDelta),
         });
         return { ok: true, realized: realizedDelta };
       },
@@ -403,10 +429,13 @@ export const usePaper = create<PaperState>()(
             order.type === "market" ? input.marketPrice : order.type === "limit" ? order.limitPrice : order.stopPrice;
           const need = Number.isFinite(px) ? (px as number) * order.qty : 0;
           const free = calcAvailable(s.cash, s.orders);
-          if (need > free) {
+          if (need > free + 1e-9) {
+            const most = maxAffordableQty(free, px as number);
             return {
               ok: false,
-              error: `not enough buying power — needs $${need.toFixed(2)}, $${Math.max(0, free).toFixed(2)} available`,
+              error: `not enough buying power — needs $${need.toFixed(2)}, $${Math.max(0, free).toFixed(2)} available${
+                most > 0 ? ` (the most you can buy is ${most} ${order.sym})` : ""
+              }`,
             };
           }
         }
@@ -419,14 +448,26 @@ export const usePaper = create<PaperState>()(
           if (!res.ok) return { ok: false, error: res.error };
           const filled: WorkingOrder = { ...order, status: "filled", filledAt: now, fillPrice: px as number };
           const exits = bracketFor(filled, px as number, now);
-          set((st) => ({ orders: [filled, ...exits, ...st.orders].slice(0, 300) }));
+          set((st) => ({ orders: reconcileReduceOnly([filled, ...exits, ...st.orders].slice(0, 300), st.shares) }));
           track("order_submitted", { sym: order.sym, side: order.side, type: order.type, qty: order.qty, mode: "filled" });
           return { ok: true, order: filled };
         }
 
         set((st) => ({ orders: [order, ...st.orders].slice(0, 300) }));
-        track("order_submitted", { sym: order.sym, side: order.side, type: order.type, qty: order.qty, mode: "resting" });
-        return { ok: true, order };
+        // A limit or stop the market has already reached fills now, as at a
+        // broker. Waiting for the next tick left it "working" indefinitely
+        // whenever the price stood still, which is all night and all weekend.
+        const mkt = input.marketPrice;
+        if (Number.isFinite(mkt) && (mkt as number) > 0) get().markPrice(order.sym, mkt as number);
+        const placed = get().orders.find((o) => o.id === order.id) ?? order;
+        track("order_submitted", {
+          sym: order.sym,
+          side: order.side,
+          type: order.type,
+          qty: order.qty,
+          mode: placed.status === "filled" ? "filled" : "resting",
+        });
+        return { ok: true, order: placed };
       },
 
       moveOrder: (id, price, marketPrice) => {
@@ -457,19 +498,64 @@ export const usePaper = create<PaperState>()(
 
       markPrice: (sym, price) => {
         const s = get();
+        if (!Number.isFinite(price) || price <= 0) return;
         if (!s.orders.some((o) => o.status === "working" && o.sym === sym)) return;
         const now = Date.now();
         const res = sweep(s.orders, sym, price, now);
         if (!res.fills.length && !res.cancelled.length) return;
-        // Book each fill through the same accounting path a manual trade uses.
+        let orders = res.orders;
+        const born: WorkingOrder[] = [];
+        const refuse = (id: string, note: string) => {
+          orders = orders.map((o) =>
+            o.id === id ? { ...o, status: "cancelled" as const, filledAt: undefined, fillPrice: undefined, note } : o
+          );
+        };
+        // Book each fill through the same accounting path a manual trade uses,
+        // re-checking the account as it stands NOW: the order was accepted
+        // against the position and the safety settings at the time it was placed.
         for (const f of res.fills) {
-          get().fillShares({ sym: f.order.sym, side: f.order.side, qty: f.order.qty, price: f.price, ts: now });
+          const o = f.order;
+          const held = get().shares[o.sym]?.qty ?? 0;
+          const signed = o.side === "buy" ? o.qty : -o.qty;
+          const reducing = Math.abs(held + signed) < Math.abs(held);
+          let qty = o.qty;
+          if (o.reduceOnly) {
+            const closes = (o.side === "sell" && held > 1e-9) || (o.side === "buy" && held < -1e-9);
+            if (!closes) {
+              refuse(o.id, "position closed, exit no longer needed");
+              continue;
+            }
+            qty = Math.min(qty, Math.abs(held));
+          } else {
+            const safety = useSafety.getState();
+            if (safety.killSwitchTriggered && !reducing) {
+              refuse(o.id, "kill switch is on, only closing orders fill");
+              continue;
+            }
+            if (safety.trainingWheels && held + signed < -1e-9) {
+              refuse(o.id, "would open a short, and training wheels are on");
+              continue;
+            }
+          }
+          const r = get().fillShares({ sym: o.sym, side: o.side, qty, price: f.price, ts: now });
+          if (!r.ok) {
+            refuse(o.id, r.error ?? "fill refused");
+            continue;
+          }
+          if (qty !== o.qty) orders = orders.map((x) => (x.id === o.id ? { ...x, qty } : x));
+          // Entries that carried a bracket get their exits once they fill.
+          if (!o.reduceOnly) born.push(...bracketFor({ ...o, qty }, f.price, now));
         }
-        // Entries that carried a bracket get their exits once they fill.
-        const born = res.fills.flatMap((f) =>
-          f.order.reduceOnly ? [] : bracketFor(f.order, f.price, now)
-        );
-        set({ orders: [...born, ...res.orders].slice(0, 300) });
+        set({ orders: reconcileReduceOnly([...born, ...orders].slice(0, 300), get().shares) });
+      },
+
+      rollDay: () => {
+        const today = localDay();
+        if (get().realizedOn !== today) set({ realizedToday: 0, realizedOn: today });
+        // The limit halts trading for the rest of the day it was hit; the
+        // overlay itself says "come back tomorrow". A new day re-arms it.
+        const safety = useSafety.getState();
+        if (safety.killSwitchTriggered && safety.killedOn !== today) safety.resetKillSwitch();
       },
 
       setStartingCash: (n) => {
@@ -496,6 +582,7 @@ export const usePaper = create<PaperState>()(
             },
           ],
           realizedToday: 0,
+          realizedOn: "",
           accountStartedAt: Date.now(),
           resetCount: get().resetCount + 1,
         });
@@ -526,6 +613,7 @@ export const usePaper = create<PaperState>()(
             },
           ],
           realizedToday: 0,
+          realizedOn: "",
           accountStartedAt: Date.now(),
           resetCount: s.resetCount + 1,
         }));
@@ -615,6 +703,7 @@ export const usePaper = create<PaperState>()(
           cash: num(p.cash, current.cash),
           startingCash: num(p.startingCash, current.startingCash),
           realizedToday: num(p.realizedToday, 0),
+          realizedOn: typeof p.realizedOn === "string" ? p.realizedOn : "",
           positions: Array.isArray(p.positions) ? p.positions : [],
           orders: Array.isArray(p.orders) ? p.orders.slice(0, 300) : [],
           balanceLog: Array.isArray(p.balanceLog) ? p.balanceLog.slice(0, MAX_TRADES) : [],
@@ -659,6 +748,8 @@ type SafetyState = {
   dailyLossLimit: number;
   killSwitchTriggered: boolean;
   killReason?: string;
+  /** The local day the switch tripped; a later day re-arms it (rollDay). */
+  killedOn?: string;
   setWizardSeen: () => void;
   setTrainingWheels: (v: boolean) => void;
   setDailyLossLimit: (n: number) => void;
@@ -676,8 +767,8 @@ export const useSafety = create<SafetyState>()(
       setWizardSeen: () => set({ wizardSeen: true }),
       setTrainingWheels: (v) => set({ trainingWheels: v }),
       setDailyLossLimit: (n) => set({ dailyLossLimit: Math.max(0, n) }),
-      triggerKillSwitch: (reason) => set({ killSwitchTriggered: true, killReason: reason }),
-      resetKillSwitch: () => set({ killSwitchTriggered: false, killReason: undefined }),
+      triggerKillSwitch: (reason) => set({ killSwitchTriggered: true, killReason: reason, killedOn: localDay() }),
+      resetKillSwitch: () => set({ killSwitchTriggered: false, killReason: undefined, killedOn: undefined }),
     }),
     { name: "lb-safety" }
   )
@@ -714,4 +805,8 @@ if (typeof window !== "undefined") {
     if (e.key === "lb-paper") void usePaper.persist.rehydrate();
     if (e.key === "lb-safety") void useSafety.persist.rehydrate();
   });
+  // Both stores hydrate from localStorage synchronously, so this sees the saved
+  // account. Then once a minute, so a tab left open overnight rolls too.
+  usePaper.getState().rollDay();
+  setInterval(() => usePaper.getState().rollDay(), 60_000);
 }

@@ -29,7 +29,8 @@ const ONE_CLICK_KEY = "lb-pro-one-click";
 const STAGE_TTL_MS = 8000;
 
 export function OrderTicket({ symbol, price, disabled = false, onResult }: Props) {
-  const [qty, setQty] = useState("100");
+  // One share: 100 of almost anything is more than the $5,000 starter account.
+  const [qty, setQty] = useState("1");
   const [staged, setStaged] = useState<{ side: "buy" | "sell"; qty: number; price: number } | null>(null);
   const [oneClick, setOneClick] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

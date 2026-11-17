@@ -16,6 +16,8 @@ export type PaperSnapshot = {
   cash: number;
   startingCash: number;
   realizedToday: number;
+  /** The day realizedToday belongs to; without it a synced copy restarts the tally. */
+  realizedOn?: string;
   positions: PaperState["positions"];
   shares: PaperState["shares"];
   orders: PaperState["orders"];
@@ -31,6 +33,7 @@ export function pickSnapshot(s: PaperState): PaperSnapshot {
     cash: s.cash,
     startingCash: s.startingCash,
     realizedToday: s.realizedToday,
+    realizedOn: s.realizedOn,
     positions: s.positions,
     shares: s.shares,
     orders: s.orders,
@@ -54,6 +57,7 @@ export function sanitizeSnapshot(raw: unknown, fallbackCapital = DEFAULT_CAPITAL
     cash: num(o.cash, startingCash),
     startingCash,
     realizedToday: num(o.realizedToday, 0),
+    realizedOn: typeof o.realizedOn === "string" ? o.realizedOn : "",
     positions: arr(o.positions),
     shares: sanitizeShares(o.shares),
     orders: arr(o.orders),
