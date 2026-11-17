@@ -118,7 +118,10 @@ export function num(x: unknown): number | undefined {
 
 /** Is this one of the app's crypto tickers? (only BTC today, but future-proof) */
 export function isCrypto(symbol: string): boolean {
-  return /^(BTC|ETH|SOL|DOGE|LTC|BCH|AVAX|LINK|XRP|ADA)(USD|USDT)?$/i.test(symbol);
+  // BTC, BTCUSD, BTC/USD and Yahoo's BTC-USD (the watchlist's own form) are all
+  // the same coin; missing the hyphen sent BTC-USD to stock endpoints, where one
+  // unknown symbol fails the whole batch.
+  return /^(BTC|ETH|SOL|DOGE|LTC|BCH|AVAX|LINK|XRP|ADA)([-/]?(USD|USDT))?$/i.test(symbol);
 }
 
 /** App timeframe → coarse cache class, which picks the freshness TTL. */

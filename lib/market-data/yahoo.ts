@@ -77,7 +77,8 @@ export const yahoo: MarketDataProvider = {
   health: (): ProviderHealth => getHealth("yahoo"),
 
   async getBars(symbol: string, tf: string): Promise<BarsResult> {
-    if (isCrypto(symbol)) throw new Error("yahoo: crypto skipped");
+    // Yahoo knows coins only as BTC-USD; BTC, BTCUSD and BTC/USD are not its symbols.
+    if (isCrypto(symbol) && !symbol.includes("-")) throw new Error("yahoo: crypto skipped");
     const cfg = RANGE_INTERVAL[tf] ?? RANGE_INTERVAL.D;
     const result = await chart(symbol, cfg.range, cfg.interval);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

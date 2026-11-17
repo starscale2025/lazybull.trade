@@ -46,8 +46,20 @@ async function get(url: string): Promise<Record<string, unknown>> {
   return (await r.json()) as Record<string, unknown>;
 }
 
-/** app symbol → Alpaca crypto pair (BTC → BTC/USD). */
-const cryptoPair = (s: string) => (s.includes("/") ? s : `${s.replace(/USD$|USDT$/i, "")}/USD`);
+/** app symbol → Alpaca crypto pair: BTC, BTCUSD, BTC-USD and BTC/USD all → BTC/USD. */
+export const cryptoPair = (s: string) => `${s.toUpperCase().replace(/[-/]?(USDT|USD)$/, "")}/USD`;
+
+/** A US ticker Alpaca can price (AAPL, BRK.B); anything else would fail the whole batch. */
+const usTicker = (s: string) => /^[A-Z]{1,5}(\.[A-Z])?$/.test(s);
+
+// Alpaca's bars endpoints default `start` to the beginning of the current day.
+// Without one, a request before the open comes back empty and a daily request
+// never holds more than today's bar, so every chart fell to the synthetic tape.
+// Ask from far enough back to cover `limit` bars across weekends and holidays,
+// newest first, and turn them round.
+const LOOKBACK_DAYS: Record<string, number> = { "1m": 7, "5m": 14, "15m": 35, "1h": 120, "4h": 730, D: 2000, W: 3800, M: 11000 };
+// RFC-3339 to the second, the precision Alpaca's own examples use.
+const startFor = (tf: string) => new Date(Date.now() - (LOOKBACK_DAYS[tf] ?? 2000) * 864e5).toISOString().replace(/\.\d{3}Z$/, "Z");
 
 const iso = (t: unknown) => (typeof t === "string" ? Math.floor(new Date(t).getTime() / 1000) : undefined);
 
@@ -101,7 +113,7 @@ export const alpaca: MarketDataProvider = {
   health: (): ProviderHealth => getHealth("alpaca"),
 
   async getQuotes(symbols: string[]): Promise<Quote[]> {
-    const stocks = symbols.filter((s) => !isCrypto(s) && !s.startsWith("^"));
+    const stocks = symbols.filter((s) => !isCrypto(s) && usTicker(s));
     const cryptos = symbols.filter(isCrypto);
     // Indices (^…) are unsupported — signal it so the chain fills them elsewhere.
     if (symbols.length && !stocks.length && !cryptos.length) throw new Error("alpaca: unsupported symbols");
@@ -147,26 +159,26 @@ export const alpaca: MarketDataProvider = {
   },
 
   async getBars(symbol: string, tf: string, limit?: number): Promise<BarsResult> {
-    if (symbol.startsWith("^")) throw new Error("alpaca: indices unsupported");
+    if (!isCrypto(symbol) && !usTicker(symbol)) throw new Error("alpaca: not a US ticker");
     const timeframe = TF[tf] ?? "1Day";
     const n = limit ?? BAR_LIMIT[tf] ?? 500;
 
     if (isCrypto(symbol)) {
       const pair = cryptoPair(symbol);
       const j = await get(
-        `${DATA}/v1beta3/crypto/us/bars?symbols=${encodeURIComponent(pair)}&timeframe=${timeframe}&limit=${n}&sort=asc`
+        `${DATA}/v1beta3/crypto/us/bars?symbols=${encodeURIComponent(pair)}&timeframe=${timeframe}&start=${encodeURIComponent(startFor(tf))}&limit=${n}&sort=desc`
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const bars = barsFrom(((j as any).bars ?? {})[pair] ?? []);
+      const bars = barsFrom([...(((j as any).bars ?? {})[pair] ?? [])].reverse());
       if (bars.length < 2) throw new Error("alpaca: no crypto bars");
       return { bars, meta: metaFrom(bars, null, "REGULAR") };
     }
 
     const j = await get(
-      `${DATA}/v2/stocks/${encodeURIComponent(symbol)}/bars?timeframe=${timeframe}&limit=${n}&feed=${FEED}&sort=asc&adjustment=all`
+      `${DATA}/v2/stocks/${encodeURIComponent(symbol)}/bars?timeframe=${timeframe}&start=${encodeURIComponent(startFor(tf))}&limit=${n}&feed=${FEED}&sort=desc&adjustment=all`
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bars = barsFrom((j as any).bars ?? []);
+    const bars = barsFrom([...((j as any).bars ?? [])].reverse());
     if (bars.length < 2) throw new Error("alpaca: no bars");
     // A cheap snapshot gives a live spot + prev close + market state for meta.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
