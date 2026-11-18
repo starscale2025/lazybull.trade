@@ -25,7 +25,7 @@ const TABS: TabDef<PaneTab>[] = [
   { id: "submissions", label: "Submissions" },
 ];
 
-export function ProblemPane({ problem, className = "" }: { problem: ClientProblem; className?: string }) {
+export function ProblemPane({ problem, figure, className = "" }: { problem: ClientProblem; figure?: React.ReactNode; className?: string }) {
   const [tab, setTab] = useState<PaneTab>("description");
 
   return (
@@ -34,7 +34,7 @@ export function ProblemPane({ problem, className = "" }: { problem: ClientProble
         <PaneTabs tabs={TABS} value={tab} onChange={setTab} label="Problem tabs" />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {tab === "description" && <DescriptionTab problem={problem} />}
+        {tab === "description" && <DescriptionTab problem={problem} figure={figure} />}
         {tab === "editorial" && <EditorialTab problem={problem} />}
         {tab === "submissions" && <SubmissionsTab problem={problem} />}
       </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Workspace, type Neighbour } from "@/components/practice/Workspace";
 import { allProblems, forClient, getProblem } from "@/lib/practice/content";
+import { problemFigure } from "@/components/practice/figures";
 
 type Params = Promise<{ slug: string }>;
 
@@ -59,7 +60,7 @@ export default async function ProblemPage({ params }: { params: Params }) {
   // home, the Practice / subject / problem trail, prev and next.
   return (
     <main className="deck tap-floor flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
-      <Workspace key={problem.id} problem={forClient(problem)} prev={prev} next={next} />
+      <Workspace key={problem.id} problem={forClient(problem)} prev={prev} next={next} figure={problemFigure(problem)} />
     </main>
   );
 }

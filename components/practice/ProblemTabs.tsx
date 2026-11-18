@@ -141,7 +141,7 @@ const IO_LABEL = "font-mono text-[0.75rem] font-semibold leading-relaxed text-fg
 const CARD_CLS =
   "block rounded-[12px] border border-border p-4 transition-colors hover:border-[var(--deck-rule-hi)] hover:bg-[var(--deck-raised)]";
 
-export function DescriptionTab({ problem }: { problem: ClientProblem }) {
+export function DescriptionTab({ problem, figure }: { problem: ClientProblem; figure?: React.ReactNode }) {
   const [revealed, setRevealed] = useState(0);
   const { rateFor, countFor, loaded, minSubmissions } = useAcceptance();
   const { teacher, open } = useTeacher(problem.id, "practice_hints");
@@ -205,6 +205,14 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
       <div className="deck-rise" style={{ ["--i" as string]: 1 }}>
         <Paragraphs paragraphs={problem.statement} className="text-[0.9375rem] leading-[1.7] text-fg-dim" />
       </div>
+
+      {/* The example, drawn: built on the server from the first example (plan A5, Stage 5). */}
+      {figure && (
+        <figure className="rounded-2xl border border-border-soft bg-bg p-3">
+          {figure}
+          <figcaption className="mt-1 t-label text-fg-faint">Example 1, drawn · SIM</figcaption>
+        </figure>
+      )}
 
       {problem.examples.length > 0 && (
         <div className="space-y-4">

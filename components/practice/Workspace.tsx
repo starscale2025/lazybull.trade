@@ -82,7 +82,18 @@ function statusLine(judge: Judge): { word: string } {
 const STEP_CLS =
   "inline-flex h-8 items-center rounded-full px-3 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-fg-faint";
 
-export function Workspace({ problem, prev, next }: { problem: ClientProblem; prev: Neighbour; next: Neighbour }) {
+export function Workspace({
+  problem,
+  prev,
+  next,
+  figure,
+}: {
+  problem: ClientProblem;
+  prev: Neighbour;
+  next: Neighbour;
+  /** The problem's figure, drawn on the server (components/practice/figures.tsx). */
+  figure?: React.ReactNode;
+}) {
   const router = useRouter();
   const trackMeta = TRACK_META[problem.track];
   const hasTs = Boolean(problem.stubs.typescript);
@@ -270,7 +281,7 @@ export function Workspace({ problem, prev, next }: { problem: ClientProblem; pre
           className="deck-neon grid min-h-0 flex-1 bg-[var(--deck-pane)] sm:rounded-[14px] sm:border sm:border-transparent lg:grid-cols-[minmax(0,44%)_minmax(0,56%)]"
         >
           <i aria-hidden className="deck-neon-bloom" />
-          <ProblemPane problem={problem} className="min-h-0 lg:max-h-[calc(100vh/var(--ui-zoom)-4.75rem)]" />
+          <ProblemPane problem={problem} figure={figure} className="min-h-0 lg:max-h-[calc(100vh/var(--ui-zoom)-4.75rem)]" />
 
           {/* The rule between the panes lives here, on the column that always
               spans the full row, so it never stops short of the frame. */}
