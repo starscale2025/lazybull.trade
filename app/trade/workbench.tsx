@@ -23,6 +23,7 @@ import { useModalFocus } from "@/components/safety/useModalFocus";
 import { RegulatoryLine } from "@/components/RegulatoryLine";
 import { RiskWizard } from "@/components/safety/RiskWizard";
 import { withBriefing } from "@/lib/safety-briefing";
+import { TAPE } from "@/lib/viz/tape";
 import { eventsFor } from "@/lib/events";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
@@ -37,13 +38,8 @@ import { Sparkles } from "lucide-react";
 import { TogglePill } from "@/components/calm/kit";
 
 // IV is still synthetic (no free options-IV feed); spot is now live.
-const SYMBOLS = [
-  { sym: "AMZN", name: "Amazon", spot: 226.45, iv: 0.32 },
-  { sym: "NVDA", name: "Nvidia", spot: 138.9, iv: 0.46 },
-  { sym: "TSLA", name: "Tesla", spot: 287.15, iv: 0.55 },
-  { sym: "AAPL", name: "Apple", spot: 229.83, iv: 0.28 },
-  { sym: "SPY", name: "S&P 500", spot: 612.4, iv: 0.16 },
-];
+// The fallback prices are the one synthetic tape every page shares (lib/viz/tape.ts).
+const SYMBOLS = TAPE.filter((t) => t.sym !== "MSFT").map((t) => ({ ...t }));
 const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
 // The home page's synthetic index. Listed only for a visitor who brought a
 // spread from there. It has no quote or history to fetch and no earnings, and

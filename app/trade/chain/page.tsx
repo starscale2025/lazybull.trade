@@ -14,13 +14,14 @@ import { SafetySettingsButton } from "@/components/safety/KillSwitch";
 import { useTeacher } from "@/lib/stores";
 import { QuickBet } from "@/components/bet/QuickBet";
 import { Chip, TogglePill, ToolButton } from "@/components/calm/kit";
+import { tapeSpot } from "@/lib/viz/tape"; // the one synthetic tape every page shares
 
 const SYMBOLS = [
-  { sym: "AMZN", name: "Amazon.com", spot: 226.45 },
-  { sym: "NVDA", name: "Nvidia", spot: 138.9 },
-  { sym: "TSLA", name: "Tesla", spot: 287.15 },
-  { sym: "AAPL", name: "Apple", spot: 229.83 },
-  { sym: "SPY", name: "S&P 500 ETF", spot: 612.4 },
+  { sym: "AMZN", name: "Amazon.com", spot: tapeSpot("AMZN") },
+  { sym: "NVDA", name: "Nvidia", spot: tapeSpot("NVDA") },
+  { sym: "TSLA", name: "Tesla", spot: tapeSpot("TSLA") },
+  { sym: "AAPL", name: "Apple", spot: tapeSpot("AAPL") },
+  { sym: "SPY", name: "S&P 500 ETF", spot: tapeSpot("SPY") },
 ];
 const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
 

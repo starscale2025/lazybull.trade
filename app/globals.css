@@ -4000,3 +4000,29 @@ html[data-motion="paused"] .deck-rise { animation: none; }
 }
 html[data-motion="paused"] .deck-neon::before,
 html[data-motion="paused"] .deck-neon-bloom::before { animation: none; }
+
+/* THE FIGURE KIT (lib/viz, components/viz; plan A5 Stage 3). Every chart on
+   the site draws with these, so it follows the theme with no JavaScript.
+   - --viz-ramp-0..8: height only, never without its legend bar. Mixed in
+     OKLab by lib/viz/ramp.ts; __tests__/viz.test.ts fails if these drift.
+   - --viz-model: a model's output. --viz-ref: a grey reference line.
+   - --viz-gain / --viz-loss: profit and loss, and nothing else.
+   Dark first, light after: same specificity, so the later block wins. */
+:root, [data-theme="dark"] {
+  --viz-ramp-0: #6B47FF; --viz-ramp-1: #6960FF; --viz-ramp-2: #6675FF;
+  --viz-ramp-3: #6188FF; --viz-ramp-4: #5C9AFF; --viz-ramp-5: #57B6ED;
+  --viz-ramp-6: #54CFD9; --viz-ramp-7: #52E8C2; --viz-ramp-8: #52FFA5;
+  --viz-model: #3884FF;
+  --viz-ref: #8A8A82;
+  --viz-gain: var(--bull);
+  --viz-loss: var(--bear);
+  --viz-axis: color-mix(in srgb, var(--fg) 34%, transparent);
+  --viz-grid: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+[data-theme="light"] {
+  --viz-ramp-0: #A996FF; --viz-ramp-1: #9190F7; --viz-ramp-2: #7889F0;
+  --viz-ramp-3: #5E82E8; --viz-ramp-4: #3F7BE0; --viz-ramp-5: #2F7ABA;
+  --viz-ramp-6: #207694; --viz-ramp-7: #0F716E; --viz-ramp-8: #006B47;
+  --viz-model: #1F5FD6;
+  --viz-ref: #8A8A80;
+}

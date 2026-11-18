@@ -150,6 +150,44 @@ const ok = (msg) => console.log("✓ " + msg);
   else ok("z ladder: every full-screen overlay outranks the Dock");
 }
 
+// ── 6. charts come from the figure kit (FAIL, a ratchet) ───────────────────
+// Plan A5, Stage 3: every figure is drawn with components/viz, which keeps
+// its aspect ratio. preserveAspectRatio="none" is how the old charts stretch
+// their lines and type into whatever box they land in. The files below
+// predate the kit and are being moved onto it (Stages 5 to 7); delete a line
+// when its file is. A new file that stretches fails the build.
+{
+  const LEGACY = new Set([
+    "components/CandleChart.tsx",
+    "components/HeroPosition.tsx",
+    "components/PayoffInstrument.tsx",
+    "components/admin/KpiStrip.tsx",
+    "components/admin/SystemHealthChart.tsx",
+    "components/learn/ChapterNav.tsx",
+    "components/pro/RightPanel.tsx",
+    "components/pro/TradingPanel.tsx",
+    "components/quant/MiniViz.tsx",
+    "components/wedge/StrategyCards.tsx",
+  ]);
+  const offenders = [];
+  const stale = new Set(LEGACY);
+  const scan = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) { scan(p); continue; }
+      if (!/\.(tsx|ts)$/.test(e.name)) continue;
+      if (!/preserveAspectRatio(=|: )"none"/.test(readFileSync(p, "utf8"))) continue;
+      if (LEGACY.has(p)) stale.delete(p);
+      else offenders.push(p);
+    }
+  };
+  scan("components");
+  scan("app");
+  if (offenders.length) fail(`a chart outside the figure kit stretches its lines (preserveAspectRatio="none"); draw it with components/viz: ${offenders.join(", ")}`);
+  else ok(`figure kit: no new stretched charts (${LEGACY.size - stale.size} legacy left to move)`);
+  if (stale.size) console.log(`  (moved onto the kit; delete from LEGACY: ${[...stale].join(", ")})`);
+}
+
 if (failed) {
   console.error("\nguard: FAILED");
   process.exit(1);

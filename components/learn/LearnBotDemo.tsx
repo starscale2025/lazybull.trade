@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { generateCandles, type Candle } from "@/lib/candles";
+import type { Candle } from "@/lib/candles";
+import { tapeBars } from "@/lib/viz/tape";
 import { getBot } from "@/lib/quant/bots";
 import { BotCell } from "@/components/quant/BotCell";
 import { Chip, TogglePill } from "@/components/calm/kit";
@@ -32,12 +33,12 @@ export function LearnBotDemo({ botId }: { botId: string }) {
           setCandles(tail);
           setSource("live");
         } else {
-          setCandles(generateCandles(180, 11 + symbol.charCodeAt(0), 226, 0.18, 1.6));
+          setCandles(tapeBars(symbol));
           setSource("synthetic");
         }
       } catch {
         if (!cancelled) {
-          setCandles(generateCandles(180, 11 + symbol.charCodeAt(0), 226, 0.18, 1.6));
+          setCandles(tapeBars(symbol));
           setSource("synthetic");
         }
       } finally {
