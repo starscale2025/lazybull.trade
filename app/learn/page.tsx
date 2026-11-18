@@ -10,7 +10,7 @@ import { LearnLiveDemo } from "@/components/learn/LearnLiveDemo";
 import { LearnDatasetPlayground } from "@/components/learn/LearnDatasetPlayground";
 import { LearnConsensusPlayground } from "@/components/learn/LearnConsensusPlayground";
 import { LearnRegimeVisualizer } from "@/components/learn/LearnRegimeVisualizer";
-import { GreekSurface3D } from "@/components/learn/GreekSurface3D";
+import { GreeksLabLive } from "@/components/greeks/GreeksLabLive";
 import { LearnBacktestBuilder } from "@/components/learn/LearnBacktestBuilder";
 import { LearnVolSmile } from "@/components/learn/LearnVolSmile";
 import { LearnProbabilityComparison } from "@/components/learn/LearnProbabilityComparison";
@@ -259,7 +259,7 @@ export default function LearnPage() {
     },
     {
       num: "06", id: "greeks", label: "The Greeks, dancing", regime: "options",
-      hint: "Drag strike · hover Greek",
+      hint: "Drag the handle · pick a Greek",
       predict: PREDICTS.greeks,
       headline: (
         <>
@@ -298,7 +298,8 @@ export default function LearnPage() {
           </div>
         </div>
       ),
-      demo: <GreekSurface3D />,
+      // the same lab as /greeks, compact: one Greek surface on the site, not two
+      demo: <GreeksLabLive compact symbol="AMZN" />,
     },
     {
       num: "07", id: "volsmile", label: "The vol smile", regime: "options",

@@ -50,7 +50,7 @@ const COLS: { title: string; links: FooterLink[]; roadmap?: string }[] = [
     links: [
       { label: "Manifesto", href: "/about" },
       { label: "Now go", href: "/learn#now-go" },
-      { label: "⚰ The graveyard", href: "/graveyard" },
+      { label: "The graveyard", href: "/graveyard" },
     ],
     roadmap: "roadmap · press / brand kit / contact / status — soon",
   },
