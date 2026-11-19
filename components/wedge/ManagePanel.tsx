@@ -46,8 +46,8 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
   const open = bets.filter((b) => b.status === "open");
 
   return (
-    <div className="bg-bg">
-      <div className="flex items-center justify-between border-b border-border-soft px-3 py-2 t-label text-fg-dim">
+    <div>
+      <div className="flex items-center justify-between border-b border-border px-5 py-3 t-label text-fg-dim">
         <span>Open positions · {open.length}</span>
         <span className="text-fg-faint">Live priced from /api/quote</span>
       </div>
@@ -85,7 +85,7 @@ export function ManagePanel({ bets, liveSpot, iv, onClose, onRoll }: Props) {
                 </div>
                 <div className="text-right">
                   <div className="t-label text-fg-faint">Live P&L</div>
-                  <div className={`font-display text-2xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
+                  <div className={`deck-figure text-[2rem] tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
                     {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
                   </div>
                 </div>

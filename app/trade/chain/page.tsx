@@ -1,7 +1,7 @@
 "use client";
 
 import { RegulatoryLine } from "@/components/RegulatoryLine";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Nav } from "@/components/Nav";
 import { TruthBadge } from "@/components/pro/TruthBadge";
 import { TickerBar } from "@/components/TickerBar";
@@ -23,6 +23,12 @@ const SYMBOLS = [
   { sym: "SPY", name: "S&P 500 ETF", spot: 612.4 },
 ];
 const SYM_LIST = SYMBOLS.map((s) => s.sym).join(",");
+
+/** deck-rise's stagger slot (globals.css, THE DECK SKIN). Only ever on the
+    header's text: deck-rise animates transform, and a box holding one of the
+    page's inline `fixed` dialogs (Safety, the pre-trade check) must never
+    carry it, or the dialog would be laid out inside that box. */
+const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
 export default function TradePage() {
   const [symIdx, setSymIdx] = useState(0);
@@ -57,24 +63,34 @@ export default function TradePage() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col bg-bg text-fg">
+    // `deck`: the pitch deck's palette for everything inside (globals.css,
+    // THE DECK SKIN); `tap-floor`: 44px touch targets, as on /trade.
+    <main className="deck tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <TickerBar />
       <Nav />
 
-      {/* page header — one compact row; the tool is the hero here */}
-      <section className="border-b border-border bg-bg">
-        <div className="shell flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
-          <div className="t-eyebrow flex flex-wrap items-center gap-3">
-            <span className="text-fg-faint">Advanced view · raw chain</span>
-            <h1 className="t-eyebrow text-fg">
-              Drag across strikes. <span className="t-accent">Build</span> a strategy.
+      {/* page header — the deck's way: the eyebrow, one display line, the
+          provenance under it. Still compact: the tool is the hero here. */}
+      <section className="border-b border-border">
+        <div className="shell flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-5 pt-6 md:pt-8">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+              <p className="deck-eyebrow deck-rise">Advanced view · raw chain</p>
+              <a href="/trade" className="deck-link deck-rise text-[0.8125rem]" style={rise(1)}>
+                <span aria-hidden>‹</span> Back to strategy builder
+              </a>
+            </div>
+            <h1 className="deck-h2 deck-rise mt-3 text-fg" style={rise(1)}>
+              Drag across strikes. <span className="deck-accent">Build a strategy.</span>
             </h1>
-            <a href="/trade" className="calm-link !text-[0.875rem]"><span aria-hidden>‹</span> Back to strategy builder</a>
+            {/* Provenance where the data is (it left the site-wide nav in the
+                calm pass, M33): this chain is synthetic, and says so here — one
+                quiet line under the title, the honesty ledger behind it. */}
+            <div className="deck-rise mt-3 text-[0.8125rem]" style={rise(2)}>
+              <TruthBadge quiet />
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Provenance where the data is (it left the site-wide nav in the
-                calm pass, M33): this chain is synthetic, and says so here. */}
-            <TruthBadge />
             <SafetySettingsButton />
             <ToolButton
               onClick={() =>
@@ -92,19 +108,22 @@ export default function TradePage() {
       </section>
 
       {/* Symbol switcher */}
-      <section className="border-b border-border bg-bg-soft">
-        <div className="shell flex items-center gap-3 overflow-x-auto py-3 t-label">
-          <span className="text-fg-faint shrink-0">Underlying</span>
+      <section className="border-b border-border">
+        <div className="shell flex items-center gap-2 overflow-x-auto overscroll-x-contain py-3">
+          <span className="deck-label mr-2 shrink-0">Underlying</span>
           {SYMBOLS.map((s, i) => (
             <TogglePill key={s.sym} on={i === symIdx} onClick={() => setSymIdx(i)} className="shrink-0">
               {s.sym}
-              <span className="ml-2 opacity-60">${s.spot.toFixed(2)}</span>
+              {/* opacity-75, not 60: on an idle pill (bone-dim on ink) 60%
+                  set the figure at 4.3:1, under AA for type this small; 75%
+                  clears it there (6.3:1) and on the pressed bone pill (9.4:1). */}
+              <span className="ml-2 t-data text-[0.75rem] opacity-75">${s.spot.toFixed(2)}</span>
             </TogglePill>
           ))}
-          <span className="ml-auto shrink-0 text-fg-dim flex items-center gap-2">
+          <span className="ml-auto flex shrink-0 items-center gap-2.5 pl-4">
             {/* "live" only over a real quote; the seed price says what it is (Gate A4 #1). */}
             {liveSpots[sym.sym] != null ? <Chip dot>Live spot</Chip> : <Chip dot tone="warn">Spot · SIM</Chip>}
-            <span className="t-data text-fg">${spot.toFixed(2)}</span>
+            <span className="t-data text-[0.9375rem] text-fg">${spot.toFixed(2)}</span>
           </span>
         </div>
       </section>

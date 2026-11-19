@@ -37,3 +37,12 @@ export const SITE_DIRECTORY = [
 // The nav rail shows the numbered content pages; Portfolio lives in the account
 // cluster, not the numbered rail (width — see components/Nav.tsx).
 export const NAV_DIRECTORY = SITE_DIRECTORY.filter((e) => e.href !== "/portfolio");
+
+// Destinations that open in a tab of their own (owner, 2026-11-17): Pro charts
+// is a full-screen terminal with no site navbar, so the page you came from
+// stays open behind it. Read by the navbar's rail, phone sheet and account
+// panel, and by the footer. Plain data, no directive, so server components
+// (the footer) can call it as well as client ones.
+export const NEW_TAB = new Set<string>(["/pro"]);
+export const newTabProps = (href: string) =>
+  NEW_TAB.has(href) ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};

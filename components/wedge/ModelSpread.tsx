@@ -40,9 +40,9 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
   })();
 
   return (
-    <div className="bg-bg">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-3 py-2">
-        <div className="flex items-center gap-3">
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
           <span className="t-label text-fg-dim">Model spread</span>
           <Chip>Consensus {(consensus * 100).toFixed(0)}%</Chip>
           <Chip tone={spread > 0.12 ? "warn" : "neutral"}>
@@ -72,11 +72,11 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
               }`}
               style={{ borderColor: disabled ? "var(--border)" : meta.tone, borderLeftWidth: 3 }}
             >
-              <div className="col-span-3 flex items-center gap-2">
+              <div className="col-span-12 flex items-center gap-2 sm:col-span-3">
                 <span className="font-mono text-[0.625rem]" style={{ color: meta.tone }}>{meta.short}</span>
                 <span className="font-display text-sm tracking-tightest text-fg">{meta.label}</span>
               </div>
-              <div className="col-span-7">
+              <div className="col-span-9 sm:col-span-7">
                 <div className="relative h-2 w-full bg-bg">
                   <motion.div
                     initial={{ width: 0 }}
@@ -88,7 +88,7 @@ export function ModelSpread({ spot, low, high, daysToExpiry, iv }: Props) {
                 </div>
                 <div className="mt-0.5 text-[0.6875rem] text-fg-faint">{meta.explain}</div>
               </div>
-              <div className="col-span-2 flex items-center justify-end gap-1.5 t-data">
+              <div className="col-span-3 flex items-center justify-end gap-1.5 t-data sm:col-span-2">
                 <span className="text-base text-fg">{v != null ? `${(v * 100).toFixed(0)}%` : "—"}</span>
                 {winner && <span className="text-fg-dim text-[0.625rem]">↑</span>}
                 {loser && <span className="text-fg-dim text-[0.625rem]">↓</span>}

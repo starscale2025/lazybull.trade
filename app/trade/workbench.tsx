@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "@/components/Nav";
 import { ScrollProgress } from "@/components/atmosphere/ScrollProgress";
 import { ProbabilityCone } from "@/components/wedge/ProbabilityCone";
-import { StrategyCards, PnlSparkline } from "@/components/wedge/StrategyCards";
 import { PlainGreeks } from "@/components/wedge/PlainGreeks";
 import { TimeMachine } from "@/components/wedge/TimeMachine";
 import { EventTimeline } from "@/components/wedge/EventTimeline";
@@ -13,6 +13,7 @@ import { ModelSpread } from "@/components/wedge/ModelSpread";
 import { ManagePanel } from "@/components/wedge/ManagePanel";
 import { ChainTable } from "@/components/wedge/ChainTable";
 import { BetBar } from "@/components/wedge/BetSlip";
+import { PayoffChart, StrategyChoices, familyName, howItPays } from "@/components/wedge/BuilderParts";
 import { storySentence, type Bet } from "@/components/wedge/PositionStory";
 import { bullCallSpread, generateStrategies, probBS, type Strategy } from "@/lib/models";
 import { useChosenPosition } from "@/lib/hero-position";
@@ -31,8 +32,8 @@ import { noteBuilderAbandon, noteExplainRequest, tradeFingerprint } from "@/lib/
 import { flushEvents, track } from "@/lib/track";
 import { clearIsland, setIsland } from "@/lib/island";
 import { TruthBadge } from "@/components/pro/TruthBadge";
-import { Sparkles, Table2, Zap } from "lucide-react";
-import { CalmLink, Chip, PillButton, TogglePill, ToolButton } from "@/components/calm/kit";
+import { Sparkles } from "lucide-react";
+import { TogglePill } from "@/components/calm/kit";
 
 // IV is still synthetic (no free options-IV feed); spot is now live.
 const SYMBOLS = [
@@ -60,20 +61,17 @@ function fmtDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
 }
 
-// The "under the hood" analytics panels, one at a time (progressive disclosure).
+// The "Go deeper" panels, one at a time (progressive disclosure).
 const TABS = [
   { id: "whatif", label: "What-if machine" },
   { id: "greeks", label: "Greeks" },
   { id: "events", label: "Event horizon" },
   { id: "models", label: "Model spread" },
   { id: "manage", label: "Positions" },
+  { id: "chain", label: "Options chain" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
-// The kit's controls stand 32px tall. This page fits one screen and its toolbars
-// and panel headers are thin strips, so here they take a compact size; touch
-// still gets 44px from the tap-floor on <main>.
-const DENSE = "!h-6 !px-2.5 !text-[0.75rem]";
 
 /**
  * The strategy builder. Rendered by app/trade/page.tsx, which is a server component
@@ -189,33 +187,6 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   const chg = quote?.chg ?? spot - prevClose;
   const chgPct = quote?.chgPct ?? (prevClose ? ((spot - prevClose) / prevClose) * 100 : 0);
 
-  // Header stat cluster — IV rank/percentile are derived from the synthetic
-  // base IV (no real IV-history feed), so the whole cluster carries an
-  // "illustrative" tag, same convention as the Source: Mock chips.
-  const symSeed = sym.sym.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const ivRank = Math.round(Math.min(98, Math.max(2, ((sym.iv - 0.12) / (0.55 - 0.12)) * 100)));
-  const ivPctile = Math.round(Math.min(98, Math.max(2, ivRank + ((symSeed % 13) - 6))));
-
-  // Next earnings from the same deterministic event calendar the timeline uses.
-  const nextEarnings = useMemo(() => {
-    if (sym === SIM) return null; // an index nobody reports earnings for
-    const start = new Date();
-    const end = new Date();
-    end.setDate(end.getDate() + 120);
-    return eventsFor(sym.sym, start, end).find((e) => e.kind === "earnings") ?? null;
-  }, [sym]);
-  // Calendar text waits for the browser's clock (Gate A4 #2, React #418): the
-  // server's day is not the reader's near midnight, east of UTC, and a page
-  // that printed the server's date failed to hydrate.
-  const earnDays =
-    nextEarnings && mounted
-      ? Math.max(0, Math.ceil((new Date(nextEarnings.date).getTime() - Date.now()) / 86_400_000))
-      : null;
-  const earnLabel =
-    nextEarnings && mounted
-      ? new Date(nextEarnings.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-      : "—";
-
   // The band a shared trade implies: its own strikes, with a little air. Null
   // unless the link names a symbol this page can chart.
   const sharedBand = useMemo(() => {
@@ -304,7 +275,6 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   // a position exists once the visitor picks or builds one.
   const [selectedId, setSelectedId] = useState<Strategy["id"] | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [showChain, setShowChain] = useState(false);
   // The chain's pointer, shared with the cone. Deliberately NOT persisted or
   // debounced: it is a cursor, and a cursor that lags its pointer reads broken.
   const [hoverStrike, setHoverStrike] = useState<number | null>(null);
@@ -510,12 +480,6 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
     track("shared_trade_placed", { underlying: shared.underlying, legs: shared.legs.length });
   };
 
-  // the range sentence — the visitor's own range, never a first-person forecast
-  const rangeLine = `Your range: ${sym.sym} between $${low.toFixed(2)} and $${high.toFixed(2)}`;
-  const thesisSentence = touched
-    ? `${rangeLine} by ${fmtDate(dateNDaysOut(days))}.`
-    : "Drag the band or the expiry line.";
-
   // under-the-hood tabs
   const [tab, setTab] = useState<TabId>("whatif");
 
@@ -570,114 +534,48 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
     }
   };
 
+  // The examples to choose from: the visitor's own spread first when they
+  // brought one from the home page, then the three the generator built.
+  const choices = isSim && broughtStrategy ? [broughtStrategy, ...strategies] : strategies;
+
+  // Choosing an example brings its review into view, but only when the review
+  // is below the fold: a visitor comparing the cards is not yanked around.
+  const choose = (s: Strategy) => {
+    setSelectedId(s.id);
+    requestAnimationFrame(() => {
+      const el = document.getElementById("review");
+      if (!el || el.getBoundingClientRect().top < window.innerHeight * 0.8) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  };
+
+  // "on Dec 22" once the browser's clock is known; "at expiry" before (the
+  // server's date is not the reader's — Gate A4 #2).
+  const when = mounted ? `on ${expiryStr}` : "at expiry";
+
   return (
-    <main className="page-aura tap-floor flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
+    <main className="deck tap-floor flex min-h-screen flex-col bg-bg pb-20 text-fg lg:pb-0">
       <ScrollProgress />
       <Nav wide />
 
-      {/* THE UNCLUTTERED BUILDER (owner, 2026-11-09). One header, one control
-          bar, the chart beside the strategy summary. The chain and the deeper
-          analysis are a click away instead of all on screen at once. One colour
-          theme: the brand ramp for the instrument, red and mint only on money. */}
-      <div className="shell shell-wide flex flex-col gap-4 pb-8 pt-2">
-        <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-baseline gap-x-3">
-              <h1 className="font-display text-[clamp(2.4rem,4vw,3.25rem)] leading-none tracking-tightest text-fg">{sym.sym}</h1>
-              <span className="text-fg-dim">{quote?.name ?? sym.name}</span>
-            </div>
-            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 t-data">
-              <span className="text-[clamp(1.6rem,2.4vw,2rem)] leading-none text-fg">${spot.toFixed(2)}</span>
-              <span className={`text-base ${chg >= 0 ? "text-bull" : "text-bear"}`}>
-                {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
-              </span>
-            </div>
-            {/* Every provenance claim on one quiet line: what the price is, that
-                the chain and IV are synthetic, and that this is paper. */}
-            <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 t-label text-fg-dim">
-              <span aria-hidden className={`size-1.5 rounded-full ${quote ? "bg-bull" : "bg-fg-faint"}`} />
-              <span>
-                {isSim
-                  ? "Synthetic index · not a real security"
-                  : quote
-                    ? `Live price · ${quote.exch ?? "US market"}`
-                    : "Seed price · connecting"}
-              </span>
-              <span aria-hidden className="text-fg-faint">·</span>
-              <TruthBadge quiet />
-              <span aria-hidden className="text-fg-faint">·</span>
-              <span>Illustrative IV</span>
-              <span aria-hidden className="text-fg-faint">·</span>
-              <span>Paper only · $5k practice account</span>
-            </p>
-          </div>
-
-          <div className="glass-tool flex divide-x divide-[color-mix(in_srgb,var(--fg)_10%,transparent)] px-2 py-2.5 t-data">
-            {[
-              { k: "IV rank", v: String(ivRank) },
-              { k: "IV percentile", v: `${ivPctile}%` },
-              { k: "IV", v: `${(sym.iv * 100).toFixed(1)}%` },
-            ].map((s) => (
-              <div key={s.k} className="px-4 text-center">
-                <div className="t-label text-fg-faint">{s.k}</div>
-                <div className="mt-0.5 text-base tabular-nums text-fg">{s.v}</div>
-              </div>
-            ))}
-            <div className="px-4 text-center">
-              <div className="t-label text-fg-faint">Earnings</div>
-              <div className="mt-0.5 flex items-baseline justify-center gap-1.5">
-                <span className="text-base tabular-nums text-fg">{earnLabel}</span>
-                {earnDays != null && <span className="t-label text-fg-faint">{earnDays}d</span>}
-              </div>
-            </div>
-          </div>
+      {/* THE GUIDED BUILDER (owner, 2026-11-17: "simple to understand, gives
+          the output in a good way"). Four numbered steps, one question each —
+          pick a stock, show where you think it ends up, pick a way to trade
+          it, review and place — with every answer in words beside its numbers
+          and risk shown first (the deck's terminal rule, slides 8 and 17). The
+          analysis tools and the chain sit in one "Go deeper" section. */}
+      <div className="shell shell-wide flex flex-col gap-12 pb-12 pt-8 lg:gap-14 lg:pt-12">
+        <header className="max-w-[46rem]">
+          <p className="deck-eyebrow">Strategy builder</p>
+          <h1 className="deck-h2 mt-4 text-fg">
+            Turn your view into a trade <span className="deck-accent">you can see</span>
+          </h1>
+          <p className="deck-lede mt-4">
+            Pick a stock, show where you think it ends up, and compare three ways to trade that view. What you could
+            lose is always shown first, and everything here is paper money.
+          </p>
         </header>
-
-        {/* the one control bar */}
-        <div className="glass-tool flex flex-wrap items-center gap-x-5 gap-y-2.5 px-5 py-2.5 t-label">
-          <span className="text-fg-dim">Underlying</span>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {symbols.map((s) => (
-              <TogglePill key={s.sym} on={s.sym === sym.sym} onClick={() => pickSymbol(s.sym)}>
-                {s.sym}
-              </TogglePill>
-            ))}
-          </div>
-          <span className="hidden h-4 w-px bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] md:block" aria-hidden />
-          <label className="flex items-center gap-2 text-fg-dim">
-            Strikes
-            <select
-              value={chainDepth}
-              onChange={(e) => setChainDepth(Number(e.target.value))}
-              className="calm-input !h-8 !px-2.5 t-data !text-[0.75rem]"
-            >
-              <option value={4}>±4</option>
-              <option value={5}>±5</option>
-              <option value={8}>±8</option>
-            </select>
-          </label>
-          <span className="hidden h-4 w-px bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] md:block" aria-hidden />
-          {/* days-from-now slider — drives the same `days` state as the cone drag + chain stepper */}
-          <label className="flex shrink-0 items-center gap-3 text-fg-dim">
-            Days to expiry
-            <input
-              type="range"
-              min={1}
-              max={365}
-              step={1}
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
-              className="h-1 w-28 accent-brand-ink xl:w-40"
-              aria-label="days from now"
-            />
-            <span className="t-data tabular-nums text-fg">
-              {days}d{mounted && <span className="lg:hidden"> · {expiryStr}</span>}
-            </span>
-          </label>
-          <PillButton size="sm" onClick={resetView} className="ml-auto !h-8">
-            Reset
-          </PillButton>
-        </div>
 
         {/* a shared trade, rebuilt — only when ?t= decoded */}
         {shared && (
@@ -690,180 +588,321 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
           />
         )}
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-          {/* chart + draggable probability cone */}
-          <section id="thesis" className="glass-tool flex scroll-mt-20 flex-col overflow-hidden">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 pb-1 pt-4">
-              <h2 className="flex flex-wrap items-baseline gap-x-2">
-                <span className="text-[1rem] font-semibold tracking-[-0.01em] text-fg">Implied range</span>
-                <span className="t-label text-fg-dim">Black-Scholes · {sym.sym}</span>
-              </h2>
-              {/* the expiry date is the decision token — keep it shrink-0 so
-                  mid-width truncation eats the prose, never the date */}
-              <span title={touched ? thesisSentence : undefined} className="hidden min-w-0 max-w-[62%] items-baseline gap-1 t-label text-fg-dim md:flex">
-                {touched ? (
-                  <>
-                    <span className="min-w-0 truncate">
-                      <ThesisLine sentence={rangeLine} />
-                    </span>
-                    <span className="shrink-0 text-fg">by {expiryStr}.</span>
-                  </>
-                ) : (
-                  <span className="min-w-0 truncate">{thesisSentence}</span>
-                )}
-              </span>
-            </div>
-            {/* grows with the summary beside it, so the two panels end level */}
-            <div className="relative min-h-[23rem] flex-1">
-              <div className="absolute inset-0">
-              {mounted ? (
-                <ProbabilityCone
-                  bars={histBars}
-                  spot={spot}
-                  iv={sym.iv}
-                  daysToExpiry={days}
-                  low={low}
-                  high={high}
-                  onChangeLow={(v) => { setLow(v); setTouched(true); }}
-                  onChangeHigh={(v) => { setHigh(v); setTouched(true); }}
-                  onChangeDays={(v) => { setDays(v); setTouched(true); }}
-                  events={events}
-                  bandProb={probInBand}
-                  // The implied range and the position share one price ruler.
-                  legs={selected?.legs}
-                  breakevens={selected?.breakevens}
-                  hoverStrike={hoverStrike}
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center t-label text-fg-faint">Loading implied range…</div>
-              )}
-              </div>
-              {/* in-band probability ring — same number the strategy panel prices from */}
-              <div className="pointer-events-none absolute left-4 top-2 z-10 hidden sm:block">
-                <InBandRing prob={probInBand} />
-              </div>
-            </div>
-          </section>
-
-          {/* the strategy summary: pick, read, place, ask */}
-          <section id="pick" className="glass-tool scroll-mt-20 p-5">
-            {isSim && brought && (
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <Chip tone="brand">Your spread from the home page · paper</Chip>
-                {selectedId !== "brought" && (
-                  <button type="button" onClick={() => setSelectedId("brought")} className="tool-btn tool-btn-sm">
-                    Show your spread
-                  </button>
-                )}
-              </div>
-            )}
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-[1rem] font-semibold tracking-[-0.01em] text-fg">Strategy summary</h2>
-              <CalmLink href="/trade/chain" className="!text-[0.8125rem]">Edit legs</CalmLink>
-            </div>
-            <p className="mt-0.5 t-label text-fg-faint">Examples that fit this range</p>
-            <StrategyCards
-              strategies={strategies}
-              selectedId={selectedId}
-              onSelect={(s) => setSelectedId(s.id)}
-              onPlace={(s) => { setSelectedId(s.id); placeBet(s); }}
-              spot={spot}
-              symbol={sym.sym}
-              columns={1}
-              compact
-            />
-            <div className="my-3 h-px bg-[color-mix(in_srgb,var(--fg)_9%,transparent)]" aria-hidden />
-            {!selected && <EmptyStrategyDetail />}
-            {selected && (
-              <StrategyDetail
-                s={selected}
-                symbol={sym.sym}
-                spot={spot}
-                daysToExpiry={days}
-                prob={probInBand}
-                onPlace={() => placeBet(selected)}
-                placeNote={isSim ? SIM_NOTE : undefined}
-              />
-            )}
-            <TeacherPanel
-              selected={selected}
-              narrating={narrating}
-              thread={thread}
-              paywall={paywall}
-              disclosure={disclosure}
-              onDismissPaywall={() => setPaywall(null)}
-              onExplain={() => selected && narrate(selected)}
-              onAsk={(q) => selected && narrate(selected, q)}
-            />
-          </section>
-        </div>
-
-        {/* The rest, one click away. Set in from the left so the shortcut dial
-            in the corner has the room it needs at rest. */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:pl-[16rem]">
-          <FoldCard
-            icon={<Zap aria-hidden size={18} />}
-            title="What-if machine"
-            sub={openCount > 0 ? `Explore outcomes · ${openCount} open position${openCount === 1 ? "" : "s"}` : "Explore potential outcomes"}
-            action="Run analysis"
-            open={showAnalysis}
-            onToggle={() => setShowAnalysis((v) => !v)}
-          />
-          <FoldCard
-            icon={<Table2 aria-hidden size={18} />}
-            title="Options chain"
-            sub="Every strike, bid and ask"
-            action="Show chain"
-            open={showChain}
-            onToggle={() => setShowChain((v) => !v)}
-          />
-        </div>
-
-        {showAnalysis && (
-          <section id="detail" className="glass-tool scroll-mt-20 overflow-hidden">
-            <div className="flex items-center gap-1.5 overflow-x-auto px-4 pt-4">
-              {TABS.map((t) => (
-                <TogglePill key={t.id} on={tab === t.id} onClick={() => setTab(t.id)} className="shrink-0">
-                  {t.label}
-                  {t.id === "manage" ? ` (${openCount})` : ""}
+        <Step n="01" title="Pick a stock">
+          <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+            <div role="group" aria-label="Underlying" className="flex flex-wrap gap-2">
+              {symbols.map((s) => (
+                <TogglePill
+                  key={s.sym}
+                  on={s.sym === sym.sym}
+                  onClick={() => pickSymbol(s.sym)}
+                  className="!h-10 !px-4 !font-mono !text-[0.8125rem] !tracking-[0.04em]"
+                >
+                  {s.sym}
                 </TogglePill>
               ))}
             </div>
-            <div id="manage" className="scroll-mt-20">
-              {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
-              {tab === "greeks" && (
-                <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} onDetails={() => { window.location.href = "/greeks"; }} />
-              )}
-              {tab === "events" && mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
-              {tab === "models" && mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
-              {tab === "manage" && (
-                <ManagePanel
-                  bets={bets}
-                  liveSpot={spot}
-                  iv={sym.iv}
-                  onClose={(id, pnl) =>
-                    setBets((cur) => cur.map((b) => (b.id === id ? { ...b, status: "closed", closedPnl: pnl } : b)))
-                  }
-                  onRoll={() => alert("Roll preview — extending to next monthly expiry. Coming soon as a real flow.")}
-                />
-              )}
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <span className="text-[1rem] text-fg-dim">{quote?.name ?? sym.name}</span>
+              <span className="deck-figure text-[clamp(2.1rem,3.4vw,2.75rem)] text-fg">${spot.toFixed(2)}</span>
+              <span className={`t-data text-[0.9375rem] ${chg >= 0 ? "text-bull" : "text-bear"}`}>
+                {chg >= 0 ? "+" : "−"}{Math.abs(chg).toFixed(2)} ({chg >= 0 ? "+" : "−"}{Math.abs(chgPct).toFixed(2)}%)
+              </span>
             </div>
-          </section>
-        )}
+          </div>
+          {/* Every provenance claim on one quiet line: what the price is, that
+              the chain and the volatility are modelled, and that this is paper. */}
+          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] text-fg-faint">
+            <span aria-hidden className={`size-1.5 rounded-full ${quote ? "bg-bull" : "bg-fg-faint"}`} />
+            <span>
+              {isSim
+                ? "Synthetic index · not a real security"
+                : quote
+                  ? `Live price · ${quote.exch ?? "US market"}`
+                  : "Seed price · connecting"}
+            </span>
+            <span aria-hidden>·</span>
+            <TruthBadge quiet />
+            <span aria-hidden>·</span>
+            <span>Illustrative volatility {(sym.iv * 100).toFixed(0)}%</span>
+            <span aria-hidden>·</span>
+            <span>Paper only · $5k practice account</span>
+          </p>
+        </Step>
 
-        {showChain && (
-          <ChainTable
-            symbol={sym.sym}
-            spot={spot}
-            iv={sym.iv}
-            days={days}
-            perSide={chainDepth}
-            onStepDays={(d) => setDays(Math.max(1, Math.min(365, days + d)))}
-            onHoverStrike={setHoverStrike}
-          />
-        )}
+        <Step id="thesis" n="02" title={`Where do you think ${sym.sym} ends up?`}>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="flex flex-col">
+              {/* chart + draggable probability cone */}
+              <div className="deck-pane relative min-h-[25rem] flex-1 overflow-hidden">
+                <div className="absolute inset-0 p-2">
+                  {mounted ? (
+                    <ProbabilityCone
+                      bars={histBars}
+                      spot={spot}
+                      iv={sym.iv}
+                      daysToExpiry={days}
+                      low={low}
+                      high={high}
+                      onChangeLow={(v) => { setLow(v); setTouched(true); }}
+                      onChangeHigh={(v) => { setHigh(v); setTouched(true); }}
+                      onChangeDays={(v) => { setDays(v); setTouched(true); }}
+                      events={events}
+                      bandProb={probInBand}
+                      // The implied range and the position share one price ruler.
+                      legs={selected?.legs}
+                      breakevens={selected?.breakevens}
+                      hoverStrike={hoverStrike}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[0.8125rem] text-fg-faint">Loading the chart…</div>
+                  )}
+                </div>
+              </div>
+              <p className="mt-3 text-[0.8125rem] leading-relaxed text-fg-faint">
+                <span className="text-fg-dim">How to read it:</span> the line is {sym.sym}&rsquo;s last 60 days, the shaded
+                cone is where the model expects the price could go, and the green band is your range. Drag the band, or
+                type Hi and Lo above the chart.
+              </p>
+            </div>
+
+            {/* the readout: the band in words, its odds, and the date */}
+            <aside aria-label="Your range" className="deck-pane flex flex-col p-5">
+              <div className="deck-label">{touched ? "Your range" : "Starting range"}</div>
+              <p className="mt-2 text-[1.125rem] leading-snug text-fg">
+                {sym.sym} ends between <span className="t-data">${low.toFixed(2)}</span> and{" "}
+                <span className="t-data">${high.toFixed(2)}</span> {mounted ? `by ${expiryStr}` : `in ${days} days`}
+              </p>
+              {!touched && (
+                <p className="mt-1.5 text-[0.8125rem] text-fg-faint">A starting point. Drag the band to make it yours.</p>
+              )}
+
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="text-[0.8125rem] text-fg-faint">Chance it ends in this range</div>
+                <div className="deck-figure mt-1 text-[3.25rem] text-fg">{Math.round(probInBand * 100)}%</div>
+                <p className="mt-1 text-[0.75rem] leading-snug text-fg-faint">
+                  Black-Scholes model, illustrative volatility. A model, not a forecast.
+                </p>
+              </div>
+
+              {/* days-from-now slider — drives the same `days` state as the cone drag + chain stepper */}
+              <label className="mt-5 block border-t border-border pt-4">
+                <span className="flex items-baseline justify-between gap-3 text-[0.8125rem] text-fg-faint">
+                  <span>By when?</span>
+                  <span className="t-data text-fg">
+                    {days} days{mounted && <span className="text-fg-faint"> · {expiryStr}</span>}
+                  </span>
+                </span>
+                <input
+                  type="range"
+                  min={1}
+                  max={365}
+                  step={1}
+                  value={days}
+                  onChange={(e) => setDays(Number(e.target.value))}
+                  className="mt-2 w-full py-2 accent-bull"
+                  aria-label="Days to expiry"
+                  aria-valuetext={mounted ? `${days} days, ${expiryStr}` : `${days} days`}
+                />
+              </label>
+
+              <div className="mt-auto flex justify-end pt-4">
+                <button type="button" onClick={resetView} className="deck-btn deck-btn-sm">
+                  Reset the range
+                </button>
+              </div>
+            </aside>
+          </div>
+        </Step>
+
+        <Step
+          id="pick"
+          n="03"
+          title="Pick a way to trade it"
+          hint={`Three common ways to trade a view on ${sym.sym}. Each one shows the most you could lose first, then the most you could make.`}
+        >
+          <StrategyChoices strategies={choices} selectedId={selectedId} onSelect={choose} spot={spot} />
+        </Step>
+
+        <Step id="review" n="04" title="Review and place">
+          {!selected ? (
+            <p className="rounded-[14px] border border-dashed border-[var(--deck-rule)] px-5 py-8 text-center text-[0.9375rem] text-fg-faint">
+              Choose one of the ways above to see exactly how it pays, what you could lose and what you could make.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+              <div className="deck-pane p-5">
+                <PayoffChart s={selected} spot={spot} symbol={sym.sym} />
+              </div>
+
+              <div className="deck-pane flex flex-col p-5">
+                <h3 className="deck-display text-[1.75rem] leading-tight tracking-[-0.02em] text-fg">
+                  {familyName(selected.kind)} <span className="text-fg-dim">on {sym.sym}</span>
+                </h3>
+                <p className="mt-3 text-[1.0625rem] leading-relaxed text-fg">{howItPays(selected, sym.sym, when)}</p>
+                <p className="mt-1 text-[0.9375rem] text-fg-dim">
+                  {selected.cost > 0
+                    ? `You pay $${selected.cost.toFixed(0)} to open it.`
+                    : `You get $${Math.abs(selected.cost).toFixed(0)} when you open it.`}
+                </p>
+
+                {/* Risk first: the loss is read before the gain. */}
+                <dl className="mt-5 grid grid-cols-2 border-y border-border">
+                  <div className="py-3 pr-3">
+                    <dt className="text-[0.75rem] text-fg-faint">Most you can lose</dt>
+                    <dd className="mt-1 t-data text-[1.25rem] text-bear">
+                      {Number.isNaN(selected.maxLoss) ? "—" : Number.isFinite(selected.maxLoss) ? `$${Math.abs(selected.maxLoss).toFixed(0)}` : "No limit"}
+                    </dd>
+                  </div>
+                  <div className="border-l border-border py-3 pl-4">
+                    <dt className="text-[0.75rem] text-fg-faint">Most you can make</dt>
+                    <dd className="mt-1 t-data text-[1.25rem] text-bull">
+                      {Number.isNaN(selected.maxProfit) ? "—" : Number.isFinite(selected.maxProfit) ? `$${Math.abs(selected.maxProfit).toFixed(0)}` : "No cap"}
+                    </dd>
+                  </div>
+                  <div className="border-t border-border py-3 pr-3">
+                    <dt className="text-[0.75rem] text-fg-faint">Chance of profit</dt>
+                    <dd className="mt-1 t-data text-[1.25rem] text-fg">{(selected.prob * 100).toFixed(0)}%</dd>
+                  </div>
+                  <div className="border-l border-t border-border py-3 pl-4">
+                    <dt className="text-[0.75rem] text-fg-faint">{selected.breakevens.length > 1 ? "Breakevens" : "Breakeven"}</dt>
+                    <dd className="mt-1 t-data text-[1.0625rem] text-fg">
+                      {selected.breakevens.length ? selected.breakevens.map((b) => `$${b.toFixed(2)}`).join(" · ") : "—"}
+                    </dd>
+                  </div>
+                </dl>
+
+                {/* place CTA — the page's one main action */}
+                {isSim ? (
+                  <p className="mt-5 text-[0.875rem] leading-relaxed text-fg-dim">{SIM_NOTE}</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => placeBet(selected)}
+                    className="deck-btn deck-btn-primary mt-5 h-auto min-h-11 w-full whitespace-normal py-2.5 text-center leading-snug"
+                  >
+                    Place this paper trade
+                    <span aria-hidden className="deck-arrow">
+                      →
+                    </span>
+                  </button>
+                )}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <CopyLinkButton trade={{ underlying: sym.sym, spot, daysToExpiry: days, legs: selected.legs }} />
+                  <span className="text-[0.75rem] text-fg-faint">Paper only · not advice</span>
+                </div>
+                <TeacherPanel
+                  selected={selected}
+                  narrating={narrating}
+                  thread={thread}
+                  paywall={paywall}
+                  disclosure={disclosure}
+                  onDismissPaywall={() => setPaywall(null)}
+                  onExplain={() => narrate(selected)}
+                  onAsk={(q) => narrate(selected, q)}
+                />
+              </div>
+            </div>
+          )}
+        </Step>
+
+        {/* Everything else, one click away and out of the way. */}
+        <section id="detail" aria-labelledby="deeper-title" className="scroll-mt-20 border-t border-[var(--deck-rule)] pt-6">
+          <button
+            type="button"
+            aria-expanded={showAnalysis}
+            aria-controls="deeper"
+            onClick={() => setShowAnalysis((v) => !v)}
+            className="flex w-full flex-wrap items-center justify-between gap-4 text-left"
+          >
+            <span className="min-w-0">
+              <span id="deeper-title" className="deck-h3 block text-[clamp(1.375rem,2.2vw,1.75rem)] text-fg">
+                Go deeper
+              </span>
+              <span className="mt-1 block text-[0.9375rem] leading-relaxed text-fg-dim">
+                What-if scenarios, the Greeks, upcoming events, model comparison, your positions
+                {openCount > 0 ? ` (${openCount} open)` : ""} and the full options chain.
+              </span>
+            </span>
+            <span className="deck-btn deck-btn-sm shrink-0">
+              {showAnalysis ? "Hide" : "Show"}
+              <span aria-hidden>{showAnalysis ? "↑" : "↓"}</span>
+            </span>
+          </button>
+
+          {showAnalysis && (
+            <div id="deeper" className="deck-pane mt-5 overflow-hidden">
+              <div className="flex items-center gap-6 overflow-x-auto overflow-y-hidden border-b border-border px-5 pb-px">
+                {TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    aria-pressed={tab === t.id}
+                    onClick={() => setTab(t.id)}
+                    className="deck-tab shrink-0"
+                  >
+                    {t.label}
+                    {t.id === "manage" ? ` (${openCount})` : ""}
+                  </button>
+                ))}
+              </div>
+              <div id="manage" className="scroll-mt-20">
+                {tab === "whatif" && <TimeMachine s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} />}
+                {tab === "greeks" && (
+                  <PlainGreeks s={selected} spot={spot} daysToExpiry={days} iv={sym.iv} onDetails={() => { window.location.href = "/greeks"; }} />
+                )}
+                {tab === "events" && mounted && <EventTimeline events={events} daysToExpiry={days} baseDate={new Date()} />}
+                {tab === "models" && mounted && <ModelSpread spot={spot} low={low} high={high} daysToExpiry={days} iv={sym.iv} />}
+                {tab === "manage" && (
+                  <ManagePanel
+                    bets={bets}
+                    liveSpot={spot}
+                    iv={sym.iv}
+                    onClose={(id, pnl) =>
+                      setBets((cur) => cur.map((b) => (b.id === id ? { ...b, status: "closed", closedPnl: pnl } : b)))
+                    }
+                    onRoll={() => alert("Roll preview — extending to next monthly expiry. Coming soon as a real flow.")}
+                  />
+                )}
+                {tab === "chain" && (
+                  <div className="p-5">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <label className="flex items-center gap-2.5 text-[0.8125rem] text-fg-faint">
+                        Strikes each side
+                        <select
+                          value={chainDepth}
+                          onChange={(e) => setChainDepth(Number(e.target.value))}
+                          className="calm-input !h-8 !px-2.5 t-data !text-[0.75rem]"
+                        >
+                          <option value={4}>±4</option>
+                          <option value={5}>±5</option>
+                          <option value={8}>±8</option>
+                        </select>
+                      </label>
+                      <Link href="/trade/chain" className="deck-link text-[0.875rem]">
+                        Build legs on the full visual chain
+                        <span aria-hidden className="deck-arrow">
+                          →
+                        </span>
+                      </Link>
+                    </div>
+                    <ChainTable
+                      symbol={sym.sym}
+                      spot={spot}
+                      iv={sym.iv}
+                      days={days}
+                      perSide={chainDepth}
+                      onStepDays={(d) => setDays(Math.max(1, Math.min(365, days + d)))}
+                      onHoverStrike={setHoverStrike}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
       </div>
-      <RegulatoryLine className="shell py-3" />
+      <RegulatoryLine className="shell shell-wide py-4" />
 
       {/* mobile: essentials + PLACE pinned to the bottom */}
       <BetBar
@@ -881,7 +920,7 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setConfirm(null)}
-            className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           >
             <motion.div
               ref={confirmRef}
@@ -894,34 +933,39 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
               exit={{ scale: 0.96, y: 12 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="surface-instrument w-full max-w-xl border border-border bg-bg shadow-2xl outline-none"
+              className="deck-pane w-full max-w-xl overflow-hidden shadow-[0_40px_120px_-40px_rgba(0,0,0,0.95)] outline-none"
             >
-              <div className="border-b border-border bg-bg-soft px-4 py-2 t-eyebrow text-fg-dim">
-                Confirm paper trade · {sym.sym}
+              <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
+                <span className="deck-eyebrow">Confirm paper trade · {sym.sym}</span>
               </div>
               <div className="p-6">
-                <div id="confirm-trade-title" className="font-display text-2xl tracking-tightest text-fg">{confirm.strategy.kind}</div>
-                <p className="mt-3 text-[0.9375rem] leading-relaxed text-fg">{storySentence(confirm)}</p>
-                <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden border border-border bg-border">
+                <div id="confirm-trade-title" className="deck-display text-[1.75rem] leading-tight tracking-[-0.02em] text-fg">{confirm.strategy.kind}</div>
+                <p className="mt-3 text-[0.9375rem] leading-relaxed text-fg-dim">{storySentence(confirm)}</p>
+                {/* Risk before returns: the loss is read first. */}
+                <div className="mt-6 grid grid-cols-3 border-y border-[var(--deck-rule)]">
                   {[
-                    { k: "Max profit", v: Number.isFinite(confirm.strategy.maxProfit) ? `+$${confirm.strategy.maxProfit.toFixed(0)}` : "uncapped", c: "text-bull" },
                     { k: "Max loss", v: Number.isFinite(confirm.strategy.maxLoss) ? `−$${Math.abs(confirm.strategy.maxLoss).toFixed(0)}` : "unbounded", c: "text-bear" },
-                    { k: "In-range probability · BS model", v: `${(confirm.strategy.prob * 100).toFixed(0)}%`, c: "text-fg" },
-                  ].map((s) => (
-                    <div key={s.k} className="bg-bg p-3">
-                      <div className="t-label text-fg-faint">{s.k}</div>
-                      <div className={`mt-1 t-data text-base ${s.c}`}>{s.v}</div>
+                    { k: "Max profit", v: Number.isFinite(confirm.strategy.maxProfit) ? `+$${confirm.strategy.maxProfit.toFixed(0)}` : "uncapped", c: "text-bull" },
+                    { k: "POP · BS model", v: `${(confirm.strategy.prob * 100).toFixed(0)}%`, c: "text-fg" },
+                  ].map((s, i) => (
+                    <div key={s.k} className={`py-3.5 ${i > 0 ? "border-l border-border pl-4" : "pr-4"}`}>
+                      <div className="deck-label">{s.k}</div>
+                      <div className={`mt-1.5 t-data text-[1.125rem] ${s.c}`}>{s.v}</div>
                     </div>
                   ))}
                 </div>
                 {confirmRefusal && (
-                  <p role="alert" className="mt-4 rounded-[var(--r-instrument)] bg-amber/10 px-3 py-2 t-body-sm text-amber">
+                  <p role="alert" className="deck-note mt-5 px-3.5 py-2.5 text-[0.875rem] leading-relaxed">
                     {confirmRefusal}
                   </p>
                 )}
-                <div className="mt-5 flex items-center justify-end gap-2">
-                  <ToolButton onClick={() => setConfirm(null)}>Cancel</ToolButton>
-                  <ToolButton primary onClick={confirmBet} disabled={!!confirmRefusal}>Place paper trade</ToolButton>
+                <div className="mt-6 flex items-center justify-end gap-2.5">
+                  <button type="button" onClick={() => setConfirm(null)} className="deck-btn deck-btn-sm">
+                    Cancel
+                  </button>
+                  <button type="button" onClick={confirmBet} disabled={!!confirmRefusal} className="deck-btn deck-btn-primary deck-btn-sm">
+                    Place paper trade
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -936,9 +980,12 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
-            className="surface-instrument fixed bottom-5 left-1/2 z-[var(--z-toast)] -translate-x-1/2 border border-border bg-bg px-4 py-2 t-label text-fg shadow-2xl"
+            className="deck-pane fixed bottom-5 left-1/2 z-[var(--z-toast)] flex -translate-x-1/2 items-center gap-2.5 px-4 py-2.5 text-[0.8125rem] text-fg shadow-[0_24px_60px_-24px_rgba(0,0,0,0.9)]"
           >
-            ✓ Paper trade placed · see the positions tab
+            <span aria-hidden className="grid size-5 place-items-center rounded-full bg-[var(--deck-green-tint)] text-[0.6875rem] text-bull">
+              ✓
+            </span>
+            Paper trade placed · see the positions tab
           </motion.div>
         )}
       </AnimatePresence>
@@ -956,230 +1003,22 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
   );
 }
 
-function ThesisLine({ sentence }: { sentence: string }) {
-  // Highlight the price band and date
-  const parts = sentence.split(/(\$[\d.]+|by [^.]+)/g);
+/** One step of the guided builder: the deck's journey numbering (slide 10),
+ *  a mono "01" in green beside a serif question, a hairline above. */
+function Step({ id, n, title, hint, children }: { id?: string; n: string; title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <span className="text-fg">
-      {parts.map((p, i) => {
-        if (p.startsWith("$")) return <span key={i} className="t-data text-fg">{p}</span>;
-        if (p.startsWith("by ")) return <span key={i} className="text-fg">{p}</span>;
-        return <span key={i}>{p}</span>;
-      })}
-    </span>
-  );
-}
-
-/** Ring gauge overlaid on the chart — "N% in band · probability @ expiration". */
-function InBandRing({ prob }: { prob: number }) {
-  const r = 44;
-  const c = 2 * Math.PI * r;
-  const p = Math.max(0, Math.min(1, prob));
-  // prob comes back from probBS, which runs Math.log and an erf — neither is
-  // specified to the last ULP, so Node and the browser can land on different
-  // final digits. Rounding the dash geometry keeps the attribute identical on
-  // both sides; see the same guard in Sparkline (components/wedge/StrategyCards).
-  const dash = c.toFixed(2);
-  const dashOffset = (c - c * p).toFixed(2);
-  return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="relative">
-        <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden>
-          <defs>
-            <linearGradient id="in-band-ramp" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0" stopColor="var(--edge-a)" />
-              <stop offset="0.55" stopColor="var(--edge-b)" />
-              <stop offset="1" stopColor="var(--edge-c)" />
-            </linearGradient>
-          </defs>
-          <circle cx="52" cy="52" r={r} stroke="var(--border)" strokeWidth="6" fill="var(--bg)" fillOpacity="0.55" />
-          <circle
-            cx="52"
-            cy="52"
-            r={r}
-            stroke="url(#in-band-ramp)"
-            strokeWidth="6"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={dash}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 52 52)"
-            style={{ transition: "stroke-dashoffset 0.5s cubic-bezier(.22,.68,.26,1), stroke 0.3s" }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-display text-2xl leading-none tracking-tightest tabular-nums text-fg">
-            {Math.round(prob * 100)}%
-          </span>
-          <span className="mt-1 t-label text-fg-dim">In band</span>
-          <span className="t-label text-fg-faint">at expiry</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** The selected strategy's legs, broker-ticket style: Buy/Sell qty strike type · mid.
- *  Collapsed by default — the ticket rows duplicate what "edit legs" opens, so
- *  they are disclosure; only the net debit/credit line is always-on. */
-function LegsList({ s }: { s: Strategy }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="t-label text-fg-faint transition-colors hover:text-fg"
-      >
-        Legs ({s.legs.length}) {open ? "▾" : "▸"}
-      </button>
-      {open && (
-        <ul className="mt-1.5 space-y-1">
-          {s.legs.map((l, i) => (
-            <li key={i} className="flex items-center justify-between t-data text-[0.75rem] text-fg-dim">
-              <span>
-                {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "call" : "put"}
-              </span>
-              <span>{l.side === "long" ? "" : "−"}{l.premium.toFixed(2)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-/** The strategy panel before anything is picked. /trade opens with no position
- *  (see selectedId), and this panel used to end at the three example rows, so
- *  the first view of a product whose promise is "options you can see" had no
- *  picture in it. This is StrategyDetail's frame with nothing in it: the $0
- *  axis and today's spot, the rail's labels with no figures, and no legs and no
- *  place button, because nothing has been chosen. */
-function EmptyStrategyDetail() {
-  return (
-    <dl className="grid grid-cols-[1fr_auto] gap-y-2">
-      {["Max profit", "Max loss", "Breakeven", "POP"].map((k) => (
-        <div key={k} className="contents">
-          <dt className="text-[0.875rem] text-fg-dim">{k}</dt>
-          <dd className="t-data text-[0.875rem] text-fg-faint">—</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-/** A section of the page that waits to be asked for. */
-function FoldCard({
-  icon,
-  title,
-  sub,
-  action,
-  open,
-  onToggle,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  sub: string;
-  action: string;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="glass-tool flex items-center gap-4 px-5 py-4">
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--brand-ink)_16%,transparent)] text-brand-ink">
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[1rem] font-semibold tracking-[-0.01em] text-fg">{title}</div>
-        <div className="truncate t-label text-fg-dim">{sub}</div>
-      </div>
-      <PillButton size="sm" aria-expanded={open} onClick={onToggle} className="!h-9">
-        {open ? "Hide" : action} <span aria-hidden>{open ? "⌃" : "›"}</span>
-      </PillButton>
-    </div>
-  );
-}
-
-/** Selected-strategy detail, ref-style: fact chips, payoff diagram beside a
- *  snug label/value stat rail, and the place-trade CTA — all inside the panel. */
-function StrategyDetail({
-  s,
-  symbol,
-  spot,
-  daysToExpiry,
-  prob,
-  onPlace,
-  placeNote,
-}: {
-  s: Strategy;
-  symbol: string;
-  spot: number;
-  daysToExpiry: number;
-  prob: number;
-  onPlace: () => void;
-  /** Why this position cannot be placed, in place of the button. */
-  placeNote?: string;
-}) {
-  // NaN is not Infinity: `Number.isFinite(NaN)` is false and `NaN > 0` is false,
-  // so a failed computation used to print the confident-sounding "unbounded".
-  // Show an em-dash instead — never dress a broken number as a risk statement.
-  const fmt = (n: number) =>
-    Number.isNaN(n)
-      ? "—"
-      : Number.isFinite(n)
-        ? `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}`
-        : n > 0
-          ? "uncapped"
-          : "unbounded";
-  const definedRisk = Number.isFinite(s.maxLoss);
-  const rr =
-    Number.isFinite(s.maxProfit) && definedRisk && Math.abs(s.maxLoss) > 0 ? s.maxProfit / Math.abs(s.maxLoss) : null;
-  // `lead` marks the figures the decision actually turns on. They get the
-  // decision tier; the rest stay chrome-sized so the promotion means something.
-  const rail: { k: string; v: string; c: string; lead?: boolean }[] = [
-    { k: "Max profit", v: fmt(s.maxProfit), c: "text-bull", lead: true },
-    { k: "Max loss", v: fmt(s.maxLoss), c: "text-bear", lead: true },
-    ...(s.breakevens.length
-      ? [{ k: "Breakeven", v: s.breakevens.map((b) => b.toFixed(2)).join(" / "), c: "text-fg" }]
-      : []),
-    { k: "POP", v: `${(s.prob * 100).toFixed(0)}%`, c: "text-fg", lead: true },
-    ...(rr != null ? [{ k: "R:R", v: rr.toFixed(2), c: "text-fg" }] : []),
-  ];
-
-  return (
-    <div>
-      <PnlSparkline s={s} spot={spot} className="h-24 w-full" />
-      <div className="mt-1 text-center t-label text-fg-faint">P/L at expiration</div>
-      <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-        {rail.map((it) => (
-          <div key={it.k} className={`flex items-baseline justify-between gap-3 ${it.k === "Breakeven" && s.breakevens.length > 1 ? "col-span-full" : ""}`}>
-            <dt className="text-[0.875rem] text-fg-dim">{it.k}</dt>
-            <dd className={`text-right t-data ${it.lead ? "text-[1.0625rem]" : "text-[0.875rem]"} ${it.c}`}>{it.v}</dd>
-          </div>
-        ))}
-        <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-[0.875rem] text-fg-dim">{s.cost > 0 ? "You pay" : "You collect"}</dt>
-          <dd className="text-right t-data text-[0.875rem] text-fg">${Math.abs(s.cost).toFixed(0)}</dd>
-        </div>
-      </dl>
-      <LegsList s={s} />
-
-      {/* place CTA — the page's one main action, inside the panel */}
-      {placeNote ? (
-        <p className="mt-3 t-label text-fg-dim">{placeNote}</p>
-      ) : (
-        <PillButton kind="primary" onClick={onPlace} className="mt-4 w-full">
-          Place this paper trade on {symbol}
-        </PillButton>
-      )}
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <CopyLinkButton trade={{ underlying: symbol, spot, daysToExpiry, legs: s.legs }} />
-        <span className="ml-auto t-label text-fg-faint">
-          {Math.round(prob * 100)}% in band · Black-Scholes · paper only
+    <section id={id} aria-labelledby={`step-${n}`} className="scroll-mt-24 border-t border-[var(--deck-rule)] pt-6">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <span aria-hidden className="font-mono text-[0.875rem] tracking-[0.08em] text-bull">
+          {n}
         </span>
+        <h2 id={`step-${n}`} className="deck-h3 text-[clamp(1.375rem,2.2vw,1.75rem)] text-fg">
+          {title}
+        </h2>
       </div>
-    </div>
+      {hint && <p className="mt-2 max-w-[46rem] text-[0.9375rem] leading-relaxed text-fg-dim">{hint}</p>}
+      <div className="mt-5">{children}</div>
+    </section>
   );
 }
 
@@ -1202,9 +1041,9 @@ function CopyLinkButton({ trade }: { trade: SharedTradeInput }) {
     setTimeout(() => setState("idle"), 2200);
   };
   return (
-    <ToolButton onClick={copy} title={url} className={DENSE}>
+    <button type="button" onClick={copy} title={url} className="deck-btn deck-btn-sm !h-7 !px-3 !text-[0.625rem]">
       {state === "copied" ? "✓ Link copied" : state === "failed" ? "Copy failed" : "Copy link ⧉"}
-    </ToolButton>
+    </button>
   );
 }
 
@@ -1234,21 +1073,21 @@ function SharedTradePanel({
   const fmt = (n: number) =>
     Number.isNaN(n) ? "—" : `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}`;
   return (
-    <section className="surface-instrument border border-border bg-surface lg:shrink-0">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border bg-bg-soft px-3 py-2">
-        <span className="t-eyebrow text-amber">Shared trade · rebuilt in your builder · paper only</span>
+    <section className="deck-pane overflow-hidden lg:shrink-0">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--deck-amber-line)] bg-[var(--deck-amber-tint)] px-5 py-2.5">
+        <span className="deck-label text-amber">Shared trade · rebuilt in your builder · paper only</span>
       </div>
-      <div className="p-3">
+      <div className="p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="font-display text-xl tracking-tightest text-fg">{d.kind}</span>
+          <span className="deck-display text-[1.5rem] tracking-[-0.02em] text-fg">{d.kind}</span>
           <span className="t-data text-[0.75rem] text-fg-dim">
             {trade.underlying} · {trade.daysToExpiry}d · spot ${spot.toFixed(2)}
           </span>
         </div>
-        <p className="t-body-sm mt-1.5 text-fg-dim">{d.blurb}</p>
-        <ul className="mt-2 divide-y divide-border-soft border-y border-border-soft">
+        <p className="mt-1.5 text-[0.875rem] leading-relaxed text-fg-dim">{d.blurb}</p>
+        <ul className="mt-3 divide-y divide-border border-y border-border">
           {trade.legs.map((l) => (
-            <li key={l.id} className="flex items-center justify-between px-1 py-1.5 t-data text-[0.75rem]">
+            <li key={l.id} className="flex items-center justify-between px-1 py-2 t-data text-[0.75rem]">
               <span className={l.side === "long" ? "text-bull" : "text-bear"}>
                 {l.side === "long" ? "Buy" : "Sell"} {l.qty} {l.strike} {l.type === "C" ? "CALL" : "PUT"}
               </span>
@@ -1259,24 +1098,30 @@ function SharedTradePanel({
             </li>
           ))}
         </ul>
-        <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1">
+        {/* Risk before returns, as everywhere in the builder. */}
+        <div className="mt-3 grid grid-cols-3 gap-x-4 gap-y-1">
           {[
-            { k: "Max profit", v: fmt(sum.maxProfit), c: "text-bull" },
             { k: "Max loss", v: sum.unboundedRisk ? "unbounded" : fmt(sum.maxLoss), c: "text-bear" },
+            { k: "Max profit", v: fmt(sum.maxProfit), c: "text-bull" },
             { k: sum.breakevens.length === 1 ? "Breakeven" : "Breakevens", v: sum.breakevens.length ? sum.breakevens.map((b) => b.toFixed(2)).join(" / ") : "—", c: "text-fg" },
           ].map((it) => (
             <div key={it.k}>
-              <div className="t-label text-fg-faint">{it.k}</div>
-              <div className={`t-data text-[0.8125rem] ${it.c}`}>{it.v}</div>
+              <div className="deck-label">{it.k}</div>
+              <div className={`mt-1 t-data text-[0.875rem] ${it.c}`}>{it.v}</div>
             </div>
           ))}
         </div>
-        <ToolButton onClick={onPlace} disabled={placed || !!refusal} className="mt-3 w-full !h-9 !justify-between">
-          <span>{placed ? "✓ Booked to your paper account" : `Open this on paper · ${cost > 0 ? "you pay" : "you collect"} $${Math.abs(cost).toFixed(0)}`}</span>
-          <span>{placed ? "" : "→"}</span>
-        </ToolButton>
-        {refusal && !placed && <p className="mt-2 t-body-sm text-amber">{refusal}</p>}
-        <div className="mt-1.5 t-label text-fg-faint">
+        <button
+          type="button"
+          onClick={onPlace}
+          disabled={placed || !!refusal}
+          className="deck-btn mt-4 h-auto min-h-10 w-full whitespace-normal py-2 text-left leading-snug !justify-between"
+        >
+          <span className="min-w-0">{placed ? "✓ Booked to your paper account" : `Open this on paper · ${cost > 0 ? "you pay" : "you collect"} $${Math.abs(cost).toFixed(0)}`}</span>
+          <span aria-hidden>{placed ? "" : "→"}</span>
+        </button>
+        {refusal && !placed && <p className="mt-2 text-[0.875rem] text-amber">{refusal}</p>}
+        <div className="mt-2 text-[0.75rem] text-fg-faint">
           Someone else built this · prices are yours, not theirs · nothing here is advice
         </div>
       </div>
@@ -1340,19 +1185,20 @@ function TeacherPanel({
   };
 
   return (
-    <div className="mt-4">
-      <PillButton
+    <div className="mt-5">
+      <button
+        type="button"
         onClick={() => {
           setOpen(true);
           onExplain();
         }}
         disabled={!selected || narrating}
-        className="w-full"
+        className="deck-btn w-full"
       >
-        <Sparkles aria-hidden size={15} className="text-brand-ink" />
+        <Sparkles aria-hidden size={14} strokeWidth={1.75} className="text-bull" />
         Explain this position
-        <span className="t-label text-fg-faint">Beta</span>
-      </PillButton>
+        <span className="rounded-[4px] bg-[var(--deck-raised)] px-1.5 py-0.5 text-[0.5625rem] tracking-[0.1em] text-fg-faint">Beta</span>
+      </button>
 
       {open && (
       <>
@@ -1381,22 +1227,22 @@ function TeacherPanel({
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask anything about this trade..."
           disabled={!selected}
-          className="calm-input min-w-0 flex-1 outline-none transition-colors placeholder:text-fg-faint focus:border-brand-ink/60 disabled:opacity-50"
+          className="calm-input min-w-0 flex-1 outline-none transition-colors placeholder:text-fg-faint disabled:opacity-50"
         />
-        <ToolButton
+        <button
           type="submit"
           disabled={!selected || narrating || !q.trim()}
           aria-label="ask the teacher"
-          className="!size-9 shrink-0 !p-0"
+          className="deck-btn !size-9 shrink-0 !p-0"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M5 12h14M13 5l7 7-7 7" />
           </svg>
-        </ToolButton>
+        </button>
       </form>
       {/* The server's disclosure string once an answer has arrived
           (lib/billing/explain-policy.ts); the house line before that. */}
-      <div className="mt-2 t-label text-fg-faint">
+      <div className="mt-2 text-[0.75rem] text-fg-faint">
         {disclosure ?? "Describes the position you built · education, not advice"}
       </div>
       </>
@@ -1411,18 +1257,18 @@ function TeacherBubble({ speaker, text, thinking }: { speaker: "user" | "teacher
   if (speaker === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] border border-border bg-bg-soft px-3 py-2 text-[0.75rem] leading-relaxed text-fg">{text}</div>
+        <div className="max-w-[85%] rounded-[12px] rounded-br-[4px] bg-[var(--deck-raised)] px-3 py-2 text-[0.8125rem] leading-relaxed text-fg">{text}</div>
       </div>
     );
   }
   return (
     <div className="flex items-end gap-2">
-      <span className="flex size-8 shrink-0 select-none items-center justify-center rounded-[var(--r-instrument)] border border-border bg-bg font-mono text-[0.75rem] text-brand-ink" aria-hidden>
+      <span className="grid size-8 shrink-0 select-none place-items-center rounded-[8px] bg-[var(--deck-green-tint)] font-mono text-[0.75rem] text-bull" aria-hidden>
         :]
       </span>
       <div
-        className={`relative max-w-[85%] whitespace-pre-line border border-border bg-surface px-3 py-2 leading-relaxed ${
-          thinking ? "text-[0.75rem] text-fg-faint" : "text-[0.75rem] text-fg"
+        className={`relative max-w-[85%] whitespace-pre-line rounded-[12px] rounded-bl-[4px] border border-border bg-[var(--deck-sunk)] px-3 py-2 leading-relaxed ${
+          thinking ? "text-[0.8125rem] text-fg-faint" : "text-[0.8125rem] text-fg"
         }`}
       >
         {text}

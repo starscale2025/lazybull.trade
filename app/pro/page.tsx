@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Nav } from "@/components/Nav";
+import Link from "next/link";
+import { AuthButtons } from "@/components/AuthButtons";
 import { Chart, type ChartHandle, type Alert } from "@/components/pro/Chart";
 import { LeftToolbar } from "@/components/pro/LeftToolbar";
 import { TopBar, SEED_SYMBOLS, type SymbolDef } from "@/components/pro/TopBar";
@@ -49,7 +50,7 @@ const DEFAULT_WORKSPACE: Workspace = {
   indicators: ["ema20", "vwap"],
   layout: 1,
   chart: "candles",
-  color: "#52ffa5",
+  color: "#00ff87",
   alerts: [],
 };
 
@@ -518,7 +519,7 @@ export default function ProPage() {
       setIndicators(ws.indicators || []);
       setLayout(ws.layout || 1);
       setChartType(ws.chart || "candles");
-      setColor(ws.color || "#52ffa5");
+      setColor(ws.color || "#00ff87");
       setAlerts(ws.alerts || []);
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -828,19 +829,25 @@ export default function ProPage() {
     // <main>, not <div>: the root layout stopped claiming the main landmark
     // (it was nesting one inside every page's own), and /pro was one of only
     // two routes that never declared its own — leaving it with none at all.
-    <main ref={wrapperRef} className="tap-floor pro-theme flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
-      {/* Site navigation — same bar as every other page, so /pro is not a dead
-          end. The workspace strip below keeps the pro-only controls. */}
-      <Nav />
-      {/* App bar — brand lives in the Nav now; this strip is workspace status. */}
-      <header className="flex h-12 items-center gap-2 border-b border-border bg-bg-soft px-3">
+    // The pitch deck's skin (globals.css, THE DECK SKIN), with opaque surfaces
+    // (.deck-opaque): menus and panels sit over a live chart here.
+    <main ref={wrapperRef} className="tap-floor deck deck-opaque flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
+      {/* THE APP BAR (owner, 2026-11-17). No site navbar on /pro: it opens in
+          its own tab from the navbar, and this bar is the page's one bar — the
+          wordmark home, what this is, the workspace status, and the account.
+          Relative + z-40 so the account panel opens over the toolbar below. */}
+      <header className="deck-navbar relative z-40 flex h-11 items-center gap-3 px-3 sm:px-4">
         {/* The document's one h1. /pro shipped with no headings at all, so a
             screen reader landed on an unnamed page and had no outline to
             navigate. There is no visible title to promote here — the terminal
             identifies itself with a badge and a workspace strip — so the
             heading is screen-reader-only rather than invented chrome. */}
         <h1 className="sr-only">Pro terminal — charting, indicators and paper trading</h1>
-        <Chip tone="brand">Pro</Chip>
+        <Link href="/" aria-label="lazybull, home" className="deck-wordmark flex shrink-0 items-center">
+          lazybull<span className="text-bull">.</span>
+        </Link>
+        <span aria-hidden className="h-5 w-px shrink-0 bg-border" />
+        <span className="deck-label shrink-0 text-fg">Pro charts</span>
         <div className="ml-1 hidden items-center gap-2 t-label text-fg-dim md:flex">
           <span>Workspace · “godmode”</span>
           {loading && <span className="animate-pulse text-fg-faint">· Loading bars…</span>}
@@ -865,6 +872,9 @@ export default function ProPage() {
             <TopBar/> immediately below with the SAME handlers, so the top 190px
             of this page carried five duplicated controls and TWO solid-green
             primaries firing the same function. One row of controls, one primary. */}
+        <div className="ml-auto flex shrink-0 items-center">
+          <AuthButtons always />
+        </div>
       </header>
 
       <TopBar

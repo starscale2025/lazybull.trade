@@ -7,7 +7,9 @@ import { bullMarkPoints } from "@/lib/bull-mark";
  */
 export function BullMark({ className = "", strokeWidth = 2.2 }: { className?: string; strokeWidth?: number }) {
   return (
-    <svg viewBox="0 0 28 20" className={className} aria-hidden fill="none">
+    // `bull-mark` is a hook only: inside the pitch-deck skin (globals.css,
+    // THE DECK SKIN) the stroke takes the brand green instead of the ramp.
+    <svg viewBox="0 0 28 20" className={`bull-mark ${className}`} aria-hidden fill="none">
       <defs>
         {/* One definition however many marks a page draws: the ids collide
             but the gradients are identical, so whichever wins is right. */}

@@ -17,9 +17,12 @@
  *                       padding that would shift every glyph off the pre
  *   caret-brand-ink     text-transparent also hides the caret in Safari
  *                       unless caret-color is explicit
- *   selection:…         app/layout.tsx paints `selection:bg-bull
- *                       selection:text-bg` on the body, which would render
- *                       selected text opaque over the coloured pre
+ *   selection:…!        app/layout.tsx paints `selection:bg-bull
+ *                       selection:text-bg` on the body, and the deck skin an
+ *                       unlayered `.deck ::selection` (solid green, ink
+ *                       text) — either would render selected text opaque
+ *                       over the coloured pre. Unlayered beats a layered
+ *                       utility, so these two carry `!` to keep the 30% film
  *   whitespace-pre      both layers must wrap identically — i.e. never
  *
  * Keyboard: Tab indents (LANG_META.indent spaces), Shift+Tab dedents, Enter
@@ -27,25 +30,44 @@
  * to the run button — the keyboard-trap exit, spelled out in the footer.
  * ⌘/Ctrl+↵ is left to bubble: the workspace root owns run / submit.
  *
- * Frame: the tools' surface-instrument panel. Buttons: the kit's square tool
- * shape, Submit the one primary. Language: pills on the aria-pressed pattern of
- * components/pro/OrderPanel.tsx (lines 164-196). Run and the language pills are
- * the kit's classes by hand: Run carries the ref Escape hands focus to, and a
- * pill here can be disabled and titled, which ToolButton and TogglePill's props
- * do not cover (ToolButton has no ref; TogglePill has neither).
+ * Skin: the Playground mockup of the pitch deck (slide 7). A header strip with
+ * the file as a tab ("● solution.py"), the language as an outlined segmented
+ * rect, then RUN (outlined pill) and SUBMIT (the screen's one green pill), mono
+ * capitals both. The body is the sunk #0a0a0a with quiet line numbers and the
+ * mockup's code colours (DECK_TOKEN below). The frame is the workspace's: this
+ * paints only its own fill. Language: buttons on the aria-pressed pattern of
+ * components/pro/OrderPanel.tsx (lines 164-196). Run and Submit are plain
+ * buttons with the deck's classes: Run carries the ref Escape hands focus to,
+ * and a language button here can be disabled and titled.
  */
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import type { ClientProblem, Lang } from "@/lib/practice/types";
+import type { ClientProblem, Lang, TokenKind } from "@/lib/practice/types";
 import { LANG_META } from "@/lib/practice/types";
 import { isEdited } from "@/lib/practice/judge";
-import { TOKEN_CLASS, tokenize } from "@/lib/practice/tokenize";
-import { Chip, ToolButton } from "@/components/calm/kit";
+import { tokenize } from "@/lib/practice/tokenize";
+import { Chip } from "@/components/calm/kit";
 import { Kbd } from "./Chips";
 
 /** The one metrics class every layer wears. Change it here or nowhere. */
 const METRICS =
   "m-0 p-3 font-mono text-[0.8125rem] leading-[1.6] tracking-normal whitespace-pre [tab-size:4] [font-variant-ligatures:none]";
+
+/** The mockup's code colours, sampled from slide 7: keywords in the brand
+    green, calls and def names in cyan, numbers in #c9ff00, comments in the
+    quiet grey, strings in the amber note's ink, the rest bone. The token KINDS
+    are lib/practice/tokenize.ts's; only the paint is this editor's. Colour
+    only — never weight or style — so a coloured glyph keeps the exact advance
+    of the transparent one above it. #c9ff00 has no paper twin in the deck, so
+    the light theme gets a darker cut of it. */
+const DECK_TOKEN: Record<TokenKind, string> = {
+  kw: "text-[var(--brand)]",
+  fn: "text-[var(--cyan)]",
+  num: "text-[#c9ff00] [[data-theme=light]_&]:text-[#4f6b00]",
+  cmt: "text-[var(--deck-quiet)]",
+  str: "text-[var(--deck-amber-text)]",
+  plain: "",
+};
 
 const LANGS: Lang[] = ["python", "typescript"];
 
@@ -199,18 +221,30 @@ export function CodeEditor({
     }
   };
 
+  const runTitle = runnable ? undefined : "TypeScript judging ships next — Python runs for real today";
+
   return (
-    <div className={`relative flex flex-col surface-instrument border border-border bg-bg ${className}`}>
-      {/* ── header strip ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-[var(--r-instrument)] border-b border-border bg-bg-soft px-3 py-2 t-label">
-        <div className="flex min-w-0 flex-wrap items-center gap-2 text-fg-dim">
-          <span className="font-mono">{meta.file}</span>
-          <span className="text-fg-faint">· UTF-8 · spaces: {meta.indent}</span>
-          {edited && <Chip dot>Edited</Chip>}
+    <div className={`relative flex flex-col bg-[var(--deck-sunk)] ${className}`}>
+      {/* ── header strip: the file as a tab, then the controls ─────────────
+          44px tall, like the problem pane's tab strip beside it, so the two
+          hairlines run on as one rule across the desk. */}
+      <div className="flex flex-wrap items-stretch justify-between border-b border-border">
+        <div className="flex min-w-0 items-stretch">
+          {/* One file, so the tab is a label, not a control. */}
+          <span className="flex min-h-11 items-center gap-2.5 border-r border-border pl-5 pr-5 font-mono text-[0.8125rem] text-fg sm:pl-6">
+            <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-fg-faint" />
+            {meta.file}
+          </span>
+          {edited && (
+            <span className="flex items-center pl-3">
+              <Chip dot>Edited</Chip>
+            </span>
+          )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div role="group" aria-label="Language" className="flex items-center gap-1">
+        <div className="ml-auto flex flex-wrap items-center gap-2 py-1.5 pl-5 pr-4 sm:pl-4 sm:pr-5">
+          {/* The mockup's "Python 3.12" box, as a two-way switch. */}
+          <div role="group" aria-label="Language" className="flex items-center gap-0.5 rounded-[8px] p-0.5 shadow-[inset_0_0_0_1px_var(--deck-rule)]">
             {LANGS.map((l) => {
               const available = l === "python" || hasTs;
               const on = l === lang;
@@ -222,7 +256,7 @@ export function CodeEditor({
                   aria-pressed={on}
                   disabled={!available || locked}
                   title={available ? (l === "typescript" ? "editor only — TypeScript judging ships next" : undefined) : "typescript stub coming soon"}
-                  className="calm-toggle disabled:cursor-not-allowed disabled:opacity-45"
+                  className="inline-flex h-7 items-center rounded-[6px] px-2.5 text-[0.8125rem] font-medium text-fg-faint transition-colors enabled:hover:text-fg aria-pressed:bg-[var(--deck-raised)] aria-pressed:text-fg disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {LANG_META[l].label}
                   {!available && " · soon"}
@@ -231,28 +265,21 @@ export function CodeEditor({
             })}
           </div>
 
-          <ToolButton onClick={onReset} disabled={locked}>
-            ↺ Reset
-          </ToolButton>
-
           <button
-            ref={runRef}
             type="button"
-            onClick={onRun}
-            disabled={locked || !runnable}
-            title={runnable ? undefined : "TypeScript judging ships next — Python runs for real today"}
-            className="tool-btn"
+            onClick={onReset}
+            disabled={locked}
+            className="inline-flex h-8 items-center rounded-full px-3 text-[0.8125rem] text-fg-faint transition-colors enabled:hover:bg-[var(--deck-raised)] enabled:hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
           >
+            ↺ Reset
+          </button>
+
+          <button ref={runRef} type="button" onClick={onRun} disabled={locked || !runnable} title={runTitle} className="deck-btn deck-btn-sm">
             ▶ Run
           </button>
-          <ToolButton
-            primary
-            onClick={onSubmit}
-            disabled={locked || !runnable}
-            title={runnable ? undefined : "TypeScript judging ships next — Python runs for real today"}
-          >
+          <button type="button" onClick={onSubmit} disabled={locked || !runnable} title={runTitle} className="deck-btn deck-btn-primary deck-btn-sm">
             Submit
-          </ToolButton>
+          </button>
         </div>
       </div>
 
@@ -268,13 +295,15 @@ export function CodeEditor({
           locked ? "pointer-events-none opacity-70" : ""
         }`}
       >
+        {/* The mockup's gutter: quiet numerals on the editor's own ink, no
+            rule — the caret's line a step brighter. */}
         <div
           ref={gutterRef}
           aria-hidden
-          className={`${METRICS} w-12 shrink-0 select-none overflow-hidden border-r border-border-soft bg-bg-soft text-right text-fg-faint`}
+          className={`${METRICS} w-12 shrink-0 select-none overflow-hidden text-right text-[var(--deck-quiet)] sm:w-14`}
         >
           {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i} className={i + 1 === caret.line ? "text-fg" : undefined}>
+            <div key={i} className={i + 1 === caret.line ? "text-fg-dim" : undefined}>
               {i + 1}
             </div>
           ))}
@@ -293,7 +322,7 @@ export function CodeEditor({
               t.kind === "plain" ? (
                 <span key={i}>{t.text}</span>
               ) : (
-                <span key={i} className={TOKEN_CLASS[t.kind]}>
+                <span key={i} className={DECK_TOKEN[t.kind]}>
                   {t.text}
                 </span>
               )
@@ -319,18 +348,18 @@ export function CodeEditor({
             autoComplete="off"
             wrap="off"
             enterKeyHint="done"
-            className={`${METRICS} absolute inset-0 h-full w-full resize-none overflow-auto border-0 bg-transparent text-transparent caret-brand-ink outline-none selection:bg-brand-ink/30 selection:text-transparent`}
+            className={`${METRICS} absolute inset-0 h-full w-full resize-none overflow-auto border-0 bg-transparent text-transparent caret-brand-ink outline-none selection:bg-brand-ink/30! selection:text-transparent!`}
           />
         </div>
       </div>
 
-      {/* ── footer strip ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-b-[var(--r-instrument)] border-t border-border bg-bg-soft px-3 py-1.5 t-label text-fg-faint">
+      {/* ── footer strip: the editor's readout, in small mono ────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border px-5 py-2 font-mono text-[0.6875rem] text-fg-faint sm:px-6">
         <span className="tabular-nums">
-          Ln {caret.line}, col {caret.col}
+          Ln {caret.line}, col {caret.col} · UTF-8 · spaces: {meta.indent}
         </span>
-        <span className="flex items-center gap-1.5">
-          {!runnable && <span className="text-fg-dim">TypeScript judging ships next — Python runs for real today ·</span>}
+        <span className="flex flex-wrap items-center gap-1.5">
+          {!runnable && <span className="text-[var(--deck-amber-text)]">TypeScript judging ships next — Python runs for real today ·</span>}
           <Kbd>tab</Kbd> indent · <Kbd>esc</Kbd> leave editor
         </span>
       </div>

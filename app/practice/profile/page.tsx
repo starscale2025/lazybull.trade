@@ -11,9 +11,11 @@ export const metadata = {
   robots: { index: false },
 };
 
+// `.deck` turns on the pitch deck's palette for everything inside (globals.css,
+// THE DECK SKIN), as on the rest of /practice.
 export default function PracticeProfilePage() {
   return (
-    <main className="page-aura tap-floor flex min-h-screen flex-col bg-bg text-fg">
+    <main className="deck tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
       <ProfileBoard />
       <Footer />

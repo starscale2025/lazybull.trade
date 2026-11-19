@@ -19,19 +19,22 @@ type Props = {
   compact?: boolean;
 };
 
-// `color` strokes the payoff line. The label is the one Chip, and only the label
-// that names a risk takes a tone.
+// `color` strokes the payoff line. Since the deck pass (2026-11-17) every
+// payoff is drawn in the reading colour, as the deck's backtest draws its
+// in-sample line: gain and loss are carried by the green and red areas under
+// it, so a strategy's line never borrows a gain or loss hue for its identity.
+// The label is the one Chip, and only the label that names a risk takes a tone.
 const TONE: Record<Strategy["id"], { label: string; color: string; chip: ChipTone }> = {
-  cheap: { label: "Cheap & risky", color: "var(--plasma)", chip: "warn" },
-  income: { label: "Defined-risk credit", color: "var(--bull)", chip: "neutral" },
+  cheap: { label: "Cheap & risky", color: "var(--fg)", chip: "warn" },
+  income: { label: "Defined-risk credit", color: "var(--fg)", chip: "neutral" },
   // This pill read "Aggressive" in --bear. Red means loss on this site, so it
   // coloured a judgement as an outcome, on a spread whose loss is capped at the
   // debit. It is named for what it is now: a debit spread that takes a side.
   // --cyan is the palette's data colour (spot, strikes, data strokes), never
   // gain or loss.
   // The `aggressive` key stays: it is an id, never shown.
-  aggressive: { label: "Directional debit", color: "var(--cyan)", chip: "neutral" },
-  brought: { label: "Your spread", color: "var(--brand-ink)", chip: "brand" },
+  aggressive: { label: "Directional debit", color: "var(--fg)", chip: "neutral" },
+  brought: { label: "Your spread", color: "var(--fg)", chip: "brand" },
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -49,13 +52,13 @@ export function StrategyCards({ strategies, selectedId, onSelect, onPlace, spot,
               onClick={() => onSelect(s)}
               aria-pressed={selected}
               title={TONE[s.id].label}
-              className={`flex items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors ${
-                selected ? "bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]" : "hover:bg-[color-mix(in_srgb,var(--fg)_4%,transparent)]"
+              className={`flex items-center gap-2.5 rounded-[10px] px-2 py-2.5 text-left transition-colors ${
+                selected ? "bg-[color-mix(in_srgb,var(--fg)_7%,transparent)]" : "hover:bg-[color-mix(in_srgb,var(--fg)_3.5%,transparent)]"
               }`}
             >
               <span
                 aria-hidden
-                className={`size-2 shrink-0 rounded-full ${selected ? "bg-[image:var(--grad-fill)]" : "bg-[color-mix(in_srgb,var(--fg)_22%,transparent)]"}`}
+                className={`size-2 shrink-0 rounded-full ${selected ? "bg-bull" : "bg-[color-mix(in_srgb,var(--fg)_22%,transparent)]"}`}
               />
               <span className="min-w-0 flex-1 text-[0.875rem] leading-snug text-fg">{s.kind}</span>
               <span className="shrink-0 t-label tabular-nums text-fg-dim">

@@ -1,12 +1,12 @@
 "use client";
 
 // The left half of the workspace: the problem, in three tabs. A thin shell —
-// the Panel frame from ./Panel.tsx with the tab pills in its title row. The
-// bodies live in ./ProblemTabs.tsx.
+// the deck's pane-tab strip (the Playground mockup, slide 7: the active tab
+// bone over a green underline that sits on the hairline) above a body that
+// scrolls inside the desk at lg. The bodies live in ./ProblemTabs.tsx.
 
 import { useState } from "react";
 import type { ClientProblem } from "@/lib/practice/types";
-import { Panel } from "./Panel";
 import { DescriptionTab, EditorialTab, PaneTabs, SubmissionsTab, type TabDef } from "./ProblemTabs";
 
 type PaneTab = "description" | "editorial" | "submissions";
@@ -17,8 +17,8 @@ const TABS: TabDef<PaneTab>[] = [
     id: "editorial",
     label: (
       <>
-        {/* Opacity, not a faint token: the pill inverts when it is on. */}
-        Editorial <span className="ml-1 opacity-60">⊘ Plus</span>
+        {/* The plan it opens with, as a quiet mono tag beside the word. */}
+        Editorial <span className="ml-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-fg-faint">⊘ Plus</span>
       </>
     ),
   },
@@ -29,10 +29,15 @@ export function ProblemPane({ problem, className = "" }: { problem: ClientProble
   const [tab, setTab] = useState<PaneTab>("description");
 
   return (
-    <Panel title={<PaneTabs tabs={TABS} value={tab} onChange={setTab} label="Problem tabs" />} className={className}>
-      {tab === "description" && <DescriptionTab problem={problem} />}
-      {tab === "editorial" && <EditorialTab problem={problem} />}
-      {tab === "submissions" && <SubmissionsTab problem={problem} />}
-    </Panel>
+    <section className={`flex h-full flex-col ${className}`}>
+      <div className="shrink-0 border-b border-border px-5 sm:px-6">
+        <PaneTabs tabs={TABS} value={tab} onChange={setTab} label="Problem tabs" />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {tab === "description" && <DescriptionTab problem={problem} />}
+        {tab === "editorial" && <EditorialTab problem={problem} />}
+        {tab === "submissions" && <SubmissionsTab problem={problem} />}
+      </div>
+    </section>
   );
 }

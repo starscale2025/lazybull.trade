@@ -28,7 +28,13 @@ export function NavAutoHide() {
       raf = 0;
       const y = window.scrollY;
       const dy = y - last;
-      const pinned = y < 140 || bar.contains(document.activeElement) || !!bar.querySelector("details[open]");
+      // Pinned near the top, while focus is in the bar, and while any of its
+      // menus is open: More (a <details>), the phone sheet or the account
+      // panel (their buttons carry aria-expanded="true").
+      const pinned =
+        y < 140 ||
+        bar.contains(document.activeElement) ||
+        !!bar.querySelector('details[open], [aria-expanded="true"]');
       if (pinned) set(false);
       else if (dy > 6) set(true);
       else if (dy < -4) set(false);

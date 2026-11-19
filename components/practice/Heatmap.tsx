@@ -4,12 +4,21 @@
 // no library, colours as CSS vars, a viewBox so the whole thing scales with
 // its container. No transitions — this can be 364 rects.
 //
+// In the pitch deck's hand (2026-11-17): the waffle of slide 2 — near-square
+// cells, the empty ones in the hairline grey, the month names as mono
+// capitals — with a solved day lit in the deck's green, the colour of the
+// ● solved circle and the Accepted verdict.
+//
 // DATE-FREE BY DESIGN. Everything is derived from the `endDay` string the
 // container passes (parsed as UTC); there is no Date.now() here, so the server
 // and the client render the same grid and nothing hydrates differently.
 
 const DAY_MS = 86_400_000;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** Month names: mono capitals in viewBox units, and the width three of them
+    take (~0.6em a glyph plus the 0.1em tracking). */
+const LABEL_SIZE = 9;
+const LABEL_W = 3 * 0.7 * LABEL_SIZE;
 
 /** `yyyy-mm-dd` → UTC midnight epoch ms. */
 function parseDay(day: string): number {
@@ -30,13 +39,14 @@ function weekday(day: string): number {
   return (new Date(parseDay(day)).getUTCDay() + 6) % 7;
 }
 
-/** The reading colour, four strengths: a solve is not a gain, so no mint. */
+/** The hairline grey for a blank day, then the deck's green at four
+    strengths: one, two, three, four or more problems first solved. */
 function fillFor(n: number): string {
-  if (n <= 0) return "color-mix(in srgb, var(--fg) 7%, transparent)";
-  if (n === 1) return "color-mix(in srgb, var(--brand-ink) 35%, transparent)";
-  if (n === 2) return "color-mix(in srgb, var(--brand-ink) 58%, transparent)";
-  if (n === 3) return "color-mix(in srgb, var(--brand-ink) 80%, transparent)";
-  return "var(--brand-ink)";
+  if (n <= 0) return "var(--border)";
+  if (n === 1) return "color-mix(in srgb, var(--bull) 30%, transparent)";
+  if (n === 2) return "color-mix(in srgb, var(--bull) 52%, transparent)";
+  if (n === 3) return "color-mix(in srgb, var(--bull) 76%, transparent)";
+  return "var(--bull)";
 }
 
 export type HeatmapProps = {
@@ -53,7 +63,7 @@ export type HeatmapProps = {
 
 export function Heatmap({ activity, endDay, weeks = 52, cell = 10, showMonths = false, className = "" }: HeatmapProps) {
   const step = cell + 2;
-  const top = showMonths ? 12 : 0;
+  const top = showMonths ? 14 : 0;
   // Walk back from endDay to its Monday, then (weeks - 1) whole weeks.
   const firstDay = addDays(endDay, -(weekday(endDay) + (weeks - 1) * 7));
 
@@ -73,9 +83,11 @@ export function Heatmap({ activity, endDay, weeks = 52, cell = 10, showMonths = 
         solves += n;
       }
       if (showMonths && r === 0) {
-        // A column whose Monday falls in the first week of a month names it.
+        // A column whose Monday falls in the first week of a month names it —
+        // unless the name would run past the last column, where the svg's
+        // viewport would clip it mid-letter.
         const d = new Date(parseDay(day));
-        if (d.getUTCDate() <= 7) labels.push({ x: w * step, text: MONTHS[d.getUTCMonth()] ?? "" });
+        if (d.getUTCDate() <= 7 && w * step + LABEL_W <= weeks * step) labels.push({ x: w * step, text: MONTHS[d.getUTCMonth()] ?? "" });
       }
       cells.push({ day, n, x: w * step, y: top + r * step });
     }
@@ -92,12 +104,12 @@ export function Heatmap({ activity, endDay, weeks = 52, cell = 10, showMonths = 
         aria-hidden
       >
         {labels.map((l) => (
-          <text key={l.x} x={l.x} y={9} fontSize={9} fill="var(--fg-faint)" className="font-sans">
-            {l.text}
+          <text key={l.x} x={l.x} y={9} fontSize={LABEL_SIZE} letterSpacing="0.1em" fill="var(--fg-faint)" className="font-mono">
+            {l.text.toUpperCase()}
           </text>
         ))}
         {cells.map((c) => (
-          <rect key={c.day} x={c.x} y={c.y} width={cell} height={cell} rx={2} fill={fillFor(c.n)}>
+          <rect key={c.day} x={c.x} y={c.y} width={cell} height={cell} rx={1.5} fill={fillFor(c.n)}>
             <title>{`${c.day} · ${c.n} solved`}</title>
           </rect>
         ))}

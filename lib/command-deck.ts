@@ -14,6 +14,16 @@ export type DeckCommand = {
   run: () => void;
 };
 
+/** Window event that opens the deck from a control rather than a keystroke —
+    the navbar's search button dispatches it (components/NavSearch.tsx) and
+    components/CommandDeck.tsx listens. */
+export const OPEN_DECK_EVENT = "lb:open-command-deck";
+
+/** Open the Command Deck, as ⌘K would. Safe to call before it mounts. */
+export function openCommandDeck(): void {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(OPEN_DECK_EVENT));
+}
+
 const registry = new Map<string, DeckCommand[]>();
 const listeners = new Set<() => void>();
 let snapshot: DeckCommand[] = [];

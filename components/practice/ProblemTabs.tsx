@@ -1,9 +1,15 @@
 "use client";
 
 // The three tab bodies of the problem pane — Description, Editorial,
-// Submissions — plus the tab pills the pane and the run console share. The
+// Submissions — plus the tab strip the pane and the run console share. The
 // teacher callout is components/quant/BotCell.tsx (line 450), the related
 // cards are app/learn/bots/[id]/page.tsx (lines 386-406).
+//
+// Skin: the Playground mockup (pitch deck, slide 7). The title in Fraunces as
+// "NN. Title", the tags as the deck's square-ish chips, the statement in the
+// dim body grey with `code` as raised mono chips, examples in sunk wells with
+// bold bone Input / Output, and the quiet label-then-value meta. The teacher's
+// hints are the info hue (cyan); an error is the amber note.
 //
 // What is real here, and where it comes from. Acceptance is accepted ÷
 // submitted over real submissions (/api/practice/stats) and reads "—" until a
@@ -21,17 +27,21 @@ import { LANG_META } from "@/lib/practice/types";
 import { fetchEditorial, useAcceptance, type PlanNeed } from "@/lib/practice/client";
 import { usePracticeProgress } from "@/lib/practice/progress";
 import { track } from "@/lib/track";
-import { TogglePill, ToolButton } from "@/components/calm/kit";
 import { DifficultyPill, LockPill, TrackChip, VERDICT_LABEL } from "./Chips";
 import { Paragraphs, RichText } from "./RichText";
 import { Empty, Td, Th, Tr } from "./Table";
 
-/* ── tab pills ───────────────────────────────────────────────────────────── */
+/* ── tab strip ───────────────────────────────────────────────────────────── */
 
 export type TabDef<T extends string> = { id: T; label: ReactNode };
 
-/** Tabs for a Panel title row, as the kit's pills. Phrasing content only (a
-    span and buttons) because Panel renders its title inside a <span>. */
+/** The deck's pane tabs (slide 7): words in the reading sans, the active one
+    bone over a 2px green underline. The semantics stay what they were — a
+    group of toggle buttons on aria-pressed, not a tablist — and .deck-tab
+    paints both the bone and the underline off [aria-pressed="true"]
+    (globals.css, THE DECK SKIN; the trade workbench's tabs use the same rule).
+    Phrasing content only (a span and buttons). The caller's strip carries the
+    hairline (`border-b`) and no bottom padding, so the underline lands on it. */
 export function PaneTabs<T extends string>({
   tabs,
   value,
@@ -44,11 +54,12 @@ export function PaneTabs<T extends string>({
   label: string;
 }) {
   return (
-    <span role="group" aria-label={label} className="inline-flex flex-wrap gap-1.5">
+    // gap-x-4 on a phone: all three problem tabs hold one line at 360px.
+    <span role="group" aria-label={label} className="flex flex-wrap items-stretch gap-x-4 sm:gap-x-6">
       {tabs.map((t) => (
-        <TogglePill key={t.id} on={value === t.id} onClick={() => onChange(t.id)}>
+        <button key={t.id} type="button" aria-pressed={value === t.id} onClick={() => onChange(t.id)} className="deck-tab">
           {t.label}
-        </TogglePill>
+        </button>
       ))}
     </span>
   );
@@ -100,16 +111,20 @@ function useTeacher(slug: string, surface: "practice_editorial" | "practice_hint
   return { teacher, open };
 }
 
+/** The plan wall, in a sunk well: the lock chip, one Fraunces line, the
+    outlined pill to the plans. Shared look with the console's Wall. */
 function LockPanel({ need, what }: { need: PlanNeed; what: string }) {
   return (
-    <div className="border border-dashed border-border bg-bg p-6 text-center">
+    <div className="rounded-[12px] border border-border bg-[var(--deck-sunk)] px-5 py-6 text-center">
       <LockPill lock={need === "power" ? "power" : "pro"} />
-      <div className="mt-3 font-display text-lg tracking-tightest text-fg">{what} ships with {need === "power" ? "Power" : "Plus"}.</div>
-      <p className="mx-auto mt-1 max-w-[38ch] t-label text-fg-faint">
+      <div className="deck-display mt-3 text-[1.25rem] leading-snug tracking-[-0.015em] text-fg">
+        {what} ships with {need === "power" ? "Power" : "Plus"}.
+      </div>
+      <p className="mx-auto mt-1.5 max-w-[38ch] text-[0.8125rem] leading-relaxed text-fg-faint">
         The reference solution, the complexity, and the three ways people get it wrong
       </p>
-      <Link href={`/pricing#${need}`} className="tool-btn mt-4">
-        See the plans →
+      <Link href={`/pricing#${need}`} className="deck-btn deck-btn-sm mt-5">
+        See the plans <span className="deck-arrow">→</span>
       </Link>
     </div>
   );
@@ -117,9 +132,14 @@ function LockPanel({ need, what }: { need: PlanNeed; what: string }) {
 
 /* ── description ─────────────────────────────────────────────────────────── */
 
-const PRE_CLS = "whitespace-pre-wrap font-mono text-[0.75rem] leading-relaxed text-fg";
+/** An example's value: dim mono, wrapping, in the sunk well. */
+const PRE_CLS = "min-w-0 whitespace-pre-wrap break-words font-mono text-[0.75rem] leading-relaxed text-fg-dim";
+/** The mockup's "Input" / "Output": bold bone mono, on the value's baseline. */
+const IO_LABEL = "font-mono text-[0.75rem] font-semibold leading-relaxed text-fg";
+/** `block` on purpose: on touch, .tap-floor makes a display-less link
+    inline-flex, which would lay the card's two lines side by side. */
 const CARD_CLS =
-  "surface-card border border-border bg-surface p-3 transition-colors hover:border-brand-ink/50 hover:bg-brand-ink/[0.04]";
+  "block rounded-[12px] border border-border p-4 transition-colors hover:border-[var(--deck-rule-hi)] hover:bg-[var(--deck-raised)]";
 
 export function DescriptionTab({ problem }: { problem: ClientProblem }) {
   const [revealed, setRevealed] = useState(0);
@@ -151,45 +171,55 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
   }, [teacher.status]);
 
   return (
-    <div className="space-y-6 p-4">
-      <header>
-        <div className="t-data text-[0.75rem] text-fg-faint">#{String(problem.num).padStart(2, "0")}</div>
-        <h1 className="mt-1 font-display text-2xl tracking-tightest text-fg">{problem.title}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <DifficultyPill difficulty={problem.difficulty} />
-          <TrackChip track={problem.track} showGlyph />
-          <span
-            className="t-label text-fg-faint"
-            title={
-              rate === null
-                ? loaded
-                  ? `${countFor(problem.id)} submitted · a rate shows after ${minSubmissions}`
-                  : "loading"
-                : `${countFor(problem.id)} submitted · accepted ÷ submitted`
-            }
-          >
-            Acceptance {rate === null ? "—" : `${(rate * 100).toFixed(1)}%`}
-          </span>
-          <span className="t-label text-fg-faint">~{problem.minutes} min</span>
+    <div className="space-y-7 px-5 py-6 sm:px-6">
+      <header className="deck-rise">
+        {/* "142. Pairs signal from cointegrated series" — the mockup's title. */}
+        <h1 className="deck-display text-[1.625rem] leading-[1.15] tracking-[-0.02em] text-fg">
+          {String(problem.num).padStart(2, "0")}. {problem.title}
+        </h1>
+        <div className="mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <DifficultyPill difficulty={problem.difficulty} />
+            <TrackChip track={problem.track} />
+          </div>
+          {/* Quiet label, then the value in bone — the mockup's "Costs 5 bps / side". */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-fg-faint">
+            <span
+              title={
+                rate === null
+                  ? loaded
+                    ? `${countFor(problem.id)} submitted · a rate shows after ${minSubmissions}`
+                    : "loading"
+                  : `${countFor(problem.id)} submitted · accepted ÷ submitted`
+              }
+            >
+              Acceptance <span className="t-data text-fg">{rate === null ? "—" : `${(rate * 100).toFixed(1)}%`}</span>
+            </span>
+            <span>
+              ~<span className="text-fg">{problem.minutes}</span> min
+            </span>
+          </div>
         </div>
       </header>
 
-      <Paragraphs paragraphs={problem.statement} className="t-body-sm text-fg-dim" />
+      <div className="deck-rise" style={{ ["--i" as string]: 1 }}>
+        <Paragraphs paragraphs={problem.statement} className="text-[0.9375rem] leading-[1.7] text-fg-dim" />
+      </div>
 
       {problem.examples.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {problem.examples.map((ex, i) => (
-            <div key={i} className="border border-border bg-bg">
-              <div className="border-b border-border bg-bg-soft px-3 py-2 t-label text-fg-dim">Example {i + 1}</div>
-              <div className="grid gap-x-3 gap-y-2 p-3 sm:grid-cols-[3.5rem_minmax(0,1fr)]">
-                <div className="t-label text-fg-faint sm:pt-0.5">Input</div>
+            <div key={i}>
+              <div className="deck-label">Example {i + 1}</div>
+              <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 gap-y-1.5 rounded-[12px] border border-border bg-[var(--deck-sunk)] px-4 py-3.5">
+                <div className={IO_LABEL}>Input</div>
                 <pre className={PRE_CLS}>{ex.input}</pre>
-                <div className="t-label text-fg-faint sm:pt-0.5">Output</div>
+                <div className={IO_LABEL}>Output</div>
                 <pre className={PRE_CLS}>{ex.output}</pre>
                 {ex.note && (
                   <>
-                    <div className="t-label text-fg-faint sm:pt-0.5">Note</div>
-                    <p className="text-[0.75rem] leading-relaxed text-fg-dim">
+                    <div className={IO_LABEL}>Note</div>
+                    <p className="text-[0.8125rem] leading-relaxed text-fg-dim">
                       <RichText text={ex.note} />
                     </p>
                   </>
@@ -202,11 +232,11 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
 
       {problem.constraints.length > 0 && (
         <section>
-          <div className="t-label text-fg-faint">Constraints</div>
-          <ul className="mt-2 space-y-1.5 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
+          <div className="deck-label">Constraints</div>
+          <ul className="mt-2.5 space-y-1.5 font-mono text-[0.75rem] leading-relaxed text-fg-dim">
             {problem.constraints.map((c, i) => (
-              <li key={i} className="flex gap-2">
-                <span aria-hidden className="text-brand-ink">
+              <li key={i} className="flex gap-2.5">
+                <span aria-hidden className="text-[var(--deck-quiet)]">
                   ›
                 </span>
                 <span className="min-w-0">
@@ -220,40 +250,43 @@ export function DescriptionTab({ problem }: { problem: ClientProblem }) {
 
       {problem.hintCount > 0 && (
         <section>
-          <div className="t-eyebrow text-brand-ink">
+          <div className="deck-eyebrow">
             Teacher · {problem.hintCount} hint{problem.hintCount === 1 ? "" : "s"}
             {problem.hintCount > 1 ? " · the first is free" : ""}
           </div>
-          <div className="mt-3 space-y-2">
+          <div className="mt-3.5 space-y-2.5">
             {shown.map((h, i) => (
-              <div key={i} className="border-l-2 border-brand-ink bg-brand-ink/5 px-3 py-2 text-[0.75rem] leading-relaxed text-fg">
-                <span className="mr-2 t-label text-brand-ink">Teacher</span>
+              <div
+                key={i}
+                className="rounded-[10px] border border-[var(--deck-cyan-line)] bg-[var(--deck-cyan-tint)] px-4 py-3 text-[0.8125rem] leading-relaxed text-fg"
+              >
+                <span className="deck-label mr-2 text-cyan">Teacher</span>
                 <RichText text={h} />
               </div>
             ))}
             {teacher.status === "locked" && revealed >= 1 && <LockPanel need={teacher.need} what={`Hints ${revealed + 1}–${problem.hintCount}`} />}
-            {teacher.status === "error" && <p className="t-label text-fg">{teacher.error}</p>}
+            {teacher.status === "error" && <p className="deck-note px-4 py-2.5 text-[0.8125rem] leading-relaxed">{teacher.error}</p>}
             {(canRevealNext || (moreBehindWall && teacher.status !== "locked")) && revealed < problem.hintCount && (
-              <ToolButton onClick={revealNext} disabled={teacher.status === "loading"}>
+              <button type="button" onClick={revealNext} disabled={teacher.status === "loading"} className="deck-btn deck-btn-sm">
                 {teacher.status === "loading" ? "…" : `▸ Reveal hint ${revealed + 1}${!canRevealNext && moreBehindWall ? " · Plus" : ""}`}
-              </ToolButton>
+              </button>
             )}
           </div>
         </section>
       )}
 
       {(learnHref || botHref) && (
-        <section className="grid gap-2 sm:grid-cols-2">
+        <section className="grid gap-2.5 sm:grid-cols-2">
           {learnHref && (
             <Link href={learnHref} className={CARD_CLS}>
-              <div className="t-label text-brand-ink">↗ Read the theory</div>
-              <div className="mt-1 text-[0.75rem] text-fg-dim">The chapter this problem is cut from</div>
+              <div className="text-[0.875rem] font-medium text-brand-ink">↗ Read the theory</div>
+              <div className="mt-1 text-[0.8125rem] text-fg-faint">The chapter this problem is cut from</div>
             </Link>
           )}
           {botHref && (
             <Link href={botHref} className={CARD_CLS}>
-              <div className="t-label text-brand-ink">▶ Open in the workbench</div>
-              <div className="mt-1 text-[0.75rem] text-fg-dim">Run the same math on a real tape</div>
+              <div className="text-[0.875rem] font-medium text-brand-ink">▶ Open in the workbench</div>
+              <div className="mt-1 text-[0.8125rem] text-fg-faint">Run the same math on a real tape</div>
             </Link>
           )}
         </section>
@@ -273,53 +306,55 @@ export function EditorialTab({ problem }: { problem: ClientProblem }) {
 
   if (!problem.hasEditorial) {
     return (
-      <div className="p-4">
+      <div className="px-5 py-6 sm:px-6">
         <Empty>No editorial for this problem yet — the five featured problems (★) have one; the rest are being written</Empty>
       </div>
     );
   }
   if (teacher.status === "idle" || teacher.status === "loading") {
     return (
-      <div className="p-4">
+      <div className="px-5 py-6 sm:px-6">
         <Empty>Loading…</Empty>
       </div>
     );
   }
   if (teacher.status === "locked") {
     return (
-      <div className="p-4">
+      <div className="px-5 py-6 sm:px-6">
         <LockPanel need={teacher.need} what="The editorial" />
       </div>
     );
   }
   if (teacher.status === "error") {
     return (
-      <div className="p-4">
+      <div className="px-5 py-6 sm:px-6">
         <Empty>{teacher.error}</Empty>
       </div>
     );
   }
   if (!teacher.editorial || teacher.editorial.length === 0) {
     return (
-      <div className="p-4">
+      <div className="px-5 py-6 sm:px-6">
         <Empty>No editorial for this problem yet</Empty>
       </div>
     );
   }
   return (
-    <div className="space-y-4 p-4">
-      <div className="t-eyebrow text-brand-ink">Editorial · the walkthrough</div>
-      <Paragraphs paragraphs={teacher.editorial} className="t-body-sm text-fg-dim" />
+    <div className="space-y-5 px-5 py-6 sm:px-6">
+      <div className="deck-eyebrow">Editorial · the walkthrough</div>
+      <Paragraphs paragraphs={teacher.editorial} className="text-[0.9375rem] leading-[1.7] text-fg-dim" />
     </div>
   );
 }
 
 /* ── submissions ─────────────────────────────────────────────────────────── */
 
+/** Green a pass, red a wrong answer, amber a file that did not run — the
+    deck's VerdictPill colours (./Chips.tsx). */
 const VERDICT_TONE: Record<Verdict, string> = {
   accepted: "text-bull",
   "wrong-answer": "text-bear",
-  error: "text-bear",
+  error: "text-amber",
 };
 
 /** Only ever called after mount — toLocaleString depends on the viewer's
@@ -344,16 +379,17 @@ export function SubmissionsTab({ problem }: { problem: ClientProblem }) {
 
   if (rows.length === 0) {
     return (
-      <div className="p-3">
+      <div className="px-5 py-6 sm:px-6">
         <Empty>No submissions yet — press ▶ Run</Empty>
-        <p className="mt-2 text-center t-label text-fg-faint">{where}</p>
+        <p className="text-center text-[0.75rem] text-fg-faint">{where}</p>
       </div>
     );
   }
 
+  // px-3 + the cells' px-2 puts the first column on the pane's 20px rule.
   return (
-    <div className="overflow-x-auto p-3">
-      <table className="w-full t-data text-[0.6875rem]">
+    <div className="overflow-x-auto px-3 py-5 sm:px-4">
+      <table className="deck-table w-full t-data text-[0.6875rem]">
         <thead>
           <Tr head>
             <Th left>When</Th>
@@ -386,7 +422,7 @@ export function SubmissionsTab({ problem }: { problem: ClientProblem }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-2 t-label text-fg-faint">{where}</p>
+      <p className="mt-3 px-2 text-[0.75rem] text-fg-faint">{where}</p>
     </div>
   );
 }

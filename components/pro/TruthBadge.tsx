@@ -52,6 +52,10 @@ export function TruthBadge({ quiet = false }: { quiet?: boolean }) {
   const [resolved, setResolved] = useState(false);
   const [glitching, setGlitching] = useState(false);
   const [open, setOpen] = useState(false);
+  // Whether the badge sits inside the pitch-deck skin (globals.css, THE DECK
+  // SKIN). The ledger portals to <body>, outside that scope, so it carries
+  // the scope itself when opened from a deck page. Read at click time.
+  const [inDeck, setInDeck] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -71,7 +75,10 @@ export function TruthBadge({ quiet = false }: { quiet?: boolean }) {
     <>
       <button
         ref={btnRef}
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          setInDeck(!!e.currentTarget.closest(".deck"));
+          setOpen((v) => !v);
+        }}
         aria-haspopup="dialog"
         aria-expanded={open}
         title="What’s real, what’s synthetic, what’s yours — open the honesty ledger"
@@ -102,7 +109,7 @@ export function TruthBadge({ quiet = false }: { quiet?: boolean }) {
           )}
         </span>
       </button>
-      {open && <HonestyLedger onClose={() => { setOpen(false); btnRef.current?.focus(); }} />}
+      {open && <HonestyLedger deck={inDeck} onClose={() => { setOpen(false); btnRef.current?.focus(); }} />}
     </>
   );
 }
@@ -148,7 +155,7 @@ const COLUMNS: {
   },
 ];
 
-function HonestyLedger({ onClose }: { onClose: () => void }) {
+function HonestyLedger({ onClose, deck = false }: { onClose: () => void; deck?: boolean }) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -190,7 +197,7 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
   // immune to any future filter/transform added to an ancestor.
   return createPortal(
     <div
-      className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className={`${deck ? "deck " : ""}fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="honesty-ledger-title"
@@ -198,7 +205,10 @@ function HonestyLedger({ onClose }: { onClose: () => void }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div ref={dialogRef} className="w-[51.25rem] max-w-full surface-instrument border border-border bg-surface shadow-2xl">
+      <div
+        ref={dialogRef}
+        className={`w-[51.25rem] max-w-full surface-instrument border border-border shadow-2xl ${deck ? "bg-[var(--deck-pane)]" : "bg-surface"}`}
+      >
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <h2 id="honesty-ledger-title" className="t-eyebrow font-semibold text-fg">
             <span className="text-brand-ink">✓</span> The honesty ledger

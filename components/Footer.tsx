@@ -1,5 +1,6 @@
 import { BullMark } from "@/components/BullMark";
 import Link from "next/link";
+import { NEW_TAB, newTabProps } from "@/lib/directory";
 import pkg from "../package.json";
 import { ContrastToggle } from "./ContrastToggle";
 import { MotionToggle } from "./MotionToggle";
@@ -217,9 +218,11 @@ export function Footer({ marketing = false }: { marketing?: boolean }) {
                 <li key={l.label}>
                   <Link
                     href={l.href}
+                    {...newTabProps(l.href)}
                     className="text-[0.875rem] text-fg-dim transition-colors hover:text-fg"
                   >
                     {l.label}
+                    {NEW_TAB.has(l.href) && <span className="sr-only"> (opens in a new tab)</span>}
                   </Link>
                 </li>
               ))}

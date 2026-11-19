@@ -1,9 +1,10 @@
 "use client";
 
-// The right rail of /practice: today's problem, the streak month, the solved
-// ring with three badges. Three stacked ./Panel.tsx frames — the panel skeleton
-// from components/quant/OutputPanel.tsx (lines 46-60). Sticky from lg so the
-// daily card stays in view while the table scrolls.
+// The right rail of /practice: the streak month, the solved ring with three
+// badges, and the way into the weekly set. Flat deck panes (slide 7's). Not
+// sticky: the three panes stand taller than a laptop screen, so pinned they
+// would hide their own lower half for the whole length of the problem set.
+// Today's problem moved up beside the headline (TodayCard).
 //
 // Everything date-shaped comes from the progress hook's `today`, which is the
 // build-time fallback on the server and the real calendar day after mount —
@@ -13,20 +14,26 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Panel } from "@/components/practice/Panel";
-import { CalmLink, CalmPanel, PillLink, Stats } from "@/components/calm/kit";
-import { DifficultyPill, TrackChip } from "@/components/practice/Chips";
 import { SolvedRing } from "@/components/practice/SolvedRing";
 import { StreakCalendar } from "@/components/practice/StreakCalendar";
 import { BadgeGrid } from "@/components/practice/Badges";
-import { DAILY_SLUG, getMeta } from "@/lib/practice/problems";
 import { usePracticeProgress } from "@/lib/practice/progress";
 import { activityFor, computeBadges } from "@/lib/practice/summary";
 
+function RailPane({ title, right, children }: { title: string; right?: string; children: React.ReactNode }) {
+  return (
+    <section className="deck-pane p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="text-[0.9375rem] font-semibold tracking-[-0.01em] text-fg">{title}</h3>
+        {right && <span className="deck-label">{right}</span>}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export function PracticeRail() {
   const { state, summary, today, signedIn, source } = usePracticeProgress();
-  const daily = getMeta(DAILY_SLUG);
   const activity = useMemo(() => activityFor(state), [state]);
   const badges = computeBadges(summary).slice(0, 3);
   const solved = {
@@ -41,53 +48,50 @@ export function PracticeRail() {
   };
 
   return (
-    <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-      {/* Calm (S1, 2026-11-09): the daily card is a calm panel, and its
-          button the quiet pill: the page's one primary, "Start today's
-          problem", is in the header above. */}
-      <CalmPanel title="Today’s problem" aside="one a day keeps the streak">
-        {daily && (
-          <>
-            <Link href={`/practice/${daily.id}`} className="font-display text-xl tracking-tightest text-fg hover:text-brand-ink">
-              {daily.title}
-            </Link>
-            <p className="mt-1.5 text-[0.875rem] leading-relaxed text-fg-dim">{daily.blurb}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <TrackChip track={daily.track} />
-              <DifficultyPill difficulty={daily.difficulty} />
-              <span className="text-[0.75rem] text-fg-faint">{daily.minutes} min</span>
+    <aside aria-label="Your practice" className="space-y-4 lg:self-start">
+      <RailPane title="Streak" right={source === "server" ? "Your account" : "This device"}>
+        <div className="mt-5 grid grid-cols-2 border-y border-border">
+          <div className="py-3 pr-3">
+            <div className="deck-label">Current</div>
+            <div className="deck-figure mt-1.5 text-[2.25rem] text-fg">
+              {summary.streak.current}
+              <span className="ml-1 font-sans text-[0.875rem] not-italic text-fg-faint">d</span>
             </div>
-            <PillLink href={`/practice/${daily.id}`} size="sm" className="mt-4">
-              Solve it
-            </PillLink>
-          </>
-        )}
-      </CalmPanel>
+          </div>
+          <div className="border-l border-border py-3 pl-4">
+            <div className="deck-label">Longest</div>
+            <div className="deck-figure mt-1.5 text-[2.25rem] text-fg">
+              {summary.streak.longest}
+              <span className="ml-1 font-sans text-[0.875rem] not-italic text-fg-faint">d</span>
+            </div>
+          </div>
+        </div>
+        <StreakCalendar activity={activity} today={today} className="mt-4" />
+        {!signedIn && <p className="mt-3 text-[0.8125rem] leading-snug text-fg-faint">Sign in to keep the streak on every device.</p>}
+      </RailPane>
 
-      <Panel
-        as="div"
-        calm
-        title="Streak"
-        right={source === "server" ? "Your account" : signedIn ? "This device" : "This device · sign in to keep it"}
-        bodyClassName="px-5 pb-5 pt-4"
-      >
-        <StreakCalendar activity={activity} today={today} />
-        <Stats
-          className="mt-5"
-          items={[
-            { value: `${summary.streak.current} d`, label: "current" },
-            { value: `${summary.streak.longest} d`, label: "longest" },
-          ]}
-        />
-      </Panel>
-
-      <Panel as="div" calm title="Progress" bodyClassName="px-5 pb-5 pt-4">
-        <SolvedRing solved={solved} total={total} size={96} caption="all tracks" />
-        <BadgeGrid badges={badges} cols={3} compact className="mt-3" />
-        <CalmLink href="/practice/profile" className="mt-4">
+      <RailPane title="Progress" right="All tracks">
+        <SolvedRing solved={solved} total={total} size={96} caption="solved, by level" className="mt-5" />
+        <BadgeGrid badges={badges} cols={3} compact className="mt-5 border-t border-border pt-4" />
+        <Link href="/practice/profile" className="deck-link mt-5 text-[0.875rem]">
           Your profile
-        </CalmLink>
-      </Panel>
+          <span aria-hidden className="deck-arrow">
+            →
+          </span>
+        </Link>
+      </RailPane>
+
+      <RailPane title="Weekly set" right="Sundays">
+        <p className="mt-3 text-[0.875rem] leading-relaxed text-fg-dim">
+          Four problems, ninety minutes. Ranked on solves and time, never on money.
+        </p>
+        <Link href="/practice/contest" className="deck-link mt-4 text-[0.875rem]">
+          See this week’s set
+          <span aria-hidden className="deck-arrow">
+            →
+          </span>
+        </Link>
+      </RailPane>
     </aside>
   );
 }

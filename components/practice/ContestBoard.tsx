@@ -9,6 +9,10 @@
 // (lib/practice/types.ts LeaderboardRow), and no prizes anywhere. An empty
 // board is an empty board; it says so.
 //
+// In the pitch deck's hand (2026-11-17): the /practice header, the countdown
+// as four sunk wells with the deck's light-italic figures in them, flat panes
+// ruled by hairlines and the tables set as slide 15 sets its own.
+//
 // The clock is touched only inside effects: the server and the first client
 // render paint `--` in every tile and "№ —" in the title, then a one-second
 // interval fills them from the client clock (lib/practice/contest.ts
@@ -17,8 +21,7 @@
 // cleared on unmount.
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { Chip, PageHeader, Stats } from "@/components/calm/kit";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { RollingNumber } from "@/components/pro/RollingNumber";
 import { Panel } from "@/components/practice/Panel";
 import { DifficultyPill, TrackChip } from "@/components/practice/Chips";
@@ -37,6 +40,7 @@ const UNITS: { key: keyof Parts; label: string }[] = [
   { key: "s", label: "seconds" },
 ];
 const pad2 = (n: number) => String(Math.round(n)).padStart(2, "0");
+const at = (i: number) => ({ ["--i" as string]: i }) as CSSProperties;
 
 /** How many of `problems` this solver's own ledger shows accepted inside
     [start, end) — the "you" column, from real rows, for the editions the
@@ -95,72 +99,91 @@ export function ContestBoard() {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Timed practice"
-        title="Weekly set"
-        accent={`№${edition ? edition.num : " —"}.`}
-        lede="Four problems, ninety minutes, Sunday 20:00 IST. Ranked on solves and time — never on money. No sign-up: an accepted submit on any of the four inside the window puts you on the board."
-      >
-        {/* The countdown: the four figures of the kit's stat row. */}
-        <div className="mt-10 t-label text-fg-faint">{edition?.open ? "Closes in" : "Next set in"}</div>
-        <div
-          role="timer"
-          aria-live="off"
-          aria-label={left ? `${edition?.open ? "closes" : "next set"} in ${left.d} days ${left.h} hours ${left.m} minutes` : "countdown loading"}
-          className="mt-3"
-        >
-          <Stats
-            className="max-sm:gap-x-6"
-            items={UNITS.map((u) => ({
-              label: u.label,
-              value: left ? <RollingNumber value={Number(left[u.key])} format={pad2} /> : "--",
-            }))}
-          />
+      <header className="shell pb-10 pt-[clamp(3rem,7vw,5.5rem)]">
+        <p className="deck-eyebrow deck-rise">Practice · Timed set</p>
+        <h1 className="deck-h1 deck-rise mt-5 max-w-[20ch] text-fg" style={at(1)}>
+          Weekly set <span className="deck-accent">№{edition ? edition.num : " —"}.</span>
+        </h1>
+        <p className="deck-lede deck-rise mt-6 max-w-[38rem]" style={at(2)}>
+          Four problems, ninety minutes, Sunday 20:00 IST. Ranked on solves and time — never on money. No sign-up: an accepted
+          submit on any of the four inside the window puts you on the board.
+        </p>
+
+        {/* The countdown: four sunk wells, the deck's figures in them. A dl,
+            so each unit's name precedes its figure for a reader; the figure
+            is drawn on top. */}
+        <div className="deck-rise mt-10" style={at(3)}>
+          <div className="deck-label">{edition?.open ? "Closes in" : "Next set in"}</div>
+          <div
+            role="timer"
+            aria-live="off"
+            aria-label={left ? `${edition?.open ? "closes" : "next set"} in ${left.d} days ${left.h} hours ${left.m} minutes` : "countdown loading"}
+            className="mt-3"
+          >
+            <dl className="grid max-w-[42rem] grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+              {UNITS.map((u) => (
+                <div
+                  key={u.key}
+                  className="flex flex-col-reverse gap-3 rounded-[12px] border border-border bg-[var(--deck-sunk)] px-4 pb-4 pt-5 sm:px-5"
+                >
+                  <dt className="deck-label">{u.label}</dt>
+                  <dd className="deck-figure text-[clamp(2.5rem,5vw,3.5rem)] text-fg">
+                    {left ? <RollingNumber value={Number(left[u.key])} format={pad2} /> : "--"}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.8125rem] text-fg-faint">
+        <div className="deck-rise mt-6 flex flex-wrap items-center gap-x-5 gap-y-3" style={at(4)}>
           {edition?.open ? (
-            <Chip tone="brand" dot>
+            <span className="deck-chip deck-chip-green">
+              <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" />
               Open now — solve any of the four
-            </Chip>
+            </span>
           ) : (
-            <span>Problems stay solvable between editions; only the window counts</span>
+            <span className="text-[0.875rem] text-fg-dim">Problems stay solvable between editions; only the window counts</span>
           )}
-          <span>Paper only · educational · not advice</span>
+          <span className="font-mono text-[0.75rem] tracking-[0.04em] text-fg-faint">Paper only · educational · not advice</span>
         </div>
-      </PageHeader>
+      </header>
 
-      <section className="shell pb-16">
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <section className="shell pb-[clamp(4rem,8vw,6rem)]">
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] xl:gap-8">
           <div className="min-w-0 space-y-6">
             <Panel
               calm
               title="The set"
               sub={`${set.length} problems · ${WEEKLY_SET.durationMin} minutes · Sunday 20:00 IST`}
               bodyClassName="px-3 pt-2"
-              footer={<span className="t-label text-fg-faint">The same four every week for now — the set rotates once the board has a history</span>}
+              footer={
+                <span className="block border-t border-border pt-4 text-[0.8125rem] leading-snug text-fg-faint">
+                  The same four every week for now — the set rotates once the board has a history
+                </span>
+              }
             >
               <ol>
                 {set.map((p, i) => (
                   <li
                     key={p.id}
-                    className="grid grid-cols-[1.5rem_1fr] items-center gap-3 border-b border-[color-mix(in_srgb,var(--fg)_6%,transparent)] px-2 py-3 last:border-b-0 sm:grid-cols-[1.5rem_1fr_auto]"
+                    className="grid grid-cols-[1.75rem_minmax(0,1fr)] items-baseline gap-x-3 gap-y-2.5 border-b border-border px-2 py-4 last:border-b-0 sm:grid-cols-[1.75rem_minmax(0,1fr)_auto] sm:gap-x-4"
                   >
                     <span className="t-data text-[0.75rem] text-fg-faint">{String(i + 1).padStart(2, "0")}</span>
                     <div className="min-w-0">
                       <Link
                         href={`/practice/${p.id}`}
-                        className="font-sans text-[0.9375rem] font-medium tracking-[-0.01em] text-fg hover:text-brand-ink"
+                        className="font-sans text-[0.9375rem] font-medium tracking-[-0.005em] text-fg transition-colors hover:text-bull"
                       >
                         {p.title}
                       </Link>
-                      <div className="mt-1">
-                        <TrackChip track={p.track} />
+                      <div className="mt-2">
+                        <TrackChip track={p.track} showGlyph />
                       </div>
                     </div>
-                    <div className="col-start-2 flex items-center gap-2 sm:col-start-3">
+                    <div className="col-start-2 flex items-center gap-3 sm:col-start-3">
                       <DifficultyPill difficulty={p.difficulty} />
-                      <span className="whitespace-nowrap t-label text-fg-faint">{p.minutes} min</span>
+                      <span className="whitespace-nowrap t-data text-[0.75rem] text-fg-faint">{p.minutes} min</span>
                     </div>
                   </li>
                 ))}
@@ -171,12 +194,12 @@ export function ContestBoard() {
               calm
               title="Past sets"
               right={board ? "From real submissions" : data === "error" ? "Unavailable" : "Loading"}
-              bodyClassName="overflow-x-auto px-3 pb-2 pt-2"
+              bodyClassName="overflow-x-auto px-3 pb-2 pt-3"
             >
               {past.length === 0 ? (
                 <Empty>{data === null ? "Loading…" : data === "error" ? "The board could not be reached" : "No past editions yet — this is the first"}</Empty>
               ) : (
-                <table className="w-full t-data text-[0.6875rem]">
+                <table className="deck-table w-full t-data text-[0.75rem]">
                   <thead>
                     <Tr head>
                       <Th left>№</Th>
@@ -207,8 +230,12 @@ export function ContestBoard() {
             title="Board"
             sub="Ranked on solves, then time — never P&L"
             right={board ? (board.dbOk ? `№${board.set.num}` : "Unavailable") : data === "error" ? "Unavailable" : "Loading"}
-            bodyClassName="overflow-x-auto px-3 pb-2 pt-2"
-            footer={<span className="t-label text-fg-faint">No prizes, no cash, no returns — a practice set</span>}
+            bodyClassName="overflow-x-auto px-3 pb-2 pt-3"
+            footer={
+              <span className="block border-t border-border pt-4 text-[0.8125rem] leading-snug text-fg-faint">
+                No prizes, no cash, no returns — a practice set
+              </span>
+            }
           >
             {rows.length === 0 ? (
               <Empty>
@@ -221,7 +248,7 @@ export function ContestBoard() {
                       : "No accepted submits in this window yet"}
               </Empty>
             ) : (
-              <table className="w-full t-data text-[0.6875rem]">
+              <table className="deck-table w-full t-data text-[0.75rem]">
                 <thead>
                   <Tr head>
                     <Th>#</Th>
@@ -234,7 +261,7 @@ export function ContestBoard() {
                   {rows.map((r) => (
                     <Tr key={r.rank}>
                       <Td>
-                        <span className={r.rank <= 3 ? "text-brand-ink" : "text-fg-faint"}>{r.rank}</span>
+                        <span className={r.rank <= 3 ? "text-bull" : "text-fg-faint"}>{r.rank}</span>
                       </Td>
                       <Td left strong>
                         {r.name}

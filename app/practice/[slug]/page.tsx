@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Nav } from "@/components/Nav";
 import { Workspace, type Neighbour } from "@/components/practice/Workspace";
 import { allProblems, forClient, getProblem } from "@/lib/practice/content";
 
@@ -53,10 +52,13 @@ export default async function ProblemPage({ params }: { params: Params }) {
   const { prev, next } = neighboursWithContent(slug);
 
   // Full-height IDE like /pro and /trade: the desk fills the viewport at lg
-  // and the panes scroll inside themselves. No Footer on purpose.
+  // and the panes scroll inside themselves. No Footer on purpose. `deck` is
+  // the pitch deck's skin (globals.css, THE DECK SKIN): the Playground
+  // mockup on slide 7 is this screen. No site navbar either (owner,
+  // 2026-11-17): the Workspace's own bar is the page's one bar — the wordmark
+  // home, the Practice / subject / problem trail, prev and next.
   return (
-    <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
-      <Nav wide />
+    <main className="deck tap-floor flex min-h-screen flex-col bg-bg text-fg lg:h-screen lg:min-h-0 lg:overflow-hidden">
       <Workspace key={problem.id} problem={forClient(problem)} prev={prev} next={next} />
     </main>
   );

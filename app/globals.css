@@ -366,7 +366,7 @@ html, body { overflow-x: clip; }
    fully behind it (WCAG 2.2 SC 2.4.11). Keep --nav-h in step with the value
    components/Nav.tsx publishes on its own wrapper; the root needs its own copy
    because the root is the scroll container. */
-:root { --nav-h: 68px; }
+:root { --nav-h: calc(2.75rem + 1px); }
 html { scroll-padding-top: calc(var(--nav-h) + 12px); }
 /* And the Island's pill under it, while one is mounted (components/island). */
 html[data-island] { scroll-padding-top: calc(var(--nav-h) + 12px + 46px); }
@@ -3097,3 +3097,760 @@ html[data-motion="paused"] .island-dial { transition: none; }
     background-image: var(--grad-line);
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE DECK SKIN (2026-11-17)
+   ──────────────────────────────────────────────────────────────────────────
+   The pitch deck's identity, as a scope. `.deck` goes on the navbar and on
+   the <main> of /practice/* and /trade/*. Nothing outside it changes: the
+   homepage, the film and every other route keep the palette above.
+
+   Every value here is lifted from the deck (Lazybull_Pitch_Deck.pptx): its
+   theme part and the product mockups on slides 6-9 (Academy, Playground,
+   Terminal), sampled pixel by pixel.
+     ink      #050505 canvas · #0a0a0a sunk · #0d0d0d pane · #141414 raised
+     rules    #1f1f1f hairline · #2a2a27 the stronger rule under a heading
+     type     #f5f5f0 · #bdbcb3 body · #8a8a82 label · #6b6b64 quiet
+     accent   #00ff87, the ONLY brand colour (the green full stop of the mark)
+     data     #00e5ff out-of-sample / info · #ff2e63 loss · #ffb800 warning
+   No gradients, no glass, no lit edges: the deck is flat, hairline-ruled and
+   editorial. Green is spent on one primary action per screen, the active
+   state, and gains.
+   ══════════════════════════════════════════════════════════════════════════ */
+.deck {
+  --bg: #050505;
+  --bg-soft: rgba(245, 245, 240, 0.022);
+  --surface: rgba(245, 245, 240, 0.034);
+  --surface-2: rgba(245, 245, 240, 0.06);
+  --border: #1f1f1f;
+  --border-soft: #171717;
+  --fg: #f5f5f0;
+  --fg-dim: #bdbcb3;
+  --fg-faint: #8a8a82;
+  --brand: #00ff87;
+  --brand-ink: #00ff87;
+  --brand-hi: #5cffaf;
+  --bull: #00ff87;
+  --bull-ink: #00ff87;
+  --bull-dim: #00c46a;
+  --bear: #ff2e63;
+  --bear-dim: #b8204a;
+  --amber: #ffb800;
+  --amber-ink: #ffb800;
+  --cyan: #00e5ff;
+  --cyan-ink: #00e5ff;
+  --plasma: #00e5ff;
+  --grad-ink: linear-gradient(90deg, #00ff87, #00ff87);
+  --grad-fill: linear-gradient(90deg, #00ff87, #00ff87);
+  --grad-on: #04140b;
+  --grad-line: linear-gradient(90deg, #1f1f1f, #1f1f1f);
+  --grad-glow: 0 10px 28px -14px rgba(0, 255, 135, 0.55);
+  /* The old brand ramp's three stops. Inside the scope the lit edges they
+     drew are switched off (below), so what still reads them is the data that
+     wore the brand — the builder's implied-range band — and that is green. */
+  --edge-a: #00ff87;
+  --edge-b: #00ff87;
+  --edge-c: #00ff87;
+  --glass-border: #1f1f1f;
+  --glass-border-hot: rgba(0, 255, 135, 0.4);
+  --glass-hi: 0 0 #0000;
+  --glass-glow: 0 0 #0000;
+  --glow-bull: 0 0 0 1px rgba(0, 255, 135, 0.3);
+  --glow-rail: 0 0 #0000;
+  --phosphor-bull: 0 0 #0000;
+  --r-panel: 14px;
+  --r-cell: 12px;
+  --r-btn: 999px;
+  --r-instrument: 8px;
+  --grid: rgba(245, 245, 240, 0.045);
+  --grid-strong: rgba(245, 245, 240, 0.09);
+
+  /* The deck's own steps, for what the shared tokens do not name. */
+  --deck-sunk: #0a0a0a;
+  --deck-pane: #0d0d0d;
+  --deck-raised: #141414;
+  --deck-hover: #1a1a19;
+  --deck-rule: #2a2a27;
+  --deck-rule-hi: #3a3a36;
+  --deck-quiet: #6b6b64;
+  --deck-green-tint: #0c2619;
+  --deck-green-line: #12452b;
+  --deck-cyan-tint: #0c1c1e;
+  --deck-cyan-line: #085861;
+  --deck-amber-tint: #201a0c;
+  --deck-amber-line: #584209;
+  --deck-amber-text: #ffe3a6;
+  --deck-red-tint: #2a0c14;
+  --deck-red-line: #5c1a2c;
+  --deck-on-green: #04140b;
+  --deck-press-glow: 0 10px 28px -12px rgba(0, 255, 135, 0.6);
+
+  /* shadcn's aliases resolve where they are declared (see SHADCN, ALIASED):
+     declared again here, or a pulled part keeps the root's violet. */
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: #0d0d0d;
+  --popover-foreground: var(--fg);
+  --primary: var(--brand);
+  --primary-foreground: #04140b;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--fg);
+  --muted: var(--surface);
+  --muted-foreground: var(--fg-dim);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--fg);
+  --destructive: var(--bear);
+  --input: var(--border);
+  --ring: var(--brand-ink);
+  color: var(--fg);
+}
+
+/* Paper: the deck's light slides. The site boots dark and nothing toggles it
+   today, but the store can, so the scope carries the deck's paper too
+   (theme part: lt1 #f7f6f0, lt2 #eeece4, accent1 #00a85a, accent6 #00803f). */
+[data-theme="light"] .deck {
+  --bg: #f7f6f0;
+  --bg-soft: rgba(12, 12, 12, 0.025);
+  --surface: rgba(255, 255, 255, 0.62);
+  --surface-2: rgba(120, 112, 78, 0.07);
+  --border: #d8d6c9;
+  --border-soft: #e4e2d6;
+  --fg: #0c0c0c;
+  --fg-dim: #42423c;
+  --fg-faint: #6e6e64;
+  --brand: #00a85a;
+  --brand-ink: #00803f;
+  --brand-hi: #00b863;
+  --bull: #00a85a;
+  --bull-ink: #00803f;
+  --bull-dim: #00803f;
+  --bear: #d61f4a;
+  --bear-dim: #a01838;
+  --amber: #c98a00;
+  --amber-ink: #8a5e00;
+  --cyan: #007aa3;
+  --cyan-ink: #007aa3;
+  --plasma: #007aa3;
+  --grad-ink: linear-gradient(90deg, #00803f, #00803f);
+  --grad-fill: linear-gradient(90deg, #00a85a, #00a85a);
+  --grad-line: linear-gradient(90deg, #d8d6c9, #d8d6c9);
+  --grad-glow: 0 10px 28px -16px rgba(0, 168, 90, 0.45);
+  --edge-a: #00a85a;
+  --edge-b: #00a85a;
+  --edge-c: #00a85a;
+  --glass-border: #d8d6c9;
+  --grid: rgba(12, 12, 12, 0.05);
+  --grid-strong: rgba(12, 12, 12, 0.11);
+  --deck-sunk: #f2f1ea;
+  --deck-pane: #fbfaf6;
+  --deck-raised: #eeece4;
+  --deck-hover: #e7e5da;
+  --deck-rule: #c9c7b8;
+  --deck-rule-hi: #a2a096;
+  --deck-quiet: #6e6e64;
+  --deck-green-tint: #e3f0e4;
+  --deck-green-line: #a8d5b6;
+  --deck-cyan-tint: #e2eff4;
+  --deck-cyan-line: #9ccbdc;
+  --deck-amber-tint: #f7eed6;
+  --deck-amber-line: #e0c787;
+  --deck-amber-text: #5e4100;
+  --deck-red-tint: #f9e3e9;
+  --deck-red-line: #eab2c1;
+  --deck-press-glow: 0 10px 28px -16px rgba(0, 168, 90, 0.45);
+  --popover: #ffffff;
+}
+
+/* A working terminal in the skin (/pro): the surfaces go opaque, as
+   .pro-theme had them, because a translucent menu or panel over a candle chart
+   is unreadable. The steps are the Playground mockup's: #0a0a0a strips,
+   #0f0f0f panels, #171717 inputs and hovers. Same specificity as .deck and
+   declared after it, so it wins on the element that carries both. */
+.deck-opaque {
+  --bg-soft: #0a0a0a;
+  --surface: #0f0f0f;
+  --surface-2: #171717;
+}
+[data-theme="light"] .deck-opaque.deck {
+  --bg-soft: #f2f1ea;
+  --surface: #fbfaf6;
+  --surface-2: #eeece4;
+}
+
+/* The bull mark (components/BullMark.tsx) strokes the old ramp by attribute;
+   inside the scope it takes the brand green, like the wordmark's full stop.
+   A CSS stroke outranks the presentation attribute. */
+.deck .bull-mark polyline { stroke: var(--brand); }
+
+/* The opt-in stealth reading mode (STEALTH, near the top) reaches into the
+   scope too: .deck sets --fg-faint on itself, which would otherwise shadow it. */
+[data-contrast="stealth"] .deck { --fg-faint: #4a4a44; }
+[data-contrast="stealth"][data-theme="light"] .deck { --fg-faint: #9a9a8e; }
+
+.deck ::selection {
+  background: var(--brand);
+  color: var(--deck-on-green);
+}
+
+/* The scroll-progress rail (components/atmosphere/ScrollProgress) hard-codes
+   the old ramp, a shimmer and a glow: flat brand green inside the scope. */
+.deck .scroll-progress-fill {
+  background: var(--brand);
+  animation: none;
+  box-shadow: none;
+}
+
+/* The kit's gradient buttons, recoloured below, also lose their gloss and
+   resting glow (unlayered, so they beat a caller's shadow utility). */
+.deck .btn-grad,
+.deck .btn-primary-glass { box-shadow: none; }
+.deck .btn-grad:hover:not(:disabled),
+.deck .btn-primary-glass:hover { box-shadow: var(--deck-press-glow); }
+
+/* The navbar's phone sheet reaches the foot of the screen, so while it is open
+   the bar rides above the floating chrome that lives there (the dial at
+   --z-dock, /trade's BetBar at 50), and stays under toasts, dialogs and the
+   command deck (140 / 150 / 160). Unlayered, so it beats the bar's z-50. */
+.nav-bar:has(#mobile-nav) { z-index: 100; }
+
+/* Tab strips scroll sideways and clip vertically; inset the focus ring so a
+   keyboard user can still see it on a tab. */
+.deck .deck-tab:focus-visible { outline-offset: -3px; }
+
+/* ── Surfaces: flat, one hairline, one radius. The shared kit's glass, lit
+   edges and travelling aura are switched off inside the scope (they are
+   unlayered rules, so these are too; two classes outrank one). ─────────── */
+.deck .glass-tool,
+.deck .calm-panel {
+  background: var(--deck-pane);
+  border: 1px solid var(--border);
+  border-radius: var(--r-panel);
+  box-shadow: none;
+}
+.deck .glass-tool::before,
+.deck .calm-panel::before,
+.deck .calm-panel::after,
+.deck .surface-instrument::after,
+.deck .lit-aura {
+  display: none;
+}
+.deck .surface-instrument { box-shadow: none; }
+.deck.page-aura,
+.deck .page-aura { background-image: none; }
+.deck .calm-card:hover { background: var(--deck-raised); }
+.deck .glass,
+.deck .glass-strong {
+  background: var(--deck-pane);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+/* ── The kit's controls, in the deck's hand ───────────────────────────── */
+.deck .calm-chip {
+  border-radius: 6px;
+  padding: 0.125rem 0.5rem;
+  background: var(--deck-raised);
+  box-shadow: none;
+}
+.deck .calm-toggle {
+  height: 2rem;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  color: var(--fg-dim);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.deck .calm-toggle:hover {
+  color: var(--fg);
+  background: var(--deck-raised);
+}
+.deck .calm-toggle[aria-pressed="true"] {
+  color: var(--bg);
+  background: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+.deck .calm-input {
+  border-radius: 10px;
+  background: var(--deck-sunk);
+  border: 1px solid var(--border);
+}
+.deck .calm-input:hover { border-color: var(--deck-rule); }
+.deck .calm-input:focus { border-color: var(--brand); }
+.deck .calm-pill-secondary {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--deck-rule);
+}
+.deck .calm-pill-secondary:hover { background: var(--deck-raised); }
+.deck .tool-btn {
+  border-radius: 8px;
+  background: var(--deck-raised);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.deck .tool-btn:hover { background: var(--deck-hover); }
+.deck .tool-btn-primary {
+  background-image: none;
+  background-color: var(--brand);
+  color: var(--deck-on-green);
+  box-shadow: none;
+}
+.deck .tool-btn-primary:hover {
+  background-image: none;
+  filter: none;
+  background-color: var(--brand-hi);
+  box-shadow: var(--deck-press-glow);
+}
+.deck .tool-btn-primary:disabled {
+  background-color: var(--deck-raised);
+  color: var(--fg-faint);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+@layer components {
+  .deck .btn-grad,
+  .deck .btn-primary-glass {
+    background-image: none;
+    background-color: var(--brand);
+    border-color: transparent;
+    color: var(--deck-on-green);
+  }
+  .deck .btn-grad:hover,
+  .deck .btn-primary-glass:hover {
+    background-color: var(--brand-hi);
+    box-shadow: var(--deck-press-glow);
+    filter: none;
+  }
+  .deck .btn-grad:disabled {
+    filter: none;
+    background-color: var(--deck-raised);
+    color: var(--fg-faint);
+  }
+  /* The accent phrase is the deck cover's: light italic, flat green — the
+     same colour as the mark's full stop, never a ramp. */
+  .deck .t-accent,
+  .deck .text-grad {
+    background-image: none;
+    color: var(--brand-ink);
+  }
+  /* An eyebrow is the deck's: mono capitals, wide tracking. Colour stays the
+     caller's utility, as everywhere (the green-on-label slides 3 and 5 use). */
+  .deck .t-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+}
+
+/* ── The deck's own parts. In the components layer, so a utility on the
+   element still wins (the rule the rest of this file keeps). ─────────────── */
+@layer components {
+  /* "● THE PROBLEM": the green dot, then mono capitals at slide-label size. */
+  .deck-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+  .deck-eyebrow::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--brand);
+  }
+  /* A label on an instrument part: "RESULT", a column head, a unit. */
+  .deck-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+  /* Display: Fraunces at its display cut, never wonky (the deck sets
+     "Fraunces 72pt NonWonky"), sentence case. */
+  .deck-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+    text-wrap: balance;
+  }
+  .deck-h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 5.2vw, 4.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.032em;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+    text-wrap: balance;
+  }
+  .deck-h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.75rem, 2.8vw, 2.375rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+    text-wrap: balance;
+  }
+  .deck-h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.1875rem;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+  }
+  /* The cover's accent: "without the PhD." */
+  .deck-accent {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--brand-ink);
+  }
+  /* The deck's big figures: "87.7%", "24.1 crore". Light italic serif. */
+  .deck-figure {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-variant-numeric: lining-nums;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+  }
+  .deck-lede {
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--fg-dim);
+  }
+
+  /* Buttons. The mockups' RUN / SUBMIT: full pills, mono capitals. Primary is
+     solid green with ink type (13.9:1); secondary is a hairline outline. */
+  .deck-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6em;
+    height: 2.5rem;
+    padding: 0 1.125rem;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--fg);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--deck-rule);
+    transition:
+      background-color 0.2s var(--ease-settle),
+      box-shadow 0.25s var(--ease-settle),
+      color 0.2s var(--ease-settle),
+      transform 0.25s var(--ease-settle);
+  }
+  .deck-btn:hover {
+    background: var(--deck-raised);
+    box-shadow: inset 0 0 0 1px var(--deck-rule-hi);
+  }
+  .deck-btn:active { transform: scale(0.97); transition-duration: 0.08s; }
+  .deck-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+  .deck-btn:disabled,
+  .deck-btn[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .deck-btn-primary {
+    color: var(--deck-on-green);
+    background: var(--brand);
+    box-shadow: none;
+  }
+  .deck-btn-primary:hover {
+    background: var(--brand-hi);
+    box-shadow: var(--deck-press-glow);
+    transform: translateY(-1px);
+  }
+  .deck-btn-primary:active { transform: scale(0.97); }
+  .deck-btn-primary:disabled,
+  .deck-btn-primary[aria-disabled="true"] {
+    opacity: 1;
+    color: var(--fg-faint);
+    background: var(--deck-raised);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .deck-btn-sm { height: 2rem; padding: 0 0.875rem; font-size: 0.6875rem; }
+  .deck-btn-lg { height: 3rem; padding: 0 1.5rem; font-size: 0.8125rem; }
+  .deck-arrow { display: inline-block; transition: transform 0.3s var(--ease-settle); }
+  .deck-btn:hover .deck-arrow,
+  a:hover > .deck-arrow { transform: translateX(3px); }
+
+  /* A quiet text link: green, the arrow moves. */
+  .deck-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--brand-ink);
+    transition: color 0.2s var(--ease-settle);
+  }
+  .deck-link:hover { color: var(--fg); }
+
+  .deck-pane {
+    background: var(--deck-pane);
+    border: 1px solid var(--border);
+    border-radius: var(--r-panel);
+  }
+  .deck-rule { height: 1px; background: var(--border); }
+  .deck-rule-strong { height: 1px; background: var(--deck-rule); }
+
+  /* The mockup's pane tabs: sentence case, the active one bone with a green
+     underline. */
+  .deck-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 2.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--fg-faint);
+    transition: color 0.2s var(--ease-settle);
+  }
+  .deck-tab:hover { color: var(--fg-dim); }
+  .deck-tab[aria-selected="true"],
+  .deck-tab[aria-pressed="true"],
+  .deck-tab[aria-current="page"] { color: var(--fg); }
+  .deck-tab[aria-selected="true"]::after,
+  .deck-tab[aria-pressed="true"]::after,
+  .deck-tab[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--brand);
+  }
+
+  /* The mockup's tag: a square-ish soft chip. */
+  .deck-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 1.5rem;
+    padding: 0 0.5rem;
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--fg-dim);
+    background: var(--deck-raised);
+  }
+  .deck-chip-green { color: var(--brand-ink); background: var(--deck-green-tint); }
+
+  .deck-kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.5rem;
+    height: 1.375rem;
+    padding: 0 0.3rem;
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    color: var(--fg-faint);
+    box-shadow: inset 0 0 0 1px var(--deck-rule);
+  }
+
+  /* The amber note on the Playground mockup ("A position on day t may only
+     use data up to day t−1"). */
+  .deck-note {
+    border-radius: 10px;
+    border: 1px solid var(--deck-amber-line);
+    background: var(--deck-amber-tint);
+    color: var(--deck-amber-text);
+  }
+
+  /* A table set the deck's way: a strong rule under the head, hairlines
+     between rows. */
+  .deck-table thead tr { box-shadow: inset 0 -1px 0 var(--deck-rule); }
+  .deck-table tbody tr { border-top: 1px solid var(--border); }
+  .deck-table tbody tr:first-child { border-top: 0; }
+  .deck-row { transition: background-color 0.2s var(--ease-settle); }
+  .deck-row:hover { background: color-mix(in srgb, var(--fg) 2.5%, transparent); }
+}
+
+@media (pointer: coarse) {
+  .deck-eyebrow,
+  .deck-label,
+  .deck .t-eyebrow { font-size: 0.75rem; }
+}
+
+/* ── The bar (components/Nav.tsx): a flat ink strip with one hairline under
+   it, as on the mockups. Near-opaque with a light frost, so a heading
+   scrolling under it never prints through the links. ─────────────────────
+   In the components layer, so a display utility on a link (hidden xl:inline-flex)
+   still wins. */
+@layer components {
+  .deck-navbar {
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid var(--border);
+  }
+  .deck-wordmark {
+    font-family: var(--font-display);
+    font-size: 1.3125rem;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+    color: var(--fg);
+  }
+  .deck-navlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--fg-faint);
+    transition: color 0.2s var(--ease-settle), background-color 0.2s var(--ease-settle);
+  }
+  .deck-navlink:hover { color: var(--fg); }
+  .deck-navlink[aria-current="page"],
+  .deck-navlink[data-holds-current] {
+    color: var(--fg);
+    background: var(--deck-raised);
+  }
+  .deck-navlink:focus-visible,
+  .deck-wordmark:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
+  .deck-menu {
+    border-radius: 12px;
+    border: 1px solid var(--deck-rule);
+    background: var(--deck-pane);
+    box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* ── Motion: one gesture. Content settles up a few pixels on first paint,
+   staggered by --i. Nothing loops; nothing moves under reduced motion. ── */
+@keyframes deck-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.deck-rise {
+  animation: deck-rise 0.7s var(--ease-settle) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-rise { animation: none; }
+}
+html[data-motion="paused"] .deck-rise { animation: none; }
+
+/* ── The workspace's neon frame (owner, 2026-11-17) ────────────────────────
+   The problem workspace's outer edge is the deck's neon green, a gradient
+   that travels round it: two bright arcs on a dim green ring, and their glow
+   outside the frame. It overrides the quiet-edge rule for the terminal tools
+   above, on the owner's word. Same mechanism as the lit edges: a masked ring
+   on the registered --edge-flow angle, stepped to 60 a second. Each half sits
+   on its own layer, so a step repaints the ring and not the editor under it.
+   From sm up, where the desk has a frame; it holds still under reduced
+   motion and the site's motion pause. */
+.deck-neon {
+  position: relative;
+  --neon: var(--brand);
+  --neon-mid: color-mix(in srgb, var(--brand) 55%, transparent);
+  --neon-low: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+.deck-neon-bloom { display: none; }
+@media (width >= 40rem) {
+  .deck-neon::before,
+  .deck-neon-bloom::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation: edge-flow 8s steps(480) infinite;
+  }
+  /* The line itself, over the frame's own (transparent) 1px border. */
+  .deck-neon::before {
+    z-index: 1;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    will-change: transform;
+    background: conic-gradient(
+      from var(--edge-flow),
+      var(--neon),
+      var(--neon-mid) 14%,
+      var(--neon-low) 30%,
+      var(--neon-mid) 44%,
+      var(--neon) 50%,
+      var(--neon-mid) 64%,
+      var(--neon-low) 80%,
+      var(--neon-mid) 94%,
+      var(--neon)
+    );
+  }
+  /* The glow: the bright arcs again, wider and blurred, then cut away inside
+     the frame so it lights the page round the desk, never the code in it.
+     The blur is on this element and the arcs on its ::before, because one
+     box runs its filter before its mask. 12px of room outside the frame. */
+  .deck-neon-bloom {
+    display: block;
+    position: absolute;
+    inset: -13px;
+    padding: 12px;
+    border-radius: 26px;
+    pointer-events: none;
+    opacity: 0.75;
+    /* σ 5px on a band 3px out: faded to ~3% by the 12px edge, so no seam. */
+    filter: blur(5px);
+    will-change: transform;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+  .deck-neon-bloom::before {
+    inset: 9px;
+    padding: 4px;
+    border-radius: 17px;
+    background: conic-gradient(
+      from var(--edge-flow),
+      var(--neon),
+      transparent 18%,
+      transparent 32%,
+      var(--neon) 50%,
+      transparent 68%,
+      transparent 82%,
+      var(--neon)
+    );
+  }
+}
+/* Neon glows on ink, not on paper: the light theme keeps the moving line. */
+[data-theme="light"] .deck-neon-bloom { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .deck-neon::before,
+  .deck-neon-bloom::before { animation: none; }
+}
+html[data-motion="paused"] .deck-neon::before,
+html[data-motion="paused"] .deck-neon-bloom::before { animation: none; }

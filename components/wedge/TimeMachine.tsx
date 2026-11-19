@@ -30,16 +30,16 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
 
   if (!s) {
     return (
-      <div className="bg-bg p-3 t-label text-fg-faint">
+      <div className="p-5 text-[0.875rem] text-fg-faint">
         Pick a strategy to time-machine its P&L.
       </div>
     );
   }
 
   return (
-    <div className="bg-bg p-3">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="t-label text-fg-dim">Time machine · what-if simulator</div>
+    <div className="p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="deck-label">Time machine · what-if simulator</div>
         <ToolButton onClick={() => { setSpotAt(spot); setDaysGone(0); }} className="!h-6 !px-2.5 !text-[0.75rem]">
           ↺ Reset
         </ToolButton>
@@ -48,7 +48,7 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
       <div className="mb-4 flex items-baseline justify-between">
         <div>
           <div className="t-label text-fg-faint">Scenario value</div>
-          <div className={`font-display text-3xl tracking-tightest tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
+          <div className={`deck-figure mt-1 text-[2.5rem] tabular-nums ${value >= 0 ? "text-bull" : "text-bear"}`}>
             {value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(0)}
           </div>
         </div>
@@ -73,7 +73,9 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             step={0.5}
             value={spotAt}
             onChange={(e) => setSpotAt(parseFloat(e.target.value))}
-            className="w-full accent-brand-ink"
+            aria-label="Stock price"
+            aria-valuetext={`$${spotAt.toFixed(2)}`}
+            className="w-full accent-bull"
           />
           <div className="mt-1 flex items-center justify-between t-label text-fg-faint">
             <span>${range.lo.toFixed(0)}</span>
@@ -94,7 +96,9 @@ export function TimeMachine({ s, spot, daysToExpiry, iv }: { s: Strategy | null;
             step={1}
             value={daysGone}
             onChange={(e) => setDaysGone(parseInt(e.target.value))}
-            className="w-full accent-brand-ink"
+            aria-label="Days from now"
+            aria-valuetext={`${daysGone} of ${daysToExpiry} days`}
+            className="w-full accent-bull"
           />
           <div className="mt-1 flex items-center justify-between t-label text-fg-faint">
             <span>Now</span>

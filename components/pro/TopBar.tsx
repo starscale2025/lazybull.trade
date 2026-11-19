@@ -27,7 +27,7 @@ export const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "D", "W", "M"];
 
 export const INDICATORS = [
   { id: "ema20", label: "EMA 20", desc: "Exponential moving avg", color: "var(--cyan)" },
-  { id: "ema50", label: "EMA 50", desc: "Exponential moving avg", color: "#8f73ff" },
+  { id: "ema50", label: "EMA 50", desc: "Exponential moving avg", color: "var(--fg-dim)" },
   { id: "rsi", label: "RSI 14", desc: "Relative strength index · pane", color: "var(--cyan)" },
   { id: "macd", label: "MACD", desc: "12 / 26 / 9 · pane", color: "var(--amber)" },
   { id: "bb", label: "BB 20·2σ", desc: "Bollinger bands", color: "var(--bull)" },

@@ -45,7 +45,7 @@ export function StreakCalendar({ activity, today, monthLabel, className = "" }: 
     >
       <div className="grid grid-cols-7 gap-0.5">
         {WEEKDAYS.map((w, i) => (
-          <div key={i} className="grid size-7 place-items-center t-label text-fg-faint">
+          <div key={i} className="grid size-7 place-items-center font-mono text-[0.625rem] text-fg-faint">
             {w}
           </div>
         ))}
@@ -56,15 +56,15 @@ export function StreakCalendar({ activity, today, monthLabel, className = "" }: 
           <div
             key={d.day}
             title={`${d.day} · ${d.n} solved`}
-            className={`grid size-7 place-items-center rounded-full t-data text-[0.6875rem] ${
-              d.n > 0 ? "bg-brand-ink/15 text-brand-ink" : "text-fg-faint"
-            } ${d.isToday ? "ring-1 ring-inset ring-brand-ink" : ""}`}
+            className={`grid size-7 place-items-center rounded-[6px] t-data text-[0.6875rem] ${
+              d.n > 0 ? "bg-bull/15 text-bull" : "text-fg-faint"
+            } ${d.isToday ? "ring-1 ring-inset ring-bull" : ""}`}
           >
             {d.num}
           </div>
         ))}
       </div>
-      <div className="mt-2 t-label text-fg-faint">{label}</div>
+      <div className="mt-2 deck-label">{label}</div>
     </div>
   );
 }

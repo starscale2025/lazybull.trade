@@ -6,7 +6,6 @@ import { priceChain, type ChainCell } from "@/lib/pricing";
 import { expiryOn, useToday } from "@/lib/expiry";
 import { useStrategy } from "@/lib/stores";
 import { GreekChip, GreekTrigger } from "@/components/ai-teacher/SpeechBubble";
-import { TogglePill } from "@/components/calm/kit";
 
 type Props = {
   underlying: string;
@@ -17,21 +16,45 @@ const STRIKES_NEAR_ATM = 11; // strikes either side of ATM
 
 const DAYS_OUT = [7, 14, 30, 45, 90];
 
+// IV heat, in the deck's data colour (THE DECK SKIN, globals.css): one hue,
+// cyan, from a whisper at the chain's lowest IV to a clear tint at its
+// highest. It says "more" or "less", never "good" or "bad" — green and red
+// are spent on the legs you pick (long / short, below), so the heat can never
+// be read as one. The percentage is rounded so the server's string and the
+// browser's agree at hydration.
+const HEAT_LO = 3; // % of --cyan at the lowest IV
+const HEAT_HI = 22; // % of --cyan at the highest
+const heat = (pct: number) => `color-mix(in srgb, var(--cyan) ${pct.toFixed(1)}%, transparent)`;
 function ivToHeat(iv: number, min: number, max: number) {
-  const t = Math.max(0, Math.min(1, (iv - min) / (max - min)));
-  // green (low IV) → amber → red (high IV)
-  if (t < 0.5) {
-    const k = t * 2;
-    const r = Math.round(0 + (255 - 0) * k);
-    const g = Math.round(255 - 75 * k);
-    return `rgba(${r}, ${g}, 100, ${0.06 + t * 0.18})`;
-  } else {
-    const k = (t - 0.5) * 2;
-    const r = 255;
-    const g = Math.round(180 - 134 * k);
-    return `rgba(${r}, ${g}, 30, ${0.12 + k * 0.18})`;
-  }
+  const t = Math.max(0, Math.min(1, (iv - min) / (max - min || 1)));
+  return heat(HEAT_LO + t * (HEAT_HI - HEAT_LO));
 }
+// The legend under the grid draws the same ramp the cells are painted from.
+const HEAT_RAMP = `linear-gradient(to right, ${heat(HEAT_LO)}, ${heat(HEAT_HI)})`;
+
+// A picked cell wears its side: long in the deck's green, short in its red —
+// the same pair the LONG / SHORT control arms, so the control previews the
+// colour a tap will paint. Idle cells are bone figures over the heat.
+const SIDE_CELL = {
+  long: "bg-[var(--deck-green-tint)] text-bull shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--bull)_45%,transparent)]",
+  short: "bg-[var(--deck-red-tint)] text-bear shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--bear)_45%,transparent)]",
+} as const;
+const IDLE_CELL = "text-fg hover:shadow-[inset_0_0_0_1px_var(--deck-rule-hi)]";
+// Open interest and volume are simulated (see the provenance line under the
+// grid), so on an idle cell they sit a step under the prices: fg-dim, not
+// fg-faint, which would drop under 4.5:1 on the hottest cells. A picked cell
+// sets all four figures in its side's colour, at full strength for contrast.
+const PLACEHOLDER = "text-fg-dim";
+
+const ARMED = {
+  long: "bg-[var(--deck-green-tint)] text-bull",
+  short: "bg-[var(--deck-red-tint)] text-bear",
+} as const;
+
+// The chain's columns, one grid for the heads and the rows alike, so a head
+// sits exactly over its figures.
+const ROW = "grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] px-3";
+const SIDE_GRID = "col-span-4 grid grid-cols-4 items-center gap-1 px-2";
 
 export function OptionsChain({ underlying, spot }: Props) {
   // Days-out on the server, calendar labels after hydration (lib/expiry.ts).
@@ -87,6 +110,11 @@ export function OptionsChain({ underlying, spot }: Props) {
   // Strategy store
   const selected = useStrategy((s) => s.selected);
   const toggle = useStrategy((s) => s.toggle);
+  // Which side each picked leg is on, read from the same store (a leg's id is
+  // its cell key), so a cell can wear long-green or short-red and follow a
+  // flip made on the strategy card.
+  const legs = useStrategy((s) => s.legs);
+  const sideByKey = useMemo(() => new Map(legs.map((l) => [l.id, l.side] as const)), [legs]);
 
   // ── the selection grammar, pointer-native (WCAG 2.5.1: the gesture is never
   // the only path — the LONG/SHORT control below arms the tap side):
@@ -230,94 +258,139 @@ export function OptionsChain({ underlying, spot }: Props) {
   const cellTouchAction = chainOverflows ? "pan-x pan-y" : "pan-y";
 
   return (
-    <div className="surface-instrument border border-border bg-bg">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-soft px-3 py-2 t-label">
-        <div className="flex items-center gap-3">
+    <div className="deck-pane">
+      {/* Pane head, the mockup's file tab: what is on the table, and which
+          side a tap builds. min-h-12 py-2, the strategy card's own head, so
+          at lg the two head rules sit on one line across the columns. */}
+      <div className="flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border px-4 py-2">
+        <div className="flex min-w-0 items-center gap-2.5 text-[0.8125rem]">
           {/* perf/engine telemetry lives in the dot's tooltip — spot is already
               read out in the symbol-switcher row above */}
           <span
-            className={perfMs < 100 ? "text-fg-faint" : "text-amber"}
+            className={`text-[0.625rem] ${perfMs < 100 ? "text-fg-faint" : "text-amber"}`}
             title={`chain priced in ${perfMs.toFixed(1)}ms · black-scholes · in-process`}
           >
             ●
           </span>
-          <span className="text-fg">{underlying}</span>
+          <span className="font-mono text-fg">{underlying}</span>
           <span className="text-fg-faint">·</span>
-          <span className="text-fg-dim">23 strikes · 5 expiries</span>
+          <span className="text-fg-faint">23 strikes · 5 expiries</span>
         </div>
-      </div>
-
-      {/* Expiry tabs + legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-soft px-3 py-2">
-        <div className="flex flex-wrap items-center gap-1">
-          {expiries.map((e, i) => (
-            <TogglePill key={e.daysToExpiry} on={i === expiryIdx} onClick={() => setExpiryIdx(i)} className="!h-7 !px-2.5 !text-[0.75rem]">
-              {e.label && <>{e.label} </>}
-              <span className={e.label ? "ml-1 opacity-60" : undefined}>{e.daysToExpiry}d</span>
-            </TogglePill>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 t-label text-fg-dim">
+        <div className="flex items-center gap-2.5">
           {/* the ARMED side for taps/keyboard — the drag-down-to-short gesture
               is a shortcut, never the only path (WCAG 2.5.1) */}
-          <span className="text-fg-faint">Tap =</span>
-          <span className="inline-flex gap-1" role="group" aria-label="Side armed for tap">
-            <TogglePill on={armedSide === "long"} onClick={() => setArmedSide("long")} className="!h-7 !px-2.5 !text-[0.75rem]">
-              Long
-            </TogglePill>
-            <TogglePill on={armedSide === "short"} onClick={() => setArmedSide("short")} className="!h-7 !px-2.5 !text-[0.75rem]">
-              Short
-            </TogglePill>
+          <span className="deck-label">Tap =</span>
+          <span
+            className="inline-flex gap-0.5 rounded-full p-0.5 shadow-[inset_0_0_0_1px_var(--deck-rule)]"
+            role="group"
+            aria-label="Side armed for tap"
+          >
+            {(["long", "short"] as const).map((side) => (
+              <button
+                key={side}
+                type="button"
+                aria-pressed={armedSide === side}
+                onClick={() => setArmedSide(side)}
+                className={`inline-flex h-7 items-center rounded-full px-3 font-mono text-[0.6875rem] uppercase tracking-[0.12em] transition-colors ${
+                  armedSide === side ? ARMED[side] : "text-fg-faint hover:text-fg"
+                }`}
+              >
+                {side === "long" ? "Long" : "Short"}
+              </button>
+            ))}
           </span>
-          {/* xl: below that the expiry tabs + toggle already fill the row */}
-          <span className="hidden text-fg-faint xl:inline" title="On mouse/pen: press a cell and pull it downward past ~26px to short it directly">
+          {/* xl: below that the head is already full */}
+          <span
+            className="hidden text-[0.75rem] text-fg-faint xl:inline"
+            title="On mouse/pen: press a cell and pull it downward past ~26px to short it directly"
+          >
             · drag ↓ = short
           </span>
         </div>
+      </div>
+
+      {/* Expiry tabs, the mockup's pane tabs: the chosen one bone with the
+          green rule under it. They scroll sideways on a phone instead of
+          wrapping; py-1 keeps the focus ring inside the scroller. */}
+      <div className="flex gap-5 overflow-x-auto overscroll-x-contain border-b border-border px-4 py-1">
+        {expiries.map((e, i) => {
+          const on = i === expiryIdx;
+          return (
+            <button
+              key={e.daysToExpiry}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setExpiryIdx(i)}
+              className={`relative inline-flex h-9 shrink-0 items-center whitespace-nowrap text-[0.8125rem] font-medium transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:rounded-full ${
+                on ? "text-fg after:bg-brand" : "text-fg-faint hover:text-fg-dim"
+              }`}
+            >
+              {e.label && <>{e.label} </>}
+              <span className={`t-data text-[0.75rem] ${e.label ? "ml-1 text-fg-faint" : ""}`}>{e.daysToExpiry}d</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Chain grid */}
       <div onMouseLeave={() => setReadoutCell(picked)}>
       {/* overscroll-x-contain: panning to the puts must not hand the swipe to
           the browser's back gesture */}
-      <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain">
-        <div className="grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg-soft px-3 py-2 t-chrome text-fg-faint">
-          <span className="col-span-4 text-center text-bull">— calls —</span>
-          <span className="text-center text-fg">strike</span>
-          <span className="col-span-4 text-center text-bear">— puts —</span>
+      <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain bg-[var(--deck-sunk)]">
+        {/* the deck's table head: the two sides named, the columns under
+            them, and the strong rule beneath */}
+        <div className={`${ROW} pt-3`}>
+          <span className="col-span-4 flex items-center gap-3 px-2">
+            <span aria-hidden className="h-px flex-1 bg-[var(--deck-rule)]" />
+            <span className="deck-label">calls</span>
+            <span aria-hidden className="h-px flex-1 bg-[var(--deck-rule)]" />
+          </span>
+          <span className="deck-label text-center">strike</span>
+          <span className="col-span-4 flex items-center gap-3 px-2">
+            <span aria-hidden className="h-px flex-1 bg-[var(--deck-rule)]" />
+            <span className="deck-label">puts</span>
+            <span aria-hidden className="h-px flex-1 bg-[var(--deck-rule)]" />
+          </span>
         </div>
-        <div className="grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft bg-bg px-3 py-1 t-chrome text-fg-faint">
+        <div className={`${ROW} border-b border-[var(--deck-rule)] pb-2 pt-2`}>
           {/* iv text columns dropped — the value paints the cell heat and the
               exact figure lives in the greeks readout under the grid */}
-          <span>vol</span>
-          <span className="text-right">oi</span>
-          <span className="text-right">bid</span>
-          <span className="text-right">ask</span>
-          <span className="text-center text-fg-dim">$</span>
-          <span>bid</span>
-          <span className="text-right">ask</span>
-          <span className="text-right">oi</span>
-          <span className="text-right">vol</span>
+          <span className={`${SIDE_GRID} deck-label`}>
+            <span>vol</span>
+            <span className="text-right">oi</span>
+            <span className="text-right">bid</span>
+            <span className="text-right">ask</span>
+          </span>
+          <span className="deck-label text-center">$</span>
+          <span className={`${SIDE_GRID} deck-label`}>
+            <span>bid</span>
+            <span className="text-right">ask</span>
+            <span className="text-right">oi</span>
+            <span className="text-right">vol</span>
+          </span>
         </div>
 
-        <div aria-label="options chain" className="select-none">
-          {strikes.map((K, rowIdx) => {
+        <div aria-label="options chain" className="select-none pb-1">
+          {strikes.map((K) => {
             const row = byStrike.get(K)!;
             const atm = Math.abs(K - spot) < 1.2;
             const callKey = `${row.call.expiry}|${row.call.strike}|C`;
             const putKey = `${row.put.expiry}|${row.put.strike}|P`;
             const callSelected = selected.includes(callKey);
             const putSelected = selected.includes(putKey);
+            const callSide = callSelected ? sideByKey.get(callKey) ?? "long" : null;
+            const putSide = putSelected ? sideByKey.get(putKey) ?? "long" : null;
             const callBg = ivToHeat(row.call.iv, ivRange.min, ivRange.max);
             const putBg = ivToHeat(row.put.iv, ivRange.min, ivRange.max);
 
             return (
+              // the at-the-money row is marked quietly: a raised band the
+              // heat sits over, and a bone strike. The last row drops its
+              // hairline: the readout's rule closes the table, and two rules
+              // 4px apart read as a slip.
               <div
                 key={K}
-                className={`grid min-w-[40rem] grid-cols-[repeat(9,minmax(0,1fr))] border-b border-border-soft px-3 py-2 t-data text-[0.6875rem] transition-colors ${
-                  atm ? "bg-fg/[0.04]" : ""
-                }`}
+                className={`${ROW} t-data border-b border-border text-[0.75rem] last:border-b-0 ${atm ? "bg-[var(--deck-raised)]" : ""}`}
               >
                 {/* CALL side cell (one button covering bid/ask area for selection).
                     Keyboard is first-class (WCAG 2.1.1): Enter/Space toggles a
@@ -344,22 +417,20 @@ export function OptionsChain({ underlying, spot }: Props) {
                     e.preventDefault();
                     toggle(row.call, "short");
                   }}
-                  className={`col-span-4 grid grid-cols-4 items-center gap-1 border px-2 py-1 text-left transition-all ${
-                    callSelected
-                      ? "border-bull bg-bull/15 text-fg"
-                      : "border-transparent text-fg-dim hover:border-bull/40 hover:text-fg"
+                  className={`${SIDE_GRID} py-2.5 text-left transition-[background-color,box-shadow,color] duration-150 ${
+                    callSide ? SIDE_CELL[callSide] : IDLE_CELL
                   }`}
                 >
-                  <span>{row.call.vol}</span>
-                  <span className="text-right">{row.call.oi}</span>
-                  <span className="text-right text-bull">{row.call.bid.toFixed(2)}</span>
-                  <span className="text-right text-bull">{row.call.ask.toFixed(2)}</span>
+                  <span className={callSide ? undefined : PLACEHOLDER}>{row.call.vol}</span>
+                  <span className={`text-right ${callSide ? "" : PLACEHOLDER}`}>{row.call.oi}</span>
+                  <span className="text-right">{row.call.bid.toFixed(2)}</span>
+                  <span className="text-right">{row.call.ask.toFixed(2)}</span>
                 </button>
 
-                {/* Strike */}
+                {/* Strike — the row's name, set in the display face */}
                 <span
-                  className={`flex items-center justify-center border-x border-border-soft font-display text-sm tracking-tightest ${
-                    atm ? "text-bull" : "text-fg"
+                  className={`flex items-center justify-center border-x border-border font-display text-[0.9375rem] tracking-tightest ${
+                    atm ? "text-fg" : "text-fg-dim"
                   }`}
                 >
                   {K.toFixed(K < 100 ? 2 : 0)}
@@ -387,16 +458,14 @@ export function OptionsChain({ underlying, spot }: Props) {
                     e.preventDefault();
                     toggle(row.put, "short");
                   }}
-                  className={`col-span-4 grid grid-cols-4 items-center gap-1 border px-2 py-1 text-left transition-all ${
-                    putSelected
-                      ? "border-bear bg-bear/15 text-fg"
-                      : "border-transparent text-fg-dim hover:border-bear/40 hover:text-fg"
+                  className={`${SIDE_GRID} py-2.5 text-left transition-[background-color,box-shadow,color] duration-150 ${
+                    putSide ? SIDE_CELL[putSide] : IDLE_CELL
                   }`}
                 >
-                  <span className="text-bear">{row.put.bid.toFixed(2)}</span>
-                  <span className="text-right text-bear">{row.put.ask.toFixed(2)}</span>
-                  <span className="text-right">{row.put.oi}</span>
-                  <span className="text-right">{row.put.vol}</span>
+                  <span>{row.put.bid.toFixed(2)}</span>
+                  <span className="text-right">{row.put.ask.toFixed(2)}</span>
+                  <span className={`text-right ${putSide ? "" : PLACEHOLDER}`}>{row.put.oi}</span>
+                  <span className={`text-right ${putSide ? "" : PLACEHOLDER}`}>{row.put.vol}</span>
                 </button>
               </div>
             );
@@ -413,7 +482,7 @@ export function OptionsChain({ underlying, spot }: Props) {
             sideways so a phone reaches every chip. h-10, not h-9: the project's
             8px scrollbar eats into the box and would clip the chips. */}
         <div
-          className="flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t border-border-soft bg-surface/95 px-3 t-label text-fg-dim backdrop-blur"
+          className="flex h-10 items-center gap-2 overflow-x-auto overscroll-x-contain border-t border-border px-4 text-[0.75rem] text-fg-dim"
         >
           {/* no key on the readout: it must update in place. Keying it on the
               cell remounted the chips and replayed their fade on every row the
@@ -428,7 +497,7 @@ export function OptionsChain({ underlying, spot }: Props) {
               {/* strike, then the greeks, then mid. mid used to sit second and
                   cost ~85px, which on a 375px screen pushed every chip past the
                   right edge — the greeks have to be the part you see first. */}
-              <span className="text-fg">
+              <span className="t-data text-fg">
                 {readout.type === "C" ? "Call" : "Put"} {readout.strike.toFixed(readout.strike < 100 ? 2 : 0)}
               </span>
               <GreekChip greek="delta" value={readout.greeks.delta.toFixed(3)} />
@@ -437,7 +506,7 @@ export function OptionsChain({ underlying, spot }: Props) {
               <GreekChip greek="vega" value={readout.greeks.vega.toFixed(3)} />
               <GreekChip greek="iv" value={`${(readout.iv * 100).toFixed(1)}%`} />
               <span className="text-fg-faint">·</span>
-              <span>Mid ${readout.mid.toFixed(2)}</span>
+              <span className="t-data">Mid ${readout.mid.toFixed(2)}</span>
             </motion.div>
           ) : (
             <span className="whitespace-nowrap text-fg-faint">Hover or tap a strike → greeks</span>
@@ -446,7 +515,7 @@ export function OptionsChain({ underlying, spot }: Props) {
       </div>
 
       {/* Hover-greek hint row (with hover triggers for the AI teacher) */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-border-soft bg-bg-soft px-3 py-2 t-label text-fg-dim">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 border-t border-border px-4 py-2.5 text-[0.75rem] text-fg-dim">
         <span className="text-fg-faint">Hover any greek →</span>
         <GreekTrigger greek="delta">Delta</GreekTrigger>
         <GreekTrigger greek="gamma">Gamma</GreekTrigger>
@@ -456,17 +525,16 @@ export function OptionsChain({ underlying, spot }: Props) {
         <GreekTrigger greek="iv">IV</GreekTrigger>
         <span className="ml-auto flex items-center gap-2">
           <span>IV heat</span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1.5 text-fg-faint">
             Low
             <span
-              className="h-2.5 w-16"
-              style={{
-                background: "linear-gradient(to right, rgba(0,255,100,0.25), rgba(255,184,30,0.4), rgba(255,46,99,0.55))",
-              }}
+              aria-hidden
+              className="h-2 w-16 rounded-[3px] shadow-[inset_0_0_0_1px_var(--border)]"
+              style={{ background: HEAT_RAMP }}
             />
             High
           </span>
-          <span className="text-fg-faint">{(ivRange.min * 100).toFixed(0)}–{(ivRange.max * 100).toFixed(0)}%</span>
+          <span className="t-data text-fg-faint">{(ivRange.min * 100).toFixed(0)}–{(ivRange.max * 100).toFixed(0)}%</span>
         </span>
       </div>
 
@@ -484,9 +552,10 @@ export function OptionsChain({ underlying, spot }: Props) {
           they read as market data, and a beginner learning to read a chain
           learns to trust a number nobody measured.
           This line is the cheapest honest fix and it stays until those two
-          columns carry a real feed. Same t-label voice as the legend above
-          it; the table itself is untouched. */}
-      <div className="border-t border-border-soft bg-bg-soft px-3 py-2 t-label text-fg-faint">
+          columns carry a real feed. The deck pass also sets those two columns
+          a step quieter than the prices (fg-dim against bone), so the
+          invented figures no longer wear the measured ones' weight. */}
+      <div className="border-t border-border px-4 py-2.5 font-mono text-[0.6875rem] leading-relaxed text-fg-faint">
         Chain: Black-Scholes with a modelled skew · open interest and volume are
         simulated placeholders
       </div>

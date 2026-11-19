@@ -24,9 +24,9 @@ export function BadgeGrid({ badges, cols = 3, compact = false, className = "" }:
         <li key={b.id} title={b.hint} className="min-w-0">
           <span
             aria-hidden
-            className={`grid place-items-center rounded-full ${
+            className={`grid place-items-center rounded-[8px] ${
               compact ? "size-7 font-mono text-[0.75rem]" : "size-9 font-display text-xl"
-            } ${b.earned ? "bg-brand-ink/14 text-brand-ink" : "bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] text-fg-faint"}`}
+            } ${b.earned ? "bg-bull/15 text-bull" : "bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] text-fg-faint"}`}
           >
             {b.glyph}
           </span>

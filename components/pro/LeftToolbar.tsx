@@ -153,7 +153,8 @@ const TOOLS: Tool[] = [
   },
 ];
 
-const COLORS = ["#52ffa5", "#3884ff", "#ffb800", "#ff2e63", "#8f73ff", "#f5f5f0"];
+// The drawing palette, in the pitch deck's colours (green, data cyan, amber, loss red, two bones).
+const COLORS = ["#00ff87", "#00e5ff", "#ffb800", "#ff2e63", "#bdbcb3", "#f5f5f0"];
 
 export function LeftToolbar({
   tool,

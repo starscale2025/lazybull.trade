@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { deckSnapshot, registerCommands, subscribeDeck, type DeckCommand } from "@/lib/command-deck";
+import { deckSnapshot, OPEN_DECK_EVENT, registerCommands, subscribeDeck, type DeckCommand } from "@/lib/command-deck";
 import { isMotionPaused, setMotionPaused } from "@/lib/motion/bus";
 
 function useDeckCommands(): DeckCommand[] {
@@ -37,6 +37,8 @@ export function CommandDeck() {
   const [active, setActive] = useState(0);
   const [coach, setCoach] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // The element that had focus when the deck opened; focus returns there.
+  const returnTo = useRef<HTMLElement | null>(null);
   const commands = useDeckCommands();
 
   // Base commands: navigation + site-wide toggles, always present.
@@ -111,19 +113,35 @@ export function CommandDeck() {
         }
         return !v;
       });
+    // Remember where focus was, so closing the deck can hand it back.
+    const remember = () => {
+      returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    };
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
+        remember();
         openDeck();
         return;
       }
       if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping(e.target)) {
         e.preventDefault();
+        remember();
         openDeck();
       }
     };
+    // The navbar's search button (components/NavSearch.tsx) asks for the deck
+    // by event, so the bar never has to import the palette's state.
+    const onAsk = () => {
+      remember();
+      openDeck();
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener(OPEN_DECK_EVENT, onAsk);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_DECK_EVENT, onAsk);
+    };
   }, []);
 
   // One-time coach mark: the first Tab on /pro teaches the deck.
@@ -144,7 +162,18 @@ export function CommandDeck() {
   }, [pathname]);
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
+    if (open) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return;
+    }
+    // Closed: give focus back to where the deck was opened from — the
+    // navbar's search button, say — but only if nothing else has taken it
+    // (a command that moves focus on purpose keeps its target).
+    const el = returnTo.current;
+    returnTo.current = null;
+    if (el?.isConnected && (document.activeElement === document.body || document.activeElement === null)) {
+      el.focus({ preventScroll: true });
+    }
   }, [open]);
 
   const filtered = useMemo(() => {

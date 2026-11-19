@@ -170,15 +170,15 @@ export type ToolKind =
 
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1, 1.272, 1.618];
 export const FIB_COLORS = [
-  "#9aa0a6", // 0
+  "#8a8a82", // 0
   "#ff2e63", // 0.236
   "#ffb800", // 0.382
-  "#22c55e", // 0.5
-  "#3884ff", // 0.618
-  "#2f6fe0", // 0.786
-  "#9aa0a6", // 1
-  "#8f73ff", // 1.272
-  "#52ffa5", // 1.618
+  "#00c46a", // 0.5
+  "#00e5ff", // 0.618
+  "#00a3b8", // 0.786
+  "#8a8a82", // 1
+  "#bdbcb3", // 1.272
+  "#00ff87", // 1.618
 ];
 
 // Format number with thousand separators + n decimals

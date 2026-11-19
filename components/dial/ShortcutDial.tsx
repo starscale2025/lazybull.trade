@@ -88,7 +88,10 @@ function arcPath(mid: number, sweep: number) {
   return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
 }
 
-const NO_DIAL = /^\/(admin|pro\/mic-check)(\/|$)/;
+// Not on the practice, strategy-builder or pro-charts routes either (owner,
+// 2026-11-17): those are full working surfaces in the pitch deck's skin, and
+// the folded dial sat over their content in the old palette.
+const NO_DIAL = /^\/(admin|pro|practice|trade)(\/|$)/;
 
 /** Pages with their own bars along the bottom edge lift the dial clear of them. */
 const liftFor = (path: string) => (/^\/pro(\/|$)/.test(path) ? "pro" : path === "/trade" ? "trade" : undefined);

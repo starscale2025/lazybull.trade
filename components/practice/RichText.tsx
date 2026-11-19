@@ -6,10 +6,15 @@
 //
 // PURE — no hooks, no directive. Renders from server pages and client
 // workspaces alike.
+//
+// The chip is the pitch deck's (Playground mockup, slide 7): bone mono on the
+// raised step, a small radius. The raised step only exists inside `.deck`, so
+// outside it the old 8% film stands in.
 
 import { Fragment } from "react";
 
-const CODE_CLS = "rounded-[4px] bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] px-1 font-mono text-[0.6875rem] text-fg";
+const CODE_CLS =
+  "rounded-[5px] bg-[var(--deck-raised,color-mix(in_srgb,var(--fg)_8%,transparent))] px-[0.4em] py-px font-mono text-[0.75rem] text-fg";
 
 type Segment = { code: boolean; text: string };
 

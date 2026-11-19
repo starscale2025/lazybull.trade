@@ -83,9 +83,9 @@ export function PlainGreeks({
     : [];
 
   return (
-    <section className="surface-instrument border border-border bg-surface lg:shrink-0">
-      <div className="flex items-center justify-between border-b border-border bg-bg-soft px-3 py-2">
-        <span className="t-eyebrow text-fg-dim">Plain English greeks</span>
+    <section className="lg:shrink-0">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <span className="deck-label">Plain English greeks</span>
         {onDetails && (
           <button
             type="button"
@@ -98,19 +98,19 @@ export function PlainGreeks({
       </div>
 
       {!s ? (
-        <div className="p-4 t-label text-fg-faint">
+        <div className="p-5 text-[0.875rem] text-fg-faint">
           Pick a strategy to see plain-English greeks.
         </div>
       ) : (
         <>
-          <ul className="divide-y divide-border-soft">
+          <ul className="divide-y divide-border">
             {rows.map((r) => {
               const meta = GreekMeta[r.key];
               const Icon = meta.Icon;
               return (
-                <li key={r.key} className="flex items-center gap-3 px-3 py-2">
+                <li key={r.key} className="flex items-center gap-3 px-5 py-2.5">
                   <span
-                    className="flex size-7 shrink-0 items-center justify-center border border-border bg-bg"
+                    className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-[var(--deck-raised)]"
                     style={{ color: meta.color }}
                     aria-hidden
                   >
@@ -119,12 +119,10 @@ export function PlainGreeks({
                   <span className="w-12 shrink-0 t-label text-fg">
                     {r.name}
                   </span>
-                  <span
-                    className="w-14 shrink-0 text-right t-data text-sm"
-                    style={{ color: meta.color }}
-                  >
-                    {perShare(r.value)}
-                  </span>
+                  {/* The value reads in the reading colour: green and red mean
+                      gain and loss in the deck skin, and a greek's sign is
+                      neither. Its identity hue stays on the icon tile. */}
+                  <span className="w-14 shrink-0 text-right t-data text-sm text-fg">{perShare(r.value)}</span>
                   <span className="flex-1 text-right text-[0.75rem] leading-snug text-fg-dim">
                     {r.meaning}
                   </span>
@@ -132,7 +130,7 @@ export function PlainGreeks({
               );
             })}
           </ul>
-          <div className="border-t border-border-soft px-3 py-1.5 t-label text-fg-faint">
+          <div className="border-t border-border px-5 py-2.5 t-label text-fg-faint">
             Net across {s.legs.length} leg{s.legs.length > 1 ? "s" : ""} · Black-Scholes · live
           </div>
         </>
