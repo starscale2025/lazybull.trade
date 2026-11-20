@@ -167,6 +167,7 @@ const ok = (msg) => console.log("✓ " + msg);
     "components/pro/RightPanel.tsx",
     "components/pro/TradingPanel.tsx",
     "components/quant/MiniViz.tsx",
+    "components/wedge/BuilderParts.tsx", // the builder's PayoffChart (2026-11-19): non-scaling strokes, HTML labels; built before this rule reached its branch
     "components/wedge/StrategyCards.tsx",
   ]);
   const offenders = [];

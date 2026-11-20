@@ -127,9 +127,8 @@ const COLUMNS: {
     title: "What’s real",
     accent: "text-brand-ink",
     items: [
-      { lead: "Quotes & bars", detail: "Yahoo Finance, polled every 15–30s. A delayed feed we label as delayed — never fabricated." },
+      { lead: "Quotes & bars", detail: "Alpaca for US stocks and crypto, refreshed every 15–30s. A symbol no feed covers gets a synthetic tape, labelled as one — never passed off as real." },
       { lead: "The neural models", detail: "11 nets trained on real market history, served from a Python service. When it’s down, we say so." },
-      { lead: "The volatility", detail: "VIX is live — it literally bends the headline type on the landing. Calm days set it straight." },
       { lead: "Your decisions", detail: "Every entry, exit, and hold is genuinely yours. That’s the only edge this site can’t give you." },
     ],
   },

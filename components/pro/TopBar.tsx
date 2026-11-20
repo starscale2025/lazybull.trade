@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TogglePill, ToolButton } from "@/components/calm/kit";
+import { typedTicker } from "@/lib/market-data/ticker";
 
 export type SymbolDef = { sym: string; name: string; exch: string };
+/** A search result: `typed` is the query offered as a ticker, `delayed` an Indian listing on the lag. */
+type Found = SymbolDef & { typed?: boolean; delayed?: boolean };
+type Menu = "sym" | "chart" | "ind" | "layout";
 
 export const SEED_SYMBOLS: SymbolDef[] = [
   { sym: "AAPL", name: "Apple Inc.", exch: "NASDAQ" },
@@ -16,8 +20,8 @@ export const SEED_SYMBOLS: SymbolDef[] = [
   { sym: "GOOGL", name: "Alphabet Inc.", exch: "NASDAQ" },
   { sym: "SPY", name: "SPDR S&P 500 ETF", exch: "ARCA" },
   { sym: "QQQ", name: "Invesco QQQ", exch: "NASDAQ" },
-  { sym: "BTC-USD", name: "Bitcoin", exch: "CCC" },
-  { sym: "ETH-USD", name: "Ethereum", exch: "CCC" },
+  { sym: "BTC-USD", name: "Bitcoin", exch: "CRYPTO" },
+  { sym: "ETH-USD", name: "Ethereum", exch: "CRYPTO" },
   { sym: "^NSEI", name: "Nifty 50 Index", exch: "NSE" },
   { sym: "^NSEBANK", name: "Bank Nifty", exch: "NSE" },
   { sym: "^GSPC", name: "S&P 500", exch: "INDEX" },
@@ -64,33 +68,110 @@ export function TopBar({
   indicators, toggleIndicator, onReplay, onAlert,
   layout, setLayout, onUndo, onRedo, onFullscreen, onSnapshot, onTrade, onPublish,
 }: Props) {
-  const [symOpen, setSymOpen] = useState(false);
-  const [indOpen, setIndOpen] = useState(false);
-  const [layoutOpen, setLayoutOpen] = useState(false);
-  const [chartOpen, setChartOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SymbolDef[]>([]);
-  const [searching, setSearching] = useState(false);
-
-  // live search via API (debounced)
+  // One menu at a time. They used to be four independent flags, so the symbol
+  // search, Indicators and the layout grid could all be open at once, stacked
+  // over the chart and the order ticket, and nothing but their own button
+  // closed them. Now opening one closes the rest, and Escape or a press
+  // anywhere outside the open one closes it (Escape hands focus back).
+  const [open, setOpen] = useState<Menu | null>(null);
+  const toggle = (m: Menu) => setOpen((o) => (o === m ? null : m));
+  const boxes = useRef<Partial<Record<Menu, HTMLDivElement | null>>>({});
+  const triggers = useRef<Partial<Record<Menu, HTMLButtonElement | null>>>({});
   useEffect(() => {
-    const q = query.trim();
-    if (!symOpen) return;
-    if (!q) { setSearchResults([]); return; }
+    if (!open) return;
+    const onPress = (e: PointerEvent) => {
+      const box = boxes.current[open];
+      if (box && e.target instanceof Node && box.contains(e.target)) return;
+      setOpen(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      triggers.current[open]?.focus();
+      setOpen(null);
+    };
+    document.addEventListener("pointerdown", onPress, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPress, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+
+  // Symbol search, a combobox: arrows move, Enter opens the highlighted row.
+  const [query, setQuery] = useState("");
+  const [found, setFound] = useState<{ q: string; items: Found[]; source: "yahoo" | "list" } | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [active, setActive] = useState(0);
+  const listId = useId();
+  // An Enter that beat the debounce: picked as soon as its own results land,
+  // never from the previous query's rows (typing NVDL fast would open NVDA).
+  const pendingEnter = useRef<string | null>(null);
+  const q = query.trim();
+  const fresh = found && found.q === q ? found.items : null;
+  const list: Found[] = q ? (fresh ?? found?.items ?? []) : SEED_SYMBOLS;
+
+  const pick = (s: SymbolDef) => {
+    setSymbol({ sym: s.sym, name: s.name, exch: s.exch });
+    setOpen(null);
+    setQuery("");
+    setFound(null);
+    setActive(0);
+    pendingEnter.current = null;
+  };
+
+  useEffect(() => {
+    if (open !== "sym" || !q) { setSearching(false); return; }
     setSearching(true);
+    let alive = true;
     const id = setTimeout(async () => {
+      let items: Found[] | null = null;
+      let source: "yahoo" | "list" = "list";
       try {
         const r = await fetch(`/api/symbol-search?q=${encodeURIComponent(q)}`);
         const j = await r.json();
-        if (j.ok) setSearchResults(j.items as SymbolDef[]);
-      } finally {
-        setSearching(false);
+        if (j.ok) {
+          items = j.items as Found[];
+          source = j.source === "yahoo" ? "yahoo" : "list";
+        }
+      } catch {
+        /* a failed lookup leaves the rows as they were */
+      }
+      if (!alive) return;
+      setSearching(false);
+      if (items) setFound({ q, items, source });
+      if (pendingEnter.current === q) {
+        const s = items?.[0] ?? typedTicker(q);
+        if (s) pick(s);
       }
     }, 220);
-    return () => clearTimeout(id);
-  }, [query, symOpen]);
+    return () => { alive = false; clearTimeout(id); };
+    // pick is recreated each render and only reads setters; q and open drive this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, open]);
 
-  const list = query.trim() ? searchResults : SEED_SYMBOLS;
+  useEffect(() => { setActive(0); }, [q, fresh]);
+  useEffect(() => {
+    if (open === "sym") document.getElementById(`${listId}-opt-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [active, open, listId]);
+
+  const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((a) => Math.min(a + 1, Math.max(0, list.length - 1)));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => Math.max(a - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (!q) { const s = SEED_SYMBOLS[active]; if (s) pick(s); return; }
+      if (fresh) {
+        const s = fresh[active] ?? fresh[0] ?? typedTicker(q);
+        if (s) pick(s);
+        return;
+      }
+      pendingEnter.current = q; // its results are on the way
+    }
+  };
 
   // min-[1350px], not lg, for the one-line bar: a single line needs ~1203 CSS
   // px, which under --ui-zoom (1.1) is ~1324 viewport px — so at lg (and even
@@ -98,14 +179,21 @@ export function TopBar({
   // clipped off the right edge. Below the threshold the bar wraps instead.
   return (
     <div className="relative z-30 flex flex-wrap items-center gap-1 border-b border-border bg-bg-soft px-2 py-1 t-label min-[1350px]:h-11 min-[1350px]:flex-nowrap min-[1350px]:py-0">
-      <div className="relative">
-        <ToolButton onClick={() => setSymOpen((o) => !o)} className="!px-2">
+      <div className="relative" ref={(el) => { boxes.current.sym = el; }}>
+        <ToolButton
+          ref={(el) => { triggers.current.sym = el; }}
+          onClick={() => toggle("sym")}
+          aria-haspopup="listbox"
+          aria-expanded={open === "sym"}
+          aria-label={`Symbol ${symbol.sym}, change`}
+          className="!px-2"
+        >
           <SymGlyph sym={symbol.sym} />
           <span className="t-data">{symbol.sym}</span>
           <Caret />
         </ToolButton>
         <AnimatePresence>
-          {symOpen && (
+          {open === "sym" && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -117,40 +205,58 @@ export function TopBar({
                 <span className="text-fg-faint">⌕</span>
                 <input
                   autoFocus
+                  role="combobox"
+                  aria-label="Search symbols"
+                  aria-expanded="true"
+                  aria-controls={listId}
+                  aria-autocomplete="list"
+                  aria-activedescendant={list[active] ? `${listId}-opt-${active}` : undefined}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search Yahoo Finance — AAPL, NIFTY, BTC, RELIANCE.NS…"
+                  onKeyDown={onSearchKey}
+                  placeholder="Symbol or company: AAPL, Nvidia, BTC-USD…"
                   className="flex-1 bg-transparent font-mono text-[0.6875rem] uppercase text-fg outline-none placeholder:font-sans placeholder:normal-case placeholder:text-fg-faint"
-                  onKeyDown={(e) => e.key === "Escape" && setSymOpen(false)}
                 />
                 {searching && <span className="text-fg-faint">…</span>}
               </div>
-              <ul className="max-h-[22.5rem] overflow-y-auto">
-                {list.map((s) => (
-                  <li key={s.sym}>
+              <ul id={listId} role="listbox" aria-label="Symbols" className="max-h-[22.5rem] overflow-y-auto">
+                {list.map((s, i) => (
+                  <li key={s.sym} role="presentation">
                     <button
-                      onClick={() => { setSymbol(s); setSymOpen(false); setQuery(""); setSearchResults([]); }}
+                      type="button"
+                      role="option"
+                      id={`${listId}-opt-${i}`}
+                      aria-selected={i === active}
+                      tabIndex={-1}
+                      onMouseEnter={() => setActive(i)}
+                      onClick={() => pick(s)}
                       className={`flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left transition-colors ${
-                        s.sym === symbol.sym ? "bg-brand-ink/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"
+                        i === active
+                          ? "bg-surface text-fg"
+                          : s.sym === symbol.sym
+                            ? "bg-brand-ink/15 text-brand-ink"
+                            : "text-fg-dim hover:bg-surface hover:text-fg"
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <SymGlyph sym={s.sym} />
                         <div className="flex flex-col">
                           <span className="t-data leading-tight text-fg">{s.sym}</span>
-                          <span className="text-[0.6875rem] text-fg-faint">{s.name}</span>
+                          <span className="text-[0.6875rem] text-fg-faint">{s.typed ? "Open this ticker" : s.name}</span>
                         </div>
                       </div>
-                      <span className="t-chrome text-fg-faint">{s.exch}</span>
+                      <span className="t-chrome text-fg-faint">{s.delayed ? `${s.exch} · delayed` : s.exch}</span>
                     </button>
                   </li>
                 ))}
                 {!list.length && !searching && (
-                  <li className="px-3 py-4 text-center t-label text-fg-faint">No matches</li>
+                  <li role="presentation" className="px-3 py-4 text-center t-label text-fg-faint">No matches</li>
                 )}
               </ul>
               <div className="border-t border-border-soft px-3 py-1.5 t-label text-fg-faint">
-                Live data via Yahoo Finance
+                {found?.source === "yahoo"
+                  ? "Search via Yahoo Finance · development only"
+                  : "Not listed? Type the ticker and press Enter"}
               </div>
             </motion.div>
           )}
@@ -175,18 +281,28 @@ export function TopBar({
       <Sep />
 
       {/* chart type */}
-      <div className="relative">
-        <ToolButton onClick={() => setChartOpen((o) => !o)} title="Chart type" className="!px-2">
+      <div className="relative" ref={(el) => { boxes.current.chart = el; }}>
+        <ToolButton
+          ref={(el) => { triggers.current.chart = el; }}
+          onClick={() => toggle("chart")}
+          aria-haspopup="true"
+          aria-expanded={open === "chart"}
+          aria-label={`Chart type: ${chart}`}
+          title="Chart type"
+          className="!px-2"
+        >
           <ChartTypeIcon type={chart} />
           <Caret />
         </ToolButton>
         <AnimatePresence>
-          {chartOpen && (
+          {open === "chart" && (
             <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute left-0 top-9 z-40 w-44 max-w-[calc(100vw/var(--ui-zoom)-1rem)] surface-instrument border border-border bg-bg shadow-2xl">
               {(["candles", "line", "area", "bars"] as Chart[]).map((c) => (
                 <button
                   key={c}
-                  onClick={() => { setChart(c); setChartOpen(false); }}
+                  type="button"
+                  aria-pressed={c === chart}
+                  onClick={() => { setChart(c); setOpen(null); }}
                   className={`flex w-full items-center gap-2 px-3 py-1.5 text-left ${c === chart ? "bg-brand-ink/15 text-brand-ink" : "text-fg-dim hover:bg-surface hover:text-fg"}`}
                 >
                   <ChartTypeIcon type={c} />
@@ -200,16 +316,22 @@ export function TopBar({
 
       <Sep />
 
-      <div className="relative">
-        <ToolButton onClick={() => setIndOpen((o) => !o)} className="!px-2">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <div className="relative" ref={(el) => { boxes.current.ind = el; }}>
+        <ToolButton
+          ref={(el) => { triggers.current.ind = el; }}
+          onClick={() => toggle("ind")}
+          aria-haspopup="true"
+          aria-expanded={open === "ind"}
+          className="!px-2"
+        >
+          <svg aria-hidden viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 17l4-4 4 4 4-8 6 8" />
           </svg>
           Indicators
           {indicators.length > 0 && <span className="text-brand-ink">{indicators.length}</span>}
         </ToolButton>
         <AnimatePresence>
-          {indOpen && (
+          {open === "ind" && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -226,6 +348,8 @@ export function TopBar({
                   return (
                     <li key={i.id}>
                       <button
+                        type="button"
+                        aria-pressed={on}
                         onClick={() => toggleIndicator(i.id)}
                         className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors ${
                           on ? "bg-brand-ink/12" : "hover:bg-surface"
@@ -257,23 +381,35 @@ export function TopBar({
       <ToolbarBtn icon={<IconRedo />} label="Redo" onClick={onRedo} />
 
       <div className="ml-auto flex items-center gap-1">
-        <div className="relative">
-          <ToolButton onClick={() => setLayoutOpen((o) => !o)} title="Multi-pane layout" className="!px-2">
-            <span className="grid grid-cols-2 gap-px">
+        <div className="relative" ref={(el) => { boxes.current.layout = el; }}>
+          <ToolButton
+            ref={(el) => { triggers.current.layout = el; }}
+            onClick={() => toggle("layout")}
+            aria-haspopup="true"
+            aria-expanded={open === "layout"}
+            aria-label={`Layout: ${layout} chart${layout > 1 ? "s" : ""}`}
+            title="Multi-pane layout"
+            className="!px-2"
+          >
+            <span aria-hidden className="grid grid-cols-2 gap-px">
               <span className="size-1.5 bg-current" />
               <span className="size-1.5 bg-current" />
               <span className="size-1.5 bg-current" />
               <span className="size-1.5 bg-current" />
             </span>
-            <span>×{layout}</span>
+            <span aria-hidden>×{layout}</span>
           </ToolButton>
           <AnimatePresence>
-            {layoutOpen && (
+            {open === "layout" && (
               <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute right-0 top-9 z-40 grid w-48 max-w-[calc(100vw/var(--ui-zoom)-1rem)] grid-cols-2 gap-1 surface-instrument border border-border bg-bg p-2 shadow-2xl">
                 {[1, 2, 3, 4].map((n) => (
                   <button
                     key={n}
-                    onClick={() => { setLayout(n); setLayoutOpen(false); }}
+                    type="button"
+                    aria-pressed={n === layout}
+                    aria-label={`${n} chart${n > 1 ? "s" : ""}`}
+                    title={`${n} chart${n > 1 ? "s" : ""}`}
+                    onClick={() => { setLayout(n); setOpen(null); }}
                     className={`flex h-12 items-center justify-center rounded-[var(--r-instrument)] border ${n === layout ? "border-brand-ink text-brand-ink" : "border-border text-fg-dim hover:text-fg"}`}
                   >
                     <span className="grid grid-cols-2 gap-0.5">

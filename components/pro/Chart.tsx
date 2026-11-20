@@ -21,6 +21,7 @@ import {
   type Bar,
 } from "./chartCore";
 import { bollinger, ema, ichimoku, macd, rsi, supertrend, vwap, type Series } from "./indicators";
+import { backdropOf, selfContainedSvg } from "./snapshot";
 import { narrate } from "@/lib/narrator";
 
 /** Every indicator's exact shape — inferred from the math module itself so a
@@ -630,17 +631,20 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     snapshot: () => {
       const svg = svgRef.current;
       if (!svg) return;
-      const xml = new XMLSerializer().serializeToString(svg);
-      const svgWithBg = xml.replace("<svg", `<svg xmlns="http://www.w3.org/2000/svg" style="background:#050505"`);
-      const blob = new Blob([svgWithBg], { type: "image/svg+xml" });
+      // A file that opens anywhere (components/pro/snapshot.ts): resolved
+      // colours, a real size, one namespace, and a line saying what it is.
+      const title = `${symbol} · ${timeframe} · lazybull · ${new Date().toISOString().slice(0, 10)}`;
+      const xml = selfContainedSvg(svg, title, backdropOf(svg.parentElement));
+      const blob = new Blob([xml], { type: "image/svg+xml" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${symbol}-${timeframe}-${Date.now()}.svg`;
+      a.download = `${symbol.replace(/[^\w.-]+/g, "")}-${timeframe}-${Date.now()}.svg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Revoked a beat later: some browsers cancel a download whose URL dies mid-click.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
     fit: (lastN: number) => {
       if (!allBars.length) return;
@@ -871,9 +875,15 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         {/* x-axis labels */}
         {xTicks.map((i) => {
           const x = xOfBar(i, vp, geom);
+          const label = fmtTime(bars[i].t);
+          // Centred on its tick, a label near either edge was cut in half
+          // ("un 02, 26"). Mono at 10px advances about 6px a character, so a
+          // label that can't sit whole inside the plot is left out.
+          const half = label.length * 3.1 + 2;
+          if (x - half < 0 || x + half > geom.width - geom.padR) return null;
           return (
             <text key={`xt-${i}`} x={x} y={geom.height - 8} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
-              {fmtTime(bars[i].t)}
+              {label}
             </text>
           );
         })}
