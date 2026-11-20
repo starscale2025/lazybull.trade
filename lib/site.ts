@@ -29,6 +29,7 @@ export const SITE_URL = (
 export const PUBLIC_ROUTES = [
   { path: "/", priority: 1.0, changeFrequency: "weekly" as const },
   { path: "/learn", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/start", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/practice", priority: 0.9, changeFrequency: "weekly" as const },
   { path: "/practice/contest", priority: 0.6, changeFrequency: "weekly" as const },
   { path: "/practice/tracks/finance", priority: 0.6, changeFrequency: "monthly" as const },

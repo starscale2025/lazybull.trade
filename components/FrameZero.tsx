@@ -16,6 +16,7 @@
  */
 
 import Link from "next/link";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { MagneticCTA } from "./atmosphere/MagneticCTA";
 import { AnomalousMatterHero } from "./ui/anomalous-matter-hero";
@@ -31,6 +32,9 @@ const FRAME_MAP = [
 export function FrameZero() {
   const { status } = useSession();
   const authed = status === "authenticated";
+  // /start carries the market map, so it is fetched on intent (hover or focus),
+  // not with the first frame: prefetched on sight it added ~56 KB to frame zero.
+  const [warmStart, setWarmStart] = useState(false);
 
   return (
     <AnomalousMatterHero
@@ -63,11 +67,16 @@ export function FrameZero() {
     >
       <div className="matter-in mt-9 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 [animation-delay:320ms] [@media(max-height:760px)]:mt-6">
         <MagneticCTA>
+          {/* To /start, every page in one place over a live market map (owner, 2026-11-20). */}
           <Link
-            href="/trade"
+            href="/start"
+            prefetch={warmStart ? null : false}
+            onMouseEnter={() => setWarmStart(true)}
+            onFocus={() => setWarmStart(true)}
+            onTouchStart={() => setWarmStart(true)}
             className="btn-primary-glass tracking-[-0.01em] group relative inline-flex h-12 items-center rounded-full px-8 text-base font-semibold"
           >
-            <span className="relative z-10">{authed ? "Open the builder" : "Get started"}</span>
+            <span className="relative z-10">{authed ? "Explore lazybull" : "Get started"}</span>
           </Link>
         </MagneticCTA>
         <Link

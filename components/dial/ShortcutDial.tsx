@@ -93,7 +93,9 @@ function arcPath(mid: number, sweep: number) {
 // Not on the practice, strategy-builder or pro-charts routes either (owner,
 // 2026-11-17): those are full working surfaces in the pitch deck's skin, and
 // the folded dial sat over their content in the old palette.
-const NO_DIAL = /^\/(admin|pro|practice|trade)(\/|$)/;
+// /start is the site's page directory itself, so its shortcut dial would only
+// cover its own links (2026-11-20).
+const NO_DIAL = /^\/(admin|pro|practice|start|trade)(\/|$)/;
 
 /** Pages with their own bars along the bottom edge lift the dial clear of them. */
 const liftFor = (path: string) =>
