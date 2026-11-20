@@ -58,10 +58,10 @@ export function Diploma() {
     ctx.fillStyle = "#07070a";
     ctx.fillRect(0, 0, W, H);
     // The brand ink, as on the page (a canvas cannot read the token).
-    ctx.strokeStyle = "#8f73ff";
+    ctx.strokeStyle = "#00ff87";
     ctx.lineWidth = 2;
     ctx.strokeRect(24, 24, W - 48, H - 48);
-    ctx.fillStyle = "#8f73ff";
+    ctx.fillStyle = "#00ff87";
     ctx.font = "600 20px ui-monospace, monospace";
     ctx.fillText("LAZYBULL · PAPER DIPLOMA", 60, 90);
     ctx.fillStyle = "#e8e8e0";
@@ -71,7 +71,7 @@ export function Diploma() {
     ctx.font = "18px ui-monospace, monospace";
     ctx.fillText(`CALLED ${answeredCount}/${total} CONCEPTS · ${correctCount} RIGHT FIRST TRY`, 60, 320);
     ctx.fillText(`CONF #${cid}   ·   ${date}   ·   $0 REAL RISK`, 60, 352);
-    ctx.fillStyle = "#8f73ff";
+    ctx.fillStyle = "#00ff87";
     ctx.font = "600 26px ui-monospace, monospace";
     // The domain is printed on an artefact people keep and share, so it has
     // to be one that resolves. lazybull.us is the site.

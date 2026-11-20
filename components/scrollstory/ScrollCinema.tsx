@@ -1518,9 +1518,9 @@ export function ScrollCinema() {
           >
             <defs>
               <linearGradient ref={cutGradRef} id="lb-cut-ramp" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#7b5cff" />
-                <stop offset="0.52" stopColor="#4d8dff" />
-                <stop offset="1" stopColor="#6dffc0" />
+                <stop offset="0" stopColor="#00a857" />
+                <stop offset="0.52" stopColor="#00c46a" />
+                <stop offset="1" stopColor="#00ff87" />
               </linearGradient>
               <clipPath id="lb-cut-up" clipPathUnits="userSpaceOnUse">
                 <rect ref={cutClipUpRef} x="-100000" y="-100000" width="300000" height="0" />
@@ -1535,7 +1535,7 @@ export function ScrollCinema() {
               stroke="url(#lb-cut-ramp)"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ filter: "drop-shadow(0 0 9px rgba(110,120,255,0.55))" }}
+              style={{ filter: "drop-shadow(0 0 9px rgba(0,255,135,0.5))" }}
             />
             <path ref={cutUpRef} fill="none" stroke="var(--bull)" strokeLinejoin="round" clipPath="url(#lb-cut-up)" />
             <path ref={cutDnRef} fill="none" stroke="var(--bear)" strokeLinejoin="round" clipPath="url(#lb-cut-dn)" />

@@ -1,12 +1,12 @@
 // The brand ramp for HEIGHT, and only height (plan A5, Stage 3, rule 3): a
-// value on a surface or in a heat strip. Three hues because the owner asked
-// for the brand colours, so it is never shown without its legend bar.
+// value on a surface or in a heat strip, never shown without its legend bar.
+// Since 2026-11-20 it is the site's one green (the owner moved the whole
+// brand from violet to a neon-to-dark green), a single-hue ramp.
 //
 // Each theme has its own ramp, ordered so the highest value stands out most
-// from that theme's page: on dark it climbs from a deep violet to a bright
-// mint; on light it flips, a pale violet floor to a dark green crest. The
-// light theme's brand tokens could not be used: their lightness is flat
-// (0.52 -> 0.55), so only the hue would change.
+// from that theme's page: on dark it climbs from a deep green to the neon;
+// on light it flips, a mid-green floor to a near-black green crest. Pale
+// greens could not be the light floor: they fall under 2.2:1 on paper.
 //
 // The steps are mixed in OKLab and published as CSS tokens (--viz-ramp-0 to
 // --viz-ramp-8 in globals.css), so a figure follows the theme with no
@@ -18,8 +18,8 @@ import { mixOklab } from "./color";
 export type VizTheme = "dark" | "light";
 
 export const RAMP_STOPS: Record<VizTheme, [string, string, string]> = {
-  dark: ["#6B47FF", "#5C9AFF", "#52FFA5"],
-  light: ["#A996FF", "#3F7BE0", "#006B47"],
+  dark: ["#008044", "#00BC60", "#00FF87"],
+  light: ["#36AE73", "#007942", "#003F20"],
 };
 
 /** The ground each ramp is judged against. */

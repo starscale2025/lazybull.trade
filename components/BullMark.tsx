@@ -14,9 +14,9 @@ export function BullMark({ className = "", strokeWidth = 2.2 }: { className?: st
         {/* One definition however many marks a page draws: the ids collide
             but the gradients are identical, so whichever wins is right. */}
         <linearGradient id="lb-mark-ramp" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#7b5cff" />
-          <stop offset="0.52" stopColor="#4d8dff" />
-          <stop offset="1" stopColor="#6dffc0" />
+          <stop offset="0" stopColor="#00a857" />
+          <stop offset="0.52" stopColor="#00c46a" />
+          <stop offset="1" stopColor="#00ff87" />
         </linearGradient>
       </defs>
       <polyline

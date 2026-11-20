@@ -1021,11 +1021,11 @@ export default function CandleField3D({
           something to refract instead. */}
       <ambientLight intensity={0.1} />
       <directionalLight position={[6, 14, 8]} intensity={0.7} color="#bfe9ff" />
-      <directionalLight position={[SPAN * 0.6, 6, -12]} intensity={1.3} color="#8f73ff" />
+      <directionalLight position={[SPAN * 0.6, 6, -12]} intensity={1.3} color="#00c46a" />
       <Environment resolution={128} frames={1}>
         <Lightformer form="rect" intensity={2.2} color="#dfe8ff" position={[SPAN / 2, 9, 10]} scale={[24, 3, 1]} />
-        <Lightformer form="rect" intensity={1.4} color="#7b5cff" position={[SPAN * 0.8, 4, -10]} scale={[16, 6, 1]} />
-        <Lightformer form="ring" intensity={1.1} color="#4d8dff" position={[-6, 6, 4]} scale={4} />
+        <Lightformer form="rect" intensity={1.4} color="#00a857" position={[SPAN * 0.8, 4, -10]} scale={[16, 6, 1]} />
+        <Lightformer form="ring" intensity={1.1} color="#00ff87" position={[-6, 6, 4]} scale={4} />
       </Environment>
 
       <Interaction />

@@ -39,8 +39,8 @@ const DIM = "#8a8a82";
 const BULL = "#52ffa5";
 const BEAR = "#ff2e63";
 const GRID = "rgba(245,245,240,0.06)";
-// The bull mark's ramp (components/BullMark.tsx), violet to blue to mint.
-const RAMP = ["#7b5cff", "#4d8dff", "#6dffc0"];
+// The bull mark's ramp (components/BullMark.tsx), deep green to neon.
+const RAMP = ["#00a857", "#00c46a", "#00ff87"];
 
 export default function Image() {
   // The payoff geometry, in the card's own coordinate space, confined to the

@@ -36,15 +36,15 @@ import { cinemaClock } from "@/lib/cinema-clock";
 import { BOKEH_FRAG, BOKEH_VERT, BULL_VERT, DOT_FRAG, LEDGER_VERT, SPHERE_VERT } from "./shaders";
 
 // ── the palette ─────────────────────────────────────────────────────────────
-// The 2026-11 brand, top to bottom: mint, blue, violet (mint stays: the
-// owner's call, 2026-11-09).
-const BRAND = { top: "#52ffa5", mid: "#3884ff", bottom: "#582eff" };
+// The brand since 2026-11-20, top to bottom: neon, mid and dark green (the
+// owner moved the whole site from violet to one green).
+const BRAND = { top: "#00ff87", mid: "#00b35b", bottom: "#00703a" };
 
 /**
  * The brand colours as a five-stop ramp, bottom to top. On the dark ground
  * every stop is a TINT (lifted toward white), so neighbouring stops sit close
  * in lightness and read as one gradient. On paper the same ramp is pulled
- * toward a deep navy instead, so it reads as ink.
+ * toward a green-black instead, so it reads as ink.
  */
 function rampStops(ink: boolean): THREE.Color[] {
   const rgb = (hex: string) => {
@@ -55,7 +55,7 @@ function rampStops(ink: boolean): THREE.Color[] {
     return [out.r, out.g, out.b];
   };
   const mix = (a: number[], b: number[], t: number) => a.map((v, i) => v + (b[i] - v) * t);
-  const toward = ink ? [0.06, 0.07, 0.16] : [1, 1, 1];
+  const toward = ink ? [0.02, 0.09, 0.05] : [1, 1, 1];
   const k = ink ? 0.35 : 1;
   const top = rgb(BRAND.top);
   const mid = rgb(BRAND.mid);

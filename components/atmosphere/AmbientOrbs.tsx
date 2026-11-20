@@ -15,7 +15,7 @@ export function AmbientOrbs() {
           left: "-10%",
           width: 520,
           height: 520,
-          background: "radial-gradient(circle, rgba(88,46,255,0.3) 0%, rgba(88,46,255,0) 70%)",
+          background: "radial-gradient(circle, rgba(0,196,106,0.26) 0%, rgba(0,196,106,0) 70%)",
           opacity: 0.7,
         }}
       />
@@ -26,7 +26,7 @@ export function AmbientOrbs() {
           right: "-8%",
           width: 460,
           height: 460,
-          background: "radial-gradient(circle, rgba(56,132,255,0.18) 0%, rgba(56,132,255,0) 70%)",
+          background: "radial-gradient(circle, rgba(0,112,58,0.22) 0%, rgba(0,112,58,0) 70%)",
           opacity: 0.55,
           animationDelay: "-7s",
         }}

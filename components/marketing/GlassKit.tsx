@@ -139,7 +139,7 @@ const BTN_KIND = {
   // The brand gradient (globals.css THE BRAND GRADIENT), dark type on it.
   primary:
     "btn-grad font-semibold " +
-    "shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_10px_30px_-14px_rgba(88,46,255,0.6)]",
+    "shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_10px_30px_-14px_rgba(0,255,135,0.45)]",
   glass:
     "glass font-medium text-fg hover:bg-[rgba(245,245,240,0.1)] hover:border-[rgba(245,245,240,0.22)]",
   ghost:

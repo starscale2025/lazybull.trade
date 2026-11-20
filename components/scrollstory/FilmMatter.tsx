@@ -551,9 +551,9 @@ function Matter({ active, onBull }: { active: boolean; onBull?: (ok: boolean) =>
       uAlpha: { value: 1 },
       uDensity: { value: 90000 / count },
       uInk: { value: 0 },
-      uA: { value: new THREE.Color("#8f73ff") },
-      uB: { value: new THREE.Color("#5c9aff") },
-      uC: { value: new THREE.Color("#52ffa5") },
+      uA: { value: new THREE.Color("#008a47") },
+      uB: { value: new THREE.Color("#00c46a") },
+      uC: { value: new THREE.Color("#00ff87") },
       uBirth: { value: 0 },
       uChop: { value: 0 },
       uTrend: { value: 0 },
@@ -628,7 +628,7 @@ function Matter({ active, onBull }: { active: boolean; onBull?: (ok: boolean) =>
     const pos = new Float32Array(N * 3);
     const seed = new Float32Array(N);
     const tint = new Float32Array(N * 3);
-    const palette = [new THREE.Color("#8f73ff"), new THREE.Color("#5c9aff"), new THREE.Color("#52ffa5"), new THREE.Color("#dfe6ff"), new THREE.Color("#dfe6ff")];
+    const palette = [new THREE.Color("#008a47"), new THREE.Color("#00c46a"), new THREE.Color("#00ff87"), new THREE.Color("#e6fff2"), new THREE.Color("#e6fff2")];
     for (let i = 0; i < N; i++) {
       pos[i * 3] = (hash(i, 11.7) - 0.5) * 34;
       pos[i * 3 + 1] = (hash(i, 23.9) - 0.5) * 18;

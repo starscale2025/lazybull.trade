@@ -292,9 +292,9 @@ export function MobileCinema() {
     let RULE = "#1f1f1f";
     let BG = "#050505";
     let MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
-    // The brand ramp, violet → blue → mint, from --grad-line's own stops, so
+    // The brand ramp, neon → dark green, from --grad-line's own stops, so
     // the mark is drawn in the same three colours as every brand accent.
-    let RAMP = ["#8f73ff", "#5c9aff", "#52ffa5"];
+    let RAMP = ["#00ff87", "#00b35b", "#00703a"];
     const readTokens = () => {
       const css = getComputedStyle(document.documentElement);
       const tok = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;

@@ -21,7 +21,7 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), "../../public/cinema/p
 const W = 1280;
 const H = 800;
 // Neutrals are navy-tinted blacks and the interface chrome is the brand
-// violet; mint is kept for what it MEANS (profit, up candles, values above
+// green (neon since 2026-11-20, was violet); green also keeps what it MEANS (profit, up candles, values above
 // zero). Until 2026-11-06 the neutrals were green-tinted and the chrome mint,
 // so the tunnel's screens read as a green terminal beside a violet site.
 const C = {
@@ -29,10 +29,10 @@ const C = {
   panel: "#0c0f19",
   line: "#1c2232",
   faint: "#3b4152",
-  brand: "#8f73ff",
+  brand: "#00ff87",
   gray: "#8a8a82",
   ink: "#f5f5f0",
-  bull: "#52ffa5",
+  bull: "#00ff87",
   bear: "#ff2e63",
   cyan: "#3884ff",
   amber: "#ffb800",
@@ -170,7 +170,7 @@ plates.chain = () => {
     const cp = Math.max(0.05, (100 - k) + 2.6 * Math.exp(-((k - 100) ** 2) / 120));
     const pp = Math.max(0.05, (k - 100) + 2.6 * Math.exp(-((k - 100) ** 2) / 120));
     const iv = 22 + Math.abs(k - 100) * 0.35;
-    if (k === 100) rows.push(rect(70, y - 26, 1140, 38, { fill: "#15132b", stroke: C.brand, r: 4 }));
+    if (k === 100) rows.push(rect(70, y - 26, 1140, 38, { fill: "#0b2016", stroke: C.brand, r: 4 }));
     const cell = (x, s, fill = C.ink, anchor = "start") => rows.push(text(x, y, s, { size: 16, fill, anchor }));
     cell(90, cd.toFixed(2), C.gray);
     cell(190, Math.max(0.01, cp - 0.05).toFixed(2));
@@ -195,7 +195,7 @@ plates.learn = () => {
   chapters.forEach((c, i) => {
     const y = 128 + i * 44;
     const on = i === 5;
-    if (on) nav.push(rect(52, y - 26, 236, 38, { fill: "#15132b", stroke: C.brand, r: 4 }));
+    if (on) nav.push(rect(52, y - 26, 236, 38, { fill: "#0b2016", stroke: C.brand, r: 4 }));
     nav.push(text(70, y, String(i + 1).padStart(2, "0"), { size: 13, fill: on ? C.brand : C.faint }));
     nav.push(text(110, y, c, { size: 15, fill: on ? C.ink : C.gray }));
   });

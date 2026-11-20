@@ -155,7 +155,7 @@ const PILL_SIZE = {
 
 const PILL_KIND = {
   primary:
-    "btn-grad font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_10px_30px_-14px_rgba(88,46,255,0.6)]",
+    "btn-grad font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.36),0_10px_30px_-14px_rgba(0,255,135,0.45)]",
   secondary: "calm-pill-secondary font-medium text-fg",
 } as const;
 

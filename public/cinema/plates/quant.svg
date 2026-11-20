@@ -12,15 +12,15 @@
 <text x="748.0" y="176.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="11" font-weight="500" fill="#8a8a82" text-anchor="end" letter-spacing="0">← leaned down</text>
 <text x="772.0" y="176.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="11" font-weight="500" fill="#8a8a82" text-anchor="start" letter-spacing="0">leaned up →</text>
 <text x="90.0" y="220.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">SMA Crossover</text>
-<rect x="760.0" y="204" width="378.0" height="20" rx="3" fill="#52ffa5" fill-opacity="0.55"/>
+<rect x="760.0" y="204" width="378.0" height="20" rx="3" fill="#00ff87" fill-opacity="0.55"/>
 <text x="90.0" y="264.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">RSI Reversion</text>
 <rect x="481.0" y="248" width="279.0" height="20" rx="3" fill="#ff2e63" fill-opacity="0.55"/>
 <text x="90.0" y="308.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Kalman Filter</text>
-<rect x="760.0" y="292" width="162.0" height="20" rx="3" fill="#52ffa5" fill-opacity="0.55"/>
+<rect x="760.0" y="292" width="162.0" height="20" rx="3" fill="#00ff87" fill-opacity="0.55"/>
 <text x="90.0" y="352.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Bollinger Bands</text>
 <rect x="562.0" y="336" width="198.0" height="20" rx="3" fill="#ff2e63" fill-opacity="0.55"/>
 <text x="90.0" y="396.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Z-Score Reversion</text>
-<rect x="760.0" y="380" width="243.0" height="20" rx="3" fill="#52ffa5" fill-opacity="0.55"/>
+<rect x="760.0" y="380" width="243.0" height="20" rx="3" fill="#00ff87" fill-opacity="0.55"/>
 <text x="90.0" y="440.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="16" font-weight="500" fill="#f5f5f0" text-anchor="start" letter-spacing="0">Hurst Exponent</text>
 <rect x="652.0" y="424" width="108.0" height="20" rx="3" fill="#ff2e63" fill-opacity="0.55"/>
 <text x="90.0" y="530.0" font-family="JetBrains Mono, ui-monospace, Menlo, monospace" font-size="18" font-weight="600" fill="#f5f5f0" text-anchor="start" letter-spacing="0">3 agreed, 3 did not: a split, not a call</text>

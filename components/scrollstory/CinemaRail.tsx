@@ -175,7 +175,7 @@ export const CinemaRail = forwardRef<
         <span
           ref={fillRef}
           aria-hidden
-          className="absolute left-0 top-1 bottom-1 w-px origin-top bg-[linear-gradient(180deg,#8f73ff,#5c9aff_55%,#52ffa5)]"
+          className="absolute left-0 top-1 bottom-1 w-px origin-top bg-[linear-gradient(180deg,#00ff87,#00b35b_55%,#00703a)]"
           style={{ transform: "scaleY(0)", boxShadow: "var(--glow-rail)" }}
         />
         {RAIL.map((row, i) => (

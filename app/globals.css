@@ -34,56 +34,57 @@
      site. #787872 measures 4.589:1. The pro (6.45) and light (4.76)
      variants below were already honest; only this one was not. */
   --fg-faint: #787872;
-  /* ── THE PALETTE (2026-11): violet #582EFF, mint #52FFA5, blue #3884FF ────
-     Violet is the brand: primary actions, the mark, selection, the glass
-     glow. Mint is what green always meant here (up, profit, live, the accent
-     word), and blue takes over everything cyan did (strikes, info, data
-     strokes). The token NAMES stay (--bull, --cyan, --plasma) because ~1,300
-     call sites read them; only the values moved. Loss red and warning amber
-     are not brand colours and do not change: a loss drawn in violet would
-     stop reading as a loss.
-     Violet is 3.3:1 on #050505, so it is a FILL: --brand-ink (5.9:1) is the
-     violet for type, the same ink/fill split as below. */
-  --brand: #582eff;
-  --brand-ink: #8f73ff;
-  --brand-hi: #7b5cff;
+  /* ── THE PALETTE (2026-11-20): one green, neon #00FF87 down to dark #00703A
+     The owner's call: the whole site in the green of the Pro charts deck
+     (THE DECK SKIN), from neon to dark green, and no violet anywhere. The
+     brand, up/profit and live are one neon; the gradients run neon → dark.
+     Blue stays a DATA colour (strikes, model lines, info), never brand.
+     The token NAMES stay (--bull, --cyan, --plasma) because ~1,300 call
+     sites read them; only the values moved. Loss red and warning amber are
+     not brand colours and do not change.
+     Neon is 15.2:1 on #050505, so here one value is both fill and ink; a
+     fill carries dark type (--grad-on), never white. */
+  --brand: #00ff87;
+  --brand-ink: #00ff87;
+  --brand-hi: #5cffaf;
   /* ── THE BRAND GRADIENT: one ramp, everywhere a brand accent appears ──────
-     violet → blue → mint, left to right: the frame-zero sphere's ramp turned
+     neon → dark green, left to right: the frame-zero sphere's ramp turned
      on its side. It was running as five different accents (solid mint words,
      violet buttons, a violet-to-blue mark, blue words on /quant, green glows
      on /learn); now every brand accent draws from these four, and the solid
      semantic colours (--bull up, --bear loss, --cyan strikes) stay solid,
      because those are data, not brand.
-       --grad-ink   TYPE. Tints, every stop ≥5.8:1 on --bg.
+       --grad-ink   TYPE. Every stop ≥6.5:1 on --bg (#00a857 is the darkest).
        --grad-fill  FILLS (primary buttons, the mark), with --grad-on type:
-                    ≥4.6:1 at the violet end, ≥6.4:1 everywhere else.
+                    ≥6.0:1 at every stop.
        --grad-line  hairlines and rules, fading out at both ends.
        --grad-glow  the shadow a filled control throws. */
-  --grad-ink: linear-gradient(100deg, #9a82ff 0%, #5c9aff 48%, #7ef0c9 100%);
-  --grad-fill: linear-gradient(100deg, #7b5cff 0%, #4d8dff 52%, #6dffc0 100%);
-  --grad-on: #07060f;
-  --grad-line: linear-gradient(90deg, transparent, #8f73ff 18%, #5c9aff 50%, #52ffa5 82%, transparent);
-  --grad-glow: 0 10px 30px -12px rgba(88, 46, 255, 0.6), 0 18px 56px -26px rgba(56, 132, 255, 0.5);
-  /* The three stops of a lit edge (LIT EDGES, below). */
-  --edge-a: #8f73ff;
-  --edge-b: #5c9aff;
-  --edge-c: #52ffa5;
-  --bull: #52ffa5;
+  --grad-ink: linear-gradient(100deg, #5cffaf 0%, #00ff87 35%, #00c46a 70%, #00a857 100%);
+  --grad-fill: linear-gradient(100deg, #00ff87 0%, #00c46a 55%, #00a857 100%);
+  --grad-on: #04140b;
+  --grad-line: linear-gradient(90deg, transparent, #00ff87 18%, #00b35b 50%, #00703a 82%, transparent);
+  --grad-glow: 0 10px 30px -12px rgba(0, 255, 135, 0.45), 0 18px 56px -26px rgba(0, 112, 58, 0.55);
+  /* The three stops of a lit edge (LIT EDGES, below): neon to dark. */
+  --edge-a: #00ff87;
+  --edge-b: #00b35b;
+  --edge-c: #00703a;
+  --bull: #00ff87;
   /* INK vs FILL. The vivid accents are for fills, strokes and 3D emissives; the
      -ink pair is for TYPE. On #050505 they are the same colour, because the
      vivid values already clear AA against it. On warm paper they are not —
      measured, --bull is 2.87:1 and --amber 2.72:1 as text, i.e. the brand
      colour failed AA in every role it occupied. Splitting the two lets the
      light theme keep its glow without asking anyone to read 2.87:1. */
-  --bull-ink: #52ffa5;
+  --bull-ink: #00ff87;
   --cyan-ink: #3884ff;
   --amber-ink: #ffb800;
-  --bull-dim: #3dbf7c;
+  --bull-dim: #00c46a;
   --bear: #ff2e63;
   --bear-dim: #b8204a;
   --amber: #ffb800;
   --cyan: #3884ff;
-  --plasma: #8f73ff;
+  /* Was violet. The third data colour is the deck's cyan, apart from the green. */
+  --plasma: #00e5ff;
   --grid: rgba(245, 245, 240, 0.05);
   --grid-strong: rgba(245, 245, 240, 0.1);
 }
@@ -135,17 +136,19 @@
   --fg: #0c0c0c;
   --fg-dim: #5a5a52;
   --fg-faint: #6e6e64; /* ≥4.5:1 on the light canvas (was #9a9a8e ≈ 2.6:1) */
-  /* Violet clears 6.0:1 on paper, so here one value is both fill and ink. */
-  --brand: #582eff;
-  --brand-ink: #582eff;
-  --brand-hi: #6a45ff;
+  /* Neon is 2.1:1 on paper, so here the green splits: a vivid fill with dark
+     type, and deep greens for ink (#00803f is 4.66:1 on #f7f6f0). */
+  --brand: #00a85a;
+  --brand-ink: #00803f;
+  --brand-hi: #00964f;
   /* On paper the tints wash out: the type ramp runs on the deep values. */
-  --grad-ink: linear-gradient(100deg, #582eff 0%, #1f5fd6 50%, #00875a 100%);
-  --grad-line: linear-gradient(90deg, transparent, #582eff 18%, #1f5fd6 50%, #00a85a 82%, transparent);
-  --grad-glow: 0 10px 30px -14px rgba(88, 46, 255, 0.35), 0 18px 56px -28px rgba(31, 95, 214, 0.3);
-  --edge-a: #582eff;
-  --edge-b: #1f5fd6;
-  --edge-c: #00a85a;
+  --grad-ink: linear-gradient(100deg, #00803f 0%, #006b35 50%, #004d26 100%);
+  --grad-fill: linear-gradient(100deg, #00e077 0%, #00c46a 50%, #00a85a 100%);
+  --grad-line: linear-gradient(90deg, transparent, #00a85a 18%, #00803f 50%, #004d26 82%, transparent);
+  --grad-glow: 0 10px 30px -14px rgba(0, 168, 90, 0.35), 0 18px 56px -28px rgba(0, 77, 38, 0.25);
+  --edge-a: #00c46a;
+  --edge-b: #00803f;
+  --edge-c: #004d26;
   --bull: #00a85a;
   /* Measured against --bg #f7f6f0: 4.66, 5.3 and 5.27 : 1. The fills above
      stay vivid; only type reads these. */
@@ -157,7 +160,7 @@
   --bear-dim: #a01838;
   --amber: #c98a00;
   --cyan: #1f5fd6;
-  --plasma: #582eff;
+  --plasma: #007aa3;
   --grid: rgba(12, 12, 12, 0.05);
   --grid-strong: rgba(12, 12, 12, 0.12);
 }
@@ -401,7 +404,7 @@ html, body {
 
 ::selection {
   background: var(--brand);
-  color: #fff;
+  color: var(--grad-on);
 }
 
 /* THE FOCUS LAW (WCAG 2.4.7). Deliberately UNLAYERED so it outranks every
@@ -451,7 +454,7 @@ nav[aria-label="Site pages"] a:focus-visible {
   z-index: var(--z-dialog);
   pointer-events: none;
   background:
-    linear-gradient(to bottom, transparent 0%, rgba(82, 255, 165, 0.03) 50%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 255, 135, 0.03) 50%, transparent 100%),
     var(--bg);
   animation: route-veil-out 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -656,7 +659,7 @@ html[data-motion="paused"]::view-transition-new(*) {
 
 /* Phosphor glow */
 .phosphor {
-  text-shadow: 0 0 20px rgba(82, 255, 165, 0.4), 0 0 4px rgba(82, 255, 165, 0.6);
+  text-shadow: 0 0 20px rgba(0, 255, 135, 0.4), 0 0 4px rgba(0, 255, 135, 0.6);
 }
 /* On gradient type a text-shadow paints OVER the clipped gradient (it sits
    between the background and the transparent fill), so the glow there is a
@@ -664,7 +667,7 @@ html[data-motion="paused"]::view-transition-new(*) {
 .t-accent.phosphor,
 .text-grad.phosphor {
   text-shadow: none;
-  filter: drop-shadow(0 0 14px rgba(110, 90, 255, 0.45)) drop-shadow(0 0 3px rgba(92, 154, 255, 0.5));
+  filter: drop-shadow(0 0 14px rgba(0, 255, 135, 0.4)) drop-shadow(0 0 3px rgba(0, 196, 106, 0.5));
 }
 
 .phosphor-red {
@@ -722,8 +725,8 @@ html[data-motion="paused"]::view-transition-new(*) {
     0deg,
     transparent,
     transparent 2px,
-    rgba(82, 255, 165, 0.02) 2px,
-    rgba(82, 255, 165, 0.02) 3px
+    rgba(0, 255, 135, 0.02) 2px,
+    rgba(0, 255, 135, 0.02) 3px
   );
 }
 
@@ -750,7 +753,7 @@ html[data-motion="paused"]::view-transition-new(*) {
 
 /* Glow effects */
 .glow-bull {
-  box-shadow: 0 0 0 1px rgba(82, 255, 165, 0.3), 0 0 40px -10px rgba(82, 255, 165, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 255, 135, 0.3), 0 0 40px -10px rgba(0, 255, 135, 0.4);
 }
 
 .glow-bear {
@@ -967,15 +970,15 @@ html[data-motion="paused"]::view-transition-new(*) {
 
 /* Phosphor pulse — for "live" key terms in body prose */
 @keyframes text-glow-pulse {
-  0%, 100% { text-shadow: 0 0 16px rgba(82, 255, 165, 0.45), 0 0 4px rgba(82, 255, 165, 0.6); }
-  50%      { text-shadow: 0 0 28px rgba(82, 255, 165, 0.7),  0 0 8px rgba(82, 255, 165, 0.8); }
+  0%, 100% { text-shadow: 0 0 16px rgba(0, 255, 135, 0.45), 0 0 4px rgba(0, 255, 135, 0.6); }
+  50%      { text-shadow: 0 0 28px rgba(0, 255, 135, 0.7),  0 0 8px rgba(0, 255, 135, 0.8); }
 }
 .text-glow-pulse { animation: text-glow-pulse 4s ease-in-out infinite; }
 
 /* Ambient slow zoom on chart frames */
 @keyframes ambient-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(82, 255, 165, 0); }
-  50%      { box-shadow: 0 0 60px -20px rgba(82, 255, 165, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+  50%      { box-shadow: 0 0 60px -20px rgba(0, 255, 135, 0.25); }
 }
 .ambient-glow { animation: ambient-glow 6s ease-in-out infinite; }
 
@@ -1048,8 +1051,8 @@ html[data-motion="paused"]::view-transition-new(*) {
 /* A filter, not a text-shadow: the lines it breathes on are gradient type
    (.t-accent), and a text-shadow would paint over the gradient. */
 @keyframes pull-quote-glow {
-  0%, 100% { filter: drop-shadow(0 0 16px rgba(110, 90, 255, 0.4)) drop-shadow(0 0 30px rgba(56, 132, 255, 0.18)); }
-  50%      { filter: drop-shadow(0 0 24px rgba(110, 90, 255, 0.6)) drop-shadow(0 0 46px rgba(82, 255, 165, 0.22)); }
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(0, 255, 135, 0.35)) drop-shadow(0 0 30px rgba(0, 112, 58, 0.25)); }
+  50%      { filter: drop-shadow(0 0 24px rgba(0, 255, 135, 0.55)) drop-shadow(0 0 46px rgba(0, 196, 106, 0.25)); }
 }
 .pull-quote-glow {
   animation: pull-quote-glow 5s ease-in-out infinite;
@@ -1080,8 +1083,8 @@ html[data-motion="paused"]::view-transition-new(*) {
   background:
     radial-gradient(
       600px circle at var(--mx, 50%) var(--my, 50%),
-      rgba(82, 255, 165, 0.08),
-      rgba(82, 255, 165, 0.025) 25%,
+      rgba(0, 255, 135, 0.08),
+      rgba(0, 255, 135, 0.025) 25%,
       transparent 55%
     );
   transition: opacity 0.4s ease;
@@ -1176,11 +1179,11 @@ html[data-motion="paused"] *::after {
   width: 100%;
   transform: scaleX(var(--p, 0));
   /* the brand ramp (globals THE BRAND GRADIENT), shimmering along the bar */
-  background: linear-gradient(90deg, #8f73ff, #5c9aff 35%, #52ffa5 60%, #5c9aff 80%, #8f73ff);
+  background: linear-gradient(90deg, #00703a, #00b35b 35%, #00ff87 60%, #00b35b 80%, #00703a);
   background-size: 200% 100%;
   animation: progress-shimmer 4s linear infinite;
   transform-origin: left center;
-  box-shadow: 0 0 14px rgba(92, 154, 255, 0.55);
+  box-shadow: 0 0 14px rgba(0, 255, 135, 0.45);
 }
 
 /* Scroll reveal — content always renders; transform-only lift on first view.
@@ -1254,8 +1257,8 @@ html[data-motion="paused"] *::after {
   content: "";
   position: absolute;
   inset: -20px;
-  /* violet: the magnet sits on primary actions, which are the brand now */
-  background: radial-gradient(120px circle at var(--lx, 50%) var(--ly, 50%), rgba(123, 92, 255, 0.45), transparent 60%);
+  /* green: the magnet sits on primary actions, which are the brand */
+  background: radial-gradient(120px circle at var(--lx, 50%) var(--ly, 50%), rgba(0, 255, 135, 0.35), transparent 60%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -1279,7 +1282,7 @@ html[data-motion="paused"] *::after {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(450px circle at var(--mx, 50%) var(--my, 50%), rgba(82, 255, 165, 0.18), transparent 55%);
+  background: radial-gradient(450px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 135, 0.18), transparent 55%);
   opacity: 0;
   transition: opacity 0.4s ease;
   mix-blend-mode: screen;
@@ -1306,8 +1309,8 @@ html[data-motion="paused"] *::after {
     0deg,
     transparent,
     transparent 2px,
-    rgba(82, 255, 165, 0.04) 2px,
-    rgba(82, 255, 165, 0.04) 3px
+    rgba(0, 255, 135, 0.04) 2px,
+    rgba(0, 255, 135, 0.04) 3px
   );
   pointer-events: none;
 }
@@ -1336,7 +1339,7 @@ html[data-motion="paused"] *::after {
   background: var(--bull);
   width: 0%;
   animation: boot-progress 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards;
-  box-shadow: 0 0 14px rgba(82, 255, 165, 0.6);
+  box-shadow: 0 0 14px rgba(0, 255, 135, 0.6);
 }
 
 /* Big section "chapter §N" callouts — float in from left */
@@ -1363,11 +1366,11 @@ html[data-motion="paused"] *::after {
   /* the brand ramp, mirrored so the loop is seamless */
   background: linear-gradient(
     100deg,
-    #9a82ff 0%,
-    #5c9aff 25%,
-    #7ef0c9 50%,
-    #5c9aff 75%,
-    #9a82ff 100%
+    #00a857 0%,
+    #00c46a 25%,
+    #5cffaf 50%,
+    #00c46a 75%,
+    #00a857 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
@@ -1531,8 +1534,8 @@ html[data-motion="paused"] *::after {
 }
 .hover-lift:hover {
   transform: translateY(-3px);
-  box-shadow: 0 24px 60px -30px rgba(82, 255, 165, 0.35);
-  border-color: rgba(82, 255, 165, 0.35);
+  box-shadow: 0 24px 60px -30px rgba(0, 255, 135, 0.35);
+  border-color: rgba(0, 255, 135, 0.35);
 }
 
 /* ───── Cards: scan-line ripple sweeping on hover ───── */
@@ -2042,9 +2045,9 @@ html[data-motion="paused"] *::after {
   --ease-boot: cubic-bezier(0.65, 0, 0.35, 1);
   /* Elevation is never a neutral drop shadow in this brand — it is a coloured
      glow. These are the two that were already being hand-written. */
-  --glow-bull: 0 0 0 1px rgba(82, 255, 165, 0.3), 0 0 40px -10px rgba(82, 255, 165, 0.4);
-  --glow-rail: 0 0 12px rgba(82, 255, 165, 0.55);
-  --phosphor-bull: 0 0 30px rgba(82, 255, 165, 0.45), 0 0 80px rgba(82, 255, 165, 0.2);
+  --glow-bull: 0 0 0 1px rgba(0, 255, 135, 0.3), 0 0 40px -10px rgba(0, 255, 135, 0.4);
+  --glow-rail: 0 0 12px rgba(0, 255, 135, 0.55);
+  --phosphor-bull: 0 0 30px rgba(0, 255, 135, 0.45), 0 0 80px rgba(0, 255, 135, 0.2);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2086,12 +2089,12 @@ html[data-motion="paused"] *::after {
     rgba(25, 31, 28, 0.51) 100%
   );
   --glass-border: rgba(245, 245, 240, 0.1);
-  --glass-border-hot: rgba(123, 92, 255, 0.45);
+  --glass-border-hot: rgba(0, 255, 135, 0.4);
   /* Lit on the top AND right edges — the two the light actually reaches. */
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset -1px 0 0 rgba(255, 255, 255, 0.055);
   --glass-blur: blur(26px) saturate(150%);
-  --glass-glow: 0 24px 80px -32px rgba(88, 46, 255, 0.4);
+  --glass-glow: 0 24px 80px -32px rgba(0, 196, 106, 0.35);
   /* Role-fixed radii. The kit's rule is that nothing else rounds — a value
      picked per-component is how a glass system stops looking machined. */
   --r-panel: 22px;
@@ -2135,10 +2138,10 @@ html[data-motion="paused"] *::after {
     rgba(255, 255, 255, 0.61) 100%
   );
   --glass-border: rgba(12, 12, 12, 0.1);
-  --glass-border-hot: rgba(88, 46, 255, 0.35);
+  --glass-border-hot: rgba(0, 128, 63, 0.35);
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.8),
     inset -1px 0 0 rgba(255, 255, 255, 0.45);
-  --glass-glow: 0 24px 80px -32px rgba(88, 46, 255, 0.22);
+  --glass-glow: 0 24px 80px -32px rgba(0, 128, 63, 0.2);
 }
 
 @layer components {
@@ -2261,7 +2264,7 @@ html[data-motion="paused"] *::after {
        white at top-LEFT, which crossed the fill and flattened it. */
     background: linear-gradient(
       45deg,
-      rgba(82, 255, 165, 0.055) 0%,
+      rgba(0, 255, 135, 0.055) 0%,
       transparent 26%,
       transparent 72%,
       rgba(255, 255, 255, 0.11) 100%
@@ -2277,7 +2280,7 @@ html[data-motion="paused"] *::after {
   .glass-hover:hover {
     transform: translateY(-3px);
     border-color: var(--glass-border-hot);
-    box-shadow: var(--glass-hi), 0 30px 90px -30px rgba(82, 255, 165, 0.4);
+    box-shadow: var(--glass-hi), 0 30px 90px -30px rgba(0, 255, 135, 0.4);
   }
 }
 
@@ -2321,17 +2324,17 @@ html[data-motion="paused"] *::after {
 }
 .glass-aurora .a1 {
   width: 56vw; height: 56vw; left: -14vw; top: -8vw;
-  background: radial-gradient(circle, rgba(88, 46, 255, 0.26), transparent 65%);
+  background: radial-gradient(circle, rgba(0, 196, 106, 0.22), transparent 65%);
   animation: drift 22s ease-in-out infinite;
 }
 .glass-aurora .a2 {
   width: 44vw; height: 44vw; right: -12vw; top: 28%;
-  background: radial-gradient(circle, rgba(56, 132, 255, 0.16), transparent 65%);
+  background: radial-gradient(circle, rgba(0, 112, 58, 0.2), transparent 65%);
   animation: drift 26s ease-in-out infinite reverse;
 }
 .glass-aurora .a3 {
   width: 50vw; height: 50vw; left: 24vw; bottom: -24vw;
-  background: radial-gradient(circle, rgba(82, 255, 165, 0.07), transparent 65%);
+  background: radial-gradient(circle, rgba(0, 255, 135, 0.07), transparent 65%);
   animation: drift 30s ease-in-out infinite;
 }
 /* The 72px grid that used to sit behind the orbs is gone (M33, calm): the
@@ -2502,7 +2505,7 @@ html[data-motion="paused"] *::after {
     background-position: 100% 50%;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.36),
-      0 10px 30px -14px rgba(88, 46, 255, 0.6);
+      0 10px 30px -14px rgba(0, 255, 135, 0.45);
   }
   .btn-primary-glass:active {
     transform: translateY(0);
@@ -3145,11 +3148,11 @@ html[data-motion="paused"] :is(.island-root, .isl-press, .isl-drop, .isl-s, .isl
    arrives. */
 .matter-glow {
   background:
-    radial-gradient(46% 52% at 8% 2%, rgba(76, 150, 255, 0.34), transparent 70%),
-    radial-gradient(30% 34% at 20% -4%, rgba(120, 240, 200, 0.16), transparent 72%),
-    radial-gradient(40% 28% at 50% -2%, rgba(90, 200, 215, 0.12), transparent 74%),
-    radial-gradient(38% 40% at 94% 96%, rgba(120, 100, 255, 0.14), transparent 72%),
-    radial-gradient(26% 26% at 50% 38%, rgba(76, 150, 255, 0.05), transparent 75%);
+    radial-gradient(46% 52% at 8% 2%, rgba(0, 196, 106, 0.3), transparent 70%),
+    radial-gradient(30% 34% at 20% -4%, rgba(0, 255, 135, 0.16), transparent 72%),
+    radial-gradient(40% 28% at 50% -2%, rgba(0, 179, 91, 0.12), transparent 74%),
+    radial-gradient(38% 40% at 94% 96%, rgba(0, 112, 58, 0.18), transparent 72%),
+    radial-gradient(26% 26% at 50% 38%, rgba(0, 196, 106, 0.05), transparent 75%);
   background-repeat: no-repeat;
   animation: matter-haze 12s ease-in-out infinite alternate;
 }
@@ -3160,9 +3163,9 @@ html[data-motion="paused"] :is(.island-root, .isl-press, .isl-drop, .isl-s, .isl
 @media (max-width: 767px) {
   .matter-glow {
     background:
-      radial-gradient(80% 34% at 10% 0%, rgba(76, 150, 255, 0.34), transparent 70%),
-      radial-gradient(50% 22% at 30% -2%, rgba(120, 240, 200, 0.16), transparent 72%),
-      radial-gradient(60% 26% at 92% 70%, rgba(120, 100, 255, 0.12), transparent 72%);
+      radial-gradient(80% 34% at 10% 0%, rgba(0, 196, 106, 0.3), transparent 70%),
+      radial-gradient(50% 22% at 30% -2%, rgba(0, 255, 135, 0.16), transparent 72%),
+      radial-gradient(60% 26% at 92% 70%, rgba(0, 112, 58, 0.16), transparent 72%);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -4003,15 +4006,16 @@ html[data-motion="paused"] .deck-neon-bloom::before { animation: none; }
 
 /* THE FIGURE KIT (lib/viz, components/viz; plan A5 Stage 3). Every chart on
    the site draws with these, so it follows the theme with no JavaScript.
-   - --viz-ramp-0..8: height only, never without its legend bar. Mixed in
+   - --viz-ramp-0..8: height only, never without its legend bar; deep to
+     neon green on dark, mid to near-black green on light. Mixed in
      OKLab by lib/viz/ramp.ts; __tests__/viz.test.ts fails if these drift.
    - --viz-model: a model's output. --viz-ref: a grey reference line.
    - --viz-gain / --viz-loss: profit and loss, and nothing else.
    Dark first, light after: same specificity, so the later block wins. */
 :root, [data-theme="dark"] {
-  --viz-ramp-0: #6B47FF; --viz-ramp-1: #6960FF; --viz-ramp-2: #6675FF;
-  --viz-ramp-3: #6188FF; --viz-ramp-4: #5C9AFF; --viz-ramp-5: #57B6ED;
-  --viz-ramp-6: #54CFD9; --viz-ramp-7: #52E8C2; --viz-ramp-8: #52FFA5;
+  --viz-ramp-0: #008044; --viz-ramp-1: #008F4B; --viz-ramp-2: #009D52;
+  --viz-ramp-3: #00AD59; --viz-ramp-4: #00BC60; --viz-ramp-5: #00CC6A;
+  --viz-ramp-6: #00DD73; --viz-ramp-7: #00EE7D; --viz-ramp-8: #00FF87;
   --viz-model: #3884FF;
   --viz-ref: #8A8A82;
   --viz-gain: var(--bull);
@@ -4020,9 +4024,9 @@ html[data-motion="paused"] .deck-neon-bloom::before { animation: none; }
   --viz-grid: color-mix(in srgb, var(--fg) 8%, transparent);
 }
 [data-theme="light"] {
-  --viz-ramp-0: #A996FF; --viz-ramp-1: #9190F7; --viz-ramp-2: #7889F0;
-  --viz-ramp-3: #5E82E8; --viz-ramp-4: #3F7BE0; --viz-ramp-5: #2F7ABA;
-  --viz-ramp-6: #207694; --viz-ramp-7: #0F716E; --viz-ramp-8: #006B47;
+  --viz-ramp-0: #36AE73; --viz-ramp-1: #2BA066; --viz-ramp-2: #20935A;
+  --viz-ramp-3: #12864E; --viz-ramp-4: #007942; --viz-ramp-5: #006A39;
+  --viz-ramp-6: #005B31; --viz-ramp-7: #004D28; --viz-ramp-8: #003F20;
   --viz-model: #1F5FD6;
   --viz-ref: #8A8A80;
 }
