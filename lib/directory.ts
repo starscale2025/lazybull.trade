@@ -38,11 +38,14 @@ export const SITE_DIRECTORY = [
 // cluster, not the numbered rail (width — see components/Nav.tsx).
 export const NAV_DIRECTORY = SITE_DIRECTORY.filter((e) => e.href !== "/portfolio");
 
-// Destinations that open in a tab of their own (owner, 2026-11-17): Pro charts
-// is a full-screen terminal with no site navbar, so the page you came from
-// stays open behind it. Read by the navbar's rail, phone sheet and account
-// panel, and by the footer. Plain data, no directive, so server components
-// (the footer) can call it as well as client ones.
-export const NEW_TAB = new Set<string>(["/pro"]);
+// Destinations that open in a tab of their own. Pro charts did (owner,
+// 2026-11-17: a full-screen terminal, the page you came from stays behind it),
+// until the owner found it would not open from /trade's navbar (2026-11-20):
+// browsers, in-app panes and home-screen apps that refuse target=_blank drop
+// the click silently. It opens in place now; its app bar's wordmark leads
+// home. Read by the navbar's rail, phone sheet and account panel, and by the
+// footer. Plain data, no directive, so server components (the footer) can call
+// it as well as client ones.
+export const NEW_TAB = new Set<string>();
 export const newTabProps = (href: string) =>
   NEW_TAB.has(href) ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {};
