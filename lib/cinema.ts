@@ -330,6 +330,15 @@ export function matterAt(progress: number): MatterFrame {
 /** The matter layer is drawn only near the passages it owns. */
 export const matterNear = (progress: number) => (progress > 0.13 && progress < 0.355) || progress > 0.57;
 
+/** The green aura behind the final shot, the bull over the horizon and
+ *  "Welcome in." (owner, 2026-11-20). It rises as the mark act opens, when the
+ *  bull settles centre over the horizon it was drawn for, and holds to the
+ *  last frame. A CSS layer under the matter's transparent canvas, so the scene
+ *  itself is unchanged. */
+export function welcomeAura(progress: number): number {
+  return ss01(clamp01((clamp01(progress) - (ACTS.mark.from - 0.012)) / 0.04));
+}
+
 /** The market's mood under the regime act: how far each word is on screen. */
 export const MOODS = [
   { word: "Mean-reverting", from: 0.246, to: 0.274 },

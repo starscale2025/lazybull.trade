@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ACTS, CANDLE3D, COPY_BEATS, MOODS, SAFETY_LINES, beatCharT, beatOpacity, candle3dOpacity, clamp01, floorHandoff, handoffOpacity, matterNear, moodOpacity, safetyLight } from "@/lib/cinema";
+import { ACTS, CANDLE3D, COPY_BEATS, MOODS, SAFETY_LINES, beatCharT, beatOpacity, candle3dOpacity, clamp01, floorHandoff, handoffOpacity, matterNear, moodOpacity, safetyLight, welcomeAura } from "@/lib/cinema";
 import { advanceFilm, cinemaClock, damp } from "@/lib/cinema-clock";
 import { isMotionPaused, motion as busMotion } from "@/lib/motion/bus";
 import { getHeroPosition, onHeroPosition, useHeroChosen, type HeroPosition } from "@/lib/hero-position";
@@ -219,6 +219,9 @@ export function ScrollCinema() {
   const dipRef = useRef<HTMLDivElement>(null);
   // The stage's lens vignette, which lifts off the safety act (safetyLight).
   const vignetteRef = useRef<HTMLDivElement>(null);
+  // The green aura behind the final shot, "Welcome in." (welcomeAura in lib/cinema).
+  const auraRef = useRef<HTMLDivElement>(null);
+  const auraLast = useRef(-1);
   const collapseRef = useRef<(() => void) | null>(null);
   const copyRefs = useRef<(HTMLDivElement | null)[]>([]);
   const candle3dWrapRef = useRef<HTMLDivElement>(null);
@@ -643,6 +646,12 @@ export function ScrollCinema() {
         }
       };
       if (vignetteRef.current) vignetteRef.current.style.opacity = String(1 - 0.9 * safetyLight(progress));
+      const aura = Math.round(welcomeAura(progress) * 100) / 100;
+      if (auraRef.current && aura !== auraLast.current) {
+        auraLast.current = aura;
+        auraRef.current.style.opacity = String(aura);
+        auraRef.current.style.visibility = aura > 0 ? "visible" : "hidden";
+      }
       driveLayer(candle3dWrapRef, candle3dOpacity(progress), CANDLE3D, candle3dActiveRef, setCandle3dActive, candle3dReadyRef);
       // The matter's layer is on for the two passages it owns. It carries no
       // parallax transform of its own: it has to land exactly on the mark.
@@ -1304,6 +1313,23 @@ export function ScrollCinema() {
             <CandleField3D active={candle3dActive} onReady={handleCandleReady} onLost={handleCandleLost} />
           </Suspense>
         </div>
+        {/* The aura: a soft green glow behind the bull, a wider dark-green
+            haze, and light along the horizon. Static gradients under the
+            matter's transparent canvas; only its opacity moves. */}
+        <div
+          ref={auraRef}
+          aria-hidden
+          data-film-aura
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: 0,
+            visibility: "hidden",
+            background:
+              "radial-gradient(42% 40% at 48% 40%, rgba(0,196,106,0.22), rgba(0,196,106,0.08) 55%, transparent 76%)," +
+              "radial-gradient(90% 70% at 50% 56%, rgba(0,112,58,0.2), transparent 72%)," +
+              "radial-gradient(75% 8% at 50% 70%, rgba(0,255,135,0.13), transparent 85%)",
+          }}
+        />
         <div ref={matterWrapRef} className="pointer-events-none absolute inset-0" style={{ visibility: "hidden" }}>
           <Suspense fallback={null}>
             <FilmMatter active={matterActive} onReady={handleMatterReady} onLost={handleMatterLost} onBull={handleMatterBull} />
