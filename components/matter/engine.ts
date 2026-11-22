@@ -235,9 +235,11 @@ function sphereRig(shared: Shared, phone: boolean): Rig {
     assemble,
     fit(w, h, { slot, visW, visH }) {
       // Big: about 74% of the height on a landscape screen, centred at 42% so
-      // it rises out of the headline, and wide on a phone. The copy is kept
+      // it stands behind the headline, and wide on a phone. The copy is kept
       // clear by the shader's dissolve band, measured from the DOM because the
-      // copy is sized in pixels and the frame in viewport units.
+      // copy is sized in pixels and the frame in viewport units. The band ends
+      // at the top of the letters (2026-11-22): the sphere sets behind the
+      // headline, and no dot runs through a word.
       const portrait = w / h < 0.8;
       const centre = portrait ? 0.29 : 0.42;
       // The tallest noise peak (REACH, not EXTENT) stays under the top edge.
@@ -256,10 +258,10 @@ function sphereRig(shared: Shared, phone: boolean): Rig {
         hb = { top: y, height: heading.offsetHeight };
       }
       const ndc = (px: number) => 1 - (2 * px) / h;
-      const fadeMid = hb && hb.height ? hb.top + hb.height * 0.72 : h * (portrait ? 0.5 : 0.62);
+      const fadeMid = hb && hb.height ? hb.top - hb.height * 0.08 : h * (portrait ? 0.5 : 0.62);
       if (hb && hb.height) {
-        own.uFadeHigh.value = ndc(hb.top + hb.height * 0.4);
-        own.uFadeLow.value = ndc(hb.top + hb.height * 1.05);
+        own.uFadeHigh.value = ndc(hb.top - hb.height * 0.35);
+        own.uFadeLow.value = ndc(hb.top + hb.height * 0.2);
       } else {
         own.uFadeHigh.value = portrait ? 0.0 : -0.2;
         own.uFadeLow.value = portrait ? -0.3 : -0.5;

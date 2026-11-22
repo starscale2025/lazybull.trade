@@ -20,7 +20,10 @@
  *   · A CSS haze (`matter-glow`) under the canvas, in the same tints as the
  *     sphere: the backdrop before the first WebGL frame, and the whole of it
  *     when WebGL never comes.
- *   · Children: frame zero's actions and footnote sit under the description.
+ *   · Children: frame zero's actions sit under the description.
+ *   · The headline and what stands beneath it share one width, so the
+ *     position reads as the headline's underline (2026-11-22).
+ *   · A foot: one quiet row along the bottom of the frame.
  */
 
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -34,8 +37,10 @@ type Props = Omit<ComponentPropsWithoutRef<"section">, "title"> & {
   description?: ReactNode;
   /** Directly under the headline: frame zero's touchable position (M12). */
   beneath?: ReactNode;
-  /** Under the description: actions, footnotes. */
+  /** Under the description: the actions. */
   children?: ReactNode;
+  /** Along the bottom of the frame, under everything: the quiet row. */
+  foot?: ReactNode;
   /** id for the <h1>, so the section can be labelled by it. */
   headingId?: string;
 };
@@ -46,6 +51,7 @@ export function AnomalousMatterHero({
   description,
   beneath,
   children,
+  foot,
   headingId,
   className = "",
   ...rest
@@ -79,23 +85,28 @@ export function AnomalousMatterHero({
       <div className="relative z-10 flex flex-1 flex-col items-center justify-end px-4 pb-12 pt-32 text-center md:pb-16">
         <div className="flex w-full max-w-4xl flex-col items-center">
           {title && <div className="matter-in">{title}</div>}
-          <h1
-            id={headingId}
-            className="matter-rise wonk-type mt-6 font-display text-fg"
-            // Sized by the shorter side: on a 1280×720 laptop the width
-            // alone set it so large the copy climbed into the sphere.
-            style={{ fontSize: "clamp(3rem, min(8.4vw, 12.5vh), 7.75rem)", lineHeight: 0.95, letterSpacing: "-0.025em" }}
-          >
-            {subtitle}
-          </h1>
-          {beneath}
+          {/* As wide as the headline's own line, never wider than the column:
+              what stands beneath stretches to the headline's two ends. */}
+          <div className="flex w-fit max-w-full flex-col items-stretch">
+            <h1
+              id={headingId}
+              className="matter-rise wonk-type mt-6 font-display text-fg"
+              // Sized by the shorter side: on a 1280×720 laptop the width
+              // alone set it so large the copy climbed into the sphere.
+              style={{ fontSize: "clamp(3rem, min(8.4vw, 12.5vh), 7.75rem)", lineHeight: 0.95, letterSpacing: "-0.025em" }}
+            >
+              {subtitle}
+            </h1>
+            {beneath}
+          </div>
           {description && (
-            <p className="matter-in mt-6 max-w-xl text-pretty text-base leading-relaxed text-fg-dim [animation-delay:200ms] md:text-lg">
+            <p className="matter-in mt-7 max-w-[45rem] text-pretty text-base leading-relaxed text-fg-dim [animation-delay:200ms] md:text-lg">
               {description}
             </p>
           )}
           {children}
         </div>
+        {foot}
       </div>
     </section>
   );

@@ -13,6 +13,10 @@
  * safety act ("a number you chose"), the landing's instrument and the Island
  * all carry it before the film has even started.
  *
+ * It is the headline's underline (2026-11-22): as wide as the headline
+ * (the shell stretches it to the headline's two ends), with what the two ends
+ * of the line mean said under them, and one quiet line for the rest.
+ *
  * The same single-pointer and keyboard model as the instrument (WCAG 2.5.7):
  * a drag, a tap that moves the nearer strike, or a focused handle's arrows
  * (Shift for 5, Home / End). Each handle speaks the consequence, not just the
@@ -146,10 +150,10 @@ export function HeroPosition() {
             percentage would be a share of its width). */}
         <span
           aria-hidden
-          className="absolute block size-2.5 rotate-45 border border-cyan bg-bg transition-[scale] duration-200 [transition-timing-function:var(--ease-settle)]"
-          style={{ top: `calc(${((Y0 / H) * 100).toFixed(3)}% - 5px)` }}
+          className="absolute block size-3 rotate-45 border border-cyan bg-bg transition-[scale] duration-200 [transition-timing-function:var(--ease-settle)]"
+          style={{ top: `calc(${((Y0 / H) * 100).toFixed(3)}% - 0.375rem)` }}
         />
-        <span aria-hidden className="absolute bottom-0 t-data text-[0.6875rem] text-cyan">
+        <span aria-hidden className="absolute bottom-0 t-data text-[0.8125rem] text-cyan">
           {v}
         </span>
       </button>
@@ -160,7 +164,7 @@ export function HeroPosition() {
     <div
       role="group"
       aria-label="An example position: a bull call spread on SIM, a synthetic index at 100. Move either strike to make it yours."
-      className="matter-in mt-4 w-full max-w-[36rem] [animation-delay:120ms]"
+      className="matter-in mt-3 w-full [animation-delay:120ms]"
     >
       <div ref={plotRef} onClick={onStripClick} className="relative w-full touch-pan-y" style={{ aspectRatio: `${W} / ${H}` }}>
         <svg aria-hidden viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
@@ -173,23 +177,32 @@ export function HeroPosition() {
             </clipPath>
           </defs>
           <line x1="0" y1={Y0} x2={W} y2={Y0} stroke="var(--fg-faint)" strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-          <polyline points={line} fill="none" stroke="var(--bear)" strokeWidth="1.75" clipPath={`url(#${clip}-dn)`} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
-          <polyline points={line} fill="none" stroke="var(--bull)" strokeWidth="1.75" clipPath={`url(#${clip}-up)`} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          <polyline points={line} fill="none" stroke="var(--bear)" strokeWidth="2.25" clipPath={`url(#${clip}-dn)`} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          <polyline points={line} fill="none" stroke="var(--bull)" strokeWidth="2.25" clipPath={`url(#${clip}-up)`} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
           <line x1={xOf(f.breakeven)} y1={Y0 - 4} x2={xOf(f.breakeven)} y2={Y0 + 4} stroke="var(--fg-dim)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         </svg>
         {handle("k1")}
         {handle("k2")}
       </div>
-      <div className="mt-1.5 flex items-baseline justify-between gap-4 text-[0.75rem] leading-tight">
-        <span className="text-left text-fg-faint">
-          <span className="t-data text-bear">−{money(f.maxLoss)}</span> most it can lose ·{" "}
-          {touched ? "you set it before the trade" : "an example, move a strike"}
+      {/* What the two ends of the line mean, under them. */}
+      <div className="mt-2 flex items-baseline justify-between gap-4 text-[0.875rem] leading-tight text-fg-dim">
+        <span className="text-left">
+          Most it can lose <span className="t-data text-bear">−{money(f.maxLoss)}</span>
         </span>
-        <span className="hidden text-right text-fg-faint sm:inline">
-          B/E <span className="t-data">{f.breakeven.toFixed(2)}</span> ·{" "}
-          <span className="t-data text-fg-dim">+{money(f.maxProfit)}</span> only above {k.k2} at expiry
+        <span className="hidden text-right sm:inline">
+          Most it can make <span className="t-data text-bull">+{money(f.maxProfit)}</span>, above {k.k2} at expiry
         </span>
       </div>
+      {/* The rest, in the smallest voice: whose it is, where it breaks even, and that it moves.
+          On a phone it sits under the one caption, flush with it. */}
+      <p className="mt-1.5 text-left text-[0.8125rem] leading-tight text-fg-faint sm:text-center">
+        {touched ? "Yours" : "An example"}
+        <span className="hidden sm:inline">
+          {" "}
+          · breaks even at <span className="t-data">{f.breakeven.toFixed(2)}</span>
+        </span>{" "}
+        · {touched ? "you set it before the trade" : "drag a strike to make it yours"}
+      </p>
     </div>
   );
 }

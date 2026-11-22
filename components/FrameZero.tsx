@@ -42,30 +42,69 @@ export function FrameZero() {
       aria-labelledby="fz-title"
       headingId="fz-title"
       className="z-30"
-      title={
-        // Calm (M33): one quiet pill, no gradient ring or pulse. The H1's
-        // "see." is this frame's one gradient.
-        <span className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] px-3.5 py-1.5 text-[0.8125rem] text-fg-dim backdrop-blur-md">
-          <span aria-hidden className="size-1.5 rounded-full bg-bull" />
-          Paper only · $0 at risk, ever
-        </span>
-      }
+      // Nothing above the headline (2026-11-22): the pill that sat here said
+      // what the paragraph says. The H1's "see." is this frame's one gradient.
       subtitle={
         <>
           Options you can <span className="t-accent">see</span>.
         </>
       }
-      // The position, on the headline's own axis: frame zero's option (M12).
+      // The position, on the headline's own axis and as wide as it: frame zero's option (M12).
       beneath={<HeroPosition />}
       description={
         <>
           Build a position and watch its payoff, its Greeks and its worst case draw themselves,
-          with an AI teacher explaining it in plain English. Then paper-trade it. Nothing real at
-          risk, ever.
+          with an AI teacher explaining it in plain English. Then paper-trade it.
         </>
       }
+      foot={
+        // One quiet row along the foot of the frame: the rooms and the film in
+        // the middle and, on a wide screen, the problem in the corner opposite
+        // the shortcut dial. Narrower, the two stack in the middle as before.
+        <div className="matter-in relative mt-10 w-full [animation-delay:440ms] [@media(max-height:760px)]:mt-6">
+          {/* The problem, once, in the smallest voice. Quoted from SEBI's study
+              of 20 Aug 2026 (FY26), linked, and never paired with an implied fix. */}
+          <p className="mx-auto max-w-md text-balance text-[0.8125rem] leading-relaxed text-fg-faint xl:absolute xl:bottom-0 xl:right-2 xl:mx-0 xl:max-w-[20rem] xl:text-right">
+            87.7% of India&apos;s individual F&amp;O traders lost money in FY26 — 89% of those under 30.{" "}
+            <a
+              href="https://www.sebi.gov.in/reports-and-statistics/research/aug-2026/study-profitability-of-individual-traders-in-the-equity-derivatives-segment-fy25-fy26-_103835.html"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-fg-faint/50 underline-offset-2 transition-colors hover:text-fg-dim"
+            >
+              Source: SEBI, August 2026
+            </a>
+            .
+          </p>
+          {/* Frame zero is also the map (M30): the four rooms, quietly, and the
+              film as the last item, so the first screen carries the brand, the
+              way in and the way past. One line, in the footnote's voice (M33).
+              On a phone the rooms are one line and the film cue the next, so
+              the row stays clear of the shortcut puck in the corner. */}
+          <nav
+            aria-label="Sections"
+            className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[0.8125rem] text-fg-faint sm:gap-x-5 xl:mt-0 [@media(max-height:760px)]:mt-3"
+          >
+            {FRAME_MAP.map((m) => (
+              // No prefetch: four rooms prefetched on sight cost frame zero
+              // ~130 KB the visitor has not asked for (the budget caught it).
+              <Link key={m.href} href={m.href} prefetch={false} className="py-1 transition-colors hover:text-fg">
+                {m.label}
+              </Link>
+            ))}
+            {/* Gone once the film has played and collapsed (ScrollCinema sets
+                html[data-film-done]): there is no film below any more. */}
+            <span className="fz-film-cue block w-full sm:contents">
+              <span aria-hidden className="hidden sm:inline">
+                ·
+              </span>
+              <span>or scroll for the film ↓</span>
+            </span>
+          </nav>
+        </div>
+      }
     >
-      <div className="matter-in mt-9 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 [animation-delay:320ms] [@media(max-height:760px)]:mt-6">
+      <div className="matter-in mt-8 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 [animation-delay:320ms] [@media(max-height:760px)]:mt-6">
         <MagneticCTA>
           {/* To /start, every page in one place over a live market map (owner, 2026-11-20). */}
           <Link
@@ -79,50 +118,11 @@ export function FrameZero() {
             <span className="relative z-10">{authed ? "Explore lazybull" : "Get started"}</span>
           </Link>
         </MagneticCTA>
-        <Link
-          href={authed ? "/portfolio" : "/auth/signin?callbackUrl=/"}
-          className="calm-link py-3"
-        >
+        {/* In the page's ink, not the brand's: the button is this frame's one green action. */}
+        <Link href={authed ? "/portfolio" : "/auth/signin?callbackUrl=/"} className="calm-link py-3 !text-fg-dim hover:!text-fg">
           {authed ? "Your portfolio" : "Sign in"} <span aria-hidden>›</span>
         </Link>
       </div>
-
-      {/* The problem, once, in the smallest voice. Quoted from SEBI's study
-          of 20 Aug 2026 (FY26), linked, and never paired with an implied fix:
-          it is the reason the product is paper-only. */}
-      <p className="matter-in mt-10 max-w-md text-balance text-[0.8125rem] leading-relaxed text-fg-faint [animation-delay:440ms] [@media(max-height:760px)]:mt-5">
-        87.7% of India&apos;s individual F&amp;O traders lost money in FY26 — 89% of those under 30.{" "}
-        <a
-          href="https://www.sebi.gov.in/reports-and-statistics/research/aug-2026/study-profitability-of-individual-traders-in-the-equity-derivatives-segment-fy25-fy26-_103835.html"
-          target="_blank"
-          rel="noreferrer"
-          className="underline decoration-fg-faint/50 underline-offset-2 transition-colors hover:text-fg-dim"
-        >
-          Source: SEBI, August 2026
-        </a>
-        .
-      </p>
-      {/* Frame zero is also the map (M30): the four rooms, quietly, and the
-          film as the last item, so the first screen carries the brand, the
-          way in and the way past. One line, in the footnote's voice (M33). */}
-      <nav
-        aria-label="Sections"
-        className="matter-in mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[0.8125rem] text-fg-faint [animation-delay:560ms] [@media(max-height:760px)]:mt-3"
-      >
-        {FRAME_MAP.map((m) => (
-          // No prefetch: four rooms prefetched on sight cost frame zero
-          // ~130 KB the visitor has not asked for (the budget caught it).
-          <Link key={m.href} href={m.href} prefetch={false} className="py-1 transition-colors hover:text-fg">
-            {m.label}
-          </Link>
-        ))}
-        {/* Gone once the film has played and collapsed (ScrollCinema sets
-            html[data-film-done]): there is no film below any more. */}
-        <span className="fz-film-cue contents">
-          <span aria-hidden>·</span>
-          <span>or scroll for the film ↓</span>
-        </span>
-      </nav>
     </AnomalousMatterHero>
   );
 }
