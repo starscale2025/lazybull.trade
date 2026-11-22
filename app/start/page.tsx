@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
-import { MarketHeatmap } from "@/components/start/MarketHeatmap";
+import { MarketCaption } from "@/components/start/MarketCaption";
+import { StartStage } from "@/components/start/StartStage";
 import { SITE_DIRECTORY } from "@/lib/directory";
 import { TRACK_META, TRACK_ORDER } from "@/lib/practice/tracks";
 
-// /start: every page on the site in one place (owner, 2026-11-20), over a live
-// map of the market. The home page's main button lands here. The links are the
-// page; the map behind them is scenery with its reading spelled out in words.
+// /start: every page on the site in one place (owner, 2026-11-20). The home
+// page's main button lands here. The first screen is a stage
+// (components/start/StartStage.tsx): the live market as a floor, a giant
+// wordmark on the horizon and the six main pages circling it. Below it, the
+// full index and the market's reading in words.
 
 export const metadata: Metadata = {
   title: "Start — lazybull",
@@ -40,7 +43,7 @@ const GROUPS: { title: string; links: Dest[] }[] = [
     title: "About lazybull",
     links: [
       fromDir("/about"),
-      { href: "/safety", l: "Safety", d: "the guard rails, and why paper only" },
+      { href: "/safety", l: "Safety", d: "the guard rails, and why they are there" },
       { href: "/graveyard", l: "The graveyard", d: "what didn't make it, buried honestly" },
       { href: "/terms", l: "Terms", d: "the rules of the site" },
       { href: "/privacy", l: "Privacy", d: "what we keep, and what we never do" },
@@ -48,75 +51,51 @@ const GROUPS: { title: string; links: Dest[] }[] = [
   },
 ];
 
-const card =
-  "group relative flex flex-col rounded-2xl border border-[rgba(245,245,240,0.12)] bg-[rgba(5,5,5,0.74)] backdrop-blur-md transition-[border-color,box-shadow] duration-300 hover:border-[color-mix(in_srgb,var(--brand)_55%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_srgb,var(--brand)_25%,transparent),0_18px_50px_-24px_color-mix(in_srgb,var(--brand)_45%,transparent)]";
-
 export default function StartPage() {
   return (
     <main className="tap-floor flex min-h-screen flex-col bg-bg text-fg">
       <Nav />
-      {/* The map is a dark screen in either theme: the section carries the dark tokens. */}
-      <section
-        data-theme="dark"
-        aria-labelledby="start-title"
-        className="relative isolate flex min-h-[calc(100svh-var(--nav-h))] flex-1 flex-col overflow-hidden bg-[#050505] text-fg"
-      >
-        <MarketHeatmap />
+      {/* The market is a dark screen in either theme: the section carries the dark tokens. */}
+      <section data-theme="dark" aria-labelledby="start-title" className="relative flex-1 bg-[#050505] text-fg">
+        <StartStage pods={PRIMARY} />
 
-        <div className="shell relative z-10 w-full pb-28 pt-10 sm:pt-14">
-          {/* The heading sits on the same glass as the cards, so no tile label runs through it. */}
-          <header className="inline-block max-w-[40rem] rounded-2xl border border-[rgba(245,245,240,0.12)] bg-[rgba(5,5,5,0.74)] px-6 py-5 backdrop-blur-md">
-            <p className="deck-eyebrow">Start here</p>
-            <h1 id="start-title" className="deck-display mt-3 text-[clamp(2.4rem,5.4vw,4.25rem)] leading-[1] tracking-[-0.03em] text-[#f5f5f0]">
-              Where to?
-            </h1>
-            <p className="mt-3 text-[1.0625rem] leading-relaxed text-[#cfcfc6]">
-              Every page on lazybull, one click away. Behind them, today&rsquo;s biggest US stocks: sized by company,
-              coloured by the day&rsquo;s move.
-            </p>
-          </header>
-
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {PRIMARY.map((p) => (
-              <li key={p.href}>
-                <Link href={p.href} className={`${card} h-full min-h-[7.5rem] p-5`}>
-                  <span className="flex items-center justify-between">
-                    <span className="deck-label">{dir[p.href].n}</span>
-                    <span aria-hidden className="text-[#8a8a82] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-brand-ink">
-                      →
-                    </span>
-                  </span>
-                  <span className="deck-display mt-3 text-[1.5rem] leading-tight tracking-[-0.02em] text-[#f5f5f0]">{p.l}</span>
-                  <span className="mt-1 text-[0.875rem] leading-snug text-[#b9b9b0]">{p.d}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 grid gap-3 lg:grid-cols-3">
-            {GROUPS.map((g) => (
-              <nav key={g.title} aria-label={g.title} className={`${card} p-5 hover:border-[rgba(245,245,240,0.12)] hover:shadow-none`}>
-                <h2 className="deck-label text-[#9b9b92]">{g.title}</h2>
-                <ul className="mt-2">
-                  {g.links.map((x) => (
-                    <li key={x.href} className="border-b border-[rgba(245,245,240,0.08)] last:border-b-0">
-                      <Link href={x.href} className="group/row flex items-baseline justify-between gap-3 py-2.5">
-                        <span className="min-w-0">
-                          <span className="block text-[0.9375rem] text-[#f5f5f0] transition-colors group-hover/row:text-brand-ink">{x.l}</span>
-                          <span className="block truncate text-[0.75rem] text-[#9b9b92]">{x.d}</span>
-                        </span>
-                        <span aria-hidden className="shrink-0 text-[#6e6e66] group-hover/row:text-brand-ink">
-                          →
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ))}
+        {/* Every page, as one list in three groups: headings, names and what each
+            is for. No boxes or divider lines; space does the grouping. Each
+            group is a grid item that may shrink (min-w-0), so nothing runs off a
+            phone's edge. */}
+        <div id="index" className="shell relative scroll-mt-16 pb-16 pt-16">
+          <h2 className="font-display text-[clamp(2rem,3.2vw,2.75rem)] leading-[1.05] tracking-[-0.02em] text-[#f5f5f0]">The full index</h2>
+          <div className="mt-10 grid gap-x-14 gap-y-12 lg:grid-cols-4">
+            {GROUPS.map((g) => {
+              const id = `index-${g.title.toLowerCase().replace(/\s+/g, "-")}`;
+              // the long group takes two columns of its own, so the three end level
+              const long = g.links.length > 6;
+              return (
+                <nav key={g.title} aria-labelledby={id} className={`min-w-0 ${long ? "lg:col-span-2" : ""}`}>
+                  <h3 id={id} className="font-display text-[1.375rem] leading-tight tracking-[-0.01em] text-[#f5f5f0]">
+                    {g.title}
+                  </h3>
+                  <ul className={`mt-5 grid gap-y-4 ${long ? "lg:grid-cols-2 lg:gap-x-14" : ""}`}>
+                    {g.links.map((x) => (
+                      <li key={x.href}>
+                        <Link href={x.href} className="group/row block">
+                          <span className="block">
+                            <span className="block text-[1.0625rem] leading-snug text-[#f5f5f0] transition-colors group-hover/row:text-brand-ink">{x.l}</span>
+                            <span className="mt-0.5 block text-[0.9375rem] leading-snug text-[#a9a99f]">{x.d}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              );
+            })}
           </div>
 
-          <p className="mt-6 font-mono text-[0.6875rem] text-[#8a8a82]">Paper only · nothing here is advice · not SEBI-registered</p>
+          <div className="mt-14">
+            <MarketCaption />
+          </div>
+          <p className="mt-4 text-[0.8125rem] text-[#8a8a82]">Paper only · nothing here is advice · not SEBI-registered</p>
         </div>
       </section>
     </main>

@@ -1,0 +1,704 @@
+/* /start, the orbit (2026-11-20). The market is the floor, the wordmark stands
+   on the horizon, the pages circle it. Everything specific to this page lives
+   here, not in app/globals.css: that file is on the home page's first load.
+
+   Layers of the stage, back to front (z-index):
+     0 aura · 1 arc of words · 2 horizon glow · 3 floor canvas · 4 pool of light
+     5 horizon line, far candles and dust · 6-9 pods at the back · 10 wordmark
+     12-15 pods in front · 16 movers · 17 near candles · 20 the bar
+   Nothing is drawn over the wordmark but the pods passing in front of it.
+   The pods' <li> carry their own z-index and the <ul> has none, so the pods
+   stack against the wordmark: nothing between them may open a stacking
+   context (no transform, opacity or filter on the <ul>). */
+
+.stage {
+  position: relative;
+  isolation: isolate;
+  /* clip, not hidden: a hidden box scrolls sideways when focus lands on a pod near its edge */
+  overflow: clip;
+  --stage-h: max(40rem, calc(100svh - var(--nav-h, 2.8rem)));
+  min-height: var(--stage-h);
+  background: #050505;
+  color: #f5f5f0;
+  /* Geometry. The stage component measures and overwrites --rx, --ry and --cy
+     in pixels; these are the same shapes for the moment before it runs. */
+  --hz: 58%;
+  /* The wordmark has a ceiling: 15.5rem (about 272px; the root is 110%), so a
+     bigger screen gets more room around it, not a bigger word. Below that it
+     follows the width, and on a short window the height, so the sky above
+     it always has room for what circles it. */
+  --fs: clamp(5rem, min(20.5vw, calc(var(--stage-h) * 0.36)), 15.5rem);
+  /* how far the y's tail hangs below the baseline */
+  --tail: calc(var(--fs) * 0.26);
+  --rx: 42%;
+  --ry: calc(var(--fs) * 0.36 + 60px);
+  --cy: calc(var(--hz) - var(--fs) * 0.36);
+  /* The pointer, -1 to 1, eased by the stage's frame loop. Every layer
+     drifts the same way, against the pointer, by its depth: the floor, its
+     pool of light and the arc of words half as far as the pods, the movers a
+     little less than the pods, near candles more, the pods at the front of
+     the ring a fifth more (the frame loop moves the pods), and the wordmark
+     hardly at all: it is what the scene turns around. */
+  --px: 0;
+  --py: 0;
+}
+
+/* ── sky ───────────────────────────────────────────────────────────────── */
+
+.aura {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 42% at 50% calc(var(--hz) - var(--fs) * 0.4), rgba(0, 196, 106, 0.2), rgba(0, 196, 106, 0.06) 56%, transparent 78%),
+    radial-gradient(92% 62% at 50% var(--hz), rgba(0, 112, 58, 0.2), transparent 72%);
+  animation: fadeIn 1.4s ease-out both;
+}
+
+/* The arc of words: a circle 1.97 wordmark sizes across its text, centred
+   0.52 below the horizon, so only its top shows over the word. Its ends fade
+   out long before they could reach a letter: fully there above 1.28 wordmark
+   sizes, gone by 0.92 (the tallest letters stand 0.74). The fade is a mask,
+   not a painted gradient. */
+.ringClip {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--hz);
+  z-index: 1;
+  overflow: clip;
+  pointer-events: none;
+  transform: translate3d(calc(var(--px) * -7px), calc(var(--py) * 4px), 0);
+  -webkit-mask-image: linear-gradient(to top, transparent calc(var(--fs) * 0.92), #000 calc(var(--fs) * 1.28)); /* taste-skill-ignore: a fade mask, not a painted gradient */
+  mask-image: linear-gradient(to top, transparent calc(var(--fs) * 0.92), #000 calc(var(--fs) * 1.28)); /* taste-skill-ignore: a fade mask, not a painted gradient */
+  animation: fadeIn 1.6s 0.3s ease-out both;
+}
+.ringBox {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--fs) * 0.52);
+  width: calc(var(--fs) * 4.19);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  /* a little brighter on the right, like light on something turning */
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.5), #000 72%); /* taste-skill-ignore: a fade mask, not a painted gradient */
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.5), #000 72%); /* taste-skill-ignore: a fade mask, not a painted gradient */
+}
+.ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: ringTurn 200s linear infinite;
+}
+/* In the SVG's own units (1000 across): about 22px on a 1440px screen, the
+   size at which four turns of the phrase fill the circle at natural spacing. */
+.ringText {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 20px;
+  font-weight: 300;
+  fill: rgba(245, 245, 240, 0.4);
+}
+
+/* ── floor and horizon ─────────────────────────────────────────────────── */
+
+.floor {
+  position: absolute;
+  /* 24px of bleed each side, so the pointer's shift never shows an edge */
+  left: -24px;
+  top: 0;
+  width: calc(100% + 48px);
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  transform: translate3d(calc(var(--px) * -7px), calc(var(--py) * 4px), 0);
+}
+
+.horizonGlow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--hz) - 90px);
+  height: 180px;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(62% 50% at 50% 50%, rgba(0, 255, 135, 0.15), transparent 76%);
+  animation: fadeIn 1.4s 0.2s ease-out both;
+}
+.horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--hz);
+  height: 2px;
+  margin-top: -1px;
+  z-index: 5;
+  pointer-events: none;
+  /* The brand's light every day: a white core and a green glow. The day's
+     mood is data, and the floor and the counts already say it. */
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 135, 0.55) 16%, #f5fff9 50%, rgba(0, 255, 135, 0.55) 84%, transparent);
+  box-shadow:
+    0 0 12px 0 rgba(0, 255, 135, 0.42),
+    0 0 40px 4px rgba(0, 255, 135, 0.14);
+  animation: lineDraw 1s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── wordmark ──────────────────────────────────────────────────────────── */
+
+/* The wordmark stands on the horizon; its clip ends just below it, by the
+   depth of the y's tail, and the letters rise out of the floor. */
+.wordClip {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--hz) + var(--tail));
+  z-index: 10;
+  overflow: clip;
+  pointer-events: none;
+}
+.word {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: var(--fs);
+  font-weight: 400;
+  line-height: 0.8;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  /* the box ends on the baseline, so "bottom: 0" stands the letters on the horizon */
+  text-box: trim-both cap alphabetic;
+}
+.word {
+  /* The gradient is painted through the letters (background-clip: text), and a
+     background only covers its own box. The trimmed box ends on the baseline
+     and at cap height, so without this padding the y's tail, the tops of the
+     tall letters and the full stop's edge get no paint: "lazybull" read as
+     "lazvbull". The padding gives them a box; the baseline stays on the horizon. */
+  padding: calc(var(--fs) * 0.1) 0.07em var(--tail) 0.03em;
+  /* a tenth of the pods' drift, and only sideways: it stays on the horizon */
+  transform: translate3d(calc(-50% + var(--px) * -1.4px), 0, 0);
+  background-image: linear-gradient(100deg, #5cffaf 0%, #00ff87 34%, #00c46a 72%, #00a857 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 36px rgba(0, 255, 135, 0.24));
+  animation: wordRise 1.15s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* The full stop is the status light: a small, calm dot whose colour says
+   live (green, breathing slowly), closed (grey) or simulated (amber). Set
+   smaller than the letters, it still sits on their baseline. */
+.dot {
+  font-size: 0.5em;
+  color: #8a8a82;
+}
+.word[data-state="live"] .dot {
+  color: #00ff87;
+  animation: dotBreath 3.2s ease-in-out infinite;
+}
+.word[data-state="sim"] .dot {
+  color: #ffb800;
+}
+
+/* The word's light on the floor: a soft pool under the letters, where a
+   mirrored copy of the word used to be. One wordmark on the page, not two. */
+.pool {
+  position: absolute;
+  left: 50%;
+  top: var(--hz);
+  z-index: 4;
+  width: calc(var(--fs) * 3.3);
+  height: calc(var(--fs) * 0.55);
+  pointer-events: none;
+  transform: translate3d(calc(-50% + var(--px) * -7px), 0, 0);
+  background: radial-gradient(50% 100% at 50% 0%, rgba(0, 255, 135, 0.13), rgba(0, 255, 135, 0.04) 55%, transparent 100%);
+  animation: fadeIn 1.2s 1s ease-out both;
+}
+
+/* Browsers without text-box: in a line-height:1 box Fraunces' baseline sits
+   0.14em above the bottom edge (measured in Chromium and WebKit with the trim
+   switched off), so the word is lowered by that much to stand on the horizon. */
+@supports not (text-box: trim-both cap alphabetic) {
+  .word {
+    line-height: 1;
+    transform: translate3d(calc(-50% + var(--px) * -1.4px), calc(var(--fs) * 0.14), 0);
+  }
+}
+
+/* ── the orbit ─────────────────────────────────────────────────────────── */
+
+/* The band the ring lives in, and the surface a drag starts on. No z-index
+   and no transform: see the note at the top. */
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--cy) - var(--ry) - 64px);
+  height: calc(var(--ry) * 2 + 140px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  touch-action: pan-y pinch-zoom;
+}
+.stage[data-live] .band {
+  cursor: grab;
+}
+.stage[data-dragging] .band {
+  cursor: grabbing;
+}
+
+/* Before the orbit starts, and whenever motion is paused or reduced, each pod
+   sits on the still arc: --c and --s are the cosine and sine of its place. */
+.pod {
+  position: absolute;
+  left: calc(50% + var(--rx) * var(--c));
+  top: calc(var(--ry) + 64px + var(--ry) * var(--s));
+  width: max-content;
+  z-index: 12;
+  opacity: var(--o, 1);
+  transform: translate(-50%, -50%) scale(var(--k));
+  transition: filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Depth in three steps (lib/start/orbit.ts, depthBand): the back of the ring
+   is a touch soft, the sides barely, the front crisp. A pod in hand is crisp. */
+.pod[data-depth="back"] {
+  filter: blur(1.1px);
+}
+.pod[data-depth="side"] {
+  filter: blur(0.35px);
+}
+.pod[data-hot],
+.pod:focus-within {
+  filter: none;
+}
+/* Live: the frame loop writes transform, opacity and z-index on each pod. */
+.stage[data-live] .pod {
+  left: 0;
+  top: 0;
+  will-change: transform, opacity;
+}
+
+/* A pod: one tone step above the ground, no outline, no glass, no glow. The
+   pod at the front, or in hand, steps up once more. The selector is long so
+   it outranks the site's touch-target rule (.tap-floor a[href]), which would
+   otherwise shrink and recentre it on phones. */
+.stage .pod .podLink[href] {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1.25rem 0.8rem 1.05rem;
+  border-radius: 999px;
+  /* --near (0 to 1, from the frame loop) rises as the pointer comes close: the
+     pod brightens and takes a faint green light. At rest it is 0: no glow. */
+  background: color-mix(in srgb, #18231e calc(var(--near, 0) * 100%), #0f1412);
+  box-shadow: 0 0 calc(var(--near, 0) * 28px) rgba(0, 255, 135, calc(var(--near, 0) * 0.18));
+  color: #f5f5f0;
+  text-decoration: none;
+  -webkit-user-drag: none;
+  /* the fill eases, so the step from "near" to "in hand" is never a jump */
+  transition:
+    background-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.stage .pod .podLink[href]:hover,
+.stage .pod[data-hot] .podLink[href] {
+  background: #1b2822;
+}
+.stage .pod .podLink[href]:focus-visible {
+  outline: 2px solid #00ff87;
+  outline-offset: 3px;
+}
+.podIcon {
+  flex: none;
+  color: #00ff87;
+}
+.podName {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(1.05rem, 1.35vw, 1.3rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+/* ── floating things ───────────────────────────────────────────────────── */
+
+/* A mover: the outer box holds its place on its wing (its centre is the
+   place) and drifts with the pointer; the inner one bobs. One tone step above
+   the ground, set in the text face with figures that line up. */
+.chip {
+  position: absolute;
+  z-index: 16;
+  pointer-events: none;
+  transform: translate3d(calc(-50% + var(--px) * -11.2px), calc(-50% + var(--py) * 6.4px), 0);
+}
+.chipBody {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  background: #0f1412;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #f5f5f0;
+  animation:
+    chipIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both,
+    bob var(--bob, 6s) ease-in-out infinite;
+}
+/* A small screen has no wings: its two movers sit in a row along the top of
+   the sky, on the page's own margins, the day's worst on the left and its best
+   on the right. The browser lays the row out, so however wide a chip is (a
+   SIM tag, a long ticker) it cannot leave the screen; if two cannot share a
+   line, the second takes the next, still against the right margin. */
+.chipRow {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  top: 0.45rem;
+  z-index: 16;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  pointer-events: none;
+}
+.chipFlow:last-child {
+  margin-left: auto;
+}
+.chipRow .chipBody {
+  gap: 0.4rem;
+  padding: 0.34rem 0.65rem;
+  font-size: 0.75rem;
+}
+.chipSym {
+  font-weight: 600;
+}
+.chipMove {
+  color: var(--tone);
+}
+.chipSim {
+  padding: 0.05rem 0.32rem;
+  border-radius: 0.25rem;
+  background: rgba(255, 184, 0, 0.16);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #ffb800;
+}
+
+/* Glass candles adrift: --d is depth, 0 far and 1 near. The far ones get
+   z-index 5 inline, so the pods and the wordmark pass in front of them. */
+.candle {
+  position: absolute;
+  z-index: 17;
+  width: calc(8px + var(--d) * 12px);
+  height: calc(26px + var(--d) * 44px);
+  pointer-events: none;
+  opacity: calc(0.35 + var(--d) * 0.5);
+  filter: blur(calc((1 - var(--d)) * 2.4px));
+  /* nearer candles drift further: half the pods' drift far away, more than the pods up close */
+  transform: translate3d(calc(var(--px) * (0.5 + var(--d) * 0.9) * -14px), calc(var(--py) * (0.5 + var(--d) * 0.9) * 8px), 0);
+}
+.candleBody {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--tone) 75%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 46%, transparent), color-mix(in srgb, var(--tone) 12%, transparent));
+  box-shadow: 0 0 18px -2px color-mix(in srgb, var(--tone) 60%, transparent);
+  animation: bob var(--bob, 7s) ease-in-out infinite;
+}
+.candleBody::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -38%;
+  bottom: -38%;
+  width: 1px;
+  margin-left: -0.5px;
+  background: color-mix(in srgb, var(--tone) 70%, transparent);
+}
+
+.dust {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* behind the wordmark and the pods: nothing is drawn over the word */
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ── the bar ───────────────────────────────────────────────────────────── */
+
+/* One quiet line along the foot of the stage, on the page's own margins: the
+   market's state on the left, where the pod at the front leads in the middle,
+   the day's count and the way down on the right. Plain text on a dark scrim
+   over the floor; no plates, no glass. */
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding-top: 3.25rem;
+  background: linear-gradient(to top, rgba(5, 5, 5, 0.94), rgba(5, 5, 5, 0.6) 55%, transparent); /* taste-skill-ignore: a neutral scrim over the floor so the bar can be read */
+  pointer-events: none;
+}
+.barInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding: 0 1.25rem 1.05rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: #c4c4bb;
+}
+.barStatus {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: #f5f5f0;
+}
+.barSay {
+  justify-self: center;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  max-width: min(44rem, 50vw);
+  margin: 0;
+  white-space: nowrap;
+}
+/* At rest the bar only names the pod at the front, quietly; a pod in hand is
+   named in full ink and says what it is for. */
+.sayName {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.25rem;
+  letter-spacing: -0.015em;
+  color: #a9a99f;
+  transition: color 0.3s ease-out;
+}
+.barSay[data-hand] .sayName {
+  color: #f5f5f0;
+}
+.sayText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #b4b4aa;
+}
+.captionSwap {
+  display: contents;
+  animation: fadeIn 0.35s ease-out both;
+}
+.barEnd {
+  justify-self: end;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1.75rem;
+  margin: 0;
+}
+.barLink {
+  pointer-events: auto;
+  color: #f5f5f0;
+  text-decoration: none;
+}
+.barLink:hover {
+  color: #00ff87;
+}
+.statusDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #8a8a82;
+}
+.statusDot[data-state="live"] {
+  background: #00ff87;
+}
+.statusDot[data-state="sim"] {
+  background: #ffb800;
+}
+.up {
+  color: #00ff87;
+}
+.down {
+  color: #ff2e63;
+}
+
+/* The reading under the index: the same day in a sentence, and the colour key. */
+.reading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #b4b4aa;
+}
+.readingLead {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f5f5f0;
+}
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.swatches {
+  display: inline-flex;
+  gap: 2px;
+}
+.swatch {
+  width: 1rem;
+  height: 0.625rem;
+}
+
+/* ── below 1024px: no ring, a still grid ───────────────────────────────── */
+
+@media (max-width: 1023px) {
+  .stage {
+    --hz: clamp(11rem, 44vw, 21rem);
+    --fs: clamp(4.25rem, 21vw, 13rem);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .band {
+    position: relative;
+    z-index: 12;
+    top: auto;
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    /* under the y's tail, so no pod cuts it */
+    margin-top: calc(var(--hz) + var(--tail) + 0.5rem);
+    padding: 0 1rem;
+  }
+  /* In the flow, under the grid, on a dark band of its own: however it
+     wraps, it covers no pod and no tile's label shows through it. */
+  .bar {
+    position: relative;
+    margin-top: 0.9rem;
+    padding-top: 0;
+    background: rgba(5, 5, 5, 0.92);
+  }
+  .barInner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem 1.25rem;
+    padding: 0.85rem 1rem 1rem;
+  }
+  .barStatus,
+  .barEnd {
+    white-space: nowrap;
+  }
+  .barEnd {
+    gap: 1.25rem;
+  }
+  .barSay {
+    display: none;
+  }
+  /* two columns of pods on a phone: a long name may take two lines, never the pill's edge */
+  .stage .pod .podLink[href] {
+    height: 100%;
+    gap: 0.55rem;
+    padding: 0.75rem 0.95rem 0.75rem 0.85rem;
+  }
+  .podName {
+    font-size: 1rem;
+    white-space: normal;
+    text-wrap: balance;
+  }
+  .pod {
+    position: static;
+    width: auto;
+    opacity: 1;
+    transform: none;
+  }
+  .candle {
+    display: none;
+  }
+  /* the pods lie on the floor here: dim it further, so it stays texture */
+  .floor {
+    opacity: 0.5;
+  }
+  /* the arc is small here: larger type, so it reads as words and not as dust */
+  .ringText {
+    font-size: 30px;
+  }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .band {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ── motion ────────────────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ringTurn {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes lineDraw {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* Transform only, never opacity: the wordmark is the page's largest paint. */
+@keyframes wordRise {
+  from {
+    transform: translate3d(calc(-50% + var(--px) * -1.4px), 104%, 0);
+  }
+}
+@keyframes dotBreath {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aura,
+  .ringClip,
+  .ring,
+  .horizonGlow,
+  .horizon,
+  .word,
+  .pool,
+  .chipBody,
+  .candleBody,
+  .captionSwap,
+  .word[data-state="live"] .dot {
+    animation: none;
+  }
+}

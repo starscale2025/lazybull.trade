@@ -80,10 +80,15 @@ export const MAP_SYMBOLS: string[] = MAP_SECTORS.flatMap((s) => s.stocks.map((x)
 
 /** The colour of a day's move: a diverging scale, grey at zero, loss red
  *  below and the brand's green above, full at ±3%. Square-rooted so a 0.3%
- *  day already reads as a direction. */
-const FLAT = "#262a27";
-const UP = "#00c46a";
-const DOWN = "#d61f4a";
+ *  day already reads as a direction.
+ *
+ *  The two ends are deep and equal in weight (OKLCH L 0.40, C 0.095 each), so
+ *  a red day and a green day are equally loud, and both stay well below the
+ *  wordmark's darkest green (L 0.64): on /start the map is the ground the
+ *  wordmark stands on, not a second headline. */
+const FLAT = "#1d201e";
+const UP = "#045631";
+const DOWN = "#722f38";
 export function moveColor(chgPct: number | null | undefined): string {
   if (chgPct == null || !Number.isFinite(chgPct)) return "#1c1e1d";
   const t = Math.min(1, Math.abs(chgPct) / 3);
@@ -93,6 +98,37 @@ export function moveColor(chgPct: number | null | undefined): string {
 /** White or near-black type, whichever reads better on a tile. */
 export function inkOn(bg: string): string {
   return contrast("#f5f5f0", bg) >= contrast("#050505", bg) ? "#f5f5f0" : "#050505";
+}
+
+/** The day in a few numbers, for everything on /start that reads the map:
+ *  the caption, the floating movers, the horizon's mood, the wordmark's type. */
+export type Reading = {
+  up: number;
+  down: number;
+  /** Top gainers and losers, biggest first, at most three each. */
+  best: [string, number][];
+  worst: [string, number][];
+  /** -1 when every stock is down, +1 when every stock is up. */
+  breadth: number;
+  /** 0 on a still day, 1 when the average stock moves 2.5% or more. */
+  heat: number;
+};
+
+export function reading(moves: Record<string, number>): Reading | null {
+  const rows = Object.entries(moves).filter(([, p]) => Number.isFinite(p));
+  if (!rows.length) return null;
+  const up = rows.filter(([, p]) => p > 0).length;
+  const down = rows.filter(([, p]) => p < 0).length;
+  const sorted = [...rows].sort((a, b) => b[1] - a[1]);
+  const mean = rows.reduce((a, [, p]) => a + Math.abs(p), 0) / rows.length;
+  return {
+    up,
+    down,
+    best: sorted.slice(0, 3).filter(([, p]) => p > 0),
+    worst: sorted.slice(-3).reverse().filter(([, p]) => p < 0),
+    breadth: up + down ? (up - down) / (up + down) : 0,
+    heat: Math.min(1, Math.max(0, (mean - 0.4) / 2.1)),
+  };
 }
 
 /** A labelled simulated day for when no feed answers (local runs, outages):

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { squarify } from "@/lib/viz/treemap";
 import { MAP_SECTORS, MAP_SYMBOLS, inkOn, moveColor, simulatedMoves } from "@/lib/market/heatmap";
-import { contrast } from "@/lib/viz/color";
+import { contrast, lightness } from "@/lib/viz/color";
 
 // The market map on /start (2026-11-20): a squarified treemap of ~100 large
 // US stocks by sector, coloured by the day's move.
@@ -64,6 +64,13 @@ describe("the market map's data", () => {
       const bg = moveColor(p);
       expect(contrast(inkOn(bg), bg), String(p)).toBeGreaterThan(4.5);
     }
+  });
+
+  it("keeps the map under the wordmark: a gain and a loss of one size equally light, every tile darker than the word", () => {
+    // the wordmark's darkest green (start.module.css, .word)
+    const word = lightness("#00a857");
+    for (const p of [0.3, 1, 2, 3, 6]) expect(Math.abs(lightness(moveColor(p)) - lightness(moveColor(-p))), String(p)).toBeLessThan(0.02);
+    for (const p of [-6, -3, -1, 0, 1, 3, 6, null]) expect(lightness(moveColor(p)), String(p)).toBeLessThan(word - 0.2);
   });
 
   it("simulates the same day the same way, and a different day differently", () => {

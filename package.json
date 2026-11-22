@@ -11,6 +11,7 @@
     "guard": "node scripts/guard.mjs",
     "guard:dial": "node scripts/dial-footprint.mjs",
     "guard:greeks": "node scripts/greeks-keyboard.mjs",
+    "guard:start": "node scripts/start-orbit.mjs",
     "verify": "tsc --noEmit && vitest run && next build && node scripts/guard.mjs && node scripts/check-compliance.mjs",
     "compliance": "node scripts/check-compliance.mjs",
     "budget": "node scripts/perf/budget.mjs"
