@@ -1,13 +1,12 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   autoY,
   barOfX,
   ChartGeom,
   Drawing,
   fmt,
-  fmtTime,
   innerH,
   innerW,
   priceOfY,
@@ -20,6 +19,7 @@ import {
   distToSeg,
   type Bar,
 } from "./chartCore";
+import { fmtAxisTime, fmtBarTime, keepWindow } from "./chartView";
 import { bollinger, ema, ichimoku, macd, rsi, supertrend, vwap, type Series } from "./indicators";
 import { backdropOf, selfContainedSvg } from "./snapshot";
 import { narrate } from "@/lib/narrator";
@@ -41,6 +41,13 @@ export type Alert = { id: string; price: number; cond: "above" | "below"; note?:
 
 type Props = {
   bars: Bar[];
+  /** What `bars` are bars of. A new id is a different series: the chart refits
+      and plays its entrance. The same id with a new array is that series
+      again (a refetch, a live tick, a bar added) and keeps the window the user
+      is looking at. Left out, every new array counts as a new series. */
+  seriesId?: string;
+  /** The user zoomed or scrolled the time axis by hand. */
+  onUserView?: () => void;
   symbol: string;
   exchange: string;
   timeframe: string;
@@ -90,6 +97,8 @@ const VOLUME_FRAC = 0.18;
 export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   {
     bars: allBars,
+    seriesId,
+    onUserView,
     symbol,
     exchange,
     timeframe,
@@ -149,29 +158,45 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     yMax: 1,
   }));
 
-  // When bars array changes (new symbol/timeframe), refit to last 120
-  // and replay the candle fast-forward entrance.
-  const lastBarsRef = useRef(allBars);
+  // A new series (another symbol or timeframe) refits to its last 120 bars and
+  // replays the candle fast-forward entrance. The SAME series arriving again
+  // keeps its window. This used to run for every new array, and the page makes
+  // one on each 30 s refetch and each live tick: a range or a zoom lasted until
+  // the next poll, and a new price arrived as a redraw of the whole chart
+  // instead of a candle moving (owner, 2026-11-22).
+  //
+  // A layout effect, so the new window is in place before the browser paints:
+  // as a passive effect it left one frame of the new bars in the old window,
+  // which between a 1,300-bar daily chart and a 77-bar monthly one is a blank.
+  const lastBarsRef = useRef<Bar[] | null>(null);
+  const seriesRef = useRef<string | undefined>(undefined);
   const [introToken, setIntroToken] = useState(0);
   const [introPlaying, setIntroPlaying] = useState(true);
-  useEffect(() => {
-    if (lastBarsRef.current !== allBars) {
-      lastBarsRef.current = allBars;
-      const span = Math.min(120, allBars.length || 120);
-      const start = Math.max(0, allBars.length - span);
-      const yr = autoY(allBars, start, span);
-      setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
-      setYLocked(false);
-      setIntroToken((n) => n + 1);
-      setIntroPlaying(true);
+  useLayoutEffect(() => {
+    const prev = lastBarsRef.current;
+    if (prev === allBars) return;
+    lastBarsRef.current = allBars;
+    if (!allBars.length) return;
+    if (seriesId !== undefined && seriesRef.current === seriesId && prev && prev.length) {
+      setVp((v) => ({ ...v, ...keepWindow(v, prev, allBars) }));
+      return;
     }
-  }, [allBars]);
+    seriesRef.current = seriesId;
+    const span = Math.min(120, allBars.length || 120);
+    const start = Math.max(0, allBars.length - span);
+    const yr = autoY(allBars, start, span);
+    setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
+    setYLocked(false);
+    setIntroToken((n) => n + 1);
+    setIntroPlaying(true);
+  }, [allBars, seriesId]);
 
-  // After ~1.4s the per-candle fade-in is finished. Drop the animation
-  // class so subsequent pan/zoom doesn't re-flicker the candles.
+  // The per-candle fade-in is over within 0.75 s (a sweep of at most 450 ms,
+  // see introStep, plus the 280 ms fade). Drop the animation class then, so
+  // subsequent pan/zoom doesn't re-flicker the candles.
   useEffect(() => {
     if (!introPlaying) return;
-    const t = setTimeout(() => setIntroPlaying(false), 1400);
+    const t = setTimeout(() => setIntroPlaying(false), 800);
     return () => clearTimeout(t);
   }, [introToken, introPlaying]);
 
@@ -296,6 +321,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     _setDraft(value);
   };
   const panRef = useRef<{ x: number; y: number; vp: Viewport } | null>(null);
+  // Read through a ref: the handlers below are bound once and must call the
+  // page's latest callback.
+  const userViewRef = useRef(onUserView);
+  userViewRef.current = onUserView;
   const yAxisDragRef = useRef<{ y: number; vp: Viewport } | null>(null);
   const xAxisDragRef = useRef<{ x: number; vp: Viewport } | null>(null);
 
@@ -329,6 +358,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         const newStart = rightEdge - newSpan;
         setVp((v) => ({ ...v, start: newStart, span: newSpan }));
         setYLocked(false);
+        userViewRef.current?.();
       }
     };
     const onUp = () => {
@@ -371,6 +401,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     const yr = autoY(allBars, start, span);
     setVp((v) => ({ ...v, start, span, yMin: yr.yMin, yMax: yr.yMax }));
     setYLocked(false);
+    userViewRef.current?.();
   };
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -408,6 +439,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         });
       }
       setYLocked(true);
+      if (Math.abs(dBars) > 0.5) userViewRef.current?.();
       return;
     }
     if (draftRef.current) {
@@ -513,7 +545,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       kbIdxRef.current = next;
       const b = bars[next];
       setHover({ x: xOfBar(next, vp, geom), y: yOfPrice(b.c, vp, geom) });
-      narrate(`${fmtTime(b.t)}: open ${fmt(b.o, 2)}, high ${fmt(b.h, 2)}, low ${fmt(b.l, 2)}, close ${fmt(b.c, 2)}.`);
+      narrate(`${fmtBarTime(b.t, timeframe)}: open ${fmt(b.o, 2)}, high ${fmt(b.h, 2)}, low ${fmt(b.l, 2)}, close ${fmt(b.c, 2)}.`);
     };
     if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
     else if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
@@ -552,6 +584,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         return { ...v, start: newStart, span: newSpan };
       });
       setYLocked(false);
+      userViewRef.current?.();
     };
     wrap.addEventListener("wheel", handleWheel, { passive: false });
     return () => wrap.removeEventListener("wheel", handleWheel);
@@ -683,6 +716,10 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
 
   const slot = innerW(geom) / vp.span;
   const candleW = Math.max(1, slot * 0.65);
+  // The entrance sweeps left to right in under half a second whatever the bar
+  // count. At a flat 8 ms a bar, 390 one-minute candles took three seconds and
+  // were cut off by the timer above, then at 1.4 s.
+  const introStep = Math.min(8, 450 / Math.max(1, visibleBars.length));
   const last = bars[bars.length - 1] || { c: 0, o: 0, h: 0, l: 0, v: 0, t: 0, i: 0 };
 
   const allDrawings = draft ? [...drawings, draft] : drawings;
@@ -803,7 +840,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           const yL = yOfPrice(b.l, vp, geom);
           const top = Math.min(yO, yC);
           const bh = Math.max(1, Math.abs(yC - yO));
-          const delayMs = introPlaying ? idx * 8 : 0;
+          const delayMs = introPlaying ? idx * introStep : 0;
           const tick = Math.max(1.5, candleW / 2);
           return (
             <g
@@ -846,7 +883,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
             const isUp = b.c >= b.o;
             const c = isUp ? "var(--bull)" : "var(--bear)";
             const h = (b.v / maxVol) * (volBottom - volTop - 6);
-            const delayMs = introPlaying ? idx * 8 : 0;
+            const delayMs = introPlaying ? idx * introStep : 0;
             return (
               <rect
                 key={`v-${b.i}-${introToken}`}
@@ -872,21 +909,27 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
           );
         })}
 
-        {/* x-axis labels */}
-        {xTicks.map((i) => {
-          const x = xOfBar(i, vp, geom);
-          const label = fmtTime(bars[i].t);
-          // Centred on its tick, a label near either edge was cut in half
-          // ("un 02, 26"). Mono at 10px advances about 6px a character, so a
-          // label that can't sit whole inside the plot is left out.
-          const half = label.length * 3.1 + 2;
-          if (x - half < 0 || x + half > geom.width - geom.padR) return null;
-          return (
-            <text key={`xt-${i}`} x={x} y={geom.height - 8} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
-              {label}
-            </text>
-          );
-        })}
+        {/* x-axis labels: the clock on an intraday frame, with the day named
+            where one begins (fmtAxisTime). `shown` is the last label actually
+            drawn, so the first one on screen always says which day it is. */}
+        {(() => {
+          let shown: number | undefined;
+          return xTicks.map((i) => {
+            const x = xOfBar(i, vp, geom);
+            const label = fmtAxisTime(bars[i].t, timeframe, shown);
+            // Centred on its tick, a label near either edge was cut in half
+            // ("un 02, 26"). Mono at 10px advances about 6px a character, so a
+            // label that can't sit whole inside the plot is left out.
+            const half = label.length * 3.1 + 2;
+            if (x - half < 0 || x + half > geom.width - geom.padR) return null;
+            shown = bars[i].t;
+            return (
+              <text key={`xt-${i}`} data-axis="x" x={x} y={geom.height - 8} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
+                {label}
+              </text>
+            );
+          });
+        })()}
 
         {/* last price marker */}
         {bars.length > 0 && (
@@ -1226,7 +1269,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         />
 
         {/* crosshair — a hover SUBSCRIBER; pointer motion re-renders only this */}
-        <CrosshairOverlay hover={hoverApi} vp={vp} geom={geom} sizeW={size.w} padB={PAD.B} bars={bars} />
+        <CrosshairOverlay hover={hoverApi} vp={vp} geom={geom} sizeW={size.w} padB={PAD.B} bars={bars} timeframe={timeframe} />
       </svg>
 
       {/* OHLC legend top-left — the width cap + wrap hold at EVERY breakpoint:
@@ -1413,9 +1456,9 @@ function useHoverPt(hover: HoverApi) {
 }
 
 function CrosshairOverlay({
-  hover, vp, geom, sizeW, padB, bars,
+  hover, vp, geom, sizeW, padB, bars, timeframe,
 }: {
-  hover: HoverApi; vp: Viewport; geom: ChartGeom; sizeW: number; padB: number; bars: Bar[];
+  hover: HoverApi; vp: Viewport; geom: ChartGeom; sizeW: number; padB: number; bars: Bar[]; timeframe: string;
 }) {
   const pt = useHoverPt(hover);
   if (!pt) return null;
@@ -1432,7 +1475,7 @@ function CrosshairOverlay({
         <g>
           <rect x={pt.x - 40} y={geom.height - padB + 2} width={80} height={16} fill="var(--surface-2)" stroke="var(--border)" />
           <text x={pt.x} y={geom.height - padB + 13} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg)">
-            {fmtTime(bars[i].t)}
+            {fmtBarTime(bars[i].t, timeframe)}
           </text>
         </g>
       )}

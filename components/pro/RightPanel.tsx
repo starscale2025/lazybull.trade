@@ -6,13 +6,14 @@ import { track } from "@/lib/track";
 import { Chip, ToolButton } from "@/components/calm/kit";
 import { fmt } from "./chartCore";
 import type { SymbolDef } from "./TopBar";
+import { useLiveQuotes } from "@/lib/streaming/useLiveQuotes";
 const DEFAULT_LIST: { sym: string }[] = [
   { sym: "^NSEI" }, { sym: "^NSEBANK" }, { sym: "^GSPC" }, { sym: "^IXIC" },
   { sym: "AAPL" }, { sym: "NVDA" }, { sym: "TSLA" }, { sym: "AMZN" }, { sym: "MSFT" }, { sym: "META" }, { sym: "GOOGL" },
   { sym: "BTC-USD" }, { sym: "ETH-USD" },
 ];
 
-type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string; marketTime?: number | null };
+type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string; marketTime?: number | null; delayed?: boolean };
 
 type Props = {
   symbol: SymbolDef;
@@ -43,7 +44,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       return DEFAULT_LIST.map((d) => d.sym);
     }
   });
-  const [quotes, setQuotes] = useState<Record<string, LiveQuote>>({});
+  const [polled, setPolled] = useState<Record<string, LiveQuote>>({});
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<SymbolDef[]>([]);
   const [hist, setHist] = useState<{ ts: number; price: number }[]>([]);
@@ -157,7 +158,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         if (!alive || !j.ok) return;
         const map: Record<string, LiveQuote> = {};
         for (const q of j.quotes as LiveQuote[]) map[q.sym] = q;
-        setQuotes(map);
+        setPolled(map);
         const live = map[symbol.sym];
         if (live?.last != null) onQuote?.(symbol.sym, live.last, live.marketTime ?? undefined);
       } catch {}
@@ -167,12 +168,32 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
     return () => { alive = false; clearInterval(id); };
   }, [list, symbol.sym, onQuote]);
 
-  // tiny live price tick history (last ~60 samples) for the symbol
+  // The live stream (lib/streaming) carries the same rows about every two
+  // seconds while a market trades, and the chart now follows it. The rail does
+  // too, or the chart's price tag would run up to 15 s ahead of the number
+  // beside it. The poll above stays as the floor, and is the only source where
+  // a stream is not available; of two rows the newer by exchange time shows.
+  const wanted = useMemo(() => Array.from(new Set([...list, symbol.sym])), [list, symbol.sym]);
+  const streamed = useLiveQuotes(wanted);
+  const quotes = useMemo(() => {
+    const out: Record<string, LiveQuote> = { ...polled };
+    for (const q of Object.values(streamed)) {
+      const cur = out[q.sym];
+      if (!cur || (q.marketTime ?? 0) >= (cur.marketTime ?? 0)) out[q.sym] = { ...cur, ...q };
+    }
+    return out;
+  }, [polled, streamed]);
+
+  // tiny live price tick history (last ~60 samples) for the symbol: one sample
+  // a poll, as before, at whatever price is showing
+  const shownLast = quotes[symbol.sym]?.last;
+  const shownLastRef = useRef(shownLast);
+  shownLastRef.current = shownLast;
   useEffect(() => {
-    const q = quotes[symbol.sym];
-    if (q?.last == null) return;
-    setHist((h) => [...h.slice(-59), { ts: Date.now(), price: q.last as number }]);
-  }, [quotes, symbol.sym]);
+    const price = shownLastRef.current;
+    if (price == null) return;
+    setHist((h) => [...h.slice(-59), { ts: Date.now(), price }]);
+  }, [polled, symbol.sym]);
 
   // performance from /api/quote (1d/1m/3m/6m/ytd/1y)
   useEffect(() => {
@@ -377,7 +398,15 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         <div className="mt-2">
           {/* Driven by the quote, not printed unconditionally (Gate A4 #1). */}
           <Chip tone={live ? "neutral" : "warn"} dot>
-            {live ? "Live · refreshing every 15s" : "SIM tape · not real quotes"}
+            {/* What the number is, by the market's own state: it only moves
+                while the market trades. */}
+            {!live
+              ? "SIM tape · not real quotes"
+              : live.delayed
+                ? "Delayed quote"
+                : live.marketState === "REGULAR"
+                  ? "Live · updates every few seconds"
+                  : "Market closed · last traded price"}
           </Chip>
         </div>
         </>)}

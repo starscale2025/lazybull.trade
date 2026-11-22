@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { AuthButtons } from "@/components/AuthButtons";
@@ -22,15 +22,20 @@ import type { PlacedOrder } from "@/lib/pro/voice/useVoiceAgent";
 import { computeAnalysis } from "@/lib/pro/voice/analysis";
 import { usePaper } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
-import { patchLastBar, reconcileBars, syntheticBars } from "@/lib/live-bars";
+import { syntheticBars } from "@/lib/live-bars";
+import { foldTrade, reconcileLive, rollStep } from "@/lib/pro/live-candle";
+import { rangeBars, rangePlan } from "@/lib/pro/ranges";
+import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
 import { registerCommands } from "@/lib/command-deck";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 import { Chip } from "@/components/calm/kit";
 
-const PRESET_TO_LASTN: Record<string, number> = {
-  "1D": 24, "5D": 60, "1M": 30, "3M": 90, "6M": 180, YTD: 250, "1Y": 260, "5Y": 1300, All: 99999,
-};
+/** The range lit when the page opens: six months of the default daily chart.
+    What each range means lives in lib/pro/ranges.ts. */
+const DEFAULT_PRESET = "6M";
+/** One empty series, so "no bars yet" is the same array every render. */
+const NO_BARS: Bar[] = [];
 
 type Workspace = {
   symbol: SymbolDef;
@@ -64,7 +69,7 @@ export default function ProPage() {
   const [indicators, setIndicators] = useState<string[]>(DEFAULT_WORKSPACE.indicators);
   const [layout, setLayout] = useState(DEFAULT_WORKSPACE.layout);
   const [chartType, setChartType] = useState<Workspace["chart"]>(DEFAULT_WORKSPACE.chart);
-  const [preset, setPreset] = useState("All");
+  const [preset, setPreset] = useState(DEFAULT_PRESET);
   const [intro, setIntro] = useState(true);
   // The keystroke-driven symbol/interval box. `seed` is the key that opened it.
   const [search, setSearch] = useState<{ open: boolean; seed: string }>({ open: false, seed: "" });
@@ -163,6 +168,9 @@ export default function ProPage() {
   // from a fetch, read by the live-tick patch so a quote arriving mid-switch
   // can never write one symbol's price into another symbol's candle.
   const barsSymRef = useRef<string | null>(null);
+  // …and which bar size, so a tick mid-switch opens a new bar on the grid of
+  // the bars that are on screen, not of the ones still being fetched.
+  const barsTfRef = useRef<string>("");
   // Freshest known trade for the charted symbol, ordered by the upstream
   // regularMarketTime. The bars proxy and the quote poll are cached separately
   // for 30s, so either can deliver the staler snapshot — whichever carries the
@@ -208,6 +216,17 @@ export default function ProPage() {
 
   // ── live data
   const [bars, setBars] = useState<Bar[]>([]);
+  // What `bars` are bars of, e.g. "AAPL|5m|live". It changes in the same update
+  // as the bars of a NEW series and stays put while that series refetches or
+  // ticks: that is how the chart tells "show something else" (refit, play the
+  // entrance) from "the same thing again" (keep the view). See Chart.tsx.
+  const [seriesId, setSeriesId] = useState("");
+  // The series the page wants right now, and what is on screen, for callbacks
+  // that outlive a render.
+  const wantRef = useRef("");
+  wantRef.current = `${symbol.sym}|${timeframe}`;
+  const shownRef = useRef<{ id: string; bars: Bar[] }>({ id: "", bars: [] });
+  shownRef.current = { id: seriesId, bars };
   const [meta, setMeta] = useState<{ exchangeName?: string; currency?: string; regularMarketPrice?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchErr, setFetchErr] = useState<string | null>(null);
@@ -381,7 +400,9 @@ export default function ProPage() {
         if (!alive) return;
         if (!j.ok) throw new Error(j.error || "quote failed");
         barsSymRef.current = symbol.sym;
-        setBars(reconcileBars(j.bars as Bar[], j.meta, symbol.sym, freshestRef));
+        barsTfRef.current = timeframe;
+        setBars(reconcileLive(j.bars as Bar[], j.meta, symbol.sym, freshestRef, rollStep(timeframe, j.meta?.marketState)));
+        setSeriesId(`${symbol.sym}|${timeframe}|live`);
         setMeta(j.meta || null);
         setSynthetic(false);
       } catch {
@@ -391,7 +412,9 @@ export default function ProPage() {
         // terminal stays fully usable (draw / indicators / replay). Labelled
         // synthetic in the app bar — never presented as real quotes.
         barsSymRef.current = symbol.sym;
+        barsTfRef.current = timeframe;
         setBars(syntheticBars(symbol.sym, timeframe) as Bar[]);
+        setSeriesId(`${symbol.sym}|${timeframe}|sim`);
         setMeta(null);
         setSynthetic(true);
         setFetchErr(null); // we HAVE bars (synthetic) — not a dead error state
@@ -405,13 +428,26 @@ export default function ProPage() {
   // refresh quote every 30s if not in replay
   useEffect(() => {
     if (replayActive) return;
+    const want = `${symbol.sym}|${timeframe}`;
     const id = setInterval(async () => {
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=${timeframe}`);
         const j = await r.json();
+        // Another symbol or bar size was picked while this was in flight: these
+        // bars are of a series nobody is looking at, and used to be drawn anyway.
+        if (wantRef.current !== want) return;
         if (j.ok) {
           barsSymRef.current = symbol.sym;
-          setBars(reconcileBars(j.bars as Bar[], j.meta, symbol.sym, freshestRef));
+          barsTfRef.current = timeframe;
+          // A refetch of the live series on screen: what is showing goes along,
+          // so the bars the chart built from ticks outlast a feed that is a
+          // minute behind.
+          const shown = shownRef.current;
+          const same = shown.id === `${want}|live` ? shown.bars : null;
+          setBars(reconcileLive(j.bars as Bar[], j.meta, symbol.sym, freshestRef, rollStep(timeframe, j.meta?.marketState), same));
+          // The same id while the feed stays live, so the chart keeps its view;
+          // a recovery from the made-up tape is a different series.
+          setSeriesId(`${want}|live`);
           setMeta(j.meta || null);
           setSynthetic(false); // feed recovered (or a key was added) → back to live
         }
@@ -428,17 +464,35 @@ export default function ProPage() {
   // terminal's tick stream drives the current bar. Replay stays untouched:
   // live ticks must never rewrite history mid-scrub.
   const onLiveQuote = useCallback(
-    (sym: string, last: number, marketTime?: number) => {
+    (sym: string, last: number, marketTime?: number, marketState?: string) => {
       if (replayActive || !Number.isFinite(last)) return;
       if (sym !== barsSymRef.current) return;
       const t = marketTime ?? 0;
       const f = freshestRef.current;
       if (f && f.sym === sym && f.t > t) return; // stale cache hit — never walk the tape backwards
       freshestRef.current = { sym, price: last, t };
-      setBars((prev) => patchLastBar(prev, last));
+      // Inside the developing bar the trade moves it; past its end, on an
+      // intraday frame while the market trades, it opens the next bar
+      // (lib/pro/live-candle.ts). The step is that of the bars on screen, which lag
+      // the timeframe state by one fetch after a switch.
+      const step = rollStep(barsTfRef.current, marketState);
+      setBars((prev) => foldTrade(prev, last, t ? t * 1000 : undefined, step));
     },
     [replayActive]
   );
+
+  // The chart listens to the live stream (lib/streaming): a price about every
+  // two seconds while the market trades. It used to hear one only from the
+  // watchlist's 15 s poll, so the last candle stood still for a quarter of a
+  // minute at a time. The watchlist still calls onLiveQuote; the older of two
+  // prices is dropped above. Indian listings are lagged by policy and never
+  // tick (lib/region.ts).
+  const streamed = useLiveQuote(replayActive ? null : symbol.sym);
+  useEffect(() => {
+    if (!streamed || streamed.delayed) return;
+    if (streamed.sym.toUpperCase() !== symbol.sym.toUpperCase()) return;
+    onLiveQuote(symbol.sym, streamed.last, streamed.marketTime ?? undefined, streamed.marketState);
+  }, [streamed, symbol.sym, onLiveQuote]);
 
   // intro fade
   useEffect(() => {
@@ -452,10 +506,42 @@ export default function ProPage() {
   // chart imperative ref for snapshot/fit
   const chartRef = useRef<ChartHandle>(null);
 
-  const onPreset = (p: string) => {
-    setPreset(p);
-    chartRef.current?.fit(PRESET_TO_LASTN[p] ?? 120);
+  // A range button is a span of time and the bar size that suits it
+  // (lib/pro/ranges.ts): "1D" is the last session in 5-minute bars, "1Y" a year
+  // of daily ones. The view is fitted once bars of that size are on screen: at
+  // once when they already are, otherwise when they arrive (the effect below).
+  const fitRange = (p: string, series: Bar[]) => {
+    const plan = rangePlan(p, symbol.sym);
+    if (plan && series.length) chartRef.current?.fit(rangeBars(series, plan));
   };
+  const onPreset = (p: string) => {
+    const plan = rangePlan(p, symbol.sym);
+    if (!plan) return;
+    setPreset(p);
+    if (plan.tf !== timeframe) setTimeframe(plan.tf);
+    else fitRange(p, bars);
+  };
+  // A new series is on screen: if a range is lit and these bars are the size it
+  // asks for, show that range of them. A layout effect like the chart's own
+  // refit, which as the child's runs first: both land before the first paint
+  // of the new bars, so the range is what appears, not 120 bars and then it.
+  useLayoutEffect(() => {
+    if (!seriesId || !preset) return;
+    if (rangePlan(preset, symbol.sym)?.tf === timeframe) fitRange(preset, bars);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seriesId]);
+  // A lit range follows the symbol: crypto and stocks use different bar sizes
+  // for three of them.
+  useEffect(() => {
+    if (!preset) return;
+    const plan = rangePlan(preset, symbol.sym);
+    if (plan && plan.tf !== timeframe) setTimeframe(plan.tf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol.sym]);
+  // The user picked a bar size, or zoomed or scrolled by hand: the view is no
+  // longer any of the ranges, so none stays lit.
+  const clearPreset = useCallback(() => setPreset(""), []);
+  const pickTimeframe = useCallback((tf: string) => { setPreset(""); setTimeframe(tf); }, []);
 
   // ── workspace save/load (Publish)
   // When signed in: persists to /api/workspaces (Mongo). When not: falls
@@ -511,6 +597,7 @@ export default function ProPage() {
       const ws = JSON.parse(raw) as Workspace;
       setSymbol(ws.symbol);
       setTimeframe(ws.timeframe);
+      if (ws.timeframe !== DEFAULT_WORKSPACE.timeframe) setPreset(""); // a saved bar size is not a range
       // Load a workspace WITHOUT recording an undo entry (there is nothing to
       // undo back to), but still through the funnel so drawingsRef stays in
       // sync — otherwise the first edit after a load would compute from the
@@ -634,11 +721,11 @@ export default function ProPage() {
       setSymbol({ sym: t, name: t, exch: "" });
       return { ok: true, symbol: t, name: t };
     },
-    setTimeframe,
+    setTimeframe: pickTimeframe,
     setChartType: (c: string) => setChartType(c as Workspace["chart"]),
     setLayout,
-    setRangePreset: (p: string) => { if (PRESET_TO_LASTN[p] != null) onPreset(p); },
-    zoomTo: (n: number) => chartRef.current?.fit(Math.max(5, Math.round(n))),
+    setRangePreset: (p: string) => onPreset(p),
+    zoomTo: (n: number) => { setPreset(""); chartRef.current?.fit(Math.max(5, Math.round(n))); },
     toggleFullscreen,
     snapshot: () => chartRef.current?.snapshot(),
     saveWorkspace: () => { void saveWorkspace(); },
@@ -881,7 +968,7 @@ export default function ProPage() {
         symbol={symbol}
         setSymbol={setSymbol}
         timeframe={timeframe}
-        setTimeframe={setTimeframe}
+        setTimeframe={pickTimeframe}
         chart={chartType}
         setChart={setChartType}
         indicators={indicators}
@@ -951,6 +1038,8 @@ export default function ProPage() {
                 onAlertFire={onAlertFire}
                 chartRef={i === 0 ? chartRef : undefined}
                 bars={i === 0 ? bars : undefined}
+                seriesId={i === 0 ? seriesId : undefined}
+                onUserView={i === 0 ? clearPreset : undefined}
                 meta={i === 0 ? meta : undefined}
                 exchangeFallback={i === 0 ? symbolMetaForChart.exch : ""}
                 chartType={chartType}
@@ -1049,7 +1138,7 @@ export default function ProPage() {
         seed={search.seed}
         onClose={() => setSearch({ open: false, seed: "" })}
         onPickSymbol={(sm) => setSymbol(sm)}
-        onPickInterval={(tf) => setTimeframe(tf)}
+        onPickInterval={pickTimeframe}
       />
 
       <TradingPanel
@@ -1125,6 +1214,8 @@ function PaneChart({
   onAlertFire,
   chartRef,
   bars: barsProp,
+  seriesId: seriesIdProp,
+  onUserView,
   meta: metaProp,
   exchangeFallback,
   chartType,
@@ -1164,42 +1255,48 @@ function PaneChart({
   fills?: { id: string; price: number; side: "buy" | "sell" }[];
   chartRef?: React.RefObject<ChartHandle | null>;
   bars?: Bar[];
+  /** Names the primary pane's bars (see the page's seriesId). */
+  seriesId?: string;
+  onUserView?: () => void;
   meta?: { exchangeName?: string } | null;
   exchangeFallback: string;
 }) {
-  const [bars, setBars] = useState<Bar[]>(barsProp || []);
-  const [meta, setMeta] = useState<{ exchangeName?: string } | null>(metaProp || null);
+  // A secondary pane fetches bars of its own. The primary one shows the page's,
+  // passed straight through: copied into state here they reached the chart one
+  // render after the id that names them.
+  const [own, setOwn] = useState<{ id: string; bars: Bar[]; meta: { exchangeName?: string } | null }>({ id: "", bars: NO_BARS, meta: null });
 
   useEffect(() => {
-    if (primary) { setBars(barsProp || []); setMeta(metaProp || null); return; }
+    if (primary) return;
     let alive = true;
+    const id = `${symbol.sym}|${timeframe}`;
+    // secondary pane: the same synthetic fallback as the primary
+    const madeUp = () => setOwn({ id: `${id}|sim`, bars: syntheticBars(symbol.sym, timeframe) as Bar[], meta: null });
     (async () => {
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=${timeframe}`);
         const j = await r.json();
         if (!alive) return;
-        if (!j.ok) {
-          setBars(syntheticBars(symbol.sym, timeframe) as Bar[]); // secondary pane: same synthetic fallback
-          setMeta(null);
-          return;
-        }
-        setBars(j.bars as Bar[]);
-        setMeta(j.meta || null);
+        if (!j.ok) { madeUp(); return; }
+        setOwn({ id: `${id}|live`, bars: j.bars as Bar[], meta: j.meta || null });
       } catch {
-        if (alive) {
-          setBars(syntheticBars(symbol.sym, timeframe) as Bar[]);
-          setMeta(null);
-        }
+        if (alive) madeUp();
       }
     })();
     return () => { alive = false; };
-  }, [primary, symbol.sym, timeframe, barsProp, metaProp]);
+  }, [primary, symbol.sym, timeframe]);
+
+  const bars = primary ? barsProp || NO_BARS : own.bars;
+  const meta = primary ? metaProp || null : own.meta;
+  const seriesId = primary ? seriesIdProp : own.id;
 
   return (
     <div className="relative bg-bg">
       <Chart
         ref={chartRef as React.Ref<ChartHandle>}
         bars={bars}
+        seriesId={seriesId}
+        onUserView={onUserView}
         symbol={symbol.sym}
         exchange={meta?.exchangeName || exchangeFallback}
         timeframe={timeframe}

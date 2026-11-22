@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Chip, TogglePill } from "@/components/calm/kit";
+import { RANGE_PRESETS } from "@/lib/pro/ranges";
 
-const PRESETS = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
+// What each range shows, and in which bar size, is lib/pro/ranges.ts.
+const PRESETS = RANGE_PRESETS;
 
 /** The kit's toggle at this strip's height: nine presets have to fit a phone. */
 const COMPACT = "!h-6 !px-1.5 !text-[0.6875rem] min-w-7 justify-center";
