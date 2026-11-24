@@ -20,6 +20,8 @@
 //     opens the next candle; neither replays the entrance or moves the view
 //   · a refetch that does not list the developing minute yet leaves that candle
 //     as the ticks built it (its open, high and low)
+//   · the watchlist's poll, when it brings a new minute's trade before the
+//     stream does, opens the new candle too and leaves the old one alone
 //   · with the market shut a tick only moves the last candle
 //   · scrolled back into history, ticks and refetches leave the view where it is
 //   · bars that answer after another bar size was picked are not drawn
@@ -235,13 +237,14 @@ try {
   const n0 = (await read(page)).bars;
   const minute = times("1m").at(-1); // start of the minute the feed is in
   feed.delay["1m"] = 4000; // refetches answer late for now: what a tick does is seen by itself
-  const sample = replayed(page, 12000); // watch for a replayed entrance through all of this
+  const sample = replayed(page, 18000); // watch for a replayed entrance through all of this
   await tick(page, 201.25, minute + 20_000);
   s = await until(page, (x) => x.close === 201.25);
   check(s.bars === n0 && s.close === 201.25 && s.candles === 120, `a trade inside the developing bar moves the last candle and adds none (${s.bars} bars, close ${s.close})`);
   await tick(page, 200.9, minute + 40_000);
   s = await until(page, (x) => x.close === 200.9);
   check(s.bars === n0 && s.close === 200.9, `and moves it down again (close ${s.close})`);
+  feed.finishedOnly = true; // from here the feed lists finished minutes only, as a real one does
   await tick(page, 202.1, minute + MIN + 5_000); // the next minute
   s = await until(page, (x) => x.close === 202.1 && x.bars === n0 + 1);
   check(s.bars === n0 + 1 && s.close === 202.1 && s.candles === 120, `a trade in the next minute opens the next candle, still in view (${n0} bars to ${s.bars}, close ${s.close}, ${s.candles} on screen)`);
@@ -252,7 +255,6 @@ try {
   await page.mouse.move(700, 20); // off the chart: the legend reads the last bar
   s = await until(page, (x) => x.close === 202.3 && x.ohlc === "O 202.10 H 202.90 L 202.10 C 202.30");
   check(s.ohlc === "O 202.10 H 202.90 L 202.10 C 202.30", `the new candle is built from its ticks (${s.ohlc})`);
-  feed.finishedOnly = true;
   feed.delay["1m"] = 0;
   await page.waitForTimeout(4300); // the late answers drain
   await afterRefetch(page, "1m");
@@ -265,12 +267,26 @@ try {
   const flashedLive = await sample;
   check(flashedLive === 0, `ticks and refetches replayed no entrance (${flashedLive} candles seen fading in)`);
 
+  // the watchlist's poll can bring a new minute's trade before the stream does
+  feed.finishedOnly = true;
+  await afterRefetch(page, "1m");
+  const nRail = (await read(page)).bars;
+  feed.clock = minute + 2 * MIN + 5_000; feed.last = 203; // a trade the stream has not pushed
+  s = await until(page, (x) => x.close === 203 && x.bars === nRail + 1);
+  check(s.bars === nRail + 1 && s.ohlc === "O 203.00 H 203.00 L 203.00 C 203.00", `a new minute's trade from the watchlist's poll opens its own candle (${nRail} bars to ${s.bars}, ${s.ohlc})`);
+  await tick(page, 203.4, minute + 2 * MIN + 15_000);
+  s = await until(page, (x) => x.close === 203.4);
+  // (the count may step back by one meanwhile: the feed's window slides as it lists the minute before)
+  check(s.bars <= nRail + 1 && s.ohlc === "O 203.00 H 203.40 L 203.00 C 203.40", `and the stream then moves that same candle, adding none (${s.bars} bars, ${s.ohlc})`);
+  feed.finishedOnly = false;
+  await afterRefetch(page, "1m");
+
   // market shut: a trade past the bar's end only moves the last candle
   feed.market = "CLOSED";
   await afterRefetch(page, "1m");
   const nShut = (await read(page)).bars;
   feed.delay["1m"] = 4000; // again: the tick by itself, before the feed lists that minute
-  const shutAt = minute + 2 * MIN + 5_000;
+  const shutAt = minute + 3 * MIN + 5_000;
   await tick(page, 202.4, shutAt, { market: "CLOSED", quiet: true });
   s = await until(page, (x) => x.close === 202.4);
   await page.waitForTimeout(600);

@@ -19,8 +19,12 @@ type Props = {
   symbol: SymbolDef;
   onPickSymbol: (s: SymbolDef) => void;
   /** Fresh poll result for the charted symbol — the page patches it into the
-      developing candle so chart and rail never disagree on the last price. */
-  onQuote?: (sym: string, last: number, marketTime?: number) => void;
+      developing candle so chart and rail never disagree on the last price.
+      The market's state goes with it: the page opens a new candle for a trade
+      past the last bar's end only while the market trades, and this poll can
+      land before the stream's tick for the same trade. Without the state it
+      poured a new minute's trade into the candle before. */
+  onQuote?: (sym: string, last: number, marketTime?: number, marketState?: string) => void;
 };
 
 // Absent data is NOT a direction. `(q?.chg ?? 0) >= 0` coalesced a missing
@@ -160,7 +164,8 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         for (const q of j.quotes as LiveQuote[]) map[q.sym] = q;
         setPolled(map);
         const live = map[symbol.sym];
-        if (live?.last != null) onQuote?.(symbol.sym, live.last, live.marketTime ?? undefined);
+        // A lagged quote still sets the last candle's close, as before, but never opens one.
+        if (live?.last != null) onQuote?.(symbol.sym, live.last, live.marketTime ?? undefined, live.delayed ? undefined : live.marketState);
       } catch {}
     };
     fetchQuotes();
