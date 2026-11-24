@@ -121,6 +121,17 @@ interface in `provider.ts`, so adding a vendor is a file plus a slot in the chai
   instance; `acquireRefreshLock`/`releaseRefreshLock` (`cache.ts`) collapses them fleet-wide via KV.
   Cache is KV when configured, an in-process Map otherwise; every KV call is timed out and its
   errors swallowed. KV is an enhancement, never a dependency.
+- **What a price is** (`spotOf`, `alpaca.ts`): a stock's `last` is its latest trade. A coin's is the
+  newer of its latest trade and the **midpoint of its latest quote**, with that one's time as
+  `marketTime`. Alpaca's own crypto venue prints few trades (on 2026-11-24 BTC/USD's last was up to
+  seven minutes old, DOGE's three hours) and builds its crypto bars from quote midpoints when none
+  prints, so a row made of trades alone stood behind its own chart, and the stream, which pushes
+  only changed rows, moved only when a trade printed. A midpoint is an **indicative price, not a
+  trade**; the honesty ledger says so. A quote with a side missing, crossed, or wider than 10% of
+  its midpoint is not used, and the trade stands. `getBars` reads the same snapshot for a coin, so
+  the series' meta carries the row's price and time, yesterday's close and the day's volume; when
+  the snapshot fails, or holds only a trade older than the bars, the meta falls back to the bars'
+  own last close.
 
 **Indian securities** are classified in `lib/region.ts` (`.NS`/`.BO`, the `^CNX*`/`^NSE*`/`^BSE*`
 families, bare names like NIFTY/SENSEX) and served with a **31-day lag** — `LAG_DAYS`, one day of

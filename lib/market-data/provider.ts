@@ -30,13 +30,19 @@ export type QuoteMeta = {
 export type Quote = {
   sym: string;
   name?: string;
+  /**
+   * The current price. A stock's is its latest trade. A coin's, from Alpaca, is
+   * the newer of its latest trade and the midpoint of its latest quote: between
+   * trades an indicative price, where the coin is quoted, not a trade
+   * (spotOf in ./alpaca).
+   */
   last: number;
   chg: number;
   chgPct: number;
   currency?: string;
   exch?: string;
   marketState?: string;
-  /** upstream snapshot time (epoch seconds) — lets the client order feeds. */
+  /** when `last` was the price, upstream (epoch seconds) — lets the client order feeds. */
   marketTime?: number | null;
   /**
    * Set ONLY for Indian securities (lib/region.ts): `last` is the newest close

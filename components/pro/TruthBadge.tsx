@@ -127,7 +127,7 @@ const COLUMNS: {
     title: "What’s real",
     accent: "text-brand-ink",
     items: [
-      { lead: "Quotes & bars", detail: "Alpaca for US stocks and crypto, refreshed every 15–30s. A symbol no feed covers gets a synthetic tape, labelled as one — never passed off as real." },
+      { lead: "Quotes & bars", detail: "Alpaca for US stocks and crypto, refreshed every 15–30s. Between trades, a crypto price is the bid/ask midpoint: an indicative price, not a trade. A symbol no feed covers gets a synthetic tape, labelled as one — never passed off as real." },
       { lead: "The neural models", detail: "11 nets trained on real market history, served from a Python service. When it’s down, we say so." },
       { lead: "Your decisions", detail: "Every entry, exit, and hold is genuinely yours. That’s the only edge this site can’t give you." },
     ],
