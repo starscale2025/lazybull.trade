@@ -7,13 +7,15 @@ import { Chip, ToolButton } from "@/components/calm/kit";
 import { fmt } from "./chartCore";
 import type { SymbolDef } from "./TopBar";
 import { useLiveQuotes } from "@/lib/streaming/useLiveQuotes";
+import type { QuoteExt } from "@/lib/market-data/provider";
+import { headline, sessionLine, sessionNote, watchRow } from "@/lib/pro/session-price";
 const DEFAULT_LIST: { sym: string }[] = [
   { sym: "^NSEI" }, { sym: "^NSEBANK" }, { sym: "^GSPC" }, { sym: "^IXIC" },
   { sym: "AAPL" }, { sym: "NVDA" }, { sym: "TSLA" }, { sym: "AMZN" }, { sym: "MSFT" }, { sym: "META" }, { sym: "GOOGL" },
   { sym: "BTC-USD" }, { sym: "ETH-USD" },
 ];
 
-type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string; marketTime?: number | null; delayed?: boolean };
+type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string; marketTime?: number | null; delayed?: boolean; ext?: QuoteExt };
 
 type Props = {
   symbol: SymbolDef;
@@ -33,6 +35,12 @@ type Props = {
 // whose thesis is that retail traders get misled by numbers, that is the worst
 // possible default. Chart.tsx:1091 already had the right shape
 // (`pnl == null ? "var(--fg-dim)"`); these two put it where the quotes are.
+/** The viewer's own clock at `ms`, as the chart's time axis prints it. */
+const clockOf = (ms: number) => {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
 const dirClass = (v: number | null | undefined) =>
   v == null ? "text-fg-faint" : v >= 0 ? "text-bull" : "text-bear";
 const dirStroke = (v: number | null | undefined) =>
@@ -181,17 +189,23 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   const wanted = useMemo(() => Array.from(new Set([...list, symbol.sym])), [list, symbol.sym]);
   const streamed = useLiveQuotes(wanted);
   const quotes = useMemo(() => {
+    // How new a row is: its trade, or, with the regular session shut, the
+    // price of the stretch that is on, which moves while the trade stands.
+    const stamp = (q: LiveQuote) => Math.max(q.marketTime ?? 0, q.ext?.now?.time ?? 0);
     const out: Record<string, LiveQuote> = { ...polled };
     for (const q of Object.values(streamed)) {
       const cur = out[q.sym];
-      if (!cur || (q.marketTime ?? 0) >= (cur.marketTime ?? 0)) out[q.sym] = { ...cur, ...q };
+      if (!cur) out[q.sym] = q;
+      // `ext` is the row's own: a row without one says the session is open,
+      // and must not inherit the other row's.
+      else if (stamp(q) >= stamp(cur)) out[q.sym] = { ...cur, ...q, ext: q.ext };
     }
     return out;
   }, [polled, streamed]);
 
   // tiny live price tick history (last ~60 samples) for the symbol: one sample
   // a poll, as before, at whatever price is showing
-  const shownLast = quotes[symbol.sym]?.last;
+  const shownLast = watchRow(quotes[symbol.sym]).last;
   const shownLastRef = useRef(shownLast);
   shownLastRef.current = shownLast;
   useEffect(() => {
@@ -261,6 +275,11 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   }, [symbol, quotes]);
 
   const live = quotes[symbol.sym];
+  // With the regular session shut (a quote with `ext`), the big number is the
+  // close and the stretch that is on has a line of its own under it.
+  const head = headline(live);
+  const session = sessionLine(live);
+  const note = sessionNote(live, Date.now(), clockOf);
   const sparkPath = useMemo(() => {
     if (hist.length < 2) return "";
     const lo = Math.min(...hist.map((p) => p.price));
@@ -339,6 +358,9 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
       <div className="dock-clear max-h-[calc(45vh/var(--ui-zoom))] flex-1 overflow-y-auto lg:max-h-none lg:min-h-[14rem]">
         {list.map((sym) => {
           const q = quotes[sym];
+          // With the regular session shut, the row is the price of the stretch
+          // that is on, tagged, against the close (lib/pro/session-price.ts).
+          const row = watchRow(q);
           const active = sym === symbol.sym;
           return (
             <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-brand-ink/12" : "hover:bg-surface"}`}>
@@ -348,13 +370,14 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
               >
                 <SymBadge sym={sym} />
                 <span className="truncate">{sym}</span>
+                {row.tag && <span data-session-tag className="shrink-0 text-[0.5625rem] tracking-wide text-fg-faint">{row.tag}</span>}
               </button>
-              <span className="col-span-3 text-right text-fg">{q?.last != null ? fmt(q.last, 2) : "—"}</span>
-              <span className={`col-span-2 text-right ${dirClass(q?.chg)}`}>
-                {q?.chg != null ? `${q.chg >= 0 ? "+" : ""}${fmt(q.chg, 2)}` : "—"}
+              <span className="col-span-3 text-right text-fg">{row.last != null ? fmt(row.last, 2) : "—"}</span>
+              <span className={`col-span-2 text-right ${dirClass(row.chg)}`}>
+                {row.chg != null ? `${row.chg >= 0 ? "+" : ""}${fmt(row.chg, 2)}` : "—"}
               </span>
-              <span className={`col-span-2 text-right ${dirClass(q?.chgPct)}`}>
-                {q?.chgPct != null ? `${q.chgPct >= 0 ? "+" : ""}${fmt(q.chgPct, 2)}%` : "—"}
+              <span className={`col-span-2 text-right ${dirClass(row.chgPct)}`}>
+                {row.chgPct != null ? `${row.chgPct >= 0 ? "+" : ""}${fmt(row.chgPct, 2)}%` : "—"}
               </span>
               {/* Hover ✕ floats over the row's right padding rather than inside
                   the ~39px Chg% cell, where it crowded the number with no gap. */}
@@ -380,7 +403,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           </button>
           <div className="flex items-center gap-1">
             <Chip tone={live?.marketState === "REGULAR" ? "brand" : "neutral"} className="!py-0">
-              {live?.marketState ? live.marketState.charAt(0) + live.marketState.slice(1).toLowerCase() : "—"}
+              {session ? session.label : live?.marketState ? live.marketState.charAt(0) + live.marketState.slice(1).toLowerCase() : "—"}
             </Chip>
           </div>
         </div>
@@ -390,14 +413,27 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         </div>
 
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="font-display text-3xl tracking-tightest tabular-nums text-fg">
-            {live?.last != null ? fmt(live.last, 2) : "—"}
+          <span data-headline-price className="font-display text-3xl tracking-tightest tabular-nums text-fg">
+            {head.price != null ? fmt(head.price, 2) : "—"}
           </span>
           <span className="font-mono text-[0.625rem] text-fg-faint">{live?.currency || ""}</span>
         </div>
-        <div className={`mt-1 font-mono text-[0.6875rem] ${dirClass(live?.chg)}`}>
-          {live?.chg != null ? `${live.chg >= 0 ? "+" : ""}${fmt(live.chg, 2)}` : "—"} · {live?.chgPct != null ? `${live.chgPct >= 0 ? "+" : ""}${fmt(live.chgPct, 2)}%` : "—"}
+        <div className={`mt-1 font-mono text-[0.6875rem] ${dirClass(head.chg)}`}>
+          {head.chg != null ? `${head.chg >= 0 ? "+" : ""}${fmt(head.chg, 2)}` : "—"} · {head.chgPct != null ? `${head.chgPct >= 0 ? "+" : ""}${fmt(head.chgPct, 2)}%` : "—"}
         </div>
+        {/* The stretch that is on while the regular session is shut: its own
+            line under the close, never in the close's place. */}
+        {session && (
+          <div data-session-line className="mt-2 flex items-baseline justify-between gap-2 border-t border-border-soft pt-2 font-mono text-[0.6875rem]">
+            <span className="t-label text-fg-faint">{session.label}</span>
+            <span className="flex items-baseline gap-2 tabular-nums">
+              <span className="text-fg">{fmt(session.price, 2)}</span>
+              <span className={dirClass(session.chg)}>
+                {session.chg >= 0 ? "+" : ""}{fmt(session.chg, 2)} · {session.chgPct >= 0 ? "+" : ""}{fmt(session.chgPct, 2)}%
+              </span>
+            </span>
+          </div>
+        )}
         {hist.length > 1 && (
           <svg viewBox="0 0 100 30" className="mt-2 h-8 w-full" preserveAspectRatio="none">
             <path d={sparkPath} fill="none" stroke={dirStroke(live?.chg)} strokeWidth="1.4" pathLength={1} className="svg-draw-fast" />
@@ -415,7 +451,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
                 ? "Delayed quote"
                 : live.marketState === "REGULAR"
                   ? "Live · updates every few seconds"
-                  : "Market closed · last traded price"}
+                  : note ?? "Market closed · last traded price"}
           </Chip>
         </div>
         </>)}
@@ -437,7 +473,11 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         {perfOpen && (
         <div className="mt-2 grid grid-cols-3 gap-px bg-border-soft">
           {(["1D", "1M", "3M", "6M", "YTD", "1Y"] as const).map((k) => {
-            const v = perf[k];
+            // With the session shut, 1D is the headline's own figure: the
+            // official close against the official close before. The daily
+            // bars are one exchange's, and sit a hair off it (31.46% where
+            // the tape says 31.48%); two numbers for one day would be noise.
+            const v = k === "1D" && live?.ext && head.chgPct != null ? head.chgPct : perf[k];
             const colour = v == null ? "var(--fg-faint)" : v >= 0 ? "var(--bull)" : "var(--bear)";
             return (
               <div key={k} className="bg-bg p-2">

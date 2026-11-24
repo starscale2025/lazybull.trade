@@ -61,6 +61,28 @@ export function usSession(ms: number): UsSession {
   return m < CLOSE ? "regular" : "post";
 }
 
+/**
+ * When the stretch `ms` falls in began (epoch ms): 04:00, 09:30, 16:00 or
+ * 20:00 in New York, the last of them the evening before for the small hours.
+ * Undefined while the market is closed. A price stamped earlier than this
+ * belongs to an older stretch, which is how a holiday is told from a session
+ * without a calendar: nothing has printed since it "began".
+ */
+export function sessionStart(ms: number): number | undefined {
+  const s = usSession(ms);
+  if (s === "closed") return undefined;
+  const from = s === "pre" ? PRE_OPEN : s === "regular" ? OPEN : s === "post" ? CLOSE : POST_CLOSE;
+  const since = (nyMinutes(ms) - from + 1440) % 1440; // minutes since it began; the night wraps midnight
+  return Math.floor(ms / 60_000) * 60_000 - since * 60_000;
+}
+
+const NY_DATE = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** New York's calendar date at `ms`, as 2026-11-24. */
+export function nyDate(ms: number): string {
+  return NY_DATE.format(new Date(ms));
+}
+
 /** Bar length (ms) per intraday frame. Daily and longer bars have no session to be outside of. */
 export const INTRADAY_STEP_MS: Record<string, number> = {
   "1m": 60_000,

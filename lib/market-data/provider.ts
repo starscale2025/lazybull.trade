@@ -26,6 +26,29 @@ export type QuoteMeta = {
   marketState?: string;
 };
 
+/** The stretches of the US week outside the regular session (./us-session). */
+export type ExtSession = "overnight" | "pre" | "post";
+
+/**
+ * What a price outside the regular session is made of:
+ *   trade      — a trade as it printed, on the feed the site reads live;
+ *   delayed    — a trade from the full tape, or from the overnight venue, served fifteen minutes late;
+ *   indicative — the midpoint of a live overnight quote: where the stock is quoted, not a trade.
+ */
+export type ExtBasis = "trade" | "delayed" | "indicative";
+
+/**
+ * A US stock while its regular session is shut (./us-extended). `close` is the
+ * last regular session's close and `prevClose` the one before (null when the
+ * feed does not say). `now` is the price of the stretch that is on, present
+ * only when something has printed or been quoted since that stretch began.
+ */
+export type QuoteExt = {
+  close: number;
+  prevClose: number | null;
+  now?: { session: ExtSession; price: number; /** epoch seconds */ time: number; basis: ExtBasis };
+};
+
 /** One row of /api/quote-batch. Field names are load-bearing (TickerBar etc.). */
 export type Quote = {
   sym: string;
@@ -44,6 +67,13 @@ export type Quote = {
   marketState?: string;
   /** when `last` was the price, upstream (epoch seconds) — lets the client order feeds. */
   marketTime?: number | null;
+  /**
+   * Set for a US stock, from Alpaca, while its regular session is shut: the
+   * session's close and what the stock is doing since. `last` and `marketState`
+   * are unchanged by it, so a consumer that does not read it sees what it
+   * always has.
+   */
+  ext?: QuoteExt;
   /**
    * Set ONLY for Indian securities (lib/region.ts): `last` is the newest close
    * the SEBI education-lag policy allows, not a live print. `asOf` is that

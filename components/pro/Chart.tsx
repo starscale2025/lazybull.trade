@@ -48,6 +48,10 @@ type Props = {
   seriesId?: string;
   /** The user zoomed or scrolled the time axis by hand. */
   onUserView?: () => void;
+  /** With the regular session shut, the price of the stretch that is on and
+      its name (lib/pro/session-price.ts). Drawn as a quiet line of its own:
+      the candles and the last-price tag stay the session's. */
+  sessionMark?: { price: number; label: string } | null;
   symbol: string;
   exchange: string;
   timeframe: string;
@@ -99,6 +103,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     bars: allBars,
     seriesId,
     onUserView,
+    sessionMark = null,
     symbol,
     exchange,
     timeframe,
@@ -722,6 +727,25 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
   const introStep = Math.min(8, 450 / Math.max(1, visibleBars.length));
   const last = bars[bars.length - 1] || { c: 0, o: 0, h: 0, l: 0, v: 0, t: 0, i: 0 };
 
+  // Where the session's price sits on the price axis (drawn further down, by
+  // "the price of the stretch that is on"). Out of view it is pinned to the
+  // edge of the price area, clear of the volume bars; its tag steps clear of
+  // the last-price tag when the two prices are close.
+  const markAt = (() => {
+    if (!sessionMark || !bars.length || !Number.isFinite(sessionMark.price)) return null;
+    const rawY = yOfPrice(sessionMark.price, vp, geom);
+    if (!Number.isFinite(rawY)) return null;
+    const top = geom.padT;
+    const bottom = geom.height - geom.padB; // the price area's own floor, above the volume
+    const above = rawY < top;
+    const below = rawY > bottom;
+    // Under the OHLC header when pinned to the top, as a pinned order is.
+    const y = above ? top + 26 + 9 : below ? bottom - 9 : Math.max(top + 9, Math.min(bottom - 9, rawY));
+    const yLast = yOfPrice(last.c, vp, geom);
+    const tagY = Math.abs(y - yLast) < 19 ? Math.max(top + 9, Math.min(bottom - 9, yLast + (y >= yLast ? 19 : -19))) : y;
+    return { y, tagY, above, below };
+  })();
+
   const allDrawings = draft ? [...drawings, draft] : drawings;
 
   // Volume area + sub-pane areas
@@ -902,6 +926,8 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
         {/* y-axis labels */}
         {yTicks.map((y, i) => {
           const yp = yOfPrice(y, vp, geom);
+          // A label half under the session's hollow tag reads as a smudge.
+          if (markAt && Math.abs(yp - markAt.tagY) < 14) return null;
           return (
             <text key={`yt-${i}`} x={size.w - geom.padR + 6} y={yp + 3} fontFamily="var(--font-jetbrains)" fontSize="10" fill="var(--fg-faint)">
               {fmt(y, 2)}
@@ -942,6 +968,32 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
                 <rect x={size.w - geom.padR + 2} y={y - 9} width={geom.padR - 4} height={18} fill={c} />
                 <text x={size.w - geom.padR / 2} y={y + 3.5} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--bg)">
                   {fmt(last.c, 2)}
+                </text>
+              </g>
+            );
+          })()
+        )}
+
+        {/* The price of the stretch that is on while the regular session is
+            shut. Hollow and unsigned on purpose: it is a quote's midpoint or a
+            late trade, not a candle's close, so it takes neither the filled
+            tag nor the up and down colours. Out of view it has no line (the
+            price is not at that height): the tag sits at the edge of the price
+            area with an arrow (markAt, above). */}
+        {sessionMark && markAt && (
+          (() => {
+            const { y, tagY, above, below } = markAt;
+            const right = size.w - geom.padR;
+            const out = above || below;
+            return (
+              <g data-session-mark pointerEvents="none">
+                {!out && <line x1={geom.padL} x2={right} y1={y} y2={y} stroke="var(--fg-dim)" strokeOpacity="0.55" strokeDasharray="1 5" strokeLinecap="round" />}
+                <text x={right - 6} y={out ? tagY + 3.5 : y - 5} textAnchor="end" fontFamily="var(--font-jetbrains)" fontSize="9.5" letterSpacing="0.06em" fill="var(--fg-dim)">
+                  {above ? "▲ " : below ? "▼ " : ""}{sessionMark.label.toUpperCase()}
+                </text>
+                <rect x={right + 2.5} y={tagY - 8.5} width={geom.padR - 5} height={17} fill="var(--bg)" stroke="var(--fg-dim)" strokeOpacity="0.7" />
+                <text x={size.w - geom.padR / 2} y={tagY + 3.5} textAnchor="middle" fontFamily="var(--font-jetbrains)" fontSize="11" fontWeight="600" fill="var(--fg)">
+                  {fmt(sessionMark.price, 2)}
                 </text>
               </g>
             );

@@ -51,7 +51,7 @@ const check = (ok, what) => (ok ? console.log(`✓ ${where}${what}`) : (fails.pu
 // one ahead of the real time (the page will not open a bar from the future).
 // `finishedOnly` makes the one-minute bars stop at the last finished minute, the way a real feed lags.
 // `print` is a trade after the close: the quote row and the bars' meta carry it, the bars do not.
-const feed = { clock: Math.floor((Date.now() - 6 * MIN) / MIN) * MIN + 5000, last: SPOT, market: "REGULAR", calls: {}, delay: {}, finishedOnly: false, print: null };
+const feed = { clock: Math.floor((Date.now() - 6 * MIN) / MIN) * MIN + 5000, last: SPOT, market: "REGULAR", calls: {}, delay: {}, finishedOnly: false, print: null, ext: null };
 
 function times(tf) {
   const step = STEP[tf];
@@ -130,7 +130,7 @@ async function open(browser, viewport, extra = {}) {
   await page.route("**/api/quote-batch?**", async (route) => {
     const syms = (new URL(route.request().url()).searchParams.get("symbols") || "").split(",").filter(Boolean);
     const t = Math.floor(spot().at / 1000);
-    await route.fulfill({ json: { ok: true, source: "canned", quotes: syms.map((sym) => ({ sym, last: sym === "AAPL" ? spot().price : SPOT, chg: 1, chgPct: 0.5, marketState: feed.market, marketTime: t })) } }).catch(() => {});
+    await route.fulfill({ json: { ok: true, source: "canned", quotes: syms.map((sym) => ({ sym, last: sym === "AAPL" ? spot().price : SPOT, chg: 1, chgPct: 0.5, marketState: feed.market, marketTime: t, ...(sym === "AAPL" && feed.ext ? { ext: feed.ext } : {}) })) } }).catch(() => {});
   });
   return { ctx, page, errs };
 }
@@ -162,6 +162,7 @@ const settle = (page, ms = 1300) => page.waitForTimeout(ms);
 const until = async (page, fn, ms = 6000) => { const t = Date.now(); for (;;) { const s = await read(page); if (fn(s)) return s; if (Date.now() - t > ms) return s; await page.waitForTimeout(80); } };
 /** The most candles seen mid-entrance while `ms` pass: 0 means nothing was replayed. */
 async function replayed(page, ms) { let max = 0; const t = Date.now(); while (Date.now() - t < ms) { max = Math.max(max, (await read(page)).animating); await page.waitForTimeout(70); } return max; }
+const until2 = async (page, get, fn, ms = 6000) => { const t = Date.now(); for (;;) { const v = await get(page); if (fn(v) || Date.now() - t > ms) return v; await page.waitForTimeout(80); } };
 const refetches = (tf) => feed.calls[tf] || 0;
 async function afterRefetch(page, tf, n = 2) { const from = refetches(tf); const t = Date.now(); while (refetches(tf) < from + n && Date.now() - t < 9000) await page.waitForTimeout(100); await page.waitForTimeout(350); }
 /** Push one trade down the stream. The feed's own clock and last price follow it, unless `quiet`. */
@@ -169,6 +170,24 @@ const tick = (page, price, atMs, { market = feed.market, quiet = false } = {}) =
   if (!quiet) { feed.clock = Math.max(feed.clock, atMs); feed.last = price; }
   return page.evaluate(([price, at, market]) => window.__tick([{ sym: "AAPL", last: price, chg: price - 200, chgPct: (price - 200) / 2, marketState: market, marketTime: at }]), [price, Math.floor(atMs / 1000), market]);
 };
+
+/** With the regular session shut: the stretch that is on moves to `price`, by the poll and down the stream. The trade and the candles stand. */
+const session = (page, price, atMs) => {
+  feed.ext = { close: 203.4, prevClose: 200, now: { session: "overnight", price, time: Math.floor(atMs / 1000), basis: "indicative" } };
+  return page.evaluate(([row]) => window.__tick([row]), [{ sym: "AAPL", last: spot().price, chg: 1, chgPct: 0.5, marketState: "CLOSED", marketTime: Math.floor(spot().at / 1000), ext: feed.ext }]);
+};
+/** What the side panel and the chart say about the price outside the candles. */
+const offHours = (page) => page.evaluate(() => {
+  const text = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : null);
+  const tag = document.querySelector("[data-session-tag]");
+  return {
+    head: text(document.querySelector("[data-headline-price]")),
+    line: text(document.querySelector("[data-session-line]")),
+    mark: text(document.querySelector("[data-session-mark]")),
+    row: text(tag ? tag.closest(".group") : null),
+    note: /Overnight · indicative price, not a trade/.test(document.body.innerText),
+  };
+});
 
 const browser = await chromium.launch();
 try {
@@ -296,7 +315,27 @@ try {
   await page.waitForTimeout(1200); // at least one watchlist poll
   s = await read(page);
   check(s.close === shut.close && s.bars === shut.bars && s.ohlc === shut.ohlc, `with the market shut, late prints leave the candles as the feed lists them (${shut.ohlc} before, ${s.ohlc} after, ${s.bars} bars)`);
-  feed.print = null; feed.clock = shutAt + 5_000; feed.market = "REGULAR";
+
+  // market shut, and the stock trading overnight: that price has a line of its own
+  await session(page, 201.1, shutAt + 20_000);
+  let o = await until2(page, offHours, (x) => /201\.10/.test(x.line || "") && /201\.10/.test(x.mark || ""));
+  s = await read(page);
+  check(o.head === "203.40", `with the session shut the big number is the close (${o.head})`);
+  check(/^Overnight ?201\.10 ?[-−]2\.30 · [-−]1\.13%$/.test(o.line || ""), `the stretch that is on has its own line under it, measured from the close ("${o.line}")`);
+  check(o.note, "and the sentence under it says what that price is");
+  check(/AAPL ?O\/N ?201\.10 ?[-−]2\.30 ?[-−]1\.13%/.test(o.row || ""), `the watchlist row carries the same price, tagged ("${o.row}")`);
+  check(/OVERNIGHT ?201\.10/.test(o.mark || ""), `the chart marks it ("${o.mark}")`);
+  check(s.close === shut.close && s.bars === shut.bars && s.ohlc === shut.ohlc, `and the candles are still the session's (${s.ohlc}, ${s.bars} bars)`);
+  await session(page, 199.5, shutAt + 30_000);
+  o = await until2(page, offHours, (x) => /199\.50/.test(x.line || "") && /199\.50/.test(x.mark || "") && /199\.50/.test(x.row || ""));
+  s = await read(page);
+  check(/199\.50/.test(o.line || "") && /199\.50/.test(o.mark || "") && /199\.50/.test(o.row || "") && o.head === "203.40", `when that price moves, the line, the row and the mark follow and the close stands ("${o.line}")`);
+  check(s.close === shut.close && s.ohlc === shut.ohlc, `no candle moved with it (${s.ohlc})`);
+
+  feed.ext = null; feed.print = null; feed.clock = shutAt + 40_000; feed.market = "REGULAR";
+  await tick(page, feed.last, feed.clock);
+  o = await until2(page, offHours, (x) => !x.line && !x.mark && !x.row);
+  check(!o.line && !o.mark && !o.row, `at the open the line, the tag and the mark are gone ("${o.line}", "${o.mark}", "${o.row}")`);
   await afterRefetch(page, "1m");
 
   // scrolled back into history

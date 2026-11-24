@@ -78,6 +78,53 @@ describe("SSE route resilience (P0-1, P0-2)", () => {
     expect(text).toContain("123.45");
   });
 
+  it("sends a row again when only the session's price moved, and not when nothing did", async () => {
+    // With the regular session shut a stock's `last` stands still; what moves
+    // is the price of the session that is on (Quote.ext).
+    let n = 0;
+    h.impl = async () => {
+      n += 1;
+      const price = n < 4 ? 163.66 : 163.9; // still for three pumps, then it moves once
+      return {
+        quotes: [{ sym: "NVDA", last: 164.85, chg: 0, chgPct: 0, ext: { close: 165.185, prevClose: 125.65, now: { session: "overnight", price, time: 1, basis: "indicative" } } }],
+        provenance: { provider: "alpaca", tier: "A", updatedAt: 0, cacheAge: 0, isRealtime: true, isCached: false },
+      };
+    };
+    const res = await GET(new Request("http://x/api/stream/quotes?symbols=NVDA"));
+    const text = await collect(res, 400);
+    expect(n).toBeGreaterThan(5);
+    // the priming snapshot, then exactly one more: the move
+    expect((text.match(/event: quotes/g) || []).length).toBe(2);
+    expect(text).toContain("163.66");
+    expect(text).toContain("163.9");
+  });
+
+  it("sends a row again when its close is corrected, and when the session opens under an unmoved price", async () => {
+    // Neither moves `last` or the session's price: the late tape's official
+    // close replaces one exchange's, and then the regular session opens before
+    // the stock has traded, so the row loses `ext` altogether.
+    let n = 0;
+    const now = { session: "pre", price: 157, time: 1, basis: "delayed" };
+    h.impl = async () => {
+      n += 1;
+      const ext = n < 3 ? { close: 165.185, prevClose: 125.65, now } : n < 5 ? { close: 165.05, prevClose: 125.53, now } : undefined;
+      return {
+        quotes: [{ sym: "NVDA", last: 164.85, chg: 0, chgPct: 0, ...(ext ? { ext } : {}) }],
+        provenance: { provider: "alpaca", tier: "A", updatedAt: 0, cacheAge: 0, isRealtime: true, isCached: false },
+      };
+    };
+    const res = await GET(new Request("http://x/api/stream/quotes?symbols=NVDA"));
+    const text = await collect(res, 400);
+    expect(n).toBeGreaterThan(6);
+    const sentRows = text
+      .split("\n")
+      .filter((l) => l.startsWith("data: ") && l.includes('"quotes"'))
+      .map((l) => JSON.parse(l.slice(6)).quotes[0]);
+    // the priming snapshot, the corrected close, the open; nothing after
+    expect(sentRows.map((r) => r.ext?.close ?? null)).toEqual([165.185, 165.05, null]);
+    expect("ext" in sentRows[2]).toBe(false);
+  });
+
   it("rejects with 429 once the per-IP connection cap is hit (P0-5)", async () => {
     const headers = { "x-forwarded-for": "9.9.9.9" };
     const held: Response[] = [];

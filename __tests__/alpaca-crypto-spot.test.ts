@@ -222,6 +222,8 @@ describe("a stock's row is still its last trade", () => {
     const alpaca = await load();
     const quotes = await alpaca.getQuotes(["AAPL"]);
     // The whole row, as the adapter built it before coins followed their book.
+    // A shut market adds `ext` beside it (lib/market-data/us-extended.ts): the
+    // session's close and the one before. The price fields are untouched.
     expect(quotes).toEqual([
       {
         sym: "AAPL",
@@ -230,6 +232,7 @@ describe("a stock's row is still its last trade", () => {
         chgPct: ((349.74 - 343.4) / 343.4) * 100,
         marketState: "CLOSED",
         marketTime: sec("2026-11-23T20:59:58Z"),
+        ext: { close: 349.74, prevClose: 343.4 },
       },
     ]);
     const req = calls.find((u) => u.pathname === "/v2/stocks/snapshots")!;

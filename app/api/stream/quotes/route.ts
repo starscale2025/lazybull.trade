@@ -111,8 +111,14 @@ export async function GET(req: Request) {
         return;
       }
 
-      // Last price we sent per symbol → only push what actually changed.
-      const lastSent = new Map<string, number>();
+      // Last price we sent per symbol → only push what actually changed. With
+      // the regular session shut a stock's `last` stands still and the price
+      // of the session that is on (Quote.ext) is what moves, so both count.
+      // All of `ext` counts, and so does its going: at the open a stock that
+      // has not traded yet must still lose its "Pre-market" line, and a close
+      // that the late tape corrects must reach a page that is already open.
+      const sent = (q: Quote) => `${q.last}|${q.ext ? JSON.stringify(q.ext) : ""}`;
+      const lastSent = new Map<string, string>();
       let seq = 0;
       const startedAt = Date.now();
       // After the priming snapshot, only the live (non-Indian) set is polled.
@@ -133,8 +139,8 @@ export async function GET(req: Request) {
           const { quotes, provenance } = await getProvider().getQuotes(wanted);
           const changed: Quote[] = initial
             ? quotes
-            : quotes.filter((q) => lastSent.get(q.sym) !== q.last);
-          for (const q of quotes) lastSent.set(q.sym, q.last);
+            : quotes.filter((q) => lastSent.get(q.sym) !== sent(q));
+          for (const q of quotes) lastSent.set(q.sym, sent(q));
           if (changed.length) sendEvent("quotes", { quotes: changed, provenance }, ++seq);
         } catch (e) {
           console.error(

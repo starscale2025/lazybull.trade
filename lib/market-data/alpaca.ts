@@ -21,7 +21,8 @@ import {
   num,
 } from "./provider";
 import { getHealth } from "./health";
-import { INTRADAY_STEP_MS, regularSessionBars } from "./us-session";
+import { INTRADAY_STEP_MS, nyDate, regularSessionBars, usSession } from "./us-session";
+import { extFeeds, extOf } from "./us-extended";
 
 const DATA = "https://data.alpaca.markets";
 const TRADING = "https://api.alpaca.markets";
@@ -175,6 +176,59 @@ async function marketState(): Promise<string | undefined> {
   }
 }
 
+/** A feed the plan refuses is left alone for this long before it is asked again. */
+const REFUSED_FOR_MS = 10 * 60_000;
+const refusedUntil = new Map<string, number>();
+// `delayed_sip` is fifteen minutes behind by construction: asking it on every
+// pump buys nothing and spends the plan's calls. The overnight feed's quotes
+// are live, so that one is asked every time.
+const SLOW_FEED_MS: Record<string, number> = { delayed_sip: 15_000 };
+const keptSnaps = new Map<string, { at: number; snaps: Promise<Record<string, unknown> | null> }>();
+// One call that times out is not a feed that has gone. For this long its last
+// answer stands, so a row does not lose its session price on one pump and get
+// it back on the next, nor its close step from the official one to one
+// exchange's and back. Every price in the answer carries its own time.
+const HELD_FOR_MS = 60_000;
+const lastAnswer = new Map<string, { at: number; snaps: Record<string, unknown> }>();
+
+/**
+ * The stocks' snapshots on a feed that is asked only while the regular
+ * session is shut (./us-extended). Null when the plan refuses it, or when it
+ * has not answered for a minute: the row is then built from what did answer.
+ * Never throws, so it cannot fail a quote or reach the breaker.
+ */
+function sessionSnapshots(stocks: string[], feed: string): Promise<Record<string, unknown> | null> {
+  const now = Date.now();
+  if ((refusedUntil.get(feed) ?? 0) > now) return Promise.resolve(null);
+  const key = `${feed}:${[...stocks].sort().join(",")}`;
+  const ask = () =>
+    get(`${DATA}/v2/stocks/snapshots?symbols=${encodeURIComponent(stocks.join(","))}&feed=${feed}`, SNAPSHOT_LEASH_MS).then(
+      (snaps) => {
+        if (lastAnswer.size >= 64) lastAnswer.clear();
+        lastAnswer.set(key, { at: Date.now(), snaps });
+        return snaps;
+      },
+      (e) => {
+        // A refusal is an answer, not a failure: nothing is held over it.
+        if (/alpaca 4(01|03|22)\b/.test(e instanceof Error ? e.message : "")) {
+          refusedUntil.set(feed, Date.now() + REFUSED_FOR_MS);
+          lastAnswer.delete(key);
+          return null;
+        }
+        const held = lastAnswer.get(key);
+        return held && Date.now() - held.at < HELD_FOR_MS ? held.snaps : null;
+      }
+    );
+  const keepFor = SLOW_FEED_MS[feed];
+  if (!keepFor) return ask();
+  const kept = keptSnaps.get(key);
+  if (kept && now - kept.at < keepFor) return kept.snaps;
+  if (keptSnaps.size >= 64) keptSnaps.clear(); // a handful of watchlists per instance; never a leak
+  const snaps = ask();
+  keptSnaps.set(key, { at: now, snaps });
+  return snaps;
+}
+
 export const alpaca: MarketDataProvider = {
   name: () => "alpaca",
   supportsRealtime: () => true,
@@ -190,25 +244,44 @@ export const alpaca: MarketDataProvider = {
     if (symbols.length && !stocks.length && !cryptos.length) throw new Error("alpaca: unsupported symbols");
 
     const out: Quote[] = [];
-    const [state, stockSnap, cryptoSnap] = await Promise.all([
-      stocks.length ? marketState() : Promise.resolve(undefined),
+    // Is the regular session shut? Alpaca's clock knows the holidays (it is
+    // kept ten seconds, so this wait is rarely paid); New York's own clock
+    // stands in when it does not answer. Shut, other feeds carry the close and
+    // the price since (./us-extended): they are asked beside the rest, on a
+    // short leash.
+    const state = stocks.length ? await marketState() : undefined;
+    const now = Date.now();
+    const shut = stocks.length > 0 && (state ? state !== "REGULAR" : usSession(now) !== "regular");
+    const feeds = shut ? extFeeds(now, FEED) : { tape: null, night: null };
+    const [stockSnap, cryptoSnap, tapeSnap, nightSnap] = await Promise.all([
       stocks.length
         ? get(`${DATA}/v2/stocks/snapshots?symbols=${encodeURIComponent(stocks.join(","))}&feed=${FEED}`)
         : Promise.resolve({} as Record<string, unknown>),
       cryptos.length
         ? get(`${DATA}/v1beta3/crypto/us/snapshots?symbols=${encodeURIComponent(cryptos.map(cryptoPair).join(","))}`)
         : Promise.resolve({} as Record<string, unknown>),
+      feeds.tape ? sessionSnapshots(stocks, feeds.tape) : Promise.resolve(null),
+      feeds.night ? sessionSnapshots(stocks, feeds.night) : Promise.resolve(null),
     ]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pushSnap = (sym: string, snap: any, st: string | undefined, crypto: boolean) => {
+    const pushSnap = (sym: string, snap: any, st: string | undefined, crypto: boolean, ext?: Quote["ext"]) => {
       if (!snap) return;
       // A coin's row follows its book between trades; a stock's is its last
       // trade (spotOf). The time is that of whichever price the row carries.
       const spot = spotOf(snap, crypto);
       const last = spot.price ?? num(snap.dailyBar?.c);
       if (last == null) return;
-      const prev = num(snap.prevDailyBar?.c) ?? last;
+      // The change is measured from the close before the trade's own day. The
+      // snapshot's "previous" daily bar is that only while its newest daily
+      // bar is the trade's day. Before the next open the newest bar is still
+      // yesterday's and a trade this morning is today's: measured from the bar
+      // before, the change spanned two sessions. NVDA read +24.68% before the
+      // open on 24 Nov 2026, a pre-market 156.66 against the close of the
+      // 20th, when it stood 5% under the close of the 23rd.
+      const barDay = msOf(snap.dailyBar?.t);
+      const laterDay = !crypto && spot.time != null && Number.isFinite(barDay) && nyDate(spot.time * 1000) > nyDate(barDay);
+      const prev = (laterDay ? ext?.close ?? num(snap.dailyBar?.c) : undefined) ?? num(snap.prevDailyBar?.c) ?? last;
       const chg = last - prev;
       out.push({
         sym,
@@ -217,9 +290,13 @@ export const alpaca: MarketDataProvider = {
         chgPct: prev ? (chg / prev) * 100 : 0,
         marketState: st,
         marketTime: spot.time ?? null,
+        ...(ext ? { ext } : {}),
       });
     };
-    for (const s of stocks) pushSnap(s, (stockSnap as Record<string, unknown>)[s], state, false);
+    for (const s of stocks) {
+      const snap = (stockSnap as Record<string, unknown>)[s];
+      pushSnap(s, snap, state, false, shut && snap ? extOf(snap, tapeSnap?.[s] ?? null, nightSnap?.[s] ?? null, now) : undefined);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cSnaps = (cryptoSnap as any).snapshots ?? {};
     for (const s of cryptos) pushSnap(s, cSnaps[cryptoPair(s)], "REGULAR", true); // crypto trades 24/7

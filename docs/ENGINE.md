@@ -135,6 +135,20 @@ interface in `provider.ts`, so adding a vendor is a file plus a slot in the chai
   stays off the chain, the cache and the breaker, and its report is kept five minutes per instance.
   `usSession` (`us-session.ts`) names the stretch of the US week an instant falls in: pre-market,
   regular, after-hours, overnight or closed, by New York's clock, with no knowledge of holidays.
+- **A stock while its session is shut** (`us-extended.ts`, `Quote.ext`): `last` and `marketState` stay
+  what they were, so the ticker and every older consumer are untouched, and the row gains `ext`.
+  `ext.close` and `ext.prevClose` are the **official** closes, from the daily bars of `delayed_sip`
+  (the full tape, fifteen minutes late); for the quarter of an hour after the bell, while the tape's
+  day is still forming, and whenever the tape does not answer, they are IEX's own. `ext.now` is the
+  newest price stamped since the stretch began, with what it is made of: `trade` (IEX, live, 08:00
+  to 17:00 New York), `delayed` (a tape or overnight-venue trade, fifteen minutes late) or
+  `indicative` (the midpoint of a live quote on Alpaca's `overnight` feed, refused when wider than
+  1%). No calendar is kept: on a holiday nothing has printed since the stretch "began", so there is
+  no `now`. The tape is asked at most once in 15 s per watchlist, the overnight feed on every pump;
+  a feed the plan refuses is left alone for ten minutes, and one that fails for another reason keeps
+  its last answer for a minute, so a row does not blink; none of it can fail a quote or reach the
+  breaker. `/pro` keeps the close as its headline and gives the price since a line of its own
+  (`lib/pro/session-price.ts`); the candles and a paper order's fill are still the session's.
 - **What a price is** (`spotOf`, `alpaca.ts`): a stock's `last` is its latest trade. A coin's is the
   newer of its latest trade and the **midpoint of its latest quote**, with that one's time as
   `marketTime`. Alpaca's own crypto venue prints few trades (on 2026-11-24 BTC/USD's last was up to

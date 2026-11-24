@@ -25,6 +25,7 @@ import { unrealizedPnl } from "@/lib/paper-shares";
 import { syntheticBars } from "@/lib/live-bars";
 import { foldTrade, isShut, reconcileLive, rollStep } from "@/lib/pro/live-candle";
 import { rangeBars, rangePlan } from "@/lib/pro/ranges";
+import { sessionMark } from "@/lib/pro/session-price";
 import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
 import { registerCommands } from "@/lib/command-deck";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
@@ -497,6 +498,12 @@ export default function ProPage() {
     if (streamed.sym.toUpperCase() !== symbol.sym.toUpperCase()) return;
     onLiveQuote(symbol.sym, streamed.last, streamed.marketTime ?? undefined, streamed.marketState);
   }, [streamed, symbol.sym, onLiveQuote]);
+  // With the regular session shut the candles stand as the feed lists them
+  // (isShut), and the stretch that is on shows as a line of its own.
+  const liveMark = useMemo(
+    () => (streamed && streamed.sym.toUpperCase() === symbol.sym.toUpperCase() ? sessionMark(streamed) : null),
+    [streamed, symbol.sym]
+  );
 
   // intro fade
   useEffect(() => {
@@ -1043,6 +1050,7 @@ export default function ProPage() {
                 chartRef={i === 0 ? chartRef : undefined}
                 bars={i === 0 ? bars : undefined}
                 seriesId={i === 0 ? seriesId : undefined}
+                sessionMark={i === 0 ? liveMark : null}
                 onUserView={i === 0 ? clearPreset : undefined}
                 meta={i === 0 ? meta : undefined}
                 exchangeFallback={i === 0 ? symbolMetaForChart.exch : ""}
@@ -1219,6 +1227,7 @@ function PaneChart({
   chartRef,
   bars: barsProp,
   seriesId: seriesIdProp,
+  sessionMark,
   onUserView,
   meta: metaProp,
   exchangeFallback,
@@ -1261,6 +1270,8 @@ function PaneChart({
   bars?: Bar[];
   /** Names the primary pane's bars (see the page's seriesId). */
   seriesId?: string;
+  /** The price of the stretch that is on while the regular session is shut (the primary pane only). */
+  sessionMark?: { price: number; label: string } | null;
   onUserView?: () => void;
   meta?: { exchangeName?: string } | null;
   exchangeFallback: string;
@@ -1300,6 +1311,7 @@ function PaneChart({
         ref={chartRef as React.Ref<ChartHandle>}
         bars={bars}
         seriesId={seriesId}
+        sessionMark={primary ? sessionMark : null}
         onUserView={onUserView}
         symbol={symbol.sym}
         exchange={meta?.exchangeName || exchangeFallback}
