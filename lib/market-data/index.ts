@@ -387,3 +387,6 @@ export function getProvider() {
 export function marketDataStatus() {
   return DEFAULT.status();
 }
+
+/** What the plan is served outside the regular session, for /api/status/overnight. */
+export { probeOvernight } from "./overnight-probe";

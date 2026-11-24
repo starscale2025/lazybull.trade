@@ -27,8 +27,39 @@ export function nyMinutes(ms: number): number {
   return h * 60 + m;
 }
 
+const NY_DAY = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" });
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** New York's weekday at `ms`: 0 is Sunday. */
+export function nyWeekday(ms: number): number {
+  return DAYS.indexOf(NY_DAY.format(new Date(ms)));
+}
+
+const PRE_OPEN = 4 * 60;
 const OPEN = 9 * 60 + 30;
 const CLOSE = 16 * 60;
+const POST_CLOSE = 20 * 60;
+
+/** The stretches of a US trading week. */
+export type UsSession = "overnight" | "pre" | "regular" | "post" | "closed";
+
+/**
+ * Which stretch `ms` falls in, by New York's clock and weekday: pre-market
+ * from 04:00, the regular session 09:30 to 16:00, after-hours to 20:00, and
+ * the overnight session 20:00 to 04:00 from Sunday evening to Friday morning.
+ * Holidays and early closes are not known here: on those days the clock names
+ * a session that is not running, so a caller holding a price should also ask
+ * how old it is.
+ */
+export function usSession(ms: number): UsSession {
+  const day = nyWeekday(ms);
+  const m = nyMinutes(ms);
+  if (m >= POST_CLOSE) return day <= 4 ? "overnight" : "closed"; // Sunday to Thursday evening
+  if (m < PRE_OPEN) return day >= 1 && day <= 5 ? "overnight" : "closed"; // the small hours, Monday to Friday
+  if (day === 0 || day === 6) return "closed";
+  if (m < OPEN) return "pre";
+  return m < CLOSE ? "regular" : "post";
+}
 
 /** Bar length (ms) per intraday frame. Daily and longer bars have no session to be outside of. */
 export const INTRADAY_STEP_MS: Record<string, number> = {

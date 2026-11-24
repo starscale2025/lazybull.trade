@@ -128,6 +128,13 @@ interface in `provider.ts`, so adding a vendor is a file plus a slot in the chai
   market shut, `/pro` leaves the candles as listed: a late print is shown as the last traded price
   beside the chart and is not folded into the session's last candle (`isShut`, `lib/pro/live-candle.ts`).
   Extended and overnight sessions are not drawn; an early close is not known to the filter.
+- **What the plan is served outside the session** (`overnight-probe.ts`, `GET /api/status/overnight`):
+  a read-only check. It asks Alpaca for one fixed symbol on each feed that could carry a price while
+  IEX is shut (`overnight`, `boats` and `delayed_sip` snapshots, and `boats` and `sip` history ending
+  16 minutes ago) and reports each HTTP status, how old each price was and a cut-down sample. It
+  stays off the chain, the cache and the breaker, and its report is kept five minutes per instance.
+  `usSession` (`us-session.ts`) names the stretch of the US week an instant falls in: pre-market,
+  regular, after-hours, overnight or closed, by New York's clock, with no knowledge of holidays.
 - **What a price is** (`spotOf`, `alpaca.ts`): a stock's `last` is its latest trade. A coin's is the
   newer of its latest trade and the **midpoint of its latest quote**, with that one's time as
   `marketTime`. Alpaca's own crypto venue prints few trades (on 2026-11-24 BTC/USD's last was up to
