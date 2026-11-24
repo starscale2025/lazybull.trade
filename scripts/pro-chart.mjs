@@ -22,7 +22,8 @@
 //     as the ticks built it (its open, high and low)
 //   · the watchlist's poll, when it brings a new minute's trade before the
 //     stream does, opens the new candle too and leaves the old one alone
-//   · with the market shut a tick only moves the last candle
+//   · with the market shut, a late print leaves the candles as the feed lists
+//     them, whether it comes by the stream, the watchlist or the bars' own meta
 //   · scrolled back into history, ticks and refetches leave the view where it is
 //   · bars that answer after another bar size was picked are not drawn
 //   · on a phone the range row still works and nothing scrolls sideways
@@ -49,7 +50,8 @@ const check = (ok, what) => (ok ? console.log(`✓ ${where}${what}`) : (fails.pu
 // checks can place trades in that minute and the three after it without dating
 // one ahead of the real time (the page will not open a bar from the future).
 // `finishedOnly` makes the one-minute bars stop at the last finished minute, the way a real feed lags.
-const feed = { clock: Math.floor((Date.now() - 6 * MIN) / MIN) * MIN + 5000, last: SPOT, market: "REGULAR", calls: {}, delay: {}, finishedOnly: false };
+// `print` is a trade after the close: the quote row and the bars' meta carry it, the bars do not.
+const feed = { clock: Math.floor((Date.now() - 6 * MIN) / MIN) * MIN + 5000, last: SPOT, market: "REGULAR", calls: {}, delay: {}, finishedOnly: false, print: null };
 
 function times(tf) {
   const step = STEP[tf];
@@ -74,7 +76,8 @@ function bars(sym, tf) {
     return { i, t, o, h: +(Math.max(o, c) * 1.002).toFixed(2), l: +(Math.min(o, c) * 0.998).toFixed(2), c, v: 1000 + ((t / step) % 97) * 90 };
   });
 }
-const metaOf = () => ({ regularMarketPrice: feed.last, regularMarketTime: Math.floor(feed.clock / 1000), marketState: feed.market, exchangeName: "NASDAQ", currency: "USD" });
+const spot = () => (feed.print ? { price: feed.print.price, at: feed.print.at } : { price: feed.last, at: feed.clock });
+const metaOf = () => ({ regularMarketPrice: spot().price, regularMarketTime: Math.floor(spot().at / 1000), marketState: feed.market, exchangeName: "NASDAQ", currency: "USD" });
 
 /** What a range should show of these bars, worked out the long way round. */
 function expectBars(tf, kind, n) {
@@ -126,8 +129,8 @@ async function open(browser, viewport, extra = {}) {
   });
   await page.route("**/api/quote-batch?**", async (route) => {
     const syms = (new URL(route.request().url()).searchParams.get("symbols") || "").split(",").filter(Boolean);
-    const t = Math.floor(feed.clock / 1000);
-    await route.fulfill({ json: { ok: true, source: "canned", quotes: syms.map((sym) => ({ sym, last: sym === "AAPL" ? feed.last : SPOT, chg: 1, chgPct: 0.5, marketState: feed.market, marketTime: t })) } }).catch(() => {});
+    const t = Math.floor(spot().at / 1000);
+    await route.fulfill({ json: { ok: true, source: "canned", quotes: syms.map((sym) => ({ sym, last: sym === "AAPL" ? spot().price : SPOT, chg: 1, chgPct: 0.5, marketState: feed.market, marketTime: t })) } }).catch(() => {});
   });
   return { ctx, page, errs };
 }
@@ -281,19 +284,19 @@ try {
   feed.finishedOnly = false;
   await afterRefetch(page, "1m");
 
-  // market shut: a trade past the bar's end only moves the last candle
+  // market shut: a late print leaves the candles alone, however it arrives
   feed.market = "CLOSED";
   await afterRefetch(page, "1m");
-  const nShut = (await read(page)).bars;
-  feed.delay["1m"] = 4000; // again: the tick by itself, before the feed lists that minute
+  await page.mouse.move(700, 20);
+  const shut = await read(page); // the candles as the feed lists them
   const shutAt = minute + 3 * MIN + 5_000;
-  await tick(page, 202.4, shutAt, { market: "CLOSED", quiet: true });
-  s = await until(page, (x) => x.close === 202.4);
-  await page.waitForTimeout(600);
+  await tick(page, 190.5, shutAt, { market: "CLOSED", quiet: true }); // by the stream
+  feed.print = { price: 190.2, at: shutAt + 5_000 }; // by the watchlist's poll, and in the bars' own meta
+  await afterRefetch(page, "1m", 2);
+  await page.waitForTimeout(1200); // at least one watchlist poll
   s = await read(page);
-  check(s.close === 202.4 && s.bars === nShut, `with the market shut a trade past the bar's end moves the last candle and opens none (${nShut} bars to ${s.bars}, close ${s.close})`);
-  feed.clock = shutAt; feed.last = 202.4; feed.market = "REGULAR"; feed.delay["1m"] = 0;
-  await page.waitForTimeout(4300);
+  check(s.close === shut.close && s.bars === shut.bars && s.ohlc === shut.ohlc, `with the market shut, late prints leave the candles as the feed lists them (${shut.ohlc} before, ${s.ohlc} after, ${s.bars} bars)`);
+  feed.print = null; feed.clock = shutAt + 5_000; feed.market = "REGULAR";
   await afterRefetch(page, "1m");
 
   // scrolled back into history

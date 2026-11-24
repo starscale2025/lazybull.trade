@@ -121,6 +121,13 @@ interface in `provider.ts`, so adding a vendor is a file plus a slot in the chai
   instance; `acquireRefreshLock`/`releaseRefreshLock` (`cache.ts`) collapses them fleet-wide via KV.
   Cache is KV when configured, an in-process Map otherwise; every KV call is timed out and its
   errors swallowed. KV is an enhancement, never a dependency.
+- **Intraday stock bars are the regular session** (`us-session.ts`): 09:30 to 16:00 New York time.
+  The free feed is one exchange (IEX); outside the session its bars are single odd lots minutes
+  apart, which a chart that places bars by index draws as a trail of dashes after the close. More
+  bars are asked for than are kept, so the session's first minutes are not pushed out. With the
+  market shut, `/pro` leaves the candles as listed: a late print is shown as the last traded price
+  beside the chart and is not folded into the session's last candle (`isShut`, `lib/pro/live-candle.ts`).
+  Extended and overnight sessions are not drawn; an early close is not known to the filter.
 - **What a price is** (`spotOf`, `alpaca.ts`): a stock's `last` is its latest trade. A coin's is the
   newer of its latest trade and the **midpoint of its latest quote**, with that one's time as
   `marketTime`. Alpaca's own crypto venue prints few trades (on 2026-11-24 BTC/USD's last was up to

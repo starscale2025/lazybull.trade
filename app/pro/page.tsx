@@ -23,7 +23,7 @@ import { computeAnalysis } from "@/lib/pro/voice/analysis";
 import { usePaper } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
 import { syntheticBars } from "@/lib/live-bars";
-import { foldTrade, reconcileLive, rollStep } from "@/lib/pro/live-candle";
+import { foldTrade, isShut, reconcileLive, rollStep } from "@/lib/pro/live-candle";
 import { rangeBars, rangePlan } from "@/lib/pro/ranges";
 import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
 import { registerCommands } from "@/lib/command-deck";
@@ -471,6 +471,10 @@ export default function ProPage() {
       const f = freshestRef.current;
       if (f && f.sym === sym && f.t > t) return; // stale cache hit — never walk the tape backwards
       freshestRef.current = { sym, price: last, t };
+      // With the market shut the candles are left as the feed lists them: a
+      // print after the close is one odd lot, and folded into the last candle
+      // it bent the session's close (lib/pro/live-candle.ts, isShut).
+      if (isShut(marketState)) return;
       // Inside the developing bar the trade moves it; past its end, on an
       // intraday frame while the market trades, it opens the next bar
       // (lib/pro/live-candle.ts). The step is that of the bars on screen, which lag

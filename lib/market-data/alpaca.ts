@@ -21,6 +21,7 @@ import {
   num,
 } from "./provider";
 import { getHealth } from "./health";
+import { INTRADAY_STEP_MS, regularSessionBars } from "./us-session";
 
 const DATA = "https://data.alpaca.markets";
 const TRADING = "https://api.alpaca.markets";
@@ -261,11 +262,20 @@ export const alpaca: MarketDataProvider = {
       return { bars, meta: metaFrom(bars, snap, "REGULAR", true) };
     }
 
+    // Intraday bars are the regular session only (./us-session): outside it
+    // this feed prints single odd lots minutes apart, which a chart that
+    // places bars by index draws as a trail of dashes after the close. Those
+    // prints also take slots, so more is asked for than is kept: up to 150
+    // extended minutes ride on a 390-minute session.
+    const intraday = tf in INTRADAY_STEP_MS;
+    const ask = intraday ? Math.min(10_000, Math.ceil(n * 1.5) + 60) : n;
     const j = await get(
-      `${DATA}/v2/stocks/${encodeURIComponent(symbol)}/bars?timeframe=${timeframe}&start=${encodeURIComponent(startFor(tf))}&limit=${n}&feed=${FEED}&sort=desc&adjustment=all`
+      `${DATA}/v2/stocks/${encodeURIComponent(symbol)}/bars?timeframe=${timeframe}&start=${encodeURIComponent(startFor(tf))}&limit=${ask}&feed=${FEED}&sort=desc&adjustment=all`
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bars = barsFrom([...((j as any).bars ?? [])].reverse());
+    const listed = barsFrom([...((j as any).bars ?? [])].reverse());
+    const session = regularSessionBars(listed, tf);
+    const bars = intraday && session.length > n ? session.slice(-n).map((b, i) => ({ ...b, i })) : session;
     if (bars.length < 2) throw new Error("alpaca: no bars");
     // A cheap snapshot gives a live spot + prev close + market state for meta.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

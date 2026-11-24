@@ -49,6 +49,9 @@ describe("hestonPrice", () => {
     expect(parity).toBeCloseTo(p.S - p.K * Math.exp(-p.r * p.T), 6);
   });
 
+  // Three Monte Carlo runs take about four seconds by themselves and six when
+  // the rest of the suite is running beside them: over vitest's 5 s default,
+  // so the case failed on time, never on its numbers. It gets room.
   it("agrees with a Monte Carlo of the same dynamics", () => {
     for (const [K, type] of [[90, "P"], [100, "C"], [110, "C"]] as const) {
       const p = { ...base, K };
@@ -56,7 +59,7 @@ describe("hestonPrice", () => {
       const mc = mcHeston(p, type);
       expect(Math.abs(exact - mc)).toBeLessThan(Math.max(0.06, 0.04 * exact));
     }
-  });
+  }, 30_000);
 
   it("puts the skew where a negative rho puts it", () => {
     const flat = Math.sqrt(base.v0);

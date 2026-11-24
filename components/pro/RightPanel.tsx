@@ -220,8 +220,12 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         const yearStart = new Date(new Date(now).getFullYear(), 0, 1).getTime();
         const ytdRef = bars.find((b) => b.t >= yearStart)?.c ?? bars[0].c;
         const day = 86_400_000;
+        // The day's move is against the bar before, which after a weekend is
+        // three days back: "the first bar within 24 hours" was Monday's own,
+        // and read +0.00% under a +31% day.
+        const prevClose = bars.length > 1 ? bars[bars.length - 2].c : last;
         setPerf({
-          "1D": ((last - findOldest(day)) / findOldest(day)) * 100,
+          "1D": ((last - prevClose) / prevClose) * 100,
           "1M": ((last - findOldest(30 * day)) / findOldest(30 * day)) * 100,
           "3M": ((last - findOldest(90 * day)) / findOldest(90 * day)) * 100,
           "6M": ((last - findOldest(180 * day)) / findOldest(180 * day)) * 100,

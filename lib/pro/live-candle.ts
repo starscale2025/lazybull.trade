@@ -29,6 +29,16 @@ export function rollStep(tf: string, marketState?: string | null): number | unde
   return marketState === "REGULAR" ? STEP_MS[tf] : undefined;
 }
 
+/**
+ * A market the feed says is shut. With it shut, the bars are the whole story:
+ * a print after the close is one odd lot on one exchange, and folding it into
+ * the session's last candle bent that candle to a price the session never
+ * closed at. A feed that does not say (undefined) is not shut.
+ */
+export function isShut(marketState?: string | null): boolean {
+  return marketState != null && marketState !== "REGULAR";
+}
+
 /** A weekend plus a holiday. A trade dated further than this past the last bar
     is a different stretch of tape, left to the bars feed. */
 const MAX_ROLL_GAP_MS = 5 * 86_400_000;
@@ -67,8 +77,9 @@ export function foldTrade<T extends Timed>(arr: T[], price: number, tradeMs?: nu
  * reconcileBars (lib/live-bars.ts) for a chart whose trades may open a bar.
  * A refetch lists finished bars; the freshest trade may already belong to the
  * next one. With a step that trade keeps, or opens, its own bar across the
- * refetch instead of vanishing into the bar before it. Without a step this is
- * reconcileBars exactly.
+ * refetch instead of vanishing into the bar before it. Without a step, on a
+ * market that is trading or does not say, this is reconcileBars exactly; on a
+ * market that is shut the bars come back untouched (isShut).
  *
  * `shown` is the series on screen when this is a refetch of that same series.
  * The feed caches intraday bars for a minute, so the chart can be a bar or two
@@ -78,12 +89,23 @@ export function foldTrade<T extends Timed>(arr: T[], price: number, tradeMs?: nu
  */
 export function reconcileLive<T extends Timed>(
   bars: T[],
-  meta: { regularMarketPrice?: number; regularMarketTime?: number } | null | undefined,
+  meta: { regularMarketPrice?: number; regularMarketTime?: number; marketState?: string } | null | undefined,
   sym: string,
   freshestRef: FreshestRef,
   stepMs?: number,
   shown?: T[] | null
 ): T[] {
+  if (isShut(meta?.marketState)) {
+    // The candles stay as the feed lists them. The freshest price is still
+    // noted, so the first trade of the next session is ordered against it.
+    const mp = meta?.regularMarketPrice;
+    const mt = meta?.regularMarketTime ?? 0;
+    const f = freshestRef.current;
+    if (typeof mp === "number" && Number.isFinite(mp) && !(f && f.sym === sym && f.t > mt)) {
+      freshestRef.current = { sym, price: mp, t: mt };
+    }
+    return bars;
+  }
   if (!stepMs) return reconcileBars(bars, meta, sym, freshestRef);
   const theirs = bars[bars.length - 1];
   let base = bars;

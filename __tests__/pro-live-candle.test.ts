@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FreshestRef } from "@/lib/live-bars";
-import { foldTrade, reconcileLive, rollStep } from "@/lib/pro/live-candle";
+import { foldTrade, isShut, reconcileLive, rollStep } from "@/lib/pro/live-candle";
 
 type Bar = { i: number; t: number; o: number; h: number; l: number; c: number; v: number };
 
@@ -174,5 +174,49 @@ describe("reconcileLive: the bars the chart built from ticks", () => {
     expect(reconcileLive(fetched, { regularMarketPrice: 102, regularMarketTime: 1 }, "AAPL", ref, undefined, shown)).toBe(fetched);
     const out = reconcileLive(fetched, { regularMarketPrice: 102, regularMarketTime: (T0 + MIN + 30_000) / 1000 }, "AAPL", { current: null }, MIN, fetched);
     expect(out).toHaveLength(2);
+  });
+});
+
+// ── a shut market leaves the candles alone (2026-11-24) ──────────────────────
+// A print after the close is one odd lot on one exchange. Folded into the last
+// candle it bent the session's close; the owner called the chart "cooked".
+
+describe("isShut", () => {
+  it("is a market the feed says is not trading", () => {
+    expect(isShut("CLOSED")).toBe(true);
+    expect(isShut("PRE")).toBe(true);
+    expect(isShut("POST")).toBe(true);
+  });
+  it("is not a trading market, nor a feed that does not say", () => {
+    expect(isShut("REGULAR")).toBe(false);
+    expect(isShut(undefined)).toBe(false);
+    expect(isShut(null)).toBe(false);
+  });
+});
+
+describe("reconcileLive on a shut market", () => {
+  const fetched = [mbar(0, 100, 101), mbar(1, 101, 102)];
+  const late = (T0 + 50 * MIN) / 1000; // a print fifty minutes after the last bar
+
+  it("returns the feed's bars untouched, whatever the late print says", () => {
+    const ref: FreshestRef = { current: null };
+    const out = reconcileLive(fetched, { regularMarketPrice: 99.4, regularMarketTime: late, marketState: "CLOSED" }, "AAPL", ref, undefined);
+    expect(out).toBe(fetched);
+    expect(out[1].c).toBe(102);
+    expect(ref.current).toEqual({ sym: "AAPL", price: 99.4, t: late }); // noted for ordering, not drawn
+  });
+
+  it("does not fold a fresher streamed print either, nor keep tick-built bars", () => {
+    const ref: FreshestRef = { current: { sym: "AAPL", price: 98.7, t: late + 60 } };
+    const built: Bar = { i: 2, t: T0 + 2 * MIN, o: 103, h: 104, l: 102, c: 103, v: 0 };
+    const out = reconcileLive(fetched, { regularMarketPrice: 99.4, regularMarketTime: late, marketState: "CLOSED" }, "AAPL", ref, MIN, [...fetched, built]);
+    expect(out).toBe(fetched);
+    expect(ref.current?.price).toBe(98.7); // the newer print stays the freshest
+  });
+
+  it("a market that does not say behaves as before: the freshest price is folded in", () => {
+    const ref: FreshestRef = { current: { sym: "AAPL", price: 98.7, t: late + 60 } };
+    const out = reconcileLive(fetched, { regularMarketPrice: 99.4, regularMarketTime: late }, "AAPL", ref, undefined);
+    expect(out[1].c).toBe(98.7);
   });
 });
