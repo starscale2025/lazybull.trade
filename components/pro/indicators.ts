@@ -82,9 +82,16 @@ export function bollinger(closes: number[], period = 20, mult = 2) {
 
 /**
  * VWAP. Session-anchored on intraday bars (cumulative sums reset at each new
- * calendar day); series-anchored on daily-and-coarser bars — because a
- * "session" VWAP of a daily bar is just its typical price, which is a line
- * that teaches nothing. Anchoring is decided from the bar spacing.
+ * calendar day); year-anchored on daily-and-coarser bars (they reset at each
+ * new calendar year) — because a "session" VWAP of a daily bar is just its
+ * typical price, which is a line that teaches nothing. Anchoring is decided
+ * from the bar spacing.
+ *
+ * Chapter 3: on daily bars the anchor was the first bar LOADED, and the feed
+ * loads 2,000 days. The default workspace's VWAP on a daily chart was then a
+ * five-and-a-half-year average: 207 under a stock at 354, off the bottom of
+ * the pane. Nobody anchors a VWAP to wherever a download happened to start;
+ * the year is the anchor a daily chart's reader means.
  *
  * HISTORY, chapter 1: this function shipped comparing a date string against a
  * string LENGTH, so the sums reset every bar and the "VWAP" the default
@@ -113,19 +120,20 @@ export function vwap(bars: Bar[]): Series {
 
   let cumPv = 0;
   let cumV = 0;
-  let lastDay = -1;
+  let lastAnchor = -1;
   for (let i = 0; i < bars.length; i++) {
-    if (intraday) {
-      const d = new Date(bars[i].t);
-      // UTC day key: a US regular session (13:30–20:00 UTC) never crosses UTC
-      // midnight, so this is viewer-timezone-independent. Local keys reset
-      // mid-session for anyone east of UTC.
-      const dayKey = d.getUTCFullYear() * 10_000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
-      if (dayKey !== lastDay) {
-        cumPv = 0;
-        cumV = 0;
-        lastDay = dayKey;
-      }
+    const d = new Date(bars[i].t);
+    // Intraday, the UTC day: a US regular session (13:30–20:00 UTC) never
+    // crosses UTC midnight, so this is viewer-timezone-independent. Local keys
+    // reset mid-session for anyone east of UTC. Daily and coarser, the UTC
+    // year, for the same reason.
+    const anchor = intraday
+      ? d.getUTCFullYear() * 10_000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate()
+      : d.getUTCFullYear();
+    if (anchor !== lastAnchor) {
+      cumPv = 0;
+      cumV = 0;
+      lastAnchor = anchor;
     }
     const tp = (bars[i].h + bars[i].l + bars[i].c) / 3;
     cumPv += tp * bars[i].v;

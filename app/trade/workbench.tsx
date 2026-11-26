@@ -24,7 +24,7 @@ import { RegulatoryLine } from "@/components/RegulatoryLine";
 import { RiskWizard } from "@/components/safety/RiskWizard";
 import { withBriefing } from "@/lib/safety-briefing";
 import { TAPE } from "@/lib/viz/tape";
-import { eventsFor } from "@/lib/events";
+import { scheduledEvents } from "@/lib/events";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
 import { isPaywall, type PaywallBody } from "@/lib/billing/gate";
 import { decodeLegs, shareUrl, type SharedTrade, type SharedTradeInput } from "@/lib/share-trade";
@@ -330,7 +330,8 @@ export function TradeWorkbench({ sharedParam }: { sharedParam?: string }) {
     const start = new Date();
     const end = new Date();
     end.setDate(end.getDate() + days);
-    return eventsFor(sym.sym, start, end);
+    // Published dates only (lib/events.ts): the same for every stock.
+    return scheduledEvents(start, end);
   }, [sym, days]);
 
   // bets / positions. The paper ACCOUNT is the store's; `bets` below is only

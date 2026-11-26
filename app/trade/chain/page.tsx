@@ -38,7 +38,7 @@ export default function TradePage() {
   const spot = liveSpots[sym.sym] ?? sym.spot;
   const setBubble = useTeacher((s) => s.setBubble);
 
-  // Live spot — real Yahoo quotes via /api/quote-batch every 10s.
+  // Live spot — real quotes via /api/quote-batch every 10s.
   useEffect(() => {
     let cancelled = false;
     const fetchAll = async () => {
@@ -118,7 +118,9 @@ export default function TradePage() {
               {/* opacity-75, not 60: on an idle pill (bone-dim on ink) 60%
                   set the figure at 4.3:1, under AA for type this small; 75%
                   clears it there (6.3:1) and on the pressed bone pill (9.4:1). */}
-              <span className="ml-2 t-data text-[0.75rem] opacity-75">${s.spot.toFixed(2)}</span>
+              {/* The live price where there is one: the tape's own figure is a
+                  months-old stand-in, and beside "Live spot" it read as wrong. */}
+              <span className="ml-2 t-data text-[0.75rem] opacity-75">${(liveSpots[s.sym] ?? s.spot).toFixed(2)}</span>
             </TogglePill>
           ))}
           <span className="ml-auto flex shrink-0 items-center gap-2.5 pl-4">

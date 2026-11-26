@@ -89,7 +89,7 @@ export function LearnBotDemo({ botId }: { botId: string }) {
         {loading
           ? `Loading daily bars for ${symbol}…`
           : source === "live"
-            ? `Running on ${symbol}'s last ${candles?.length ?? 0} daily bars from Yahoo Finance.`
+            ? `Running on ${symbol}'s last ${candles?.length ?? 0} daily bars from the live feed.`
             : `Running on a synthetic price series: live bars for ${symbol} are not available right now, so the chip says Synthetic.`}
       </p>
       <div className="flex flex-wrap items-center gap-2">

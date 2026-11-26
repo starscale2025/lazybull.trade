@@ -52,6 +52,10 @@ type Props = {
       its name (lib/pro/session-price.ts). Drawn as a quiet line of its own:
       the candles and the last-price tag stay the session's. */
   sessionMark?: { price: number; label: string } | null;
+  /** Why there are no bars and none are coming (the site has no source for
+      this symbol). Shown in place of the loading line, which otherwise pulses
+      for as long as the pane is empty. */
+  emptyNote?: string | null;
   symbol: string;
   exchange: string;
   timeframe: string;
@@ -104,6 +108,7 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
     seriesId,
     onUserView,
     sessionMark = null,
+    emptyNote = null,
     symbol,
     exchange,
     timeframe,
@@ -762,15 +767,28 @@ export const Chart = forwardRef<ChartHandle, Props>(function Chart(
       <div ref={wrapRef} className="relative h-full w-full overflow-hidden bg-bg">
         <div className="pointer-events-none absolute left-3 top-3 font-mono text-[0.6875rem]">
           <span className="text-fg">{symbol}</span>
-          <span className="ml-3 text-fg-faint">·</span>
-          <span className="ml-3 text-fg-dim">{exchange}</span>
+          {exchange && (
+            <>
+              <span className="ml-3 text-fg-faint">·</span>
+              <span className="ml-3 text-fg-dim">{exchange}</span>
+            </>
+          )}
           <span className="ml-3 text-fg-faint">·</span>
           <span className="ml-3 text-fg-dim">{timeframe}</span>
-          <span className="ml-3 text-cyan animate-pulse">· loading data</span>
+          {emptyNote ? (
+            <span className="ml-3 text-fg-faint">· no data</span>
+          ) : (
+            <span className="ml-3 text-cyan animate-pulse">· loading data</span>
+          )}
         </div>
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="font-display text-[6.25rem] tracking-tightest text-fg/[0.03] leading-none">lazybull<span className="italic">pro</span></div>
         </div>
+        {emptyNote && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center">
+            <p data-empty-note className="t-label text-fg-dim">{emptyNote}</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -1489,7 +1507,7 @@ const IND_META: Record<string, { label: string; color: string }> = {
 const VERIFIED_MATH: Record<string, string> = {
   ema20: "EMA(20): αP + (1−α)·EMA₋₁, α = 2/21 — pinned by __tests__/pro-indicators.test.ts",
   ema50: "EMA(50): αP + (1−α)·EMA₋₁, α = 2/51 — pinned by __tests__/pro-indicators.test.ts",
-  vwap: "VWAP: Σ(typical·vol) / Σvol, session-anchored intraday, series-anchored on daily — pinned by __tests__/pro-indicators.test.ts (incl. the regression for the bug we shipped)",
+  vwap: "VWAP: Σ(typical·vol) / Σvol, session-anchored intraday, year-anchored on daily and above — pinned by __tests__/pro-indicators.test.ts (incl. the regression for the bug we shipped)",
   rsi: "RSI(14): 100 − 100/(1+RS), Wilder smoothing — pinned by __tests__/pro-indicators.test.ts",
   macd: "MACD(12,26,9): hist = (EMA12−EMA26) − signal — pinned by __tests__/pro-indicators.test.ts",
   bb: "Bollinger(20,2): SMA ± 2σ — pinned by __tests__/pro-indicators.test.ts",

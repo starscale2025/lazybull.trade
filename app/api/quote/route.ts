@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProvider } from "@/lib/market-data";
+import { missReason } from "@/lib/market-data/coverage";
 
 // Historical/daily bars for the Quant workbench + the AI bots. All the vendor
 // logic, caching, fallback chain and provenance now live behind the provider
@@ -27,8 +28,11 @@ export async function GET(req: Request) {
   try {
     const res = await getProvider().getBars(symbol, tf);
     if (!res) {
-      // Tier D — no real data anywhere. Same contract as before → client synth.
-      return NextResponse.json({ ok: false, error: "no data", symbol, tf }, { status: 502 });
+      // Tier D — no real data anywhere. `reason` says which kind of nothing
+      // (lib/market-data/coverage.ts): a symbol the site carries, missing for
+      // now, or one it never could. The client draws its practice tape only
+      // for the first.
+      return NextResponse.json({ ok: false, error: "no data", reason: missReason(symbol), symbol, tf }, { status: 502 });
     }
     if (res.delayed && res.bars.length < 2) {
       return NextResponse.json(
@@ -47,6 +51,9 @@ export async function GET(req: Request) {
       ...(res.delayed ? { delayed: true, asOf: res.asOf, policy: res.policy } : {}),
     });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: (e as Error).message, symbol, tf }, { status: 502 });
+    // The exception's own text stays on the server: it can name a vendor, a
+    // host or a key's status, and none of that is for a visitor.
+    console.error("[quote] bars failed:", symbol, tf, e instanceof Error ? e.message : e);
+    return NextResponse.json({ ok: false, error: "no data", reason: missReason(symbol), symbol, tf }, { status: 502 });
   }
 }

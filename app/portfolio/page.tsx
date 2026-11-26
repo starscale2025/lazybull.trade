@@ -14,7 +14,7 @@ import { Nav } from "@/components/Nav";
 import { ResetFundsModal } from "@/components/ResetFundsModal";
 import { usePaper, type BalanceEntry, type ClosedTrade, type Position } from "@/lib/stores";
 import { unrealizedPnl } from "@/lib/paper-shares";
-import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
+import { accountMetrics, optionRisk, protectionFor, toCsv } from "@/lib/paper-metrics";
 import { placePaperOrder } from "@/lib/pro/paper";
 import { fmt } from "@/components/pro/chartCore";
 import { CalmPanel, PageHeader, PillButton, PillLink, Stats, ToolButton } from "@/components/calm/kit";
@@ -34,6 +34,13 @@ const stamp = (ts: number) => `${stampDate(ts)} ${stampTime(ts)}`;
 
 const money = (n: number) => `$${fmt(Math.abs(n), 2)}`;
 const signedMoney = (n: number) => `${n >= 0 ? "+" : "−"}$${fmt(Math.abs(n), 2)}`;
+/** The open option positions' worst case in words. A position whose loss has
+    no limit has no figure to add, so it is counted beside the sum. */
+const riskLine = (r: { defined: number; uncapped: number }) => {
+  const some = `${r.uncapped} position${r.uncapped === 1 ? "" : "s"} with no loss cap`;
+  if (r.uncapped === 0) return `${money(r.defined)} at risk`;
+  return r.defined > 0 ? `${money(r.defined)} at risk · ${some}` : some;
+};
 
 function downloadCsv(name: string, csv: string) {
   const a = document.createElement("a");
@@ -114,12 +121,14 @@ export default function PortfolioPage() {
   const betStats = useMemo(() => {
     const openBets = bets.filter((p) => p.status === "open");
     const closedBets = bets.filter((p) => p.status === "closed");
-    const wageredOpen = openBets.reduce((a, p) => a + Math.abs(p.cost), 0);
+    /** The most the open positions can lose, not what they cost: a credit
+        position's cost is the premium it collected. */
+    const risk = optionRisk(openBets);
     /** Signed — what equity carries the open positions at. */
     const openCost = openBets.reduce((a, p) => a + p.cost, 0);
     const wins = closedBets.filter((p) => p.pnl > 0).length;
     const betPnl = closedBets.reduce((a, p) => a + p.pnl, 0);
-    return { openBets, closedBets, wageredOpen, openCost, wins, betPnl };
+    return { openBets, closedBets, risk, openCost, wins, betPnl };
   }, [bets]);
 
   const metrics = useMemo(
@@ -393,7 +402,7 @@ export default function PortfolioPage() {
           title={`Option positions · ${betStats.openBets.length} open`}
           headerExtra={
             <span className="hidden t-label text-fg-faint sm:inline">
-              {money(betStats.wageredOpen)} at risk
+              {riskLine(betStats.risk)}
               {" · "}
               {betStats.closedBets.length
                 ? `${betStats.wins}W · ${betStats.closedBets.length - betStats.wins}L · ${signedMoney(betStats.betPnl)} settled`
@@ -432,7 +441,8 @@ export default function PortfolioPage() {
                           .join(" · ")}
                       </span>
                     </Td>
-                    <Td>{money(Math.abs(p.cost))}</Td>
+                    {/* Signed the way the cash moved: + collected, − paid. */}
+                    <Td>{signedMoney(-p.cost)}</Td>
                     <Td>
                       {p.status === "open" ? (
                         <span className="text-cyan">open</span>

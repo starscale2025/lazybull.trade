@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isIndianSecurity } from "@/lib/region";
 import { yahoo } from "@/lib/market-data/yahoo";
 import { searchWithTyped } from "@/lib/market-data/symbols";
+import { priceable } from "@/lib/market-data/coverage";
 
 // Indian results stay in the list — the beginner funnel IS India — but each one
 // is tagged `delayed: true` so the picker can say "31 d lag" before the user
@@ -17,8 +18,14 @@ export const revalidate = 300;
 
 const tagDelayed = <T extends { sym: string }>(it: T) => (isIndianSecurity(it.sym) ? { ...it, delayed: true } : it);
 
+/** The built-in list's matches, held to what this deployment has a source for
+    (lib/market-data/coverage.ts). With only the US feed configured, an index or
+    an Indian name is a row that can never be priced: offering it in a picker
+    sends the visitor to an empty chart. With a source that carries them, they
+    are all back, the Indian ones tagged as before. */
 function fromList(q: string) {
-  return NextResponse.json({ ok: true, source: "list", items: searchWithTyped(q).map(tagDelayed) });
+  const items = searchWithTyped(q, 24).filter((it) => priceable(it.sym)).slice(0, 13);
+  return NextResponse.json({ ok: true, source: "list", items: items.map(tagDelayed) });
 }
 
 export async function GET(req: Request) {

@@ -6,7 +6,7 @@
 // board is an empty board.
 
 import { contestBoard, solversPerWindow } from "@/lib/db/practice";
-import { WEEKLY_SET, editionAt, windowFor } from "@/lib/practice/contest";
+import { WEEKLY_SET, editionAt, pickEdition, windowFor } from "@/lib/practice/contest";
 import { gate, json } from "@/lib/practice/http";
 import type { PastSet } from "@/lib/practice/types";
 
@@ -20,8 +20,7 @@ export async function GET(req: Request) {
 
   const now = Date.now();
   const current = editionAt(now);
-  const asked = Number(new URL(req.url).searchParams.get("set"));
-  const num = Number.isInteger(asked) ? Math.min(current.num, Math.max(WEEKLY_SET.num, asked)) : current.num;
+  const num = pickEdition(new URL(req.url).searchParams.get("set"), current.num);
   const win = windowFor(num);
   if (!win) return json({ ok: false, error: "no such set" }, 404);
 

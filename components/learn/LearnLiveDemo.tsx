@@ -69,7 +69,7 @@ export function LearnLiveDemo() {
   if (loading || !candles) {
     return (
       <div className="grid h-64 place-items-center rounded-xl bg-fg/[0.05] t-label text-fg-faint">
-        Loading {SYMBOL} bars from Yahoo Finance…
+        Loading {SYMBOL} bars…
       </div>
     );
   }
@@ -82,7 +82,7 @@ export function LearnLiveDemo() {
             synthetic data is the warning colour. */}
         <Chip tone={source === "live" ? "brand" : "warn"}>
           <span aria-hidden className={`size-1.5 shrink-0 rounded-full bg-current ${source === "live" ? "pulse-dot" : ""}`} />
-          {source === "live" ? "Live Yahoo OHLCV" : "Synthetic fallback"}
+          {source === "live" ? "Live OHLCV" : "Synthetic fallback"}
         </Chip>
         <Chip>Bot · SMA Crossover</Chip>
       </div>

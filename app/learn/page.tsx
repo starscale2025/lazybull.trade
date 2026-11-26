@@ -45,7 +45,7 @@ const CATEGORY_ORDER: BotCategory[] = ["ai", "trend", "stats", "risk", "options"
 // service — two things lazybull is not and cannot be while unregistered. The
 // counts stay because they are checkable against BOT_REGISTRY below.
 const CATEGORY_BLURB: Record<BotCategory, string> = {
-  ai: "12 teaching instruments that delegate to a Python ML service — neural option pricers, and direction models you can watch agree and disagree on real Yahoo data.",
+  ai: "12 teaching instruments that delegate to a Python ML service — neural option pricers, and direction models you can watch agree and disagree on real market data.",
   trend: "Follow momentum. Where a breakout was marked, where the reversal ended it. SMA Crossover, MACD, Donchian, Bollinger.",
   stats: "Measure what’s normal. Z-score, Hurst exponent, Kalman filter, LinReg channel.",
   risk: "The maths of risk and ruin. Kelly criterion, Monte Carlo VaR, Sharpe optimiser.",
@@ -178,7 +178,7 @@ export default function LearnPage() {
   const RUN_2: DeskChapter[] = [
     {
       num: "03", id: "live-demo", label: "Live demo", regime: "trend",
-      hint: "Live · Yahoo feed",
+      hint: "Live feed",
       predict: PREDICTS.liveDemo,
       headline: (
         <>
@@ -191,7 +191,7 @@ export default function LearnPage() {
       body: (
         <>
           Below is the textbook moving-average-crossover bot, running on real AMZN daily bars
-          fetched from Yahoo on page load. Drag the period sliders — the math recomputes
+          fetched on page load. Drag the period sliders — the math recomputes
           instantly, in your browser, with no round-trip. Every signal you see was just computed
           by your CPU.
         </>
@@ -489,7 +489,7 @@ export default function LearnPage() {
             num="01"
             title="Dataset"
             tldr="The chart you’re testing on."
-            body="Real OHLCV from Yahoo Finance for AAPL, NVDA, BTC, NIFTY — anything Yahoo lists. Synthetic deterministic walks for symbols Yahoo doesn’t have. Same input → same answer, every time."
+            body="Real OHLCV for US stocks, funds and the major coins. Synthetic deterministic walks for symbols without a feed. Same input → same answer, every time."
           />
           <Piece
             num="02"

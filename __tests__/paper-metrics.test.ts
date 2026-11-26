@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { accountMetrics, protectionFor, toCsv } from "@/lib/paper-metrics";
+import { accountMetrics, optionRisk, protectionFor, toCsv } from "@/lib/paper-metrics";
+import type { Leg } from "@/lib/pricing";
 import type { SharePosition } from "@/lib/paper-shares";
 import type { Order } from "@/lib/paper-orders";
 
@@ -181,5 +182,47 @@ describe("toCsv", () => {
     expect(csv).toContain('"x,y"');
     expect(csv).toContain('"he said ""hi"""');
     expect(csv).toContain('"line');
+  });
+});
+
+describe("optionRisk: what the open option positions can lose", () => {
+  let n = 0;
+  const leg = (side: Leg["side"], type: Leg["type"], strike: number, premium: number): Leg => ({ id: `l${n++}`, side, type, strike, qty: 1, premium });
+  const at = (legs: Leg[], openSpot = 100) => ({ legs, openSpot });
+
+  it("a debit spread can lose what it cost", () => {
+    // long 100 call at 5.00, short 108 call at 2.70: paid 2.30 a share
+    const r = optionRisk([at([leg("long", "C", 100, 5), leg("short", "C", 108, 2.7)])]);
+    expect(r.uncapped).toBe(0);
+    expect(r.defined).toBeCloseTo(230, 6);
+  });
+
+  it("REGRESSION: a credit position's risk is the width less the credit, not the credit", () => {
+    // An iron condor that collects 5.28 with 12.50-wide wings can lose 7.22.
+    // The portfolio printed the 528 it collected as the amount at risk.
+    const condor = [leg("long", "P", 87.5, 1), leg("short", "P", 100, 3.6), leg("short", "C", 110, 3.9), leg("long", "C", 122.5, 1.22)];
+    const r = optionRisk([at(condor, 105)]);
+    expect(r.uncapped).toBe(0);
+    expect(r.defined).toBeCloseTo(722, 6);
+  });
+
+  it("a naked short has no figure: it is counted, not guessed at", () => {
+    const r = optionRisk([at([leg("short", "C", 105, 3)])]);
+    expect(r).toEqual({ defined: 0, uncapped: 1 });
+  });
+
+  it("sums the defined ones and counts the rest", () => {
+    const r = optionRisk([
+      at([leg("long", "C", 100, 5)]), // can lose 500
+      at([leg("long", "P", 95, 2), leg("short", "P", 90, 0.8)]), // can lose 120
+      at([leg("short", "P", 95, 2)]),
+      at([leg("short", "C", 105, 3)]),
+    ]);
+    expect(r.uncapped).toBe(2);
+    expect(r.defined).toBeCloseTo(620, 6);
+  });
+
+  it("nothing open is nothing at risk", () => {
+    expect(optionRisk([])).toEqual({ defined: 0, uncapped: 0 });
   });
 });

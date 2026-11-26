@@ -117,7 +117,7 @@ export const BOT_CONTENT: Record<string, BotContent> = {
     ],
     fails: [
       "Regime breaks. COVID-era March 2020, the 2022 rate cycle, post-earnings gaps — the ensemble was fit on smoother periods.",
-      "Tickers Yahoo doesn't have rich data for. The Python side needs ≥250 historical bars to build features.",
+      "Tickers without a long price history. The Python side needs ≥250 historical bars to build features.",
       "Crypto and FX. The training basket is US equities; out-of-distribution.",
       "Split votes. When 3-3 or 4-2, the consensus number is essentially noise — the bot will say SPLIT and that's the right answer.",
     ],

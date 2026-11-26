@@ -55,6 +55,20 @@ export function editionAt(nowMs: number, set: WeeklySet = WEEKLY_SET): Edition {
   return { num: set.num + weeks, start, end, open: nowMs < end, upcoming: false };
 }
 
+/** Which edition a request means, given its `set` parameter and the current
+    edition's number. No parameter, a blank one or one that is not a whole
+    number means the current edition; a number is held to the editions that
+    exist. `Number(null)` is 0, a whole number: read that way, a request with
+    no `set` was served the first edition while the page's header counted the
+    current one. */
+export function pickEdition(raw: string | null | undefined, current: number, set: WeeklySet = WEEKLY_SET): number {
+  const text = raw?.trim();
+  if (!text) return current;
+  const asked = Number(text);
+  if (!Number.isInteger(asked)) return current;
+  return Math.min(current, Math.max(set.num, asked));
+}
+
 /** Zero-padded parts for a countdown display. Negative input clamps to zero. */
 export function formatCountdown(ms: number): { d: string; h: string; m: string; s: string } {
   const total = Math.max(0, Math.floor(ms / 1000));

@@ -26,6 +26,7 @@ import { syntheticBars } from "@/lib/live-bars";
 import { foldTrade, isShut, reconcileLive, rollStep } from "@/lib/pro/live-candle";
 import { rangeBars, rangePlan } from "@/lib/pro/ranges";
 import { sessionMark } from "@/lib/pro/session-price";
+import { isNoFeed, noFeedNote } from "@/lib/pro/no-feed";
 import { useLiveQuote } from "@/lib/streaming/useLiveQuotes";
 import { registerCommands } from "@/lib/command-deck";
 import { UpgradeNudge } from "@/components/billing/UpgradeNudge";
@@ -234,6 +235,9 @@ export default function ProPage() {
   // true when the visible bars are the deterministic synthetic tape (the live
   // feed was unavailable) rather than real quotes — surfaced honestly in the bar.
   const [synthetic, setSynthetic] = useState(false);
+  // true when the site has no source for the symbol at all: the pane is empty
+  // and says so (lib/pro/no-feed.ts), and nothing is refetched.
+  const [noFeed, setNoFeed] = useState(false);
 
   // Mark the open position to the latest bar. Declared here rather than beside
   // `position` because it needs `bars`, which is fetched below.
@@ -394,10 +398,15 @@ export default function ProPage() {
     let alive = true;
     setLoading(true);
     setFetchErr(null);
+    setNoFeed(false);
     (async () => {
+      // The body of a failed answer, kept for the catch: its `reason` says
+      // whether the symbol is missing for now or was never carried here.
+      let answer: { reason?: unknown } | null = null;
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=${timeframe}`);
         const j = await r.json();
+        answer = j;
         if (!alive) return;
         if (!j.ok) throw new Error(j.error || "quote failed");
         barsSymRef.current = symbol.sym;
@@ -408,17 +417,27 @@ export default function ProPage() {
         setSynthetic(false);
       } catch {
         if (!alive) return;
-        // Feed unavailable (every provider unconfigured + Yahoo 429s, offline, an
-        // unknown symbol): fall back to a deterministic synthetic tape so the
-        // terminal stays fully usable (draw / indicators / replay). Labelled
-        // synthetic in the app bar — never presented as real quotes.
         barsSymRef.current = symbol.sym;
         barsTfRef.current = timeframe;
+        setMeta(null);
+        setFetchErr(null);
+        if (isNoFeed(answer, symbol.sym)) {
+          // Nothing here carries this symbol (an index, an Indian listing, a
+          // ticker nobody listed). An empty pane that says so: a made-up tape
+          // would be an invented chart of a real market.
+          setBars(NO_BARS);
+          setSeriesId(`${symbol.sym}|${timeframe}|none`);
+          setSynthetic(false);
+          setNoFeed(true);
+          return;
+        }
+        // A symbol the site does carry, with the feed not answering (a provider
+        // down, offline): fall back to a deterministic synthetic tape so the
+        // terminal stays fully usable (draw / indicators / replay). Labelled
+        // synthetic in the app bar — never presented as real quotes.
         setBars(syntheticBars(symbol.sym, timeframe) as Bar[]);
         setSeriesId(`${symbol.sym}|${timeframe}|sim`);
-        setMeta(null);
-        setSynthetic(true);
-        setFetchErr(null); // we HAVE bars (synthetic) — not a dead error state
+        setSynthetic(true); // we HAVE bars (synthetic) — not a dead error state
       } finally {
         if (alive) setLoading(false);
       }
@@ -426,9 +445,10 @@ export default function ProPage() {
     return () => { alive = false; };
   }, [symbol.sym, timeframe]);
 
-  // refresh quote every 30s if not in replay
+  // refresh quote every 30s if not in replay, and not for a symbol the site
+  // has no source for: asking again every half minute changes nothing
   useEffect(() => {
-    if (replayActive) return;
+    if (replayActive || noFeed) return;
     const want = `${symbol.sym}|${timeframe}`;
     const id = setInterval(async () => {
       try {
@@ -455,7 +475,7 @@ export default function ProPage() {
       } catch {}
     }, 30000);
     return () => clearInterval(id);
-  }, [symbol.sym, timeframe, replayActive]);
+  }, [symbol.sym, timeframe, replayActive, noFeed]);
 
   // Live tick → developing candle. The quote rail polls every 15s while the
   // bars proxy caches for 30s, so the chart's last price could sit a few cents
@@ -960,7 +980,7 @@ export default function ProPage() {
         {synthetic && !loading && (
           <span
             className="ml-1"
-            title="Live feed unavailable — showing a deterministic synthetic tape, not real quotes. Add a data key to go live."
+            title="The live feed is not answering, so this is a practice tape made by the site, not real quotes."
           >
             <Chip tone="warn">Synthetic tape</Chip>
           </span>
@@ -1051,6 +1071,7 @@ export default function ProPage() {
                 bars={i === 0 ? bars : undefined}
                 seriesId={i === 0 ? seriesId : undefined}
                 sessionMark={i === 0 ? liveMark : null}
+                emptyNote={i === 0 && noFeed && !loading ? noFeedNote(symbol.sym) : null}
                 onUserView={i === 0 ? clearPreset : undefined}
                 meta={i === 0 ? meta : undefined}
                 exchangeFallback={i === 0 ? symbolMetaForChart.exch : ""}
@@ -1129,7 +1150,7 @@ export default function ProPage() {
           />
         )}
 
-        <RightPanel symbol={symbol} onPickSymbol={setSymbol} onQuote={onLiveQuote} />
+        <RightPanel symbol={symbol} onPickSymbol={setSymbol} onQuote={onLiveQuote} noData={noFeed} />
       </div>
 
       {replayActive && (
@@ -1228,6 +1249,7 @@ function PaneChart({
   bars: barsProp,
   seriesId: seriesIdProp,
   sessionMark,
+  emptyNote: emptyNoteProp,
   onUserView,
   meta: metaProp,
   exchangeFallback,
@@ -1272,6 +1294,8 @@ function PaneChart({
   seriesId?: string;
   /** The price of the stretch that is on while the regular session is shut (the primary pane only). */
   sessionMark?: { price: number; label: string } | null;
+  /** Primary pane only: the page's own "no source for this symbol" sentence. */
+  emptyNote?: string | null;
   onUserView?: () => void;
   meta?: { exchangeName?: string } | null;
   exchangeFallback: string;
@@ -1279,23 +1303,28 @@ function PaneChart({
   // A secondary pane fetches bars of its own. The primary one shows the page's,
   // passed straight through: copied into state here they reached the chart one
   // render after the id that names them.
-  const [own, setOwn] = useState<{ id: string; bars: Bar[]; meta: { exchangeName?: string } | null }>({ id: "", bars: NO_BARS, meta: null });
+  const [own, setOwn] = useState<{ id: string; bars: Bar[]; meta: { exchangeName?: string } | null; none?: boolean }>({ id: "", bars: NO_BARS, meta: null });
 
   useEffect(() => {
     if (primary) return;
     let alive = true;
     const id = `${symbol.sym}|${timeframe}`;
-    // secondary pane: the same synthetic fallback as the primary
-    const madeUp = () => setOwn({ id: `${id}|sim`, bars: syntheticBars(symbol.sym, timeframe) as Bar[], meta: null });
+    // secondary pane: the same two fallbacks as the primary. A symbol the site
+    // has no source for gets an empty pane that says so; one it does carry,
+    // with the feed not answering, gets the made-up practice tape.
+    const fallBack = (answer: { reason?: unknown } | null) =>
+      isNoFeed(answer, symbol.sym)
+        ? setOwn({ id: `${id}|none`, bars: NO_BARS, meta: null, none: true })
+        : setOwn({ id: `${id}|sim`, bars: syntheticBars(symbol.sym, timeframe) as Bar[], meta: null });
     (async () => {
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=${timeframe}`);
         const j = await r.json();
         if (!alive) return;
-        if (!j.ok) { madeUp(); return; }
+        if (!j.ok) { fallBack(j); return; }
         setOwn({ id: `${id}|live`, bars: j.bars as Bar[], meta: j.meta || null });
       } catch {
-        if (alive) madeUp();
+        if (alive) fallBack(null);
       }
     })();
     return () => { alive = false; };
@@ -1304,6 +1333,7 @@ function PaneChart({
   const bars = primary ? barsProp || NO_BARS : own.bars;
   const meta = primary ? metaProp || null : own.meta;
   const seriesId = primary ? seriesIdProp : own.id;
+  const emptyNote = primary ? emptyNoteProp ?? null : own.none && own.id.startsWith(`${symbol.sym}|`) ? noFeedNote(symbol.sym) : null;
 
   return (
     <div className="relative bg-bg">
@@ -1312,6 +1342,7 @@ function PaneChart({
         bars={bars}
         seriesId={seriesId}
         sessionMark={primary ? sessionMark : null}
+        emptyNote={emptyNote}
         onUserView={onUserView}
         symbol={symbol.sym}
         exchange={meta?.exchangeName || exchangeFallback}

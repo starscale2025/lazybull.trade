@@ -9,11 +9,7 @@ import type { SymbolDef } from "./TopBar";
 import { useLiveQuotes } from "@/lib/streaming/useLiveQuotes";
 import type { QuoteExt } from "@/lib/market-data/provider";
 import { headline, sessionLine, sessionNote, watchRow } from "@/lib/pro/session-price";
-const DEFAULT_LIST: { sym: string }[] = [
-  { sym: "^NSEI" }, { sym: "^NSEBANK" }, { sym: "^GSPC" }, { sym: "^IXIC" },
-  { sym: "AAPL" }, { sym: "NVDA" }, { sym: "TSLA" }, { sym: "AMZN" }, { sym: "MSFT" }, { sym: "META" }, { sym: "GOOGL" },
-  { sym: "BTC-USD" }, { sym: "ETH-USD" },
-];
+import { DEFAULT_WATCHLIST, migrateWatchlist } from "@/lib/pro/watchlist";
 
 type LiveQuote = { sym: string; name?: string; last?: number; chg?: number; chgPct?: number; currency?: string; exch?: string; marketState?: string; marketTime?: number | null; delayed?: boolean; ext?: QuoteExt };
 
@@ -27,6 +23,10 @@ type Props = {
       land before the stream's tick for the same trade. Without the state it
       poured a new minute's trade into the candle before. */
   onQuote?: (sym: string, last: number, marketTime?: number, marketState?: string) => void;
+  /** The site has no source for the charted symbol (the page learned it from
+      the bars request). The chart is empty then, so the label under the price
+      must not call anything a practice tape. */
+  noData?: boolean;
 };
 
 // Absent data is NOT a direction. `(q?.chg ?? 0) >= 0` coalesced a missing
@@ -46,16 +46,12 @@ const dirClass = (v: number | null | undefined) =>
 const dirStroke = (v: number | null | undefined) =>
   v == null ? "var(--fg-faint)" : v >= 0 ? "var(--bull)" : "var(--bear)";
 
-export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
-  const [list, setList] = useState<string[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_LIST.map((d) => d.sym);
-    try {
-      const saved = localStorage.getItem("lb-pro-watchlist");
-      return saved ? (JSON.parse(saved) as string[]) : DEFAULT_LIST.map((d) => d.sym);
-    } catch {
-      return DEFAULT_LIST.map((d) => d.sym);
-    }
-  });
+export function RightPanel({ symbol, onPickSymbol, onQuote, noData = false }: Props) {
+  // The server's HTML and the first client render both start from the default.
+  // What this browser saved is read in the effect below, once hydrated.
+  const [list, setList] = useState<string[]>(() => [...DEFAULT_WATCHLIST]);
+  /** The saved list has been read: only then may the list be written back. */
+  const [restored, setRestored] = useState(false);
   const [polled, setPolled] = useState<Record<string, LiveQuote>>({});
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<SymbolDef[]>([]);
@@ -64,16 +60,28 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
 
   // Collapsible fixed sections — the pair permanently ate ~250px of the 300px
   // column, squeezing the watchlist to a handful of rows. Persisted the same
-  // way as lb-pro-watchlist. Read lazily (not in an effect) so there is no
-  // open→closed flicker on mount; SSR falls back to open.
-  const [detailsOpen, setDetailsOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    try { return localStorage.getItem("lb-pro-details-open") !== "0"; } catch { return true; }
-  });
-  const [perfOpen, setPerfOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    try { return localStorage.getItem("lb-pro-perf-open") !== "0"; } catch { return true; }
-  });
+  // way as lb-pro-watchlist; the server's HTML has both open.
+  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [perfOpen, setPerfOpen] = useState(true);
+
+  // What this browser saved: the watchlist and the two folded sections. Read
+  // here, after hydration, and not while rendering. Read in the state
+  // initialisers, as it was, the first client render differed from the
+  // server's HTML for anyone who had edited their list or folded a section,
+  // and React threw a hydration error (#418) on every load of the terminal
+  // and rebuilt the panel from scratch.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lb-pro-watchlist");
+      const parsed: unknown = saved ? JSON.parse(saved) : null;
+      // A first visit saved the default of its day; an untouched copy of the
+      // old one (four indices with no source here) is swapped for today's.
+      if (Array.isArray(parsed)) setList(migrateWatchlist(parsed.filter((s): s is string => typeof s === "string")));
+      if (localStorage.getItem("lb-pro-details-open") === "0") setDetailsOpen(false);
+      if (localStorage.getItem("lb-pro-perf-open") === "0") setPerfOpen(false);
+    } catch {}
+    setRestored(true);
+  }, []);
   // Persist OUTSIDE the updater — StrictMode double-invokes updaters (see the
   // undo-history comment in app/pro/page.tsx), so side effects don't belong there.
   const toggleSection = (key: "details" | "perf") => {
@@ -82,10 +90,12 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
     (key === "details" ? setDetailsOpen : setPerfOpen)(next);
   };
 
-  // persist
+  // persist, once the saved list has been read: before that `list` is still
+  // the default, and writing it would replace the list the visitor built
   useEffect(() => {
+    if (!restored) return;
     try { localStorage.setItem("lb-pro-watchlist", JSON.stringify(list)); } catch {}
-  }, [list]);
+  }, [list, restored]);
 
   // ── profile sync via the /api/watchlists backend. localStorage stays the
   // offline cache; signed in, the server copy is the cross-device truth.
@@ -107,8 +117,12 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
         if (!j?.ok) return;
         if (Array.isArray(j.symbols) && j.symbols.length) {
           // Server copy exists → adopt it (and don't echo it straight back up).
-          adoptingListRef.current = true;
-          setList(j.symbols as string[]);
+          // An untouched old default is swapped on the way in, and that swap
+          // IS an edit: the push below writes the new list to the profile.
+          const synced = j.symbols as string[];
+          const mine = migrateWatchlist(synced);
+          adoptingListRef.current = mine === synced;
+          setList(mine);
           setTimeout(() => { adoptingListRef.current = false; }, 0);
         } else {
           // First sign-in from this account → seed the profile with the local list.
@@ -208,6 +222,10 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   const shownLast = watchRow(quotes[symbol.sym]).last;
   const shownLastRef = useRef(shownLast);
   shownLastRef.current = shownLast;
+  // Another symbol's ticks are not this one's history: start the line again.
+  // Declared before the sampler so that, on a switch, it clears and then the
+  // sampler adds the new symbol's first point.
+  useEffect(() => { setHist([]); }, [symbol.sym]);
   useEffect(() => {
     const price = shownLastRef.current;
     if (price == null) return;
@@ -217,6 +235,10 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
   // performance from /api/quote (1d/1m/3m/6m/ytd/1y)
   useEffect(() => {
     let alive = true;
+    // The last symbol's figures go first. A symbol with no data never fills
+    // them, and the block kept showing the stock before it (its cells print a
+    // dash when empty).
+    setPerf({});
     (async () => {
       try {
         const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol.sym)}&tf=D`);
@@ -301,7 +323,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
             byte-identically to the span it replaces. */}
         <h2 className="text-fg">Watchlist</h2>
         <div className="flex items-center gap-1">
-          <ToolButton title="Reset to default" onClick={() => setList(DEFAULT_LIST.map((d) => d.sym))} className="!size-5 !p-0 !text-[0.6875rem]">⟳</ToolButton>
+          <ToolButton title="Reset to default" onClick={() => setList([...DEFAULT_WATCHLIST])} className="!size-5 !p-0 !text-[0.6875rem]">⟳</ToolButton>
         </div>
       </div>
 
@@ -363,7 +385,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           const row = watchRow(q);
           const active = sym === symbol.sym;
           return (
-            <div key={sym} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-brand-ink/12" : "hover:bg-surface"}`}>
+            <div key={sym} data-watch-row={sym} data-priced={row.last != null ? "1" : "0"} className={`group relative grid grid-cols-12 items-center gap-2 px-3 py-1.5 t-data text-[0.6875rem] transition-colors ${active ? "bg-brand-ink/12" : "hover:bg-surface"}`}>
               <button
                 className="col-span-5 flex items-center gap-1.5 text-left text-fg"
                 onClick={() => onPickSymbol({ sym, name: q?.name || sym, exch: q?.exch || "" })}
@@ -442,11 +464,13 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
 
         <div className="mt-2">
           {/* Driven by the quote, not printed unconditionally (Gate A4 #1). */}
-          <Chip tone={live ? "neutral" : "warn"} dot>
+          {/* Allowed to wrap: "Pre-market · live from one exchange · as of
+              18:55" is wider than the panel, and a chip keeps to one line. */}
+          <Chip tone={live ? "neutral" : "warn"} dot className="!whitespace-normal">
             {/* What the number is, by the market's own state: it only moves
                 while the market trades. */}
             {!live
-              ? "SIM tape · not real quotes"
+              ? noData ? "No price data for this symbol here" : "SIM tape · not real quotes"
               : live.delayed
                 ? "Delayed quote"
                 : live.marketState === "REGULAR"
@@ -471,7 +495,7 @@ export function RightPanel({ symbol, onPickSymbol, onQuote }: Props) {
           {perfOpen && <span className="text-fg-faint">Vs prev close</span>}
         </div>
         {perfOpen && (
-        <div className="mt-2 grid grid-cols-3 gap-px bg-border-soft">
+        <div data-perf-grid className="mt-2 grid grid-cols-3 gap-px bg-border-soft">
           {(["1D", "1M", "3M", "6M", "YTD", "1Y"] as const).map((k) => {
             // With the session shut, 1D is the headline's own figure: the
             // official close against the official close before. The daily

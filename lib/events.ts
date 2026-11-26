@@ -1,6 +1,15 @@
-// Deterministic event calendar so the timeline always shows the same pins
-// for a given symbol/date range. Real product would pull from an actual
-// economic calendar API.
+// The dated events the builder pins between today and a position's expiry.
+//
+// Only dates an authority has published are here: the Federal Reserve's
+// rate-setting meetings and the Bureau of Labor Statistics' inflation
+// releases. This file used to make its dates up: a hash of the ticker's
+// letters picked an "earnings" day, an "ex-dividend" day and a "Fed" day, and
+// the builder drew them as upcoming events with nothing saying so. A visitor
+// who knew when Apple reports saw a date that was simply wrong.
+//
+// Company earnings and dividend dates are not shown at all until the site has
+// a calendar it is licensed to show. No date is ever inferred: past the end of
+// the tables below, the builder shows no event rather than a guess.
 
 export type MarketEvent = {
   id: string;
@@ -20,102 +29,91 @@ const KIND_TONE: Record<MarketEvent["kind"], string> = {
 };
 export const eventTone = (k: MarketEvent["kind"]) => KIND_TONE[k];
 
-function hash(s: string) {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) % 1_000_000;
-}
+/**
+ * Federal Open Market Committee meetings: the second day of each, when the
+ * statement comes out. From the Federal Reserve's calendar,
+ * https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm, as last
+ * updated on 18 November 2026. The calendar calls every date tentative until
+ * the meeting before it confirms it.
+ */
+const FED_MEETINGS: { date: string; strategy?: true }[] = [
+  { date: "2026-12-09" },
+  { date: "2027-01-27" },
+  { date: "2027-03-17" },
+  { date: "2027-04-28" },
+  { date: "2027-06-09" },
+  { date: "2027-07-28" },
+  { date: "2027-09-15" },
+  // Listed by the Federal Reserve as a "Monetary Policy Strategy Meeting".
+  { date: "2027-10-27", strategy: true },
+  { date: "2027-11-17" },
+  { date: "2028-01-26" },
+];
 
-function addDays(base: Date, days: number) {
-  const d = new Date(base);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+/**
+ * Consumer Price Index releases (08:30 Eastern). From the Bureau of Labor
+ * Statistics' schedule, https://www.bls.gov/schedule/news_release/cpi.htm,
+ * read on 25 November 2026.
+ */
+const CPI_RELEASES: string[] = [
+  "2026-12-10",
+  "2027-01-13",
+  "2027-02-11",
+  "2027-03-10",
+  "2027-04-13",
+  "2027-05-12",
+  "2027-06-10",
+  "2027-07-14",
+  "2027-08-11",
+  "2027-09-14",
+  "2027-10-14",
+  "2027-11-10",
+  "2027-12-10",
+];
 
-function iso(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
+/** The last day either table covers. Past it the builder has nothing to pin. */
+export const EVENTS_KNOWN_UNTIL = "2027-12-10";
 
-export function eventsFor(symbol: string, from: Date, to: Date): MarketEvent[] {
+/** A calendar date (yyyy-mm-dd) as the start of that day, UTC. */
+const dayMs = (isoDate: string) => Date.parse(`${isoDate}T00:00:00Z`);
+
+/**
+ * The published events from `from` to `to`, both included, oldest first.
+ * They are the same for every stock: nothing here is about one company.
+ */
+export function scheduledEvents(from: Date, to: Date): MarketEvent[] {
+  // Whole days: an event dated today counts, whatever the hour is now.
+  const lo = dayMs(from.toISOString().slice(0, 10));
+  const hi = to.getTime();
+  const within = (date: string) => {
+    const t = dayMs(date);
+    return t >= lo && t <= hi;
+  };
   const out: MarketEvent[] = [];
-  const seed = hash(symbol);
-  const fromMs = from.getTime();
-  const toMs = to.getTime();
-
-  // earnings — quarterly cadence offset by symbol seed
-  let cursor = new Date(from);
-  cursor.setDate(cursor.getDate() + (seed % 80));
-  while (cursor.getTime() <= toMs) {
-    if (cursor.getTime() >= fromMs) {
-      out.push({
-        id: `er-${iso(cursor)}`,
-        date: iso(cursor),
-        kind: "earnings",
-        title: `${symbol} earnings`,
-        blurb: "Implied vol typically rises into the print and crushes after.",
-        vol: "high",
-      });
-    }
-    cursor = addDays(cursor, 91);
+  for (const m of FED_MEETINGS) {
+    if (!within(m.date)) continue;
+    out.push({
+      id: `fed-${m.date}`,
+      date: m.date,
+      kind: "fed",
+      title: m.strategy ? "Fed strategy meeting" : "Fed rate decision",
+      blurb: m.strategy
+        ? "The Federal Reserve lists this one as a monetary policy strategy meeting."
+        : "The Federal Reserve's statement, then its press conference. Prices can swing in both directions on the day.",
+      vol: "high",
+    });
   }
-
-  // Fed meetings — 8 per year, fixed-ish dates (months 1,3,5,6,7,9,11,12)
-  const fedMonths = [0, 2, 4, 5, 7, 8, 10, 11];
-  for (let y = from.getFullYear() - 1; y <= to.getFullYear() + 1; y++) {
-    for (const m of fedMonths) {
-      const d = new Date(y, m, 18 + (seed % 4)); // mid-month
-      if (d.getTime() >= fromMs && d.getTime() <= toMs) {
-        out.push({
-          id: `fed-${iso(d)}`,
-          date: iso(d),
-          kind: "fed",
-          title: "FOMC decision",
-          blurb: "Fed rate decision and presser. Whippy intraday tape — wider stops.",
-          vol: "high",
-        });
-      }
-    }
+  for (const date of CPI_RELEASES) {
+    if (!within(date)) continue;
+    out.push({
+      id: `cpi-${date}`,
+      date,
+      kind: "cpi",
+      title: "US inflation report (CPI)",
+      blurb: "The monthly consumer price figures, out at 08:30 Eastern. Interest-rate expectations react first.",
+      vol: "medium",
+    });
   }
-
-  // CPI — second Tuesday-ish of each month
-  for (let y = from.getFullYear() - 1; y <= to.getFullYear() + 1; y++) {
-    for (let m = 0; m < 12; m++) {
-      const d = new Date(y, m, 12 + (seed % 3));
-      if (d.getTime() >= fromMs && d.getTime() <= toMs) {
-        out.push({
-          id: `cpi-${iso(d)}`,
-          date: iso(d),
-          kind: "cpi",
-          title: "US CPI print",
-          blurb: "Inflation reading. Front-end of the curve reacts hardest.",
-          vol: "medium",
-        });
-      }
-    }
-  }
-
-  // Dividends — quarterly if a "stock-like" symbol
-  if (!symbol.startsWith("^") && !symbol.includes("-USD")) {
-    let div = new Date(from);
-    div.setDate(div.getDate() + (seed % 30));
-    while (div.getTime() <= toMs) {
-      if (div.getTime() >= fromMs) {
-        out.push({
-          id: `div-${iso(div)}`,
-          date: iso(div),
-          kind: "dividend",
-          title: `${symbol} ex-dividend`,
-          blurb: "Stock drops by ~div amount on ex-date. Calls/puts adjust accordingly.",
-          vol: "low",
-        });
-      }
-      div = addDays(div, 91);
-    }
-  }
-
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 

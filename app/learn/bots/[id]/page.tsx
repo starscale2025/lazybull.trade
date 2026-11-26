@@ -434,7 +434,7 @@ function defaultShines(category: string): string[] {
   ];
   if (category === "ai") return [
     "Liquid US large caps with rich macro context.",
-    "When the FastAPI service is up — the Python NN runs trained models on real Yahoo data.",
+    "When the FastAPI service is up — the Python NN runs trained models on real market data.",
     "Multi-week horizons. Day-trading is out of scope.",
   ];
   return [

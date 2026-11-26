@@ -122,11 +122,36 @@ describe("vwap — the one we shipped broken", () => {
     expect(out[1]).toBeCloseTo(175, 10); // cumulative across the local-midnight seam
   });
 
-  it("anchors across the WHOLE series on daily bars — a per-bar 'session' VWAP of daily data is just typical price, which teaches nothing", () => {
+  it("is cumulative across days on daily bars — a per-bar 'session' VWAP of daily data is just typical price, which teaches nothing", () => {
     const t0 = Date.UTC(2026, 6, 1);
     const bars = [bar(t0, 110, 90, 100, 100), bar(t0 + DAY, 210, 190, 200, 300)];
     const out = vwap(bars);
     expect(out[1]).toBeCloseTo(175, 10); // cumulative, NOT 200
+  });
+
+  it("REGRESSION 3: on daily bars the anchor is the calendar year, not the first bar that happened to load", () => {
+    // The feed loads 2,000 daily bars. Anchored to the first of them, the
+    // default workspace's VWAP was a five-year average, far off the pane.
+    const dec30 = Date.UTC(2025, 11, 30, 5);
+    const bars = [
+      bar(dec30, 110, 90, 100, 100), // 2025: typical 100
+      bar(dec30 + DAY, 110, 90, 100, 100),
+      bar(Date.UTC(2026, 0, 2, 5), 210, 190, 200, 300), // 2026 starts again: typical 200
+      bar(Date.UTC(2026, 0, 5, 5), 310, 290, 300, 100), // cumulative inside 2026
+    ];
+    const out = vwap(bars);
+    expect(out[1]).toBeCloseTo(100, 10);
+    expect(out[2]).toBeCloseTo(200, 10); // NOT (100·200 + 200·300) / 500 = 160
+    expect(out[3]).toBeCloseTo((200 * 300 + 300 * 100) / 400, 10); // 225
+  });
+
+  it("weekly and monthly bars anchor to the year as well", () => {
+    const WEEK = 7 * DAY;
+    const t0 = Date.UTC(2025, 11, 22);
+    const bars = [bar(t0, 110, 90, 100, 100), bar(t0 + WEEK, 110, 90, 100, 100), bar(t0 + 2 * WEEK, 210, 190, 200, 100)];
+    const out = vwap(bars);
+    expect(out[1]).toBeCloseTo(100, 10); // 29 Dec 2025 is still 2025
+    expect(out[2]).toBeCloseTo(200, 10); // 5 Jan 2026 starts the year
   });
 
   it("handles zero volume without inventing numbers", () => {

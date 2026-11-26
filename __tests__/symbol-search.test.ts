@@ -74,11 +74,29 @@ describe("/api/symbol-search", () => {
     expect(j.items[0].sym).toBe("NVDA");
   });
 
-  it("tags Indian listings as delayed", async () => {
+  it("tags Indian listings as delayed, where a source carries them", async () => {
+    // Yahoo allowed, and failing: the list answers, and the list is whole.
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubEnv("MARKET_DATA_ALLOW_YAHOO", "1");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("Too Many Requests", { status: 429 })));
     const j = await search("infosys");
     expect(j.items[0]).toMatchObject({ sym: "INFY.NS", delayed: true });
+  });
+
+  it("offers nothing the deployment cannot price: no indices or Indian names on the US feed alone", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("MARKET_DATA_ALLOW_YAHOO", "");
+    vi.stubEnv("TWELVE_DATA_API_KEY", "");
+    vi.stubGlobal("fetch", vi.fn());
+    const syms = async (q: string) => ((await search(q)).items as { sym: string }[]).map((i) => i.sym);
+    expect(await syms("infosys")).not.toContain("INFY.NS");
+    expect(await syms("nifty")).toEqual([]); // every match is an index, and "NIFTY" typed is one too
+    expect(await syms("^GSPC")).toEqual([]);
+    expect(await syms("s&p")).not.toContain("^GSPC");
+    // what it does carry is all still there
+    expect((await syms("apple"))[0]).toBe("AAPL");
+    expect(await syms("bitcoin")).toContain("BTC-USD");
+    expect(await syms("ROKU")).toContain("ROKU"); // a typed US ticker stays reachable
   });
 
   it("falls back to the list when Yahoo is allowed but fails", async () => {

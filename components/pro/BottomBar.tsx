@@ -3,20 +3,13 @@
 import { useEffect, useState } from "react";
 import { Chip, TogglePill } from "@/components/calm/kit";
 import { RANGE_PRESETS } from "@/lib/pro/ranges";
+import { fmtIST } from "@/lib/pro/clock";
 
 // What each range shows, and in which bar size, is lib/pro/ranges.ts.
 const PRESETS = RANGE_PRESETS;
 
 /** The kit's toggle at this strip's height: nine presets have to fit a phone. */
 const COMPACT = "!h-6 !px-1.5 !text-[0.6875rem] min-w-7 justify-center";
-
-function fmtIST(d: Date): string {
-  const ist = new Date(d.getTime() + (5.5 * 60 - d.getTimezoneOffset()) * 60_000);
-  const hh = String(ist.getUTCHours()).padStart(2, "0");
-  const mm = String(ist.getUTCMinutes()).padStart(2, "0");
-  const ss = String(ist.getUTCSeconds()).padStart(2, "0");
-  return `${hh}:${mm}:${ss}`;
-}
 
 export function BottomBar({
   preset,
@@ -67,7 +60,7 @@ export function BottomBar({
       <div className="hidden items-center gap-3 text-fg-faint md:flex">
         <span>{status}</span>
         <span>·</span>
-        <span className="t-data text-fg-dim">{clock || "--:--:--"} UTC+5:30</span>
+        <span data-pro-clock className="t-data text-fg-dim">{clock || "--:--:--"} UTC+5:30</span>
       </div>
     </div>
   );

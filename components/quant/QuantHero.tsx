@@ -298,7 +298,7 @@ export function QuantHero({
                 <div>
                   <div className="flex items-center gap-1.5 t-label text-fg-faint">
                     Symbol
-                    <InfoTip text="The instrument every bot studies. Live mode fetches its real daily candles from Yahoo; Seed mode deals a synthetic tape instead." />
+                    <InfoTip text="The instrument every bot studies. Live mode fetches its real daily candles; Seed mode deals a synthetic tape instead." />
                   </div>
                   <select
                     value={symbol}

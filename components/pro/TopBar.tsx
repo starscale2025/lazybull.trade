@@ -22,9 +22,6 @@ export const SEED_SYMBOLS: SymbolDef[] = [
   { sym: "QQQ", name: "Invesco QQQ", exch: "NASDAQ" },
   { sym: "BTC-USD", name: "Bitcoin", exch: "CRYPTO" },
   { sym: "ETH-USD", name: "Ethereum", exch: "CRYPTO" },
-  { sym: "^NSEI", name: "Nifty 50 Index", exch: "NSE" },
-  { sym: "^NSEBANK", name: "Bank Nifty", exch: "NSE" },
-  { sym: "^GSPC", name: "S&P 500", exch: "INDEX" },
 ];
 
 export const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "D", "W", "M"];

@@ -5,7 +5,7 @@ import { generateCandles } from "@/lib/candles";
 import { CandleChart } from "@/components/CandleChart";
 
 const KNOBS = [
-  { key: "symbol" as const, label: "Symbol", body: "Picks the baseline price the synthetic chart starts from. AMZN ≈ $226, NVDA ≈ $138, BTC ≈ $95k. Real symbols get real Yahoo bars on the workbench; synthetic is just for stress-testing." },
+  { key: "symbol" as const, label: "Symbol", body: "Picks the baseline price the synthetic chart starts from. AMZN ≈ $226, NVDA ≈ $138, BTC ≈ $95k. Real symbols get real daily bars on the workbench; synthetic is just for stress-testing." },
   { key: "bars" as const, label: "Bars", body: "How many candles the chart shows. 60 = 3 months of daily, 252 = a year, 1300 = five years. More bars give bots more history to fit." },
   { key: "seed" as const, label: "Seed", body: "Which ‘what-if’ universe. Same seed → same chart, every page load. This is what makes Lazybull’s results reproducible." },
   { key: "drift" as const, label: "Drift μ", body: "The trend. Positive = bullish drift up; negative = bearish drift down; zero = pure noise. Trend bots love high drift; reversion bots love drift near zero." },

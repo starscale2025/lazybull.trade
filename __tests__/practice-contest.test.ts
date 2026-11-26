@@ -1,7 +1,7 @@
 // The weekly set's clock — pure functions of a "now" the caller passes.
 
 import { describe, expect, it } from "vitest";
-import { WEEKLY_SET, editionAt, formatCountdown, formatDuration, nextStart, windowFor } from "@/lib/practice/contest";
+import { WEEKLY_SET, editionAt, formatCountdown, formatDuration, nextStart, pickEdition, windowFor } from "@/lib/practice/contest";
 import { PROBLEMS } from "@/lib/practice/problems";
 
 const ANCHOR = Date.parse(WEEKLY_SET.anchorIso);
@@ -44,5 +44,31 @@ describe("the weekly window", () => {
     expect(formatDuration(42 * 60_000 + 7_000)).toBe("42m 07s");
     expect(formatDuration(3_600_000 + 12 * 60_000)).toBe("1h 12m");
     expect(formatDuration(-1)).toBe("0s");
+  });
+});
+
+describe("which edition a request means", () => {
+  const current = WEEKLY_SET.num + 10;
+
+  it("REGRESSION: no `set` at all is the current edition, not the first", () => {
+    // Number(null) is 0, a whole number: the route clamped it up to the first
+    // edition, so the board said one number under a header that said another
+    // and "no past editions yet" on the eleventh.
+    expect(pickEdition(null, current)).toBe(current);
+    expect(pickEdition(undefined, current)).toBe(current);
+  });
+
+  it("a blank or non-numeric `set` is the current edition too", () => {
+    for (const raw of ["", " ", "abc", "2.5", "NaN", "14th"]) expect(pickEdition(raw, current), JSON.stringify(raw)).toBe(current);
+  });
+
+  it("a number is held to the editions that exist", () => {
+    expect(pickEdition(String(WEEKLY_SET.num), current)).toBe(WEEKLY_SET.num);
+    expect(pickEdition(String(current - 3), current)).toBe(current - 3);
+    expect(pickEdition(" 16 ", current)).toBe(16);
+    expect(pickEdition("999", current)).toBe(current); // not a future one
+    expect(pickEdition("1", current)).toBe(WEEKLY_SET.num); // nor one before the first
+    expect(pickEdition("0", current)).toBe(WEEKLY_SET.num);
+    expect(pickEdition("-4", current)).toBe(WEEKLY_SET.num);
   });
 });

@@ -26,6 +26,30 @@
 
 import type { SharePosition } from "./paper-shares";
 import { ordersMargin as calcOrdersMargin, type Order } from "./paper-orders";
+import { pnlSummary, type Leg } from "./pricing";
+
+/**
+ * What the open option positions can lose at expiry, summed.
+ *
+ * A position's cost is not that figure. For a credit position the cost is the
+ * premium that came in, and the portfolio once printed it as the amount "at
+ * risk": an iron condor that collected $528 and could lose $722 read as
+ * "$527.77 at risk".
+ *
+ * `defined` adds up the worst case of every position that has one. `uncapped`
+ * counts the positions whose loss keeps growing with the stock (a naked
+ * short): they have no figure to add, so they are counted, never guessed at.
+ */
+export function optionRisk(positions: { legs: Leg[]; openSpot: number }[]): { defined: number; uncapped: number } {
+  let defined = 0;
+  let uncapped = 0;
+  for (const p of positions) {
+    const s = pnlSummary(p.legs, p.openSpot);
+    if (s.unboundedRisk) uncapped += 1;
+    else defined += Math.max(0, -s.maxLoss);
+  }
+  return { defined, uncapped };
+}
 
 export type AccountMetrics = {
   /** Cash. */

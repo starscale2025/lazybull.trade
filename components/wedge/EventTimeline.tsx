@@ -18,10 +18,8 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
       <div className="mb-4 flex items-center justify-between">
         <div className="deck-label">Event horizon · next {daysToExpiry}d</div>
         <div className="flex items-center gap-3 t-label text-fg-faint">
-          <Legend tone="var(--bear)" label="Earnings" />
           <Legend tone="var(--amber)" label="Fed" />
           <Legend tone="var(--cyan)" label="CPI" />
-          <Legend tone="var(--bull)" label="Div" />
         </div>
       </div>
 
@@ -61,6 +59,12 @@ export function EventTimeline({ events, daysToExpiry, baseDate }: { events: Mark
           No scheduled events in your window
         </div>
       )}
+
+      {/* What these dates are, and what is missing. They were once made up
+          from the ticker's letters, earnings days included. */}
+      <p data-events-source className="mt-3 t-label text-fg-faint">
+        Fed meetings and US inflation reports, from their published calendars. Company earnings and dividend dates are not shown yet.
+      </p>
 
       {/* upcoming list */}
       {within.length > 0 && (
