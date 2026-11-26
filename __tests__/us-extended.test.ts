@@ -226,6 +226,22 @@ describe("extOf: the price of the stretch that is on", () => {
     expect(extOf(iex, tape, null, at("2026-11-26T11:00:00Z"))).toEqual({ close: 158.31, prevClose: 157.8 });
   });
 
+  it("REGRESSION: a print stamped on the boundary is the stretch before's, not the next one's", () => {
+    // Wednesday 25 Nov 2026, 23:59: the evening before Thanksgiving, with no
+    // overnight session. The tape's newest trade is after-hours' last, stamped
+    // 20:00:00 exactly (SPY on the live site). It was read as the night's
+    // first price: "O/N 716.70 +0.00%".
+    const days = { dailyBar: { t: "2026-11-25T05:00:00Z", c: 716.7 }, prevDailyBar: { c: 718.2 } };
+    const tape = { ...days, latestTrade: { t: "2026-11-26T01:00:00Z", p: 716.7 } };
+    expect(extOf({ ...days }, tape, null, at("2026-11-26T04:59:00Z"))).toEqual({ close: 716.7, prevClose: 718.2 });
+    // the same at the bell: a 16:00:00 print is the session's, not after-hours' first
+    const bell = { ...DAYS, latestTrade: { t: "2026-11-23T21:00:00Z", p: 165.05 } };
+    expect(extOf({ ...DAYS }, bell, null, at("2026-11-23T21:20:00Z"))?.now).toBeUndefined();
+    // one millisecond later is the new stretch's
+    const after = { ...DAYS, latestTrade: { t: "2026-11-23T21:00:00.001Z", p: 165.1 } };
+    expect(extOf({ ...DAYS }, after, null, at("2026-11-23T21:20:00Z"))?.now).toMatchObject({ session: "post", price: 165.1 });
+  });
+
   it("a weekend has a close and no session, whatever the feeds hold", () => {
     const stray = { latestTrade: { t: "2026-11-28T16:59:00Z", p: 1 }, latestQuote: { t: "2026-11-28T16:59:00Z", bp: 1, ap: 1 } };
     expect(extOf(IEX, { ...DAYS, ...stray }, stray, at("2026-11-28T17:00:00Z"))).toEqual(OFFICIAL);

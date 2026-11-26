@@ -100,7 +100,12 @@ export function extOf(main: any, tape: any, night: any, nowMs: number): QuoteExt
   let best: Offer | null = null;
   const offer = (price: number | undefined, t: unknown, basis: ExtBasis, rank: number, venue?: ExtSession) => {
     const at = msOf(t);
-    if (price == null || !(price > 0) || !Number.isFinite(at) || at < start || at > nowMs + SKEW_MS) return;
+    // Strictly after the stretch began: a print stamped on the boundary itself
+    // is the end of the stretch before. The tape reports after-hours' last
+    // trade at 20:00:00 exactly, and read as the night's first it put an
+    // "overnight" price equal to the close on the evening before Thanksgiving,
+    // when there is no overnight session at all.
+    if (price == null || !(price > 0) || !Number.isFinite(at) || at <= start || at > nowMs + SKEW_MS) return;
     const session = venue ?? usSession(at);
     if (!isExt(session)) return; // a print from inside the regular session is the candles' business
     // The newest wins; at the same instant a trade that printed beats a late one, and both beat a quote.
